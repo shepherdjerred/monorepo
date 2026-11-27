@@ -161,6 +161,44 @@ export const flagValueSchemas = {
       .max(100 * 1024 * 1024),
   ),
 
+  // artifacts (`artifacts/src/infrastructure/config.ts`)
+  "artifacts-max-file-bytes": variantNumber(
+    z
+      .number()
+      .int()
+      .positive()
+      .max(4 * 1024 * 1024 * 1024),
+  ),
+  "artifacts-max-version-bytes": variantNumber(
+    z
+      .number()
+      .int()
+      .positive()
+      .max(16 * 1024 * 1024 * 1024),
+  ),
+  "artifacts-max-files": variantNumber(z.number().int().positive().max(10_000)),
+  "artifacts-feedback-settle-seconds": variantNumber(
+    z.number().min(0).max(600),
+  ),
+  "artifacts-delivery-orphan-minutes": variantNumber(
+    z.number().int().positive().max(10_080),
+  ),
+  "artifacts-board-idle-days": variantNumber(
+    z.number().int().positive().max(3650),
+  ),
+  "artifacts-archive-grace-days": variantNumber(
+    z.number().int().min(0).max(3650),
+  ),
+  "artifacts-upload-ttl-hours": variantNumber(
+    z.number().int().positive().max(720),
+  ),
+  "artifacts-blob-grace-hours": variantNumber(
+    z.number().int().positive().max(720),
+  ),
+  "artifacts-event-retention-days": variantNumber(
+    z.number().int().positive().max(3650),
+  ),
+
   // storm forum (`storm-forum/src/config.ts`)
   "storm-forum-season": variantString(z.enum(STORM_SEASONS)),
 

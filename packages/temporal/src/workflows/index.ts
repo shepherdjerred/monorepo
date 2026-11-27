@@ -198,6 +198,7 @@ export const runMainVulnScanWorkflow = () =>
 export const runCiWorkspaceReaperWorkflow =
   maintenanceWorkflows.runCiWorkspaceReaperWorkflow;
 export const runTrackerAttachmentCleanup = maintenanceWorkflows.trackerCleanup;
+export const runArtifactsCleanup = maintenanceWorkflows.artifactsCleanup;
 export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
 export const runScheduleRehearsalWorkflow =
   (): Promise<ScheduleRehearsalResult> =>

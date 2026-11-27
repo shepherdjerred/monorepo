@@ -59,6 +59,7 @@ const ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
 const BUCKETS = {
   agent_chat_sessions: "agent-chat-sessions",
   apple_sdks: "apple-sdks",
+  artifacts_blobs: "artifacts-blobs",
   better_skill_capped: "better-skill-capped",
   brim_sessions: "brim-sessions",
   ci_handoff: "ci-handoff",
@@ -102,6 +103,7 @@ const BUCKETS = {
 /** Buckets whose destroy must fail to plan, the state bucket above all. */
 const PROTECTED_BUCKETS = [
   "apple_sdks",
+  "artifacts_blobs",
   "brim_sessions",
   "delivery_artifacts",
   "git_backups",

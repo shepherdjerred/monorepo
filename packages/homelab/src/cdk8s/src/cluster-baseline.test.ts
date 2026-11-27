@@ -137,6 +137,7 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["prometheus", "errors"],
   ["seaweedfs", "seaweedfs"],
   ["prometheus", "mail"],
+  ["prometheus", "artifacts"],
   ["prometheus", "scout"],
   ["tasknotes", "tasknotes"],
   ["prometheus", "cluster-hygiene"],

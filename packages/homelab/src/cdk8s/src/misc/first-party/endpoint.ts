@@ -102,6 +102,18 @@ export const EXPERIMENTS_INTERNAL_ENDPOINT = defineEndpoint({
   portName: "internal",
 });
 
+/**
+ * Artifacts's single listener (`resources/artifacts`). The two tailnet hosts
+ * reach it through the Tailscale ingress proxies; Prometheus, blackbox and the
+ * Temporal cleanup reach it on the Service's own DNS name.
+ */
+export const ARTIFACTS_ENDPOINT = defineEndpoint({
+  namespace: "artifacts",
+  app: "artifacts",
+  port: 7440,
+  portName: "http",
+});
+
 /** Golink's HTTP server (`resources/golink`). */
 export const GOLINK_ENDPOINT = defineEndpoint({
   namespace: "golink",

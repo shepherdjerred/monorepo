@@ -20,3 +20,18 @@ export async function runPromtoolFixture(
     await rm(directory, { recursive: true, force: true });
   }
 }
+
+/** The PromQL text of the named alert, so a test evaluates what ships. */
+export function alertExpression(
+  rules: readonly {
+    readonly alert?: string | undefined;
+    readonly expr: { readonly value: unknown };
+  }[],
+  name: string,
+): string {
+  const value = rules.find((rule) => rule.alert === name)?.expr.value;
+  if (typeof value !== "string") {
+    throw new TypeError(`Missing ${name} alert expression`);
+  }
+  return value;
+}

@@ -260,6 +260,9 @@ describe("platform model lookups", () => {
     expect(consumedBucket({ env: "S3_BUCKET", namespace: "tracker" })).toBe(
       "tracker-attachments",
     );
+    expect(consumedBucket({ env: "S3_BUCKET", namespace: "artifacts" })).toBe(
+      "artifacts-blobs",
+    );
     expect(consumedBucket({ env: "LLM_ARCHIVE_S3_BUCKET" })).toBe(
       "llm-archive",
     );

@@ -15,6 +15,7 @@ import { createStormBrainChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-c
 import { createStormStatsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/storm-stats.ts";
 import { createMailChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/mail.ts";
 import { createFeedsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/feeds.ts";
+import { createArtifactsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/artifacts.ts";
 import { createErrorsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/errors.ts";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
 import { createGolinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/golink.ts";
@@ -215,6 +216,7 @@ describe("First-party Flags consumer deployments", () => {
       (app: App) => createMailChart(app),
       (app: App) => createFeedsChart(app),
       (app: App) => createErrorsChart(app),
+      (app: App) => createArtifactsChart(app),
       (app: App) => createStormForumCharts(app),
       (app: App) =>
         createGolinkChart(app, {

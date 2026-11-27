@@ -364,26 +364,27 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
-test.each(["ci-maintenance-dispatch", "the-storm-rwf-recording-archive"])(
-  "%s starts paused until its new Workflow is deployed",
-  (scheduleId) => {
-    const schedule = findScheduleById(scheduleId);
-    expect(schedule.initialPauseNote).toContain("100% candidate traffic");
-    expect(buildScheduleState(schedule, {})).toEqual({
-      paused: true,
-      note: schedule.initialPauseNote,
-    });
-    expect(
-      buildScheduleState(
-        schedule,
-        {},
-        { paused: false, note: "Canary accepted" },
-      ),
-    ).toEqual({
-      paused: false,
-    });
-  },
-);
+test.each([
+  "ci-maintenance-dispatch",
+  "the-storm-rwf-recording-archive",
+  "artifacts-cleanup",
+])("%s starts paused until its new Workflow is deployed", (scheduleId) => {
+  const schedule = findScheduleById(scheduleId);
+  expect(schedule.initialPauseNote).toContain("100% candidate traffic");
+  expect(buildScheduleState(schedule, {})).toEqual({
+    paused: true,
+    note: schedule.initialPauseNote,
+  });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      { paused: false, note: "Canary accepted" },
+    ),
+  ).toEqual({
+    paused: false,
+  });
+});
 
 test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
   // Stable workers do not register this Workflow, so its schedule must remain
@@ -629,6 +630,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // One bounded list-and-delete Activity on the infra queue.
   "runCiWorkspaceReaperWorkflow",
   "runTrackerAttachmentCleanup",
+  // One bounded cleanup Activity per pass on the infra queue, at most ten
+  // passes. No workflow-level sleeps.
+  "runArtifactsCleanup",
   // Awaits one scan activity (clone + trivy fs) then report delivery and the
   // Alertmanager publish. No workflow-level sleeps; each activity carries its
   // own startToCloseTimeout + retry budget.

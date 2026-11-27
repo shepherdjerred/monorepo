@@ -22,6 +22,7 @@ export const MANAGED_NAMESPACES = [
   "feeds",
   "mail",
   "errors",
+  "artifacts",
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
@@ -595,6 +596,34 @@ export const ERRORS_FLAG_KEYS = [
 
 export type ErrorsFlagKey = (typeof ERRORS_FLAG_KEYS)[number];
 
+export const ARTIFACTS_BOOLEAN_FLAG_KEYS = ["artifacts-enabled"] as const;
+
+export type ArtifactsBooleanFlagKey =
+  (typeof ARTIFACTS_BOOLEAN_FLAG_KEYS)[number];
+
+export const ARTIFACTS_VARIANT_FLAG_KEYS = [
+  "artifacts-max-file-bytes",
+  "artifacts-max-version-bytes",
+  "artifacts-max-files",
+  "artifacts-feedback-settle-seconds",
+  "artifacts-delivery-orphan-minutes",
+  "artifacts-board-idle-days",
+  "artifacts-archive-grace-days",
+  "artifacts-upload-ttl-hours",
+  "artifacts-blob-grace-hours",
+  "artifacts-event-retention-days",
+] as const;
+
+export type ArtifactsVariantFlagKey =
+  (typeof ARTIFACTS_VARIANT_FLAG_KEYS)[number];
+
+export const ARTIFACTS_FLAG_KEYS = [
+  ...ARTIFACTS_BOOLEAN_FLAG_KEYS,
+  ...ARTIFACTS_VARIANT_FLAG_KEYS,
+] as const;
+
+export type ArtifactsFlagKey = (typeof ARTIFACTS_FLAG_KEYS)[number];
+
 export const MANAGED_FLAG_KEYS = [
   ...DELIVERY_FLAG_KEYS,
   ...MEDIA_FLAG_KEYS,
@@ -615,6 +644,7 @@ export const MANAGED_FLAG_KEYS = [
   ...FEEDS_FLAG_KEYS,
   ...MAIL_FLAG_KEYS,
   ...ERRORS_FLAG_KEYS,
+  ...ARTIFACTS_FLAG_KEYS,
 ] as const;
 
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
@@ -639,6 +669,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...FEEDS_BOOLEAN_FLAG_KEYS,
   ...MAIL_BOOLEAN_FLAG_KEYS,
   ...ERRORS_BOOLEAN_FLAG_KEYS,
+  ...ARTIFACTS_BOOLEAN_FLAG_KEYS,
 ] as const;
 
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
@@ -663,6 +694,7 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...FEEDS_VARIANT_FLAG_KEYS,
   ...MAIL_VARIANT_FLAG_KEYS,
   ...ERRORS_VARIANT_FLAG_KEYS,
+  ...ARTIFACTS_VARIANT_FLAG_KEYS,
 ] as const;
 
 export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];

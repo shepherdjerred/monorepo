@@ -20,6 +20,7 @@ import {
   MailIcon,
   NotebookPenIcon,
   PackageIcon,
+  PresentationIcon,
   RefreshCwIcon,
   RocketIcon,
   RssIcon,
@@ -41,6 +42,7 @@ export type ExternalEntry = {
  * `CONSOLE_LINKS` cannot appear without one.
  */
 const ICONS: Readonly<Record<string, LucideIcon>> = {
+  artifacts: PresentationIcon,
   delivery: RocketIcon,
   errors: AlertOctagonIcon,
   flags: FlagIcon,

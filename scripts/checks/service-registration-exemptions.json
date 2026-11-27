@@ -10,7 +10,6 @@
   "chartsWithoutRecipe": {
     "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists",
     "charts": "self-bootstrap: charts/prod deploys charts-bootstrap from Docker Hub OCI so recovering charts never depends on charts",
-    "artifacts": "prepared service: ARTIFACTS_ACTIVE is false, so no Application renders and no recipe exists until activation",
     "experiments": "prepared service: EXPERIMENTS_ACTIVE is false, so no Application renders and no recipe exists until activation"
   },
   "policyOnlyDelegations": {

@@ -143,7 +143,7 @@ function buildFakeFlagsService() {
 }
 
 describe("Flags inventory reconciler activity", () => {
-  test("retires unused keys, creates missing keys, updates metrics for 20 deployments, and posts drift alerts", async () => {
+  test("retires unused keys, creates missing keys, updates metrics for 21 deployments, and posts drift alerts", async () => {
     const fake = buildFakeFlagsService();
     const registry = new Registry();
     const metrics = createFlagInventoryMetrics(registry);
@@ -163,7 +163,7 @@ describe("Flags inventory reconciler activity", () => {
       now: () => fixedNow,
     });
 
-    expect(results).toHaveLength(20);
+    expect(results).toHaveLength(21);
     expect(
       fake.authHeaders.every((header) => header === "Bearer machine-secret"),
     ).toBe(true);
@@ -199,7 +199,7 @@ describe("Flags inventory reconciler activity", () => {
       'scout-riot-budget-mode: live value "block" fails its value schema (Invalid option: expected one of "observe"|"enforce")',
     ]);
 
-    expect(postedAlerts).toHaveLength(20);
+    expect(postedAlerts).toHaveLength(21);
     const scoutProdAlert = postedAlerts.find(
       (alert) => alert.labels["deployment"] === "scout/prod",
     );

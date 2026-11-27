@@ -1,6 +1,10 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { FeatureFlagModeSchema } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { z } from "zod";
 import { LIMIT_DEFAULTS } from "#shared/contract.ts";
@@ -42,24 +46,37 @@ export const BootstrapSchema = z.object({
 });
 export type Bootstrap = z.infer<typeof BootstrapSchema>;
 
-const positiveInt = (max: number) =>
-  z.coerce.number().int().positive().max(max);
+/**
+ * The numeric limits. Each key's bounds live in the feature-flags variant
+ * registry, so the Flags server rejects an out-of-range write and this config
+ * reads the same schema.
+ */
+const NUMERIC_FLAGS = {
+  maxFileBytes: "artifacts-max-file-bytes",
+  maxVersionBytes: "artifacts-max-version-bytes",
+  maxFiles: "artifacts-max-files",
+  feedbackSettleSeconds: "artifacts-feedback-settle-seconds",
+  deliveryOrphanMinutes: "artifacts-delivery-orphan-minutes",
+  boardIdleDays: "artifacts-board-idle-days",
+  archiveGraceDays: "artifacts-archive-grace-days",
+  uploadTtlHours: "artifacts-upload-ttl-hours",
+  blobGraceHours: "artifacts-blob-grace-hours",
+  eventRetentionDays: "artifacts-event-retention-days",
+} as const;
 
 const FLAG_KINDS = {
   artifactsEnabled: "boolean",
-  maxFileBytes: "string",
-  maxVersionBytes: "string",
-  maxFiles: "string",
-  feedbackSettleSeconds: "string",
-  deliveryOrphanMinutes: "string",
-  boardIdleDays: "string",
-  archiveGraceDays: "string",
-  uploadTtlHours: "string",
-  blobGraceHours: "string",
-  eventRetentionDays: "string",
+  maxFileBytes: flagValueKind(NUMERIC_FLAGS.maxFileBytes),
+  maxVersionBytes: flagValueKind(NUMERIC_FLAGS.maxVersionBytes),
+  maxFiles: flagValueKind(NUMERIC_FLAGS.maxFiles),
+  feedbackSettleSeconds: flagValueKind(NUMERIC_FLAGS.feedbackSettleSeconds),
+  deliveryOrphanMinutes: flagValueKind(NUMERIC_FLAGS.deliveryOrphanMinutes),
+  boardIdleDays: flagValueKind(NUMERIC_FLAGS.boardIdleDays),
+  archiveGraceDays: flagValueKind(NUMERIC_FLAGS.archiveGraceDays),
+  uploadTtlHours: flagValueKind(NUMERIC_FLAGS.uploadTtlHours),
+  blobGraceHours: flagValueKind(NUMERIC_FLAGS.blobGraceHours),
+  eventRetentionDays: flagValueKind(NUMERIC_FLAGS.eventRetentionDays),
 } as const;
-
-const GIB = 1024 * 1024 * 1024;
 
 export type BehaviorOptions = {
   /** `FEATURE_FLAGS_MODE=disabled`: no flag layer, defaults apply. */
@@ -73,7 +90,7 @@ export type BehaviorOptions = {
 /**
  * Typed behavior configuration. `operatorLogins` is bootstrap (env only);
  * everything else resolves `flag -> default`. The `artifacts-enabled` flag
- * pauses writes; its managed-inventory entry is added with the activation.
+ * pauses writes.
  */
 export function behaviorConfig(stage: string, options: BehaviorOptions = {}) {
   const flag = <S extends z.ZodType>(
@@ -117,46 +134,54 @@ export function behaviorConfig(stage: string, options: BehaviorOptions = {}) {
       },
       artifactsEnabled: flag("artifacts-enabled", true, z.boolean()),
       maxFileBytes: flag(
-        "artifacts-max-file-bytes",
+        NUMERIC_FLAGS.maxFileBytes,
         LIMIT_DEFAULTS.maxFileBytes,
-        positiveInt(4 * GIB),
+        flagValueSchema(NUMERIC_FLAGS.maxFileBytes),
       ),
       maxVersionBytes: flag(
-        "artifacts-max-version-bytes",
+        NUMERIC_FLAGS.maxVersionBytes,
         LIMIT_DEFAULTS.maxVersionBytes,
-        positiveInt(16 * GIB),
+        flagValueSchema(NUMERIC_FLAGS.maxVersionBytes),
       ),
       maxFiles: flag(
-        "artifacts-max-files",
+        NUMERIC_FLAGS.maxFiles,
         LIMIT_DEFAULTS.maxFiles,
-        positiveInt(10_000),
+        flagValueSchema(NUMERIC_FLAGS.maxFiles),
       ),
       feedbackSettleSeconds: flag(
-        "artifacts-feedback-settle-seconds",
+        NUMERIC_FLAGS.feedbackSettleSeconds,
         LIMIT_DEFAULTS.feedbackSettleSeconds,
-        z.coerce.number().min(0).max(600),
+        flagValueSchema(NUMERIC_FLAGS.feedbackSettleSeconds),
       ),
       deliveryOrphanMinutes: flag(
-        "artifacts-delivery-orphan-minutes",
+        NUMERIC_FLAGS.deliveryOrphanMinutes,
         LIMIT_DEFAULTS.deliveryOrphanMinutes,
-        positiveInt(10_080),
+        flagValueSchema(NUMERIC_FLAGS.deliveryOrphanMinutes),
       ),
       boardIdleDays: flag(
-        "artifacts-board-idle-days",
+        NUMERIC_FLAGS.boardIdleDays,
         LIMIT_DEFAULTS.boardIdleDays,
-        positiveInt(3650),
+        flagValueSchema(NUMERIC_FLAGS.boardIdleDays),
       ),
       archiveGraceDays: flag(
-        "artifacts-archive-grace-days",
+        NUMERIC_FLAGS.archiveGraceDays,
         LIMIT_DEFAULTS.archiveGraceDays,
-        z.coerce.number().int().min(0).max(3650),
+        flagValueSchema(NUMERIC_FLAGS.archiveGraceDays),
       ),
-      uploadTtlHours: flag("artifacts-upload-ttl-hours", 24, positiveInt(720)),
-      blobGraceHours: flag("artifacts-blob-grace-hours", 24, positiveInt(720)),
+      uploadTtlHours: flag(
+        NUMERIC_FLAGS.uploadTtlHours,
+        24,
+        flagValueSchema(NUMERIC_FLAGS.uploadTtlHours),
+      ),
+      blobGraceHours: flag(
+        NUMERIC_FLAGS.blobGraceHours,
+        24,
+        flagValueSchema(NUMERIC_FLAGS.blobGraceHours),
+      ),
       eventRetentionDays: flag(
-        "artifacts-event-retention-days",
+        NUMERIC_FLAGS.eventRetentionDays,
         30,
-        positiveInt(3650),
+        flagValueSchema(NUMERIC_FLAGS.eventRetentionDays),
       ),
     },
     sources: {
