@@ -555,6 +555,8 @@ describe("track", () => {
     track("champion_comparison_opened", { outcome: "succeeded" });
     track("champions_index_opened", { outcome: "succeeded" });
     track("champions_filter_changed", { kind: "servers" });
+    track("players_roster_opened", { outcome: "succeeded" });
+    track("players_filter_changed", { kind: "servers" });
     track("match_detail_opened", { outcome: "succeeded" });
     track("match_timeline_viewed", { outcome: "not_captured" });
 
@@ -609,6 +611,24 @@ describe("track", () => {
       },
       {
         event: "champions_filter_changed",
+        properties: {
+          kind: "servers",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "players_roster_opened",
+        properties: {
+          outcome: "succeeded",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "players_filter_changed",
         properties: {
           kind: "servers",
           site_key: "scout-beta",

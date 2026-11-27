@@ -29,7 +29,7 @@ import { ReportForm } from "#src/routes/reports/report-form.tsx";
 import { ReportHelp } from "#src/routes/reports/report-help.tsx";
 import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
-import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
+import { ConsumerPlayers } from "#src/routes/consumer/consumer-players.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
 import { ConsumerChampions } from "#src/routes/consumer/consumer-champions.tsx";
@@ -256,7 +256,7 @@ export const routes: RouteObject[] = [
               },
               {
                 path: "players",
-                element: <ConsumerPlayerSearch />,
+                element: <ConsumerPlayers />,
                 loader: consumerPlayersLoader,
                 errorElement: <RouteErrorPanel />,
               },

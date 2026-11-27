@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { ChampionCard } from "./champion-card.tsx";
@@ -185,6 +186,45 @@ describe("Sticker", () => {
     );
     expect(html).toContain("scout-face");
     expect(html.startsWith("<div")).toBe(true);
+  });
+});
+
+// A static render drops handlers, so read the anchor's props from the element
+// the component returns.
+function anchorOnClick(element: ReactElement): unknown {
+  const props: unknown = element.props;
+  return typeof props === "object" && props !== null && "onClick" in props
+    ? props.onClick
+    : undefined;
+}
+
+function onClick(): void {
+  // A handler the test never fires.
+}
+
+describe("links a router takes over", () => {
+  test("a game sentence stays an anchor with its href and hands its click on", () => {
+    const row = GameSentenceRow({
+      result: "win",
+      champion: "Ahri",
+      href: "/players/1/matches/NA1_1",
+      onClick,
+    });
+    expect(anchorOnClick(row)).toBe(onClick);
+    expect(renderToStaticMarkup(row)).toContain(
+      'href="/players/1/matches/NA1_1"',
+    );
+  });
+
+  test("a sticker does the same", () => {
+    const sticker = Sticker({
+      title: "Quadra kill as Jinx",
+      detail: "Yesterday",
+      who: { champion: "Jinx" },
+      href: "/players/1/matches/NA1_1",
+      onClick,
+    });
+    expect(anchorOnClick(sticker)).toBe(onClick);
   });
 });
 
