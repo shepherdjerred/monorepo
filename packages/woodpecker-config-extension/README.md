@@ -133,11 +133,22 @@ both URLs so it measures a build without shared Gradle or Rust compiler outputs.
 `cacheTrustDomain` (`src/pipeline/cache-trust-domain.ts`) picks that domain,
 and the Turbo team and signing key, for both the PR graph and benchmark
 requests. Default-branch work is trusted. A same-repository pull request or
-canary benchmark is trusted only when `authorizePipeline` classes the actor
-owner-controlled, the event is not credentialless hosted automation, and
-neither the author nor the sender is a GitHub App. Renovate, the owner's Apps,
-credentialless automation and every other actor use the pull-request domain.
-`test/pr-reachable-secrets.test.ts` pins what each pull-request shape reaches.
+canary benchmark is trusted only when `authorizePipeline` admitted the actor
+as owner-controlled, the event is not credentialless hosted automation,
+neither the author nor the sender is a GitHub App, and both are in
+`CACHE_TRUSTED_ACTORS` (`shepherdjerred`, `derrej`). That list is separate
+from the CI allowlist on purpose. Renovate, the owner's Apps, credentialless
+automation and every other actor use the pull-request domain.
+`test/pr-reachable-secrets.test.ts` pins the full grants each pull-request
+shape reaches.
+
+The shared volumes follow the domain too. `cacheSourceSteps` mounts
+`woodpecker-source-main` for trusted builds and `woodpecker-source-pr`
+otherwise; only the pinned checkout image writes either. `formatCacheScope`
+gives verify `woodpecker-format-main` on the default branch,
+`woodpecker-format-pr` in the pull-request domain, and no formatter volume for
+a trusted proposal: `ci-pod-guard` admits the main volume only for
+default-branch verify, and the PR volume is written by Renovate's code.
 
 ### Experimental workspace reuse
 

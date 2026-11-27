@@ -26,7 +26,12 @@ import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "#test-fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
-import { TEST_IDENTITY, TEST_IMAGES, testPipelineSteps } from "#test-identity";
+import {
+  OWNER_AUTHORIZATION,
+  TEST_IDENTITY,
+  TEST_IMAGES,
+  testPipelineSteps,
+} from "#test-identity";
 
 const REQUEST = "8f6d3a2e-4c1b-4e7a-9f0d-2b5c6d7e8f90";
 const manual = PipelineSchema.parse({
@@ -111,7 +116,7 @@ describe("extended verification request", () => {
           variables: { ...manual.variables, CI_BENCHMARK_PROFILE: "verify" },
         },
         "main",
-        true,
+        OWNER_AUTHORIZATION,
       ),
     ).toThrow("exclusive");
     expect(() =>
@@ -230,13 +235,18 @@ describe("extended verification step", () => {
   });
 
   test("takes the extended scratch profile and shared mise installs under their flags", () => {
-    const [plain] = performanceSteps(steps, DISABLED_PERFORMANCE, true, false);
+    const [plain] = performanceSteps(
+      steps,
+      DISABLED_PERFORMANCE,
+      "main",
+      false,
+    );
     expect(plain?.ramScratch).toBeUndefined();
     expect(plain?.resources).toEqual(TURBO_VERIFY_TIER);
     const [tuned] = performanceSteps(
       steps,
       { ...DISABLED_PERFORMANCE, scratch: true, miseInstalls: true },
-      true,
+      "main",
       false,
     );
     const profile = RAM_SCRATCH_PROFILES["verify-extended"];

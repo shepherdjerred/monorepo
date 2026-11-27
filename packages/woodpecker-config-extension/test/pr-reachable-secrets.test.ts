@@ -176,31 +176,72 @@ const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
  * - OpenTofu validation is offline and has no provider or state credentials.
  * - `GRADLE_BUILD_CACHE_READ_PASSWORD` is the Gradle cache's read-only user.
  *
+ * Pinned as full `secret/key -> env` grants, not environment names, so a
+ * release key mapped onto an allowed name such as `TURBO_TOKEN` fails here.
  * This is the set for every pull request outside the owner's own.
  */
-const PR_REACHABLE_SECRETS = [
-  "GITHUB_DOWNLOAD_TOKEN",
-  "GRADLE_BUILD_CACHE_READ_PASSWORD",
-  "SCCACHE_WEBDAV_PASSWORD",
-  "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
-  "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
-  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
-  "TURBO_TOKEN",
+/** One Secret key mounted under one environment name: `[secret, key, env]`. */
+type Grant = readonly [secret: string, key: string, env: string];
+const GITHUB = "ci-github-credentials";
+const GRADLE = "ci-gradle-build-cache-credentials";
+const SEAWEEDFS = "ci-seaweedfs-credentials";
+const TURBO = "ci-turbo-cache-credentials";
+
+const PR_REACHABLE_GRANTS: readonly Grant[] = [
+  [GITHUB, "GITHUB_DOWNLOAD_TOKEN", "GITHUB_DOWNLOAD_TOKEN"],
+  [
+    GRADLE,
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+  ],
+  [GRADLE, "GRADLE_BUILD_CACHE_READ_PASSWORD", "SCCACHE_WEBDAV_PASSWORD"],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  ],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  ],
+  [
+    TURBO,
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+  ],
+  [TURBO, "TURBO_TOKEN", "TURBO_TOKEN"],
 ];
 
 /**
- * What the owner's own pull requests reach: the same set, with the trusted
- * cache's write identity in place of the read-only one. Nothing that
+ * What the owner's own pull requests reach: the same grants, with the
+ * trusted cache's write identity in place of the read-only one. Nothing that
  * publishes, deploys or mutates infrastructure is added.
  */
-const OWNER_PR_REACHABLE_SECRETS = [
-  "GITHUB_DOWNLOAD_TOKEN",
-  "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
-  "SCCACHE_WEBDAV_PASSWORD",
-  "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
-  "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
-  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
-  "TURBO_TOKEN",
+const OWNER_PR_REACHABLE_GRANTS: readonly Grant[] = [
+  [GITHUB, "GITHUB_DOWNLOAD_TOKEN", "GITHUB_DOWNLOAD_TOKEN"],
+  [
+    GRADLE,
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+  ],
+  [GRADLE, "GRADLE_BUILD_CACHE_WRITE_PASSWORD", "SCCACHE_WEBDAV_PASSWORD"],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  ],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  ],
+  [
+    TURBO,
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+  ],
+  [TURBO, "TURBO_TOKEN", "TURBO_TOKEN"],
 ];
 
 /**
@@ -235,6 +276,17 @@ const grantKeys = (steps: ReturnType<typeof allSteps>) =>
 
 const grantEnvs = (steps: ReturnType<typeof allSteps>) =>
   new Set(steps.flatMap((step) => (step.secrets ?? []).map((g) => g.env)));
+
+/** Grants as sorted, comparable rows; the same shape for both sides. */
+const rows = (list: readonly Grant[]) =>
+  [...new Set(list.map((grant) => grant.join(" ")))].sort();
+
+const grants = (steps: ReturnType<typeof allSteps>) =>
+  rows(
+    steps.flatMap((step) =>
+      (step.secrets ?? []).map((g): Grant => [g.secret, g.key, g.env]),
+    ),
+  );
 
 /**
  * Exactly the steps allowed to write a published site or release archive.
@@ -294,15 +346,17 @@ describe("what a pull request can reach", () => {
   test.each(ISOLATED_PULL_REQUESTS)(
     "a pull request from $shape reaches exactly the reviewed set and no trusted cache credential",
     ({ pipeline, credentialless, admitted }) => {
-      expect(authorizePipeline(pipeline).allowed).toBe(admitted);
+      const authorization = authorizePipeline(pipeline);
+      expect(authorization.allowed).toBe(admitted);
       const trustDomain = cacheTrustDomain({
         proposal: true,
         credentialless,
+        authorization,
         pipeline,
       });
       expect(trustDomain).toBe("pull-request");
       const steps = pullRequestAgainstMain(allSteps(), trustDomain);
-      expect([...grantEnvs(steps)].sort()).toEqual(PR_REACHABLE_SECRETS);
+      expect(grants(steps)).toEqual(rows(PR_REACHABLE_GRANTS));
       const keys = grantKeys(steps);
       for (const key of TRUSTED_CACHE_KEYS)
         expect(keys.has(key), `${key} must not reach this PR`).toBe(false);
@@ -323,11 +377,12 @@ describe("what a pull request can reach", () => {
       const trustDomain = cacheTrustDomain({
         proposal: true,
         credentialless: false,
+        authorization: authorizePipeline(pipeline),
         pipeline,
       });
       expect(trustDomain).toBe("trusted");
       const steps = pullRequestAgainstMain(allSteps(), trustDomain);
-      expect([...grantEnvs(steps)].sort()).toEqual(OWNER_PR_REACHABLE_SECRETS);
+      expect(grants(steps)).toEqual(rows(OWNER_PR_REACHABLE_GRANTS));
       const keys = grantKeys(steps);
       for (const key of TRUSTED_CACHE_KEYS)
         expect(keys.has(key), key).toBe(true);

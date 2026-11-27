@@ -525,23 +525,22 @@ describe("signed workflow routing", () => {
 });
 
 describe("signed cache trust domain", () => {
-  const trustedCache = {
-    team: "monorepo",
-    user: "ci-main",
-    keys: [
-      "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
-      "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
-    ],
-  };
-  const pullRequestCache = {
+  const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const TRUSTED_KEYS = [
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+  ];
+  const PULL_REQUEST_KEYS = [
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
+  ];
+  const trusted = { team: "monorepo", user: "ci-main", keys: TRUSTED_KEYS };
+  const isolated = {
     team: "monorepo-pull-request",
     user: "ci-pull-request",
-    keys: [
-      "GRADLE_BUILD_CACHE_READ_PASSWORD",
-      "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
-    ],
+    keys: PULL_REQUEST_KEYS,
   };
-  const VerifyWorkflowSchema = z.object({
+  const WorkflowSchema = z.object({
     steps: z.array(
       z.object({
         environment: z.record(z.string(), z.string()).default({}),
@@ -554,42 +553,185 @@ describe("signed cache trust domain", () => {
     ),
   });
 
+  /** What the emitted workflow that signs Turbo entries actually holds. */
+  function cacheIdentity(configs: { name: string; data: string }[]) {
+    const config = configs.find((entry) => entry.data.includes("TURBO_TEAM"));
+    if (config === undefined) throw new Error("No remote-cache workflow");
+    const workflow = WorkflowSchema.parse(parse(config.data));
+    const environment: Record<string, string> = Object.fromEntries(
+      workflow.steps.flatMap((step) => Object.entries(step.environment)),
+    );
+    const keys = new Set(
+      workflow.steps.flatMap((step) =>
+        step.backend_options.kubernetes.secrets.map((grant) => grant.key),
+      ),
+    );
+    return {
+      team: environment["TURBO_TEAM"],
+      user: environment["GRADLE_BUILD_CACHE_USERNAME"],
+      sccacheUser: environment["SCCACHE_WEBDAV_USERNAME"],
+      keys: [...TRUSTED_KEYS, ...PULL_REQUEST_KEYS].filter((key) =>
+        keys.has(key),
+      ),
+      formatRoot: environment["CI_FORMAT_CACHE_ROOT"],
+      formatClaims: config.data.match(/woodpecker-format-[a-z]+/gu) ?? [],
+      sourceClaims: [
+        ...new Set(config.data.match(/woodpecker-source-(?:main|pr)/gu)),
+      ],
+    };
+  }
+
+  const owner = { author: "shepherdjerred", sender: "shepherdjerred" };
+  /**
+   * Every pipeline shape the extension signs cache credentials for, through
+   * `createApp`, so `app.ts` resolving the wrong domain fails here. Formatter
+   * results and the source cache are on, so the shared volumes are pinned too:
+   * a trusted proposal mounts no formatter volume (ci-pod-guard admits
+   * `woodpecker-format-main` only for default-branch verify) and shares main's
+   * source objects; an isolated one keeps both `-pr` volumes.
+   */
   test.each([
-    { login: "shepherdjerred", cache: trustedCache },
-    { login: "derrej", cache: trustedCache },
-    { login: BOT, cache: pullRequestCache },
-    { login: "renovate[bot]", cache: pullRequestCache },
+    {
+      shape: "an owner PR",
+      pipeline: owner,
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "an agent-account PR",
+      pipeline: { author: "derrej", sender: "derrej" },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "the agent pushing to an owner PR",
+      pipeline: { author: "shepherdjerred", sender: "derrej" },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "an owner PR marked ready for review",
+      pipeline: {
+        ...owner,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "Renovate rebasing an owner PR",
+      pipeline: { author: "shepherdjerred", sender: "renovate[bot]" },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "an approved Renovate PR",
+      pipeline: { author: "renovate[bot]", sender: "renovate[bot]" },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "an owner App PR",
+      pipeline: { author: BOT, sender: BOT },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "a push to main by the release App",
+      pipeline: {
+        event: "push",
+        ref: "refs/heads/main",
+        refspec: "",
+        author: "long-summer-intern[bot]",
+        sender: "long-summer-intern[bot]",
+      },
+      cache: trusted,
+      format: "main",
+      source: "woodpecker-source-main",
+    },
   ])(
-    "a same-repository PR by $login verifies in the $cache.team cache",
-    async ({ login, cache }) => {
+    "$shape verifies in the $cache.team cache",
+    async ({ pipeline, cache, format, source }) => {
       // Approved, so Renovate receives its full reviewed graph.
-      const { app } = harness(true);
-      const response = await app.request(
-        await request({ author: login, sender: login, changed_files: [] }),
-      );
-      const result = ConfigResponseSchema.parse(await response.json());
-      const workflow = VerifyWorkflowSchema.parse(
-        parse(
-          result.configs.find(
-            (entry) => entry.name === ".woodpecker/verify.yaml",
-          )?.data ?? "",
-        ),
-      );
-      const verify = workflow.steps.find(
-        (step) => step.environment["TURBO_TEAM"] !== undefined,
-      );
-      expect(verify?.environment).toMatchObject({
-        TURBO_TEAM: cache.team,
-        GRADLE_BUILD_CACHE_USERNAME: cache.user,
-        SCCACHE_WEBDAV_USERNAME: cache.user,
+      const { app } = harness(true, gateImage, true, {
+        performance: { formatting: true },
       });
-      const keys = new Set(
-        workflow.steps.flatMap((step) =>
-          step.backend_options.kubernetes.secrets.map((grant) => grant.key),
-        ),
+      const response = await app.request(
+        await request({ ...pipeline, changed_files: [] }),
       );
-      for (const key of [...trustedCache.keys, ...pullRequestCache.keys])
-        expect(keys.has(key), key).toBe(cache.keys.includes(key));
+      expect(response.status).toBe(200);
+      const identity = cacheIdentity(
+        ConfigResponseSchema.parse(await response.json()).configs,
+      );
+      expect(identity).toEqual({
+        team: cache.team,
+        user: cache.user,
+        sccacheUser: cache.user,
+        keys: cache.keys,
+        formatRoot:
+          format === undefined
+            ? undefined
+            : `/woodpecker/format-cache/${format}`,
+        formatClaims:
+          format === undefined ? [] : [`woodpecker-format-${format}`],
+        sourceClaims: [source],
+      });
+    },
+  );
+
+  test.each([
+    {
+      author: "shepherdjerred",
+      cache: trusted,
+      source: "woodpecker-source-main",
+    },
+    {
+      author: "long-summer-intern[bot]",
+      cache: isolated,
+      source: "woodpecker-source-pr",
+    },
+  ])(
+    "a canary benchmark started by $author uses the $cache.team cache",
+    async ({ author, cache, source }) => {
+      const { app } = harness(false, gateImage, true, { performance: {} });
+      const response = await app.request(
+        await request({
+          event: "manual",
+          branch: "ci-canary/cache-trust",
+          ref: "refs/heads/ci-canary/cache-trust",
+          refspec: "",
+          author,
+          sender: "",
+          variables: {
+            CI_BENCHMARK_PROFILE: "verify",
+            CI_BENCHMARK_VARIANT: "baseline",
+            CI_BENCHMARK_CACHE: "warm",
+            CI_BENCHMARK_SOURCE: fixture.pipeline.commit,
+            CI_BENCHMARK_FEATURE: "gradle",
+          },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(
+        cacheIdentity(
+          ConfigResponseSchema.parse(await response.json()).configs,
+        ),
+      ).toMatchObject({
+        team: cache.team,
+        user: cache.user,
+        keys: cache.keys,
+        formatClaims: [],
+        sourceClaims: [source],
+      });
     },
   );
 });

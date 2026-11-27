@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Pipeline } from "#src/schemas.ts";
+import type { AuthorizationResult } from "#src/authorization.ts";
 import type { CiImages } from "#src/images.ts";
 import { buildPipelineSteps, verifyCommands } from "./steps.ts";
 import { playwrightSteps } from "./lanes/playwright.ts";
@@ -14,6 +15,7 @@ import {
 import { grantSccacheWebdav, withoutSccacheWebdav } from "./sccache-webdav.ts";
 import {
   cacheTrustDomain,
+  formatCacheScope,
   type CacheTrustDomain,
 } from "./cache-trust-domain.ts";
 import { RAM_SCRATCH } from "./ram-scratch.ts";
@@ -46,7 +48,7 @@ export type BenchmarkRequest = z.infer<typeof Request> & {
 export function benchmarkRequest(
   pipeline: Pipeline,
   defaultBranch: string,
-  owner: boolean,
+  authorization: AuthorizationResult,
 ): BenchmarkRequest | undefined {
   if (
     !Object.keys(pipeline.variables).some((key) =>
@@ -54,6 +56,8 @@ export function benchmarkRequest(
     )
   )
     return;
+  const owner =
+    authorization.allowed && authorization.actorClass === "owner-controlled";
   const branchAllowed =
     pipeline.branch === defaultBranch ||
     pipeline.branch.startsWith("ci-canary/");
@@ -87,15 +91,21 @@ export function benchmarkRequest(
     (request.profile !== "verify" || pipeline.branch === defaultBranch)
   )
     throw new Error("RAM scratch requires a verify canary branch");
-  return {
-    ...request,
-    main: pipeline.branch === defaultBranch,
-    trustDomain: cacheTrustDomain({
-      proposal: pipeline.branch !== defaultBranch,
-      credentialless: false,
-      pipeline,
-    }),
-  };
+  const main = pipeline.branch === defaultBranch;
+  const trustDomain = cacheTrustDomain({
+    proposal: !main,
+    credentialless: false,
+    authorization,
+    pipeline,
+  });
+  // A trusted canary mounts no formatter results, so the candidate would
+  // measure nothing.
+  if (
+    request.feature === "formatting" &&
+    formatCacheScope({ main, trustDomain }) === "none"
+  )
+    throw new Error("A formatter-cache benchmark needs a formatter volume");
+  return { ...request, main, trustDomain };
 }
 
 export function benchmarkSteps(
@@ -157,7 +167,7 @@ export function benchmarkSteps(
   };
   const cached = cacheSourceSteps([step], {
     enabled: true,
-    main: request.main,
+    trustDomain: request.trustDomain,
     credentialless: false,
     image: trustedImage,
   }).map((candidate) => ({
@@ -174,7 +184,7 @@ export function benchmarkSteps(
   return grantSccacheWebdav(
     grantGradleBuildCache(
       signRemoteCacheSteps(
-        performanceSteps(cached, options, request.main, false),
+        performanceSteps(cached, options, formatCacheScope(request), false),
         request.trustDomain,
       ),
       request.trustDomain,

@@ -1,9 +1,13 @@
 import { describe, expect, test } from "vitest";
+import { authorizePipeline } from "#src/authorization.ts";
 import {
+  CACHE_TRUSTED_ACTORS,
   cacheTrustDomain,
+  formatCacheScope,
   type CacheTrustDomain,
 } from "#src/pipeline/cache-trust-domain.ts";
 import { PipelineSchema } from "#src/schemas.ts";
+import { OWNER_AUTHORIZATION } from "#test-identity";
 import fixture from "#test-fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 
 /**
@@ -36,7 +40,9 @@ const ACTORS: readonly {
     main: "trusted",
   },
   {
-    actor: "the owner's PR re-run by the agent account",
+    // A Woodpecker restart copies author and sender (restart.go), so a re-run
+    // keeps the original event's identities; this is a new push event.
+    actor: "the agent pushing to the owner's PR",
     author: "shepherdjerred",
     sender: "derrej",
     proposal: "trusted",
@@ -148,6 +154,21 @@ function pipeline(overrides: Record<string, unknown>) {
   return PipelineSchema.parse({ ...fixture.pipeline, ...overrides });
 }
 
+/** Resolve a pipeline the way `app.ts` does: authorize it, then decide. */
+function resolve(
+  event: { readonly proposal: boolean; readonly credentialless: boolean },
+  overrides: Record<string, unknown>,
+) {
+  const parsed = pipeline(overrides);
+  return cacheTrustDomain({
+    ...event,
+    authorization: authorizePipeline(parsed),
+    pipeline: parsed,
+  });
+}
+
+const PULL_REQUEST = { proposal: true, credentialless: false } as const;
+
 describe("cache trust domain", () => {
   test.each(
     ACTORS.flatMap((row) =>
@@ -171,44 +192,63 @@ describe("cache trust domain", () => {
       expected,
     }) => {
       expect(
-        cacheTrustDomain({
-          proposal,
-          credentialless,
-          pipeline: pipeline({ author, sender, from_fork: fromFork }),
-        }),
+        resolve(
+          { proposal, credentialless },
+          { author, sender, from_fork: fromFork },
+        ),
       ).toBe(expected);
     },
   );
 
   test("reads forge identity, never branch names, commit messages or PR text", () => {
-    const impersonation = {
-      branch: "main",
-      refspec: "shepherdjerred/feature:main",
-      message: "Authored by shepherdjerred",
-      title: "shepherdjerred: trusted change",
-      variables: { CI_ACTOR: "shepherdjerred" },
-    };
     expect(
-      cacheTrustDomain({
-        proposal: true,
-        credentialless: false,
-        pipeline: pipeline({
-          ...impersonation,
-          author: "renovate[bot]",
-          sender: "renovate[bot]",
-        }),
+      resolve(PULL_REQUEST, {
+        branch: "main",
+        refspec: "shepherdjerred/feature:main",
+        message: "Authored by shepherdjerred",
+        title: "shepherdjerred: trusted change",
+        variables: { CI_ACTOR: "shepherdjerred" },
+        author: "renovate[bot]",
+        sender: "renovate[bot]",
       }),
     ).toBe("pull-request");
     expect(
-      cacheTrustDomain({
-        proposal: true,
-        credentialless: false,
-        pipeline: pipeline({
-          refspec: "renovate/hono-4.x:main",
-          message: "chore(deps): update renovate[bot] config",
-          title: "chore(deps): renovate[bot]",
-        }),
+      resolve(PULL_REQUEST, {
+        refspec: "renovate/hono-4.x:main",
+        message: "chore(deps): update renovate[bot] config",
+        title: "chore(deps): renovate[bot]",
       }),
     ).toBe("trusted");
   });
+
+  /**
+   * Admitting an account to run CI and letting it write main's cache are
+   * separate decisions. Widening this list is a reviewed change to what can
+   * write entries main loads.
+   */
+  test("names exactly the accounts whose proposals write main's cache", () => {
+    expect(CACHE_TRUSTED_ACTORS).toEqual(["shepherdjerred", "derrej"]);
+    // An account later admitted as owner-controlled gains no cache write.
+    expect(
+      cacheTrustDomain({
+        ...PULL_REQUEST,
+        authorization: OWNER_AUTHORIZATION,
+        pipeline: pipeline({ author: "new-agent", sender: "new-agent" }),
+      }),
+    ).toBe("pull-request");
+  });
+});
+
+describe("formatter cache scope", () => {
+  test.each([
+    { main: true, trustDomain: "trusted", scope: "main" },
+    { main: false, trustDomain: "trusted", scope: "none" },
+    { main: false, trustDomain: "pull-request", scope: "pr" },
+    { main: true, trustDomain: "pull-request", scope: "pr" },
+  ] as const)(
+    "main=$main in the $trustDomain domain mounts $scope",
+    ({ main, trustDomain, scope }) => {
+      expect(formatCacheScope({ main, trustDomain })).toBe(scope);
+    },
+  );
 });

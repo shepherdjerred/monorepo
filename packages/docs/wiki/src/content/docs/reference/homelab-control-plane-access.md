@@ -41,18 +41,30 @@ command arguments.
 
 [`cacheTrustDomain`](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/cache-trust-domain.ts)
 assigns each CI build one domain from the forge-reported author, sender, and
-fork flag. [Why owner pull requests are trusted](/explanation/ci-pipeline-shape/#owner-pull-requests-share-mains-build-cache).
+fork flag. [Why owner pull requests are trusted, and the accepted risk](/explanation/ci-pipeline-shape/#owner-pull-requests-share-mains-build-cache).
 
-| Build                                                                                                                   | Domain                         |
-| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| Push or manual run on `main`                                                                                            | Trusted                        |
-| Same-repository pull request or canary benchmark; author and sender each `shepherdjerred` or `derrej`                   | Trusted                        |
-| Pull request with `renovate[bot]` as author or sender                                                                   | Pull-request                   |
-| Pull request or canary benchmark with `long-summer-intern[bot]` or `justin-principal-engineer[bot]` as author or sender | Pull-request                   |
-| Credentialless hosted automation (Renovate before exact-head approval)                                                  | Pull-request; no cache grant   |
-| Fork pull request, or any account outside the CI allowlist                                                              | Refused before any step exists |
+| Build                                                                                                                   | Domain                         | Formatter results        | Source cache             |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------ | ------------------------ |
+| Push or manual run on `main`                                                                                            | Trusted                        | `woodpecker-format-main` | `woodpecker-source-main` |
+| Same-repository pull request or canary benchmark; author and sender each `shepherdjerred` or `derrej`                   | Trusted                        | None                     | `woodpecker-source-main` |
+| Pull request with `renovate[bot]` as author or sender                                                                   | Pull-request                   | `woodpecker-format-pr`   | `woodpecker-source-pr`   |
+| Pull request or canary benchmark with `long-summer-intern[bot]` or `justin-principal-engineer[bot]` as author or sender | Pull-request                   | `woodpecker-format-pr`   | `woodpecker-source-pr`   |
+| Credentialless hosted automation (Renovate before exact-head approval)                                                  | Pull-request; no cache grant   | None                     | None                     |
+| Fork pull request, or any account outside the CI allowlist                                                              | Refused before any step exists | None                     | None                     |
 
-A manual run records no sender; its author alone decides.
+- The trusted accounts are `CACHE_TRUSTED_ACTORS`, a list separate from the CI
+  allowlist (`OWNER_CONTROLLED_ACTORS`).
+- The sender is the account that produced the event, not the pusher of the head
+  commit; Woodpecker does not report the pusher. A restart copies the original
+  author and sender.
+- A manual run records no sender; its author alone decides.
+- Every step of a trusted build that uses the remote cache holds `TURBO_TOKEN`,
+  `TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED`, and, for Gradle and `sccache`,
+  the `ci-main` write password.
+- `ci-pod-guard` admits `woodpecker-format-main` only for `verify` pods on a
+  `main` push or manual run.
+- Formatter results and the source cache mount only when their performance
+  flags are on.
 
 ## Related
 

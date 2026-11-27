@@ -241,24 +241,44 @@ pull-request domain, and only main was trusted. Main could not load a pull
 request's entries, so it rebuilt each change that its pull request had already
 built.
 
-That split guarded against a risk this repository does not have. One person
-lands work here: the owner, directly or through his agents. An owner pull
-request is code he is about to merge, so its entries are the ones main would
-write. Sharing them extends no trust that main does not already extend.
+One person lands work here: the owner, directly or through his agents. An
+owner pull request is usually code he is about to merge, so its entries are the
+ones main would write anyway.
+
+The trade has a cost, and it is accepted rather than designed away. Every step
+of an owner pull request now holds `TURBO_TOKEN`, the trusted Turbo signing key
+and the `ci-main` write password. Code that never merges can therefore write
+signed entries under hashes main computes. A later main verify or Playwright
+run would replay that result, and nothing in Git would record why. Release
+artifacts are unaffected, because only the verification lanes read these
+caches. The exposure is limited to the owner and his agent account, who
+already decide what merges to main.
 
 Renovate is the case the split exists for. Its pull requests bring third-party
 code that nobody here wrote, so they stay in the pull-request domain. So do
 forks, credentialless hosted automation, the owner's GitHub Apps and every
 other account. Those builds still read main's entries; they cannot write them.
 
+The shared volumes follow the same line. Verify's formatter results are written
+by the code under test, so a trusted pull request must not read the volume that
+Renovate writes. Cluster admission reserves main's formatter volume for main, so
+an owner pull request mounts neither and runs Prettier in full. Source objects
+are different: only the extension's pinned checkout image writes them, so owner
+pull requests share main's source cache.
+
 [`cacheTrustDomain`](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/cache-trust-domain.ts)
 decides from forge identity alone. It reads the author and sender logins and
 the fork flag that Woodpecker signs into each request. A branch name, commit
-message or pull request title cannot move a build into the trusted domain. The
-owner's canary benchmarks resolve through the same function, so the two rules
-cannot drift. The
-[CI cache access reference](/reference/homelab-control-plane-access/) lists
-which identity each build receives.
+message or pull request title cannot move a build into the trusted domain. Its
+list of trusted accounts is separate from the list allowed to run CI, so
+admitting a new bot does not also let it write main's cache.
+
+Trust follows the account that sent the event, not whoever pushed the head
+commit, because Woodpecker does not report the pusher. A restart copies the
+original event's author and sender. The owner's canary benchmarks resolve
+through the same function, so the two rules cannot drift. The
+[CI cache access reference](/reference/homelab-control-plane-access/#ci-cache-trust-domains)
+lists which identity each build receives.
 
 ## The lanes are phases, not duplicated test suites
 

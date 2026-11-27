@@ -17,7 +17,11 @@ import { changedFilesSince } from "#src/github-compare.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
 import { grantSccacheWebdav } from "#src/pipeline/sccache-webdav.ts";
-import { cacheTrustDomain } from "#src/pipeline/cache-trust-domain.ts";
+import {
+  cacheTrustDomain,
+  formatCacheScope,
+  type CacheTrustDomain,
+} from "#src/pipeline/cache-trust-domain.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
@@ -141,8 +145,15 @@ async function pipelineEmitter(
   options: AppOptions,
   pipeline: Pipeline,
   defaultBranch: string,
-  credentialless: boolean,
+  access: {
+    readonly credentialless: boolean;
+    readonly trustDomain: CacheTrustDomain;
+  },
 ) {
+  const { credentialless, trustDomain } = access;
+  const main =
+    ["push", "manual"].includes(pipeline.event) &&
+    pipeline.branch === defaultBranch;
   const context = {
     event: isPrVerificationEvent(pipeline) ? "pull_request" : pipeline.event,
     branch: pipeline.branch,
@@ -179,14 +190,11 @@ async function pipelineEmitter(
           cacheSourceSteps(steps, {
             enabled,
             credentialless,
-            main:
-              ["push", "manual"].includes(pipeline.event) &&
-              pipeline.branch === defaultBranch,
+            trustDomain,
             image: options.trustedGateImage,
           }),
           performance,
-          ["push", "manual"].includes(pipeline.event) &&
-            pipeline.branch === defaultBranch,
+          formatCacheScope({ main, trustDomain }),
           credentialless,
         ),
         context,
@@ -319,7 +327,11 @@ async function extendedVerifyResponse(
           await options.changedBase(repo.id, repo.default_branch),
         ),
     (selected) =>
-      pipelineEmitter(options, selected, repo.default_branch, false),
+      // The request parser admits only default-branch work, which is trusted.
+      pipelineEmitter(options, selected, repo.default_branch, {
+        credentialless: false,
+        trustDomain: "trusted",
+      }),
   );
   const images = await resolveCiImages(target.commit, options.imageFetcher);
   return context.json({
@@ -348,7 +360,7 @@ export function createApp(options: AppOptions): Hono {
     const { repo, pipeline, authorization } = request;
     const benchmark = await benchmarkResponse(context, options, pipeline, {
       defaultBranch: repo.default_branch,
-      owner: authorization.actorClass === "owner-controlled",
+      authorization,
     });
     if (benchmark !== undefined) return benchmark;
     const extended = await extendedVerifyResponse(context, options, {
@@ -393,6 +405,15 @@ export function createApp(options: AppOptions): Hono {
       pipeline,
       options.automationHeadApproved,
     );
+    const access = {
+      credentialless: credentiallessAutomation,
+      trustDomain: cacheTrustDomain({
+        proposal: prVerification,
+        credentialless: credentiallessAutomation,
+        authorization,
+        pipeline,
+      }),
+    };
     if (maintenance.kind !== undefined) {
       let verified: Promise<string | undefined> | undefined;
       const verifiedMain = () =>
@@ -404,12 +425,7 @@ export function createApp(options: AppOptions): Hono {
           ? pipeline
           : maintenanceSourcePipeline(pipeline, await verifiedMain()),
         (selected) =>
-          pipelineEmitter(
-            options,
-            selected,
-            repo.default_branch,
-            credentiallessAutomation,
-          ),
+          pipelineEmitter(options, selected, repo.default_branch, access),
       );
       const images = await resolveCiImages(target.commit, options.imageFetcher);
       return context.json({
@@ -438,7 +454,7 @@ export function createApp(options: AppOptions): Hono {
       options,
       pipeline,
       repo.default_branch,
-      credentiallessAutomation,
+      access,
     );
 
     const limited = limitedPrSteps({
@@ -487,11 +503,7 @@ export function createApp(options: AppOptions): Hono {
       ...step,
       environment: { ...step.environment, CI_REPO_ID: String(repo.id) },
     }));
-    const trustDomain = cacheTrustDomain({
-      proposal: prVerification,
-      credentialless: credentiallessAutomation,
-      pipeline,
-    });
+    const { trustDomain } = access;
     const selected = groupSmallChecks(
       grantSccacheWebdav(
         grantGradleBuildCache(
