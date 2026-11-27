@@ -1,7 +1,7 @@
 import { useHref } from "react-router";
 import { Panel } from "@scout-for-lol/design-system/components/surfaces/panel";
-import { SetupRow } from "@scout-for-lol/design-system/domain/rows/setup-row";
 import { GameSentenceRow } from "@scout-for-lol/design-system/domain/rows/game-sentence-row";
+import { BuildGroup } from "./match-build-list.tsx";
 import { builtItems, builtRunes, builtSpells } from "./match-build.ts";
 import {
   displayNameOf,
@@ -70,16 +70,21 @@ export function MatchBuild(props: {
         <h2 id="match-build-title" className="font-display text-2xl font-bold">
           Build
         </h2>
-        <div className="mt-3 grid gap-4">
+        <div className="mt-4 grid gap-6">
           {items.items.length === 0 ? null : (
-            <SetupRow
+            <BuildGroup
               title="Items"
               items={items.items}
-              sequence={items.sequence}
+              ordered={items.sequence}
             />
           )}
-          {runes.length === 0 ? null : <SetupRow title="Runes" items={runes} />}
-          <SetupRow title="Summoner spells" items={builtSpells(props.viewer)} />
+          {runes.length === 0 ? null : (
+            <BuildGroup title="Runes" items={runes} />
+          )}
+          <BuildGroup
+            title="Summoner spells"
+            items={builtSpells(props.viewer)}
+          />
         </div>
       </section>
     </Panel>

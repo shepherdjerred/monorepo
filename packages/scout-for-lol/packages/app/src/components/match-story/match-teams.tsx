@@ -18,10 +18,7 @@ import { MatchEveryone } from "./match-everyone.tsx";
 
 type Team = DetailMatch["teams"][number];
 
-function ParticipantName(props: {
-  participant: DetailParticipant;
-  isViewer: boolean;
-}) {
+function ParticipantName(props: { participant: DetailParticipant }) {
   const { participant } = props;
   const alias = participant.scoutAliases.at(0);
   const name =
@@ -38,7 +35,11 @@ function ParticipantName(props: {
           <b className="block truncate font-display text-lg">{name}</b>
         </Link>
       )}
-      {alias === undefined || props.isViewer ? null : (
+      {participant.isViewer ? (
+        <span className="shrink-0 rounded-full bg-[var(--scout-brand-soft)] px-2 py-0.5 text-sm font-semibold text-scout-brand">
+          You
+        </span>
+      ) : alias === undefined || participant.selectedPlayer ? null : (
         <span className="shrink-0 rounded-full bg-[var(--scout-surface-inset)] px-2 py-0.5 text-sm font-semibold">
           Friend
         </span>
@@ -63,10 +64,7 @@ function TeamRow(props: { participant: DetailParticipant; maxDamage: number }) {
         className="row-span-2 self-start sm:row-span-1"
       />
       <span className="grid min-w-0 leading-snug">
-        <ParticipantName
-          participant={participant}
-          isViewer={participant.selectedPlayer}
-        />
+        <ParticipantName participant={participant} />
         <span className="truncate text-scout-subtle">
           {championLine(participant)}
         </span>

@@ -71,7 +71,9 @@ export function MatchPage(props: {
       : story.participants.find(
           (participant) => participant.participantId === viewer.participantId,
         );
-  const friends = match.remake ? [] : friendsOf(match, viewer);
+  const friends = match.remake
+    ? []
+    : friendsOf(match, viewer).filter((friend) => !friend.isViewer);
   // The left column holds the lane and the timeline. When neither exists the
   // build and friends take the width instead of leaving it empty.
   const storyPending =

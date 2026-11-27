@@ -60,10 +60,31 @@ describe("match model", () => {
     expect(
       heroText({ match, viewer, queue: "Ranked Solo", now: MATCH_FIXTURE_NOW }),
     ).toEqual({
-      title: "Northstar won as Ahri",
+      title: "You won as Ahri",
       lead: "9/2/11 in a 28-minute game, with RiverQuartz and TidalWren.",
       sub: "Up 21 LP to Emerald II, 64 LP. Ranked Solo, 2 hours ago.",
     });
+  });
+
+  test("the page is about someone else when the signed-in account is not the player", () => {
+    const nobody = setup({ signedIn: "nobody" });
+    expect(
+      heroText({
+        match: nobody.match,
+        viewer: nobody.viewer,
+        queue: "Ranked Solo",
+        now: MATCH_FIXTURE_NOW,
+      }).title,
+    ).toBe("Northstar won as Ahri");
+    const teammate = setup({ signedIn: "teammate" });
+    expect(
+      heroText({
+        match: teammate.match,
+        viewer: teammate.viewer,
+        queue: "Ranked Solo",
+        now: MATCH_FIXTURE_NOW,
+      }).lead,
+    ).toBe("9/2/11 in a 28-minute game, with TidalWren and you.");
   });
 
   test("hero text leaves the LP out when no snapshot was captured", () => {
@@ -82,7 +103,7 @@ describe("match model", () => {
       queue: "Ranked Solo",
       now: MATCH_FIXTURE_NOW,
     });
-    expect(text.title).toBe("Northstar played Ahri");
+    expect(text.title).toBe("You played Ahri");
     expect(text.sub).toBe("Remade, no result. Ranked Solo, 2 hours ago.");
   });
 

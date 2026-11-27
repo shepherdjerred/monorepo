@@ -2,7 +2,7 @@ import { Panel } from "@scout-for-lol/design-system/components/surfaces/panel";
 import { ChampionFace } from "@scout-for-lol/design-system/domain/profile/champion-face";
 import {
   championLabel,
-  displayNameOf,
+  selfName,
   laneDetail,
   laneLead,
   riotIdOf,
@@ -52,7 +52,7 @@ export function MatchLane(props: {
         <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
           <Side
             participant={viewer}
-            name={displayNameOf(viewer)}
+            name={selfName(viewer)}
             win={lane.goldDelta > 0}
           />
           <span className="rounded-full bg-[var(--scout-surface-inset)] px-3 py-0.5 text-scout-subtle">

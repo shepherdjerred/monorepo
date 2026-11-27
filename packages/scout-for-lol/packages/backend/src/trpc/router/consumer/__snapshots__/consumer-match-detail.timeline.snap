@@ -23,6 +23,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Mossback",
               "tagLine": "NA1"
@@ -90,6 +91,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Velour",
               "tagLine": "NA1"
@@ -157,6 +159,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": true,
+            "isViewer": false,
             "riotId": {
               "gameName": "Northstar",
               "tagLine": "NA1"
@@ -247,6 +250,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "RiverQuartz",
               "tagLine": "NA1"
@@ -320,6 +324,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "TidalWren",
               "tagLine": "NA1"
@@ -399,6 +404,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Tallowick",
               "tagLine": "NA1"
@@ -466,6 +472,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Ninefold",
               "tagLine": "NA1"
@@ -533,6 +540,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Windlass",
               "tagLine": "NA1"
@@ -600,6 +608,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Petrichor",
               "tagLine": "NA1"
@@ -667,6 +676,7 @@
             "placement": null,
             "augments": [],
             "selectedPlayer": false,
+            "isViewer": false,
             "riotId": {
               "gameName": "Anchorage",
               "tagLine": "NA1"

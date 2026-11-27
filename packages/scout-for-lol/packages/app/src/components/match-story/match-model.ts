@@ -113,7 +113,10 @@ export function compactNumber(value: number): string {
     : `${(value / 1_000_000).toFixed(1)}M`;
 }
 
-/** Tracked teammates of the viewer, in roster order. */
+/**
+ * Tracked teammates of the player the page is about, in roster order. The
+ * signed-in viewer is among them when the page is about someone else.
+ */
 export function friendsOf(
   match: DetailMatch,
   viewer: DetailParticipant,
@@ -124,6 +127,11 @@ export function friendsOf(
       participant.teamId === viewer.teamId &&
       participant.scoutAliases.length > 0,
   );
+}
+
+/** "You" for the signed-in viewer, the Scout alias or Riot ID for anyone else. */
+export function selfName(participant: DetailParticipant): string {
+  return participant.isViewer ? "You" : displayNameOf(participant);
 }
 
 /** "A", "A and B", "A, B and C". */
@@ -199,16 +207,21 @@ export function heroText(options: {
   now: number;
 }): HeroText {
   const { match, viewer } = options;
-  const name = displayNameOf(viewer);
+  const name = selfName(viewer);
   const champion = championLabel(viewer.championName);
   const result = resultOf(match, viewer);
   const title =
     result === "remake"
       ? `${name} played ${champion}`
       : `${name} ${result === "win" ? "won" : "lost"} as ${champion}`;
-  const friends = friendsOf(match, viewer).map((friend) =>
-    displayNameOf(friend),
-  );
+  // The signed-in viewer on the page's player's team reads as "you", last.
+  const companions = friendsOf(match, viewer);
+  const friends = [
+    ...companions
+      .filter((friend) => !friend.isViewer)
+      .map((friend) => displayNameOf(friend)),
+    ...(companions.some((friend) => friend.isViewer) ? ["you"] : []),
+  ];
   const minutes = durationMinutes(match.gameDurationSeconds).toString();
   const lead = `${kdaText(viewer)} in a ${minutes}-minute game${
     friends.length === 0 ? "" : `, with ${joinNames(friends)}`

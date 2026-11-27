@@ -33,7 +33,7 @@ describe("a match with a timeline", () => {
   const html = render({}, done({}));
 
   test("leads with the result, score, friends and LP change", () => {
-    expect(html).toContain("Northstar won as Ahri");
+    expect(html).toContain("You won as Ahri");
     expect(html).toContain(
       "9/2/11 in a 28-minute game, with RiverQuartz and TidalWren.",
     );
@@ -66,7 +66,8 @@ describe("a match with a timeline", () => {
   });
 
   test("shows the build in purchase order and the rune page", () => {
-    expect(html).toContain("Malignance");
+    expect(html).toContain("Malignance first");
+    expect(html).toContain("then Shadowflame");
     expect(html).toContain("Electrocute");
     expect(html).toContain("Sorcery second");
     expect(html).toContain("Flash");
@@ -81,7 +82,7 @@ describe("a match with a timeline", () => {
 describe("while the story loads", () => {
   test("paints the page from the detail with a placeholder below", () => {
     const html = render({}, { status: "loading" });
-    expect(html).toContain("Northstar won as Ahri");
+    expect(html).toContain("You won as Ahri");
     expect(html).toContain("Both teams");
     expect(html).toContain("Loading the game");
     expect(html).not.toContain("scout-gold-chart");
@@ -100,7 +101,7 @@ describe("a match with no timeline", () => {
   const html = render(options, done(options));
 
   test("shows only what exists: no chart, no lane, no moments", () => {
-    expect(html).toContain("Northstar won as Ahri");
+    expect(html).toContain("You won as Ahri");
     expect(html).not.toContain("scout-gold-chart");
     expect(html).not.toContain("How it went");
     expect(html).not.toContain("Moments");
@@ -125,7 +126,7 @@ describe("a remake", () => {
   const html = render(options, done(options));
 
   test("says it was remade and states no result or LP", () => {
-    expect(html).toContain("Northstar played Ahri");
+    expect(html).toContain("You played Ahri");
     expect(html).toContain("Remade, no result.");
     expect(html).not.toContain(" won as ");
     expect(html).not.toContain(">Won<");
@@ -142,8 +143,33 @@ describe("a viewer on the other team", () => {
   test("reads the lane and the result from their side", () => {
     const options = { viewerOnRed: true } as const;
     const html = render(options, done(options));
-    expect(html).toContain("Northstar lost as Ahri");
+    expect(html).toContain("You lost as Ahri");
     expect(html).toContain("Ahead of Yasuo at 15 minutes, by 640 gold.");
     expect(html).toContain("Red ahead");
+  });
+});
+
+describe("who the signed-in account is", () => {
+  test("puts the You chip on the viewer's own row", () => {
+    const html = render({}, done({}));
+    expect(html).toContain(">You</span>");
+    expect(html).toContain(
+      '<span class="truncate text-scout-subtle">You</span>',
+    );
+  });
+
+  test("names the player and shows no You chip when the viewer is not in the game", () => {
+    const options = { signedIn: "nobody" } as const;
+    const html = render(options, done(options));
+    expect(html).toContain("Northstar won as Ahri");
+    expect(html).not.toContain(">You</span>");
+  });
+
+  test("puts the chip on the viewer's row when the page is about a teammate", () => {
+    const options = { signedIn: "teammate" } as const;
+    const html = render(options, done(options));
+    expect(html).toContain("Northstar won as Ahri");
+    expect(html).toContain("with TidalWren and you.");
+    expect(html).toContain(">You</span>");
   });
 });

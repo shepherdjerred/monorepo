@@ -177,6 +177,11 @@ export type MatchFixtureOptions = {
   remake?: boolean;
   /** The viewer's ranked game left a rank snapshot. */
   lp?: "gain" | "none" | "unknown";
+  /**
+   * Who the signed-in account is: the player the page is about (default), a
+   * tracked teammate of theirs, or nobody in the game.
+   */
+  signedIn?: "selected" | "teammate" | "nobody";
   /** Seat the viewer on the red team, against the fixture's usual blue. */
   viewerOnRed?: boolean;
 };
@@ -202,6 +207,15 @@ function loadoutFor(seat: Seat): MatchLoadout {
       statShardIds: { offense: 5008, flex: 5008, defense: 5002 },
     },
   };
+}
+
+/** The teammate seat the signed-in account takes when it is not the subject. */
+const TEAMMATE_SEAT = 4;
+
+function isSignedIn(seat: Seat, options: MatchFixtureOptions): boolean {
+  const who = options.signedIn ?? "selected";
+  if (who === "nobody") return false;
+  return who === "selected" ? seat.viewer === true : seat.id === TEAMMATE_SEAT;
 }
 
 function participantFor(seat: Seat, options: MatchFixtureOptions) {
@@ -237,6 +251,7 @@ function participantFor(seat: Seat, options: MatchFixtureOptions) {
     placement: null,
     augments: [],
     selectedPlayer: seat.viewer === true,
+    isViewer: isSignedIn(seat, options),
     riotId: { gameName: seat.name, tagLine: seat.tag },
     championId: seat.championId,
     championName: seat.champion,
@@ -456,6 +471,7 @@ export function matchStoryFixture(
       championName: seat.champion,
       displayName: seat.name,
       selectedPlayer: seat.viewer === true,
+      isViewer: isSignedIn(seat, options),
       finalItemIds: [...seat.items, 3020, 1052],
       buildOrder: timeline
         ? seat.items.map((itemId, index) => ({
