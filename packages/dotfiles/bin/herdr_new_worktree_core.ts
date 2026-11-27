@@ -1,5 +1,5 @@
 // The work behind the Herdr new-worktree dialog, run detached after the
-// dialog closes: name the branch, space and tab from the first message, create
+// dialog closes: name the branch and space from the first message, create
 // the worktree on the space's machine, and open a space whose agent starts
 // with that message. The dialog only gathers choices; this owns the slow parts.
 
@@ -36,7 +36,7 @@ export type Request = {
   readonly argv: readonly string[] | null;
   /** A caller's own first-tab name instead of the generated title. */
   readonly tab: string | null;
-  /** Whether `message` is also sent to the started agent (`false` only names the branch and tab). */
+  /** Whether `message` is also sent to the started agent (`false` only names the branch and space). */
   readonly sendMessage: boolean;
 };
 
@@ -403,15 +403,13 @@ export async function createWorktree(
   );
   await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
-  const tab = request.tab ?? named.title;
-  // Nesting follows the checkout folder. The generated title names the space
-  // and, unless the caller named it, the first tab.
+  // Nesting follows the checkout folder. Omitting tab uses Herdr's default.
   const terminal = await runtime.newSpace({
     folder: path,
     machine: machine ?? "",
     focus: false,
     ...(named.title === null ? {} : { name: named.title }),
-    ...(tab === null ? {} : { tab }),
+    ...(request.tab === null ? {} : { tab: request.tab }),
     ...(argv === null ? {} : { argv }),
     ...(task === null ? {} : { task }),
   });

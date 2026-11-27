@@ -64,6 +64,20 @@ const PUT_LIFECYCLE = [
 ];
 
 /**
+ * The `input` of a provisioner-bearing `terraform_data`, also as its
+ * `triggers_replace`. A provisioner runs only when the resource is created or
+ * replaced, and a changed `input` is an in-place update that never re-runs it,
+ * so every value the script depends on must also force replacement. Every
+ * provisioner script here is idempotent (a bucket lifecycle PUT or an
+ * overwriting `aws s3 cp`), so a replacement is safe to repeat.
+ */
+function rerunOnChange<const Values extends Record<string, unknown>>(
+  values: Values,
+): { input: Values; triggersReplace: Values } {
+  return { input: values, triggersReplace: values };
+}
+
+/**
  * A provisioner script: each line ended by a newline. The text is an OpenTofu
  * template, so `${self.input.…}` is resolved by OpenTofu, not here.
  */
@@ -237,12 +251,12 @@ export class SeaweedfsStack extends HomelabStack {
       protected: true,
     });
     new DataResource(this, "scout_desktop_seed", {
-      input: {
+      ...rerunOnChange({
         bucket: scoutDesktop.id,
         endpoint_url: STATE_ENDPOINT,
         index_md5: '${filemd5("${path.module}/scout-desktop/index.html")}',
         not_found_md5: '${filemd5("${path.module}/scout-desktop/404.html")}',
-      },
+      }),
       provisioners: [
         this.deploy([
           'aws s3 cp "${path.module}/scout-desktop/index.html" "s3://${self.input.bucket}/index.html" \\',
@@ -312,12 +326,12 @@ export class SeaweedfsStack extends HomelabStack {
     // (keeps the static-site root blackbox probe green). Re-uploads whenever
     // either file's content changes via the filemd5 values in `input`.
     new DataResource(this, "public_sjer_red_seed", {
-      input: {
+      ...rerunOnChange({
         bucket: publicSjerRed.id,
         endpoint_url: STATE_ENDPOINT,
         index_md5: '${filemd5("${path.module}/public/index.html")}',
         not_found_md5: '${filemd5("${path.module}/public/404.html")}',
-      },
+      }),
       provisioners: [
         this.deploy([
           'aws s3 cp "${path.module}/public/index.html" "s3://${self.input.bucket}/index.html" \\',
@@ -348,11 +362,11 @@ export class SeaweedfsStack extends HomelabStack {
 
     // Seed the bucket root with a landing page so `GET /` returns 200.
     new DataResource(this, "private_sjer_red_seed", {
-      input: {
+      ...rerunOnChange({
         bucket: privateSjerRed.id,
         endpoint_url: STATE_ENDPOINT,
         index_md5: '${filemd5("${path.module}/private/index.html")}',
-      },
+      }),
       provisioners: [
         this.deploy([
           'aws s3 cp "${path.module}/private/index.html" "s3://${self.input.bucket}/index.html" \\',
@@ -474,13 +488,13 @@ export class SeaweedfsStack extends HomelabStack {
       forEach: site,
       // Ensure the bucket exists before configuring its lifecycle.
       dependsOn: this.bucketsNamed(Object.keys(immutablePrefixes)),
-      input: {
+      ...rerunOnChange({
         bucket: site.key,
         endpoint_url: STATE_ENDPOINT,
         // Re-runs the provisioner whenever the prefix set or TTL changes.
         rules:
           '${jsonencode({ Rules = [for idx, prefix in each.value : { ID = "expire-old-hashed-${idx}", Status = "Enabled", Filter = { Prefix = prefix }, Expiration = { Days = 90 } }] })}',
-      },
+      }),
       provisioners: [
         this.deploy([
           ...PUT_LIFECYCLE,
@@ -553,11 +567,11 @@ export class SeaweedfsStack extends HomelabStack {
     const [only, ...more] = expiry.rules;
     if (more.length === 0) {
       new DataResource(this, id, {
-        input: {
+        ...rerunOnChange({
           bucket: expiry.bucket.id,
           expire_days: only.days,
           endpoint_url: STATE_ENDPOINT,
-        },
+        }),
         provisioners: [
           this.deploy([
             ...PUT_LIFECYCLE,
@@ -581,12 +595,12 @@ export class SeaweedfsStack extends HomelabStack {
       )
       .join(", ");
     new DataResource(this, id, {
-      input: {
+      ...rerunOnChange({
         bucket: expiry.bucket.id,
         endpoint_url: STATE_ENDPOINT,
         // Re-runs the provisioner whenever a rule, prefix or TTL changes.
         rules: `\${jsonencode({ Rules = [${rules}] })}`,
-      },
+      }),
       provisioners: [
         this.deploy([
           ...PUT_LIFECYCLE,

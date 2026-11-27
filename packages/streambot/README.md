@@ -352,10 +352,12 @@ the routes, session storage, command service, and playback actor are real. This
 fixture is absent from the production image. Use it after `bun run build` to inspect
 the library, queue, controls, subtitle picker, and system light/dark themes.
 
-The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 after
-`bun run build`; it includes simulated OAuth, music browsing, private/server
-playlists, sports artwork, history, and attribution. An optional port argument
-(for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
+The expanded browsing fixture is `bun run preview:web` (or `bun run test/web/preview.ts`
+after `bun run build`) on port 5188; it includes simulated OAuth, music browsing,
+private/server playlists, sports artwork, history, and attribution. An optional port
+argument or `PORT` environment variable (for example, `bun run test/web/preview.ts 5189`)
+isolates concurrent worktrees, and `toolkit screenshot streambot <route>` drives it
+automatically.
 The preview's room has a Listening and a Watching player with queues, and responses
 carry `x-trace-id`. Two preview-only switches change state an open page then
 receives over the room stream: `/preview/voice?in=0` (or `1`) leaves or rejoins the
@@ -562,14 +564,14 @@ delivery leg unresolved.
 bun run dev              # watch mode
 bun run start            # run once
 bun run test             # unit tests (machine, config, sources) — no ffmpeg needed
-bun run test:integration # real-ffmpeg subtitle tests (needs ffmpeg + libass)
+bun run test:integration # real-ffmpeg media/subtitle tests (uses FFMPEG_PATH / ffmpeg-full, or Docker --target smoke fallback on macOS)
 bun run e2e              # live e2e against the dedicated test Discord server
 bun run e2e:sports       # manual live sports browser → Discord Go Live check
 bun run e2e:voice-recovery # live voice-loss recovery e2e
 bun run typecheck
 bun run lint
-bun run docker:build     # build the image (repo-root build context)
-bun run smoke            # smoke script
+bun run docker:build     # build lean production image streambot:dev (repo-root build context)
+bun run smoke            # build --target smoke (integration + voice-smoke) and verify lean streambot:dev boot
 ```
 
 Measure local sender pacing without Discord credentials using real ffmpeg,

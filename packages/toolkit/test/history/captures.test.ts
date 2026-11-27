@@ -994,7 +994,11 @@ describe("assembled response redaction", () => {
         })),
       ],
     });
-    await ingest(context, [chat, claude]);
+    const report = await ingest(context, [chat, claude]);
+    expect(report.redactedSecrets).toBe(3);
+    // Re-ingesting a duplicate flow in a new segment must not double-count post-assembly redactions.
+    const duplicate = await ingest(context, [claude], "0002-1-000001.jsonl");
+    expect(duplicate).toMatchObject({ captures: 0, redactedSecrets: 0 });
     const { captures } = HistoryApiCapturesResponseSchema.parse(
       await fetchJson(context, "/v1/captures"),
     );

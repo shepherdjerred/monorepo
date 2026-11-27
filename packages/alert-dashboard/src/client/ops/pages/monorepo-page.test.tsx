@@ -45,8 +45,19 @@ describe("MonorepoPage", () => {
 
     // Audits strip
     expect(html).toContain("Monorepo audits");
+    expect(html).toContain("PR code-review provider pool");
     expect(html).toContain("Architecture boundaries");
     expect(html).toContain("Main dependency vulnerability scan");
+
+    // PR code-review pool section
+    expect(html).toContain("PR code review pool");
+    expect(html).toContain('aria-label="7d ci/code-review gate outcomes"');
+    expect(html).toContain("Code review assignments by provider");
+    expect(html).toContain("Code review gate outcomes");
+    expect(html).toContain("CodeRabbit");
+    expect(html).toContain("$0 free");
+    expect(html).toContain("Paid exception");
+    expect(html).toContain("22 ok · 2 timeout · 5 limited");
 
     // Expensive tasks sorted by totalMissMinutes descending
     // Task ids may wrap only after "/" or "#": no-wrap segments with a
@@ -67,5 +78,57 @@ describe("MonorepoPage", () => {
     expect(html).toContain('href="/services/scout-for-lol"');
     expect(html).toContain("Extended");
     expect(html).toContain('aria-label="Package category"');
+  });
+
+  it("renders cooldown warnings and gracefully omits PR code review when absent on older facets", () => {
+    const monorepo = requireFixtureFacet("monorepo");
+    const legacyHtml = renderMonorepoPage("/monorepo", {
+      ...monorepo,
+      codeReview: undefined,
+    });
+    expect(legacyHtml).not.toContain("PR code review pool");
+
+    const baseCodeReview = monorepo.codeReview;
+    expect(baseCodeReview).toBeDefined();
+    if (baseCodeReview === undefined) {
+      return;
+    }
+    const cooldownHtml = renderMonorepoPage("/monorepo", {
+      ...monorepo,
+      codeReview: {
+        ...baseCodeReview,
+        readyProvidersCount: 0,
+        coolingDownProvidersCount: 2,
+        providers: baseCodeReview.providers.map((p) =>
+          p.configuredWeight > 0
+            ? {
+                ...p,
+                status: "cooldown",
+                cooldownUntil: "2026-11-26T19:45:00Z",
+              }
+            : p,
+        ),
+      },
+    });
+    expect(cooldownHtml).toContain("Cooldown · 19:45 UTC");
+    expect(cooldownHtml).toContain("2 provider(s) cooling down");
+
+    const unavailableHtml = renderMonorepoPage("/monorepo", {
+      ...monorepo,
+      codeReview: {
+        ...baseCodeReview,
+        coordinatorObserved: false,
+        coordinatorRunning: false,
+        coordinatorProcessedCount: 0,
+        readyProvidersCount: 0,
+        coolingDownProvidersCount: 0,
+        providers: baseCodeReview.providers.map((p) =>
+          p.configuredWeight > 0 ? { ...p, status: "unknown" } : p,
+        ),
+      },
+    });
+    expect(unavailableHtml).toContain("— / 2");
+    expect(unavailableHtml).toContain("Coordinator state unavailable");
+    expect(unavailableHtml).toContain("Unknown");
   });
 });

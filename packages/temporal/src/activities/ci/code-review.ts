@@ -13,6 +13,7 @@ import {
   prCodeReviewDurationSeconds,
   prCodeReviewOutcomesTotal,
   prCodeReviewProviderCooldownsTotal,
+  prCodeReviewProviderOutcomesTotal,
 } from "#observability/metrics-code-review.ts";
 import {
   CODE_REVIEW_COORDINATOR_WORKFLOW_ID,
@@ -91,6 +92,10 @@ export function createCodeReviewActivities(deps: CodeReviewActivityDeps = {}) {
         signalArgs: [payload],
       });
       prCodeReviewAssignmentsTotal.inc({ provider: payload.providerId });
+      prCodeReviewProviderOutcomesTotal.inc({
+        provider: payload.providerId,
+        outcome: payload.outcome,
+      });
       if (payload.cooldownMs > 0) {
         prCodeReviewProviderCooldownsTotal.inc({
           provider: payload.providerId,

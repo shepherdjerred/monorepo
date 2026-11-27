@@ -3,6 +3,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   PROMOTION_SWEEP_HOURS,
   PROMOTION_TIMEZONE,
+  REDDIT_OUTREACH_INTERVAL_MS,
 } from "#shared/promotion/cadence.ts";
 import { schedulesInNamespace } from "./schedule-types.ts";
 
@@ -11,7 +12,7 @@ export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
     id: "the-storm-reddit-outreach",
     workflowType: "runStormRedditOutreach",
     args: [],
-    timing: { kind: "interval", every: "15 minutes" },
+    timing: { kind: "interval", every: REDDIT_OUTREACH_INTERVAL_MS },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "1 minute",

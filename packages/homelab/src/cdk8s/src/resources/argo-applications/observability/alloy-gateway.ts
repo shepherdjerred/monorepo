@@ -8,107 +8,11 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
-// Phoenix ingests whole LLM traces per project; the project is selected by
-// the x-project-name header on the exporter, and projects are created
-// implicitly on first write — a typo here silently creates a stray project.
-//
-// Routing is an explicit allowlist: each branch's filter processor DROPS every
-// span matching one of its `drop` conditions, so a branch's conditions are the
-// negation of "this span belongs to the project". A service listed nowhere
-// reaches no project by construction — that exclusion bounds Phoenix's
-// database growth, so there must never be a catch-all branch.
-type PhoenixBranch = {
-  // Exact Phoenix project name.
-  project: string;
-  // River component suffix; must be a valid River identifier (no hyphens).
-  river: string;
-  // OTTL span conditions (filter processor drops on ANY match). Equality
-  // against a nil service.name is simply false — safe. IsMatch on nil ERRORS,
-  // and error_mode=ignore skips only the erroring condition, which would leak
-  // the span into the project — any IsMatch use needs a `== nil` drop guard
-  // listed first.
-  drop: string[];
-};
-
-const SERVICE_NAME = 'resource.attributes["service.name"]';
-
-// otlphttp appends /v1/traces. Its default encoding is protobuf, which is the
-// only body Phoenix's OTLP route accepts (JSON gets a 415) — keep it, even
-// though several producers POST OTLP JSON to this gateway.
-const PHOENIX_ENDPOINT = "http://phoenix.phoenix.svc.cluster.local:6006";
-const DEPLOY_ENV = 'resource.attributes["deployment.environment.name"]';
-
-const PHOENIX_BRANCHES: PhoenixBranch[] = [
-  {
-    project: "scout-beta",
-    river: "px_scout_beta",
-    drop: [
-      `not(${SERVICE_NAME} == "scout-backend" and ${DEPLOY_ENV} == "beta")`,
-    ],
-  },
-  {
-    project: "scout-prod",
-    river: "px_scout_prod",
-    drop: [
-      `not(${SERVICE_NAME} == "scout-backend" and ${DEPLOY_ENV} == "prod")`,
-    ],
-  },
-  {
-    project: "birmel",
-    river: "px_birmel",
-    drop: [`${SERVICE_NAME} != "birmel"`],
-  },
-  {
-    project: "temporal",
-    river: "px_temporal",
-    drop: [
-      `${SERVICE_NAME} == nil`,
-      `not(IsMatch(${SERVICE_NAME}, "^temporal-"))`,
-    ],
-  },
-  {
-    project: "misc",
-    river: "px_misc",
-    drop: [
-      `not(${SERVICE_NAME} == "streambot" or ${SERVICE_NAME} == "alert-dashboard")`,
-    ],
-  },
-];
-
 // OTTL conditions embed as River strings, so their inner quotes need escaping.
 function riverString(value: string): string {
   return `"${value
     .replaceAll("\\", String.raw`\\`)
     .replaceAll('"', String.raw`\"`)}"`;
-}
-
-function renderPhoenixBranch(branch: PhoenixBranch): string {
-  const conditions = branch.drop
-    .map((condition) => `      ${riverString(condition)},`)
-    .join("\n");
-  return `otelcol.processor.filter "${branch.river}" {
-  error_mode = "ignore"
-
-  traces {
-    span = [
-${conditions}
-    ]
-  }
-
-  output {
-    traces = [otelcol.exporter.otlphttp.${branch.river}.input]
-  }
-}
-
-otelcol.exporter.otlphttp "${branch.river}" {
-  client {
-    endpoint = "${PHOENIX_ENDPOINT}"
-    auth     = otelcol.auth.bearer.phoenix.handler
-    headers  = {
-      "x-project-name" = "${branch.project}",
-    }
-  }
-}`;
 }
 
 /** OTLP/HTTP metrics port published on the tailnet as `otlp-metrics`. */
@@ -141,7 +45,7 @@ const justinMetricNamePattern = "^(" + JUSTIN_METRIC_NAMES.join("|") + ")$";
 // Metrics-only OTLP/HTTP receiver for workstation pushes arriving over the
 // Tailscale ingress. It is a separate receiver on its own port so the tailnet
 // can reach metrics without exposing the trace receiver on 4318, and so a
-// tailnet client can never inject spans into Tempo or Phoenix.
+// tailnet client can never inject spans into Tempo.
 //
 // The Tailscale ingress is unauthenticated beyond tailnet ACLs, so the filter
 // is the allowlist: anything whose name does not match the prefix is dropped
@@ -194,25 +98,16 @@ prometheus.remote_write "cluster" {
   }
 }`;
 
-// Grafana Alloy River config: receive OTLP/HTTP from every in-cluster trace
-// producer, forward ALL spans to Tempo unconditionally, and tail-sample whole
-// traces containing LLM spans into per-service-stage Phoenix projects.
-// Producers only ever know the gateway URL.
+// Grafana Alloy River config: stateless OTLP/HTTP trace forwarder for every
+// in-cluster trace producer, batching all spans directly into Tempo (where Hub
+// `/traces` reads 0–30d full-content trajectories alongside the 365d SeaweedFS
+// `llm-archive` index). Producers only ever know the gateway URL.
 //
 // Every producer in the repo speaks OTLP/HTTP on 4318 (several POST OTLP JSON
 // via plain fetch, which the receiver also accepts) — no gRPC receiver until a
 // gRPC producer exists. Tempo permits 50MB traces (max_bytes_per_trace), so
 // the per-request cap must never be the smaller limit; the otelcol default of
 // 20MiB is too low.
-//
-// Tail sampling holds a trace for decision_wait before deciding, so Phoenix
-// receives whole traces with their root span rather than orphaned LLM
-// children — reading the full trajectory is the point. The sampled decision cache forwards spans of
-// long agent traces that arrive after the decision immediately;
-// non_sampled_cache_size must stay 0 (unset) so "drop" windows are
-// re-evaluated when late LLM spans arrive. The kill switch for a runaway
-// producer is removing a branch from tail_sampling's output list — the
-// config-reloader applies that without recreating the pod.
 export const ALLOY_GATEWAY_CONFIG = `
 otelcol.receiver.otlp "gateway" {
   http {
@@ -221,10 +116,7 @@ otelcol.receiver.otlp "gateway" {
   }
 
   output {
-    traces = [
-      otelcol.processor.batch.tempo.input,
-      otelcol.processor.tail_sampling.llm.input,
-    ]
+    traces = [otelcol.processor.batch.tempo.input]
   }
 }
 
@@ -240,61 +132,25 @@ otelcol.exporter.otlphttp "tempo" {
   }
 }
 
-otelcol.processor.tail_sampling "llm" {
-  decision_wait = "120s"
-
-  decision_cache = {
-    sampled_cache_size = 100000,
-  }
-
-  policy {
-    name = "llm-traces"
-    type = "ottl_condition"
-
-    ottl_condition {
-      error_mode = "ignore"
-      span = [
-        ${riverString('attributes["gen_ai.system"] != nil')},
-        ${riverString('attributes["gen_ai.request.model"] != nil')},
-        ${riverString('attributes["gen_ai.operation.name"] != nil')},
-      ]
-    }
-  }
-
-  output {
-    traces = [
-${PHOENIX_BRANCHES.map(
-  (branch) => `      otelcol.processor.filter.${branch.river}.input,`,
-).join("\n")}
-    ]
-  }
-}
-
-otelcol.auth.bearer "phoenix" {
-  token = sys.env("PHOENIX_API_KEY")
-}
-
-${PHOENIX_BRANCHES.map((branch) => renderPhoenixBranch(branch)).join("\n\n")}
-
 ${TAILNET_METRICS_CONFIG}
 `;
 
 /**
- * Grafana Alloy as an unprivileged OTLP trace gateway Deployment.
+ * Grafana Alloy as an unprivileged OTLP trace & tailnet metrics gateway Deployment.
  *
  * This is a second Alloy release, deliberately separate from the `alloy` app:
  * that one is a privileged hostPID eBPF profiling DaemonSet whose security
  * boundary is "no ingress, pushes only to Pyroscope". A trace gateway needs
- * the opposite shape — network ingress, egress to Tempo, Phoenix, and
- * Prometheus, no host access — so it gets its own namespace, Deployment, and Service instead
+ * the opposite shape — network ingress, egress to Tempo and Prometheus, no
+ * host access — so it gets its own namespace, Deployment, and Service instead
  * of widening the profiler's boundary. Both releases share the `versions.alloy`
  * chart pin and move together on chart bumps.
  */
 // Explicit Namespace (root-chart sync wave 0) rather than relying only on
 // CreateNamespace=true: the OnePasswordItem in the Application applies at
 // wave -19 — before any Application could create the namespace — so the
-// namespace has to exist independently (it shipped one release ahead of the
-// item). Default (baseline) Pod Security applies; nothing here is privileged.
+// namespace has to exist independently. Default (baseline) Pod Security
+// applies; nothing here is privileged.
 export function createAlloyGatewayNamespace(chart: Chart): void {
   new Namespace(chart, "alloy-gateway-namespace", {
     metadata: {
@@ -305,16 +161,6 @@ export function createAlloyGatewayNamespace(chart: Chart): void {
 
 /** Objects the root renders beside the Application; the `alloy-gateway-companion` companion chart renders the same objects under transition rendering. */
 export function createAlloyGatewayResources(chart: Chart): OnePasswordItem {
-  // One Phoenix system API key, shared by every per-project exporter.
-  new OnePasswordItem(chart, "alloy-gateway-phoenix-1p", {
-    metadata: {
-      name: "phoenix-ingest",
-      namespace: "alloy-gateway",
-    },
-    spec: {
-      itemPath: vaultItemPath("phoenix-ingest"),
-    },
-  });
   const monitoringAuth = new OnePasswordItem(
     chart,
     "alloy-gateway-monitoring-auth-1p",
@@ -367,10 +213,6 @@ export function createAlloyGatewayApp(chart: Chart) {
     },
     controller: {
       type: "deployment",
-      // Must stay 1 once tail sampling lands: sampling decisions require every
-      // span of a trace on the same instance. Scaling out needs a trace-ID-aware
-      // otelcol.exporter.loadbalancing tier in front — build that instead of
-      // raising this number.
       replicas: 1,
     },
     alloy: {
@@ -384,15 +226,6 @@ export function createAlloyGatewayApp(chart: Chart) {
       // by the OnePasswordItem above; a missing item fails the pod fast
       // rather than exporting unauthenticated.
       extraEnv: [
-        {
-          name: "PHOENIX_API_KEY",
-          valueFrom: {
-            secretKeyRef: {
-              name: "phoenix-ingest",
-              key: "PHOENIX_API_KEY",
-            },
-          },
-        },
         {
           name: "PROMETHEUS_WRITE_TOKEN",
           valueFrom: {
@@ -419,8 +252,7 @@ export function createAlloyGatewayApp(chart: Chart) {
           protocol: "TCP",
         },
       ],
-      // Tail sampling buffers decision_wait's worth of spans in memory; at
-      // homelab span volume that is a few MB, well inside this request.
+      // Stateless OTLP batch forwarding plus tailnet metric filtering.
       // Requests only, no limits, per repo convention — bursts can exceed it.
       resources: {
         requests: {
@@ -429,10 +261,9 @@ export function createAlloyGatewayApp(chart: Chart) {
         },
       },
     },
-    // otelcol_* receiver/exporter metrics feed the delivery and failure
-    // checks for the Phoenix branches. Prometheus only discovers
-    // ServiceMonitors carrying release: prometheus (same convention the shared
-    // createServiceMonitor helper enforces).
+    // otelcol_* receiver/exporter metrics feed Tempo & Prometheus delivery
+    // checks. Prometheus only discovers ServiceMonitors carrying
+    // release: prometheus (same convention createServiceMonitor enforces).
     serviceMonitor: {
       enabled: true,
       additionalLabels: {

@@ -1,9 +1,6 @@
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { initialHistoryImportPhasesTotal } from "#src/metrics/initial-history-import.ts";
-import {
-  reportLakeMigrationPending,
-  runReportLakeFold,
-} from "#src/report-lake/compactor.ts";
+import { runReportLakeFold } from "#src/report-lake/compactor.ts";
 
 export async function publishReadyImports(
   db: ExtendedPrismaClient,
@@ -31,10 +28,6 @@ export async function publishReadyImports(
 
   const ready = jobs.filter((job) => trackedPuuids.has(job.puuid));
   if (ready.length === 0) return;
-  // While the schema migration is pending only the scheduled rebuild
-  // publishes the accounts snapshot that guild queries join, so these jobs stay
-  // in the publish phase until it has run (see reportLakeMigrationPending).
-  if (await reportLakeMigrationPending()) return;
   await runReportLakeFold({ prisma: db });
 
   const completions = await Promise.all(

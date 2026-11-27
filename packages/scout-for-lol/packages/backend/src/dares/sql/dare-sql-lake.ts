@@ -155,11 +155,8 @@ export async function createDareSqlLakeRelations(
   const multiTeamClause = input.excludeMultiTeamGames
     ? "AND match_id NOT IN (SELECT match_id FROM _dare_multi_team_ids)"
     : "";
-  // `coverage` is read-gated (MATCH_MIGRATION_GATED_COLUMNS), so a game known
-  // only from the end-of-game block is recognised by the game version it never
-  // states: Riot's and the history bundle's documents always carry one.
   const endOfGameClause = input.excludeEndOfGameGames
-    ? "AND match_id NOT IN (SELECT match_id FROM _dare_match_window WHERE game_version IS NULL)"
+    ? "AND match_id NOT IN (SELECT match_id FROM _dare_match_window WHERE coverage = 'end_of_game')"
     : "";
   const matchOrder = input.matchOrder === "newest" ? "DESC" : "ASC";
   await session.run(

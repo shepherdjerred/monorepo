@@ -106,8 +106,8 @@ function prepareIngestStatements(database: Database): IngestStatements {
       INSERT INTO usage_events
         (document_id, source, occurred_at, model, input_tokens, output_tokens,
          cache_read_tokens, cache_creation_tokens, cached_input_tokens,
-         reasoning_tokens, cost_usd, cost_complete)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         reasoning_tokens, cost_usd, cost_complete, cost_reported)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `),
     deleteToolCalls: database.prepare(
       "DELETE FROM tool_calls WHERE document_id = ?",
@@ -214,6 +214,7 @@ function upsertDocument(
       event.reasoningTokens,
       event.costUsd,
       event.costComplete ? 1 : 0,
+      event.costReported === true ? 1 : 0,
     );
   }
 }

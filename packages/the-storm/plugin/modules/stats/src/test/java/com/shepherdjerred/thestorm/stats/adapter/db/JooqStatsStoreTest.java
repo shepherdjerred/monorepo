@@ -81,7 +81,9 @@ final class JooqStatsStoreTest {
             "ts-mc.net:25565",
             WorldBucket.WORLD,
             GameModeBucket.SURVIVAL,
-            false));
+            false,
+            "US",
+            "United States"));
 
     clock.set(firstJoin.plusSeconds(60));
     service.checkpointPlayer(
@@ -118,7 +120,9 @@ final class JooqStatsStoreTest {
             "ts-mc.net",
             WorldBucket.SKYLANDS,
             GameModeBucket.SURVIVAL,
-            false));
+            false,
+            "AU",
+            "Australia"));
 
     var aliceSummary = store.findPlayer("alicerenamed").get().orElseThrow();
     assertThat(aliceSummary.playerUuid()).isEqualTo(ALICE);
@@ -141,10 +145,16 @@ final class JooqStatsStoreTest {
     var pending = store.pendingEvents(50).get();
     assertThat(pending).hasSize(8);
 
-    // Verify second session_started preserved original firstSeenAt!
+    // Verify second session_started preserved original firstSeenAt and country fields!
+    var firstStartJson = JSON.readTree(pending.getFirst().eventJson());
+    assertThat(firstStartJson.required("countryCode").asString()).isEqualTo("US");
+    assertThat(firstStartJson.required("countryName").asString()).isEqualTo("United States");
+
     var secondStartJson = JSON.readTree(pending.get(6).eventJson());
     assertThat(secondStartJson.required("type").asString()).isEqualTo("session_started");
     assertThat(secondStartJson.required("firstSeenAt").asString()).isEqualTo(firstJoin.toString());
+    assertThat(secondStartJson.required("countryCode").asString()).isEqualTo("AU");
+    assertThat(secondStartJson.required("countryName").asString()).isEqualTo("Australia");
 
     var recoveredEndJson = JSON.readTree(pending.get(7).eventJson());
     assertThat(recoveredEndJson.required("type").asString()).isEqualTo("session_ended");

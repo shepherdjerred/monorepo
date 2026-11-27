@@ -142,6 +142,7 @@ export async function readRedditFeedPage(
     subreddit: string;
     limit: number;
     account: string;
+    after?: string | null;
   },
 ): Promise<{ posts: RedditFeedPost[]; next: string | null }> {
   z.number().int().min(1).max(100).parse(input.limit);
@@ -150,6 +151,17 @@ export async function readRedditFeedPage(
     await browser.currentUrl(),
     input.subreddit,
   );
+  const expectedCursor =
+    input.after == null
+      ? null
+      : new URL(
+          validateRedditFeedPageUrl(input.after, input.subreddit),
+        ).searchParams.get("after");
+  if (new URL(observedUrl).searchParams.get("after") !== expectedCursor)
+    throw new RedditBrowserReadError(
+      expectedCursor === null ? "page" : "cursor",
+      "Reddit redirected away from the requested listing page",
+    );
   await browser.snapshot({ selector: "#siteTable" });
   const page = z
     .strictObject({
