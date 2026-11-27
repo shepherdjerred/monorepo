@@ -62,6 +62,8 @@ const TimelineEventPageInput = TimelinePageInput.extend({
 
 type AuthorizedMatch = {
   player: { id: number; puuids: Set<string> };
+  /** Every account linked to the signed-in viewer in the scoped servers. */
+  viewerPuuids: Set<string>;
   rows: LakeMatchParticipantRow[];
   aliasesByPuuid: Map<
     string,
@@ -72,6 +74,7 @@ type AuthorizedMatch = {
 type ScopedPlayer = {
   guilds: Awaited<ReturnType<typeof assertConsumerPlayerScope>>;
   player: { id: number; puuids: Set<string> };
+  viewerPuuids: Set<string>;
 };
 
 /** The viewer's guilds and the named player, before any lake read. */
@@ -90,8 +93,20 @@ async function findScopedPlayer(
   if (player === null) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
+  // The viewer's own accounts: the players their Discord account is linked to
+  // in the scoped servers, as `consumerPlayer.home` finds "your" profiles.
+  const linked = await prisma.player.findMany({
+    where: {
+      discordId: user.discordId,
+      serverId: { in: guilds.map((guild) => guild.id) },
+    },
+    select: { accounts: { select: { puuid: true } } },
+  });
   return {
     guilds,
+    viewerPuuids: new Set<string>(
+      linked.flatMap((entry) => entry.accounts.map((account) => account.puuid)),
+    ),
     player: {
       id: player.id,
       puuids: new Set<string>(player.accounts.map((account) => account.puuid)),
@@ -104,7 +119,7 @@ async function completeAuthorization(
   scoped: ScopedPlayer,
   rows: LakeMatchParticipantRow[],
 ): Promise<AuthorizedMatch> {
-  const { guilds, player } = scoped;
+  const { guilds, player, viewerPuuids } = scoped;
   if (!rows.some((row) => isPlayerRow(row, player.puuids))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
@@ -140,7 +155,7 @@ async function completeAuthorization(
     });
     aliasesByPuuid.set(account.puuid, aliases);
   }
-  return { player, rows, aliasesByPuuid };
+  return { player, viewerPuuids, rows, aliasesByPuuid };
 }
 
 async function authorizeMatch(
@@ -196,6 +211,8 @@ function matchView(
       placement: row.subteam_placement ?? row.placement,
       augments: arenaAugmentsFromLakeRow(row),
       selectedPlayer: isPlayerRow(row, match.player.puuids),
+      /** This participant is the signed-in viewer, whoever the page is about. */
+      isViewer: isPlayerRow(row, match.viewerPuuids),
       riotId: {
         gameName: normalizeRiotIdPart(row.riot_id_game_name),
         tagLine: normalizeRiotIdPart(row.riot_id_tagline),

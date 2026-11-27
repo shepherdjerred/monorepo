@@ -8,6 +8,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  PlayerIdSchema,
   RegionSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
@@ -17,6 +18,10 @@ import {
   seedDesignAuditChampionFriends,
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
+import {
+  designAuditStoryGame,
+  seedDesignAuditStoryRank,
+} from "#src/database/design-audit-story-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -31,6 +36,7 @@ const DEFAULT_GUILD_ID = "1337623164146155593";
 const DEFAULT_DISCORD_ID = "000000000000000001";
 const DEFAULT_PLAYER_ALIAS = "Scout Classic";
 const DEFAULT_COMPETITION_ID = 1;
+const DEFAULT_PLAYER_ID = 7001;
 const DEFAULT_REPORT_ID = 1;
 const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 const DESIGN_AUDIT_EXPLORE_CONVERSATION_ID =
@@ -110,6 +116,13 @@ export async function seedDesignAuditDatabase(
   const region = RegionSchema.parse("AMERICA_NORTH");
   const playerAlias =
     Bun.env["SCOUT_DESIGN_AUDIT_PLAYER_ALIAS"] ?? DEFAULT_PLAYER_ALIAS;
+  const playerId = PlayerIdSchema.parse(
+    requiredPositiveInteger(
+      "SCOUT_DESIGN_AUDIT_PLAYER_ID",
+      Bun.env["SCOUT_DESIGN_AUDIT_PLAYER_ID"],
+      DEFAULT_PLAYER_ID,
+    ),
+  );
   const competitionId = CompetitionIdSchema.parse(
     requiredPositiveInteger(
       "SCOUT_DESIGN_AUDIT_COMPETITION_ID",
@@ -226,6 +239,7 @@ export async function seedDesignAuditDatabase(
 
     const player = await seedDesignAuditPlayerProfile({
       prisma,
+      playerId,
       guildId,
       discordId,
       playerAlias,
@@ -235,6 +249,7 @@ export async function seedDesignAuditDatabase(
       now,
     });
     await seedDesignAuditClashHistory({ prisma, puuid, region });
+    await seedDesignAuditStoryRank({ prisma, puuid, now });
     const friends = await seedDesignAuditChampionFriends({
       prisma,
       guildId,
@@ -315,14 +330,28 @@ export async function seedDesignAuditDatabase(
 
     await resetTestLake(lakeDir);
     const review = designAuditMatchFixtures(player.id);
+    const story = designAuditStoryGame({
+      playerId: player.id,
+      alias: playerAlias,
+      puuid,
+      discordId,
+    });
     await writeTestLake(lakeDir, {
       serverId: guildId,
-      timelineFrames: [...review.timelineFrames, ...champions.timelineFrames],
-      timelineEvents: review.timelineEvents,
-      timelineCoverage: review.timelineCoverage,
-      timelineEventParticipants: review.timelineEventParticipants,
+      timelineFrames: [
+        ...review.timelineFrames,
+        ...champions.timelineFrames,
+        ...story.timelineFrames,
+      ],
+      timelineEvents: [...review.timelineEvents, ...story.timelineEvents],
+      timelineCoverage: [...review.timelineCoverage, ...story.timelineCoverage],
+      timelineEventParticipants: [
+        ...review.timelineEventParticipants,
+        ...story.timelineEventParticipants,
+      ],
       matchFacts: [
         ...champions.tracked,
+        ...story.matchFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,
@@ -397,6 +426,7 @@ export async function seedDesignAuditDatabase(
       ],
       untrackedMatchFacts: [
         ...champions.untracked,
+        ...story.untrackedMatchFacts,
         ...review.extra,
         {
           playerId: 901,

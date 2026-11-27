@@ -4,12 +4,15 @@ import type {
   DiscordAccountId,
   DiscordGuildId,
   LeaguePuuid,
+  PlayerId,
   Region,
 } from "@scout-for-lol/data";
 
 /** Build the deterministic combined-account profile used by visual audits. */
 export async function seedDesignAuditPlayerProfile(input: {
   prisma: PrismaClient;
+  /** Fixed so routes keyed by player id (`/players/:id`) have a stable URL. */
+  playerId: PlayerId;
   guildId: DiscordGuildId;
   discordId: DiscordAccountId;
   playerAlias: string;
@@ -20,6 +23,7 @@ export async function seedDesignAuditPlayerProfile(input: {
 }) {
   const player = await input.prisma.player.create({
     data: {
+      id: input.playerId,
       serverId: input.guildId,
       alias: input.playerAlias,
       discordId: input.discordId,

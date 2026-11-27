@@ -8,7 +8,9 @@ import {
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { trpcOptions } from "#src/lib/query/trpc-options.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
+import { PROTECTED_QUERY_OPTIONS } from "#src/lib/query/protected-query-options.ts";
 import { SESSION_QUERY_OPTIONS } from "#src/lib/query/session-query.ts";
+import { ConsumerMatchParamsSchema } from "#src/lib/routes/route-params.ts";
 
 /**
  * Data-router loaders. Every loader is **non-blocking**: it kicks off a
@@ -106,6 +108,25 @@ export function consumerPlayerLoader({ params }: LoaderFunctionArgs): null {
       trpcOptions.consumerPlayer.status.queryOptions(undefined, {
         staleTime: 0,
       }),
+    ),
+  );
+  return null;
+}
+
+/**
+ * Warm the match detail, the read the page paints from. The story waits for
+ * the detail inside the component, so it is not preloaded: both are lake
+ * reads and the page must not hold two slots before first paint.
+ */
+export function consumerMatchLoader({ params }: LoaderFunctionArgs): null {
+  const parsed = ConsumerMatchParamsSchema.safeParse(params);
+  if (!parsed.success) return null;
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerMatch.detail.queryOptions(
+        { playerId: parsed.data.playerId, matchId: parsed.data.matchId },
+        PROTECTED_QUERY_OPTIONS,
+      ),
     ),
   );
   return null;

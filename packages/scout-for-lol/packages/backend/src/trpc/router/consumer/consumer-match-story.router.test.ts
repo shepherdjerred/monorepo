@@ -57,6 +57,7 @@ function trackedPlayer(options: {
   guildId: DiscordGuildId;
   alias: string;
   puuid: LeaguePuuid;
+  discordId?: typeof actor;
 }) {
   return createTrackedPlayer(trpc.prisma, {
     ...options,
@@ -86,17 +87,23 @@ async function seedStoryMatch(
     withTimeline?: boolean;
     remake?: boolean;
     queueId?: number;
+    /** Link the Northstar player to the signed-in Discord account. */
+    viewerLinked?: boolean;
+    /** Link the RiverQuartz player to the signed-in Discord account. */
+    friendLinked?: boolean;
   } = {},
 ) {
   const viewer = await trackedPlayer({
     guildId,
     alias: "Northstar",
     puuid: VIEWER_PUUID,
+    ...(options.viewerLinked === true ? { discordId: actor } : {}),
   });
   const friend = await trackedPlayer({
     guildId,
     alias: "RiverQuartz",
     puuid: puuidOf(4),
+    ...(options.friendLinked === true ? { discordId: actor } : {}),
   });
   const fixture = storyMatchFixture({
     matchId: options.matchId ?? MATCH,
@@ -543,6 +550,44 @@ function detailSnapshot(
     2,
   )}\n`;
 }
+
+async function viewerFlags(options: Parameters<typeof seedStoryMatch>[0]) {
+  const { viewer } = await seedStoryMatch(options);
+  const detail = await trpc
+    .authedCaller(actor)
+    .consumerMatch.detail({ playerId: viewer.id, matchId: MATCH });
+  const participants = detail.match.teams.flatMap((team) => team.participants);
+  return {
+    viewerIds: participants
+      .filter((entry) => entry.isViewer)
+      .map((entry) => entry.participantId),
+    selectedIds: participants
+      .filter((entry) => entry.selectedPlayer)
+      .map((entry) => entry.participantId),
+  };
+}
+
+describe("consumerMatch.detail isViewer", () => {
+  test("marks the selected participant as the viewer when the signed-in account is linked to it", async () => {
+    const flags = await viewerFlags({ viewerLinked: true });
+    expect(flags.selectedIds).toEqual([STORY_VIEWER_PARTICIPANT_ID]);
+    expect(flags.viewerIds).toEqual([STORY_VIEWER_PARTICIPANT_ID]);
+  });
+
+  test("marks nobody when the selected player belongs to someone else", async () => {
+    const flags = await viewerFlags({});
+    expect(flags.selectedIds).toEqual([STORY_VIEWER_PARTICIPANT_ID]);
+    expect(flags.viewerIds).toEqual([]);
+  });
+
+  test("marks the viewer's own row when the page is about a friend", async () => {
+    // The signed-in account is linked to RiverQuartz (participant 4); the page
+    // is about Northstar (participant 3), who is not the viewer.
+    const flags = await viewerFlags({ friendLinked: true });
+    expect(flags.selectedIds).toEqual([STORY_VIEWER_PARTICIPANT_ID]);
+    expect(flags.viewerIds).toEqual([4]);
+  });
+});
 
 describe("consumerMatch.detail", () => {
   test("keeps its payload for a match with a timeline and a recorded rank change", async () => {
