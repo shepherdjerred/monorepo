@@ -4,7 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router";
 import { vi } from "vitest";
-import type { ThemeStore } from "@shepherdjerred/console-ui";
+import { createThemeStore, type ThemeStore } from "@shepherdjerred/console-ui";
 import { createQueryClient } from "@shepherdjerred/flags/client/api.ts";
 import { App } from "@shepherdjerred/flags/client/app.tsx";
 
@@ -56,4 +56,41 @@ export async function mountApp(
   });
   await settle();
   return { container, root };
+}
+
+/** A light theme store whose storage and media query never change. */
+export function testTheme(name: string): ThemeStore {
+  return createThemeStore(name, {
+    storage: () => ({
+      getItem: () => null,
+      setItem: noop,
+      removeItem: noop,
+    }),
+    darkQuery: { matches: false, addEventListener: noop },
+    root: { dataset: {} },
+    onStorage: noop,
+  });
+}
+
+/** A primary-button click, as a user makes it, then a settle. */
+export async function press(element: Element): Promise<void> {
+  await act(async () => {
+    element.dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 }),
+    );
+    await Promise.resolve();
+  });
+  await settle();
+}
+
+/** Replaces an input's text the way typing does, so React sees the change. */
+export async function typeText(input: Element, text: string): Promise<void> {
+  if (!(input instanceof HTMLInputElement))
+    throw new TypeError("typeText needs an <input>");
+  await act(async () => {
+    Reflect.set(HTMLInputElement.prototype, "value", text, input);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await Promise.resolve();
+  });
+  await settle();
 }

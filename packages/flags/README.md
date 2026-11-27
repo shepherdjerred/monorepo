@@ -181,8 +181,9 @@ The browser UI is served by this process and uses the shared console look from
 `@shepherdjerred/console-ui`. The workspace button at the top of the sidebar is
 the app switcher: it lists the other consoles and tools from `ops-model`'s
 `CONSOLE_LINKS` and opens them in the same tab; the search button beside it
-opens the ⌘K palette. Below them a Views group links Overview, Compare and Drift
-(with the total drifted-item count), then the sidebar lists real deployments
+opens the ⌘K palette. Below them a Views group links Overview, Compare, Drift
+(with the total drifted-item count) and Archived (with the retired-flag count),
+then the sidebar lists real deployments
 with their flag counts: prod-only catalogs are one row, and Scout and Karma are
 grouped with Beta and Prod rows. Below 900px the sidebar is replaced by the
 shared top bar: the app switcher, a search button and a menu whose drawer lists
@@ -192,9 +193,10 @@ Every page is built from the console-ui page kit, the way Hub's and Go link's
 pages are: a `PageBody` with a `PageHeading`, then `SummaryGrid` and `Card`s. A
 deployment's heading names the catalog and stage and shows its revision, a drift
 badge linking to its section of the drift page, and "Compare with Beta/Prod"
-when the catalog has both stages. The flag table lists each flag's key, its
-state (an On, Off or Targeted `SeverityBadge`, or the variant string) and its
-type. The search field filters flags by key and keeps the filter in the `?q=`
+when the catalog has both stages. The flag table lists each flag's key with its
+inventory description as a muted, truncated second line, its state (an On, Off
+or Targeted `SeverityBadge`, or the variant string) and its type. The search
+field filters flags by key or description and keeps the filter in the `?q=`
 query, so it survives choosing a flag. Choosing a flag opens its editor beside
 the table.
 
@@ -221,6 +223,16 @@ The views:
   documented remediation command. `/drift#<catalog/stage>` scrolls to one
   deployment. A deployment missing from the report fails the request, so the
   page shows the error rather than a partial result.
+- **Archived** (`/archive`): `GET /v1/archive` as one card per deployment
+  listing each retired key with when and by whom it was retired, its revision
+  and its final value (a variant's value, or the boolean flag as JSON). A key
+  with basis `declared-retired` was deleted before the audit trail and reads
+  "Retired before audit; final value not recorded". Each row's History button
+  opens the key's timeline inline, because the history endpoint still serves a
+  key that is no longer live. The page is read-only: to restore a key,
+  re-declare it in `managed-flag-inventory.json` and remove it from
+  `retired-flag-declarations.ts`; the inventory sync re-creates it, then
+  restore an old value from its history in the editor.
 - **⌘K palette** (console-ui's `CommandPalette`): views, deployments, and flags
   across every deployment. It loads each document under `useDocument`'s query
   key, so documents are shared with the pages.
@@ -270,6 +282,36 @@ changes.
 against the draft: side by side when there is room, inline when narrow.
 `json`-encoded variants are diffed as their decoded values. Save writes that
 revision. A conflicting write is left unchanged: a warning above the form diffs
-their flag against the draft, with a button to load theirs.
+their flag against the draft, with a button to load theirs. A save or a
+conflict refetches the flag's history and the deployment's metadata.
+
+### Description, dates and history
+
+The editor reads `GET /v1/deployments/:catalog/:stage/metadata` (parsed with
+`FlagsMetadataResponseSchema`). The description is the inventory's `purpose`,
+with `owner`, `namespace` and `source` as chips; it is read-only and is changed
+in `managed-flag-inventory.json`. A key the deployment's inventory projection
+does not declare says "Not declared in the inventory". Under it:
+
+- **Added**: a recorded `create` shows its exact time; a legacy date reads
+  "first declared ⟨date⟩" or "on or before ⟨date⟩" (see Legacy added dates); a
+  key with neither reads "Added before audit (⟨audit start⟩)".
+- **Last changed** ⟨relative time⟩ **by** ⟨actor⟩, when a change is recorded.
+  An actor is shown by its id: a human's login, a machine's advisory label
+  (`toolkit`, `temporal-flag-inventory-sync`, `unknown`) or `seed`.
+
+Times are UTC. The History section lists
+`GET /v1/deployments/:catalog/:stage/flags/:key/history` newest first, 20 at a
+time, with "Load older" following `nextBefore`. Each entry shows its action,
+actor, time and revision and expands to a side-by-side diff of its before and
+after bodies. With no rows it reads "No recorded changes since ⟨audit start⟩".
+
+"Restore this version" on a create or update loads its `after` body into the
+editor's draft; nothing is written until you review and save it as usual. The
+save sends the editor's current `expectedRevision`, never the entry's, so a
+concurrent write still conflicts and a value the server refuses still shows
+its issues. Restore is disabled, with the reason beside it, when the body does
+not parse as a flag today, has another key or type than the stored flag, fails
+the value registry, or equals the stored value. A retire has no restore.
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.

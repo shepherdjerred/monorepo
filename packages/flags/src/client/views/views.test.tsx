@@ -262,7 +262,8 @@ test("the sidebar leads with a Views group and counts drift", () => {
   expect(html).toContain('aria-label="Flags"');
   // Every row carries an icon.
   const rows = html.match(/<a[^>]*class="ui-nav-item"[^>]*>.*?<\/a>/g) ?? [];
-  expect(rows).toHaveLength(6);
+  // Four views (Overview, Compare, Drift, Archived) and three deployments.
+  expect(rows).toHaveLength(7);
   for (const row of rows) expect(row).toContain("ui-nav-icon");
 });
 
