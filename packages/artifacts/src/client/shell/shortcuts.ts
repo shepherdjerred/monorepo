@@ -90,6 +90,12 @@ export const SHORTCUT_SHEET: readonly {
   readonly keys: string;
   readonly does: string;
 }[] = [
+  { keys: "1 / 2 / 0", does: "Canvas: fit all, fit the selection, 100 %" },
+  { keys: "+ / -", does: "Canvas: zoom in and out" },
+  {
+    keys: "H, Space",
+    does: "Canvas: hand tool, or hold Space and drag to pan",
+  },
   { keys: "C", does: "Comment mode: click to place a pin" },
   { keys: "Enter", does: "Interact with the selected frame" },
   { keys: "Esc", does: "Leave the frame, comment mode, or a draft" },

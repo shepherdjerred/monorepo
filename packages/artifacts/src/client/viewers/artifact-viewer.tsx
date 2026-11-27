@@ -7,6 +7,7 @@ import { MarkdownViewer } from "./markdown-viewer.tsx";
 import { PinsOverlay } from "./pins-overlay.tsx";
 import {
   type AnchorAdapter,
+  type HostInput,
   type PresetId,
   type ReviewState,
   type ViewerArtifact,
@@ -36,6 +37,10 @@ export type ArtifactViewerProps = {
   readonly onActiveChange?: (active: boolean) => void;
   readonly review?: ReviewState | null;
   readonly preset?: PresetId;
+  /** Called whenever the view inside the stage changed (scroll, resize, load). */
+  readonly onViewChange?: (() => void) | undefined;
+  /** Wheel and gesture input a live frame forwarded for the host's camera. */
+  readonly onHostInput?: ((input: HostInput) => void) | undefined;
   /** Receives the stage's adapter so a page can reveal a thread's anchor. */
   readonly adapterRef?: { current: AnchorAdapter | null };
 };
@@ -54,13 +59,19 @@ export function ArtifactViewer({
   review = null,
   preset = "desktop",
   adapterRef,
+  onViewChange: onViewChanged,
+  onHostInput,
 }: ArtifactViewerProps): React.JSX.Element {
   const ownAdapter = useRef<AnchorAdapter | null>(null);
   const adapter = adapterRef ?? ownAdapter;
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const [tick, setTick] = useState(0);
+  // Read through a ref so a parent's callback never remounts the bridge.
+  const viewChanged = useRef(onViewChanged);
+  viewChanged.current = onViewChanged;
   const onViewChange = useCallback(() => {
     setTick((value) => value + 1);
+    viewChanged.current?.();
   }, []);
 
   const props = {
@@ -72,6 +83,7 @@ export function ArtifactViewer({
     review,
     adapterRef: adapter,
     onViewChange,
+    onHostInput,
     preset,
   };
 

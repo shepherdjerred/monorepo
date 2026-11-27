@@ -9,7 +9,7 @@ type Placed = {
   readonly approximate: boolean;
 };
 
-function describe(pin: Pin): string {
+export function describePin(pin: Pin): string {
   const where =
     pin.stale && pin.versionNumber !== null
       ? `on v${String(pin.versionNumber)}`
@@ -100,7 +100,7 @@ export function PinsOverlay({
             aria-pressed={selected}
             aria-label={
               members.length === 1
-                ? describe(first)
+                ? describePin(first)
                 : `${String(members.length)} threads: ${members.map((pin) => String(pin.index)).join(", ")}`
             }
             title={approximate ? "Approximate position" : undefined}

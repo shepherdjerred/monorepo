@@ -6,7 +6,7 @@ import { useBoard, useBoardThreads } from "#client/data/queries.ts";
 import { Composer } from "#client/threads/composer.tsx";
 import { ThreadCard } from "#client/threads/thread-card.tsx";
 import { WaitingHeader } from "#client/threads/thread-panel.tsx";
-import { KIND_LABEL } from "./board-frame.tsx";
+import { KIND_LABEL } from "#client/canvas/placeholder.tsx";
 
 /**
  * The accessible way to review a board: frames and threads as one nested
@@ -38,7 +38,7 @@ export function OutlinePage(): React.JSX.Element {
       <title>{`${board.data.board.title} outline · Artifacts`}</title>
       <div className="ar-page-head">
         <h1>{board.data.board.title}</h1>
-        <Link className="ui-btn" to={`/b/${slug}?grid=1`}>
+        <Link className="ui-btn" to={`/b/${slug}?view=canvas`}>
           Visual board
         </Link>
       </div>

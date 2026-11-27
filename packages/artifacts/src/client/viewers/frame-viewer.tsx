@@ -79,6 +79,18 @@ export function frameScale(
   return Math.min(1, byWidth, byHeight);
 }
 
+/** The client point of a position the frame reported in its own (unscaled) pixels. */
+function frameClientPoint(
+  frame: HTMLIFrameElement | null,
+  at: { readonly x: number; readonly y: number },
+): Point | null {
+  if (frame === null) return null;
+  const rect = frame.getBoundingClientRect();
+  const width = frame.offsetWidth;
+  const scale = width > 0 ? rect.width / width : 1;
+  return { x: rect.left + at.x * scale, y: rect.top + at.y * scale };
+}
+
 function useContainerSize() {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -109,6 +121,7 @@ export function FrameViewer({
   review,
   adapterRef,
   onViewChange,
+  onHostInput,
   preset,
 }: ViewerProps): React.JSX.Element {
   const [containerRef, container] = useContainerSize();
@@ -120,6 +133,9 @@ export function FrameViewer({
     new Map<number, (point: Extract<FrameMessage, { t: "point" }>) => void>(),
   );
   const probeId = useRef(0);
+  // A ref, so a new callback from the canvas never rebuilds the bridge.
+  const hostInput = useRef(onHostInput);
+  hostInput.current = onHostInput;
 
   const size = presetSize(preset, version.viewport, container);
   const scale = frameScale(
@@ -173,11 +189,29 @@ export function FrameViewer({
             );
             break;
           case "wheel":
-          case "gesture":
+          case "gesture": {
+            // The page did not keep this input: the canvas camera takes it. The
+            // point is the frame's own client pixels (rounded by the browser);
+            // pins never depend on it.
+            const client = frameClientPoint(frameRef.current, message);
+            const forward = hostInput.current;
+            if (client === null || forward === undefined) break;
+            forward(
+              message.t === "wheel"
+                ? {
+                    type: "wheel",
+                    dx: message.dx,
+                    dy: message.dy,
+                    ctrl: message.ctrl,
+                    client,
+                  }
+                : { type: "gesture", scale: message.scale, client },
+            );
+            break;
+          }
           case "drawn":
           case "scroll":
           case "nav":
-            // Wheel and gesture forwarding to a canvas camera arrives with the canvas.
             break;
         }
       },
@@ -363,7 +397,7 @@ export function FrameViewer({
               });
             }}
           />
-        ) : active ? null : (
+        ) : active || mode === "node" ? null : (
           <button
             type="button"
             className="ar-frame-activate"
@@ -374,7 +408,8 @@ export function FrameViewer({
           </button>
         )}
       </div>
-      {active ? (
+      {/* On the canvas the Exit chip is part of the unscaled overlay. */}
+      {active && mode === "focus" ? (
         <button
           type="button"
           className="ar-exit-chip"
