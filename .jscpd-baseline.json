@@ -1938,7 +1938,7 @@
     },
     "packages/media/src/infrastructure/visibility/access.ts|packages/media/src/shared/movie-editions/lifecycle/public-v4.ts": {
       "clones": 1,
-      "tokens": 73
+      "tokens": 71
     },
     "packages/media/src/migration/handoff-network/torrent-evidence.integration.test.ts|packages/media/src/migration/handoff-network/torrents.test.ts": {
       "clones": 1,
@@ -2570,7 +2570,7 @@
     },
     "packages/temporal/src/workflows/media/core.ts|packages/temporal/src/workflows/media/series-pack/fixtures/acquisition-before-prepare.ts": {
       "clones": 5,
-      "tokens": 2320
+      "tokens": 2153
     },
     "packages/temporal/src/workflows/media/handoff.ts|packages/temporal/src/workflows/media/native-quarantine.ts": {
       "clones": 1,
