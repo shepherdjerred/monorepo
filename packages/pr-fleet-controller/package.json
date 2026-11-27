@@ -42,7 +42,7 @@
     "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
-    "@shepherdjerred/root-scripts": "workspace:*",
+    "@shepherdjerred/script-kit": "workspace:*",
     "ai": "7.0.179",
     "zod": "^4.4.3"
   },

@@ -194,8 +194,6 @@ async function fixture() {
   );
   for (const file of [
     "scripts/lib/run.ts",
-    "scripts/run-temporal-node.ts",
-    "scripts/temporal-replay.ts",
     "packages/version-catalog/src/catalog.json",
     "packages/s3-signed-request/src/index.ts",
     "packages/delivery/src/shared/contract.ts",
@@ -268,8 +266,6 @@ test("exported helpers and their exact artifact ownership inputs invalidate the 
     let before = hashes(root);
     for (const file of [
       "scripts/lib/run.ts",
-      "scripts/run-temporal-node.ts",
-      "scripts/temporal-replay.ts",
       "packages/s3-signed-request/src/index.ts",
       "packages/delivery/src/shared/contract.ts",
       "packages/ops-model/src/catalog.ts",

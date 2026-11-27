@@ -1,7 +1,7 @@
 import {
   replayTemporalHistories,
   parseTemporalReplayTargets,
-} from "@shepherdjerred/root-scripts/temporal-replay.ts";
+} from "@shepherdjerred/script-kit/temporal-replay.ts";
 import { z } from "zod";
 
 await replayTemporalHistories({

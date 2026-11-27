@@ -3,6 +3,20 @@
   "tasks": {
     "lint": {
       "dependsOn": ["build"]
+    },
+    // world_archive.py and world_overviews.py read the pinned game version
+    // from the version catalog by path, outside this package.
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/version-catalog/src/catalog.json"
+      ]
+    },
+    "test:ci": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/version-catalog/src/catalog.json"
+      ]
     }
   }
 }

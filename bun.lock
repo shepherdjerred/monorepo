@@ -1804,7 +1804,7 @@
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
-        "@shepherdjerred/root-scripts": "workspace:*",
+        "@shepherdjerred/script-kit": "workspace:*",
         "ai": "7.0.179",
         "zod": "^4.4.3",
       },
@@ -2272,7 +2272,7 @@
       },
       "devDependencies": {
         "@shepherdjerred/architecture": "workspace:*",
-        "@shepherdjerred/root-scripts": "workspace:*",
+        "@shepherdjerred/script-kit": "workspace:*",
         "@temporalio/activity": "1.26.0",
         "@temporalio/client": "1.26.0",
         "@temporalio/testing": "1.26.0",
@@ -2280,6 +2280,24 @@
         "@types/node": "^26.1.1",
         "@typescript/native": "npm:typescript@7.0.2",
         "bun-types": "1.4.5",
+        "eslint": "^10.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.5",
+      },
+    },
+    "packages/script-kit": {
+      "name": "@shepherdjerred/script-kit",
+      "version": "0.1.0",
+      "dependencies": {
+        "@temporalio/client": "1.26.0",
+        "@temporalio/worker": "1.26.0",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.5",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.5",
         "eslint": "^10.7.0",
         "typescript": "^6.0.3",
         "vitest": "5.0.5",
@@ -2706,6 +2724,7 @@
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/root-scripts": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
+        "@shepherdjerred/script-kit": "workspace:*",
         "@shepherdjerred/storm-forum": "workspace:*",
         "@shepherdjerred/temporal-observability": "workspace:*",
         "@shepherdjerred/text": "workspace:*",
@@ -3125,9 +3144,8 @@
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/release-tools": "workspace:*",
         "@shepherdjerred/s3-signed-request": "workspace:*",
+        "@shepherdjerred/script-kit": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
-        "@temporalio/client": "1.26.0",
-        "@temporalio/worker": "1.26.0",
         "fast-xml-builder": "1.3.1",
         "fast-xml-parser": "5.11.1",
         "fast-xml-validator": "1.4.2",
@@ -4787,6 +4805,8 @@
     "@shepherdjerred/root-scripts": ["@shepherdjerred/root-scripts@workspace:scripts"],
 
     "@shepherdjerred/s3-signed-request": ["@shepherdjerred/s3-signed-request@workspace:packages/s3-signed-request"],
+
+    "@shepherdjerred/script-kit": ["@shepherdjerred/script-kit@workspace:packages/script-kit"],
 
     "@shepherdjerred/statically-typed": ["@shepherdjerred/statically-typed@workspace:packages/statically-typed"],
 

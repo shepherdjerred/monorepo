@@ -90,6 +90,7 @@ hold only scoped invariants that agents must keep in context.
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
 | [bugsink-config](bugsink-config/)                 | Browser-safe Bugsink data collection policy shared by application clients      |
 | [text](text/)                                     | Grapheme-safe truncation and chunking for user-facing text                     |
+| [script-kit](script-kit/)                         | Self-contained Temporal replay and commit-message script helpers               |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
 ## Plugins & extensions

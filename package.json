@@ -175,6 +175,7 @@
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",
     "packages/s3-signed-request",
+    "packages/script-kit",
     "packages/bugsink-config",
     "packages/sjer.red",
     "packages/starlight-karma-bot",

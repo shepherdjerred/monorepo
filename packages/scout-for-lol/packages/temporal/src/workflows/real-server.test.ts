@@ -21,7 +21,7 @@ import {
   acquireTemporalTendLease,
   type TemporalTendLeaseHandle,
   TemporalTendLeaseSchema,
-} from "@shepherdjerred/root-scripts/lib/temporal/temporal-tend-lease.ts";
+} from "@shepherdjerred/script-kit/temporal-tend-lease.ts";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
 import { scoutPrematchDiscoveryInputCodec } from "#src/workflow-contracts.ts";
 

@@ -14,8 +14,6 @@
       ],
       "inputs": [
         "package.json",
-        "run-temporal-node.ts",
-        "temporal-replay.ts",
         "types/**",
         "lib/**",
         "$TURBO_ROOT$/ci/scripts/images/image-targets.ts"

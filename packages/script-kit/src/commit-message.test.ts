@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { validateCommitMessage } from "./commit-message.ts";
 
-const repositoryRoot = new URL("../..", import.meta.url).pathname;
+const repositoryRoot = new URL("../../..", import.meta.url).pathname;
 
 test("accepts a commit scope backed by a workspace package", async () => {
   await expect(

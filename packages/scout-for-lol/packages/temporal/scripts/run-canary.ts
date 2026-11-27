@@ -6,7 +6,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { z } from "zod";
-import { temporalOperatorConnectionOptions } from "@shepherdjerred/root-scripts/temporal-replay.ts";
+import { temporalOperatorConnectionOptions } from "@shepherdjerred/script-kit/temporal-replay.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
   ScoutQueueCanaryProbeResultSchema,
