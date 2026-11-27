@@ -12,6 +12,14 @@ import { streamerEnv as env } from "./streamer/streamer-test-fixtures.ts";
 
 const stream = loadConfig(env()).stream;
 
+/** Every audio flag off: the ffmpeg audio stage that shipped before the flags existed. */
+const AUDIO_OFF = {
+  dialogDownmix: false,
+  loudnessNormalization: false,
+  liveResync: false,
+  trackRanking: false,
+} as const;
+
 const MUSIC: ResolvedSource = {
   title: "A Song",
   ffmpegInput: "https://media.invalid/audio.webm",
@@ -33,6 +41,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: MUSIC,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
 
     expect(options.audioOnly).toBe(true);
@@ -56,6 +65,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: MUSIC,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
 
     expect(options.readrate).toBe(stream.readrate);
@@ -70,6 +80,7 @@ describe("buildMusicPrepareOptions", () => {
       resolved: { ...MUSIC, live: true },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(liveOptions.readrate).toBeUndefined();
     expect("readrate" in liveOptions).toBe(false);
@@ -85,6 +96,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 0,
         volumePercent,
+        audioProcessing: AUDIO_OFF,
       });
       expect(options.audioVolume).toBeUndefined();
     }
@@ -97,6 +109,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
       }).startTime,
     ).toBeUndefined();
     expect(
@@ -105,6 +118,7 @@ describe("buildMusicPrepareOptions", () => {
         resolved: MUSIC,
         startSeconds: 42,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
       }).startTime,
     ).toBe(42);
   });
@@ -118,6 +132,7 @@ describe("buildMusicPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(options.customHeaders).toEqual({ Referer: "https://x.invalid/" });
   });
@@ -135,6 +150,7 @@ describe("buildMusicPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
     });
     expect(options.subtitleBurn).toBeUndefined();
     expect(options.inputColor).toBeUndefined();
@@ -148,6 +164,7 @@ function gain(volumePercent: number): number | undefined {
     resolved: VIDEO,
     startSeconds: 0,
     volumePercent,
+    audioProcessing: AUDIO_OFF,
     pipelineMode: "sw",
   }).audioVolume;
 }
@@ -159,6 +176,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, hdr: true, subtitle: { path: "/tmp/s.srt" } },
       startSeconds: 30,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
 
@@ -180,6 +198,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, discontinuousLive: true },
       startSeconds: 30,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(options.normalizeTimestamps).toBe(true);
@@ -194,6 +213,7 @@ describe("buildVideoPrepareOptions", () => {
         resolved: VIDEO,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
         pipelineMode: "hw-upload",
       }).hardwarePipelineMode,
     ).toBe("upload");
@@ -202,6 +222,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(software.encoder).toBeUndefined();
@@ -232,6 +253,7 @@ describe("buildVideoPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
 
@@ -249,6 +271,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(options.audioInput).toBeUndefined();
@@ -272,6 +295,7 @@ describe("buildVideoPrepareOptions", () => {
       },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "sw",
     });
     expect(options.customInputOptions).toEqual(inputOptions);
@@ -283,6 +307,7 @@ describe("buildVideoPrepareOptions", () => {
         resolved: VIDEO,
         startSeconds: 0,
         volumePercent: 100,
+        audioProcessing: AUDIO_OFF,
         pipelineMode: "sw",
       }).customInputOptions,
     ).toBeUndefined();
@@ -294,6 +319,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(seekable.readrate).toBe(stream.readrate);
@@ -304,6 +330,7 @@ describe("buildVideoPrepareOptions", () => {
       resolved: { ...VIDEO, live: true },
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(live.readrate).toBeUndefined();
@@ -341,6 +368,7 @@ function sizedOptions(
     },
     startSeconds: 0,
     volumePercent: 100,
+    audioProcessing: AUDIO_OFF,
     pipelineMode,
   });
 }
@@ -364,6 +392,7 @@ describe("buildVideoPrepareOptions output size", () => {
       resolved: VIDEO,
       startSeconds: 0,
       volumePercent: 100,
+      audioProcessing: AUDIO_OFF,
       pipelineMode: "hw",
     });
     expect(options.width).toBe(stream.width);
@@ -408,6 +437,7 @@ function hwOptions(resolved: ResolvedSource) {
     startSeconds: 0,
     volumePercent: 100,
     pipelineMode: "hw",
+    audioProcessing: AUDIO_OFF,
   });
 }
 

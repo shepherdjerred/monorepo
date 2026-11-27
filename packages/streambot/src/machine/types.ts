@@ -11,6 +11,7 @@ import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
   ProbedAudio,
   ProbedVideo,
+  RankedTracks,
 } from "@shepherdjerred/streambot/sources/probed-media.ts";
 import type { SportsPlaybackRecipe } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import type {
@@ -154,6 +155,11 @@ export type ConcreteResolvedSource = {
   readonly probedVideo?: ProbedVideo;
   /** The chosen audio stream's channel layout, from the same probe. */
   readonly probedAudio?: ProbedAudio;
+  /**
+   * The probe-ranked audio track and video variant. Played instead of the fields above only while
+   * `streambot-audio-track-ranking-enabled` is on for the segment; absent when the probe failed.
+   */
+  readonly rankedTracks?: RankedTracks;
   /**
    * Media duration (seconds, from the resolve-time ffprobe). Lets the streamer distinguish a real
    * end of media from a premature exit-0 truncation (network URL expiry, container short-read).

@@ -394,6 +394,7 @@ describe("finalizeResolved — folding the final probe into the resolved source"
     audioCodec: "aac",
     audioChannels: 2,
     durationSeconds: 1800,
+    ranked: {},
   };
   const noVideo: MediaInfo = {
     ...withVideo,

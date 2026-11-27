@@ -8,6 +8,7 @@ import type { MediaInfo } from "@shepherdjerred/streambot/sources/probe.ts";
 import type {
   ProbedAudio,
   ProbedVideo,
+  RankedTracks,
 } from "@shepherdjerred/streambot/sources/probed-media.ts";
 import { probePlaybackSource } from "@shepherdjerred/streambot/sources/source-probe.ts";
 import type {
@@ -62,10 +63,12 @@ export function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
 function probedSportsProperties(info: MediaInfo | null): {
   probedVideo?: ProbedVideo;
   probedAudio?: ProbedAudio;
+  rankedTracks?: RankedTracks;
 } {
   return {
     ...(info?.video === undefined ? {} : { probedVideo: info.video }),
     ...(info?.audio === undefined ? {} : { probedAudio: info.audio }),
+    ...(info === null ? {} : { rankedTracks: info.ranked }),
   };
 }
 

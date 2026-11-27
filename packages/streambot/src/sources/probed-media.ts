@@ -30,3 +30,22 @@ export type ProbedAudio = {
   readonly channels?: number;
   readonly channelLayout?: string;
 };
+
+/**
+ * The streams `streambot-audio-track-ranking-enabled` plays, carried beside the legacy
+ * first-usable choice because the flag is evaluated at playback time, not at resolve time.
+ *
+ * Audio ranks the default track first, then the preferred language, skipping commentary and
+ * audio-description tracks, then the most channels. Video ranks variants by height (the tallest
+ * that fits the output box, else the shortest above it), then advertised HLS bitrate.
+ */
+export type RankedTracks = {
+  /** Zero-based among the audio streams of the input that carries audio (`<input>:a:N`). */
+  readonly audioStreamIndex?: number;
+  readonly audio?: ProbedAudio;
+  /** Zero-based among all video streams, cover art included (`0:v:N`). */
+  readonly videoStreamIndex?: number;
+  readonly video?: ProbedVideo;
+  /** The ranked video stream is PQ/HLG; an HLS master can mix HDR and SDR variants. */
+  readonly hdr?: boolean;
+};

@@ -33,6 +33,11 @@ import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
 import { buildSoftwareVideoGraph, formatFrameRate } from "./videoGraph.js";
+import {
+  buildAudioOutputStage,
+  isDialogDownmixLayout,
+  type AudioProcessing,
+} from "./audioGraph.js";
 
 import type { AudioFrameSink } from "./AudioSink.js";
 import type { Request } from "zeromq";
@@ -148,6 +153,15 @@ export type PrepareStreamOptions = {
    * so a caller that knew its desired volume up front had no way to say so.
    */
   audioVolume: number;
+
+  /**
+   * Opt-in audio processing ahead of the `volume@internal_lib` gain: a dialogue-first surround
+   * downmix, realtime loudness normalisation, and timestamp resync for live input (see
+   * {@link AudioProcessing}). Omitted, or with every step off, the audio arguments are exactly the
+   * legacy `-ac 2 -lfe_mix_level 1` + `volume@internal_lib=<gain>` pair. The caller decides; this
+   * package never reads configuration or flags for it.
+   */
+  audioProcessing?: AudioProcessing;
 
   /**
    * Functions to get encoder settings
@@ -408,11 +422,6 @@ class FfmpegArgumentBuilder {
 
   outputOptionsList(options: readonly string[]): this {
     this.outputOptions.push(...options);
-    return this;
-  }
-
-  audioChannels(channels: number): this {
-    this.outputOptions.push("-ac", String(channels));
     return this;
   }
 
@@ -695,20 +704,6 @@ function createFfmpegStderrHandler(
   };
 }
 
-/**
- * Render a linear gain for ffmpeg's `volume` filter.
- *
- * Unity renders as the literal `1.0` this filter has always carried, so a caller that leaves
- * `audioVolume` alone gets a byte-identical command line to the one before the option existed —
- * the rawvideo bots (`discord-plays-pokemon`, `discord-plays-mario-kart`) pin that vector. Every
- * other value renders as itself, and `0` stays `0`: silence is a volume, not a missing option, so
- * it must never be rounded or promoted back to unity. ffmpeg parses `1` and `1.0` identically; the
- * spelling is preserved for the diff, not for the filter.
- */
-function formatAudioGain(gain: number): string {
-  return gain === 1 ? "1.0" : String(gain);
-}
-
 export function prepareStream(
   input: string | Readable,
   options: Partial<PrepareStreamOptions> = {},
@@ -857,6 +852,9 @@ export function prepareStream(
       ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
       ...(opts.pad !== undefined ? { pad: opts.pad } : {}),
       ...(opts.audioInput !== undefined ? { audioInput: opts.audioInput } : {}),
+      ...(opts.audioProcessing !== undefined
+        ? { audioProcessing: opts.audioProcessing }
+        : {}),
       ...(opts.ffmpegPath !== undefined ? { ffmpegPath: opts.ffmpegPath } : {}),
     } satisfies PrepareStreamOptions;
   }
@@ -875,6 +873,12 @@ export function prepareStream(
       mergedOptions.audioStreamIndex < 0)
   ) {
     throw new Error("audioStreamIndex must be a non-negative integer");
+  }
+  const downmixLayout = mergedOptions.audioProcessing?.dialogDownmix;
+  if (downmixLayout !== undefined && !isDialogDownmixLayout(downmixLayout)) {
+    throw new Error(
+      `audioProcessing.dialogDownmix has no matrix for layout ${String(downmixLayout)}`,
+    );
   }
 
   // `audioOnly` does not modify the video path, it deletes it. Anything that is only meaningful in
@@ -1249,19 +1253,19 @@ export function prepareStream(
           ? "0:a:0"
           : "0:a:0?"
         : `0:a:${String(mergedOptions.audioStreamIndex)}`;
+    // Without `audioProcessing` the stage is the legacy `-ac 2 -lfe_mix_level 1` downmix and a
+    // lone `volume@internal_lib`; see audioGraph.ts for each opt-in step and its order.
+    const audioStage = buildAudioOutputStage(
+      audioVolume,
+      mergedOptions.audioProcessing,
+    );
     commandBuilder
       .addOutputOption(["-map", audioMap])
-      .audioChannels(2)
-      /*
-       * I don't have much surround sound material to test this with,
-       * if you do and you have better settings for this, feel free to
-       * contribute!
-       */
-      .addOutputOption(["-lfe_mix_level", "1"])
+      .addOutputOption([...audioStage.channelOptions])
       .audioFrequency(48000)
       .audioCodec("libopus")
-      .audioBitrate(`${bitrateAudio}k`)
-      .audioFilters(`volume@internal_lib=${formatAudioGain(audioVolume)}`);
+      .audioBitrate(`${bitrateAudio}k`);
+    for (const filter of audioStage.filters) commandBuilder.audioFilters(filter);
     // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
     // they bind to the (only) audio stream, after -c:a above.
     if (mergedOptions.lowDelayAudio)

@@ -16,6 +16,7 @@ import type {
 } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audio-ports.ts";
+import type { AudioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 
 /** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
 export type PlayerFactory = typeof createSeekablePlayer;
@@ -29,6 +30,8 @@ export type StreamerDependencies = {
   createObserver?: StreamObserverFactory;
   /** Test seam for the voice-join boundary, where `receiveAudio` mirrors `voice.enabled`. */
   joinStreamerVoice?: typeof joinStreamerVoice;
+  /** Per-segment audio flag evaluation; defaults to the live Flags evaluation for the guild. */
+  audioProcessingFlags?: (guildId: string) => Promise<AudioProcessingFlags>;
 };
 
 /**

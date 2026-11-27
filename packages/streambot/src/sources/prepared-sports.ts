@@ -80,6 +80,7 @@ export async function runWithPreparedSportsInput(
       hdr: _hdr,
       probedVideo: _video,
       probedAudio: _audio,
+      rankedTracks: _ranked,
       ...metadata
     } = input.resolved;
     running = run(
@@ -94,6 +95,9 @@ export async function runWithPreparedSportsInput(
           ...(prepared.probedAudio === undefined
             ? {}
             : { probedAudio: prepared.probedAudio }),
+          ...(prepared.rankedTracks === undefined
+            ? {}
+            : { rankedTracks: prepared.rankedTracks }),
           ...preparedSportsInputFields(prepared),
           ...(prepared.videoStreamIndex === undefined
             ? {}
