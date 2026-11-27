@@ -8,10 +8,13 @@ import {
   classifyConsumerChanges,
   classifyPackageRelease,
   classifyPackageReleaseRange,
-  fetchNpmPackageTags,
   NPM_PACKAGE_POLICIES,
   packageJsonHasConsumerChange,
 } from "./npm-release-eligibility.ts";
+import {
+  fetchNpmPackageTags,
+  openReleaseHistory,
+} from "../release/release-history.ts";
 
 const webringPath = "packages/webring";
 const astroPath = "packages/astro-opengraph-images";
@@ -316,6 +319,58 @@ describe("historical release regressions", () => {
       ).rejects.toThrow("No release tag found");
     } finally {
       await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  test("reads release history from a scratch repository, leaving the checkout untouched", async () => {
+    const fixture = releaseHistory[0];
+    if (fixture === undefined) throw new Error("Release fixture is missing");
+    const policy = NPM_PACKAGE_POLICIES.find(
+      (candidate) => candidate.name === fixture.packageName,
+    );
+    if (policy === undefined) throw new Error("Package policy is missing");
+    const origin = await historicalRepository(fixture);
+    const checkout = await mkdtemp(
+      path.join(tmpdir(), "npm-release-checkout-"),
+    );
+    let scratch: string | undefined;
+    try {
+      await fixtureGit(checkout, "init", "--quiet");
+      await fixtureGit(checkout, "remote", "add", "origin", origin);
+      const history = await openReleaseHistory(checkout);
+      scratch = history.path;
+      // The same decision as reading the origin directly.
+      const viaHistory = await classifyPackageReleaseRange(
+        history.path,
+        policy,
+        fixture.previousTag,
+        fixture.tag,
+      );
+      expect(viaHistory).toEqual(
+        await classifyPackageReleaseRange(
+          origin,
+          policy,
+          fixture.previousTag,
+          fixture.tag,
+        ),
+      );
+      // Tags live only in the scratch repository, which is promisor and bare.
+      const scratchTags = await Bun.$`git -C ${history.path} tag --list`.text();
+      const checkoutTags = await Bun.$`git -C ${checkout} tag --list`.text();
+      const promisor =
+        await Bun.$`git -C ${history.path} config remote.origin.promisor`.text();
+      expect(scratchTags.trim()).not.toBe("");
+      expect(checkoutTags.trim()).toBe("");
+      expect(promisor.trim()).toBe("true");
+      await history.cleanup();
+      expect(await Bun.file(path.join(history.path, "HEAD")).exists()).toBe(
+        false,
+      );
+    } finally {
+      if (scratch !== undefined)
+        await rm(scratch, { recursive: true, force: true });
+      await rm(checkout, { recursive: true, force: true });
+      await rm(origin, { recursive: true, force: true });
     }
   });
 

@@ -280,62 +280,6 @@ export function classifyConsumerChanges(
   return { eligible: reasons.length > 0, reasons };
 }
 
-export async function fetchNpmPackageTags(
-  root: string,
-  env: Record<string, string> = {},
-): Promise<void> {
-  for (const policy of NPM_PACKAGE_POLICIES) {
-    const tagRef = `refs/tags/${policy.tagPrefix}*`;
-    await run(["git", "fetch", "--no-tags", "origin", `${tagRef}:${tagRef}`], {
-      cwd: root,
-      env,
-    });
-  }
-}
-
-export async function fetchReleaseTarget(
-  root: string,
-  env: Record<string, string> = {},
-  branch = "main",
-): Promise<string> {
-  const remoteRef = `refs/heads/${branch}`;
-  const remote = await run(["git", "ls-remote", "origin", remoteRef], {
-    cwd: root,
-    env,
-    capture: true,
-    echoCapturedStdout: false,
-  });
-  const remoteSha = remote.stdout
-    .split("\n")
-    .map((line) => line.trim().split(/\s+/)[0])
-    .find((value) => value !== undefined && /^[0-9a-f]{40}$/.test(value));
-  if (remoteSha === undefined) {
-    throw new Error(`Could not resolve origin/${branch} for release preflight`);
-  }
-
-  const localRef = `refs/remotes/origin/${branch}`;
-  await run(
-    ["git", "fetch", "--no-tags", "origin", `${remoteRef}:${localRef}`],
-    {
-      cwd: root,
-      env,
-    },
-  );
-  const local = await run(["git", "rev-parse", localRef], {
-    cwd: root,
-    capture: true,
-    echoCapturedStdout: false,
-  });
-  const localSha = local.stdout.trim();
-  if (localSha !== remoteSha) {
-    throw new Error(
-      `origin/${branch} moved while release preflight fetched it ` +
-        `(${remoteSha} -> ${localSha}); retry the release lane`,
-    );
-  }
-  return remoteSha;
-}
-
 async function latestTag(
   root: string,
   policy: NpmPackagePolicy,
@@ -360,20 +304,28 @@ async function packageJsonAtTag(
   root: string,
   ref: string,
   packageJsonPath: string,
+  env: Record<string, string>,
 ): Promise<string> {
   const result = await run(["git", "show", `${ref}:${packageJsonPath}`], {
     cwd: root,
+    env,
     capture: true,
     echoCapturedStdout: false,
   });
   return result.stdout;
 }
 
+type ClassifyOptions = {
+  readonly headRef?: string;
+  /** Credentials for Git to fetch a missing blob from a promisor remote. */
+  readonly env?: Record<string, string>;
+};
+
 async function classifyPackageReleaseFromTag(
   root: string,
   policy: NpmPackagePolicy,
   tag: string,
-  headRef = "HEAD",
+  { headRef = "HEAD", env = {} }: ClassifyOptions = {},
 ): Promise<PackageReleaseDecision> {
   const changed = await run(
     [
@@ -387,7 +339,7 @@ async function classifyPackageReleaseFromTag(
       "--",
       policy.path,
     ],
-    { cwd: root, capture: true, echoCapturedStdout: false },
+    { cwd: root, env, capture: true, echoCapturedStdout: false },
   );
   const changedFiles = changed.stdout
     .split("\n")
@@ -398,11 +350,12 @@ async function classifyPackageReleaseFromTag(
     root,
     headRef,
     policy.packageJsonPath,
+    env,
   );
   const packageJsonChange =
     changedFiles.includes(policy.packageJsonPath) &&
     packageJsonHasConsumerChange(
-      await packageJsonAtTag(root, tag, policy.packageJsonPath),
+      await packageJsonAtTag(root, tag, policy.packageJsonPath, env),
       headPackageJson,
       policy.packageJsonPath,
     );
@@ -443,12 +396,13 @@ export async function classifyPackageReleaseRange(
   previousTag: string,
   headRef: string,
 ): Promise<PackageReleaseDecision> {
-  return classifyPackageReleaseFromTag(root, policy, previousTag, headRef);
+  return classifyPackageReleaseFromTag(root, policy, previousTag, { headRef });
 }
 
 export async function classifyAllPackageReleases(
   root: string,
   headRef = "HEAD",
+  env: Record<string, string> = {},
 ): Promise<readonly PackageReleaseDecision[]> {
   return Promise.all(
     NPM_PACKAGE_POLICIES.map(async (policy) =>
@@ -456,7 +410,7 @@ export async function classifyAllPackageReleases(
         root,
         policy,
         await latestTag(root, policy),
-        headRef,
+        { headRef, env },
       ),
     ),
   );

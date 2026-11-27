@@ -184,6 +184,19 @@ function gitOriginUrl(
   return `https://github.com/${repository.owner}/${repository.repo}.git`;
 }
 
+/**
+ * The only files release-please's clone needs on disk. release-please reads
+ * every repository file through Git objects (`git show`, `git ls-tree`,
+ * `git log`) and writes through the GitHub API, never from the working tree,
+ * so materializing the whole tree only costs writes: about 1.9 GB per run,
+ * most of it blobs fetched just to be checked out. Git refuses a checkout that
+ * leaves no files, so the two root files that configure release-please stay.
+ */
+const RELEASE_PLEASE_WORKTREE_PATHS = [
+  "release-please-config.json",
+  ".release-please-manifest.json",
+] as const;
+
 export async function initializePartialClone(
   repositoryPath: string,
   remoteUrl: string,
@@ -196,6 +209,14 @@ export async function initializePartialClone(
     "config",
     "remote.origin.partialclonefilter",
     "blob:none",
+  ]);
+  // Set before the first checkout, and inherited by LocalGitHub's own
+  // `checkout` and `reset --hard`, so no later step fetches the tree's blobs.
+  await runGit(repositoryPath, [
+    "sparse-checkout",
+    "set",
+    "--no-cone",
+    ...RELEASE_PLEASE_WORKTREE_PATHS.map((file) => `/${file}`),
   ]);
   await runGit(repositoryPath, [
     "fetch",
