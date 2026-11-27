@@ -194,3 +194,108 @@ describe("the per-champion files", () => {
     expect(failed[0]?.issues.join(" ")).toContain("resolves to no game fact");
   });
 });
+
+const COMBO = {
+  id: "middle:Ahri:combo:0",
+  name: "Charm catch",
+  category: "trick" as const,
+  sequence: [{ kind: "ability" as const, champion: AHRI, slot: "E" as const }],
+  when: "Use it when the target will not stand still.",
+  text: "Land Charm first, then follow up while they walk toward you.",
+};
+
+const WITH_COMBO: StoredUnit = {
+  id: "middle:Ahri",
+  lane: "middle",
+  inputHash: HASH,
+  sets: [
+    {
+      subjectKey: "Ahri",
+      tips: [
+        {
+          id: "g1",
+          text: "Hold Charm for a caster.",
+          cites: [],
+          pWrong: 0.1,
+          hidden: false,
+        },
+      ],
+      combos: [
+        {
+          combo: COMBO,
+          cites: [
+            { kind: "ability", champion: AHRI, slot: "E", name: "Charm" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const refUnit = (comboId: string): StoredUnit => ({
+  ...UNIT,
+  sets: [
+    {
+      ...(UNIT.sets[0] ?? { subjectKey: "Ahri", tips: [], combos: [] }),
+      comboRefs: [
+        {
+          comboId,
+          note: "Charm catches Syndra before her stun is ready.",
+          cites: [
+            { kind: "ability", champion: AHRI, slot: "E", name: "Charm" },
+          ],
+        },
+      ],
+    },
+    ...UNIT.sets.slice(1),
+  ],
+});
+
+describe("a matchup side's combo references", () => {
+  test("point at a combo of the same champion in the same lane, and link the note's words", () => {
+    const { files, failed } = buildChampionFiles(
+      [WITH_COMBO, refUnit(COMBO.id)],
+      META,
+      context,
+    );
+    expect(failed).toEqual([]);
+    const ahri = ChampionTipsFileSchema.parse(files.get("Ahri"));
+    const ref = ahri.matchups[0]?.comboRefs[0];
+    expect(ref?.comboId).toBe(COMBO.id);
+    expect(ref?.refs.map((entry) => [entry.kind, entry.key])).toEqual([
+      ["ability", "Ahri-E"],
+      ["champion", "Syndra"],
+    ]);
+    expect(fileIssues(ahri, index)).toEqual([]);
+  });
+
+  test("fail the unit when the combo does not exist, and fail the file check when a written file points at a missing one", () => {
+    const { failed } = buildChampionFiles(
+      [WITH_COMBO, refUnit("middle:Ahri:combo:9")],
+      META,
+      context,
+    );
+    expect(failed[0]?.issues.join(" ")).toContain(
+      "not a combo of this champion",
+    );
+    const { files } = buildChampionFiles(
+      [WITH_COMBO, refUnit(COMBO.id)],
+      META,
+      context,
+    );
+    const ahri = ChampionTipsFileSchema.parse(
+      structuredClone(files.get("Ahri")),
+    );
+    const side = ahri.matchups[0];
+    if (side === undefined) {
+      throw new Error("no matchup side");
+    }
+    side.comboRefs[0] = {
+      ...(side.comboRefs[0] ?? { note: "x", refs: [] }),
+      comboId: "middle:Ahri:combo:9",
+      note: "x",
+      refs: [],
+    };
+    expect(fileIssues(ahri, index).join(" ")).toContain("does not exist");
+  });
+});

@@ -69,7 +69,7 @@ const HIDE_AT = 0.85;
 /** Room kept under the cap for the Decisions API, which the batch budget does not see. */
 const DECISIONS_ALLOWANCE_USD = 2;
 
-const StoredUnitSchema = z.object({
+export const StoredUnitSchema = z.object({
   id: z.string(),
   lane: z.enum(["top", "jungle", "middle", "adc", "support"]),
   inputHash: z.string(),
@@ -89,9 +89,69 @@ const StoredUnitSchema = z.object({
       combos: z.array(
         z.object({ combo: ComboSchema, cites: z.array(CiteSchema) }),
       ),
+      comboRefs: z
+        .array(
+          z.object({
+            comboId: z.string(),
+            note: z.string(),
+            cites: z.array(CiteSchema),
+          }),
+        )
+        .optional(),
     }),
   ),
 });
+
+/** Where `refs-only.ts` checkpoints the combo references a later pass chose for the matchup sides. */
+export const REFS_CHECKPOINTS = `${import.meta.dir}/../../.tips-cache/full-run-refs`;
+
+const RefsCheckpointSchema = z.object({
+  units: z.array(
+    z.object({
+      unitId: z.string(),
+      sets: z.array(
+        z.object({
+          subjectKey: z.string(),
+          comboRefs: z.array(
+            z.object({
+              comboId: z.string(),
+              note: z.string(),
+              cites: z.array(CiteSchema),
+            }),
+          ),
+        }),
+      ),
+    }),
+  ),
+});
+
+/** Put the checkpointed combo references onto the stored matchup sides, so every write of the output keeps them. */
+export async function applyRefs(stored: StoredUnit[]): Promise<number> {
+  const byUnit = new Map(stored.map((unit) => [unit.id, unit]));
+  let applied = 0;
+  for (const name of (
+    await readdir(REFS_CHECKPOINTS).catch(() => [])
+  ).toSorted()) {
+    const checkpoint = RefsCheckpointSchema.parse(
+      await Bun.file(`${REFS_CHECKPOINTS}/${name}`).json(),
+    );
+    for (const entry of checkpoint.units) {
+      const unit = byUnit.get(entry.unitId);
+      for (const side of entry.sets) {
+        const set = unit?.sets.find(
+          (candidate) =>
+            candidate.opponentKey !== undefined &&
+            candidate.subjectKey === side.subjectKey,
+        );
+        if (set !== undefined) {
+          set.comboRefs = side.comboRefs;
+          applied += side.comboRefs.length > 0 ? 1 : 0;
+        }
+      }
+    }
+  }
+  return applied;
+}
 
 const ChunkSchema = z.object({
   index: z.number().int(),
@@ -133,7 +193,7 @@ const prettierJson = async (path: string, value: unknown): Promise<string> => {
   });
 };
 
-async function readChunks(): Promise<Chunk[]> {
+export async function readChunks(): Promise<Chunk[]> {
   const names = await readdir(CHECKPOINTS).catch(() => []);
   const chunks: Chunk[] = [];
   for (const name of names
@@ -215,7 +275,7 @@ function toStored(ctx: Context, unit: UnitState): StoredUnit | undefined {
   };
 }
 
-async function writeOutputs(
+export async function writeOutputs(
   stored: readonly StoredUnit[],
   glossary: ReadonlyMap<GlossaryId, GlossaryEntry>,
   meta: { patch: string; model: string; promptVersion: string },
@@ -288,6 +348,7 @@ async function main(): Promise<void> {
   const prior = await readChunks();
   const done = new Set(prior.flatMap((chunk) => chunk.unitIds));
   const stored: StoredUnit[] = prior.flatMap((chunk) => chunk.stored);
+  await applyRefs(stored);
   const failedGeneration = prior.flatMap((chunk) => chunk.failed);
   const spend = new Map<string, number>();
   const stats = new Map<string, Record<string, number>>();

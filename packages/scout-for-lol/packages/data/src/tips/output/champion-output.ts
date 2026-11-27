@@ -5,6 +5,7 @@ import {
   ChampionTipsFileSchema,
   type ChampionTipsIndex,
   type OutputCombo,
+  type OutputComboRef,
   type OutputComboStep,
   type OutputGeneralSet,
   type OutputMatchupSet,
@@ -43,12 +44,22 @@ export type StoredCombo = {
   cites: Cite[];
 };
 
+/** A matchup side's pointer at one of its champion's combos, with why it works or fails here. */
+export type StoredComboRef = {
+  comboId: string;
+  note: string;
+  /** Ability cites of the referenced combo, so the note can be linked. */
+  cites: Cite[];
+};
+
 export type StoredSet = {
   subjectKey: string;
   /** Data Dragon key of the opponent; absent for a general set. */
   opponentKey?: string | undefined;
   tips: StoredTip[];
   combos: StoredCombo[];
+  /** Up to three of the subject's combos that bear on this matchup; absent when none were chosen. */
+  comboRefs?: StoredComboRef[] | undefined;
 };
 
 export type StoredUnit = {
@@ -143,6 +154,40 @@ function convertCombo(
   };
 }
 
+/** The combo ids of each champion's general set in each lane, for a matchup side's references to resolve against. */
+function comboIdsByLane(
+  units: readonly StoredUnit[],
+): Map<string, Set<string>> {
+  const found = new Map<string, Set<string>>();
+  for (const unit of units) {
+    for (const set of unit.sets) {
+      if (set.opponentKey === undefined) {
+        found.set(
+          `${set.subjectKey}|${unit.lane}`,
+          new Set(set.combos.map((entry) => entry.combo.id)),
+        );
+      }
+    }
+  }
+  return found;
+}
+
+function convertComboRef(
+  ref: StoredComboRef,
+  known: ReadonlySet<string> | undefined,
+  context: RefContext,
+  issues: string[],
+): OutputComboRef {
+  if (known?.has(ref.comboId) !== true) {
+    issues.push(`${ref.comboId} is not a combo of this champion in this lane`);
+  }
+  const refs = refsFor(ref.note, ref.cites, context);
+  for (const issue of validateRefs(ref.note, refs, context.index)) {
+    issues.push(`${ref.comboId}: ${issue.message}`);
+  }
+  return { comboId: ref.comboId, note: ref.note, refs };
+}
+
 /** Group the units by champion into schema-valid files; units with an unresolvable reference are returned as failed. */
 export function buildChampionFiles(
   units: readonly StoredUnit[],
@@ -152,6 +197,7 @@ export function buildChampionFiles(
   const generals = new Map<string, OutputGeneralSet[]>();
   const matchups = new Map<string, OutputMatchupSet[]>();
   const failed: FailedUnit[] = [];
+  const comboIds = comboIdsByLane(units);
   for (const unit of units) {
     const issues: string[] = [];
     const converted = unit.sets.map((set) => {
@@ -175,7 +221,14 @@ export function buildChampionFiles(
               inputHash: unit.inputHash,
               opponent: set.opponentKey,
               tips,
-              comboRefs: [],
+              comboRefs: (set.comboRefs ?? []).map((ref) =>
+                convertComboRef(
+                  ref,
+                  comboIds.get(`${set.subjectKey}|${unit.lane}`),
+                  context,
+                  issues,
+                ),
+              ),
             } satisfies OutputMatchupSet,
           };
     });
@@ -279,9 +332,29 @@ function comboFileIssues(combo: OutputCombo, index: FactIndex): string[] {
   ];
 }
 
+/** Every combo a matchup side points at is a combo of this champion's general set in that lane. */
+function comboRefIssues(file: ChampionTipsFile, index: FactIndex): string[] {
+  return file.matchups.flatMap((set) => {
+    const known = new Set(
+      file.general
+        .filter((general) => general.lane === set.lane)
+        .flatMap((general) => general.combos.map((combo) => combo.id)),
+    );
+    return set.comboRefs.flatMap((ref) => [
+      ...(known.has(ref.comboId)
+        ? []
+        : [
+            `${file.champion} ${set.lane} vs ${set.opponent}: combo ${ref.comboId} does not exist`,
+          ]),
+      ...textIssues(ref.comboId, ref.note, ref.refs, index),
+    ]);
+  });
+}
+
 /** Validate a parsed file's references against the facts; the CI check. */
 export function fileIssues(file: ChampionTipsFile, index: FactIndex): string[] {
   return [
+    ...comboRefIssues(file, index),
     ...[...file.general, ...file.matchups]
       .flatMap((set) => set.tips)
       .flatMap((tip) => textIssues(tip.id, tip.text, tip.refs, index)),

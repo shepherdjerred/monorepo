@@ -80,6 +80,7 @@ export const OutputComboRefSchema = z.strictObject({
   note: z.string().trim().min(1).max(COMBO_TEXT_MAX_LENGTH),
   refs: z.array(TextRefSchema),
 });
+export type OutputComboRef = z.infer<typeof OutputComboRefSchema>;
 
 const SetStampShape = {
   lane: LaneSchema,
