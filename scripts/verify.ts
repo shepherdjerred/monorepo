@@ -31,6 +31,7 @@ const turboTasks = [
   "quality-ratchet",
   "compliance-check",
   "lockfile-check",
+  "check-image-install-projection",
   "merge-conflicts",
   "env-var-names",
   "line-endings-scout",

@@ -42,10 +42,11 @@ const SHARED_APPLICATION_IMAGE_INPUTS = [
   "ci/application-image-smoke.Dockerfile",
   "ci/scripts/images/application-image-runtime.ts",
   "ci/scripts/images/smoke-app-in-image.ts",
-  // Every application Dockerfile projects its install closure and completes
-  // its production tree with these.
+  // Every application Dockerfile projects its install closure (manifests,
+  // bun.lock and patches) and completes its production tree with these.
   "ci/scripts/images/complete-bin-links.ts",
   "ci/scripts/images/workspace-manifests.ts",
+  "ci/scripts/images/install-projection/install-projection.ts",
   ".dockerignore",
   "bunfig.toml",
   "tsconfig.base.json",

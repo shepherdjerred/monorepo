@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
 
 /**
- * Project the workspace manifests one image's filtered `bun install` needs.
+ * Project the install inputs one image's filtered `bun install` needs.
  *
  * Application Dockerfiles run this in a cheap `manifests` stage that sees every
- * workspace manifest, then their install stages copy only its output. Bun
- * installs a filtered workspace from the frozen lockfile with just that
- * closure on disk, and BuildKit keys the copy on content, so an edit to a
- * package outside the closure no longer reruns the install or changes the
- * manifests shipped in the runtime image.
+ * workspace manifest, the root `bun.lock` and `patches/`, then their install
+ * stages copy only its output: the closure's workspace manifests plus a root
+ * `package.json`, `bun.lock` and patch set projected onto that closure
+ * (install-projection.ts). BuildKit keys the copy on content, so a manifest,
+ * lockfile or patch change for a package outside the closure no longer reruns
+ * the install or changes the files shipped in the runtime image.
  *
  * The closure is the same `workspace:` walk image selection attributes (every
  * dependency field, transitively), so the install sees a superset of what each
@@ -19,6 +20,8 @@
 
 import { copyFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { projectInstallInputs } from "./install-projection/install-projection.ts";
+import { isRecord } from "../selectors/select-image-targets-lockfile.ts";
 import {
   dependencyClosure,
   loadWorkspaces,
@@ -52,21 +55,53 @@ export function closureManifestPaths(
   return ["package.json", ...manifests.sort()];
 }
 
+async function copyInto(
+  workspaceRoot: string,
+  outputRoot: string,
+  file: string,
+): Promise<void> {
+  const destination = path.join(outputRoot, file);
+  await mkdir(path.dirname(destination), { recursive: true });
+  await copyFile(path.join(workspaceRoot, file), destination);
+}
+
+/**
+ * Write the closure's workspace manifests and its projected root
+ * `package.json`, `bun.lock` and patches; returns the written paths.
+ */
 export async function writeClosureManifests(
   workspaceRoot: string,
   outputRoot: string,
   filters: readonly string[],
 ): Promise<string[]> {
+  const rootManifest = await Bun.file(
+    path.join(workspaceRoot, "package.json"),
+  ).text();
+  const root: unknown = JSON.parse(rootManifest);
+  const rootName = isRecord(root) ? root["name"] : undefined;
+  for (const filter of filters) {
+    if (typeof rootName === "string" && new Bun.Glob(filter).match(rootName)) {
+      throw new Error(`install filter selects the root workspace: ${filter}`);
+    }
+  }
   const manifests = closureManifestPaths(
     filters,
     await loadWorkspaces(workspaceRoot),
-  );
+  ).filter((manifest) => manifest !== "package.json");
+  const projection = projectInstallInputs({
+    rootManifest,
+    lockfile: await Bun.file(path.join(workspaceRoot, "bun.lock")).text(),
+    workspaceDirs: manifests.map((manifest) => path.dirname(manifest)),
+  });
   for (const manifest of manifests) {
-    const destination = path.join(outputRoot, manifest);
-    await mkdir(path.dirname(destination), { recursive: true });
-    await copyFile(path.join(workspaceRoot, manifest), destination);
+    await copyInto(workspaceRoot, outputRoot, manifest);
   }
-  return manifests;
+  for (const patch of projection.patches) {
+    await copyInto(workspaceRoot, outputRoot, patch);
+  }
+  await Bun.write(path.join(outputRoot, "package.json"), projection.manifest);
+  await Bun.write(path.join(outputRoot, "bun.lock"), projection.lockfile);
+  return ["package.json", "bun.lock", ...projection.patches, ...manifests];
 }
 
 if (import.meta.main) {

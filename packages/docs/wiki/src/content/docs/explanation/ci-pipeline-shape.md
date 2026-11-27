@@ -79,9 +79,19 @@ publishes immutable candidates and preserves original qualified artifacts for
 unchanged recipes. Preservation depends on reproducible application images.
 Each [install stage](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/packages/birmel/Dockerfile)
 copies only its workspace closure's manifests, as projected by
-[`workspace-manifests.ts`](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/workspace-manifests.ts).
-An edit to an unrelated package therefore leaves the install and every later
-layer cached. A cache miss must still rebuild the same bytes. Bun's isolated
+[`workspace-manifests.ts`](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/workspace-manifests.ts),
+together with a root `package.json`, `bun.lock` and patch set projected onto
+that closure by `ci/scripts/images/install-projection/install-projection.ts`. An edit to an
+unrelated package, or a dependency change only other workspaces install,
+therefore leaves the install and every later layer cached. The projection
+keeps only the packages Bun keeps for those workspaces, so it drops optional
+peers that only other workspaces install. The extended tier's
+`ci/scripts/images/install-projection/check-install-projection.ts drift`
+compares every install against a full-lockfile install. It fails on any
+difference beyond the optional-peer changes audited in
+`optional-peer-baseline.json` next to it. A workspace that loads an optional
+package at runtime declares it as a dependency instead. A cache miss must
+still rebuild the same bytes. Bun's isolated
 linker can skip bin links between dependency-cycle members on a cold install,
 so
 [`complete-bin-links.ts`](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/complete-bin-links.ts)
