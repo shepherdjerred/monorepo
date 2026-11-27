@@ -13,6 +13,9 @@ regexes = [
   # Discord's shared "Deleted User" placeholder account ID, a public user
   # snowflake that Discord substitutes for deleted message authors.
   '''^456226577798135808$''',
+  # The artifacts image's Docker Hub repository, the `versionKey` of its
+  # service registration; its entropy trips generic-api-key.
+  '''^shepherdjerred/artifacts$''',
 ]
 paths = [
   '''packages/dotfiles/Library/Application Support/pinchtab/config\.json''',

@@ -156,6 +156,10 @@ describe("dockerhub", () => {
         id: "shepherdjerred/errors",
         to: 'docker_hub_repository.image["errors"]',
       },
+      {
+        id: "shepherdjerred/artifacts",
+        to: 'docker_hub_repository.image["artifacts"]',
+      },
     ]);
     expect(dockerhub.moved).toEqual([
       {

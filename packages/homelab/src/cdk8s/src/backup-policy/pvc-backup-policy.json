@@ -610,5 +610,11 @@
     "name": "pgdata-errors-postgresql-0",
     "backup": "enabled",
     "reason": "Errors PostgreSQL database"
+  },
+  {
+    "namespace": "artifacts",
+    "name": "pgdata-artifacts-postgresql-0",
+    "backup": "enabled",
+    "reason": "Artifacts PostgreSQL database: boards, versions, threads and comments. The blobs live in the artifacts-blobs bucket, which SeaweedFS replicates to Backblaze."
   }
 ]

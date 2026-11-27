@@ -1,0 +1,10 @@
+{
+  "id": "artifacts/prod",
+  "serviceId": "artifacts",
+  "name": "prod",
+  "application": "artifacts",
+  "pipelineRevisionId": "artifacts/prod/1",
+  "configurationRevision": "artifacts/prod/1",
+  "configuration": {},
+  "automatic": true
+}

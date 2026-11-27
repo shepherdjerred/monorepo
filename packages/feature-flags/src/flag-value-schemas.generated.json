@@ -56,6 +56,96 @@
       "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
     }
   },
+  "artifacts-archive-grace-days": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3650
+    }
+  },
+  "artifacts-blob-grace-hours": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 720
+    }
+  },
+  "artifacts-board-idle-days": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 3650
+    }
+  },
+  "artifacts-delivery-orphan-minutes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 10080
+    }
+  },
+  "artifacts-event-retention-days": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 3650
+    }
+  },
+  "artifacts-feedback-settle-seconds": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 600
+    }
+  },
+  "artifacts-max-file-bytes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 4294967296
+    }
+  },
+  "artifacts-max-files": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 10000
+    }
+  },
+  "artifacts-max-version-bytes": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 17179869184
+    }
+  },
+  "artifacts-upload-ttl-hours": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "integer",
+      "exclusiveMinimum": 0,
+      "maximum": 720
+    }
+  },
   "birmel-agent-auxiliary-timeout-ms": {
     "encoding": "number",
     "schema": {

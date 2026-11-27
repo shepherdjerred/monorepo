@@ -105,9 +105,9 @@ test("the API context lists only delegated leaf targets now that the root releas
         expectedGeneration: 0,
       })),
   });
-  expect(descriptor.targets).toHaveLength(27);
+  expect(descriptor.targets).toHaveLength(28);
   const observed = handoverContext(raw, descriptor);
-  expect(observed.targets).toHaveLength(27);
+  expect(observed.targets).toHaveLength(28);
   expect(
     observed.targets.some((row) => row.environmentId === "gitops/root"),
   ).toBe(false);

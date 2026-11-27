@@ -5,10 +5,12 @@ publishes a page, a site, a PDF, a diagram, a recording or any file; Jerred
 reviews it on a board, pins comments to a point in it, and the agent that is
 waiting receives each comment, replies, and publishes the next version.
 
-This package is **prepared and inactive**: it holds the Prisma schema, the
-wire contract and the server. `ARTIFACTS_ACTIVE` is `false`, so the image
-builds and the chart publishes, and nothing deploys. The UI, `toolkit
-artifacts` and the activation each land in their own change.
+The service runs as `artifacts/prod`: `ARTIFACTS_ACTIVE` is `true` in
+`packages/homelab/src/cdk8s/src/resources/artifacts`. The chart renders the
+two tailnet Ingresses, a PostgreSQL cluster, the `artifacts-blobs` bucket
+binding and the `artifacts-cleanup` Temporal schedule. The wiki explains the
+design in [Why agent artifacts use two hosts and an opaque
+origin](../docs/wiki/src/content/docs/explanation/agent-artifacts.md).
 
 ## Hosts and isolation
 
@@ -113,8 +115,9 @@ resolved `flag -> default` (`src/infrastructure/config.ts`): the
 `paused`) and the limits `artifacts-max-file-bytes`, `-max-version-bytes`,
 `-max-files`, `-feedback-settle-seconds`, `-delivery-orphan-minutes`,
 `-board-idle-days`, `-archive-grace-days`, `-upload-ttl-hours`,
-`-blob-grace-hours` and `-event-retention-days`. The flag keys join the managed
-inventory with the activation.
+`-blob-grace-hours` and `-event-retention-days`. Every key is in the managed
+flag inventory under the `artifacts` namespace and the `artifacts/prod`
+deployment.
 
 ## Review UI
 
