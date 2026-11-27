@@ -128,8 +128,6 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by first-party `@shepherdjerred/golink`, which discovers Tailscale
   // ingresses and platform-model sites in-process without a sync workflow.
   "golink-sync",
-  // Replaced by `flag-inventory-sync` after the first-party Flags rename.
-  "flipt-flag-inventory-daily",
   // Replaced by `feeds-refresh` and `@shepherdjerred/feeds` startup catalog reconciliation.
   "freshrss-sync-hourly",
 ] as const;
@@ -190,8 +188,6 @@ const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
   { workflowType: "runVeleroR2OrphanAuditWorkflow", namespace: "prod" },
   // Drain the retired golink-sync workflow replaced by first-party golink.
   { workflowType: "syncGolinks", namespace: "prod" },
-  // Drain the retired flag-inventory workflow replaced by `runFlagInventorySync`.
-  { workflowType: "runFliptFlagInventory", namespace: "prod" },
 ] as const;
 
 export async function terminateRetiredWorkflowExecutions(
