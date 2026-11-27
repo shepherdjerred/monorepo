@@ -36,6 +36,11 @@ Operator management (`7360`, via `https://flags.tailnet-1a49.ts.net` or
 [inventory how-to](../docs/wiki/src/content/docs/how-to/check-flag-inventory.md)
 covers the operator UI, `toolkit flags`, missing-key reconciliation, and
 revision-checked declared rollout writes.
+Machine callers share `FLAGS_MACHINE_TOKEN`, so
+`createFlagsMachineFetcher(url, token, fetch, { actor })` also sends a stable
+advisory `X-Flags-Actor` label (`temporal-flag-inventory-sync`,
+`check-flag-inventory`) that the Flags audit trail records; it is not a
+credential.
 
 ## Variant value schemas
 
