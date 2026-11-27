@@ -134,6 +134,13 @@ uv run --no-project --with unicorn python "$tools/probe-exact-inventory-mutation
 bun "$tools/research/audit-exact-inventory-chronology.mjs" --current --native-proof-sha256 $inventoryNativeProofSha256 --canonical-match $matchV5Path --canonical-match-sha256 $matchV5Sha256 $inventoryNativeProof $replayPath $boundScene $inventoryAudit $inventoryTracks
 ```
 
+Compare the portable reader with the native receipt and the ordered inventory
+tracks by passing the prepared motion decoder bytes as the final argument.
+
+```powershell
+bun "$tools/research/verify-recorded-inventory-fold.mjs" $replayPath $boundScene $inventoryNativeProof $inventoryNativeProofSha256 $inventoryTracks $inventoryTracksSha256 $preparedMotionDecoder
+```
+
 Collect the unique positive `itemId` values from the seven-slot arrays into a
 JSON array. Build the `terrain-texture-mips` utility and pass its DLL to the asset
 preparer. The preparer reads names and icon textures from the exact local game

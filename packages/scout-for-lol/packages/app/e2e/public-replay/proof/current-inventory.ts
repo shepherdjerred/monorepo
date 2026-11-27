@@ -28,7 +28,8 @@ const iconAsset = z.object({
   height: z.number().int().positive(),
 });
 const sceneInventory = z.object({
-  championInventory: z.object({ items: z.array(iconAsset).min(1) }),
+  championInventory: z.object({ items: z.array(iconAsset).min(1) }).optional(),
+  championInventoryItems: z.array(iconAsset).min(1).optional(),
 });
 const manifestFiles = z.object({
   files: z.array(
@@ -95,11 +96,12 @@ type ItemIcon = z.infer<typeof iconAsset> & { sha256: string };
 
 async function readItemIcons(root: string, manifestPath: string) {
   const { files } = manifestFiles.parse(await Bun.file(manifestPath).json());
-  const {
-    championInventory: { items },
-  } = sceneInventory.parse(
+  const scene = sceneInventory.parse(
     await Bun.file(path.join(root, "scene.json")).json(),
   );
+  const items = scene.championInventoryItems ?? scene.championInventory?.items;
+  if (items === undefined)
+    throw new Error("Current scene has no item icon catalog.");
   const inventory = new Map(
     files
       .filter((file) => file.path.startsWith("item-icons/"))

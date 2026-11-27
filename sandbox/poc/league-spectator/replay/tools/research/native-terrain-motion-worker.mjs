@@ -12,6 +12,16 @@ import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
 import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
+import { createRecordedInventoryCollector } from "./recorded-inventory-packets.mjs";
+
+function* observeMotionPackets(packets, observe) {
+  // Motion may stop after the game clock. Keep ownership of the underlying
+  // iterator so inventory can still validate the remaining physical packets.
+  for (let next = packets.next(); !next.done; next = packets.next()) {
+    observe(next.value);
+    yield next.value;
+  }
+}
 
 async function prepareMotion({
   identity,
@@ -20,6 +30,7 @@ async function prepareMotion({
   decoderBytes,
   allowCurrentBuild = false,
   decodeChampionStats,
+  decodeChampionInventory,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -50,6 +61,15 @@ async function prepareMotion({
     throw new Error(
       "Replay-derived champion stats require the reviewed current build.",
     );
+  if (
+    decodeChampionInventory !== undefined &&
+    (decodeChampionInventory !== true ||
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild)
+  )
+    throw new Error(
+      "Replay-derived champion inventory requires the reviewed current build.",
+    );
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
@@ -74,10 +94,19 @@ async function prepareMotion({
     createPosition944ReaderFromCodecs(codecs),
     options,
   );
+  const inventory =
+    decodeChampionInventory === true
+      ? createRecordedInventoryCollector(replay, identity, prepared, codecs)
+      : undefined;
+  const packets = replayTimedPacketEnvelopes(
+    replayPacketEnvelopes(replay, decompress),
+  );
   const { motion, coverage, championStats } = prepareNativeTerrainMotion(
     prepared,
     keyframes,
-    replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
+    inventory === undefined
+      ? packets
+      : observeMotionPackets(packets, inventory.observe),
     {
       readWaypoints: createWaypointReaderFromCodecs(codecs),
       readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
@@ -90,12 +119,18 @@ async function prepareMotion({
     throw new Error(
       "Replay motion worker has no champion stats for this replay.",
     );
+  if (inventory !== undefined) {
+    for (const packet of packets) inventory.observe(packet);
+  }
   return {
     type: "ready",
     frames: keyframes.frames,
     motion,
     coverage,
     ...(championStats === undefined ? {} : { championStats }),
+    ...(inventory === undefined
+      ? {}
+      : { championInventoryTracks: inventory.finish() }),
   };
 }
 

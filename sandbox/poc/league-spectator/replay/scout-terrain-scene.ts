@@ -18,7 +18,9 @@ import {
   readChampionResourceTracks,
 } from "./scout-terrain-champion-stats.ts";
 import {
+  inventoryTracksSchema,
   replayInventorySceneSchema,
+  replayItemAssetSchema,
   type ReplayInventoryPoints,
 } from "./scout-terrain-inventory.ts";
 import {
@@ -129,6 +131,7 @@ const TerrainSceneFields = z.object({
   championResourceTracks: ChampionResourceTracksSchema.optional(),
   championExperience: championExperienceSceneSchema(z).optional(),
   championInventory: replayInventorySceneSchema(z).optional(),
+  championInventoryItems: z.array(replayItemAssetSchema(z)).optional(),
   championEliminations: z
     .array(
       z.strictObject({
@@ -360,6 +363,7 @@ const TerrainSceneFields = z.object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
       allowCurrentBuild: z.literal(true).optional(),
       decodeChampionStats: z.literal(true).optional(),
+      decodeChampionInventory: z.literal(true).optional(),
     })
     .optional(),
   navgrid: z
@@ -382,6 +386,20 @@ export const SceneSchema = TerrainSceneFields.refine(
     path: ["workerMotion", "decodeChampionStats"],
     message:
       "Replay-derived champion stats require current worker motion without embedded motion or stat tracks.",
+  },
+).refine(
+  (scene) =>
+    scene.workerMotion?.decodeChampionInventory === true
+      ? scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.championInventory === undefined &&
+        scene.championInventoryItems !== undefined
+      : scene.championInventoryItems === undefined,
+  {
+    path: ["workerMotion", "decodeChampionInventory"],
+    message:
+      "Replay-derived champion inventory requires current worker motion and item assets without embedded motion or inventory tracks.",
   },
 );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -518,6 +536,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
       tracks: z.array(z.looseObject({ participantId })),
     }),
     championStats: WorkerChampionStatsSchema.optional(),
+    championInventoryTracks: inventoryTracksSchema(z).optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -578,6 +597,13 @@ async function loadWorkerMotion(
       throw new Error(
         "Replay motion worker returned unexpected champion stats coverage.",
       );
+    if (
+      (result.championInventoryTracks !== undefined) !==
+      (workerMotion.decodeChampionInventory === true)
+    )
+      throw new Error(
+        "Replay motion worker returned unexpected champion inventory coverage.",
+      );
     return result;
   } finally {
     if (cancel !== undefined) signal.removeEventListener("abort", cancel);
@@ -619,6 +645,16 @@ export async function loadSceneMotion(
     ]),
   );
   const championStats = decoded.championStats;
+  const inventoryTracks = decoded.championInventoryTracks;
+  const inventoryItems = scene.championInventoryItems;
+  if (
+    inventoryTracks !== undefined &&
+    (inventoryItems === undefined ||
+      teams.size !== scene.identity.participantCount)
+  )
+    throw new Error(
+      "Replay-derived champion inventory requires item assets and a unique roster.",
+    );
   if (championStats !== undefined) {
     if (teams.size !== scene.identity.participantCount)
       throw new Error("Replay-derived champion stats require a unique roster.");
@@ -655,6 +691,16 @@ export async function loadSceneMotion(
       ...(championStats === undefined
         ? {}
         : { ...championStats, workerMotion: undefined }),
+      ...(inventoryTracks === undefined || inventoryItems === undefined
+        ? {}
+        : {
+            championInventory: {
+              items: inventoryItems,
+              tracks: inventoryTracks,
+            },
+            championInventoryItems: undefined,
+            workerMotion: undefined,
+          }),
     },
     heights,
   };

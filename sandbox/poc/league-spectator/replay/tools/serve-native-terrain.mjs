@@ -72,6 +72,7 @@ const { positionals, values } = parseArgs({
     "experience-map-definition": { type: "string" },
     "champion-inventory": { type: "string" },
     "champion-inventory-sha256": { type: "string" },
+    "champion-inventory-from-replay": { type: "boolean" },
     "item-assets": { type: "string" },
     "item-assets-sha256": { type: "string" },
     "structure-models": { type: "string" },
@@ -115,17 +116,28 @@ assert.ok(
 );
 const inventoryPath = values["champion-inventory"];
 const inventoryDigest = values["champion-inventory-sha256"];
+const decodeChampionInventory =
+  values["champion-inventory-from-replay"] === true;
 const itemAssetsPath = values["item-assets"];
 const itemAssetsDigest = values["item-assets-sha256"];
 assert.ok(
-  [inventoryDigest, itemAssetsPath, itemAssetsDigest].every(
-    (value) => (value === undefined) === (inventoryPath === undefined),
+  (inventoryDigest === undefined) === (inventoryPath === undefined),
+  "Prepared champion inventory requires a SHA-256 pin",
+);
+const includeInventory = decodeChampionInventory || inventoryPath !== undefined;
+assert.ok(
+  [itemAssetsPath, itemAssetsDigest].every(
+    (value) => (value !== undefined) === includeInventory,
   ),
-  "Recorded inventory requires both artifact paths and SHA-256 pins",
+  "Recorded inventory requires a pinned item asset catalog",
 );
 assert.ok(
-  inventoryPath === undefined || privatePackageOutput !== undefined,
+  !includeInventory || privatePackageOutput !== undefined,
   "Recorded inventory requires a private package",
+);
+assert.ok(
+  !decodeChampionInventory || inventoryPath === undefined,
+  "Replay-decoded champion inventory conflicts with prepared inventory tracks",
 );
 const animationPath = values["champion-animation-cues"];
 const animationDigest = values["champion-animation-cues-sha256"];
@@ -1144,6 +1156,10 @@ assert.ok(
   !decodeChampionStats || currentBuild,
   "Replay-decoded champion stats require the verified current build",
 );
+assert.ok(
+  !decodeChampionInventory || currentBuild,
+  "Replay-decoded champion inventory requires the verified current build",
+);
 if (currentBuild) {
   assert.ok(
     privatePackageOutput !== undefined &&
@@ -1258,6 +1274,7 @@ const replayPreparation = prepareReplayForSeek(
 );
 let prepared = replayPreparation;
 let championModelSelections;
+let replayInventoryTracks;
 if (decoderBytes !== undefined) {
   const { createExactTerrainByteCodecs } =
     await import("./research/native-terrain-positions-944.mjs");
@@ -1280,6 +1297,21 @@ if (decoderBytes !== undefined) {
     ...replayPreparation,
     observations: { ...previous, binding, levels },
   };
+  if (decodeChampionInventory) {
+    const { createRecordedInventoryCollector } =
+      await import("./research/recorded-inventory-packets.mjs");
+    const inventory = createRecordedInventoryCollector(
+      replay,
+      identity,
+      prepared,
+      codecs,
+    );
+    for (const packet of replayTimedPacketEnvelopes(
+      replayPacketEnvelopes(replay, decompress),
+    ))
+      inventory.observe(packet);
+    replayInventoryTracks = inventory.finish();
+  }
   if (values["champion-catalog-sha256"] !== undefined)
     championModelSelections = readChampionModelSelections(
       prepared,
@@ -1587,6 +1619,7 @@ if (decoderBytes !== undefined) {
       waypointOrigin,
       ...(currentBuild ? decoderOptions : {}),
       ...(decodeChampionStats ? { decodeChampionStats: true } : {}),
+      ...(decodeChampionInventory ? { decodeChampionInventory: true } : {}),
     };
   } else {
     const [
@@ -1804,7 +1837,7 @@ if (scoutScene) {
   }
 }
 const itemRoutes = new Map();
-if (championStatInputs.length > 0 || inventoryPath !== undefined) {
+if (championStatInputs.length > 0 || includeInventory) {
   const {
     admitRecordedChampionStats,
     championExperienceSceneSchema,
@@ -1852,34 +1885,35 @@ if (championStatInputs.length > 0 || inventoryPath !== undefined) {
       scene[field] = tracks;
     }
   }
-  if (inventoryPath !== undefined) {
+  if (includeInventory) {
     const { itemIdsForTracks, readRecordedInventory, replayItemAssetSchema } =
       await import("../scout-terrain-inventory.ts");
     const { inventoryIconDimensions, currentInventoryAssetSource } =
       await import("./research/prepare-exact-inventory-assets.mjs");
     const { verifyRecordedInventoryFooter } =
       await import("./research/verify-recorded-inventory-footer.mjs");
-    const [inventoryBytes, itemAssetBytes] = await Promise.all([
-      readFile(inventoryPath),
-      readFile(itemAssetsPath),
-    ]);
-    assert.equal(
-      sha256(inventoryBytes),
-      inventoryDigest,
-      "Recorded inventory digest differs",
-    );
+    const itemAssetBytes = await readFile(itemAssetsPath);
     assert.equal(
       sha256(itemAssetBytes),
       itemAssetsDigest,
       "Exact replay item asset manifest digest differs",
     );
-    const tracks = readRecordedInventory(
-      z,
-      JSON.parse(inventoryBytes.toString("utf8")),
-      scene.identity,
-      roster,
-    );
-    verifyRecordedInventoryFooter(bytes, scene.participants, tracks);
+    let tracks = replayInventoryTracks;
+    if (inventoryPath !== undefined) {
+      const inventoryBytes = await readFile(inventoryPath);
+      assert.equal(
+        sha256(inventoryBytes),
+        inventoryDigest,
+        "Recorded inventory digest differs",
+      );
+      tracks = readRecordedInventory(
+        z,
+        JSON.parse(inventoryBytes.toString("utf8")),
+        scene.identity,
+        roster,
+      );
+      verifyRecordedInventoryFooter(bytes, scene.participants, tracks);
+    }
     const sourceIdentity = currentBuild
       ? {
           installedExeSha256: z.literal(
@@ -1944,7 +1978,8 @@ if (championStatInputs.length > 0 || inventoryPath !== undefined) {
       0,
       "Exact inventory icons do not cover all recorded items",
     );
-    scene.championInventory = { items, tracks };
+    if (decodeChampionInventory) scene.championInventoryItems = items;
+    else scene.championInventory = { items, tracks };
   }
 }
 let championAnimationRoutes;

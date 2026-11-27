@@ -6,8 +6,11 @@ import {
   currentTerrainClientArchiveSha256,
   currentTerrainClientSliceSha256,
   currentTerrainPositionBuild,
+  position944SubstitutionIndex,
   preparedBytes,
   preparedSha256,
+  rotateByteLeft,
+  swapAdjacentBits,
   terrainPositionBuild,
   terrainPositionProtocol,
 } from "./native-terrain-byte-codecs.mjs";
@@ -25,14 +28,6 @@ const substitutionSha256 =
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
-}
-
-function rotateLeft(byte, shift) {
-  return ((byte << shift) | (byte >>> (8 - shift))) & 0xff;
-}
-
-function swapAdjacentBits(byte) {
-  return ((byte >>> 1) & 0x55) | ((byte << 1) & 0xaa);
 }
 
 function createCodecsFromClient(clientBytes, build) {
@@ -71,18 +66,19 @@ function createCodecsFromClient(clientBytes, build) {
   )
     throw Error("Unexpected exact terrain replication byte substitution");
 
-  const decodePositionByte = (byte) => {
-    const rotated = rotateLeft((rotateLeft(byte ^ 0xff, 2) + 0xfe) & 0xff, 4);
-    return (substitution[swapAdjacentBits(rotated ^ 0x19)] + 0x67) & 0xff;
-  };
+  const decodePositionByte = (byte) =>
+    (substitution[position944SubstitutionIndex(byte)] + 0x67) & 0xff;
   const decodeSyncByte = (byte) =>
-    (rotateLeft(substitution[(byte + 0x64) & 0xff] ^ 0xff, 6) + 0xed) & 0xff;
+    (rotateByteLeft(substitution[(byte + 0x64) & 0xff] ^ 0xff, 6) + 0xed) &
+    0xff;
   // The opcode 309 readers reference a byte-identical copy at 0x21485c0.
   const decodeReplicationVectorByte = (byte) =>
-    swapAdjacentBits(rotateLeft(substitution[substitution[byte ^ 0xad]], 2));
+    swapAdjacentBits(
+      rotateByteLeft(substitution[substitution[byte ^ 0xad]], 2),
+    );
   const decodeReplicationTailByte = (byte) => {
     const index = (((byte << 1) | 0x54) + ((byte >>> 1) & 0x55)) & 0xff;
-    return rotateLeft(substitution[index], 6);
+    return rotateByteLeft(substitution[index], 6);
   };
   return {
     decodePositionByte,

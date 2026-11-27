@@ -22,7 +22,7 @@ export function replayItemAssetSchema(schema: typeof z) {
     .refine(({ itemId, icon }) => icon === `item-icons/${itemId}.png`);
 }
 
-function inventoryTracksSchema(schema: typeof z) {
+export function inventoryTracksSchema(schema: typeof z) {
   const slot = schema
     .object({
       itemId: schema.number().int().positive().max(0xffffffff),

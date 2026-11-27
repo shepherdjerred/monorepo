@@ -7,7 +7,10 @@ import {
   loadPosition944Reader,
   prepareExactTerrainDecoder,
 } from "./native-terrain-positions-944.mjs";
-import { createPreparedTerrainByteCodecs } from "./native-terrain-byte-codecs.mjs";
+import {
+  createPreparedTerrainByteCodecs,
+  recoverTerrainByteSubstitution,
+} from "./native-terrain-byte-codecs.mjs";
 
 const replay = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
 const currentReplay = { ...replay, build: "16.23.841.8428" };
@@ -116,6 +119,10 @@ test(
       maps,
       currentReplay,
       currentOptions,
+    );
+    assert.deepEqual(
+      recoverTerrainByteSubstitution(prepared),
+      new Uint8Array(slice.subarray(0x2148f00, 0x2149000)),
     );
     for (const [name, decode] of Object.entries(codecs))
       for (let byte = 0; byte < 256; byte++)

@@ -32,6 +32,32 @@ export function assertExactTerrainReplay(
     );
 }
 
+export function rotateByteLeft(byte, shift) {
+  return ((byte << shift) | (byte >>> (8 - shift))) & 0xff;
+}
+
+export function swapAdjacentBits(byte) {
+  return ((byte >>> 1) & 0x55) | ((byte << 1) & 0xaa);
+}
+
+export function position944SubstitutionIndex(byte) {
+  const rotated = rotateByteLeft(
+    (rotateByteLeft(byte ^ 0xff, 2) + 0xfe) & 0xff,
+    4,
+  );
+  return swapAdjacentBits(rotated ^ 0x19);
+}
+
+/** Recover the original byte table from the authenticated position codec. */
+export function recoverTerrainByteSubstitution({ decodePositionByte }) {
+  const substitution = new Uint8Array(256);
+  for (let byte = 0; byte < substitution.length; byte++) {
+    substitution[position944SubstitutionIndex(byte)] =
+      (decodePositionByte(byte) - 0x67) & 0xff;
+  }
+  return substitution;
+}
+
 /** Used by loaders only after authenticating a copy of the map bytes. */
 export function codecsFromTerrainByteMaps(maps) {
   return {

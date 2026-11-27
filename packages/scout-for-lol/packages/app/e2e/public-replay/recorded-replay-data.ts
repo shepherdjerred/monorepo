@@ -108,9 +108,13 @@ const SceneIdentitySchema = z.object({
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
   workerMotion: z
-    .object({ decodeChampionStats: z.literal(true).optional() })
+    .object({
+      decodeChampionStats: z.literal(true).optional(),
+      decodeChampionInventory: z.literal(true).optional(),
+    })
     .optional(),
   championInventory: z.object({ tracks: z.array(z.unknown()) }).optional(),
+  championInventoryItems: z.array(z.unknown()).nonempty().optional(),
   championExperience: z
     .object({ thresholds: z.array(z.number()), tracks: z.array(z.unknown()) })
     .optional(),
@@ -151,6 +155,40 @@ async function readUploadedReplay(
   return uploaded;
 }
 
+function championCapabilities({
+  workerMotion,
+  championHealthTracks,
+  championResourceTracks,
+  championInventory,
+  championInventoryItems,
+}: z.infer<typeof SceneIdentitySchema>) {
+  const directChampionStats = workerMotion?.decodeChampionStats === true;
+  const directChampionInventory =
+    workerMotion?.decodeChampionInventory === true;
+  if (
+    directChampionInventory
+      ? championInventory !== undefined || championInventoryItems === undefined
+      : championInventoryItems !== undefined
+  )
+    throw new Error("Recorded scene has inconsistent worker inventory inputs.");
+  if (
+    directChampionStats &&
+    (championHealthTracks !== undefined || championResourceTracks !== undefined)
+  )
+    throw new Error(
+      "Direct worker stats require a scene without baked champion stat tracks.",
+    );
+  return {
+    directChampionStats,
+    championHealth: directChampionStats || championHealthTracks !== undefined,
+    championResources:
+      directChampionStats || championResourceTracks !== undefined,
+    championInventory:
+      directChampionInventory || championInventory !== undefined,
+    directChampionInventory,
+  };
+}
+
 export async function readRecordedReplay() {
   const manifestPath = Bun.env["SCOUT_REPLAY_E2E_MANIFEST"] ?? "";
   const roflPath = Bun.env["SCOUT_REPLAY_E2E_ROFL"] ?? "";
@@ -164,6 +202,9 @@ export async function readRecordedReplay() {
   const rofl = await Bun.file(roflPath).bytes();
   const digest = sha256(rofl);
   const root = path.dirname(manifestPath);
+  const scene = SceneIdentitySchema.parse(
+    await Bun.file(path.join(root, "scene.json")).json(),
+  );
   const {
     identity,
     followCameraDefaults,
@@ -171,14 +212,8 @@ export async function readRecordedReplay() {
     terrainVisibility,
     teamVision,
     championAnimationCues,
-    championHealthTracks,
-    championResourceTracks,
-    workerMotion,
-    championInventory,
     championExperience,
-  } = SceneIdentitySchema.parse(
-    await Bun.file(path.join(root, "scene.json")).json(),
-  );
+  } = scene;
   if (
     identity.replaySha256 !== digest ||
     inventory.capabilities.replaySha256 !== digest ||
@@ -189,14 +224,7 @@ export async function readRecordedReplay() {
       "The scene, manifest and ROFL must identify the same replay.",
     );
   }
-  const directChampionStats = workerMotion?.decodeChampionStats === true;
-  if (
-    directChampionStats &&
-    (championHealthTracks !== undefined || championResourceTracks !== undefined)
-  )
-    throw new Error(
-      "Direct worker stats require a scene without baked champion stat tracks.",
-    );
+  const capabilities = championCapabilities(scene);
 
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
@@ -229,11 +257,7 @@ export async function readRecordedReplay() {
       [],
     unitVisibility: teamVision !== undefined,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
-    directChampionStats,
-    championHealth: directChampionStats || championHealthTracks !== undefined,
-    championResources:
-      directChampionStats || championResourceTracks !== undefined,
-    championInventory: championInventory !== undefined,
+    ...capabilities,
     championExperience: championExperience !== undefined,
     descriptor: {
       ...replayFixture,

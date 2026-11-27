@@ -439,8 +439,13 @@ original 16.23.840.6595 Map11 definition extracted from the same build's WAD.
 
 Add the roster's seven playable item slots with the
 [recorded inventory tracks and icon catalog](tools/research/README.md#recorded-inventory).
-Pass both manifests and their digests to `--champion-inventory`,
-`--champion-inventory-sha256`, `--item-assets`, and `--item-assets-sha256`.
+For 16.23.841.8428, pass `--champion-inventory-from-replay`, `--item-assets`,
+and `--item-assets-sha256`. The builder selects the icons from the exact catalog.
+The browser worker builds the inventory timeline from the original ROFL at
+load time and verifies the final slots against its footer. The package
+contains the selected icons and their metadata. For prepared playback, pass
+the track manifest and digest with `--champion-inventory` and
+`--champion-inventory-sha256` alongside the icon catalog options.
 
 To replay a verified champion animation request, generate a
 [recorded cue manifest](tools/research/README.md) and provide

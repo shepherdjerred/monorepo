@@ -195,18 +195,25 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "invalid-package",
       "The saved terrain package requires textured geometry and a motion decoder.",
     );
+  const motion = loadSceneMotion(scene, signal, {
+    read,
+    // The worker owns its copy. Scout retains the original for subsequent loads.
+    replay: async () => replay.slice(0),
+    worker: () => resources.worker("replay-motion-worker.mjs"),
+  });
+  const inventoryInput =
+    scene.workerMotion.decodeChampionInventory === true
+      ? motion.then(({ scene }) => scene.championInventory)
+      : Promise.resolve(scene.championInventory);
   const [loaded, inventory] = await Promise.all([
-    loadSceneMotion(scene, signal, {
-      read,
-      // The worker owns its copy. Scout retains the original for subsequent loads.
-      replay: async () => replay.slice(0),
-      worker: () => resources.worker("replay-motion-worker.mjs"),
-    }),
-    loadRecordedInventory(
-      scene.championInventory,
-      scene.participants.map(({ participantId }) => participantId),
-      scene.identity.durationMilliseconds,
-      (path) => resources.objectUrl(path, "image/png"),
+    motion,
+    inventoryInput.then((data) =>
+      loadRecordedInventory(
+        data,
+        scene.participants.map(({ participantId }) => participantId),
+        scene.identity.durationMilliseconds,
+        (path) => resources.objectUrl(path, "image/png"),
+      ),
     ),
   ]);
   if (!loaded.scene.decodedPositionFrames?.length)
