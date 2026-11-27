@@ -17,6 +17,7 @@ import {
   seedDesignAuditChampionFriends,
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
+import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -246,6 +247,15 @@ export async function seedDesignAuditDatabase(
       viewer: { playerId: player.id, alias: playerAlias, puuid, discordId },
       friends,
     });
+    // Dated from the seed run, not `now` above: plays-with counts 90 days.
+    const playerFriends = await seedDesignAuditFriends({
+      prisma,
+      guildId,
+      discordId,
+      region,
+      main: { playerId: player.id, playerAlias, puuid },
+      now: new Date(),
+    });
 
     await prisma.subscription.create({
       data: {
@@ -323,6 +333,7 @@ export async function seedDesignAuditDatabase(
       timelineEventParticipants: review.timelineEventParticipants,
       matchFacts: [
         ...champions.tracked,
+        ...playerFriends.matchFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,
@@ -397,6 +408,7 @@ export async function seedDesignAuditDatabase(
       ],
       untrackedMatchFacts: [
         ...champions.untracked,
+        ...playerFriends.untrackedMatchFacts,
         ...review.extra,
         {
           playerId: 901,
