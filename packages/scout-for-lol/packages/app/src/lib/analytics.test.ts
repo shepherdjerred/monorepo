@@ -175,6 +175,7 @@ describe("normalizePath", () => {
     expect(normalizePath("/players/42/matches/NA1_123456789")).toBe(
       "/players/:playerId/matches/:matchId",
     );
+    expect(normalizePath("/champions")).toBe("/champions");
     expect(normalizePath("/champions/22")).toBe("/champions/:championId");
     expect(normalizePath("/halls/123")).toBe("/halls/:guildId");
     expect(normalizePath("/challenges/template-123")).toBe(
@@ -552,6 +553,8 @@ describe("track", () => {
       action: "explicit_selection",
     });
     track("champion_comparison_opened", { outcome: "succeeded" });
+    track("champions_index_opened", { outcome: "succeeded" });
+    track("champions_filter_changed", { kind: "servers" });
     track("match_detail_opened", { outcome: "succeeded" });
     track("match_timeline_viewed", { outcome: "not_captured" });
 
@@ -590,6 +593,24 @@ describe("track", () => {
         event: "champion_comparison_opened",
         properties: {
           outcome: "succeeded",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "champions_index_opened",
+        properties: {
+          outcome: "succeeded",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "champions_filter_changed",
+        properties: {
+          kind: "servers",
           site_key: "scout-beta",
           site_hostname: "beta.scout-for-lol.com",
         },

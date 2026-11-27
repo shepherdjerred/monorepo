@@ -32,6 +32,9 @@ export function consumerNavigationItems(
   return [
     ...(input.exploreAvailable ? [{ label: "Explore", to: "/explore" }] : []),
     ...(input.profilesAvailable ? [{ label: "Players", to: "/players" }] : []),
+    ...(input.profilesAvailable
+      ? [{ label: "Champions", to: "/champions" }]
+      : []),
     ...(input.hallAvailable === true
       ? [{ label: "Hall of Fame", to: input.hallTo ?? "/halls" }]
       : []),

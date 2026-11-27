@@ -135,6 +135,35 @@ a.scout-friend-row:hover .scout-friend-row__name b {
   color: var(--scout-color-text-muted);
 }
 
+.scout-friend-row__record {
+  display: flex;
+  width: auto;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.scout-friend-row__games {
+  display: grid;
+  flex: none;
+  min-width: 6.5rem;
+  color: var(--scout-color-text-muted);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The record takes only what its figures need, so the name gets the rest. */
+.scout-friend-row__record .scout-win-rate {
+  flex: none;
+  width: 8rem;
+}
+
+.scout-friend-row__games > span {
+  font-size: 13px;
+}
+
 .scout-friend-row[data-layout="ladder"] .scout-friend-row__rank {
   flex-direction: row-reverse;
   text-align: right;
@@ -568,6 +597,24 @@ a.scout-sticker:hover .scout-face {
     flex-direction: row;
     grid-column: 3;
     grid-row: 2;
+    text-align: left;
+  }
+
+  .scout-friend-row__record {
+    grid-column: 3;
+    grid-row: 2;
+    width: auto;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .scout-friend-row__record .scout-win-rate {
+    flex: 1 1 8rem;
+  }
+
+  .scout-friend-row__games {
+    min-width: 0;
+    gap: 0 12px;
     text-align: left;
   }
 

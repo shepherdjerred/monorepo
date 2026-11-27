@@ -1,10 +1,13 @@
 import type { LoaderFunctionArgs } from "react-router";
 import {
+  ChampionIdSchema,
   CompetitionIdSchema,
   ExploreConversationIdSchema,
   PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
+import { championScopeInput } from "#src/lib/champions/champion-pages.ts";
+import { parsePlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { trpcOptions } from "#src/lib/query/trpc-options.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
@@ -107,6 +110,62 @@ export function consumerPlayerLoader({ params }: LoaderFunctionArgs): null {
         staleTime: 0,
       }),
     ),
+  );
+  return null;
+}
+
+/**
+ * The champion pages read with the filters in the URL and every server
+ * selected, which is the input a visit starts on.
+ */
+function championLoaderScope(request: Request) {
+  return championScopeInput(
+    parsePlayerProfileFilters(new URL(request.url).searchParams),
+    undefined,
+  );
+}
+
+export function consumerChampionsLoader({ request }: LoaderFunctionArgs): null {
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerChampion.index.queryOptions(
+        championLoaderScope(request),
+      ),
+    ),
+  );
+  return null;
+}
+
+export function consumerChampionLoader({
+  params,
+  request,
+}: LoaderFunctionArgs): null {
+  const parsed = ChampionIdSchema.safeParse(Number(params["championId"]));
+  if (!parsed.success) return null;
+  const scope = championLoaderScope(request);
+  const championId = parsed.data;
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerChampion.compare.queryOptions({
+        championId,
+        ...scope,
+        cohort: "qualified",
+        sort: "win_rate",
+      }),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(
+      trpcOptions.consumerChampion.compare.queryOptions({
+        championId,
+        ...scope,
+        cohort: "small_sample",
+        sort: "games",
+      }),
+    ),
+  );
+  void preloadQuery(
+    queryClient.query(trpcOptions.consumerChampion.index.queryOptions(scope)),
   );
   return null;
 }

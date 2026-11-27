@@ -32,6 +32,7 @@ import { ExploreShared } from "#src/routes/explore-shared.tsx";
 import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
+import { ConsumerChampions } from "#src/routes/consumer/consumer-champions.tsx";
 import { ConsumerMatch } from "#src/routes/consumer/consumer-match.tsx";
 import { ExploreMatch } from "#src/routes/explore-match.tsx";
 import {
@@ -71,6 +72,8 @@ import {
   competitionDetailLoader,
   daresLoader,
   competitionsLoader,
+  consumerChampionLoader,
+  consumerChampionsLoader,
   consumerPlayerLoader,
   consumerPlayersLoader,
   exploreLoader,
@@ -269,8 +272,15 @@ export const routes: RouteObject[] = [
                 errorElement: <RouteErrorPanel />,
               },
               {
+                path: "champions",
+                element: <ConsumerChampions />,
+                loader: consumerChampionsLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
                 path: "champions/:championId",
                 element: <ConsumerChampion />,
+                loader: consumerChampionLoader,
                 errorElement: <RouteErrorPanel />,
               },
               {

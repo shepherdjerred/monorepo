@@ -117,3 +117,66 @@ export const Ladder: Story = {
     </ul>
   ),
 };
+
+export const OnAChampionLongName: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <ul className="scout-row-list">
+      <li>
+        <FriendRow
+          name="Scout Classic"
+          you
+          place={1}
+          href="#scout"
+          latest="Dev Guild 1"
+          record={{ games: 15, winRate: 60, form: "Won 6 of the last 10" }}
+        />
+      </li>
+      <li>
+        <FriendRow
+          name="A friend with a very long summoner name that keeps going"
+          place={2}
+          href="#long"
+          latest="Midnight Scrims"
+          record={{ games: 41, winRate: 52, form: "Won 5 of the last 10" }}
+        />
+      </li>
+    </ul>
+  ),
+};
+
+export const OnAChampion: Story = {
+  parameters: { controls: { disable: true } },
+  render: () => (
+    <ul className="scout-row-list">
+      <li>
+        <FriendRow
+          name="RiverQuartz"
+          place={1}
+          href="#river"
+          latest="Rift Study Group"
+          record={{ games: 34, winRate: 65, form: "Won 7 of the last 10" }}
+        />
+      </li>
+      <li>
+        <FriendRow
+          name="Northstar"
+          you
+          place={2}
+          href="#north"
+          latest="Rift Study Group"
+          record={{ games: 41, winRate: 61, form: "Won 6 of the last 10" }}
+        />
+      </li>
+      <li>
+        <FriendRow
+          name="Halcyon"
+          place={3}
+          href="#halcyon"
+          latest="Midnight Scrims"
+          record={{ games: 18, winRate: 56, form: "Won 4 of the last 10" }}
+        />
+      </li>
+    </ul>
+  ),
+};

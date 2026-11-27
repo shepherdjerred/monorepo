@@ -71,6 +71,22 @@ describe("FriendRow", () => {
     expect(html).toContain("scout-person__live");
     expect(html).toContain("Unranked");
   });
+
+  test("shows games, form and a win rate bar in place of a rank", () => {
+    const html = renderToStaticMarkup(
+      <FriendRow
+        name="RiverQuartz"
+        place={1}
+        latest="Rift Study Group"
+        record={{ games: 34, winRate: 65, form: "Won 7 of the last 10" }}
+      />,
+    );
+    expect(html).toContain("34 games");
+    expect(html).toContain("Won 7 of the last 10");
+    expect(html).toContain("65.0%");
+    expect(html).toContain("scout-win-rate");
+    expect(html).not.toContain("Unranked");
+  });
 });
 
 describe("game sentences", () => {

@@ -103,6 +103,21 @@ export function appRoutes(): AuditRoute[] {
       authenticated: true,
       golden: true,
     },
+    // The design-audit seed's Ahri games, friends and lane results (103).
+    {
+      name: "champions",
+      surface: "app",
+      path: "/app/champions",
+      authenticated: true,
+      golden: true,
+    },
+    {
+      name: "champion",
+      surface: "app",
+      path: "/app/champions/103",
+      authenticated: true,
+      golden: true,
+    },
     {
       name: "player-detail",
       surface: "app",
