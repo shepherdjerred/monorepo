@@ -1,0 +1,309 @@
+/* Generated tips and combos: a sentence whose named entities are tooltip
+   triggers, a tip set led by ability icons, and combos as icon sequences. */
+
+/* ---------- tip text ---------- */
+
+.scout-tip-text {
+  min-width: 0;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.scout-tip-text__ref {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline dotted
+    color-mix(in srgb, var(--scout-color-text-muted) 80%, transparent);
+  text-decoration-thickness: 0.09375rem;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.scout-tip-text__ref:hover,
+.scout-tip-text__ref[aria-expanded="true"] {
+  background: var(--scout-brand-soft);
+  text-decoration-style: solid;
+}
+
+/* ---------- tip list ---------- */
+
+.scout-generated-tips__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-generated-tips__tip {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 0;
+}
+
+.scout-generated-tips__tip:first-child {
+  padding-top: 2px;
+}
+
+.scout-generated-tips__tip + .scout-generated-tips__tip {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+}
+
+.scout-generated-tips__tip:last-child {
+  padding-bottom: 2px;
+}
+
+.scout-generated-tips__icons {
+  display: flex;
+  flex: none;
+  min-width: 92px;
+  gap: 8px;
+}
+
+.scout-generated-tips__icon {
+  display: block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: calc(var(--scout-radius-large) * 0.8);
+  background: var(--scout-surface-inset);
+}
+
+.scout-generated-tips__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.scout-generated-tips__text {
+  flex: 1 1 auto;
+}
+
+/* The other side, closed, with its first tip showing. */
+.scout-generated-tips__flip {
+  margin-top: 16px;
+  border-radius: var(--scout-radius-panel);
+  background: var(--scout-color-surface);
+  box-shadow: var(--scout-shadow-float);
+}
+
+.scout-generated-tips__flip > .scout-fold__summary {
+  min-height: 84px;
+  padding: 16px 24px 16px 20px;
+  border-radius: var(--scout-radius-panel);
+}
+
+.scout-generated-tips__flip > .scout-fold__summary:hover {
+  background: var(--scout-brand-soft);
+}
+
+.scout-generated-tips__flip > .scout-fold__summary > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.scout-generated-tips__flip-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scout-generated-tips__flip-face {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.scout-generated-tips__flip-text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.scout-generated-tips__flip-text b {
+  font: 700 1.3125rem/1.35 var(--scout-font-display);
+}
+
+.scout-generated-tips__flip-text span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--scout-color-text-muted);
+  font-weight: 400;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.scout-generated-tips__flip > .scout-fold__body {
+  padding: 0 36px 26px;
+}
+
+/* ---------- combo sequence ---------- */
+
+.scout-combo-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-combo-sequence > li {
+  display: inline-flex;
+  align-items: center;
+}
+
+.scout-combo-step {
+  display: grid;
+  flex: none;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--scout-radius-large) * 0.8);
+  background: var(--scout-surface-inset);
+  color: var(--scout-color-text);
+  cursor: pointer;
+}
+
+.scout-combo-step img,
+.scout-combo-step__pending {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.scout-combo-step:hover,
+.scout-combo-step[aria-expanded="true"] {
+  box-shadow: 0 0 0 2px var(--scout-color-primary);
+}
+
+.scout-combo-step--attack {
+  background: var(--scout-surface-inset-strong);
+}
+
+.scout-combo-sequence__chevron {
+  flex: none;
+  margin-inline: 2px;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-combo-sequence[data-size="compact"] .scout-combo-step {
+  width: 32px;
+  height: 32px;
+}
+
+.scout-combo-sequence[data-size="compact"] .scout-combo-sequence__chevron {
+  margin-inline: 0;
+}
+
+/* ---------- combo row ---------- */
+
+.scout-combo-row {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.scout-combo-row:first-child {
+  padding-top: 2px;
+}
+
+.scout-combo-row:last-child {
+  padding-bottom: 2px;
+}
+
+.scout-combo-row + .scout-combo-row {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+  padding-top: 16px;
+}
+
+.scout-combo-row__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.scout-combo-row__name {
+  font: 700 1.1875rem/1.3 var(--scout-font-display);
+}
+
+.scout-combo-row__when,
+.scout-combo-row__text {
+  margin: 0;
+}
+
+.scout-combo-row__when {
+  color: var(--scout-color-text-muted);
+}
+
+/* ---------- combo reference ---------- */
+
+.scout-combo-ref {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.scout-combo-ref + .scout-combo-ref {
+  box-shadow: 0 -1px 0
+    color-mix(in srgb, var(--scout-color-text) 7%, transparent);
+}
+
+.scout-combo-ref__body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.scout-combo-ref__name {
+  font-weight: 700;
+}
+
+.scout-combo-ref__note {
+  margin: 0;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+@media (max-width: 720px) {
+  .scout-generated-tips__tip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .scout-generated-tips__flip > .scout-fold__summary {
+    align-items: flex-start;
+    padding: 16px 18px;
+  }
+
+  .scout-generated-tips__flip > .scout-fold__body {
+    padding: 0 20px 22px;
+  }
+
+  .scout-combo-ref {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
