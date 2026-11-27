@@ -124,7 +124,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["structuredOutputs"]
+      }
     }
   },
   "birmel-llm-decisions-model": {
@@ -134,7 +139,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "native", "endpoint": "decisions" }
     }
   },
   "birmel-llm-decisions-threshold": {
@@ -153,7 +159,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "native", "endpoint": "embedding" }
     }
   },
   "birmel-llm-image-model": {
@@ -163,7 +170,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "native", "endpoint": "image" }
     }
   },
   "birmel-llm-max-output-tokens": {
@@ -182,7 +190,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["structuredOutputs"]
+      }
     }
   },
   "birmel-llm-model": {
@@ -192,7 +205,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["tools"]
+      }
     }
   },
   "birmel-llm-reasoning-effort": {
@@ -210,7 +228,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "native", "endpoint": "language" }
     }
   },
   "birmel-responder-engagement-window-ms": {
@@ -440,7 +459,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["tools", "imageInput"]
+      }
     }
   },
   "scout-explore-quota-limits": {
@@ -553,7 +577,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["tools"]
+      }
     }
   },
   "scout-riot-budget-mode": {
@@ -579,7 +608,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "native", "endpoint": "decisions" }
     }
   },
   "storm-brain-model": {
@@ -589,7 +619,12 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": {
+        "kind": "native",
+        "endpoint": "language",
+        "requires": ["structuredOutputs"]
+      }
     }
   },
   "storm-forum-season": {
@@ -692,7 +727,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "claudeAgentSdk" }
     }
   },
   "temporal-agent-chat-discord-codex-default-model": {
@@ -702,7 +738,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "codexSdk" }
     }
   },
   "temporal-agent-chat-imessage-claude-model": {
@@ -712,7 +749,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "claudeAgentSdk" }
     }
   },
   "temporal-agent-chat-imessage-codex-model": {
@@ -722,7 +760,8 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 200,
-      "pattern": "^\\S+$"
+      "pattern": "^\\S+$",
+      "x-model-route": { "kind": "codexSdk" }
     }
   },
   "temporal-agent-chat-photon-owners": {

@@ -13,7 +13,7 @@ import {
   EmailSchema,
   jsonSchemaForSpec,
   MailboxSchema,
-  ModelIdSchema,
+  modelIdFor,
   SnowflakeSchema,
   variantJson,
   variantNumber,
@@ -27,6 +27,27 @@ import {
 const NonEmptyStringListSchema = z.array(z.string().min(1));
 const PositiveIntSchema = z.number().int().positive();
 const NonNegativeIntSchema = z.number().int().nonnegative();
+/*
+ * Model-id flags, tagged with the llm-models route each consumer resolves:
+ * `runtime.languageModel(id, ["tools"])` for tool-loop agents,
+ * `generateValidatedObject` (language + structuredOutputs) for extraction,
+ * `runtime.decide` for decisions, `createCodexConfig` or the Claude Agent SDK
+ * for agent chat.
+ */
+const LANGUAGE_MODEL = modelIdFor({ kind: "native", endpoint: "language" });
+const TOOL_LANGUAGE_MODEL = modelIdFor({
+  kind: "native",
+  endpoint: "language",
+  requires: ["tools"],
+});
+const STRUCTURED_LANGUAGE_MODEL = modelIdFor({
+  kind: "native",
+  endpoint: "language",
+  requires: ["structuredOutputs"],
+});
+const DECISIONS_MODEL = modelIdFor({ kind: "native", endpoint: "decisions" });
+const CODEX_MODEL = modelIdFor({ kind: "codexSdk" });
+const CLAUDE_AGENT_MODEL = modelIdFor({ kind: "claudeAgentSdk" });
 const PlexSectionIdSchema = z.string().regex(/^[1-9]\d*$/u);
 
 /** `@shepherdjerred/storm-theme` catalog ids plus `auto` (`SeasonChoiceSchema`). */
@@ -147,18 +168,22 @@ export const flagValueSchemas = {
   "birmel-agent-auxiliary-timeout-ms": variantNumber(PositiveIntSchema),
   "birmel-agent-max-steps": variantNumber(z.number().int().min(1).max(24)),
   "birmel-agent-response-timeout-ms": variantNumber(PositiveIntSchema),
-  "birmel-llm-classifier-model": variantString(ModelIdSchema),
-  "birmel-llm-decisions-model": variantString(ModelIdSchema),
+  "birmel-llm-classifier-model": variantString(STRUCTURED_LANGUAGE_MODEL),
+  "birmel-llm-decisions-model": variantString(DECISIONS_MODEL),
   "birmel-llm-decisions-threshold": variantNumber(z.number().min(0).max(1)),
-  "birmel-llm-embedding-model": variantString(ModelIdSchema),
-  "birmel-llm-image-model": variantString(ModelIdSchema),
+  "birmel-llm-embedding-model": variantString(
+    modelIdFor({ kind: "native", endpoint: "embedding" }),
+  ),
+  "birmel-llm-image-model": variantString(
+    modelIdFor({ kind: "native", endpoint: "image" }),
+  ),
   "birmel-llm-max-output-tokens": variantNumber(PositiveIntSchema),
-  "birmel-llm-memory-model": variantString(ModelIdSchema),
-  "birmel-llm-model": variantString(ModelIdSchema),
+  "birmel-llm-memory-model": variantString(STRUCTURED_LANGUAGE_MODEL),
+  "birmel-llm-model": variantString(TOOL_LANGUAGE_MODEL),
   "birmel-llm-reasoning-effort": variantString(
     z.enum(["minimal", "low", "medium", "high"]),
   ),
-  "birmel-persona-style-model": variantString(ModelIdSchema),
+  "birmel-persona-style-model": variantString(LANGUAGE_MODEL),
   "birmel-responder-engagement-window-ms": variantNumber(PositiveIntSchema),
   "birmel-responder-transcript-max-messages": variantNumber(
     z.number().int().min(1).max(50),
@@ -178,7 +203,13 @@ export const flagValueSchemas = {
   ),
   "llm-daily-token-budget": variantNumber(PositiveIntSchema),
   "llm-hourly-token-budget": variantNumber(PositiveIntSchema),
-  "scout-explore-model": variantString(ModelIdSchema),
+  "scout-explore-model": variantString(
+    modelIdFor({
+      kind: "native",
+      endpoint: "language",
+      requires: ["tools", "imageInput"],
+    }),
+  ),
   "scout-explore-quota-limits": variantJson(ExploreQuotaLimitsSchema),
   "scout-explore-spend-policy": variantJson(ExploreSpendPolicySchema),
   "scout-feature-tip-cooldown-hours": variantNumber(PositiveIntSchema),
@@ -187,7 +218,7 @@ export const flagValueSchemas = {
   ),
   "scout-client-minimum-version": variantString(SemanticVersionSchema),
   "scout-feature-tip-percent": variantNumber(z.number().int().min(0).max(100)),
-  "scout-report-ai-model": variantString(ModelIdSchema),
+  "scout-report-ai-model": variantString(TOOL_LANGUAGE_MODEL),
   "scout-riot-budget-mode": variantString(z.enum(["observe", "enforce"])),
   "scout-participant-crawl-daily-match-budget": variantNumber(
     z.number().int().nonnegative().max(1_000_000),
@@ -248,8 +279,8 @@ export const flagValueSchemas = {
 
   // storm brain (`storm-brain/src/config.ts`)
   "storm-brain-conversation-model": variantString(z.literal("gpt-6-luna")),
-  "storm-brain-decisions-model": variantString(ModelIdSchema),
-  "storm-brain-model": variantString(ModelIdSchema),
+  "storm-brain-decisions-model": variantString(DECISIONS_MODEL),
+  "storm-brain-model": variantString(STRUCTURED_LANGUAGE_MODEL),
 
   // streambot (`streambot/src/config/dynamic.ts`, `media-features.ts`)
   "streambot-idle-timeout-seconds": variantNumber(PositiveIntSchema),
@@ -270,11 +301,11 @@ export const flagValueSchemas = {
 
   // temporal agent chat (`temporal/src/config/agent-chat.ts`, `imessage.ts`, `photon.ts`)
   "temporal-agent-chat-discord-claude-default-model":
-    variantString(ModelIdSchema),
-  "temporal-agent-chat-discord-codex-default-model":
-    variantString(ModelIdSchema),
-  "temporal-agent-chat-imessage-claude-model": variantString(ModelIdSchema),
-  "temporal-agent-chat-imessage-codex-model": variantString(ModelIdSchema),
+    variantString(CLAUDE_AGENT_MODEL),
+  "temporal-agent-chat-discord-codex-default-model": variantString(CODEX_MODEL),
+  "temporal-agent-chat-imessage-claude-model":
+    variantString(CLAUDE_AGENT_MODEL),
+  "temporal-agent-chat-imessage-codex-model": variantString(CODEX_MODEL),
   "temporal-agent-chat-photon-owners": variantString(PhotonOwnersSchema),
 
   // temporal workers (`temporal/src/config/*.ts`)

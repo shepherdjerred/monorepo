@@ -23,6 +23,7 @@
   "devDependencies": {
     "@shepherdjerred/console-ui": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@types/bun": "1.4.5",
