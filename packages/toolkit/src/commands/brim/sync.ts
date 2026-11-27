@@ -128,7 +128,7 @@ async function runPush(
       console.log(line);
     },
   });
-  if (process.platform !== "darwin")
+  if (process.platform !== "darwin" || !settings.publishCaptures)
     return { ...report, captureArchiveBytes: 0 };
   const capture = await loadBrimCaptureSettings();
   const captureArchiveBytes = capture.enabled

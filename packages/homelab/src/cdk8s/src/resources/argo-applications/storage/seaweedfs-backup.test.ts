@@ -186,10 +186,14 @@ describe("SeaweedFS backup to Backblaze", () => {
       ?.replace("-filerExcludePaths=", "")
       .split(",");
     expect(excluded?.toSorted()).toEqual(
-      Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS)
-        .map((bucket) => `/buckets/${bucket}`)
-        .toSorted(),
+      [
+        ...Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS).map(
+          (bucket) => `/buckets/${bucket}`,
+        ),
+        "/buckets/brim-sessions/captures/v1",
+      ].toSorted(),
     );
+    expect(excluded).not.toContain("/buckets/brim-sessions");
 
     const item = resources.find(
       (resource) => resource.kind === "OnePasswordItem",

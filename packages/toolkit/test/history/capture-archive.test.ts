@@ -119,4 +119,16 @@ test("projects redacted captures, scopes mirrored requests by device, and republ
   expect(reader.detail(macId ?? 0, NOW)?.rawRequest).toMatchObject({
     machine: "macbook",
   });
+
+  for (const key of await store.listKeys("captures/v1/macbook/")) {
+    await store.delete(key);
+  }
+  await reader.refresh();
+  expect(reader.detail(macId ?? 0, NOW)).toBeNull();
+  expect(reader.list(null, { limit: 5, offset: 0 }, NOW).captures).toHaveLength(
+    1,
+  );
+  expect(
+    await Bun.file(path.join(directory, "mirror", "macbook.sqlite")).exists(),
+  ).toBe(false);
 });

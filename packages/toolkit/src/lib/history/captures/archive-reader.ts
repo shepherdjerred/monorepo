@@ -122,11 +122,27 @@ export class CaptureArchiveReader {
     }
   }
 
+  async #removeMachine(machineId: string): Promise<void> {
+    const cached = this.#stores.get(machineId);
+    if (cached === undefined) return;
+    const { directory } = this.#options;
+    await Promise.all([
+      rm(path.join(directory, `${machineId}.sqlite`), { force: true }),
+      rm(path.join(directory, `${machineId}.sha256`), { force: true }),
+    ]);
+    cached.close();
+    this.#stores.delete(machineId);
+    this.#machines.delete(archiveMachineCode(machineId));
+  }
+
   async #refreshMachine(machineId: string): Promise<void> {
     const { directory, store, open } = this.#options;
     const prefix = capturePrefix(machineId);
     const sealedManifest = await store.get(captureManifestKey(prefix));
-    if (sealedManifest === null) return;
+    if (sealedManifest === null) {
+      await this.#removeMachine(machineId);
+      return;
+    }
     const { digest } = CaptureArchiveManifest.parse(
       JSON.parse(new TextDecoder().decode(await open(sealedManifest))),
     );
@@ -167,9 +183,12 @@ export class CaptureArchiveReader {
   }
 
   async refresh(): Promise<void> {
-    const machines = await this.#options.store.listChildren(
-      CAPTURE_ARCHIVE_PREFIX,
+    const machines = new Set(
+      await this.#options.store.listChildren(CAPTURE_ARCHIVE_PREFIX),
     );
+    for (const machineId of this.#stores.keys()) {
+      if (!machines.has(machineId)) await this.#removeMachine(machineId);
+    }
     let failures = 0;
     for (const machineId of machines) {
       try {

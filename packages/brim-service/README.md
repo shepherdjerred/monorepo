@@ -9,10 +9,10 @@ interface. The Brim CLI and Herdr use the same quota and priority records.
 - Workstations publish transcript changes through `brim sync`. SeaweedFS
   retains the encrypted transcript archive. The cluster refreshes a private,
   rebuildable mirror and history index through `brim-archive-refresh`.
-- A Mac with Brim capture enabled also publishes a separately encrypted
-  snapshot of retained requests. Brim serves requests from the preceding 30
-  days. The `captures/v1/` S3 lifecycle expires old snapshots independently
-  of transcript history.
+- An enrolled Mac with Brim capture enabled also publishes a separately
+  encrypted snapshot of retained requests. Brim serves requests from the
+  preceding 30 days. The `captures/v1/` S3 lifecycle expires old snapshots
+  independently of transcript history.
 - MacBook publishes normalized quota, reset-credit, and billing readings.
   Its headless collector reads the same provider sign-ins and Keychain entries
   as the menu-bar app. Reauthentication happens in the original app or CLI.
@@ -65,6 +65,10 @@ and can span multiple five-minute ticks. Confirm an indexed session from
 each workstation, including a Windows session. Then compare the latest
 quota readings against MacBook and exercise a priority write from two Herdr
 clients.
+
+Before enrolling capture-producing Brim clients, verify the 30-day
+`captures/v1/` lifecycle rule and the matching filer backup exclusion on the
+cluster.
 
 ## Local checks
 
