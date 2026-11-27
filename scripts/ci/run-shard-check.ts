@@ -128,6 +128,7 @@ export function changedFilesForShard(
   check: CheckName,
   shard: ShardName,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
+  repository = REPO_ROOT,
 ): string[] | null {
   const base = environment["CI_CHANGED_BASE"]?.trim();
   if (base === undefined || base === "") return null;
@@ -135,7 +136,7 @@ export function changedFilesForShard(
     ["git", "cat-file", "-e", `${base}^{commit}`],
     ["git", "merge-base", "--is-ancestor", base, "HEAD"],
   ]) {
-    const validation = Bun.spawnSync(command, { cwd: REPO_ROOT });
+    const validation = Bun.spawnSync(command, { cwd: repository });
     if (validation.exitCode !== 0) {
       console.error(
         `WARN: ${check}[${shard}] could not validate ${base}; checking the complete shard`,
@@ -145,7 +146,7 @@ export function changedFilesForShard(
   }
   const diff = Bun.spawnSync(
     ["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD"],
-    { cwd: REPO_ROOT },
+    { cwd: repository },
   );
   if (diff.exitCode !== 0) return null;
   const changed = diff.stdout
@@ -299,15 +300,18 @@ export async function prettierDigestForFiles(
 export async function prettierChangedDigest(
   shard: ShardName,
   environment: Readonly<Record<string, string | undefined>>,
+  repository = REPO_ROOT,
 ): Promise<string> {
   return prettierDigestForFiles(
     shard,
-    changedFilesForShard("prettier", shard, environment),
+    changedFilesForShard("prettier", shard, environment, repository),
+    repository,
   );
 }
 
 export async function prettierChangedEnvironment(
   environment: Readonly<Record<string, string | undefined>>,
+  repository = REPO_ROOT,
 ): Promise<Record<string, string>> {
   return Object.fromEntries(
     await Promise.all(
@@ -315,7 +319,7 @@ export async function prettierChangedEnvironment(
         async (shard) =>
           [
             PRETTIER_CHANGED_ENV_KEYS[shard],
-            await prettierChangedDigest(shard, environment),
+            await prettierChangedDigest(shard, environment, repository),
           ] as const,
       ),
     ),

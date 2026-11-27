@@ -289,30 +289,27 @@ describe("changedFilesForShard", () => {
   });
 });
 
-// A shallow checkout may lack older commits, so derive bases from HEAD itself.
-function gitOutput(...args: string[]): string {
-  const result = Bun.spawnSync(["git", ...args], {
-    cwd: import.meta.dir,
-  });
-  expect(result.exitCode, result.stderr.toString()).toBe(0);
-  return result.stdout.toString().trim();
-}
-
 const BUILD_FILE = "packages/mc-harness/src/build/apply.ts";
 
 async function withShardRepository(
-  body: (repository: string, git: (...args: string[]) => void) => Promise<void>,
+  body: (
+    repository: string,
+    git: (...args: string[]) => string,
+  ) => Promise<void>,
 ): Promise<void> {
   const repository = await mkdtemp(path.join(tmpdir(), "prettier-digest-"));
   const git = (...args: string[]) => {
     const result = Bun.spawnSync(["git", ...args], { cwd: repository });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
+    return result.stdout.toString().trim();
   };
   try {
     git("init", "--quiet");
     for (const [file, content] of Object.entries({
       [BUILD_FILE]: "const a = 1;\n",
       "packages/other/src/index.ts": "const b = 1;\n",
+      "packages/scout-for-lol/src/index.ts": "const scout = 1;\n",
+      "packages/homelab/src/index.ts": "const homelab = 1;\n",
       ".editorconfig": "root = true\n",
       ".prettierrc.json": "{}\n",
     })) {
@@ -327,33 +324,60 @@ async function withShardRepository(
 
 describe("prettierChangedDigest", () => {
   test("is a `full` digest whenever the base is unusable, so the shard runs in full", async () => {
-    for (const shard of SHARD_NAMES) {
-      expect(await prettierChangedDigest(shard, {})).toMatch(
-        /^full-[a-f0-9]{64}$/u,
-      );
-      expect(
-        await prettierChangedDigest(shard, { CI_CHANGED_BASE: "f".repeat(40) }),
-      ).toMatch(/^full-[a-f0-9]{64}$/u);
-    }
+    await withShardRepository(async (repository) => {
+      for (const shard of SHARD_NAMES) {
+        expect(await prettierChangedDigest(shard, {}, repository)).toMatch(
+          /^full-[a-f0-9]{64}$/u,
+        );
+        expect(
+          await prettierChangedDigest(
+            shard,
+            { CI_CHANGED_BASE: "f".repeat(40) },
+            repository,
+          ),
+        ).toMatch(/^full-[a-f0-9]{64}$/u);
+      }
+    });
   });
 
   test("an unchanged shard hashes the same whichever base reached the same diff", async () => {
-    const head = gitOutput("rev-parse", "HEAD");
-    const symbolic = await prettierChangedDigest("scout", {
-      CI_CHANGED_BASE: "HEAD",
+    await withShardRepository(async (repository, git) => {
+      git(
+        "-c",
+        "user.name=Test Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "--quiet",
+        "--no-gpg-sign",
+        "-m",
+        "base",
+      );
+      const head = git("rev-parse", "HEAD");
+      const symbolic = await prettierChangedDigest(
+        "scout",
+        { CI_CHANGED_BASE: "HEAD" },
+        repository,
+      );
+      const explicit = await prettierChangedDigest(
+        "scout",
+        { CI_CHANGED_BASE: head },
+        repository,
+      );
+      expect(symbolic).toMatch(/^changed-[a-f0-9]{64}$/u);
+      expect(explicit).toBe(symbolic);
     });
-    const explicit = await prettierChangedDigest("scout", {
-      CI_CHANGED_BASE: head,
-    });
-    expect(symbolic).toMatch(/^changed-[a-f0-9]{64}$/u);
-    expect(explicit).toBe(symbolic);
   });
 
   test("the environment has one key per shard", async () => {
-    const environment = await prettierChangedEnvironment({});
-    expect(Object.keys(environment).sort()).toEqual(
-      Object.values(PRETTIER_CHANGED_ENV_KEYS).sort(),
-    );
+    await withShardRepository(async (repository) => {
+      const environment = await prettierChangedEnvironment({}, repository);
+      expect(Object.keys(environment).sort()).toEqual(
+        Object.values(PRETTIER_CHANGED_ENV_KEYS).sort(),
+      );
+    });
   });
 });
 
