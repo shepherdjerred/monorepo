@@ -12,6 +12,11 @@ import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
+import type {
+  ProbedAudio,
+  ProbedVideo,
+  VideoRotation,
+} from "@shepherdjerred/streambot/sources/probed-media.ts";
 
 const log = logger.child("probe");
 
@@ -79,8 +84,26 @@ const StreamSchema = z.object({
   height: z.number().optional(),
   pix_fmt: z.string().optional(),
   color_transfer: z.string().optional(),
+  color_space: z.string().optional(),
+  color_range: z.string().optional(),
+  /** `N:M`; `0:1` (or absent) means ffprobe does not know, which players treat as square. */
+  sample_aspect_ratio: z.string().optional(),
+  /** `progressive`, `tt`/`bb`/`tb`/`bt` (interlaced), or `unknown`. */
+  field_order: z.string().optional(),
+  /** Rational strings such as `24000/1001`; `0/0` when unknown. */
+  r_frame_rate: z.string().optional(),
+  avg_frame_rate: z.string().optional(),
+  /** Legacy rotation tag (clockwise degrees) written by older muxers. */
+  tags: z.object({ rotate: z.string().optional() }).optional(),
+  /** The display matrix's `rotation` is counter-clockwise degrees, e.g. `-90` for most phone clips. */
+  side_data_list: z
+    .array(z.object({ rotation: z.number().optional() }))
+    .optional(),
   channels: z.number().optional(),
+  channel_layout: z.string().optional(),
 });
+
+type ProbedStream = z.infer<typeof StreamSchema>;
 
 const FfprobeOutputSchema = z.object({
   streams: z.array(StreamSchema).default([]),
@@ -100,6 +123,10 @@ export type MediaInfo = {
   audioStreamIndex?: number;
   audioChannels: number | undefined;
   durationSeconds: number | undefined;
+  /** Display properties of the selected video stream; absent when it has no usable dimensions. */
+  video?: ProbedVideo;
+  /** Layout of the selected audio stream; absent when the source has no audio. */
+  audio?: ProbedAudio;
 };
 
 /** Map a pixel height to a coarse, bounded resolution label (keeps `streambot_source_info` low-card). */
@@ -109,6 +136,66 @@ export function resolutionBucket(height?: number): string {
   if (height >= 1400) return "1440p";
   if (height >= 1000) return "1080p";
   return height >= 600 ? "720p" : "sd";
+}
+
+/** Parse an ffprobe rational (`24000/1001`, `16:9`); undefined unless both terms are positive. */
+function parseRatio(value: string | undefined): number | undefined {
+  const match = value === undefined ? null : /^(\d+)[/:](\d+)$/u.exec(value);
+  if (match === null) return undefined;
+  const numerator = Number(match[1]);
+  const denominator = Number(match[2]);
+  return numerator > 0 && denominator > 0 ? numerator / denominator : undefined;
+}
+
+const QUARTER_TURNS = [
+  0, 90, 180, 270,
+] as const satisfies readonly VideoRotation[];
+
+/** Clockwise quarter-turns from the display matrix (CCW degrees) or, failing that, the legacy tag. */
+function videoRotation(stream: ProbedStream): VideoRotation {
+  const matrix = stream.side_data_list?.find(
+    (entry) => entry.rotation !== undefined,
+  )?.rotation;
+  const legacy = Number(stream.tags?.rotate ?? 0);
+  const clockwise =
+    matrix === undefined ? (Number.isFinite(legacy) ? legacy : 0) : -matrix;
+  const quarterTurns = ((Math.round(clockwise / 90) % 4) + 4) % 4;
+  return QUARTER_TURNS[quarterTurns] ?? 0;
+}
+
+const INTERLACED_FIELD_ORDERS = new Set(["tt", "bb", "tb", "bt"]);
+
+function probedVideo(stream: ProbedStream): ProbedVideo | undefined {
+  const { width, height } = stream;
+  if (width === undefined || height === undefined || width <= 0 || height <= 0)
+    return undefined;
+  const pixelAspect = parseRatio(stream.sample_aspect_ratio) ?? 1;
+  const rotation = videoRotation(stream);
+  const storedAspect = (width * pixelAspect) / height;
+  const frameRate =
+    parseRatio(stream.avg_frame_rate) ?? parseRatio(stream.r_frame_rate);
+  return {
+    displayAspect:
+      rotation === 90 || rotation === 270 ? 1 / storedAspect : storedAspect,
+    rotation,
+    ...(frameRate === undefined ? {} : { frameRate }),
+    interlaced: INTERLACED_FIELD_ORDERS.has(stream.field_order ?? ""),
+    ...(stream.color_space === undefined
+      ? {}
+      : { colorSpace: stream.color_space }),
+    ...(stream.color_range === undefined
+      ? {}
+      : { colorRange: stream.color_range }),
+  };
+}
+
+function probedAudio(stream: ProbedStream): ProbedAudio {
+  return {
+    ...(stream.channels === undefined ? {} : { channels: stream.channels }),
+    ...(stream.channel_layout === undefined
+      ? {}
+      : { channelLayout: stream.channel_layout }),
+  };
 }
 
 /** ffprobe `color_transfer` values that denote HDR (PQ / HLG). */
@@ -144,6 +231,7 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
   const rawDuration = parsed.data.format?.duration;
   const durationSeconds =
     rawDuration === undefined ? undefined : Number(rawDuration);
+  const displayed = video === undefined ? undefined : probedVideo(video);
   return {
     videoCodec: video?.codec_name ?? "unknown",
     ...(video === undefined
@@ -160,6 +248,8 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
       durationSeconds !== undefined && Number.isFinite(durationSeconds)
         ? durationSeconds
         : undefined,
+    ...(displayed === undefined ? {} : { video: displayed }),
+    ...(audio === undefined ? {} : { audio: probedAudio(audio) }),
   };
 }
 

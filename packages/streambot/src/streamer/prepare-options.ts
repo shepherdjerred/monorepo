@@ -1,4 +1,8 @@
-import { Encoders, Utils } from "@shepherdjerred/discord-video-stream";
+import {
+  Encoders,
+  Utils,
+  fitWithin,
+} from "@shepherdjerred/discord-video-stream";
 import type { PrepareStreamOptions } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
@@ -118,9 +122,10 @@ export function buildVideoPrepareOptions(
 ): Partial<PrepareStreamOptions> {
   const { stream, resolved } = input;
   const useHardware = input.pipelineMode !== "sw";
+  const size = outputSize(stream, resolved);
   return {
-    width: stream.width,
-    height: stream.height,
+    width: size.width,
+    height: size.height,
     frameRate: stream.fps,
     bitrateVideo: stream.bitrateKbps,
     bitrateVideoMax: stream.bitrateKbps * 2,
@@ -163,8 +168,12 @@ export function buildVideoPrepareOptions(
       : {}),
     // Discontinuous live input can change decoded frame format at an ad boundary, so keep its
     // decoder output in system memory from the first attempt; scaling and encoding stay on GPU.
+    //
+    // A rotated source (phone video) takes the same route: ffmpeg only autorotates software
+    // frames, so decoding straight into VAAPI surfaces would send the picture sideways.
     ...(input.pipelineMode === "hw-upload" ||
-    (useHardware && resolved.discontinuousLive === true)
+    (useHardware &&
+      (resolved.discontinuousLive === true || isRotated(resolved)))
       ? { hardwarePipelineMode: "upload" as const }
       : {}),
     ...headerOptions(resolved.ffmpegInputHeaders),
@@ -191,6 +200,27 @@ export function buildVideoPrepareOptions(
           },
         }),
   };
+}
+
+/**
+ * The encoded picture size: the source's display aspect fitted inside the configured box, so a
+ * 2.39:1 film encodes at 1920x804 rather than being stretched to 1920x1080, and a portrait clip
+ * at 608x1080. Discord letterboxes a non-16:9 stream itself, so no padding is encoded and the GPU
+ * and software pipelines size identically. A source whose probe failed keeps the configured box.
+ */
+function outputSize(
+  stream: Pick<Config["stream"], "width" | "height">,
+  resolved: Pick<ResolvedSource, "probedVideo">,
+): { width: number; height: number } {
+  const box = { width: stream.width, height: stream.height };
+  return resolved.probedVideo === undefined
+    ? box
+    : fitWithin(resolved.probedVideo.displayAspect, box);
+}
+
+function isRotated(resolved: Pick<ResolvedSource, "probedVideo">): boolean {
+  const rotation = resolved.probedVideo?.rotation;
+  return rotation !== undefined && rotation !== 0;
 }
 
 /**

@@ -445,6 +445,38 @@ describe("finalizeResolved — folding the final probe into the resolved source"
     expect(finalized.hdr).toBe(true);
   });
 
+  test("threads the probed display properties and video stream index for any source", () => {
+    const video = {
+      displayAspect: 2.39,
+      rotation: 0,
+      interlaced: false,
+    } as const;
+    const finalized = finalizeResolved(
+      SPLIT_VIDEO,
+      {
+        ...withVideo,
+        videoStreamIndex: 1,
+        video,
+        audio: { channels: 6, channelLayout: "5.1(side)" },
+      },
+      undefined,
+    );
+    expect(finalized.probedVideo).toEqual(video);
+    expect(finalized.probedAudio).toEqual({
+      channels: 6,
+      channelLayout: "5.1(side)",
+    });
+    // Without the index the fork maps `0:v`, which also matches embedded cover art.
+    expect(finalized.ffmpegVideoStreamIndex).toBe(1);
+  });
+
+  test("a failed probe leaves the display properties absent", () => {
+    const finalized = finalizeResolved(SPLIT_VIDEO, null, undefined);
+    expect(finalized.probedVideo).toBeUndefined();
+    expect(finalized.probedAudio).toBeUndefined();
+    expect(finalized.ffmpegVideoStreamIndex).toBeUndefined();
+  });
+
   test("leaves hdr unset for an SDR source rather than writing false", () => {
     expect(
       finalizeResolved(SPLIT_VIDEO, withVideo, undefined).hdr,

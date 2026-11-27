@@ -8,6 +8,10 @@ import type {
   SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
+import type {
+  ProbedAudio,
+  ProbedVideo,
+} from "@shepherdjerred/streambot/sources/probed-media.ts";
 import type { SportsPlaybackRecipe } from "@shepherdjerred/streambot/sports/prepared-input.ts";
 import type {
   MediaKind,
@@ -142,6 +146,14 @@ export type ConcreteResolvedSource = {
    * the stream pipeline; absent (probe failed or SDR) → no tonemap.
    */
   readonly hdr?: boolean;
+  /**
+   * How the chosen video stream is meant to be shown (display aspect, rotation, frame rate,
+   * interlacing, colour), from the resolve-time ffprobe. Absent when the probe failed, in which
+   * case the stream keeps the configured output box.
+   */
+  readonly probedVideo?: ProbedVideo;
+  /** The chosen audio stream's channel layout, from the same probe. */
+  readonly probedAudio?: ProbedAudio;
   /**
    * Media duration (seconds, from the resolve-time ffprobe). Lets the streamer distinguish a real
    * end of media from a premature exit-0 truncation (network URL expiry, container short-read).
