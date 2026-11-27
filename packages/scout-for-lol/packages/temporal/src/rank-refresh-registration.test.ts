@@ -1,0 +1,64 @@
+import { describe, expect, test } from "vitest";
+import {
+  ScoutRankRefreshBatchResultSchema,
+  ScoutRankRefreshInputSchema,
+  ScoutRankRefreshResultSchema,
+} from "./rank-refresh-contracts.ts";
+import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "./identifiers.ts";
+import * as workflows from "./workflows/index.ts";
+
+describe("rank refresh contracts", () => {
+  test("names a Workflow type the bundle exports", () => {
+    expect(SCOUT_WORKFLOW_NAMES.rankRefresh).toBe("scoutRankRefreshWorkflow");
+    expect(Object.keys(workflows)).toContain("scoutRankRefreshWorkflow");
+  });
+
+  test("its Activity runs on the background queue the other backfills use", () => {
+    expect(scoutTaskQueues("beta").background).toBe("scout-beta-background");
+    expect(scoutTaskQueues("prod").background).toBe("scout-prod-background");
+  });
+
+  test("accepts only the scheduled trigger", () => {
+    expect(
+      ScoutRankRefreshInputSchema.parse({ stage: "beta", trigger: "schedule" }),
+    ).toEqual({ stage: "beta", trigger: "schedule" });
+    expect(() =>
+      ScoutRankRefreshInputSchema.parse({ stage: "beta", trigger: "manual" }),
+    ).toThrow();
+    expect(() =>
+      ScoutRankRefreshInputSchema.parse({
+        stage: "beta",
+        trigger: "schedule",
+        puuid: "x",
+      }),
+    ).toThrow();
+  });
+
+  test("results are closed and non-negative", () => {
+    expect(
+      ScoutRankRefreshBatchResultSchema.parse({
+        enabled: true,
+        refreshed: 3,
+        unranked: 1,
+        more: false,
+      }),
+    ).toEqual({ enabled: true, refreshed: 3, unranked: 1, more: false });
+    expect(() =>
+      ScoutRankRefreshBatchResultSchema.parse({
+        enabled: true,
+        refreshed: -1,
+        unranked: 0,
+        more: false,
+      }),
+    ).toThrow();
+    expect(() =>
+      ScoutRankRefreshResultSchema.parse({
+        enabled: true,
+        batches: 0,
+        refreshed: 0,
+        unranked: 0,
+        drained: true,
+      }),
+    ).toThrow();
+  });
+});
