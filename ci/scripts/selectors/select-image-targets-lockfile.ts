@@ -424,7 +424,21 @@ type QueueVisit = {
   seen: Set<string>;
   queue: ResolutionQueueEntry[];
   onEntry: (key: string, entry: LockPackageEntry) => void;
+  /**
+   * Whether a package's `optionalPeers` are walked. Selection over-walks
+   * them (the safe direction); a lockfile projection must match the set
+   * Bun keeps, and Bun never installs an optional peer on its own.
+   */
+  optionalPeers: boolean;
 };
+
+function optionalPeerNames(meta: Record<string, unknown>): Set<string> {
+  const value = meta["optionalPeers"];
+  if (value === undefined) return new Set();
+  if (!Array.isArray(value) || !value.every((name) => typeof name === "string"))
+    throw new TypeError("lockfile optionalPeers must be an array of strings");
+  return new Set(value);
+}
 
 /**
  * Visit one queued dep: resolve it, call onEntry, and enqueue its own deps.
@@ -446,8 +460,12 @@ function visitQueueEntry(next: ResolutionQueueEntry, visit: QueueVisit): void {
   visit.onEntry(key, entry);
   // Workspace members reached through the graph are covered by closureDirs.
   if (entry.id.includes("@workspace:")) return;
+  const skipped = visit.optionalPeers
+    ? new Set<string>()
+    : optionalPeerNames(entry.meta);
   for (const { field, required } of PACKAGE_DEP_FIELDS) {
     for (const name of Object.keys(depMap(entry.meta, field))) {
+      if (field === "peerDependencies" && skipped.has(name)) continue;
       visit.queue.push({ name, parentKey: key, required });
     }
   }
@@ -461,8 +479,15 @@ function drainResolutionQueue(
   queue: ResolutionQueueEntry[],
   lock: Lockfile,
   onEntry: (key: string, entry: LockPackageEntry) => void,
+  optionalPeers = true,
 ): void {
-  const visit: QueueVisit = { lock, seen: new Set<string>(), queue, onEntry };
+  const visit: QueueVisit = {
+    lock,
+    seen: new Set<string>(),
+    queue,
+    onEntry,
+    optionalPeers,
+  };
   while (visit.queue.length > 0) {
     const next = visit.queue.pop();
     if (next === undefined) break;
@@ -514,6 +539,33 @@ export function closurePackageIds(
     ids.add(entry.id);
   });
   return ids;
+}
+
+/**
+ * Every lockfile package key reachable from the closure's workspace dirs:
+ * the same graph walk as closureFingerprint, accumulating the keys a lockfile
+ * projected onto that closure must keep. Workspace entries the walk reaches
+ * are included; the caller decides which belong to the closure. Returns null
+ * when a closure dir is missing from the lockfile.
+ */
+export function closurePackageKeys(
+  closureDirs: readonly string[],
+  lock: Lockfile,
+): Set<string> | null {
+  const keys = new Set<string>();
+  const queue = seedResolutionQueue(closureDirs, lock, () => {
+    // Workspace entries are the caller's closure; only packages accumulate.
+  });
+  if (queue === null) return null;
+  drainResolutionQueue(
+    queue,
+    lock,
+    (key) => {
+      keys.add(key);
+    },
+    false,
+  );
+  return keys;
 }
 
 export type LockfilePair = {

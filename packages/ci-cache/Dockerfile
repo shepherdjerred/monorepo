@@ -2,10 +2,10 @@
 FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
-# ── manifests: only the install closure's workspace manifests ───────────────
+# ── manifests: the install closure's manifests and projected lockfile ───────
 FROM base AS manifests
 COPY --parents \
-  package.json scripts/package.json \
+  package.json bun.lock patches/ scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
@@ -13,6 +13,7 @@ COPY --parents \
   /workspace/
 COPY --parents \
   ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/images/install-projection/install-projection.ts \
   ci/scripts/selectors/select-image-targets-workspaces.ts \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
@@ -20,7 +21,7 @@ RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
   '@shepherdjerred/ci-cache'
 
 FROM base AS deps
-COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --parents bunfig.toml ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/ci-cache'
 
