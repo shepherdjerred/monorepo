@@ -2,14 +2,12 @@ import { cp, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { homedir } from "node:os";
 import { z } from "zod";
-import {
-  lakeSchemaFingerprint,
-  lakeSchemaStatus,
-  type LakeSchemaStatus,
-} from "@scout-for-lol/backend/report-lake/schema.ts";
+import { lakeSchemaFingerprint } from "@scout-for-lol/backend/report-lake/schema.ts";
 
 export const DEV_SEED_REFRESH_COMMAND =
   "bun run --filter='./packages/scout-for-lol' dev:seed";
+
+export type LakeSchemaStatus = "current" | "unknown";
 
 const BuildManifestSchema = z.looseObject({
   schemaFingerprint: z.string().min(1).optional(),
@@ -132,12 +130,13 @@ export async function inspectPublishedBuild(
   const schemaFingerprint = await readManifestSchemaFingerprint(
     path.join(lakeDir, "builds", buildId),
   );
-  const schemaStatus = lakeSchemaStatus(schemaFingerprint);
+  const schemaStatus: LakeSchemaStatus =
+    schemaFingerprint === lakeSchemaFingerprint() ? "current" : "unknown";
   return {
     buildId,
     schemaFingerprint,
     schemaStatus,
-    compatible: schemaStatus === "current" || schemaStatus === "predecessor",
+    compatible: schemaStatus === "current",
   };
 }
 
