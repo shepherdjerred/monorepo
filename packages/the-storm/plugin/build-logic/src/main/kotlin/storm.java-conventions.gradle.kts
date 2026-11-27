@@ -61,7 +61,7 @@ tasks.withType<JavaCompile>().configureEach {
   options.compilerArgs.addAll(
       listOf("-Xlint:all", "-Xlint:-processing", "-Xlint:-classfile", "-Werror", "-parameters"))
   options.errorprone {
-    isEnabled = !sidecarJarOnly
+    enabled.set(!sidecarJarOnly)
     disableWarningsInGeneratedCode = true
     excludedPaths = ".*/build/generated/.*"
     error("NullAway")
