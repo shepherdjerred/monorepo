@@ -18,6 +18,7 @@ import {
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditFriends } from "#src/database/design-audit-friends-fixture.ts";
+import { seedDesignAuditHome } from "#src/database/design-audit-home-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import {
   designAuditMatchFixtures,
@@ -256,6 +257,13 @@ export async function seedDesignAuditDatabase(
       main: { playerId: player.id, playerAlias, puuid },
       now: new Date(),
     });
+    // Home: streak, pentakill, rank moves, a live game and a challenge.
+    const homeFacts = await seedDesignAuditHome({
+      prisma,
+      guildId,
+      discordId,
+      now: new Date(),
+    });
 
     await prisma.subscription.create({
       data: {
@@ -334,6 +342,7 @@ export async function seedDesignAuditDatabase(
       matchFacts: [
         ...champions.tracked,
         ...playerFriends.matchFacts,
+        ...homeFacts,
         ...designAuditHistoryFixtures({
           playerId: player.id,
           playerAlias,

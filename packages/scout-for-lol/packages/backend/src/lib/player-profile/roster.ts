@@ -31,7 +31,7 @@ export const ROSTER_FORM_GAMES = 20;
 const DAY_MS = 86_400_000;
 export const ROSTER_ACTIVITY_DAYS = 7;
 
-type RosterPlayerRow = {
+export type RosterPlayerRow = {
   id: number;
   alias: string;
   serverId: DiscordGuildId;
@@ -39,7 +39,7 @@ type RosterPlayerRow = {
   accounts: { puuid: LeaguePuuid }[];
 };
 
-type RosterGuild = { id: DiscordGuildId; name: string };
+export type RosterGuild = { id: DiscordGuildId; name: string };
 
 /**
  * One person for each connected set of Player rows. A person tracked in two
@@ -47,7 +47,7 @@ type RosterGuild = { id: DiscordGuildId; name: string };
  * two accounts; both collapse here, joined by a shared Discord link or a
  * shared PUUID.
  */
-function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
+export function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
   const parent = players.map((_, index) => index);
   const find = (index: number): number => {
     let root = index;
@@ -74,7 +74,39 @@ function groupPeople(players: RosterPlayerRow[]): RosterPlayerRow[][] {
   return [...people.values()];
 }
 
-function freshest(
+export function groupGamesByPuuid(
+  games: readonly RosterGameRow[],
+): Map<string, RosterGameRow[]> {
+  const byPuuid = new Map<string, RosterGameRow[]>();
+  for (const game of games) {
+    byPuuid.set(game.puuid, [...(byPuuid.get(game.puuid) ?? []), game]);
+  }
+  return byPuuid;
+}
+
+/**
+ * One person's games across their accounts, newest first. A match two of their
+ * accounts were both in counts once.
+ */
+export function personGames(
+  puuids: ReadonlySet<string>,
+  gamesByPuuid: ReadonlyMap<string, RosterGameRow[]>,
+): RosterGameRow[] {
+  return [
+    ...new Map(
+      [...puuids]
+        .flatMap((puuid) => gamesByPuuid.get(puuid) ?? [])
+        .toSorted(
+          (left, right) =>
+            right.game_creation_ms - left.game_creation_ms ||
+            right.match_id.localeCompare(left.match_id),
+        )
+        .map((game) => [game.match_id, game] as const),
+    ).values(),
+  ];
+}
+
+export function freshest(
   evidence: (RankEvidence | undefined)[],
 ): RankEvidence | undefined {
   return evidence
@@ -82,7 +114,9 @@ function freshest(
     .toSorted((left, right) => right.at.getTime() - left.at.getTime())[0];
 }
 
-function runOfSameResult(games: { win: boolean }[]): PlayerStreak | null {
+export function runOfSameResult(
+  games: { win: boolean }[],
+): PlayerStreak | null {
   const first = games[0];
   if (first === undefined) return null;
   const run = games.findIndex((game) => game.win !== first.win);
@@ -107,13 +141,7 @@ export function buildRoster(input: {
   nowMs: number;
 }) {
   const guildById = new Map(input.guilds.map((guild) => [guild.id, guild]));
-  const gamesByPuuid = new Map<string, RosterGameRow[]>();
-  for (const game of input.games) {
-    gamesByPuuid.set(game.puuid, [
-      ...(gamesByPuuid.get(game.puuid) ?? []),
-      game,
-    ]);
-  }
+  const gamesByPuuid = groupGamesByPuuid(input.games);
   const sinceMs = input.nowMs - ROSTER_ACTIVITY_DAYS * DAY_MS;
 
   const people = groupPeople(input.players).map((members) => {
@@ -123,18 +151,7 @@ export function buildRoster(input: {
     const puuids = new Set(
       members.flatMap((member) => member.accounts.map((a) => a.puuid)),
     );
-    const games = [
-      ...new Map(
-        [...puuids]
-          .flatMap((puuid) => gamesByPuuid.get(puuid) ?? [])
-          .toSorted(
-            (left, right) =>
-              right.game_creation_ms - left.game_creation_ms ||
-              right.match_id.localeCompare(left.match_id),
-          )
-          .map((game) => [game.match_id, game] as const),
-      ).values(),
-    ];
+    const games = personGames(puuids, gamesByPuuid);
     const form = games.slice(0, ROSTER_FORM_GAMES);
     const latest = games[0];
     const personRanks = [...puuids].map((puuid) => input.ranks.get(puuid));

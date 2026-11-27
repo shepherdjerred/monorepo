@@ -20,6 +20,13 @@ const RosterGameRowSchema = z.object({
   queue: z.string().nullable(),
   queue_id: LakeInt,
   win: z.boolean(),
+  kills: LakeInt,
+  deaths: LakeInt,
+  assists: LakeInt,
+  largest_multi_kill: LakeInt,
+  game_mode: z.string(),
+  team_id: LakeInt,
+  player_subteam_id: LakeInt.nullable(),
 });
 
 export type RosterGameRow = z.infer<typeof RosterGameRowSchema>;
@@ -53,8 +60,10 @@ export async function readRosterGames(
       scalarParam(options.sinceMs),
     ],
     sql:
-      `SELECT puuid, match_id, game_creation_ms, champion_id, champion_name, queue, queue_id, win FROM (` +
+      `SELECT puuid, match_id, game_creation_ms, champion_id, champion_name, queue, queue_id, win, ` +
+      `kills, deaths, assists, largest_multi_kill, game_mode, team_id, player_subteam_id FROM (` +
       `SELECT puuid, match_id, champion_id, champion_name, queue, queue_id, win, ` +
+      `kills, deaths, assists, largest_multi_kill, game_mode, team_id, player_subteam_id, ` +
       `${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
       `row_number() OVER (PARTITION BY puuid ORDER BY ${GAME_CREATED_MS_SQL} DESC, match_id DESC) AS recency ` +
       `FROM (${source.sql})) ` +
