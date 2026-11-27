@@ -405,14 +405,41 @@ function defaultTitleFromUrl(feedUrl: string): string {
 }
 
 const CLOSING_FEED_ROOT_PATTERN =
-  /<\/(?:rss|feed|atom:feed|rdf:RDF|RDF)\s*>\s*$/iu;
+  /<\/(?:rss|feed|atom:feed|rdf:RDF|RDF)\s*>$/iu;
+
+function trailingXmlMiscStart(xml: string, end: number): number | undefined {
+  if (xml.endsWith("-->", end)) {
+    const start = xml.lastIndexOf("<!--", end - 3);
+    return start === -1 ? undefined : start;
+  }
+  if (xml.endsWith("?>", end)) {
+    const start = xml.lastIndexOf("<?", end - 2);
+    return start === -1 ? undefined : start;
+  }
+  return undefined;
+}
+
+function stripTrailingXmlMisc(xml: string): string {
+  let end = xml.length;
+  while (end > 0) {
+    while (end > 0 && /\s/u.test(xml.charAt(end - 1))) {
+      end -= 1;
+    }
+    const nextEnd = trailingXmlMiscStart(xml, end);
+    if (nextEnd === undefined) {
+      break;
+    }
+    end = nextEnd;
+  }
+  return xml.slice(0, end);
+}
 
 export function parseFeedXml(
   xml: string,
   feedUrl: string,
   fallbackNowSeconds?: number,
 ): ParsedFeedDocument {
-  const cleaned = xml.replace(/^\u{FEFF}/u, "").trim();
+  const cleaned = stripTrailingXmlMisc(xml.replace(/^\u{FEFF}/u, "").trim());
   if (cleaned.length === 0) {
     throw new Error("Feed XML body is empty");
   }

@@ -47,7 +47,6 @@ import {
   SCHEMA_SQL,
   subscriptionsEtagFromDb,
   type FeedRow,
-  type IdRow,
 } from "./store-sql.ts";
 import type {
   ConsoleEntriesQuery,
@@ -60,6 +59,84 @@ import type {
   StoredFeed,
   StoreMutationFailure,
 } from "./types.ts";
+
+const DEFAULT_MAX_READ_PER_FEED = 5000;
+const STALE_POLL_ENTRY_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
+type ExistingPollEntryRow = {
+  readonly id: number;
+  readonly is_read: number;
+  readonly is_starred: number;
+  readonly auto_read_matched: number;
+};
+
+function orderPolledEntriesChronologically(
+  entries: readonly ParsedFeedEntry[],
+): readonly ParsedFeedEntry[] {
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .toSorted(
+      (a, b) => a.entry.publishedAt - b.entry.publishedAt || b.index - a.index,
+    )
+    .map(({ entry }) => entry);
+}
+
+function updateExistingPolledEntry(input: {
+  readonly updateEntry: ReturnType<Database["query"]>;
+  readonly existing: ExistingPollEntryRow;
+  readonly entry: ParsedFeedEntry;
+  readonly feed: StoredFeed;
+}): boolean {
+  const { updateEntry, existing, entry, feed } = input;
+  const newlyAutoRead =
+    existing.is_read === 0 &&
+    existing.is_starred === 0 &&
+    existing.auto_read_matched === 0 &&
+    matchesAutoReadRule(feed.autoRead, entry);
+  updateEntry.run(
+    entry.title,
+    entry.url,
+    entry.author,
+    entry.contentHtml,
+    JSON.stringify(entry.enclosures),
+    JSON.stringify(entry.categories ?? []),
+    newlyAutoRead ? 1 : existing.is_read,
+    newlyAutoRead ? 1 : existing.auto_read_matched,
+    existing.id,
+  );
+  return newlyAutoRead;
+}
+
+function insertNewPolledEntry(input: {
+  readonly insertEntry: ReturnType<Database["query"]>;
+  readonly id: number;
+  readonly feed: StoredFeed;
+  readonly entry: ParsedFeedEntry;
+  readonly crawledAtMs: number;
+  readonly staleCutoffSeconds: number | null;
+}): boolean {
+  const { insertEntry, id, feed, entry, crawledAtMs, staleCutoffSeconds } =
+    input;
+  const matched = matchesAutoReadRule(feed.autoRead, entry);
+  const staleArchive =
+    staleCutoffSeconds !== null && entry.publishedAt < staleCutoffSeconds;
+  insertEntry.run(
+    id,
+    feed.id,
+    entry.guid,
+    entry.url,
+    entry.title,
+    entry.author,
+    entry.contentHtml,
+    entry.publishedAt,
+    crawledAtMs,
+    JSON.stringify(entry.enclosures),
+    JSON.stringify(entry.categories ?? []),
+    matched || staleArchive ? 1 : 0,
+    matched ? 1 : 0,
+  );
+  return matched;
+}
 
 export class FeedsStore implements FeedsRepository {
   #lastEntryId: number;
@@ -111,7 +188,7 @@ export class FeedsStore implements FeedsRepository {
     readonly minAgeSeconds?: number | undefined;
     readonly nowSeconds?: number | undefined;
   }): number {
-    const maxRead = options?.maxReadPerFeed ?? 500;
+    const maxRead = options?.maxReadPerFeed ?? DEFAULT_MAX_READ_PER_FEED;
     const minAge = options?.minAgeSeconds ?? 120 * 24 * 60 * 60;
     const now = options?.nowSeconds ?? Math.floor(Date.now() / 1000);
     return this.db
@@ -165,14 +242,14 @@ export class FeedsStore implements FeedsRepository {
     readonly discoveredHtmlUrl?: string | null | undefined;
     readonly entries: readonly ParsedFeedEntry[];
   }): { readonly inserted: number; readonly autoRead: number } {
-    const findExisting = this.db.query<IdRow, [number, string]>(
-      "SELECT id FROM entries WHERE feed_id = ? AND guid = ?",
+    const findExisting = this.db.query<ExistingPollEntryRow, [number, string]>(
+      "SELECT id, is_read, is_starred, auto_read_matched FROM entries WHERE feed_id = ? AND guid = ?",
     );
     const insertEntry = this.db.query(
       "INSERT INTO entries (id, feed_id, guid, url, title, author, content_html, published_at, crawled_at_ms, enclosures_json, categories_json, is_read, is_starred, auto_read_matched) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)",
     );
     const updateEntry = this.db.query(
-      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ?, categories_json = ? WHERE id = ?",
+      "UPDATE entries SET title = ?, url = ?, author = ?, content_html = ?, enclosures_json = ?, categories_json = ?, is_read = ?, auto_read_matched = ? WHERE id = ?",
     );
     return this.db.transaction(() => {
       const feed = this.getFeedById(input.feedId);
@@ -180,40 +257,35 @@ export class FeedsStore implements FeedsRepository {
         throw new Error(`Unknown feed id: ${String(input.feedId)}`);
       }
       const crawledAtMs = input.polledAtSeconds * 1000;
+      const staleCutoffSeconds =
+        feed.lastSuccessAt === null
+          ? null
+          : input.polledAtSeconds - STALE_POLL_ENTRY_MAX_AGE_SECONDS;
       let inserted = 0;
       let autoRead = 0;
-      for (const entry of input.entries) {
-        const encJson = JSON.stringify(entry.enclosures);
-        const catJson = JSON.stringify(entry.categories ?? []);
+      for (const entry of orderPolledEntriesChronologically(input.entries)) {
         const existing = findExisting.get(input.feedId, entry.guid);
         if (existing !== null) {
-          updateEntry.run(
-            entry.title,
-            entry.url,
-            entry.author,
-            entry.contentHtml,
-            encJson,
-            catJson,
-            existing.id,
-          );
+          if (
+            updateExistingPolledEntry({
+              updateEntry,
+              existing,
+              entry,
+              feed,
+            })
+          ) {
+            autoRead += 1;
+          }
           continue;
         }
-        const matched = matchesAutoReadRule(feed.autoRead, entry);
-        insertEntry.run(
-          this.#allocateEntryId(crawledAtMs),
-          input.feedId,
-          entry.guid,
-          entry.url,
-          entry.title,
-          entry.author,
-          entry.contentHtml,
-          entry.publishedAt,
+        const matched = insertNewPolledEntry({
+          insertEntry,
+          id: this.#allocateEntryId(crawledAtMs),
+          feed,
+          entry,
           crawledAtMs,
-          encJson,
-          catJson,
-          matched ? 1 : 0,
-          matched ? 1 : 0,
-        );
+          staleCutoffSeconds,
+        });
         inserted += 1;
         if (matched) {
           autoRead += 1;
