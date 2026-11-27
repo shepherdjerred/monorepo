@@ -10,6 +10,7 @@ const turboTasks = [
   "check-suppressions",
   "check-agent-guidance",
   "check-directory-file-counts",
+  "check-flag-usage",
   "check-ai-architecture",
   "check-floating-deps",
   "check-patched-deps",

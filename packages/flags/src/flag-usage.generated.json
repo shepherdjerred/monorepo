@@ -1,0 +1,2692 @@
+{
+  "version": 1,
+  "flags": {
+    "ai_reports_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/reports/ai/status.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "ai_reports_unlimited": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/reports/ai/status.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-daily-digest-quiet-clear": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-digest-email-from": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-digest-email-to": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-email-enabled": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incident-email-from": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "alert-dashboard-incident-email-to": [
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/alert-dashboard",
+        "file": "packages/alert-dashboard/src/infrastructure/digest-flag.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "arcade_brawl_enabled": [
+      {
+        "package": "@arcade/backend",
+        "file": "packages/arcade/packages/backend/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "arcade_enabled": [
+      {
+        "package": "@arcade/backend",
+        "file": "packages/arcade/packages/backend/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "arcade_melee_enabled": [
+      {
+        "package": "@arcade/backend",
+        "file": "packages/arcade/packages/backend/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "arcade_mkwii_enabled": [
+      {
+        "package": "@arcade/backend",
+        "file": "packages/arcade/packages/backend/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-activity-tracking-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-agent-auxiliary-timeout-ms": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-agent-max-steps": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-agent-response-timeout-ms": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-birthdays-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-daily-posts-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-elections-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-classifier-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-decisions-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-decisions-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-decisions-threshold": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-embedding-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-image-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-max-output-tokens": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-memory-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-llm-reasoning-effort": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-persona-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-persona-style-model": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-responder-enabled": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-responder-engagement-window-ms": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-responder-transcript-max-messages": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "birmel-responder-transcript-window-ms": [
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/birmel",
+        "file": "packages/birmel/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "challenge_runs_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/challenge-tools.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/progression/challenges/access.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/challenge.router.ts",
+        "kind": "call-argument",
+        "count": 3
+      }
+    ],
+    "ci-extended-verify-dispatch-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/ci-extended-verify.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "ci-maintenance-dispatch-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/ci-maintenance.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "ci-workspace-golden-refresh-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/ci-maintenance.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "ci-workspace-seed-refresh-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/ci-maintenance.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "clash_surface": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/league/clash/access.ts",
+        "kind": "call-argument",
+        "count": 3
+      }
+    ],
+    "dare_notifications_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/configuration/flags.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/dares/presentation/dare-callout.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/temporal/notification/dare-status-notification.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "dares_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/configuration/flags.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/consumer/dares-access.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/dares/dare-common.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/dare.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/dare-capability.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/dare-tool-context.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/tips/tip-catalog.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/dares/dares.router.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "debug": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/http/version.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/league/tasks/competition/daily-update.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "delivery-enabled-environments": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "delivery-enrichment-sources": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "delivery-executor-concurrency": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "delivery-lease-seconds": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "delivery-operator-logins": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "delivery-writes-enabled": [
+      {
+        "package": "@shepherdjerred/delivery",
+        "file": "packages/delivery/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "duels_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/configuration/flags.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/progression/duels/access.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/tips/tip-catalog.ts",
+        "kind": "array-element",
+        "count": 1
+      }
+    ],
+    "errors-email-notifications-enabled": [
+      {
+        "package": "@shepherdjerred/errors",
+        "file": "packages/errors/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "errors-ingest-enabled": [
+      {
+        "package": "@shepherdjerred/errors",
+        "file": "packages/errors/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "errors-telemetry-enabled": [
+      {
+        "package": "@shepherdjerred/errors",
+        "file": "packages/errors/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "errors-tracker-creation-enabled": [
+      {
+        "package": "@shepherdjerred/errors",
+        "file": "packages/errors/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "explore-guild-allowlist": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "explore_creation_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/creation/capability.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/creation/confirm.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "explore_on_demand_riot_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/riot-history-tools.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "feature_tips_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/tips/tip-selection.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "feeds-refresh-enabled": [
+      {
+        "package": "@shepherdjerred/feeds",
+        "file": "packages/feeds/src/server.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "golink-dynamic-aliases-enabled": [
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "golink-telemetry-enabled": [
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "golink-writes-enabled": [
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/golink",
+        "file": "packages/golink/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "hall_of_fame_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/hall-tools.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/progression/hall/evaluate-match.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/temporal/notification/hall-record-break-notification.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/tips/tip-catalog.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/guild.router.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/hall.router.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "initial_match_history_import_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/track.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/creation/confirm.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/subscription.router.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "justin_autonomous_devex_enabled": [
+      {
+        "package": "@shepherdjerred/justin-principal-engineer",
+        "file": "packages/justin-principal-engineer/src/host/autonomy-policy.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "karma-admin-user-id": [
+      {
+        "package": "starlight-karma-bot",
+        "file": "packages/starlight-karma-bot/src/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "starlight-karma-bot",
+        "file": "packages/starlight-karma-bot/src/config.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "karma-emoji": [
+      {
+        "package": "starlight-karma-bot",
+        "file": "packages/starlight-karma-bot/src/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "starlight-karma-bot",
+        "file": "packages/starlight-karma-bot/src/config.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "llm-daily-token-budget": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "llm-hourly-token-budget": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "mail-relay-enabled": [
+      {
+        "package": "@shepherdjerred/mail",
+        "file": "packages/mail/src/server/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "mail-settings": [
+      {
+        "package": "@shepherdjerred/mail",
+        "file": "packages/mail/src/server/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "media-acquisition-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-artwork-cache-max-bytes": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-capacity-observation-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-email-sender": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-keep-days": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-permitted-movie-section-id": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-permitted-tv-section-id": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-personal-discord-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-plex-event-hints-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-purge-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-quarantine-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-requests-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-session-lifetime-ms": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-shared-announcements-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-shared-announcements-upgrades": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-shared-discord-channel-id": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-source-cleanup-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "media-subtitle-maintenance-enabled": [
+      {
+        "package": "@shepherdjerred/media",
+        "file": "packages/media/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "mvp_votes_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/tools/mvp-votes-tools.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/mvp-votes/eligibility.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/guild.router.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "player-card-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "riot_account_linking_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/riot/http.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/riot/router.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout-client-end-of-game-deadline-seconds": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-client-minimum-version": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-consumer-player-profiles-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/consumer/player-access.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "scout-evidence-recovery-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "scout-explore-analysis-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-explore-model": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-explore-model-picker-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-explore-quota-limits": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-explore-spend-policy": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-feature-tip-cooldown-hours": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-feature-tip-percent": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-participant-crawl-daily-match-budget": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-participant-crawl-enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-report-ai-model": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-riot-budget-mode": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout-temporal-call-graph-tracing": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "scout_client_ingestion": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/access/authentication.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/access/policy.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/http.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/scout-client.router.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_client_result_recovery": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/ingress.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/prematch-evidence.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/reconciliation.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/telemetry/capture-metrics.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_coach_live_answers": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-trigger-routes.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-voice-routes.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/explore-run-routes.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "scout_coach_proactive": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/configuration/flags.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/explore/agent.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-trigger-routes.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_desktop_coach": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/coach/review-runtime.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-review-routes.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-trigger-routes.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-voice-routes.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/explore-run-routes.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "scout_desktop_explore_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/auth.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_desktop_voice": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-trigger-speech-route.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/scout-client/desktop/coach-voice-routes.ts",
+        "kind": "array-element",
+        "count": 1
+      }
+    ],
+    "scout_durable_orchestration_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/temporal/orchestration-cutover.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_operations_console_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/operations/operations-commands.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "scout_support_conversations_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/help.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/support/discord.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/support/jobs.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/trpc/router/feedback.router.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "storm-brain-conversation-enabled": [
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/index.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "storm-brain-conversation-model": [
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/index.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "storm-brain-decisions-model": [
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/index.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "storm-brain-model": [
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-brain",
+        "file": "packages/storm-brain/src/index.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "storm-forum-calendar-enabled": [
+      {
+        "package": "@shepherdjerred/storm-forum",
+        "file": "packages/storm-forum/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "storm-forum-registration-enabled": [
+      {
+        "package": "@shepherdjerred/storm-forum",
+        "file": "packages/storm-forum/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "storm-forum-season": [
+      {
+        "package": "@shepherdjerred/storm-forum",
+        "file": "packages/storm-forum/src/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/storm-forum",
+        "file": "packages/storm-forum/src/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "storm-stats-ingest-enabled": [
+      {
+        "package": "@shepherdjerred/storm-stats",
+        "file": "packages/storm-stats/src/server/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-stats",
+        "file": "packages/storm-stats/src/server/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "storm-stats-public-enabled": [
+      {
+        "package": "@shepherdjerred/storm-stats",
+        "file": "packages/storm-stats/src/server/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/storm-stats",
+        "file": "packages/storm-stats/src/server/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-assistant-v2-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-automatic-channel-routing-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-history-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-idle-timeout-seconds": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-live-buffer-ms": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-lol-autoplay-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-lol-esports-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-music-catalog-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-music-over-voice-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-music-search-provider": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-numbered-channels-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 2
+      }
+    ],
+    "streambot-player-card-repost-after-messages": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-player-card-tick-ms": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-playlists-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-plex-posters-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-radio-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-reconnect-delay-seconds": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-reconnect-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-reconnect-max-attempts": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-sports-streaming-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-spotify-links-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-subtitle-languages": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-subtitles-include-auto-generated": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-tv-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-usage-analytics-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "streambot-voice-decisions-router-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "streambot-web-ui-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/media-features.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "subtitles-enabled": [
+      {
+        "package": "@shepherdjerred/streambot",
+        "file": "packages/streambot/src/config/dynamic.ts",
+        "kind": "config-derived",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-discord-claude-default-model": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/agent-chat.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/agent-chat.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-discord-codex-default-model": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/agent-chat.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/agent-chat.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-imessage-claude-model": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/imessage.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/imessage.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-imessage-codex-model": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/imessage.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/imessage.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-photon-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/photon.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/photon.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-agent-chat-photon-owners": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/imessage.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/photon.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/photon.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-call-graph-tracing": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/call-graph-tracing.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "temporal-code-review-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/code-review.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-code-review-settings": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/code-review.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/code-review.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-daily-report-notifications-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/report-notifications.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/report-notifications.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-email-recipient": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/mail.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/mail.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-email-sender": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/mail.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/mail.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "temporal-renovate-llm-delta-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/activities/ops/renovate-delta/llm-synthesizer.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "temporal-report-auto-remediation-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/report-remediation.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "the-storm-analytics-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-anticheat-corrections-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-async-chat-moderation-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-beginners-luck-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-companions-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/companions/src/main/java/com/shepherdjerred/thestorm/companions/adapter/http/FlagsCompanionGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-content-safety-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-crier-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/world/src/main/java/com/shepherdjerred/thestorm/world/adapter/remote/FlagsCrierGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-identity-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-ip-enforcement-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-letters-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-merchant-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/world/src/main/java/com/shepherdjerred/thestorm/world/adapter/remote/FlagsMerchantGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-promotion-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/promotion.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "the-storm-promotion-settings": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/promotion.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/promotion.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "the-storm-reddit-outreach-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/reddit-outreach.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "the-storm-reddit-outreach-settings": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/reddit-outreach.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/reddit-outreach.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-bomb-effects-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-candidate-visits-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/tools/maps/combat/settings.ts",
+        "kind": "array-element",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-carry-over-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-death-feed-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-host-settings-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/tools/maps/combat/settings.ts",
+        "kind": "array-element",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-killstreaks-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfKillstreaksGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-kits-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfKitsGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-match-flow-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/tools/maps/combat/settings.ts",
+        "kind": "array-element",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-recording-archive-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/rwf-recording-archive.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/rwf-recording-archive.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-spectator-tools-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-stats-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwf-team-chat-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwfbots-chat-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FlagsChatGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-rwfbots-learning-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FlagsLearningGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-shop-rentals-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/towns/src/main/java/com/shepherdjerred/thestorm/towns/adapter/remote/FlagsRentalGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-skylands-launch-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/skytravel/src/main/java/com/shepherdjerred/thestorm/skytravel/adapter/paper/LaunchFlights.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-staff-tools-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-stargates-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/mechanics/src/main/java/com/shepherdjerred/thestorm/mechanics/adapter/remote/FlagsStargatesGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-stats-export-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "the-storm-survival-enabled": [
+      {
+        "package": "@shepherdjerred/the-storm",
+        "file": "packages/the-storm/plugin/modules/arena/src/main/java/com/shepherdjerred/thestorm/arena/adapter/remote/FlagsSurvivalGate.java",
+        "kind": "java",
+        "count": 1
+      }
+    ],
+    "tracker-attachment-max-bytes": [
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "tracker-forum-enabled": [
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "tracker-live-updates-enabled": [
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "tracker-telemetry-enabled": [
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "tracker-writes-enabled": [
+      {
+        "package": "@shepherdjerred/tracker",
+        "file": "packages/tracker/src/infrastructure/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "trmnl-ha-climate-entities": [
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "trmnl-ha-presence-entities": [
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "trmnl-ha-security-entities": [
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/trmnl-dashboard",
+        "file": "packages/trmnl-dashboard/src/dynamic-config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "voice_assistant_enabled": [
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/configuration/flags.ts",
+        "kind": "array-element",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/discord/commands/scout-voice.ts",
+        "kind": "call-argument",
+        "count": 1
+      },
+      {
+        "package": "@scout-for-lol/backend",
+        "file": "packages/scout-for-lol/packages/backend/src/voice-assistant/manager.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-bun-copyfile-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-delivery-catalog-v2-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/delivery-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-delivery-publication-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/delivery-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-extended-verify-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/extended-config.ts",
+        "kind": "constant",
+        "count": 1
+      }
+    ],
+    "woodpecker-format-cache-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-gradle-seed-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-log-retention-days": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/woodpecker-retention.ts",
+        "kind": "call-argument",
+        "count": 2
+      },
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/woodpecker-retention.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "woodpecker-log-retention-enabled": [
+      {
+        "package": "@shepherdjerred/temporal",
+        "file": "packages/temporal/src/config/woodpecker-retention.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "woodpecker-maintenance-lanes-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/maintenance-config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "woodpecker-mise-shared-installs-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-prepared-workspace-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-ram-scratch-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-small-check-grouping-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ],
+    "woodpecker-source-cache-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/checkout/config.ts",
+        "kind": "config-flag-name",
+        "count": 1
+      }
+    ],
+    "woodpecker-source-incremental-enabled": [
+      {
+        "package": "@shepherdjerred/woodpecker-config-extension",
+        "file": "packages/woodpecker-config-extension/src/performance-config.ts",
+        "kind": "call-argument",
+        "count": 1
+      }
+    ]
+  },
+  "unreferenced": ["alert-dashboard-email-from", "alert-dashboard-email-to"]
+}

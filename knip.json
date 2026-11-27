@@ -14,6 +14,7 @@
       "entry": [
         "*.ts",
         "checks/**/*.ts",
+        "generate/*.ts",
         "ci/*.ts",
         "ci/trmnl/publish-plugins.ts",
         "release/*.ts",
