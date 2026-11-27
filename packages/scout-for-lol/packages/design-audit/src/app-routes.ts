@@ -20,6 +20,8 @@ export function appRoutes(): AuditRoute[] {
   const alias = encodeURIComponent(
     envValue("SCOUT_DESIGN_AUDIT_PLAYER_ALIAS", "Scout Classic"),
   );
+  const playerId = envValue("SCOUT_DESIGN_AUDIT_PLAYER_ID", "7001");
+  const matchId = envValue("SCOUT_DESIGN_AUDIT_MATCH_ID", "NA1_9500000001");
   const competitionId = envValue("SCOUT_DESIGN_AUDIT_COMPETITION_ID", "1");
   const reportId = envValue("SCOUT_DESIGN_AUDIT_REPORT_ID", "1");
   const exploreConversationId = envValue(
@@ -114,6 +116,15 @@ export function appRoutes(): AuditRoute[] {
       name: "player-manage",
       surface: "app",
       path: `${prefix}/players/${alias}/manage`,
+      authenticated: true,
+      golden: false,
+    },
+    // The redesigned Match page: a ranked win with a timeline, an LP change and
+    // two tracked friends on the audit player's team.
+    {
+      name: "consumer-match",
+      surface: "app",
+      path: `/app/players/${playerId}/matches/${matchId}`,
       authenticated: true,
       golden: false,
     },

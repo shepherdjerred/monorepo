@@ -71,6 +71,7 @@ import {
   competitionDetailLoader,
   daresLoader,
   competitionsLoader,
+  consumerMatchLoader,
   consumerPlayerLoader,
   consumerPlayersLoader,
   exploreLoader,
@@ -266,6 +267,7 @@ export const routes: RouteObject[] = [
               {
                 path: "players/:playerId/matches/:matchId",
                 element: <ConsumerMatch />,
+                loader: consumerMatchLoader,
                 errorElement: <RouteErrorPanel />,
               },
               {

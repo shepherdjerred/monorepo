@@ -1,54 +1,58 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  matchMapLabel,
-  matchQueueLabel,
-} from "#src/lib/player/match-review.ts";
-import { ArenaSubteams } from "#src/components/match/match-arena-subteams.tsx";
-import { Button } from "@scout-for-lol/design-system/components/button";
+  Chip,
+  chipVariants,
+} from "@scout-for-lol/design-system/components/surfaces/chip";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@scout-for-lol/design-system/components/card";
-import { MatchReview } from "#src/components/match/match-review.tsx";
+  PageLoading,
+  PageState,
+} from "@scout-for-lol/design-system/domain/profile/page-states";
+import {
+  MatchPage,
+  type StoryState,
+} from "#src/components/match-story/match-page.tsx";
 import { track } from "#src/lib/analytics.ts";
+import { PROTECTED_QUERY_OPTIONS } from "#src/lib/query/protected-query-options.ts";
 import { useConsumerMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-
-function duration(seconds: number): string {
-  return `${Math.floor(seconds / 60).toString()}m ${(seconds % 60).toString()}s`;
-}
 
 export function ConsumerMatch() {
   const { playerId, matchId } = useConsumerMatchParams();
   const [searchParams] = useSearchParams();
   const profileParams = new URLSearchParams(searchParams);
   profileParams.delete("view");
-  const profileSearch = `?${profileParams.toString()}`;
+  const profilePath = `/players/${playerId.toString()}?${profileParams.toString()}`;
   const trpc = useTRPC();
   const detail = useQuery(
     trpc.consumerMatch.detail.queryOptions(
       { playerId, matchId },
-      { staleTime: 0, gcTime: 0, refetchOnMount: "always" },
+      PROTECTED_QUERY_OPTIONS,
     ),
   );
-  const tally = useQuery(trpc.mvpVotes.matchTally.queryOptions({ matchId }));
-  const tallyValue = Loaded.strict(
-    Loaded.fromQuery(tally, ["mvpVotes.matchTally"]),
-  );
-  const tracked = useRef(false);
-  // `strict` because this query carries authorization: the scoreboard and the
-  // guild-scoped Scout aliases below are only visible through a shared guild.
-  // Without it a revoked access whose refetch 403s would come back as
-  // `degraded` over the retained cache and keep rendering protected data.
+  // `strict` because this query carries authorization: without it a revoked
+  // access whose refetch 403s would come back as `degraded` over the retained
+  // cache and keep rendering protected data.
   const detailValue = Loaded.strict(
     Loaded.fromQuery(detail, ["consumer.match"]),
   );
+  // The story is a second lake read, so it starts once the page can paint.
+  const story = useQuery(
+    trpc.consumerMatch.story.queryOptions(
+      { playerId, matchId },
+      {
+        ...PROTECTED_QUERY_OPTIONS,
+        enabled: detail.isSuccess,
+      },
+    ),
+  );
+  const storyValue = Loaded.strict(
+    Loaded.fromQuery(story, ["consumer.matchStory"]),
+  );
+  const tracked = useRef(false);
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     if (tracked.current || (!detail.isSuccess && !detail.isError)) return;
@@ -67,86 +71,56 @@ export function ConsumerMatch() {
   if (detailValue.status === "loading") {
     return (
       <PageShell>
-        <p className="text-sm text-scout-subtle">Loading match details…</p>
+        <PageLoading label="Loading the match" />
       </PageShell>
     );
   }
   if (detailValue.status === "error") {
     return (
       <PageShell>
-        <Card>
-          <CardHeader>
-            <CardTitle>Match unavailable</CardTitle>
-            <CardDescription>
-              This match is unavailable. Check your server access and try again.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex gap-2">
-            <Button onClick={() => void detail.refetch()}>Retry</Button>
-            <Button asChild variant="outline">
-              <Link to={`/players/${playerId.toString()}${profileSearch}`}>
+        <PageState
+          id="match-unavailable"
+          kind="unavailable"
+          level={1}
+          title="Match unavailable"
+          lead="This match could not be loaded."
+          actions={
+            <>
+              <Chip type="button" onClick={() => void detail.refetch()}>
+                Retry
+              </Chip>
+              <Link
+                to={profilePath}
+                className={chipVariants({ variant: "ghost" })}
+              >
                 Back to profile
               </Link>
-            </Button>
-          </CardContent>
-        </Card>
+            </>
+          }
+        />
       </PageShell>
     );
   }
 
-  const match = detailValue.data.match;
+  const storyState: StoryState =
+    storyValue.status === "done"
+      ? { status: "done", story: storyValue.data }
+      : storyValue.status === "error"
+        ? { status: "error", retry: () => void story.refetch() }
+        : { status: "loading" };
   return (
-    <PageShell>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Recorded match</p>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            {matchQueueLabel(match.queue)}
-          </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-scout-subtle">
-            <span>
-              {match.gameCreationMs === null
-                ? "Start time not recorded"
-                : new Date(match.gameCreationMs).toLocaleString()}
-            </span>
-            <span>·</span>
-            <span>{duration(match.gameDurationSeconds)}</span>
-            <span>·</span>
-            <span>
-              {match.gameVersion === null
-                ? "Patch not recorded"
-                : `Patch ${match.gameVersion}`}
-            </span>
-            {matchMapLabel(match.mapId) !== "" && (
-              <span>{matchMapLabel(match.mapId)}</span>
-            )}
-          </div>
-        </div>
-        <Button asChild variant="outline">
-          <Link to={`/players/${playerId.toString()}${profileSearch}`}>
-            Back to profile
-          </Link>
-        </Button>
-      </div>
-
-      <MatchReview
-        source={{ kind: "consumer", playerId }}
-        matchId={matchId}
-        match={match}
-        tally={tallyValue.status === "done" ? tallyValue.data : null}
-        arena={
-          match.arenaSubteams !== null && match.arenaSubteams.length > 0 ? (
-            <ArenaSubteams subteams={match.arenaSubteams} />
-          ) : undefined
-        }
-      />
-    </PageShell>
+    <MatchPage
+      detail={detailValue.data}
+      story={storyState}
+      profilePath={profilePath}
+      now={now}
+    />
   );
 }
 
 function PageShell(props: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-7xl space-y-7 px-6 py-8 sm:px-8 sm:py-12">
+    <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 sm:py-12">
       {props.children}
     </div>
   );
