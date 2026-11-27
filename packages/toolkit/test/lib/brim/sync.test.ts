@@ -25,7 +25,10 @@ import { pullArchive } from "#lib/brim/sync/pull.ts";
 import { pushArchive } from "#lib/brim/sync/push.ts";
 import { syncRoots } from "#lib/brim/sync/roots.ts";
 import { scanSourceFiles } from "#lib/brim/sync/scan.ts";
-import { brokeredS3Credentials } from "#lib/brim/sync/settings.ts";
+import {
+  brokeredS3Credentials,
+  loadBrimSyncSettings,
+} from "#lib/brim/sync/settings.ts";
 import {
   CLAUDE_SESSION,
   CODEX_SESSION,
@@ -415,6 +418,20 @@ describe("brim sync mirror index contract", () => {
   });
 });
 
+test("capture publication requires shared Brim enrollment", async () => {
+  const configPath = path.join(await tempHome(), "config.toml");
+  const base = { configPath, hostname: "studio" };
+  await expect(
+    loadBrimSyncSettings({ ...base, environment: {} }),
+  ).resolves.toMatchObject({ publishCaptures: false });
+  await expect(
+    loadBrimSyncSettings({
+      ...base,
+      environment: { BRIM_SERVICE_URL: "https://brim.example.test" },
+    }),
+  ).resolves.toMatchObject({ publishCaptures: true });
+});
+
 describe("brim sync S3 credentials", () => {
   const settings = {
     machineId: "studio",
@@ -424,6 +441,8 @@ describe("brim sync S3 credentials", () => {
     profile: "brim-sync",
     recipient: "unused",
     pullSinceDays: 30,
+    includeDesktopStores: false,
+    publishCaptures: false,
   };
 
   test("profile mode leaves the keys to the AWS profile", async () => {

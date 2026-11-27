@@ -527,6 +527,13 @@ radio group. `src/styles/primitives.css` styles them.
 
 ### Modules
 
+Brim serves subscription quotas, API billing and an archive-backed Session and
+Requests inspector at `/brim`. The Hub module only proxies reads to the Brim
+service. It verifies the actual Tailscale proxy peer and operator login on
+each request, then authenticates upstream with `BRIM_HUB_TOKEN`. Configure
+`BRIM_API_URL`, `BRIM_INGRESS_IDENTITY_DIR` and `BRIM_OPERATOR_LOGINS` with
+that token. Brim's status is exposed on `/readyz/brim`.
+
 The app is composed from modules. Ops and the alert ledger are the built-in
 `core` module: they stay in the layered tree above and keep their root-level
 URLs. Every other module is a self-contained area with its own URL prefix.

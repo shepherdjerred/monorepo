@@ -58,6 +58,24 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: "https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics",
   },
+  brimServiceUrl: {
+    schema: z.url({ protocol: /^https$/ }).nullable(),
+    sources: ["env", "file", "default"],
+    default: null,
+  },
+  brimServiceSharedProviders: {
+    schema: z.union([
+      z.array(z.string().min(1)),
+      z.string().transform((value) =>
+        value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    ]),
+    sources: ["env", "file", "default"],
+    default: [],
+  },
   /**
    * This machine's id in the Brim sync archive. Unset derives it from the
    * hostname; set it when a hostname is shared or likely to change.
@@ -108,6 +126,11 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     schema: z.coerce.number().int().positive(),
     sources: ["env", "file", "default"],
     default: 30,
+  },
+  brimSyncIncludeDesktopStores: {
+    schema: BooleanSettingSchema,
+    sources: ["env", "file", "default"],
+    default: false,
   },
   /**
    * Route the wrapped agent CLIs through the local capture proxy. Off by

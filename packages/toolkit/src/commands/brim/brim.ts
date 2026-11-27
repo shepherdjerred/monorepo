@@ -2,9 +2,12 @@ import { parseArgs } from "node:util";
 import { runPicker } from "#commands/brim/run-picker.tsx";
 import {
   defaultSnapshotsPath,
-  loadSnapshots,
   SnapshotCacheMissingError,
 } from "#lib/brim/cache.ts";
+import {
+  BrimServiceUnavailableError,
+  loadBrimRankingSnapshots,
+} from "#lib/brim/shared.ts";
 import {
   formatLaunch,
   LaunchError,
@@ -235,21 +238,30 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
   try {
     result = withKnownProviders(
       rankSnapshots(
-        await loadSnapshots(options.snapshotsPath ?? defaultSnapshotsPath()),
+        await loadBrimRankingSnapshots(
+          options.snapshotsPath ?? defaultSnapshotsPath(),
+          options.snapshotsPath !== undefined,
+        ),
         { minFiveHourRemaining: options.minRemaining },
       ),
     );
   } catch (error: unknown) {
     // An explicit pick needs no ranking, so a machine that never ran the Brim
     // app (a remote Herdr machine) still starts it. A corrupt cache still fails.
-    if (
-      !(error instanceof SnapshotCacheMissingError) ||
-      options.provider === undefined ||
-      options.json
-    ) {
+    const canProceed =
+      error instanceof BrimServiceUnavailableError
+        ? options.json || options.provider !== undefined
+        : error instanceof SnapshotCacheMissingError &&
+          options.provider !== undefined &&
+          !options.json;
+    if (!canProceed) {
       fail(error instanceof Error ? error.message : String(error));
     }
-    result = withoutQuotaData("no Brim snapshot cache on this machine");
+    result = withoutQuotaData(
+      error instanceof BrimServiceUnavailableError
+        ? error.message
+        : "no Brim snapshot cache on this machine",
+    );
   }
   result = excludeProviders(result, options.exclude);
 

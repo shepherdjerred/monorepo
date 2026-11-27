@@ -16,6 +16,8 @@ export const HISTORY_SOURCE_NAMES = [
   "kimi-mirror",
   "muse-mirror",
   "antigravity-mirror",
+  "cursor-mirror",
+  "conductor-mirror",
 ] as const;
 
 /** Sources that index other machines' sessions pulled by `brim sync`. */
@@ -26,6 +28,8 @@ export const MIRROR_HISTORY_SOURCE_NAMES = [
   "kimi-mirror",
   "muse-mirror",
   "antigravity-mirror",
+  "cursor-mirror",
+  "conductor-mirror",
 ] as const satisfies readonly (typeof HISTORY_SOURCE_NAMES)[number][];
 
 const MIRROR_SOURCES: ReadonlySet<string> = new Set(

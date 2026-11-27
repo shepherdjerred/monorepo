@@ -1480,6 +1480,11 @@ brim [--provider <id>] [--exclude <id>] [--min-5h <pct>] [--dry-run] [-- <agent 
 brim --json [--exclude <id>]
 ```
 
+Workstations configured for shared Brim read quotas from the cluster.
+`brim --json` also works on Windows for Herdr’s picker. Use
+`brim metadata list` to inspect live Herdr marks. The shared quota account
+and credential settings are in the [Brim service enrollment guide](../brim-service/README.md#workstation-enrollment).
+
 Each provider maps to one agent wrapper in `~/.local/share/agent-bin`:
 `claude`, `codex`, `agy`, `cursor-agent`, `grok`, `kimi`, and `muse`. The
 wrappers own credential scrubbing, the agent git identity, and bypass flags;

@@ -23,11 +23,13 @@ import {
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
+  BRIM_ENDPOINT,
   FEEDS_ENDPOINT,
   GOLINK_ENDPOINT,
   MAIL_API_ENDPOINT,
   TRACKER_ENDPOINT,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import { BRIM_SERVICE_ACTIVE } from "@shepherdjerred/homelab/cdk8s/src/resources/brim-service/index.ts";
 
 /**
  * The gateway's public webhook listeners (GitHub, agent tasks, Xcode Cloud,
@@ -129,7 +131,10 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
   });
 }
 
-export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+export function createTemporalWorkerNetworkPolicies(
+  chart: Chart,
+  brimEnabled = BRIM_SERVICE_ACTIVE,
+): void {
   createTemporalWorkersFlagsEgressPolicy(chart);
   createTemporalWorkersSeaweedfsEgressPolicy(chart);
 
@@ -245,6 +250,9 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         { ports: [tcp(7341)] },
         { to: [TRACKER_ENDPOINT.peer()], ports: [TRACKER_ENDPOINT.tcp()] },
         { to: [GOLINK_ENDPOINT.peer()], ports: [GOLINK_ENDPOINT.tcp()] },
+        ...(brimEnabled
+          ? [{ to: [BRIM_ENDPOINT.peer()], ports: [BRIM_ENDPOINT.tcp()] }]
+          : []),
         {
           to: [
             {

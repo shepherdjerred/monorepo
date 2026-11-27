@@ -109,6 +109,7 @@ group "app" {
     "charts",
     "ci-cache",
     "errors",
+    "brim-service",
   ]
 }
 
@@ -340,6 +341,14 @@ target "errors" {
   tags       = imagetags("errors")
   cache-from = cachefrom("errors")
   cache-to   = cacheto("errors")
+}
+
+target "brim-service" {
+  inherits   = ["_app"]
+  dockerfile = "packages/brim-service/Dockerfile"
+  tags       = imagetags("brim-service")
+  cache-from = cachefrom("brim-service")
+  cache-to   = cacheto("brim-service")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

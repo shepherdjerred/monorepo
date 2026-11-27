@@ -9,6 +9,13 @@ const EnvironmentSchema = z
   .object({
     ALERTMANAGER_URL: z.url(),
     ALERT_DASHBOARD_WEBHOOK_TOKEN: z.string().min(32),
+    BRIM_API_URL: z.httpUrl().optional(),
+    BRIM_HUB_TOKEN: z.string().min(32).optional(),
+    BRIM_INGRESS_IDENTITY_DIR: z.string().min(1).optional(),
+    BRIM_OPERATOR_LOGINS: z
+      .string()
+      .refine((value) => value.split(",").some((login) => login.trim() !== ""))
+      .optional(),
     DATABASE_URL: z.string().min(1),
     DAILY_DIGEST_QUIET_CLEAR: BooleanTextSchema.default(true),
     EMAIL_ENABLED: BooleanTextSchema.default(false),
@@ -49,6 +56,25 @@ const EnvironmentSchema = z
     S3_ENDPOINT: z.url().optional(),
     AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
     AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  })
+  .superRefine((value, context) => {
+    const brimKeys = [
+      "BRIM_API_URL",
+      "BRIM_HUB_TOKEN",
+      "BRIM_INGRESS_IDENTITY_DIR",
+      "BRIM_OPERATOR_LOGINS",
+    ] as const;
+    if (brimKeys.some((key) => value[key] !== undefined)) {
+      for (const key of brimKeys) {
+        if (value[key] === undefined || value[key].trim() === "") {
+          context.addIssue({
+            code: "custom",
+            message: `${key} is required when the Brim proxy is configured`,
+            path: [key],
+          });
+        }
+      }
+    }
   })
   .superRefine((value, context) => {
     if (

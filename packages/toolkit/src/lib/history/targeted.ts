@@ -10,6 +10,7 @@ import type {
 
 export async function targetedMessages(
   records: readonly HistoryRecord[],
+  paths = defaultHistoryPaths(),
 ): Promise<{
   readonly messages: ReadonlyMap<string, readonly HistoryMessage[]>;
   readonly warnings: readonly HistoryWarning[];
@@ -20,7 +21,6 @@ export async function targetedMessages(
   const bySource = Map.groupBy(records, (record) => record.source);
   const messages = new Map<string, readonly HistoryMessage[]>();
   const warnings: HistoryWarning[] = [];
-  const paths = defaultHistoryPaths();
   await Promise.all(
     [...bySource.entries()].map(async ([sourceName, sourceRecords]) => {
       const source = sources.get(sourceName);

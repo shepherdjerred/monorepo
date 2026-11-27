@@ -779,6 +779,11 @@ export default class Takeover extends View {
         const seen = new Set();
         const others = [];
         const current = [];
+        const quotaResult = await exec("brim", ["--json"], {
+          on: this.targetMachine,
+        }).catch(() => null);
+        const quotas =
+          quotaResult?.code === 0 ? JSON.parse(quotaResult.stdout) : null;
         for (const a of await knownAgents({ on: this.targetMachine ?? null })) {
           const provider = PROVIDER[a.key];
           if (!a.installed || !provider || seen.has(provider)) continue;
@@ -799,16 +804,27 @@ export default class Takeover extends View {
             });
           else others.push(entry);
         }
+        const available = new Set(others.map((entry) => entry.provider));
+        const ranked =
+          quotas?.ranked.filter((entry) => available.has(entry.provider)) ?? [];
+        const other =
+          quotas?.other.filter((entry) => available.has(entry.provider)) ?? [];
+        const ordered = [...ranked, ...other];
+        const used = new Set(ordered.map((entry) => entry.provider));
         nextAgents = {
-          choices: [...others, ...current],
-          ranked: 0,
-          other: 0,
+          choices: [
+            ...ordered,
+            ...others.filter((entry) => !used.has(entry.provider)),
+            ...current,
+          ],
+          ranked: ranked.length,
+          other: other.length,
           unavailable: current.length,
-          unranked: true,
+          unranked: ordered.length === 0,
         };
       } else {
         const r = await exec("brim", ["--json"], {
-          on: window()?.platform === "windows" ? this.targetMachine : null,
+          on: this.targetMachine,
         });
         if (r.code !== 0)
           throw new Error(r.stderr.trim() || `brim --json exited ${r.code}.`);

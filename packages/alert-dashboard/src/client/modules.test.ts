@@ -57,6 +57,12 @@ describe("the composed module registry", () => {
       "shell /system",
       "shell /traces",
       "shell /traces/:traceId",
+      "shell /brim",
+      "shell /brim/usage",
+      "shell /brim/sessions",
+      "shell /brim/sessions/:sessionId",
+      "shell /brim/sessions/:sessionId/requests/:captureId",
+      "shell /brim/priorities",
     ]);
   });
 
@@ -82,6 +88,7 @@ describe("the composed module registry", () => {
           "Review /review",
           "Reports /reports",
           "Traces /traces",
+          "Brim /brim",
         ],
       },
       {
@@ -120,6 +127,7 @@ describe("the composed module registry", () => {
       "The Storm overview",
       "Promotion",
       "LLM traces",
+      "Brim",
     ]);
   });
 

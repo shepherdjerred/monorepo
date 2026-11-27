@@ -1,10 +1,14 @@
 #!/usr/bin/env bun
 
-// `sync` is dispatched before the picker is loaded: it is the only verb that
-// runs on Windows, where the agent launcher and Ink picker have no meaning.
+// Keep archive and metadata commands off the picker’s import graph.
 try {
   const args = process.argv.slice(2);
   switch (args[0]) {
+    case "metadata": {
+      const { handleBrimMetadata } = await import("#commands/brim/metadata.ts");
+      await handleBrimMetadata(args.slice(1));
+      break;
+    }
     case "sync": {
       const { handleSyncCommand } = await import("#commands/brim/sync.ts");
       process.exitCode = await handleSyncCommand(args.slice(1));

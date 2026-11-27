@@ -44,6 +44,7 @@ import { feedsActivities } from "./maintenance/feeds/feeds.ts";
 import { flagInventoryActivities } from "./flag-inventory-sync.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { refreshBrimArchive } from "./ops/brim/refresh.ts";
 import { llmArchiveIndexActivities } from "./ops/llm-archive/llm-archive-index.ts";
 import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
 import { renovateAutomationActivities } from "./renovate/index.ts";
@@ -99,6 +100,7 @@ export const infraActivities = {
   ...ciWorkspaceReaperActivities,
   ...ciWorkspaceGoldenActivities,
   ...opsActivities,
+  refreshBrimArchive,
   ...llmArchiveIndexActivities,
   ...renovateDeltaActivities,
 };

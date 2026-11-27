@@ -4,6 +4,8 @@ import type { MirrorIndex } from "#lib/brim/sync/mirror-index.ts";
 import { writeAntigravityFixture } from "./antigravity.ts";
 import { writeClaudeFixture } from "./claude.ts";
 import { writeCodexSessionUsageFixture } from "./codex.ts";
+import { writeConductorFixture } from "./conductor.ts";
+import { writeCursorFixture } from "./cursor.ts";
 import { writeGrokFixture } from "./grok.ts";
 import { writeKimiFixture } from "./kimi.ts";
 import { writeMuseFixture } from "./muse.ts";
@@ -13,7 +15,10 @@ import { writeMuseFixture } from "./muse.ts";
  * fixtures as the local sources, laid out as `brim sync pull` writes them.
  * Returns the index path.
  */
-export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
+export async function writeMirrorFixture(
+  mirrorDir: string,
+  desktopStores = false,
+): Promise<string> {
   const machineRoot = path.join(mirrorDir, "studio");
   const claudeProjects = path.join(machineRoot, "claude/projects");
   const codexSessions = path.join(machineRoot, "codex/sessions");
@@ -94,6 +99,17 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
   await writeKimiFixture(kimiSessions);
   await writeMuseFixture(museRoot);
   await writeAntigravityFixture(antigravityRoot);
+  const desktopPaths = await (async () => {
+    if (!desktopStores) return {};
+    const cursorDir = path.join(machineRoot, "cursor");
+    const conductorDir = path.join(machineRoot, "conductor");
+    await mkdir(cursorDir, { recursive: true });
+    await mkdir(conductorDir, { recursive: true });
+    return {
+      cursorDatabases: [writeCursorFixture(cursorDir)],
+      conductorDatabases: [writeConductorFixture(conductorDir)],
+    };
+  })();
   const index: MirrorIndex = {
     schemaVersion: 1,
     generatedAt: "2026-11-02T00:00:00.000Z",
@@ -114,6 +130,7 @@ export async function writeMirrorFixture(mirrorDir: string): Promise<string> {
         kimiSessionsDirs: [kimiSessions],
         museRoots: [museRoot],
         antigravityRoots: [antigravityRoot],
+        ...desktopPaths,
       },
     ],
   };

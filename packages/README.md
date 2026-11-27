@@ -20,6 +20,7 @@ hold only scoped invariants that agents must keep in context.
 | [charts](charts/)                                               | Helm chart registry (`index.yaml`, `/api/charts*`, SQLite WAL index) and read-only console UI             |
 | [ci-cache](ci-cache/)                                           | Streaming Rust remote cache for Turborepo (`/v8/*`), Gradle (`/cache/*`), and `sccache` WebDAV            |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |
+| [brim-service](brim-service/)                                   | Private workstation history, quota, billing, and Herdr priority API for Hub                               |
 | [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                              |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                                  |
 | [media](media/)                                                 | Unified media requests, acquisition policies, library lifecycle, and household retention                  |

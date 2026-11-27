@@ -6,10 +6,13 @@ import {
 } from "#commands/brim/takeover-args.ts";
 import {
   defaultSnapshotsPath,
-  loadSnapshots,
   SnapshotCacheMissingError,
   type UsageSnapshot,
 } from "#lib/brim/cache.ts";
+import {
+  BrimServiceUnavailableError,
+  loadBrimRankingSnapshots,
+} from "#lib/brim/shared.ts";
 import {
   formatLaunch,
   LaunchError,
@@ -62,7 +65,10 @@ export type TakeoverCommandContext = {
   readonly historyPaths?: HistoryPaths;
   readonly runtimePaths?: HistoryRuntimePaths;
   readonly sources?: readonly HistorySource[];
-  readonly loadSnapshots: (path: string) => Promise<readonly UsageSnapshot[]>;
+  readonly loadSnapshots: (
+    path: string,
+    useLocalFile?: boolean,
+  ) => Promise<readonly UsageSnapshot[]>;
   readonly which?: Which;
   readonly runHc?: HcCommandRunner;
   readonly runHerdrApp?: HerdrAppRunner;
@@ -82,7 +88,8 @@ export function defaultTakeoverContext(): TakeoverCommandContext {
     env: Bun.env,
     isTTY: process.stdin.isTTY,
     now: () => new Date(),
-    loadSnapshots: (filePath) => loadSnapshots(filePath),
+    loadSnapshots: (filePath, useLocalFile = false) =>
+      loadBrimRankingSnapshots(filePath, useLocalFile),
     pickProvider: (result, previews) => runPicker(result, previews),
     stdout: (line) => {
       console.log(line);
@@ -120,20 +127,26 @@ async function rankTargetProviders(
   try {
     const snapshots = await context.loadSnapshots(
       parsed.snapshotsPath ?? defaultSnapshotsPath(),
+      parsed.snapshotsPath !== undefined,
     );
     result = withKnownProviders(
       rankSnapshots(snapshots, { minFiveHourRemaining: parsed.minRemaining }),
     );
   } catch (error: unknown) {
     if (
-      !(error instanceof SnapshotCacheMissingError) ||
+      (!(error instanceof SnapshotCacheMissingError) &&
+        !(error instanceof BrimServiceUnavailableError)) ||
       parsed.to === undefined
     ) {
       throw new TakeoverError(
         error instanceof Error ? error.message : String(error),
       );
     }
-    result = withoutQuotaData("no Brim snapshot cache on this machine");
+    result = withoutQuotaData(
+      error instanceof BrimServiceUnavailableError
+        ? error.message
+        : "no Brim snapshot cache on this machine",
+    );
   }
   const withSourceExcluded = excludeProviders(
     result,

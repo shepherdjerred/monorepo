@@ -84,6 +84,8 @@ import { createChartsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 
 import { createCiCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/ci-cache.ts";
 
+import { createBrimServiceApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/brim-service.ts";
+
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
     namespace: "argocd",
@@ -184,6 +186,8 @@ export async function createAppsChart(app: App) {
   createChartsApp(chart);
 
   createCiCacheApp(chart);
+
+  createBrimServiceApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

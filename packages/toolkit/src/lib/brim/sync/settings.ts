@@ -16,6 +16,8 @@ export type BrimSyncSettings = {
   readonly s3Credentials: "profile" | "broker";
   readonly recipient: string;
   readonly pullSinceDays: number;
+  readonly includeDesktopStores: boolean;
+  readonly publishCaptures: boolean;
 };
 
 export async function loadBrimSyncSettings(
@@ -33,6 +35,8 @@ export async function loadBrimSyncSettings(
     s3Credentials: await config.value("brimSyncS3Credentials"),
     recipient: await config.value("brimSyncRecipient"),
     pullSinceDays: await config.value("brimSyncPullSinceDays"),
+    includeDesktopStores: await config.value("brimSyncIncludeDesktopStores"),
+    publishCaptures: (await config.value("brimServiceUrl")) !== null,
   };
 }
 

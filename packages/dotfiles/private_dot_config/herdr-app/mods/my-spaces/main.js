@@ -74,6 +74,7 @@ const fromArgv = (argv) =>
     )
     .find((w) => PROVIDER[w]);
 function allAtLimit(s, ps, argvOf, limits) {
+  if (s.machine) return false;
   const tabs = new Set((s.tabs ?? []).map((c) => c.id));
   const provider = (p) =>
     PROVIDER[p.app] ??

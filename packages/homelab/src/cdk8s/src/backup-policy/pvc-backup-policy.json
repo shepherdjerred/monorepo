@@ -120,6 +120,18 @@
     "reason": "Alert dashboard SQLite ledger and lifecycle history"
   },
   {
+    "namespace": "brim-service",
+    "name": "brim-service-data",
+    "backup": "enabled",
+    "reason": "Brim quota history, billing snapshots and shared Herdr priorities"
+  },
+  {
+    "namespace": "brim-service",
+    "name": "brim-service-archive",
+    "backup": "disabled",
+    "reason": "Rebuildable decrypted mirror and indexes of the encrypted SeaweedFS archive"
+  },
+  {
     "namespace": "bugsink",
     "name": "pgdata-bugsink-postgresql-0",
     "backup": "enabled",

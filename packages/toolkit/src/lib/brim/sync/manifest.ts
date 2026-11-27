@@ -18,6 +18,8 @@ export const SYNC_TOOLS = [
   "kimi",
   "muse",
   "antigravity",
+  "cursor",
+  "conductor",
 ] as const;
 export const SyncToolSchema = z.enum(SYNC_TOOLS);
 export type SyncTool = z.infer<typeof SyncToolSchema>;

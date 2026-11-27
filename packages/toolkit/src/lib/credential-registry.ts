@@ -316,6 +316,17 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     },
   },
   ...BRIM_SYNC_CREDENTIALS,
+  BRIM_DEVICE_TOKEN: {
+    description: "Brim quota reader and live Herdr priority credential",
+    source: { kind: "keychain", service: "monorepo-brim-device-token" },
+  },
+  BRIM_MACBOOK_PUBLISH_TOKEN: {
+    description: "MacBook Brim quota and billing publisher credential",
+    source: {
+      kind: "keychain",
+      service: "monorepo-brim-macbook-publish-token",
+    },
+  },
   ...AGENT_SHARE_CREDENTIALS,
   WOODPECKER_TOKEN: {
     description: "Woodpecker CI API token",

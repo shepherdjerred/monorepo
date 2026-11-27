@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { App } from "cdk8s";
+import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
+import { createAlertDashboardDeployment } from "./index.ts";
+import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 
 const SecurityContextSchema = z
   .object({
@@ -97,6 +99,82 @@ function synthesizeDeployment(): z.infer<typeof DeploymentSchema> {
   }
   return deployment;
 }
+
+test("Brim uses a projected token and read-only ingress observation after activation", () => {
+  resetProbeRegistry();
+  const chart = new Chart(new App(), "alert-dashboard", {
+    namespace: "alert-dashboard",
+    disableResourceNameHashes: true,
+  });
+  createAlertDashboardDeployment(chart, true);
+  const manifests = chart.toJson();
+  const pod = DeploymentSchema.parse(
+    manifests.find((resource) => resource.kind === "Deployment"),
+  ).spec.template.spec;
+  expect(pod).toMatchObject({
+    automountServiceAccountToken: false,
+    serviceAccountName: "brim-hub-ingress-observer",
+  });
+  expect(pod.containers[0]).toMatchObject({
+    volumeMounts: expect.arrayContaining([
+      {
+        name: "ingress-observer",
+        mountPath: "/var/run/brim-hub-ingress",
+        readOnly: true,
+      },
+    ]),
+    env: expect.arrayContaining([
+      {
+        name: "BRIM_API_URL",
+        value: "http://brim-service.brim-service.svc.cluster.local:7458",
+      },
+      {
+        name: "BRIM_HUB_TOKEN",
+        valueFrom: {
+          secretKeyRef: expect.objectContaining({ key: "BRIM_HUB_TOKEN" }),
+        },
+      },
+    ]),
+  });
+  expect(manifests.filter((resource) => resource.kind === "Role")).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        metadata: {
+          name: "brim-hub-ingress-observer",
+          namespace: "alert-dashboard",
+        },
+        rules: [
+          {
+            apiGroups: ["networking.k8s.io"],
+            resources: ["ingresses"],
+            resourceNames: [
+              "alert-dashboard-alert-dashboard-hub-ingress-ingress",
+            ],
+            verbs: ["get"],
+          },
+        ],
+      }),
+      expect.objectContaining({
+        metadata: { name: "brim-hub-ingress-observer", namespace: "tailscale" },
+        rules: [
+          { apiGroups: [""], resources: ["pods"], verbs: ["list"] },
+          { apiGroups: ["apps"], resources: ["statefulsets"], verbs: ["get"] },
+        ],
+      }),
+    ]),
+  );
+  resetProbeRegistry();
+});
+
+test("the prepared Hub deployment leaves Brim credentials and RBAC disabled", () => {
+  const pod = synthesizeDeployment().spec.template.spec;
+  expect(pod.volumes.some(({ name }) => name === "ingress-observer")).toBe(
+    false,
+  );
+  expect(
+    pod.containers[0]?.env?.some(({ name }) => name.startsWith("BRIM_")),
+  ).toBe(false);
+});
 
 const IngressSchema = z.object({
   kind: z.literal("Ingress"),

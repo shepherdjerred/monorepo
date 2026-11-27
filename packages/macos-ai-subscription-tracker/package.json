@@ -7,6 +7,7 @@
     "format:check": "bun scripts/xcode-env.ts -- swift format lint --recursive --parallel --strict --configuration .swift-format Package.swift Sources Tests",
     "lint:swift": "bun scripts/xcode-env.ts -- swiftlint lint --strict --quiet --config .swiftlint.yml Sources Tests Package.swift && bun scripts/check-concurrency-escapes.ts",
     "build:macos": "bun scripts/xcode-env.ts -- swift build -c release -Xswiftc -warnings-as-errors",
+    "build:collector": "bun scripts/xcode-env.ts -- swift build -c release --product brim-collector -Xswiftc -warnings-as-errors",
     "test:macos": "bun scripts/xcode-env.ts -- swift test -Xswiftc -warnings-as-errors",
     "coverage:macos": "bun scripts/xcode-env.ts -- swift test --enable-code-coverage -Xswiftc -warnings-as-errors && bun scripts/check-coverage.ts",
     "xcode:generate": "xcodegen generate --spec project.yml",
@@ -21,6 +22,7 @@
     "verify:notarized": "bun scripts/verify-notarized-app.ts",
     "verify:macos": "bun run format:check && bun run lint:swift && bun run coverage:macos && bun run xcode:verify && bun run bundle:macos && bun run verify:bundle",
     "install:macos": "bun scripts/install-app.ts",
+    "install:collector": "bun scripts/install-collector.ts",
     "install:notarized": "bun scripts/install-app.ts --notarized"
   }
 }

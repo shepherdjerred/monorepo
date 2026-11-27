@@ -101,6 +101,7 @@
     "packages/astro-opengraph-images",
     "packages/better-skill-capped",
     "packages/birmel",
+    "packages/brim-service",
     "packages/charts",
     "packages/ci-cache",
     "packages/code-review",

@@ -8,7 +8,10 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import {
+  BRIM_ENDPOINT,
+  MAIL_API_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import {
   flagsEnv,
   seaweedfsS3,
@@ -29,12 +32,19 @@ import {
   prometheusIngressRule,
   seaweedfsEgress,
   dnsEgressRule,
+  kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { BRIM_SERVICE_ACTIVE } from "@shepherdjerred/homelab/cdk8s/src/resources/brim-service/index.ts";
+import { createTailscaleIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale-ingress-observer.ts";
 
 const IMAGE = firstPartyImageRecipe("alert-dashboard");
+const BRIM_IDENTITY_DIR = "/var/run/brim-hub-ingress";
 
-export function createAlertDashboardDeployment(chart: Chart) {
-  return new FirstPartyWebService(chart, "alert-dashboard-web-service", {
+export function createAlertDashboardDeployment(
+  chart: Chart,
+  brimEnabled = BRIM_SERVICE_ACTIVE,
+) {
+  const web = new FirstPartyWebService(chart, "alert-dashboard-web-service", {
     name: "alert-dashboard",
     port: 7341,
     probes: {
@@ -46,6 +56,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
       metadata: { labels: { app: "alert-dashboard" } },
       strategy: DeploymentStrategy.recreate(),
       securityContext: { fsGroup: 1000 },
+      ...(brimEnabled ? { automountServiceAccountToken: false } : {}),
     },
     data: {
       id: "alert-dashboard-data",
@@ -172,6 +183,20 @@ export function createAlertDashboardDeployment(chart: Chart) {
             ),
             OTEL_SERVICE_NAME: EnvValue.fromValue("alert-dashboard"),
             TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+            ...(brimEnabled
+              ? {
+                  BRIM_API_URL: EnvValue.fromValue(BRIM_ENDPOINT.url),
+                  BRIM_HUB_TOKEN: EnvValue.fromSecretValue({
+                    secret,
+                    key: "BRIM_HUB_TOKEN",
+                  }),
+                  BRIM_INGRESS_IDENTITY_DIR:
+                    EnvValue.fromValue(BRIM_IDENTITY_DIR),
+                  BRIM_OPERATOR_LOGINS: EnvValue.fromValue(
+                    "shepherdjerred@gmail.com",
+                  ),
+                }
+              : {}),
           },
         },
       };
@@ -230,8 +255,27 @@ export function createAlertDashboardDeployment(chart: Chart) {
             ports: [tcp(3200)],
           },
           otlpEgress(),
+          ...(brimEnabled
+            ? [
+                { to: [BRIM_ENDPOINT.peer()], ports: [BRIM_ENDPOINT.tcp()] },
+                kubernetesApiEgressRule(),
+              ]
+            : []),
         ],
       },
     ],
   });
+  if (brimEnabled) {
+    createTailscaleIngressObserver(web.deployment, {
+      accountConstructId: "brim-hub-ingress-observer-account",
+      accountName: "brim-hub-ingress-observer",
+      roleName: "brim-hub-ingress-observer",
+      constructSuffix: "brim-hub-ingress-observer",
+      ingressNamespace: "alert-dashboard",
+      ingressName: "alert-dashboard-alert-dashboard-hub-ingress-ingress",
+      proxyNamespace: "tailscale",
+      mountPath: BRIM_IDENTITY_DIR,
+    });
+  }
+  return web;
 }

@@ -22,6 +22,8 @@ import { redactBytes, type SecretMatch } from "./redact.ts";
 export type SqliteTableProjection = {
   readonly table: string;
   readonly columns: readonly string[];
+  /** Retain linkable source rowids, including gaps, as explicit primary keys. */
+  readonly preserveRowId?: boolean;
   /** Rewrites a text cell of `column` before redaction; throws to refuse. */
   readonly rewrite?: Readonly<Record<string, (value: string) => string>>;
 };
@@ -88,11 +90,16 @@ function copyTable(database: Database, projection: SqliteTableProjection) {
     return `${quote(column)} ${type}`;
   });
   const list = projection.columns.map((column) => quote(column)).join(", ");
+  const outputColumns =
+    projection.preserveRowId === true
+      ? ["rowid INTEGER PRIMARY KEY", ...definitions]
+      : definitions;
+  const select = projection.preserveRowId === true ? `rowid, ${list}` : list;
   database.run(
-    `CREATE TABLE ${OUTPUT}.${quote(projection.table)} (${definitions.join(", ")})`,
+    `CREATE TABLE ${OUTPUT}.${quote(projection.table)} (${outputColumns.join(", ")})`,
   );
   database.run(
-    `INSERT INTO ${OUTPUT}.${quote(projection.table)} (${list}) SELECT ${list} FROM main.${quote(projection.table)}`,
+    `INSERT INTO ${OUTPUT}.${quote(projection.table)} (${select}) SELECT ${select} FROM main.${quote(projection.table)}`,
   );
 }
 

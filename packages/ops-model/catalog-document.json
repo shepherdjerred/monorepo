@@ -234,6 +234,12 @@
       "title": "Errors",
       "kind": "product",
       "package": "errors"
+    },
+    {
+      "id": "brim-service",
+      "title": "Brim",
+      "kind": "product",
+      "package": "brim-service"
     }
   ],
   "services": [
@@ -2740,6 +2746,34 @@
             "argoApp": "errors"
           }
         ]
+      }
+    },
+    {
+      "id": "brim-service",
+      "title": "Brim",
+      "package": "brim-service",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "brim-service",
+      "components": [
+        {
+          "name": "image:brim-service",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:brim-service",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["brim-service"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "brim-service": "inactive"
+        },
+        "charts": ["brim-service"]
       }
     }
   ],

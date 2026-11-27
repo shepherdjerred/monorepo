@@ -313,11 +313,13 @@ export async function pullArchive(options: PullOptions): Promise<PullReport> {
       );
       if (kept !== undefined) machines.push(kept);
     }
+    // A later device can take a long time to mirror. Keep completed file
+    // state on disk so a restarted reader does not fetch these bytes again.
+    await writePrivateFile(
+      options.paths.pullState,
+      `${JSON.stringify(pullState, null, 2)}\n`,
+    );
   }
-  await writePrivateFile(
-    options.paths.pullState,
-    `${JSON.stringify(pullState, null, 2)}\n`,
-  );
   const index: MirrorIndex = {
     schemaVersion: MIRROR_INDEX_SCHEMA_VERSION,
     generatedAt: now.toISOString(),

@@ -11,7 +11,7 @@ import {
   type HistoryPaths,
 } from "#lib/history/paths.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
-import { scanHistorySources } from "#lib/history/serve.ts";
+import { scanHistorySources } from "#lib/history/scan.ts";
 import { readCursorDatabase } from "#lib/history/sources-shared.ts";
 import {
   EMPTY_DOCUMENT_DETAILS,
@@ -180,6 +180,7 @@ beforeAll(async () => {
   await writeAntigravityFixture(antigravityRoot);
   const brimSyncMirrorIndex = await writeMirrorFixture(
     path.join(fixtureRoot, "brim-sync-mirror"),
+    true,
   );
   const kimi = await writeKimiFixture(
     path.join(fixtureRoot, "kimi-code/sessions"),

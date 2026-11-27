@@ -30,8 +30,8 @@ export const BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID = "q3t3h5dkrqwtbllgybca7pjvke";
 export const SEAWEEDFS_BACKUP_CLIENT = "backup_s3";
 
 /**
- * Buckets `filer.backup` does not copy, with why each can be lost. Every other
- * bucket, including one created later, is backed up.
+ * Whole buckets `filer.backup` does not copy, with why each can be lost.
+ * Other buckets are backed up, subject to path-specific exclusions.
  */
 export const SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS: Readonly<
   Record<string, string>
@@ -166,9 +166,14 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
       .digest("hex"),
   );
 
-  const excludedPaths = Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS)
-    .toSorted()
-    .map((bucket) => `/buckets/${bucket}`);
+  const excludedPaths = [
+    ...Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS).map(
+      (bucket) => `/buckets/${bucket}`,
+    ),
+    // Raw Brim captures expire after 30 days. The sink retains old versions
+    // for another 30 days, so leave this prefix on SeaweedFS only.
+    "/buckets/brim-sessions/captures/v1",
+  ].toSorted();
   const container = deployment.addContainer({
     name: "filer-backup",
     image: `chrislusf/seaweedfs:${versions["chrislusf/seaweedfs"]}`,
