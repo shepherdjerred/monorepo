@@ -2,10 +2,11 @@ import {
   assertExactTerrainReplay,
   currentTerrainPositionBuild,
 } from "./native-terrain-byte-codecs.mjs";
+import { collectCurrentInhibitorLifecycle } from "./native-terrain-inhibitor-lifecycle.mjs";
 
 const inhibitorCount = 6;
 
-function readSnapshot(packetReader, timeSeconds) {
+function readSnapshot(packetReader, timeSeconds, readPacket) {
   const { keyframe, packets } = packetReader.read(timeSeconds);
   const states = new Map();
   let opcode = null;
@@ -18,10 +19,12 @@ function readSnapshot(packetReader, timeSeconds) {
       packet.marker & 32
         ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
         : packet.paramBits;
-    if (opcode !== 947 || packet.payload.length !== 1) continue;
-    const value = packet.payload[0];
-    if (value !== 0x91 && value !== 0x81) continue;
-    const state = value === 0x91 ? "alive" : "destroyed";
+    if (opcode !== 947) continue;
+    const state =
+      readPacket === undefined
+        ? readLegacySnapshotState(packet.payload)
+        : readPacket(packet.payload);
+    if (state === undefined) continue;
     if (states.has(context) && states.get(context) !== state)
       throw Error("Conflicting inhibitor states in snapshot");
     states.set(context, state);
@@ -29,12 +32,21 @@ function readSnapshot(packetReader, timeSeconds) {
   return states;
 }
 
+function readLegacySnapshotState(payload) {
+  if (payload.length !== 1) return;
+  if (payload[0] === 0x91) return "alive";
+  if (payload[0] === 0x81) return "destroyed";
+}
+
 /** Snapshot and loss evidence for the supported short and Ranked Map11 fixtures. */
 export function prepareNativeTerrainInhibitors(prepared, options) {
   const { packetReader, observations } = prepared;
   assertExactTerrainReplay(packetReader, options);
   const current = packetReader.build === currentTerrainPositionBuild;
-  const opening = readSnapshot(packetReader, 0);
+  const readCurrentPacket = options?.readCurrentInhibitorPacket;
+  if (readCurrentPacket !== undefined && !current)
+    throw Error("Exact inhibitor lifecycle requires the current replay build");
+  const opening = readSnapshot(packetReader, 0, readCurrentPacket);
   if (
     opening.size !== inhibitorCount ||
     [...opening.values()].some((state) => state !== "alive")
@@ -63,6 +75,20 @@ export function prepareNativeTerrainInhibitors(prepared, options) {
       throw Error("Inhibitor loss clocks must be ordered per actor");
     times.push(timeSeconds);
     history.set(context, times);
+  }
+
+  if (readCurrentPacket !== undefined) {
+    if (losses === null || options.currentInhibitorPackets === undefined)
+      throw Error(
+        "Exact inhibitor lifecycle requires the current replay packets and verified losses",
+      );
+    return collectCurrentInhibitorLifecycle(
+      packetReader,
+      opening,
+      losses,
+      options.currentInhibitorPackets,
+      readCurrentPacket,
+    );
   }
 
   const snapshots = new Map();

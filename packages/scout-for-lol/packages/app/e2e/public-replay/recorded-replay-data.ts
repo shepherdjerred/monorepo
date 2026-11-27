@@ -104,6 +104,23 @@ const SceneIdentitySchema = z.object({
     })
     .optional(),
   teamVision: z.array(z.unknown()).optional(),
+  inhibitorModels: z
+    .object({
+      instances: z.array(
+        z.object({
+          position: z.tuple([z.number(), z.number(), z.number()]),
+          inactiveRanges: z
+            .array(
+              z.tuple([
+                z.number().nonnegative(),
+                z.number().positive().nullable(),
+              ]),
+            )
+            .optional(),
+        }),
+      ),
+    })
+    .optional(),
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
@@ -256,6 +273,7 @@ export async function readRecordedReplay() {
     terrainMaterials,
     terrainVisibility,
     teamVision,
+    inhibitorModels,
     championAnimationCues,
   } = scene;
   if (
@@ -292,6 +310,7 @@ export async function readRecordedReplay() {
     paths,
     packageUrl,
     followCameraDefaults,
+    inhibitorInstances: inhibitorModels?.instances,
     terrainMaterials,
     terrainVisibility,
     sourceAlphaBlendMaterials:

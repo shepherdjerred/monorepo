@@ -323,6 +323,14 @@ const TerrainSceneFields = z.object({
           worldModelInstance.extend({
             teamId,
             destroyedAtSeconds: z.number().positive().nullable(),
+            inactiveRanges: z
+              .array(
+                z.tuple([
+                  z.number().positive(),
+                  z.number().positive().nullable(),
+                ]),
+              )
+              .optional(),
           }),
         )
         .min(1)
@@ -391,19 +399,50 @@ const TerrainSceneFields = z.object({
     .optional(),
 });
 export const SceneSchema = TerrainSceneFields.refine(
-  (scene) =>
-    scene.workerMotion?.decodeChampionStats !== true ||
-    (scene.identity.build === currentTerrainPositionBuild &&
-      scene.workerMotion.allowCurrentBuild === true &&
-      scene.motion === undefined &&
-      scene.championHealthTracks === undefined &&
-      scene.championResourceTracks === undefined),
+  ({ identity, inhibitorModels }) => {
+    const duration = identity.durationMilliseconds / 1000;
+    return (
+      inhibitorModels?.instances.every(
+        ({ destroyedAtSeconds, inactiveRanges }) => {
+          if (inactiveRanges === undefined) return true;
+          if (
+            (inactiveRanges.length === 0) !== (destroyedAtSeconds === null) ||
+            (destroyedAtSeconds !== null && destroyedAtSeconds > duration)
+          )
+            return false;
+          return inactiveRanges.every(([start, end], index) => {
+            const previous = inactiveRanges[index - 1];
+            return (
+              start <= duration &&
+              (end === null || (end > start && end <= duration)) &&
+              (previous === undefined ||
+                (previous[1] !== null && start >= previous[1]))
+            );
+          });
+        },
+      ) ?? true
+    );
+  },
   {
-    path: ["workerMotion", "decodeChampionStats"],
+    path: ["inhibitorModels", "instances"],
     message:
-      "Replay-derived champion stats require current worker motion without embedded motion or stat tracks.",
+      "Recorded inhibitor inactive ranges must be ordered and within the replay.",
   },
 )
+  .refine(
+    (scene) =>
+      scene.workerMotion?.decodeChampionStats !== true ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.championHealthTracks === undefined &&
+        scene.championResourceTracks === undefined),
+    {
+      path: ["workerMotion", "decodeChampionStats"],
+      message:
+        "Replay-derived champion stats require current worker motion without embedded motion or stat tracks.",
+    },
+  )
   .refine(
     (scene) =>
       scene.workerMotion?.decodeChampionInventory === true

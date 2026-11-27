@@ -11,6 +11,18 @@ const healthTrackColor = [0.06, 0.09, 0.12, 1];
 const blueHealthColor = [94 / 255, 173 / 255, 212 / 255, 1];
 const redHealthColor = [219 / 255, 94 / 255, 98 / 255, 1];
 
+export function inhibitorIsActive(
+  { destroyedAtSeconds, inactiveRanges },
+  timeSeconds,
+) {
+  if (inactiveRanges === undefined)
+    return destroyedAtSeconds === null || timeSeconds < destroyedAtSeconds;
+  return !inactiveRanges.some(
+    ([start, end]) =>
+      timeSeconds >= start && (end === null || timeSeconds < end),
+  );
+}
+
 function drawChampionHealth(
   gl,
   frame,
@@ -647,10 +659,9 @@ export function createTerrainRenderer(
         modelRenderer.draw(
           viewProjection.elements,
           scene.inhibitorModels.instances.filter(
-            ({ context, destroyedAtSeconds }) =>
-              visible(context) &&
-              (destroyedAtSeconds === null ||
-                frame.timeSeconds < destroyedAtSeconds),
+            (instance) =>
+              visible(instance.context) &&
+              inhibitorIsActive(instance, frame.timeSeconds),
           ),
         );
       gl.useProgram(program);

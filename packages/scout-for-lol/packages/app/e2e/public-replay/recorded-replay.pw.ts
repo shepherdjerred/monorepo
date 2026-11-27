@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
 import { observeRecordedItemBlobs } from "./proof/current-inventory.ts";
+import { verifyRecordedInhibitorReturns } from "./recorded-inhibitor-assertions.ts";
 import {
   observeDirectChampionStatsWorker,
   verifyDirectChampionStatsWorker,
@@ -366,6 +367,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
     testInfo,
     expectedLosses: fixture.descriptor.durationSeconds > 1490.2,
   });
+  await verifyRecordedInhibitorReturns(page, fixture, testInfo);
   const lateTime = Math.floor(fixture.descriptor.durationSeconds * 0.85);
   await seek(page, lateTime);
   const lateMatch = await readRecordedDraw(page);

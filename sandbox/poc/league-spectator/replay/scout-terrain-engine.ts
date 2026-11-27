@@ -74,21 +74,28 @@ function recordedTimeline(
       };
     },
   );
+  const verifiedInhibitorLosses = new Set(data.inhibitorTimes ?? []);
   const inhibitors =
     data.scene.inhibitorModels?.instances.flatMap(
-      ({ destroyedAtSeconds, position, teamId }) =>
-        destroyedAtSeconds === null
-          ? []
-          : [
-              {
-                timeSeconds: destroyedAtSeconds,
-                label:
-                  teamId === 100
-                    ? "Blue inhibitor destroyed"
-                    : "Red inhibitor destroyed",
-                mapPoint: data.mapPointAt(position),
-              },
-            ],
+      ({ destroyedAtSeconds, inactiveRanges, position, teamId }) => {
+        if (destroyedAtSeconds === null) return [];
+        const times = [
+          destroyedAtSeconds,
+          ...(inactiveRanges
+            ?.slice(1)
+            .flatMap(([start]) =>
+              verifiedInhibitorLosses.has(start) ? [start] : [],
+            ) ?? []),
+        ];
+        return times.map((timeSeconds) => ({
+          timeSeconds,
+          label:
+            teamId === 100
+              ? "Blue inhibitor destroyed"
+              : "Red inhibitor destroyed",
+          mapPoint: data.mapPointAt(position),
+        }));
+      },
     ) ?? [];
   const positionedInhibitorLosses = new Set(
     inhibitors.map(({ timeSeconds }) => timeSeconds),

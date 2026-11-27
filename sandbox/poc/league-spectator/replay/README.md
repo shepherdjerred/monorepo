@@ -310,6 +310,13 @@ validates the terrain, models, and replay observations. Recorded dragon cues
 for additional replays require an explicit world-unit or announcer input and
 must pass the original dragon-evidence checks.
 
+For 16.23.841.8428, the private builder also accepts an independently reviewed
+Riot Match-V5 result through `--canonical-match` and `--canonical-match-sha256`.
+Use the original replay filename. The builder checks the build, game ID,
+Map11 CLASSIC mode, duration, and all ten players against the original footer.
+The check includes per-player kills, deaths, assists, and ordered item slots.
+The result file stays local.
+
 For a catalog-backed build, pass the catalog to `--champion-models` and its
 reviewed digest to `--champion-catalog-sha256`. The builder selects the
 models from the saved opening packets and validates the model bytes. Pass
@@ -338,8 +345,13 @@ events remain in the jump menu.
 For current-build inhibitors, use `--authored-inhibitor-catalog` and
 `--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
 manifest. The builder matches the authored registration order to the replay's
-turret anchors and verifies inhibitor opening states and losses.
-For the current recording the Nexus cutoff uses the verified terminal loss.
+turret anchors and checks all indexed inhibitor states against the original
+loss and return packets. The standing model hides on loss and returns at the
+recorded time when seeking or playing forward.
+Use `--authored-nexus-catalog` and `--authored-nexus-catalog-sha256` with the
+same placement receipt to bind both Nexus models and verify the terminal loss.
+The terminal loss supplies the Nexus cutoff. The transition animation remains
+unverified.
 
 Create the turret catalog from the pinned build's WAD and placement
 receipt with the existing ordinal exporter. Use a fresh private output path.
@@ -351,6 +363,9 @@ bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-structures.
 bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-inhibitors.mjs `
   $installation 16.23.841.8428 $turretPlacementReceipt $archivedMaterials `
   $ordinalExporterBin $newInhibitorCatalogDirectory --authored-catalog
+bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-nexus.mjs `
+  $installation 16.23.841.8428 $archivedMaterials - $ordinalExporterBin `
+  $newNexusCatalogDirectory $turretPlacementReceipt --authored-catalog
 ```
 
 The authored request manifest passed in `--champion-animation-cues` supplies
@@ -450,6 +465,8 @@ markers with the same recorded masks. Terrain fog shading remains unverified.
 For the current-build preview, pass `--current` to the verifier with the
 matching macOS archive and the reviewed `scene.json` before team tracks are
 added. The verifier restricts the tracks to the actors that scene can draw.
+When the reviewed actor set changes, pass the new scene digest with
+`--scene-sha256` to regenerate and verify every rendered actor's track.
 Units with pending initialization stay absent from the selected-team view
 until their first observed mask.
 

@@ -17,7 +17,10 @@ import {
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { current: { type: "boolean", default: false } },
+  options: {
+    current: { type: "boolean", default: false },
+    "scene-sha256": { type: "string" },
+  },
 });
 const [
   replayPath,
@@ -29,6 +32,7 @@ const [
   ...extra
 ] = positionals;
 const current = values.current;
+const scenePin = values["scene-sha256"];
 if (
   !replayPath ||
   !decoderPath ||
@@ -36,10 +40,11 @@ if (
   !proofPath ||
   !tracksPath ||
   extra.length ||
-  (current && !scenePath)
+  (current && !scenePath) ||
+  (scenePin !== undefined && (!current || !/^[a-f0-9]{64}$/.test(scenePin)))
 )
   throw Error(
-    "Usage: bun verify-exact-team-visibility.mjs [--current] <saved-rofl> <exact-macos-binary> <python-with-unicorn> <proof-json> <tracks-json> [admitted-scene-json; required with --current]",
+    "Usage: bun verify-exact-team-visibility.mjs [--current [--scene-sha256 SHA]] <saved-rofl> <exact-macos-binary> <python-with-unicorn> <proof-json> <tracks-json> [admitted-scene-json; required with --current]",
   );
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -79,8 +84,9 @@ if (scenePath) {
   if (current)
     assert.equal(
       sceneSha256,
-      "f9da8ecd935ffe403d39e4c2ef649c6aa86875846a91a45989c0a4096211bd4c",
-      "Current team visibility requires the reviewed v6 scene and roster",
+      scenePin ??
+        "f9da8ecd935ffe403d39e4c2ef649c6aa86875846a91a45989c0a4096211bd4c",
+      "Current team visibility requires the pinned scene and roster",
     );
   const scene = JSON.parse(new TextDecoder().decode(sceneBytes));
   assert.equal(scene.identity.replaySha256, replaySha256);
@@ -318,6 +324,12 @@ const artifact = JSON.stringify({
 });
 const tracksSha256 = sha256(artifact);
 if (current)
+  assert.equal(
+    tracks.length,
+    actors.size,
+    "Current team visibility is missing a rendered actor's native initialization",
+  );
+if (current && scenePin === undefined)
   assert.equal(
     tracksSha256,
     "c2cf2a71c991078e164027ec43fc2ee8fa868237e71bca251e7fee0e13264e43",

@@ -130,6 +130,9 @@ export function bindNativeTerrainInhibitorCatalog(
     instances,
     losses: inhibitors.losses,
     renderableLosses: inhibitors.renderableLosses,
+    ...(inhibitors.inactivity === undefined
+      ? {}
+      : { inactivity: inhibitors.inactivity }),
     presentationOmissions: inhibitors.presentationOmissions,
     unresolvedSnapshotStates: inhibitors.unresolvedSnapshotStates,
   };

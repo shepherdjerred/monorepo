@@ -50,6 +50,8 @@ const { positionals, values } = parseArgs({
   options: {
     "position-decoder": { type: "string" },
     "scout-recovery-db": { type: "string" },
+    "canonical-match": { type: "string" },
+    "canonical-match-sha256": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
     "announcer-catalog": { type: "string" },
@@ -83,6 +85,8 @@ const { positionals, values } = parseArgs({
     "authored-turret-catalog": { type: "string" },
     "authored-turret-catalog-sha256": { type: "string" },
     "nexus-models": { type: "string" },
+    "authored-nexus-catalog": { type: "string" },
+    "authored-nexus-catalog-sha256": { type: "string" },
     "inhibitor-models": { type: "string" },
     "inhibitor-models-sha256": { type: "string" },
     "authored-inhibitor-catalog": { type: "string" },
@@ -104,6 +108,20 @@ const [terrainRoot, threeCore, replayPath, ...receiptPaths] = positionals;
 const rawReplayOnly = receiptPaths.length === 0;
 const privatePackageOutput = values["private-package-output"];
 const recoveryPath = values["scout-recovery-db"];
+const canonicalMatchPath = values["canonical-match"];
+const canonicalMatchDigest = values["canonical-match-sha256"];
+assert.equal(
+  canonicalMatchPath === undefined,
+  canonicalMatchDigest === undefined,
+  "Canonical replay evidence requires a matching SHA-256 pin",
+);
+assert.ok(
+  canonicalMatchPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      recoveryPath === undefined &&
+      /^[a-f0-9]{64}$/u.test(canonicalMatchDigest)),
+  "Canonical replay evidence requires a private package without Scout Desktop recovery",
+);
 const terrainVisibilityPath = values["terrain-visibility"];
 const terrainVisibilityDigest = values["terrain-visibility-sha256"];
 assert.ok(
@@ -188,6 +206,20 @@ const announcerDirectory = values["announcer-preview"];
 const announcerCatalogDirectory = values["announcer-catalog"];
 const inhibitorCatalogPath = values["authored-inhibitor-catalog"];
 const inhibitorCatalogDigest = values["authored-inhibitor-catalog-sha256"];
+const nexusCatalogPath = values["authored-nexus-catalog"];
+const nexusCatalogDigest = values["authored-nexus-catalog-sha256"];
+assert.equal(
+  nexusCatalogPath === undefined,
+  nexusCatalogDigest === undefined,
+  "Authored Nexus catalogs require a matching SHA-256 pin",
+);
+assert.ok(
+  nexusCatalogPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      values["turret-placements"] !== undefined &&
+      values["nexus-models"] === undefined),
+  "Authored Nexus catalogs require a private package and turret placements without prepared Nexus models",
+);
 assert.equal(
   inhibitorCatalogPath === undefined,
   inhibitorCatalogDigest === undefined,
@@ -1063,23 +1095,25 @@ async function loadInhibitorRenderRoutes(manifestPath, exported, observed) {
     "inhibitor-models",
     110,
   );
-  const lossTimes = new Map(
-    (observed.renderableLosses ?? observed.losses).map(
-      ({ context, timeSeconds }) => [context, timeSeconds],
-    ),
-  );
+  const lossTimes = new Map();
+  for (const { context, timeSeconds } of observed.renderableLosses ??
+    observed.losses)
+    if (observed.inactivity === undefined || !lossTimes.has(context))
+      lossTimes.set(context, timeSeconds);
   const omittedContexts = new Set(omissions.map(({ context }) => context));
   const instances = exported.instances.map(
     ({ context, assetId, transform, team }) => {
       assert.equal(team, assetId === "inhibitor-0" ? 100 : 200);
       const participantId = assetIds.get(assetId);
       assert.notEqual(participantId, undefined);
+      const inactiveRanges = observed.inactivity?.get(context);
       return {
         context,
         participantId,
         ...unpackWorldTransform(transform),
         teamId: team,
         destroyedAtSeconds: lossTimes.get(context) ?? null,
+        ...(inactiveRanges === undefined ? {} : { inactiveRanges }),
       };
     },
   );
@@ -1114,6 +1148,22 @@ async function loadNexusModelRoutes(
     exported.map.installedMapSha256,
     "ed38cba7aaa4390e8b2a2cfe778d5f1151152b9b97f2c90883c17b27b510d67a",
   );
+  return await loadNexusRenderRoutes(
+    manifestPath,
+    exported,
+    identity,
+    { packetReader, observations },
+    placementSha,
+  );
+}
+
+async function loadNexusRenderRoutes(
+  manifestPath,
+  exported,
+  identity,
+  { packetReader, observations },
+  placementSha,
+) {
   assert.deepEqual(Object.keys(exported.assets).sort(), ["nexus-0", "nexus-3"]);
   const { routes, assetIds, bindings } = await loadWorldModelBindings(
     manifestPath,
@@ -1251,6 +1301,10 @@ assert.ok(
   inhibitorCatalogPath === undefined || currentBuild,
   "Authored inhibitor catalogs require the verified current build",
 );
+assert.ok(
+  nexusCatalogPath === undefined || currentBuild,
+  "Authored Nexus catalogs require the verified current build",
+);
 if (currentBuild) {
   assert.ok(
     privatePackageOutput !== undefined &&
@@ -1284,13 +1338,23 @@ const reviewedCurrentReplay =
   currentBuild &&
   identity.replaySha256 ===
     "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
+if (canonicalMatchPath !== undefined) {
+  const { verifyCanonicalRecordedRift } =
+    await import("./research/verify-canonical-rift-replay.mjs");
+  await verifyCanonicalRecordedRift(
+    canonicalMatchPath,
+    canonicalMatchDigest,
+    replayPath,
+    replay,
+  );
+}
 if (shortFixture) {
   assert.ok(rawReplayOnly);
   assert.equal(identity.durationMilliseconds, 76063);
 } else if (reviewedReplay) {
   for (const [field, value] of Object.entries(identity))
     assert.equal(proof[field], value);
-} else if (!reviewedCurrentReplay) {
+} else if (!reviewedCurrentReplay && canonicalMatchPath === undefined) {
   assert.ok(recoveryPath, "Replay lacks reviewed Map11 provenance");
   const { verifyRecordedRift } =
     await import("./research/recorded-terrain-provenance.mjs");
@@ -1366,6 +1430,7 @@ const replayPreparation = prepareReplayForSeek(
 let prepared = replayPreparation;
 let championModelSelections;
 let replayInventoryTracks;
+let replayCodecs;
 if (decoderBytes !== undefined) {
   const { createExactTerrainByteCodecs } =
     await import("./research/native-terrain-positions-944.mjs");
@@ -1374,6 +1439,7 @@ if (decoderBytes !== undefined) {
     identity,
     decoderOptions,
   );
+  replayCodecs = codecs;
   const { binding } = bindNativeTerrainChampionIdentities(
     replayPreparation,
     codecs,
@@ -1581,6 +1647,7 @@ if (values["champion-models"] !== undefined) {
 let structureModelRoutes;
 let inhibitorModelRoutes;
 let placementSha;
+let nexus;
 if (values["turret-placements"] !== undefined) {
   const { prepareNativeTerrainTurrets, turretPlacementReceiptDigests } =
     await import("./research/native-terrain-turrets.mjs");
@@ -1650,8 +1717,13 @@ if (values["turret-placements"] !== undefined) {
   }
   let inhibitors;
   if (inhibitorCatalogPath !== undefined) {
-    const { bindNativeTerrainInhibitorCatalog } =
-      await import("./research/native-terrain-inhibitor-catalog.mjs");
+    const [
+      { bindNativeTerrainInhibitorCatalog },
+      { readCurrentInhibitorPacketState },
+    ] = await Promise.all([
+      import("./research/native-terrain-inhibitor-catalog.mjs"),
+      import("./research/native-terrain-inhibitor-packet.mjs"),
+    ]);
     const catalog = await readPinnedWorldUnitManifest(
       inhibitorCatalogPath,
       inhibitorCatalogDigest,
@@ -1660,7 +1732,13 @@ if (values["turret-placements"] !== undefined) {
       prepared,
       placementReceipt,
       catalog,
-      decoderOptions,
+      {
+        ...decoderOptions,
+        readCurrentInhibitorPacket: readCurrentInhibitorPacketState,
+        currentInhibitorPackets: replayTimedPacketEnvelopes(
+          replayPacketEnvelopes(replay, decompress),
+        ),
+      },
       turrets,
     );
     inhibitors = await loadInhibitorRenderRoutes(
@@ -1691,16 +1769,45 @@ if (values["turret-placements"] !== undefined) {
     }));
     inhibitorModelRoutes = inhibitors.routes;
   }
+  if (nexusCatalogPath !== undefined) {
+    const { bindNativeTerrainNexusCatalog } =
+      await import("./research/native-terrain-nexus-catalog.mjs");
+    const catalog = await readPinnedWorldUnitManifest(
+      nexusCatalogPath,
+      nexusCatalogDigest,
+    );
+    const bound = bindNativeTerrainNexusCatalog(
+      prepared,
+      placementReceipt,
+      catalog,
+      replayCodecs,
+      decoderOptions,
+      turrets,
+    );
+    nexus = await loadNexusRenderRoutes(
+      nexusCatalogPath,
+      {
+        ...bound,
+        assets: catalog.assets,
+        placementReceiptSha256: catalog.placementReceiptSha256,
+        positionEvidence: "authored-registration",
+      },
+      identity,
+      prepared,
+      placementSha,
+    );
+  }
 }
 let nexusModelRoutes;
-if (values["nexus-models"] !== undefined) {
-  const nexus = await loadNexusModelRoutes(
+if (values["nexus-models"] !== undefined)
+  nexus = await loadNexusModelRoutes(
     values["nexus-models"],
     identity,
     prepared,
     decoderBytes,
     placementSha,
   );
+if (nexus !== undefined) {
   scene.nexusModels = {
     bindings: nexus.bindings,
     instances: nexus.instances,

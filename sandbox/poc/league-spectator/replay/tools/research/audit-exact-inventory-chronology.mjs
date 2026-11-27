@@ -1,12 +1,13 @@
 import { writeFile } from "node:fs/promises";
-import { basename } from "node:path";
 import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
 import { createReplayPacketReader } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/packet-reader.mjs";
+import { openReplay } from "../../transport.mjs";
 import {
   applyRecordedInventorySnapshot,
   foldRecordedInventory,
 } from "./recorded-inventory-fold.mjs";
+import { verifyCanonicalRecordedRift } from "./verify-canonical-rift-replay.mjs";
 import {
   compareRecordedInventoryFooter,
   readInventoryReplayFooter,
@@ -183,47 +184,13 @@ for (const checkpoint of later) {
 }
 
 async function verifyCanonicalFooter() {
-  const canonicalBytes = await Bun.file(canonicalPath).bytes();
-  const canonicalSha256 = sha(canonicalBytes);
-  if (canonicalSha256 !== canonicalPin)
-    throw Error("Current inventory requires the reviewed Riot Match-V5 result");
-  const canonical = JSON.parse(
-    new TextDecoder("utf-8", { fatal: true }).decode(canonicalBytes),
+  const { sourceSha256, verifiedSlots } = await verifyCanonicalRecordedRift(
+    canonicalPath,
+    canonicalPin,
+    replayPath,
+    openReplay(replayBuffer),
   );
-  const game = /^([A-Z0-9]+)-(\d+)\.rofl$/.exec(basename(replayPath));
-  if (
-    !game ||
-    canonical.metadata.matchId !== `${game[1]}_${game[2]}` ||
-    String(canonical.info.gameId) !== game[2] ||
-    canonical.info.gameVersion !== build ||
-    canonical.info.mapId !== 11 ||
-    canonical.info.gameMode !== "CLASSIC" ||
-    canonical.info.participants.length !== 10
-  )
-    throw Error("Riot Match-V5 result differs from the bound Rift replay");
-  const footer = JSON.parse(readInventoryReplayFooter(rawReplay).statsJson);
-  const matched = new Set();
-  for (const row of footer) {
-    const candidates = canonical.info.participants.filter(
-      (member) =>
-        member.riotIdGameName === row.RIOT_ID_GAME_NAME &&
-        member.riotIdTagline === row.RIOT_ID_TAG_LINE &&
-        member.teamId === Number(row.TEAM) &&
-        member.championName === row.SKIN,
-    );
-    if (candidates.length !== 1 || matched.has(candidates[0]))
-      throw Error("Riot Match-V5 inventory lacks a unique bound participant");
-    const [member] = candidates;
-    matched.add(member);
-    for (let slot = 0; slot < 7; slot++)
-      if (member[`item${slot}`] !== Number(row[`ITEM${slot}`]))
-        throw Error(
-          "Riot Match-V5 ordered inventory differs from the replay footer",
-        );
-  }
-  if (matched.size !== 10)
-    throw Error("Riot Match-V5 final inventory is incomplete");
-  return { sourceSha256: canonicalSha256, verifiedSlots: matched.size * 7 };
+  return { sourceSha256, verifiedSlots };
 }
 
 const result = {

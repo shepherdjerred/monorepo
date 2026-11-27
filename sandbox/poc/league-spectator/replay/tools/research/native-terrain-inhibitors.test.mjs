@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { prepareNativeTerrainInhibitors } from "./native-terrain-inhibitors.mjs";
+import { readCurrentInhibitorPacketState } from "./native-terrain-inhibitor-packet.mjs";
 
 function preparedFixture(lateValue = 0x81, verified = true) {
   const keyframes = [
@@ -88,4 +89,81 @@ test("keeps current losses while leaving unsupported and returned states unresol
       assert.equal(overlay.read(10).inhibitors[0].seekState, "alive");
     }
   }
+});
+
+function currentLifecycle() {
+  const prepared = preparedFixture(0x91);
+  const { packetReader } = prepared;
+  packetReader.build = "16.23.841.8428";
+  const snapshot = (timeSeconds) =>
+    packetReader.read(timeSeconds).packets.map((packet, blockOffset) => ({
+      ...packet,
+      blockOffset,
+      timeSeconds,
+    }));
+  const gameplay = (timeSeconds, hex, blockOffset) => ({
+    stream: 1,
+    chunkOffset: 150,
+    blockOffset,
+    timeSeconds,
+    secondTimeBits: 0,
+    explicitOpcode: 947,
+    marker: 0,
+    paramBits: 1073742125,
+    payload: Buffer.from(hex, "hex"),
+  });
+  return {
+    prepared,
+    options: {
+      allowCurrentBuild: true,
+      readCurrentInhibitorPacket: readCurrentInhibitorPacketState,
+      currentInhibitorPackets: [
+        ...snapshot(0),
+        gameplay(8, "8a6ec4", 0),
+        gameplay(9, "926ec4", 1),
+        ...snapshot(10),
+      ],
+    },
+  };
+}
+
+test("applies the original loss and return clocks for current exact packets", () => {
+  const { prepared, options } = currentLifecycle();
+  const overlay = prepareNativeTerrainInhibitors(prepared, options);
+  assert.deepEqual(overlay.inactivity.get(1073742125), [[8, 9]]);
+  assert.deepEqual(overlay.unresolvedSnapshotStates, []);
+  assert.deepEqual(overlay.presentationOmissions, []);
+  const stateAt = (time) => overlay.read(time).inhibitors[0].seekState;
+  assert.deepEqual(
+    [stateAt(7.99), stateAt(8), stateAt(8.99), stateAt(9)],
+    ["alive", "destroyed", "destroyed", "alive"],
+  );
+});
+
+test("rejects current inhibitor lifecycle when gameplay and verified history or snapshots disagree", () => {
+  const { prepared, options } = currentLifecycle();
+  const packets = options.currentInhibitorPackets;
+  const without = (index) => ({
+    ...options,
+    currentInhibitorPackets: packets.filter(
+      (_, position) => position !== index,
+    ),
+  });
+  assert.throws(
+    () => prepareNativeTerrainInhibitors(prepared, without(6)),
+    /without a preceding verified loss/,
+  );
+  assert.throws(
+    () => prepareNativeTerrainInhibitors(prepared, without(7)),
+    /snapshot differs from recorded lifecycle/,
+  );
+  assert.throws(
+    () => prepareNativeTerrainInhibitors(prepared, without(8)),
+    /missing an indexed snapshot state/,
+  );
+  packets[6].secondTimeBits++;
+  assert.throws(
+    () => prepareNativeTerrainInhibitors(prepared, options),
+    /differs from verified loss history/,
+  );
 });
