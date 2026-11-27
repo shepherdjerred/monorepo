@@ -1412,7 +1412,7 @@ existed carry no `livenessChecks` and render their original report.
 
 ### Reddit request outreach
 
-`the-storm-reddit-outreach` runs `runStormRedditOutreach` every 15 minutes in
+`the-storm-reddit-outreach` runs `runStormRedditOutreach` every five minutes in
 `prod`, on the existing workflow and promotion worker queues. Overlapping runs
 and missed schedule ticks are skipped. It uses the signed-in
 `storm-promotion-reddit` PinchTab profile to scan MinecraftServer,
