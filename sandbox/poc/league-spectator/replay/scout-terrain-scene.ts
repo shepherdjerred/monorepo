@@ -5,8 +5,12 @@ import type {
   ReplayScoreboard,
 } from "@scout-for-lol/replay/types";
 import {
+  ChampionAnimationCatalogSchema,
   ChampionAnimationCuesSchema,
+  ChampionAnimationWorkerCuesSchema,
   loadRecordedChampionAnimations,
+  matchesRenderedAnimationCatalog,
+  validateWorkerAnimationCues,
 } from "./scout-terrain-animations.ts";
 import {
   championExperienceSceneSchema,
@@ -369,6 +373,7 @@ const TerrainSceneFields = z.object({
       decodeChampionStats: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
+      championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
     })
     .optional(),
   navgrid: z
@@ -421,6 +426,29 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "decodeChampionExperience"],
       message:
         "Replay-derived champion experience requires current worker motion and authored thresholds without embedded experience tracks.",
+    },
+  )
+  .refine(
+    (scene) => {
+      const catalog = scene.workerMotion?.championAnimationCatalog;
+      return (
+        catalog === undefined ||
+        (scene.identity.build === currentTerrainPositionBuild &&
+          scene.workerMotion?.allowCurrentBuild === true &&
+          scene.motion === undefined &&
+          scene.championAnimationCues === undefined &&
+          scene.championModels !== undefined &&
+          matchesRenderedAnimationCatalog(
+            catalog,
+            scene.participants,
+            scene.championModels.bindings,
+          ))
+      );
+    },
+    {
+      path: ["workerMotion", "championAnimationCatalog"],
+      message:
+        "Replay-derived champion animation requires an exact current rendered-model catalog and no embedded cues or motion.",
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -560,6 +588,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     championInventoryTracks: inventoryTracksSchema(z).optional(),
     championExperienceTracks:
       createChampionExperienceTracksSchema(z).optional(),
+    championAnimationCues: ChampionAnimationWorkerCuesSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -634,6 +663,22 @@ async function loadWorkerMotion(
       throw new Error(
         "Replay motion worker returned unexpected champion experience coverage.",
       );
+    const animationCatalog = workerMotion.championAnimationCatalog;
+    if (
+      (result.championAnimationCues !== undefined) !==
+      (animationCatalog !== undefined)
+    )
+      throw new Error(
+        "Replay motion worker returned unexpected champion animation coverage.",
+      );
+    if (
+      result.championAnimationCues !== undefined &&
+      animationCatalog !== undefined
+    )
+      validateWorkerAnimationCues(
+        result.championAnimationCues,
+        animationCatalog,
+      );
     return result;
   } finally {
     if (cancel !== undefined) signal.removeEventListener("abort", cancel);
@@ -679,6 +724,7 @@ export async function loadSceneMotion(
   const inventoryItems = scene.championInventoryItems;
   const experienceTracks = decoded.championExperienceTracks;
   const experienceThresholds = scene.championExperienceThresholds;
+  const animationCues = decoded.championAnimationCues;
   if (
     experienceTracks !== undefined &&
     (experienceThresholds === undefined ||
@@ -749,6 +795,13 @@ export async function loadSceneMotion(
               tracks: experienceTracks,
             },
             championExperienceThresholds: undefined,
+            workerMotion: undefined,
+          }),
+      ...(animationCues === undefined
+        ? {}
+        : {
+            championAnimationCues:
+              animationCues.length === 0 ? undefined : animationCues,
             workerMotion: undefined,
           }),
     },

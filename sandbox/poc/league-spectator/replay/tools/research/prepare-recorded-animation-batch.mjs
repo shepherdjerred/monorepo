@@ -24,6 +24,7 @@ import {
   recordedAnimationRequests,
   supportsRecordedAnimationRequest,
 } from "./recorded-animation-requests.mjs";
+import { createCurrentChampionAnimationCatalog } from "./recorded-champion-animation-resources.mjs";
 
 const [
   installation,
@@ -482,6 +483,9 @@ for (const row of packets) {
 }
 assert.equal(cues.length + omissions.length, packets.length);
 assert.ok(cues.length > 0);
+const catalog = current && createCurrentChampionAnimationCatalog(replay, cues);
+const catalogFile = "champion-animation-catalog.json";
+if (catalog) await emit(catalogFile, catalog);
 await emit("omissions.json", omissions);
 await emit("scout-animation.json", {
   schema: 1,
@@ -507,5 +511,9 @@ console.log(
     cues: cues.length,
     omissions: omissions.length,
     clips: new Set(cues.map((cue) => cue.clip.sha256)).size,
+    ...(catalog && {
+      catalog: out(catalogFile),
+      catalogSha256: await digest(out(catalogFile)),
+    }),
   }),
 );

@@ -231,8 +231,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await expect(score).toContainText(/Blue team\s*0\s*kills/);
   await expect(score).toContainText(/Red team\s*0\s*kills/);
   await expect(score.getByText(result.winner)).toHaveCount(0);
-  if (fixture.directChampionObservations)
-    await verifyDirectChampionStatsWorker(page, fixture);
+  const cueCount = await verifyDirectChampionStatsWorker(page, fixture);
   await verifyRecordedRoster(page, fixture, testInfo);
   const opening = await readRecordedDraw(page);
   verifyCameraProjection(opening, undefined, 1, false);
@@ -487,13 +486,13 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
       testInfo,
       fixture.descriptor.gameBuild === "16.23.841.8428",
     );
-  if (fixture.championAnimationCueCount > 0)
+  if (cueCount > 0)
     await verifyRecordedChampionAnimation(
       page,
       {
         current: fixture.descriptor.gameBuild === "16.23.841.8428",
         long: fixture.descriptor.durationSeconds > 100,
-        cueCount: fixture.championAnimationCueCount,
+        cueCount,
       },
       testInfo,
     );

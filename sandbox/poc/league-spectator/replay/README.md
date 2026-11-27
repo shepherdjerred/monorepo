@@ -319,9 +319,23 @@ drawing at the next corroborated snapshot. Its terrain, champion movement
 and scoreboard are evidence channels for the recorded match.
 
 Use current-build structure manifests with the matching `--turret-placements`
-receipt. The package omits actors with contradictory turret or unresolved
-inhibitor lifetimes. Verified inhibitor loss events remain in the jump menu.
+receipt. A 16.23.841.8428 build can use `--authored-turret-catalog` and
+`--authored-turret-catalog-sha256` in place of `--structure-models`. The builder
+then binds the authored placements and models to the replay's opening actors
+and verifies their losses and snapshots. The package omits actors with
+contradictory turret or unresolved inhibitor lifetimes. Verified inhibitor loss
+events remain in the jump menu.
 For the current recording the Nexus cutoff uses the verified terminal loss.
+
+Create the turret catalog from the pinned build's WAD and placement
+receipt with the existing ordinal exporter. Use a fresh private output path.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-structures.mjs `
+  $installation 16.23.841.8428 $turretPlacementReceipt $archivedMaterials `
+  $ordinalExporterBin $newTurretCatalogDirectory --authored-catalog
+```
+
 The authored request manifest passed in `--champion-animation-cues` supplies
 verified action windows from the loaded skins. Passive locomotion and death
 animation still require native selection evidence.
@@ -452,13 +466,14 @@ contains the selected icons and their metadata. For prepared playback, pass
 the track manifest and digest with `--champion-inventory` and
 `--champion-inventory-sha256` alongside the icon catalog options.
 
-To replay a verified champion animation request, generate a
-[recorded cue manifest](tools/research/README.md) and provide
-`--champion-animation-cues` and `--champion-animation-cues-sha256` to the private
-package builder. The builder checks the original packet in the same ROFL and
-binds the clip to the verified model, rig, and joint order. The browser samples
-the authored clip in its recorded request window. Native animation blending
-and preemption remain unverified.
+To play verified champion animation requests on 16.23.841.8428, pass
+`--champion-animation-catalog` and `--champion-animation-catalog-sha256` to the
+private package builder. The catalog binds authored clips to the exact model,
+rig, and joint order. The browser worker reads the request windows from the
+original ROFL during its motion scan. Prepared playback uses
+`--champion-animation-cues` and `--champion-animation-cues-sha256` with the
+[recorded cue manifest](tools/research/README.md#recorded-champion-animation-cues).
+Native animation blending and preemption remain unverified.
 
 The recorded browser test checks team kills, roster statistics, and the
 winner at the exact replay end. It reads expected final scores independently

@@ -62,6 +62,8 @@ const { positionals, values } = parseArgs({
     "champion-catalog-sha256": { type: "string" },
     "champion-animation-cues": { type: "string" },
     "champion-animation-cues-sha256": { type: "string" },
+    "champion-animation-catalog": { type: "string" },
+    "champion-animation-catalog-sha256": { type: "string" },
     "champion-health": { type: "string" },
     "champion-health-sha256": { type: "string" },
     "champion-resources": { type: "string" },
@@ -77,6 +79,8 @@ const { positionals, values } = parseArgs({
     "item-assets": { type: "string" },
     "item-assets-sha256": { type: "string" },
     "structure-models": { type: "string" },
+    "authored-turret-catalog": { type: "string" },
+    "authored-turret-catalog-sha256": { type: "string" },
     "nexus-models": { type: "string" },
     "inhibitor-models": { type: "string" },
     "inhibitor-models-sha256": { type: "string" },
@@ -142,6 +146,8 @@ assert.ok(
 );
 const animationPath = values["champion-animation-cues"];
 const animationDigest = values["champion-animation-cues-sha256"];
+const animationCatalogPath = values["champion-animation-catalog"];
+const animationCatalogDigest = values["champion-animation-catalog-sha256"];
 assert.equal(
   animationPath === undefined,
   animationDigest === undefined,
@@ -150,6 +156,30 @@ assert.equal(
 assert.ok(
   animationPath === undefined || privatePackageOutput !== undefined,
   "Recorded champion animation cues require a private package",
+);
+assert.equal(
+  animationCatalogPath === undefined,
+  animationCatalogDigest === undefined,
+  "Champion animation catalogs require a matching SHA-256 pin",
+);
+assert.ok(
+  animationCatalogPath === undefined ||
+    (animationPath === undefined && privatePackageOutput !== undefined),
+  "Replay-decoded champion animations require a private package without prepared cues",
+);
+const turretCatalogPath = values["authored-turret-catalog"];
+const turretCatalogDigest = values["authored-turret-catalog-sha256"];
+assert.equal(
+  turretCatalogPath === undefined,
+  turretCatalogDigest === undefined,
+  "Authored turret catalogs require a matching SHA-256 pin",
+);
+assert.ok(
+  turretCatalogPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      values["turret-placements"] !== undefined &&
+      values["structure-models"] === undefined),
+  "Authored turret catalogs require a private package and turret placements without prepared structure models",
 );
 const announcerDirectory = values["announcer-preview"];
 const championStatInputs = [
@@ -883,6 +913,10 @@ async function loadStructureModelRoutes(
       `Structure model ${field} mismatch`,
     );
   assert.equal(exported.placementReceiptSha256, placementSha256);
+  return await loadStructureRenderRoutes(manifestPath, exported, turrets);
+}
+
+async function loadStructureRenderRoutes(manifestPath, exported, turrets) {
   const omissions = turrets.presentationOmissions ?? [];
   assert.deepEqual(exported.presentationOmissions ?? [], omissions);
   assert.equal(exported.instances.length, 22 - omissions.length);
@@ -1172,6 +1206,14 @@ assert.ok(
 assert.ok(
   !decodeChampionExperience || currentBuild,
   "Replay-decoded champion experience requires the verified current build",
+);
+assert.ok(
+  animationCatalogPath === undefined || currentBuild,
+  "Replay-decoded champion animations require the verified current build",
+);
+assert.ok(
+  turretCatalogPath === undefined || currentBuild,
+  "Authored turret catalogs require the verified current build",
 );
 if (currentBuild) {
   assert.ok(
@@ -1513,9 +1555,10 @@ if (values["turret-placements"] !== undefined) {
     turretPlacementReceiptDigests[identity.build],
     "Map11 turret placement receipt digest differs from the reviewed file",
   );
+  const placementReceipt = JSON.parse(placementBytes);
   const turrets = prepareNativeTerrainTurrets(
     prepared,
-    JSON.parse(placementBytes),
+    placementReceipt,
     decoderOptions,
   );
   const losses = turrets.renderableLosses ?? turrets.losses;
@@ -1529,13 +1572,35 @@ if (values["turret-placements"] !== undefined) {
     );
   }
   scene.turretLosses = losses;
-  if (values["structure-models"] !== undefined) {
-    const structures = await loadStructureModelRoutes(
+  let structures;
+  if (turretCatalogPath !== undefined) {
+    const { bindNativeTerrainTurretCatalog } =
+      await import("./research/native-terrain-turret-catalog.mjs");
+    const catalog = await readPinnedWorldUnitManifest(
+      turretCatalogPath,
+      turretCatalogDigest,
+    );
+    assert.equal(catalog.placementReceiptSha256, placementSha);
+    const bound = bindNativeTerrainTurretCatalog(
+      prepared,
+      placementReceipt,
+      catalog,
+      decoderOptions,
+      turrets,
+    );
+    structures = await loadStructureRenderRoutes(
+      turretCatalogPath,
+      { ...bound, assets: catalog.assets },
+      turrets,
+    );
+  } else if (values["structure-models"] !== undefined)
+    structures = await loadStructureModelRoutes(
       values["structure-models"],
       identity,
       placementSha,
       turrets,
     );
+  if (structures !== undefined) {
     scene.structureModels = {
       bindings: structures.bindings,
       instances: structures.instances,
@@ -2010,7 +2075,21 @@ if (
   }
 }
 let championAnimationRoutes;
-if (animationPath !== undefined) {
+if (animationCatalogPath !== undefined) {
+  const { readCurrentChampionAnimationCatalog } =
+    await import("./research/recorded-champion-animation-resources.mjs");
+  const { bindings, routes } = await readCurrentChampionAnimationCatalog(
+    animationCatalogPath,
+    animationCatalogDigest,
+    scene,
+  );
+  assert.ok(
+    scene.workerMotion && bindings.length > 0,
+    "Champion animation catalog requires a motion worker and at least one admitted model",
+  );
+  scene.workerMotion.championAnimationCatalog = bindings;
+  championAnimationRoutes = routes;
+} else if (animationPath !== undefined) {
   const { readRecordedChampionAnimations } =
     await import("./research/recorded-champion-animation-resources.mjs");
   const { cues, routes } = await readRecordedChampionAnimations(

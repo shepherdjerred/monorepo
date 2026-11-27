@@ -4,23 +4,106 @@ import { readOriginalRigOrdinalSource } from "./tools/ordinal-model-layout.mjs";
 import { createOrdinalClipSampler } from "./tools/research/native-terrain-animation.mjs";
 import { latestAt } from "./tools/research/native-terrain-motion-sample.mjs";
 
-export const ChampionAnimationCuesSchema = z
+const championModel = z
+  .string()
+  .regex(/^\/champion-models\/[a-f0-9]{64}\.glb$/);
+const clipResources = {
+  bindings: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.json$/),
+  clip: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.clip$/),
+  rig: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.skl$/),
+};
+
+export const ChampionAnimationWorkerCuesSchema = z.array(
+  z.strictObject({
+    participantId: z.number().int().positive(),
+    timeSeconds: z.number().nonnegative(),
+    endSeconds: z.number().positive(),
+    rate: z.number().positive(),
+    model: championModel,
+    ...clipResources,
+  }),
+);
+
+export const ChampionAnimationCuesSchema =
+  ChampionAnimationWorkerCuesSchema.nonempty();
+
+export const ChampionAnimationCatalogSchema = z
   .array(
     z.strictObject({
       participantId: z.number().int().positive(),
-      timeSeconds: z.number().nonnegative(),
-      endSeconds: z.number().positive(),
-      rate: z.number().positive(),
-      model: z.string().regex(/^\/champion-models\/[a-f0-9]{64}\.glb$/),
-      bindings: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.json$/),
-      clip: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.clip$/),
-      rig: z.string().regex(/^\/champion-animations\/[a-f0-9]{64}\.skl$/),
+      model: championModel,
+      actions: z
+        .array(
+          z.strictObject({
+            name: z.string().regex(/^[A-Za-z0-9_]+$/),
+            durationSeconds: z.number().positive(),
+            ...clipResources,
+          }),
+        )
+        .nonempty(),
     }),
   )
-  .nonempty();
+  .min(1)
+  .max(10);
+
+type AnimationCatalog = z.infer<typeof ChampionAnimationCatalogSchema>;
 
 type Cue = z.infer<typeof ChampionAnimationCuesSchema>[number];
 type ClipSampler = ReturnType<typeof createOrdinalClipSampler>;
+
+export function matchesRenderedAnimationCatalog(
+  catalog: AnimationCatalog,
+  participants: readonly { participantId: number }[],
+  bindings: readonly { participantId: number; url: string }[],
+) {
+  const roster = new Set(
+    participants.map(({ participantId }) => participantId),
+  );
+  const models = new Map(
+    bindings.map(({ participantId, url }) => [participantId, url]),
+  );
+  return (
+    roster.size === 10 &&
+    bindings.length === roster.size &&
+    models.size === roster.size &&
+    bindings.every(({ participantId }) => roster.has(participantId)) &&
+    catalog.every(
+      ({ participantId, model, actions }) =>
+        roster.has(participantId) &&
+        models.get(participantId) === model &&
+        new Set(actions.map(({ name }) => name)).size === actions.length &&
+        actions.every(
+          ({ rig, bindings }) =>
+            rig === actions[0].rig && bindings === actions[0].bindings,
+        ),
+    ) &&
+    new Set(catalog.map(({ participantId }) => participantId)).size ===
+      catalog.length
+  );
+}
+
+export function validateWorkerAnimationCues(
+  cues: z.infer<typeof ChampionAnimationWorkerCuesSchema>,
+  catalog: AnimationCatalog,
+) {
+  const actors = new Map(catalog.map((actor) => [actor.participantId, actor]));
+  for (const cue of cues) {
+    const actor = actors.get(cue.participantId);
+    if (
+      actor === undefined ||
+      actor.model !== cue.model ||
+      Math.fround(cue.rate) !== cue.rate ||
+      !actor.actions.some(
+        ({ clip, rig, bindings, durationSeconds }) =>
+          clip === cue.clip &&
+          rig === cue.rig &&
+          bindings === cue.bindings &&
+          cue.endSeconds <= cue.timeSeconds + durationSeconds / cue.rate + 1e-6,
+      )
+    )
+      throw new Error("Replay animation worker returned an unadmitted cue.");
+  }
+}
 
 function compileClip(
   cue: Cue,

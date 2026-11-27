@@ -215,6 +215,52 @@ export async function readRecordedChampionAnimations(
   return { cues, routes };
 }
 
+/** Remove match clocks and actor identities from already verified authored cues. */
+export function createCurrentChampionAnimationCatalog(
+  { build, protocol },
+  cues,
+) {
+  assert.equal(build, currentTerrainPositionBuild);
+  assert.equal(protocol, terrainPositionProtocol);
+  assert.ok(Array.isArray(cues) && cues.length > 0);
+  const entries = new Map();
+  for (const {
+    modelSha256,
+    durationSeconds,
+    rig,
+    clip,
+    bindings,
+    request: { name, graphKey, animationSha256, graphSha256 },
+  } of cues) {
+    const key = `${modelSha256}:${name}`;
+    const entry = {
+      modelSha256,
+      name,
+      graphKey,
+      animationSha256,
+      graphSha256,
+      durationSeconds,
+      rig,
+      clip,
+      bindings,
+    };
+    if (entries.has(key))
+      assert.deepEqual(
+        entries.get(key),
+        entry,
+        "Conflicting authored clip for the same model and animation name",
+      );
+    else entries.set(key, entry);
+  }
+  return {
+    schema: 1,
+    kind: "current-champion-animation-catalog",
+    build,
+    protocol,
+    entries: [...entries.values()],
+  };
+}
+
 /** Bind reusable authored clips to admitted exact model digests. */
 export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
   const proof = await readPinnedAnimationJson(path, pin);

@@ -112,6 +112,7 @@ const SceneIdentitySchema = z.object({
       decodeChampionStats: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
+      championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
     })
     .optional(),
   championInventory: z.object({ tracks: z.array(z.unknown()) }).optional(),
@@ -168,12 +169,19 @@ function championCapabilities({
   championInventoryItems,
   championExperience,
   championExperienceThresholds,
+  championAnimationCues,
 }: z.infer<typeof SceneIdentitySchema>) {
   const directChampionStats = workerMotion?.decodeChampionStats === true;
   const directChampionInventory =
     workerMotion?.decodeChampionInventory === true;
   const directChampionExperience =
     workerMotion?.decodeChampionExperience === true;
+  const directChampionAnimation =
+    workerMotion?.championAnimationCatalog !== undefined;
+  if (directChampionAnimation && championAnimationCues !== undefined)
+    throw new Error(
+      "Direct worker animation requires a scene without baked cues.",
+    );
   if (
     directChampionExperience
       ? championExperience !== undefined ||
@@ -197,10 +205,13 @@ function championCapabilities({
       "Direct worker stats require a scene without baked champion stat tracks.",
     );
   return {
-    directChampionObservations:
-      directChampionStats ||
-      directChampionInventory ||
+    directChampionObservations: [
+      directChampionStats,
+      directChampionInventory,
       directChampionExperience,
+      directChampionAnimation,
+    ].includes(true),
+    directChampionAnimation,
     directChampionStats,
     directChampionExperience,
     championExperience:

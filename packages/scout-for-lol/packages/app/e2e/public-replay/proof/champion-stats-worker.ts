@@ -1,6 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { z } from "zod";
+import {
+  verifyDirectAnimationCues,
+  workerAnimationCues,
+} from "./animation-worker-oracle.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -54,6 +58,7 @@ const reply = z.object({
   decodeChampionStats: z.boolean(),
   decodeChampionInventory: z.boolean(),
   decodeChampionExperience: z.boolean(),
+  hasChampionAnimationCatalog: z.boolean(),
   stats: z
     .object({
       championHealthTracks: health,
@@ -62,6 +67,7 @@ const reply = z.object({
     .optional(),
   inventoryTracks: inventory.optional(),
   experienceTracks: experience.optional(),
+  animationCues: workerAnimationCues.optional(),
 });
 
 export async function observeDirectChampionStatsWorker(page: Page) {
@@ -84,10 +90,15 @@ export async function observeDirectChampionStatsWorker(page: Page) {
           const decodeChampionExperience =
             Object.getOwnPropertyDescriptor(object, "decodeChampionExperience")
               ?.value === true;
+          const hasChampionAnimationCatalog = Object.hasOwn(
+            object,
+            "championAnimationCatalog",
+          );
           if (
             decodeChampionStats ||
             decodeChampionInventory ||
-            decodeChampionExperience
+            decodeChampionExperience ||
+            hasChampionAnimationCatalog
           ) {
             const requestKeys = Object.keys(object).sort();
             const captureReady = ({ data }: MessageEvent<unknown>) => {
@@ -112,6 +123,10 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                     response,
                     "championExperienceTracks",
                   )?.value;
+                const animationCues: unknown = Object.getOwnPropertyDescriptor(
+                  response,
+                  "championAnimationCues",
+                )?.value;
                 Object.defineProperty(
                   globalThis,
                   "__scoutDirectChampionStatsProof",
@@ -122,9 +137,11 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       decodeChampionStats,
                       decodeChampionInventory,
                       decodeChampionExperience,
+                      hasChampionAnimationCatalog,
                       stats,
                       inventoryTracks,
                       experienceTracks,
+                      animationCues,
                     },
                   },
                 );
@@ -196,13 +213,19 @@ export async function verifyDirectChampionStatsWorker(
     directChampionStats: boolean;
     directChampionInventory: boolean;
     directChampionExperience: boolean;
+    directChampionAnimation: boolean;
+    directChampionObservations: boolean;
+    championAnimationCueCount: number;
   },
 ) {
+  if (!fixture.directChampionObservations)
+    return fixture.championAnimationCueCount;
   const {
     descriptor,
     directChampionStats,
     directChampionInventory,
     directChampionExperience,
+    directChampionAnimation,
   } = fixture;
   const oracleRoot = Bun.env["SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY"];
   if (oracleRoot === undefined || oracleRoot === "")
@@ -220,11 +243,18 @@ export async function verifyDirectChampionStatsWorker(
   expect(actual.decodeChampionStats).toBe(directChampionStats);
   expect(actual.decodeChampionInventory).toBe(directChampionInventory);
   expect(actual.decodeChampionExperience).toBe(directChampionExperience);
+  expect(actual.hasChampionAnimationCatalog).toBe(directChampionAnimation);
+  const optionalKeys = Object.entries({
+    championAnimationCatalog: directChampionAnimation,
+    decodeChampionExperience: directChampionExperience,
+    decodeChampionInventory: directChampionInventory,
+    decodeChampionStats: directChampionStats,
+  })
+    .filter(([, enabled]) => enabled)
+    .map(([key]) => key);
   expect(actual.requestKeys).toEqual([
     "allowCurrentBuild",
-    ...(directChampionExperience ? ["decodeChampionExperience"] : []),
-    ...(directChampionInventory ? ["decodeChampionInventory"] : []),
-    ...(directChampionStats ? ["decodeChampionStats"] : []),
+    ...optionalKeys,
     "decoderBytes",
     "identity",
     "replayBytes",
@@ -287,4 +317,18 @@ export async function verifyDirectChampionStatsWorker(
   } else {
     expect(actual.experienceTracks).toBeUndefined();
   }
+  if (directChampionAnimation) {
+    if (actual.animationCues === undefined)
+      throw new Error(
+        "Direct worker response is missing champion animation cues.",
+      );
+    await verifyDirectAnimationCues(
+      oracleRoot,
+      descriptor.sha256,
+      actual.animationCues,
+    );
+    return actual.animationCues.length;
+  }
+  expect(actual.animationCues).toBeUndefined();
+  return fixture.championAnimationCueCount;
 }

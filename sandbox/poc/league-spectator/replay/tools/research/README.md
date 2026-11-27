@@ -237,6 +237,12 @@ reads the announcement enum and its registered name. The receipt records
 the packet context, physical order, and replay timestamp. It leaves
 dynamic sound selection and playback outside the packet check.
 
+For 16.23.841.8428, the portable reader in
+`native-terrain-announcer-reader.mjs` decodes complete opcode 880 envelopes
+for comparison with the native receipt. The collector accepts an
+independently verified Map11 event-to-media mapping and reports omitted
+events. It does not make the native spectator audio admission decision.
+
 ```powershell
 bun sandbox/poc/league-spectator/replay/tools/research/extract-exact-announcement-packets.mjs $replayPath $announcementPackets
 uv run --no-project --with unicorn --with capstone python sandbox/poc/league-spectator/replay/tools/probe-exact-announcement-packets.py $macGameExecutable $announcementPackets $announcementReceipt
@@ -751,8 +757,11 @@ other actor events remain unverified.
 
 For 16.23.841.8428, the portable reader can reconstruct these windows from
 ordinary replay packets and a pinned untimed catalog of exact model and clip
-bindings. Compare the reader with the original packet receipt and timed cue
-artifact using `verify-current-animation-cues.mjs`.
+bindings. Run the batch with `--current-build` to also emit
+`champion-animation-catalog.json` and its SHA-256. Give that catalog to the
+private package builder for browser-derived playback. Compare the reader with
+the original packet receipt and timed cue artifact using
+`verify-current-animation-cues.mjs`.
 
 ## Recorded terrain fog provider packets
 

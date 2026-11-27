@@ -2,9 +2,11 @@ import { decompress } from "scout-terrain-fzstd";
 import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/prepare.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
+import { createCurrentChampionAnimationCueAccumulator } from "./native-terrain-animation-cue-reader.mjs";
 import {
   createPreparedTerrainByteCodecs,
   currentTerrainPositionBuild,
+  recoverTerrainByteSubstitution,
 } from "./native-terrain-byte-codecs.mjs";
 import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-identities.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
@@ -24,6 +26,77 @@ function* observeMotionPackets(packets, observe) {
   }
 }
 
+function createChampionAnimationCollector(replay, binding, codecs, catalog) {
+  const verified = new Set(binding.verified.map(({ context }) => context));
+  if (
+    !Array.isArray(catalog) ||
+    catalog.length === 0 ||
+    catalog.length > verified.size
+  )
+    throw Error("Invalid champion animation catalog.");
+  const actors = new Map();
+  for (const { participantId, model, actions } of catalog) {
+    if (
+      !verified.has(participantId) ||
+      actors.has(participantId) ||
+      typeof model !== "string" ||
+      !/^\/champion-models\/[a-f0-9]{64}\.glb$/u.test(model) ||
+      !Array.isArray(actions) ||
+      actions.length === 0
+    )
+      throw Error(
+        "Champion animation catalog needs verified distinct actors and models.",
+      );
+    const byName = new Map();
+    const { rig: actorRig, bindings: actorBindings } = actions[0];
+    for (const action of actions) {
+      const { name, durationSeconds, rig, clip, bindings } = action;
+      if (
+        typeof name !== "string" ||
+        name.length >= 256 ||
+        !/^[A-Za-z0-9_]+$/u.test(name) ||
+        byName.has(name) ||
+        !Number.isFinite(durationSeconds) ||
+        durationSeconds <= 0 ||
+        typeof rig !== "string" ||
+        !/^\/champion-animations\/[a-f0-9]{64}\.skl$/u.test(rig) ||
+        rig !== actorRig ||
+        typeof clip !== "string" ||
+        !/^\/champion-animations\/[a-f0-9]{64}\.clip$/u.test(clip) ||
+        typeof bindings !== "string" ||
+        !/^\/champion-animations\/[a-f0-9]{64}\.json$/u.test(bindings) ||
+        bindings !== actorBindings
+      )
+        throw Error("Invalid authored champion animation action.");
+      byName.set(name, { durationSeconds, rig, clip, bindings });
+    }
+    actors.set(participantId, { model, actions: byName });
+  }
+  const accumulator = createCurrentChampionAnimationCueAccumulator(
+    replay,
+    recoverTerrainByteSubstitution(codecs),
+    actors,
+  );
+  let context = 0;
+  let opcode;
+  return {
+    observe(packet) {
+      if (packet.blockOffset === 0) {
+        context = 0;
+        opcode = undefined;
+      }
+      opcode = packet.explicitOpcode ?? opcode;
+      context =
+        packet.marker & 32
+          ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
+          : packet.paramBits;
+      if (packet.stream === 1 && opcode === 669)
+        accumulator.observe(context, packet.timeSeconds, packet.payload);
+    },
+    finish: accumulator.finish,
+  };
+}
+
 async function prepareMotion({
   identity,
   waypointOrigin,
@@ -33,6 +106,7 @@ async function prepareMotion({
   decodeChampionStats,
   decodeChampionInventory,
   decodeChampionExperience,
+  championAnimationCatalog,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -81,6 +155,13 @@ async function prepareMotion({
     throw Error(
       "Replay-derived champion experience requires the reviewed current build.",
     );
+  if (
+    championAnimationCatalog !== undefined &&
+    (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived champion animations require the reviewed current build.",
+    );
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
@@ -109,6 +190,21 @@ async function prepareMotion({
     decodeChampionInventory === true
       ? createRecordedInventoryCollector(replay, identity, prepared, codecs)
       : undefined;
+  const animation =
+    championAnimationCatalog === undefined
+      ? undefined
+      : createChampionAnimationCollector(
+          replay,
+          binding,
+          codecs,
+          championAnimationCatalog,
+        );
+  const observers = [inventory, animation].filter(
+    (collector) => collector !== undefined,
+  );
+  const observe = (packet) => {
+    for (const observer of observers) observer.observe(packet);
+  };
   const packets = replayTimedPacketEnvelopes(
     replayPacketEnvelopes(replay, decompress),
   );
@@ -116,9 +212,7 @@ async function prepareMotion({
     prepareNativeTerrainMotion(
       prepared,
       keyframes,
-      inventory === undefined
-        ? packets
-        : observeMotionPackets(packets, inventory.observe),
+      observers.length === 0 ? packets : observeMotionPackets(packets, observe),
       {
         readWaypoints: createWaypointReaderFromCodecs(codecs),
         readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
@@ -134,8 +228,8 @@ async function prepareMotion({
     throw new Error(
       "Replay motion worker has no champion stats for this replay.",
     );
-  if (inventory !== undefined) {
-    for (const packet of packets) inventory.observe(packet);
+  if (observers.length > 0) {
+    for (const packet of packets) observe(packet);
   }
   if (championExperienceTracks !== undefined)
     verifyRecordedChampionExperienceFooter(
@@ -155,6 +249,9 @@ async function prepareMotion({
     ...(championExperienceTracks === undefined
       ? {}
       : { championExperienceTracks }),
+    ...(animation === undefined
+      ? {}
+      : { championAnimationCues: animation.finish() }),
   };
 }
 
