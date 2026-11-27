@@ -1,4 +1,4 @@
-import type { ArchivedSpanIndexRow } from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { ArchivedSpanIndexRow } from "#src/llm-traces/index.ts";
 import type { CodexCandidateSpan } from "./trajectory-codex.ts";
 import { readSpanString } from "./trajectory-leaf.ts";
 import type { OtlpSpanShape, OtlpTraceShape } from "#src/trajectory.ts";

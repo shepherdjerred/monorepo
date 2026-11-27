@@ -2,7 +2,7 @@ import { costForDecisionUsage } from "@shepherdjerred/llm-models";
 import type {
   TrajectoryDecisionAnswer,
   TrajectoryItem,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "#src/llm-traces/index.ts";
 import { z } from "zod";
 import {
   parseTrajectoryMessages,

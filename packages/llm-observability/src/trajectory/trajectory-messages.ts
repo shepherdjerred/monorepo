@@ -2,7 +2,7 @@ import { z } from "zod";
 import type {
   TrajectoryMessage,
   TrajectoryMessagePart,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "#src/llm-traces/index.ts";
 
 const LooseRecordSchema = z.record(z.string(), z.unknown());
 const UnknownArraySchema = z.array(z.unknown());

@@ -4,7 +4,7 @@ import {
   normalizeOtlpTrace,
   type OtlpSpanShape,
 } from "#src/trajectory.ts";
-import type { ArchivedSpanIndexRow } from "@shepherdjerred/ops-model/llm-traces.ts";
+import type { ArchivedSpanIndexRow } from "#src/llm-traces/index.ts";
 
 const BASE_MS = 1_790_361_600_000;
 

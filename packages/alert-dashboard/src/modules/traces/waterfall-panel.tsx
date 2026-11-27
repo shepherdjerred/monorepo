@@ -2,7 +2,7 @@ import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type {
   ArchiveEnvelopeRefView,
   WaterfallSpan,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { useId, useState } from "react";
 
 import { statusPill } from "#client/ops/pages/cluster-page.tsx";

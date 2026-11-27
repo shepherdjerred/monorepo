@@ -6,7 +6,7 @@ import {
   type TraceSource,
   type TraceStatusFilter,
   type TracesSearchQuery,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 
 import { age } from "#client/time.ts";
 

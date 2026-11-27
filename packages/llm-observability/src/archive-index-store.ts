@@ -14,7 +14,7 @@ import {
   type TracesFacetsResponse,
   type TracesSearchQuery,
   type TracesSearchResponse,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "./llm-traces/index.ts";
 import {
   ARCHIVE_INDEX_SCHEMA_SQL,
   buildSearchWhereClause,

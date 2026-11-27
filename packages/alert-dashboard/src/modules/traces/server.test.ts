@@ -8,7 +8,7 @@ import {
   TraceDetailSchema,
   TracesFacetsResponseSchema,
   TracesSearchResponseSchema,
-} from "@shepherdjerred/ops-model/llm-traces.ts";
+} from "@shepherdjerred/llm-observability/llm-traces";
 import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
