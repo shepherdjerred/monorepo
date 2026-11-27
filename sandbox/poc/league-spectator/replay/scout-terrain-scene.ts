@@ -117,6 +117,74 @@ const worldModelInstance = z.object({
   position,
   basis: z.array(z.number()).length(9),
 });
+const worldUnitInstance = z.object({
+  context: z.number().int().positive(),
+  participantId,
+  teamId: teamId.optional(),
+  creationTimeSeconds: z.number().nonnegative(),
+  killTimeSeconds: z.number().positive(),
+  paths: z
+    .array(
+      z.object({
+        timeSeconds: z.number().nonnegative(),
+        endTimeSeconds: z.number().nonnegative(),
+        points: z.array(z.tuple([z.number(), z.number()])).nonempty(),
+        speeds: z
+          .array(
+            z.object({
+              timeSeconds: z.number().nonnegative(),
+              distance: z.literal(0),
+              speed: z.number().nonnegative(),
+            }),
+          )
+          .length(1),
+      }),
+    )
+    .nonempty(),
+});
+const laneMinionId = z
+  .string()
+  .regex(/^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)$/);
+const laneMinionAsset = z.strictObject({
+  asset: z
+    .string()
+    .regex(/^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)\/0$/),
+});
+const laneTransformRow = z.tuple([
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+]);
+const LaneMinionCatalogSchema = z.strictObject({
+  barracksPlacements: z
+    .array(
+      z.strictObject({
+        transform: z.tuple([
+          laneTransformRow,
+          laneTransformRow,
+          laneTransformRow,
+          laneTransformRow,
+        ]),
+        units: z.strictObject({
+          "4": laneMinionAsset,
+          "5": laneMinionAsset,
+          "6": laneMinionAsset,
+          "7": laneMinionAsset,
+        }),
+      }),
+    )
+    .length(6),
+  models: z.array(z.tuple([laneMinionId, participantId])).length(8),
+});
+const laneCount = z.number().int().positive();
+const LaneMinionCoverageSchema = z.strictObject({
+  candidateBirths: z.number().int().nonnegative(),
+  birthsByClass: z.record(z.string().regex(/^\d{1,3}$/), laneCount),
+  admittedByModel: z.record(laneMinionId, laneCount),
+  omissions: z.record(z.string().regex(/^[a-zA-Z]+$/), laneCount),
+});
+const LaneMinionInstancesSchema = z.array(worldUnitInstance.extend({ teamId }));
 const recordedStructureLoss = z.object({
   context: z.number().int().positive(),
   timeSeconds: z.number().positive(),
@@ -375,37 +443,10 @@ const TerrainSceneFields = z.object({
   worldUnitModels: z
     .object({
       bindings: z.array(modelBinding).nonempty(),
-      instances: z
-        .array(
-          z.object({
-            context: z.number().int().positive(),
-            participantId,
-            teamId: teamId.optional(),
-            creationTimeSeconds: z.number().nonnegative(),
-            killTimeSeconds: z.number().positive(),
-            paths: z
-              .array(
-                z.object({
-                  timeSeconds: z.number().nonnegative(),
-                  endTimeSeconds: z.number().nonnegative(),
-                  points: z.array(z.tuple([z.number(), z.number()])).nonempty(),
-                  speeds: z
-                    .array(
-                      z.object({
-                        timeSeconds: z.number().nonnegative(),
-                        distance: z.literal(0),
-                        speed: z.number().nonnegative(),
-                      }),
-                    )
-                    .length(1),
-                }),
-              )
-              .nonempty(),
-          }),
-        )
-        .nonempty(),
+      instances: z.array(worldUnitInstance).nonempty(),
     })
     .optional(),
+  laneMinionModelBindings: z.array(modelBinding).length(8).optional(),
   workerMotion: z
     .object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
@@ -416,6 +457,7 @@ const TerrainSceneFields = z.object({
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
+      laneMinionCatalog: LaneMinionCatalogSchema.optional(),
       decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
@@ -563,6 +605,43 @@ export const SceneSchema = TerrainSceneFields.refine(
       message:
         "Replay-derived team vision requires exact current worker motion without embedded masks.",
     },
+  )
+  .refine(
+    (scene) => {
+      const catalog = scene.workerMotion?.laneMinionCatalog;
+      const bindings = scene.laneMinionModelBindings;
+      if (catalog === undefined) return bindings === undefined;
+      if (
+        bindings === undefined ||
+        scene.identity.build !== currentTerrainPositionBuild ||
+        scene.workerMotion?.allowCurrentBuild !== true ||
+        scene.motion !== undefined ||
+        scene.teamVision !== undefined
+      )
+        return false;
+      const known = new Set(
+        scene.worldUnitModels?.bindings.map(
+          ({ participantId }) => participantId,
+        ),
+      );
+      const names = new Set<string>();
+      return catalog.models.every(([name, id], index) => {
+        if (
+          known.has(id) ||
+          names.has(name) ||
+          bindings[index].participantId !== id
+        )
+          return false;
+        known.add(id);
+        names.add(name);
+        return true;
+      });
+    },
+    {
+      path: ["workerMotion", "laneMinionCatalog"],
+      message:
+        "Replay-derived lanes require exact current model bindings and no baked vision.",
+    },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
 type TerrainFrame = TerrainScene["frames"][number];
@@ -705,6 +784,8 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     announcerCues: AnnouncerCuesSchema.optional(),
     teamVision: TeamVisionSchema.optional(),
     terrainVisibility: TerrainVisibilitySchema.optional(),
+    laneMinionInstances: LaneMinionInstancesSchema.optional(),
+    laneMinionCoverage: LaneMinionCoverageSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -825,6 +906,12 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    const decodeLanes = workerMotion.laneMinionCatalog !== undefined;
+    if (
+      (result.laneMinionInstances !== undefined) !== decodeLanes ||
+      (result.laneMinionCoverage !== undefined) !== decodeLanes
+    )
+      throw Error("Replay motion worker returned unexpected lane coverage.");
     const terrainGraph = workerMotion.terrainControllerGraph;
     if (
       (result.terrainVisibility !== undefined) !==
@@ -844,9 +931,13 @@ async function loadWorkerMotion(
         "Replay motion worker returned unexpected team vision coverage.",
       );
     if (result.teamVision !== undefined && teamVisionActors !== undefined) {
-      const { contexts } = teamVisionActors;
+      const laneContexts =
+        result.laneMinionInstances?.map(({ context }) => context) ?? [];
+      const contexts = new Set([...teamVisionActors.contexts, ...laneContexts]);
       const received = new Set(result.teamVision.map(({ context }) => context));
       if (
+        contexts.size !==
+          teamVisionActors.contexts.size + laneContexts.length ||
         received.size !== contexts.size ||
         result.teamVision.length !== contexts.size ||
         [...received].some((context) => !contexts.has(context))
@@ -942,6 +1033,102 @@ function teamVisionActorBindings(scene: TerrainScene) {
   return { world, contexts };
 }
 
+function validateLanePaths(
+  actor: z.infer<typeof LaneMinionInstancesSchema>[number],
+  mapBounds: TerrainScene["mapBounds"],
+) {
+  const { min, max } = mapBounds;
+  let previousEnd = actor.creationTimeSeconds;
+  for (const { timeSeconds, endTimeSeconds, points, speeds } of actor.paths) {
+    const [knot] = speeds;
+    if (
+      timeSeconds < previousEnd ||
+      endTimeSeconds <= timeSeconds ||
+      endTimeSeconds > actor.killTimeSeconds ||
+      points.length < 2 ||
+      knot.timeSeconds !== timeSeconds ||
+      knot.speed <= 0
+    )
+      throw Error("A decoded lane path falls outside its recorded life.");
+    previousEnd = endTimeSeconds;
+    let distance = 0;
+    for (const [index, [x, z]] of points.entries()) {
+      if (x < min[0] || x > max[0] || z < min[2] || z > max[2])
+        throw Error("A decoded lane path falls outside Map11.");
+      if (index > 0) {
+        const [priorX, priorZ] = points[index - 1];
+        distance += Math.hypot(x - priorX, z - priorZ);
+      }
+    }
+    if (
+      distance <= 0 ||
+      endTimeSeconds > timeSeconds + distance / knot.speed + 1e-9
+    )
+      throw Error("A decoded lane path is longer than its recorded movement.");
+  }
+}
+
+function loadWorldUnits(
+  scene: TerrainScene,
+  laneActors: z.infer<typeof LaneMinionInstancesSchema> | undefined,
+  coverage: z.infer<typeof LaneMinionCoverageSchema> | undefined,
+): TerrainScene["worldUnitModels"] {
+  if (laneActors === undefined || coverage === undefined)
+    return scene.worldUnitModels;
+  const catalog = scene.workerMotion?.laneMinionCatalog;
+  const bindings = scene.laneMinionModelBindings;
+  if (catalog === undefined || bindings === undefined)
+    throw Error("Decoded lanes are missing their authored catalog.");
+
+  const models = new Map(catalog.models.map(([name, id]) => [id, name]));
+  const contexts = new Set([
+    ...scene.participants.map(({ participantId }) => participantId),
+    ...[
+      scene.worldUnitModels,
+      scene.structureModels,
+      scene.inhibitorModels,
+      scene.nexusModels,
+    ].flatMap((group) => group?.instances.map(({ context }) => context) ?? []),
+  ]);
+  const counts = new Map<string, number>();
+  const duration = scene.identity.durationMilliseconds / 1000;
+  for (const actor of laneActors) {
+    const model = models.get(actor.participantId);
+    const team = model?.startsWith("sru_order") ? 100 : 200;
+    if (
+      model === undefined ||
+      actor.teamId !== team ||
+      contexts.has(actor.context) ||
+      actor.creationTimeSeconds >= actor.killTimeSeconds ||
+      actor.killTimeSeconds > duration
+    )
+      throw Error("A decoded lane actor conflicts with the scene or catalog.");
+    contexts.add(actor.context);
+    counts.set(model, (counts.get(model) ?? 0) + 1);
+    validateLanePaths(actor, scene.mapBounds);
+  }
+  const count = (rows: Record<string, number>) =>
+    Object.values(rows).reduce((total, count) => total + count, 0);
+  if (
+    coverage.candidateBirths !== count(coverage.birthsByClass) ||
+    coverage.candidateBirths !==
+      laneActors.length + count(coverage.omissions) ||
+    Object.keys(coverage.admittedByModel).length !== counts.size ||
+    !Object.entries(coverage.admittedByModel).every(
+      ([model, amount]) => counts.get(model) === amount,
+    )
+  )
+    throw Error(
+      "Decoded lane coverage does not account for the recorded births.",
+    );
+
+  if (laneActors.length === 0) return scene.worldUnitModels;
+  return {
+    bindings: [...(scene.worldUnitModels?.bindings ?? []), ...bindings],
+    instances: [...(scene.worldUnitModels?.instances ?? []), ...laneActors],
+  };
+}
+
 export async function loadSceneMotion(
   scene: TerrainScene,
   signal: AbortSignal,
@@ -1030,6 +1217,17 @@ export async function loadSceneMotion(
       ...scene,
       motion: decoded.motion,
       decodedPositionFrames,
+      ...(decoded.laneMinionInstances === undefined
+        ? {}
+        : {
+            worldUnitModels: loadWorldUnits(
+              scene,
+              decoded.laneMinionInstances,
+              decoded.laneMinionCoverage,
+            ),
+            laneMinionModelBindings: undefined,
+            workerMotion: undefined,
+          }),
       ...(decoded.teamVision === undefined
         ? {}
         : { teamVision: decoded.teamVision, workerMotion: undefined }),

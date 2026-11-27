@@ -6,6 +6,8 @@ import {
   workerAnimationCues,
 } from "./animation-worker-oracle.ts";
 import { RecordedTerrainVisibilitySchema } from "./terrain-visibility-schema.ts";
+import { readDirectWorkerReply } from "./motion-worker-capture.ts";
+import { verifyDirectLaneWorker } from "./lane-worker-oracle.ts";
 
 const schemaTrack = z.number().int().positive();
 const statPoint = z.tuple([z.number(), z.number(), z.number()]);
@@ -84,6 +86,8 @@ const reply = z.object({
   animationCues: workerAnimationCues.optional(),
   teamVision: teamVision.optional(),
   terrainVisibility: RecordedTerrainVisibilitySchema.optional(),
+  laneMinionInstances: z.array(z.unknown()).optional(),
+  laneMinionCoverage: z.unknown().optional(),
   announcerCues: z
     .array(
       z
@@ -95,119 +99,6 @@ const reply = z.object({
     )
     .optional(),
 });
-
-export async function observeDirectChampionStatsWorker(page: Page) {
-  await page.addInitScript(() => {
-    const OriginalWorker = globalThis.Worker;
-    Object.defineProperty(globalThis, "Worker", {
-      value: class ObservedWorker extends OriginalWorker {
-        override postMessage(
-          message: unknown,
-          options?: Transferable[] | StructuredSerializeOptions,
-        ) {
-          const object =
-            message !== null && typeof message === "object" ? message : {};
-          const decodeChampionStats =
-            Object.getOwnPropertyDescriptor(object, "decodeChampionStats")
-              ?.value === true;
-          const decodeChampionInventory =
-            Object.getOwnPropertyDescriptor(object, "decodeChampionInventory")
-              ?.value === true;
-          const decodeChampionExperience =
-            Object.getOwnPropertyDescriptor(object, "decodeChampionExperience")
-              ?.value === true;
-          const hasChampionAnimationCatalog = Object.hasOwn(
-            object,
-            "championAnimationCatalog",
-          );
-          const hasAnnouncerEvents = Object.hasOwn(object, "announcerEvents");
-          const hasTeamVision = Object.hasOwn(object, "decodeTeamVision");
-          const hasTerrainControllers = Object.hasOwn(
-            object,
-            "terrainControllerGraph",
-          );
-          if (
-            decodeChampionStats ||
-            decodeChampionInventory ||
-            decodeChampionExperience ||
-            hasChampionAnimationCatalog ||
-            hasAnnouncerEvents ||
-            hasTeamVision ||
-            hasTerrainControllers
-          ) {
-            const requestKeys = Object.keys(object).sort();
-            const captureReady = ({ data }: MessageEvent<unknown>) => {
-              const response =
-                data !== null && typeof data === "object" ? data : {};
-              if (
-                Object.getOwnPropertyDescriptor(response, "type")?.value ===
-                "ready"
-              ) {
-                this.removeEventListener("message", captureReady);
-                const stats: unknown = Object.getOwnPropertyDescriptor(
-                  response,
-                  "championStats",
-                )?.value;
-                const inventoryTracks: unknown =
-                  Object.getOwnPropertyDescriptor(
-                    response,
-                    "championInventoryTracks",
-                  )?.value;
-                const experienceTracks: unknown =
-                  Object.getOwnPropertyDescriptor(
-                    response,
-                    "championExperienceTracks",
-                  )?.value;
-                const animationCues: unknown = Object.getOwnPropertyDescriptor(
-                  response,
-                  "championAnimationCues",
-                )?.value;
-                const announcerCues: unknown = Object.getOwnPropertyDescriptor(
-                  response,
-                  "announcerCues",
-                )?.value;
-                const observedTeamVision: unknown =
-                  Object.getOwnPropertyDescriptor(
-                    response,
-                    "teamVision",
-                  )?.value;
-                const terrainVisibility: unknown =
-                  Object.getOwnPropertyDescriptor(
-                    response,
-                    "terrainVisibility",
-                  )?.value;
-                Object.defineProperty(
-                  globalThis,
-                  "__scoutDirectChampionStatsProof",
-                  {
-                    configurable: true,
-                    value: {
-                      requestKeys,
-                      decodeChampionStats,
-                      decodeChampionInventory,
-                      decodeChampionExperience,
-                      hasChampionAnimationCatalog,
-                      stats,
-                      inventoryTracks,
-                      experienceTracks,
-                      animationCues,
-                      announcerCues,
-                      teamVision: observedTeamVision,
-                      terrainVisibility,
-                    },
-                  },
-                );
-              }
-            };
-            this.addEventListener("message", captureReady);
-          }
-          if (Array.isArray(options)) super.postMessage(message, options);
-          else super.postMessage(message, options);
-        }
-      },
-    });
-  });
-}
 
 const oracleFiles = {
   "exact-terrain-fog-agent/exact-8428-rift-terrain-windowed-receipt.json":
@@ -275,6 +166,7 @@ export async function verifyDirectChampionStatsWorker(
     announcerEvents?: unknown;
     directTeamVision: boolean;
     directTerrainVisibility: boolean;
+    directLaneModels: [string, number][] | undefined;
     terrainVisibility:
       z.infer<typeof RecordedTerrainVisibilitySchema> | undefined;
   },
@@ -310,6 +202,7 @@ export async function verifyDirectChampionStatsWorker(
     decodeTeamVision: fixture.directTeamVision,
     teamVisionWorldActors: fixture.directTeamVision,
     terrainControllerGraph: fixture.directTerrainVisibility,
+    laneMinionCatalog: fixture.directLaneModels !== undefined,
   })
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
@@ -328,6 +221,12 @@ export async function verifyDirectChampionStatsWorker(
     actual.teamVision,
     descriptor.sha256,
     oracleRoot,
+  );
+  await verifyDirectLaneWorker(
+    oracleRoot,
+    descriptor.sha256,
+    fixture.directLaneModels,
+    actual,
   );
   const terrainVisibility = await verifyDirectTerrainVisibility(
     fixture,
@@ -461,20 +360,10 @@ async function verifyDirectTeamVision(
   );
 }
 
-async function readDirectWorkerReply(page: Page): Promise<unknown> {
-  return page.evaluate((): unknown => {
-    const observed: unknown = Object.getOwnPropertyDescriptor(
-      globalThis,
-      "__scoutDirectChampionStatsProof",
-    )?.value;
-    return observed;
-  });
-}
-
 export async function readDirectAnnouncerWorker(page: Page) {
-  const { announcerCues, requestKeys } = reply.parse(
-    await readDirectWorkerReply(page),
-  );
+  const { announcerCues, requestKeys } = reply
+    .pick({ announcerCues: true, requestKeys: true })
+    .parse(await readDirectWorkerReply(page, ["announcerCues", "requestKeys"]));
   expect(requestKeys).toContain("announcerEvents");
   return announcerCues;
 }

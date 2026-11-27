@@ -5,7 +5,10 @@ import {
   rotateByteLeft,
   swapAdjacentBits,
 } from "./native-terrain-byte-codecs.mjs";
-import { readCurrentRecordedTeamVision } from "./recorded-team-vision.mjs";
+import {
+  createCurrentRecordedTeamVisionCollector,
+  readCurrentRecordedTeamVision,
+} from "./recorded-team-vision.mjs";
 
 const replay = {
   build: "16.23.841.8428",
@@ -102,5 +105,33 @@ test("fails closed for missing initialization, wrong champion side, and bad fram
         codecs,
       ),
     /exact .8428/,
+  );
+});
+
+test("includes admitted late actors and respects pre-birth clock and physical order", () => {
+  const { observe, addCandidate, finish } =
+    createCurrentRecordedTeamVisionCollector(
+      replay,
+      scene.participants,
+      [],
+      codecs,
+      { dynamicActors: true },
+    );
+  observe(packet(1012, 0, 1200));
+  observe(packet(66, 0, 1200, 1));
+  observe(packet(66, 3, 1201, 1));
+  observe(packet(1012, 4, 1201));
+  observe(packet(66, 4, 1201, 2));
+  addCandidate(1201, 4);
+  addCandidate(1202, 4);
+  observe(packet(696, 4, 1201, 2));
+  observe(packet(66, 4, 1201, 1));
+  assert.deepEqual(finish(new Set([1201])), [
+    { context: 1200, changes: [[0, 2]] },
+    { context: 1201, changes: [[4, 2]] },
+  ]);
+  assert.throws(
+    () => finish(new Set([1201, 1202])),
+    /missing a rendered actor/,
   );
 });

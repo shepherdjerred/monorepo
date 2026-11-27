@@ -10,10 +10,8 @@ import {
   replayPath,
   sha256,
 } from "./recorded-replay-data.ts";
-import {
-  observeDirectChampionStatsWorker,
-  readDirectAnnouncerWorker,
-} from "./proof/champion-stats-worker.ts";
+import { readDirectAnnouncerWorker } from "./proof/champion-stats-worker.ts";
+import { observeDirectChampionStatsWorker } from "./proof/motion-worker-capture.ts";
 import {
   observeRecordedReplayRequests,
   seek,

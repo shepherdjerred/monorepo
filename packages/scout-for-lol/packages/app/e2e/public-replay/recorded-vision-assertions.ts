@@ -1,7 +1,8 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
-import { replayPath } from "./recorded-replay-data.ts";
+import { replayPath, type readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
+import { centerMinimapOn, drawsNear } from "./recorded-world-assertions.ts";
 
 async function expectActor(
   page: Page,
@@ -46,13 +47,42 @@ async function verifyCurrentTeamVision(page: Page, testInfo: TestInfo) {
   await expectActor(page, illaoi, true);
 }
 
+async function verifyCurrentLaneVision(page: Page, testInfo: TestInfo) {
+  const minimap = page.getByRole("button", { name: "Replay minimap" });
+  const minion = minimap.locator('[data-map-actor-id="1073841830"]');
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  const before = [7576.406, 7577.933] as const;
+  const after = [7543.13, 7548.69] as const;
+  await seek(page, 2089.2);
+  await centerMinimapOn(minimap, before);
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  for (const [side, time, position, visible, evidence] of [
+    ["red", 2089.2, before, true, "red-before"],
+    ["blue", 2089.2, before, false, "blue-before"],
+    ["blue", 2089.3, after, true, "blue-after"],
+    ["blue", 2089.2, before, false, "blue-rewound"],
+  ] as const) {
+    await vision.selectOption(side);
+    await seek(page, time);
+    await expect(minion).toHaveCount(visible ? 1 : 0);
+    await expect.poll(() => drawsNear(page, 3669, position)).toBe(visible);
+    await page.getByLabel("League of Legends replay scene").screenshot({
+      path: testInfo.outputPath(`recorded-lane-vision-${evidence}.png`),
+    });
+  }
+  await vision.selectOption("all");
+}
+
 export async function verifyRecordedTeamVision(
   page: Page,
   testInfo: TestInfo,
-  current: boolean,
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ) {
-  if (current) {
+  if (fixture.descriptor.gameBuild === "16.23.841.8428") {
     await verifyCurrentTeamVision(page, testInfo);
+    if (fixture.directLaneModels !== undefined)
+      await verifyCurrentLaneVision(page, testInfo);
     return;
   }
   const vision = page.getByRole("combobox", { name: "Unit visibility" });

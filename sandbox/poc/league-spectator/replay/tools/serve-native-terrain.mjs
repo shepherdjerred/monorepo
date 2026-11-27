@@ -98,6 +98,10 @@ const { positionals, values } = parseArgs({
     "neutral-unit-models-sha256": { type: "string" },
     "lane-minion-models": { type: "string" },
     "lane-minion-models-sha256": { type: "string" },
+    "lane-minion-model-catalog": { type: "string" },
+    "lane-minion-model-catalog-sha256": { type: "string" },
+    "lane-minion-map-definitions": { type: "string" },
+    "lane-minion-map-materials": { type: "string" },
     "team-vision": { type: "string" },
     "team-vision-sha256": { type: "string" },
     "team-vision-from-replay": { type: "boolean" },
@@ -398,6 +402,27 @@ for (const option of [
     `--${option} requires a Scout scene and its position decoder`,
   );
 }
+
+const laneMinionCatalogPath = values["lane-minion-model-catalog"];
+for (const option of [
+  "lane-minion-model-catalog-sha256",
+  "lane-minion-map-definitions",
+  "lane-minion-map-materials",
+]) {
+  assert.equal(
+    laneMinionCatalogPath === undefined,
+    values[option] === undefined,
+    `--lane-minion-model-catalog requires --${option}`,
+  );
+}
+assert.ok(
+  laneMinionCatalogPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["lane-minion-models"] === undefined &&
+      visionPath === undefined),
+  "Replay-derived lane minions require a private worker package without prepared lane models or prepared team vision",
+);
 
 async function readPinned(path) {
   const bytes = await readFile(join(terrainRoot, path));
@@ -1934,6 +1959,7 @@ if (decoderBytes !== undefined) {
   navgridBytes = heightBytes;
 }
 const worldUnitModelRoutes = new Map();
+let replayLaneMinionWorld;
 if (scoutScene) {
   let dragonKills;
   if (
@@ -2046,6 +2072,79 @@ if (scoutScene) {
     scene.worldUnitModels = {
       bindings: [...existing.bindings, ...units.bindings],
       instances: [...existing.instances, ...units.instances],
+    };
+  }
+  if (laneMinionCatalogPath !== undefined) {
+    assert.ok(
+      currentBuild && scene.workerMotion && replayCodecs,
+      "Replay-derived lane minions require the exact current motion worker",
+    );
+    const { readCurrentLaneMinionCatalog } =
+      await import("./native-terrain-lane-minion-catalog.mjs");
+    const { models: assets, barracksPlacements } =
+      await readCurrentLaneMinionCatalog(
+        laneMinionCatalogPath,
+        values["lane-minion-model-catalog-sha256"],
+        values["lane-minion-map-materials"],
+        values["lane-minion-map-definitions"],
+      );
+    const existing = scene.worldUnitModels ?? { bindings: [], instances: [] };
+    const units = await loadWorldUnitAssets(
+      laneMinionCatalogPath,
+      assets,
+      200 + existing.bindings.length,
+    );
+    const { readCurrentLaneMinionTracks } =
+      await import("./research/recorded-lane-minion-tracks.mjs");
+    const { instances } = readCurrentLaneMinionTracks({
+      replay,
+      packets: replayTimedPacketEnvelopes(
+        replayPacketEnvelopes(replay, decompress),
+      ),
+      codecs: replayCodecs,
+      movementOrigin: proof.navgrid.movementOrigin,
+      barracksPlacements,
+    });
+    const occupied = new Set(existing.instances.map(({ context }) => context));
+    const laneInstances = instances.map(
+      ({
+        context,
+        modelId,
+        team,
+        creationTimeSeconds,
+        killTimeSeconds,
+        paths,
+      }) => {
+        const participantId = units.models.get(modelId);
+        assert.ok(
+          participantId !== undefined && !occupied.has(context),
+          "Replay-derived lane model or actor binding differs",
+        );
+        return {
+          context,
+          participantId,
+          teamId: team,
+          creationTimeSeconds,
+          killTimeSeconds,
+          paths,
+        };
+      },
+    );
+    for (const [path, response] of units.routes) {
+      assert.ok(
+        !worldUnitModelRoutes.has(path),
+        "Duplicate lane minion model route",
+      );
+      worldUnitModelRoutes.set(path, response);
+    }
+    scene.laneMinionModelBindings = units.bindings;
+    scene.workerMotion.laneMinionCatalog = {
+      barracksPlacements,
+      models: [...units.models],
+    };
+    replayLaneMinionWorld = {
+      bindings: [...existing.bindings, ...units.bindings],
+      instances: [...existing.instances, ...laneInstances],
     };
   }
   if (scene.inhibitorLosses === undefined && !currentBuild) {
@@ -2299,7 +2398,9 @@ if (decodeTeamVision) {
     await import("./research/recorded-team-vision.mjs");
   readCurrentRecordedTeamVision(
     replay,
-    scene,
+    replayLaneMinionWorld === undefined
+      ? scene
+      : { ...scene, worldUnitModels: replayLaneMinionWorld },
     replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
     replayCodecs,
   );

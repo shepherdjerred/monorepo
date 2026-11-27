@@ -21,6 +21,7 @@ import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-94
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
 import { verifyRecordedChampionExperienceFooter } from "./recorded-champion-experience-tracks.mjs";
 import { createRecordedInventoryCollector } from "./recorded-inventory-packets.mjs";
+import { createCurrentLaneMinionCollector } from "./recorded-lane-minion-tracks.mjs";
 import { createCurrentRecordedTeamVisionCollector } from "./recorded-team-vision.mjs";
 
 function* observeMotionPackets(packets, observe) {
@@ -30,6 +31,135 @@ function* observeMotionPackets(packets, observe) {
     observe(next.value);
     yield next.value;
   }
+}
+
+function cacheLastWaypoints(read) {
+  let previousPayload;
+  let previousOpcode;
+  let previousResult;
+  return (opcode, payload) => {
+    if (opcode !== previousOpcode || payload !== previousPayload) {
+      previousResult = read(opcode, payload);
+      previousOpcode = opcode;
+      previousPayload = payload;
+    }
+    return previousResult;
+  };
+}
+
+const laneModelId = /^sru_(?:order|chaos)minion(?:melee|ranged|siege|super)$/;
+const laneVariants = ["melee", "ranged", "siege", "super"];
+
+function readLaneBarracksTeam(row) {
+  if (
+    row === null ||
+    typeof row !== "object" ||
+    Object.keys(row).length !== 2 ||
+    !Array.isArray(row.transform) ||
+    row.transform.length !== 4 ||
+    row.transform.some(
+      (axis) =>
+        !Array.isArray(axis) ||
+        axis.length !== 4 ||
+        !axis.every(Number.isFinite),
+    ) ||
+    row.units === null ||
+    typeof row.units !== "object" ||
+    Object.keys(row.units).length !== 4
+  )
+    throw Error("Invalid authored lane minion barracks placement.");
+  const team = /^sru_(order|chaos)minionmelee\/0$/.exec(
+    row.units[4]?.asset,
+  )?.[1];
+  if (
+    team === undefined ||
+    laneVariants.some((variant, index) => {
+      const unit = row.units[index + 4];
+      return (
+        unit === null ||
+        typeof unit !== "object" ||
+        Object.keys(unit).length !== 1 ||
+        unit.asset !== `sru_${team}minion${variant}/0`
+      );
+    })
+  )
+    throw Error("Invalid authored lane minion barracks units.");
+  return team;
+}
+
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
+
+async function readLaneModelIds(catalog) {
+  if (typeof catalog !== "object" || Object.keys(catalog).length !== 2)
+    throw Error("Invalid authored lane minion catalog.");
+  const { barracksPlacements, models } = catalog;
+  if (
+    !Array.isArray(barracksPlacements) ||
+    barracksPlacements.length !== 6 ||
+    !Array.isArray(models) ||
+    models.length !== 8
+  )
+    throw Error("Invalid authored lane minion catalog.");
+  const teams = barracksPlacements.map(readLaneBarracksTeam);
+  if (teams.filter((team) => team === "order").length !== 3)
+    throw Error("Invalid authored Map11 lane minion teams.");
+  if (
+    (await sha256Hex(
+      new TextEncoder().encode(JSON.stringify(barracksPlacements)),
+    )) !== "4a2ba16f5b7210953c6d3aede1ac77a1652b169aa090c2d6da93290821a9b703"
+  )
+    throw Error("Authored Map11 lane minion barracks digest differs.");
+  const ids = new Map();
+  const used = new Set();
+  for (const row of models) {
+    if (!Array.isArray(row) || row.length !== 2)
+      throw Error("Invalid authored lane minion model binding.");
+    const [modelId, participantId] = row;
+    if (
+      typeof modelId !== "string" ||
+      !laneModelId.test(modelId) ||
+      !Number.isSafeInteger(participantId) ||
+      participantId <= 0 ||
+      ids.has(modelId) ||
+      used.has(participantId)
+    )
+      throw Error("Invalid authored lane minion model binding.");
+    ids.set(modelId, participantId);
+    used.add(participantId);
+  }
+  return ids;
+}
+
+function finishLaneMinions(lane, modelIds) {
+  const { instances, coverage } = lane.finish();
+  const laneMinionInstances = instances.map(
+    ({
+      context,
+      modelId,
+      team,
+      creationTimeSeconds,
+      killTimeSeconds,
+      paths,
+    }) => {
+      const participantId = modelIds.get(modelId);
+      if (participantId === undefined)
+        throw Error("Recorded lane minion has no authenticated model.");
+      return {
+        context,
+        participantId,
+        teamId: team,
+        creationTimeSeconds,
+        killTimeSeconds,
+        paths,
+      };
+    },
+  );
+  return { laneMinionInstances, laneMinionCoverage: coverage };
 }
 
 function createChampionAnimationCollector(replay, binding, codecs, catalog) {
@@ -145,6 +275,7 @@ async function prepareMotion({
   announcerEvents,
   decodeTeamVision,
   teamVisionWorldActors,
+  laneMinionCatalog,
   terrainControllerGraph,
 }) {
   if (
@@ -152,10 +283,7 @@ async function prepareMotion({
     !(decoderBytes instanceof ArrayBuffer)
   )
     throw new Error("Replay motion needs replay and decoder bytes.");
-  const replayDigest = await crypto.subtle.digest("SHA-256", replayBytes);
-  const sha256 = Array.from(new Uint8Array(replayDigest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
+  const sha256 = await sha256Hex(replayBytes);
   if (identity?.replaySha256 !== sha256)
     throw new Error("Replay motion SHA-256 differs from the scene.");
   const replay = openReplay(replayBytes);
@@ -167,6 +295,23 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (
+    laneMinionCatalog !== undefined &&
+    (laneMinionCatalog === null ||
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild ||
+      !Array.isArray(waypointOrigin) ||
+      waypointOrigin.length !== 2 ||
+      waypointOrigin[0] !== 7358 ||
+      waypointOrigin[1] !== 7412)
+  )
+    throw Error(
+      "Replay-derived lane minions require the reviewed current build.",
+    );
+  const laneModelIds =
+    laneMinionCatalog === undefined
+      ? undefined
+      : await readLaneModelIds(laneMinionCatalog);
   if (
     decodeTeamVision === true
       ? !options.allowCurrentBuild ||
@@ -287,8 +432,25 @@ async function prepareMotion({
           })),
           teamVisionWorldActors,
           codecs,
+          { dynamicActors: laneMinionCatalog !== undefined },
         )
       : undefined;
+  const rawWaypoints = createWaypointReaderFromCodecs(codecs);
+  const readWaypoints =
+    laneMinionCatalog === undefined
+      ? rawWaypoints
+      : cacheLastWaypoints(rawWaypoints);
+  const lane =
+    laneMinionCatalog === undefined
+      ? undefined
+      : createCurrentLaneMinionCollector({
+          replay,
+          codecs,
+          movementOrigin: waypointOrigin,
+          barracksPlacements: laneMinionCatalog.barracksPlacements,
+          onBirth: teamVision?.addCandidate,
+          readWaypoints,
+        });
   const terrain =
     terrainControllerGraph === undefined
       ? undefined
@@ -310,6 +472,7 @@ async function prepareMotion({
     announcer,
     teamVision,
     terrain,
+    lane,
   ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
@@ -323,7 +486,7 @@ async function prepareMotion({
       keyframes,
       observers.length === 0 ? packets : observeMotionPackets(packets, observe),
       {
-        readWaypoints: createWaypointReaderFromCodecs(codecs),
+        readWaypoints,
         readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
         waypointOrigin,
         ...(decodeChampionStats === true ? { includeChampionStats: true } : {}),
@@ -366,6 +529,12 @@ async function prepareMotion({
           }),
     };
   }
+  const laneResult =
+    lane === undefined ? undefined : finishLaneMinions(lane, laneModelIds);
+  const visibleLaneContexts =
+    laneResult === undefined
+      ? undefined
+      : new Set(laneResult.laneMinionInstances.map(({ context }) => context));
   return {
     type: "ready",
     frames: keyframes.frames,
@@ -381,7 +550,10 @@ async function prepareMotion({
     ...(animation === undefined
       ? {}
       : { championAnimationCues: animation.finish() }),
-    ...(teamVision === undefined ? {} : { teamVision: teamVision.finish() }),
+    ...(laneResult ?? {}),
+    ...(teamVision === undefined
+      ? {}
+      : { teamVision: teamVision.finish(visibleLaneContexts) }),
     ...(terrainVisibility === undefined ? {} : { terrainVisibility }),
     ...(announcer === undefined
       ? {}

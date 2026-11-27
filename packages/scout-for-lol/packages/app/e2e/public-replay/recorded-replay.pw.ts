@@ -2,10 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 import { z } from "zod";
 import { observeRecordedItemBlobs } from "./proof/current-inventory.ts";
 import { verifyRecordedInhibitorReturns } from "./recorded-inhibitor-assertions.ts";
-import {
-  observeDirectChampionStatsWorker,
-  verifyDirectChampionStatsWorker,
-} from "./proof/champion-stats-worker.ts";
+import { verifyDirectChampionStatsWorker } from "./proof/champion-stats-worker.ts";
+import { observeDirectChampionStatsWorker } from "./proof/motion-worker-capture.ts";
 import { verifyRecordedNeutralObjectives } from "./recorded-neutral-assertions.ts";
 import {
   verifyRecordedChampionLifecycle,
@@ -482,11 +480,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
     testInfo,
   );
   if (fixture.unitVisibility)
-    await verifyRecordedTeamVision(
-      page,
-      testInfo,
-      fixture.descriptor.gameBuild === "16.23.841.8428",
-    );
+    await verifyRecordedTeamVision(page, testInfo, fixture);
   if (cueCount > 0)
     await verifyRecordedChampionAnimation(
       page,

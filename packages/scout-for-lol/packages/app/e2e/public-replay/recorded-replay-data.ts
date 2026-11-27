@@ -111,6 +111,13 @@ const SceneIdentitySchema = z.object({
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
       terrainControllerGraph: z.object({}).optional(),
+      laneMinionCatalog: z
+        .object({
+          models: z.array(
+            z.tuple([z.string(), z.number().int().nonnegative()]),
+          ),
+        })
+        .optional(),
       decodeTeamVision: z.literal(true).optional(),
       announcerEvents: z
         .array(
@@ -233,7 +240,7 @@ function championCapabilities({
   };
 }
 
-function visibilityCapabilities({
+function workerCapabilities({
   workerMotion,
   terrainVisibility,
   teamVision,
@@ -251,7 +258,11 @@ function visibilityCapabilities({
     unitVisibility: teamVision !== undefined || directTeamVision,
     directTeamVision,
     directTerrainVisibility,
-    directVisibility: directTerrainVisibility || directTeamVision,
+    directLaneModels: workerMotion?.laneMinionCatalog?.models,
+    directWorldObservations:
+      directTerrainVisibility ||
+      directTeamVision ||
+      workerMotion?.laneMinionCatalog !== undefined,
   };
 }
 
@@ -290,7 +301,8 @@ export async function readRecordedReplay() {
     );
   }
   const capabilities = championCapabilities(scene);
-  const { directVisibility, ...visibility } = visibilityCapabilities(scene);
+  const { directWorldObservations, ...observationCapabilities } =
+    workerCapabilities(scene);
 
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
@@ -322,9 +334,9 @@ export async function readRecordedReplay() {
         .filter(({ sourceAlphaBlend }) => sourceAlphaBlend)
         .map(({ material }) => material.slice(material.lastIndexOf("/") + 1)) ??
       [],
-    ...visibility,
+    ...observationCapabilities,
     directReplayObservations:
-      directVisibility || capabilities.directChampionObservations,
+      directWorldObservations || capabilities.directChampionObservations,
     announcerEvents: scene.workerMotion?.announcerEvents,
     announcerPreview: inventory.capabilities.announcerPreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,

@@ -8,13 +8,19 @@ import { createCurrentLaneMinionPacketReader } from "./recorded-lane-minion-pack
 
 const openingWaveBoundary = 36;
 
-function registerGameplay(packets, readPacket, readWaypoints, substitution) {
+function registerGameplay(
+  readPacket,
+  readWaypoints,
+  substitution,
+  onBirth,
+  includeCreationPayload,
+) {
   const births = new Map();
   const openingTeam = new Map();
   let opcode = null;
   let context = 0;
-  for (const packet of packets) {
-    if (packet.stream !== 1) continue;
+  function observe(packet) {
+    if (packet.stream !== 1) return;
     if (packet.blockOffset === 0) {
       opcode = null;
       context = 0;
@@ -31,17 +37,20 @@ function registerGameplay(packets, readPacket, readWaypoints, substitution) {
       births.set(context, {
         creation: readPacket(opcode, payload),
         timeSeconds,
-        creationPayload: Uint8Array.from(payload),
+        ...(includeCreationPayload
+          ? { creationPayload: Uint8Array.from(payload) }
+          : {}),
         teamPackets: [],
         endings: [],
         waypoints: new Map(),
       });
+      onBirth?.(context, timeSeconds);
     } else if (opcode === 66 && payload.length === 2 && payload[0] === 0x77) {
       const index = rotateByteLeft(payload[1], 5) ^ 0xff;
       const team = substitution[swapAdjacentBits(substitution[index] ^ 0x71)];
       if (timeSeconds === 0 && !openingTeam.has(context))
         openingTeam.set(context, team);
-      if (birth === undefined || timeSeconds < birth.timeSeconds) continue;
+      if (birth === undefined || timeSeconds < birth.timeSeconds) return;
       const elapsed = timeSeconds - birth.timeSeconds;
       if (birth.timeSeconds < openingWaveBoundary) {
         if (birth.teamPackets.length === 0 && elapsed <= 0.035)
@@ -64,7 +73,7 @@ function registerGameplay(packets, readPacket, readWaypoints, substitution) {
       }
     }
   }
-  return { births, openingTeam };
+  return { observe, births, openingTeam };
 }
 
 function resolveBirthTeam(packets) {
@@ -178,19 +187,23 @@ function readActor(
       creationTimeSeconds: birth.timeSeconds,
       killTimeSeconds,
       removalTimeSeconds,
-      creationPayload: birth.creationPayload,
+      ...(birth.creationPayload === undefined
+        ? {}
+        : { creationPayload: birth.creationPayload }),
       paths,
     },
   };
 }
 
 /** Recover only lane actors with original creation, team, end and movement evidence. */
-export function readCurrentLaneMinionTracks({
+export function createCurrentLaneMinionCollector({
   replay,
-  packets,
   codecs,
   movementOrigin,
   barracksPlacements,
+  onBirth,
+  includeCreationPayload = false,
+  readWaypoints = createWaypointReaderFromCodecs(codecs),
 }) {
   if (
     barracksPlacements.length !== 6 ||
@@ -200,41 +213,59 @@ export function readCurrentLaneMinionTracks({
     throw Error(
       "Recorded lane paths require authenticated Map11 barracks and movement origin",
     );
-  const { births, openingTeam } = registerGameplay(
-    packets,
+  const { observe, births, openingTeam } = registerGameplay(
     createCurrentLaneMinionPacketReader(replay, codecs),
-    createWaypointReaderFromCodecs(codecs),
+    readWaypoints,
     recoverTerrainByteSubstitution(codecs),
+    onBirth,
+    includeCreationPayload,
   );
-  const worldPoint = (point) =>
-    point.map((coordinate, axis) => 2 * coordinate + movementOrigin[axis]);
-  const instances = [];
-  const coverage = {
-    candidateBirths: births.size,
-    birthsByClass: {},
-    admittedByModel: {},
-    omissions: {},
-  };
-  const count = (table, key) => {
-    table[key] = (table[key] ?? 0) + 1;
-  };
-  for (const [context, birth] of births) {
-    count(coverage.birthsByClass, birth.creation.unitType);
-    const { actor, reason } = readActor(
-      context,
-      birth,
-      openingTeam,
-      barracksPlacements,
-      worldPoint,
-    );
-    if (actor === undefined) {
-      if (birth.timeSeconds < openingWaveBoundary)
-        throw Error(`First-wave lane birth failed corroboration: ${reason}`);
-      count(coverage.omissions, reason);
-    } else {
-      instances.push(actor);
-      count(coverage.admittedByModel, actor.modelId);
+  function finish() {
+    const durationSeconds = replay.durationMilliseconds / 1000;
+    const worldPoint = (point) =>
+      point.map((coordinate, axis) => 2 * coordinate + movementOrigin[axis]);
+    const instances = [];
+    const coverage = {
+      candidateBirths: births.size,
+      birthsByClass: {},
+      admittedByModel: {},
+      omissions: {},
+    };
+    const count = (table, key) => {
+      table[key] = (table[key] ?? 0) + 1;
+    };
+    for (const [context, birth] of births) {
+      count(coverage.birthsByClass, birth.creation.unitType);
+      const { actor, reason } = readActor(
+        context,
+        birth,
+        openingTeam,
+        barracksPlacements,
+        worldPoint,
+      );
+      if (actor !== undefined && actor.removalTimeSeconds > durationSeconds)
+        throw Error(
+          "Recorded lane minion removal is outside the replay clock.",
+        );
+      if (actor === undefined) {
+        if (birth.timeSeconds < openingWaveBoundary)
+          throw Error(`First-wave lane birth failed corroboration: ${reason}`);
+        count(coverage.omissions, reason);
+      } else {
+        instances.push(actor);
+        count(coverage.admittedByModel, actor.modelId);
+      }
     }
+    return { instances, coverage };
   }
-  return { instances, coverage };
+  return { observe, finish };
+}
+
+export function readCurrentLaneMinionTracks({ packets, ...options }) {
+  const collector = createCurrentLaneMinionCollector({
+    ...options,
+    includeCreationPayload: true,
+  });
+  for (const packet of packets) collector.observe(packet);
+  return collector.finish();
 }

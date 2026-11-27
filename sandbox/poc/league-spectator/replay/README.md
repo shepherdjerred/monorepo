@@ -185,6 +185,23 @@ the actor proof format consumed by the lane model preparer.
 bun tools/research/export-current-lane-minions.mjs $replayPath $matchV5 $matchV5Sha256 $preparedDecoder $map11MaterialsBin $map11DefinitionsBin $newLaneActorProof
 ```
 
+To decode lane units in the browser for a private `16.23.841.8428` package,
+assemble the eight authored models from pinned prepared model manifests. The
+producer copies the existing GLBs and strips the match-specific actor proof.
+
+```powershell
+bun tools/native-terrain-lane-minion-catalog.mjs $newPrivateLaneCatalog $preparedLaneModelsA $preparedLaneModelsASha256 $preparedLaneModelsB $preparedLaneModelsBSha256
+```
+
+Give `serve-native-terrain.mjs` the catalog with `--lane-minion-model-catalog`
+and `--lane-minion-model-catalog-sha256`. Pass the original WAD entries as
+`--lane-minion-map-materials` and `--lane-minion-map-definitions`. The builder
+checks the eight models and six barracks, then preflights the original replay
+against the catalog. The browser reconstructs bounded lane paths from the
+saved recording. Use `--team-vision-from-replay` for team-perspective playback
+with this catalog. Prepared lane or team-vision sidecars cannot be combined
+with direct lane decoding.
+
 Run the offline announcer verifier with a saved ROFL, the matching Female1
 English WPK, and the local vgmstream decoder. It verifies the recorded welcome
 and minion-spawn events and checks their original media at replay clock offsets.
