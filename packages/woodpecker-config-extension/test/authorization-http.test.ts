@@ -255,7 +255,7 @@ describe("signed maintenance routing", () => {
     expect(response.status).toBe(400);
   });
   test.each(["release-notes", "ci-images"])(
-    "emits one %s workflow in the PR pool below ready priority",
+    "emits one %s workflow in the maintenance pool at main priority",
     async (kind) => {
       const { app, base, changedBase } = harness(false, undefined, false, {
         maintenance: true,
@@ -267,8 +267,8 @@ describe("signed maintenance routing", () => {
       expect(body.configs.map((config) => config.name)).toEqual([
         `.woodpecker/maintenance-${kind}.yaml`,
       ]);
-      expect(body.configs[0]?.data).toContain("ci-pool: pr");
-      expect(body.configs[0]?.data).toContain("priority-class: ci-draft");
+      expect(body.configs[0]?.data).toContain("ci-pool: maintenance");
+      expect(body.configs[0]?.data).toContain("priority-class: ci-main");
       expect(body.configs[0]?.data).toContain("group: ci-maintenance");
       expect(base).not.toHaveBeenCalled();
       expect(changedBase).not.toHaveBeenCalled();

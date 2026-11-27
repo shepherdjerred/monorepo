@@ -110,7 +110,16 @@ export function createWoodpeckerAgent(chart: Chart) {
     CI_ADMISSION_BUDGET.legacyMaxWorkflows > 0
       ? createAgentDeployment(chart, serviceAccount, serverSecretRef)
       : undefined;
-  const pools: readonly CiAgentPool[] = ["pr", "main", "review", "completion"];
+  // `maintenance` takes only the Temporal-dispatched maintenance workflows.
+  // One slot of its own keeps the golden workspace refresh from waiting
+  // behind the PR backlog in the `pr` agent's first-in-first-out queue.
+  const pools: readonly CiAgentPool[] = [
+    "pr",
+    "main",
+    "maintenance",
+    "review",
+    "completion",
+  ];
   const poolDeployments = pools.map((pool) =>
     createAgentDeployment(chart, serviceAccount, serverSecretRef, pool),
   );
