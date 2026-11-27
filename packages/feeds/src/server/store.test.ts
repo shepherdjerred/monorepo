@@ -388,6 +388,97 @@ test("FeedsStore applies auto-read on insert without overwriting manual unread/s
   }
 });
 
+test("FeedsStore auto-reads existing unstarred unread entries when a poll backfills matching categories without overriding manual unread", () => {
+  const store = FeedsStore.open(":memory:");
+  try {
+    const createdCategoryRuleFeed = store.createUserFeed({
+      url: "https://vendor.example.org/rss.xml",
+      title: "Vendor Blog",
+      category: "Engineering & Infra",
+      hidden: false,
+      autoRead: { field: "category", pattern: "^Company$", flags: "i" },
+    });
+    if (!createdCategoryRuleFeed.ok) {
+      throw new Error("Expected vendor feed");
+    }
+    expect(
+      store.recordPollSuccess({
+        feedId: createdCategoryRuleFeed.feed.id,
+        polledAtSeconds: 1_710_000_300,
+        etag: '"e1"',
+        lastModified: null,
+        entries: [
+          {
+            guid: "vendor-1",
+            url: "https://vendor.example.org/post-1",
+            title: "Partnership announcement",
+            author: "Vendor",
+            contentHtml: "<p>Initial draft without category</p>",
+            publishedAt: 1_710_000_300,
+            enclosures: [],
+            categories: [],
+          },
+        ],
+      }),
+    ).toEqual({ inserted: 1, autoRead: 0 });
+
+    expect(
+      store.recordPollSuccess({
+        feedId: createdCategoryRuleFeed.feed.id,
+        polledAtSeconds: 1_710_000_400,
+        etag: '"e2"',
+        lastModified: null,
+        entries: [
+          {
+            guid: "vendor-1",
+            url: "https://vendor.example.org/post-1",
+            title: "Partnership announcement",
+            author: "Vendor",
+            contentHtml: "<p>Tagged Company</p>",
+            publishedAt: 1_710_000_300,
+            enclosures: [],
+            categories: ["Company"],
+          },
+        ],
+      }),
+    ).toEqual({ inserted: 0, autoRead: 1 });
+    const vendorEntry = store.queryEntries({
+      view: "all",
+      feedId: createdCategoryRuleFeed.feed.id,
+    }).items[0];
+    expect(vendorEntry?.isRead).toBe(true);
+    expect(vendorEntry?.autoReadMatched).toBe(true);
+
+    if (vendorEntry === undefined) {
+      throw new Error("Expected vendor entry");
+    }
+    store.updateEntriesState({ ids: [vendorEntry.id], isRead: false });
+    expect(
+      store.recordPollSuccess({
+        feedId: createdCategoryRuleFeed.feed.id,
+        polledAtSeconds: 1_710_000_500,
+        etag: '"e3"',
+        lastModified: null,
+        entries: [
+          {
+            guid: "vendor-1",
+            url: "https://vendor.example.org/post-1",
+            title: "Partnership announcement",
+            author: "Vendor",
+            contentHtml: "<p>Tagged Company</p>",
+            publishedAt: 1_710_000_300,
+            enclosures: [],
+            categories: ["Company"],
+          },
+        ],
+      }),
+    ).toEqual({ inserted: 0, autoRead: 0 });
+    expect(store.getEntriesByIds([vendorEntry.id])[0]?.isRead).toBe(false);
+  } finally {
+    store.close();
+  }
+});
+
 test("FeedsStore handles poll scheduling, backoff filtering, 304 not-modified, and health redaction", () => {
   const store = FeedsStore.open(":memory:");
   try {
@@ -819,6 +910,95 @@ test("FeedsStore supports Reader sessions, stream queries, and entry pruning", (
     expect(remainingTitles).toContain("Old Starred Read");
     expect(remainingTitles).toContain("Old Unread");
     expect(remainingTitles).not.toContain("Old Read 1");
+  } finally {
+    store.close();
+  }
+});
+
+test("FeedsStore allocates IDs newest-first for descending RSS items and prevents pruned archive resurrection", () => {
+  const store = FeedsStore.open(":memory:");
+  try {
+    const created = store.createUserFeed({
+      url: "https://archive.example.org/rss.xml",
+      title: "Full Archive Blog",
+      category: "AI",
+      hidden: false,
+    });
+    if (!created.ok) {
+      throw new Error("Expected archive feed");
+    }
+
+    // Standard newest-first RSS order allocates highest ID to newest entry
+    store.recordPollSuccess({
+      feedId: created.feed.id,
+      polledAtSeconds: 2_000_000_000,
+      etag: null,
+      lastModified: null,
+      entries: [
+        {
+          guid: "newest",
+          url: "https://archive.example.org/newest",
+          title: "Newest Post",
+          author: "A",
+          contentHtml: "",
+          publishedAt: 1_999_999_900,
+          enclosures: [],
+        },
+        {
+          guid: "older",
+          url: "https://archive.example.org/older",
+          title: "Older Post",
+          author: "A",
+          contentHtml: "",
+          publishedAt: 1_999_900_000,
+          enclosures: [],
+        },
+      ],
+    });
+    expect(
+      store
+        .queryEntries({ view: "unread", feedId: created.feed.id })
+        .items.map((i) => i.title),
+    ).toEqual(["Newest Post", "Older Post"]);
+
+    // Subsequent poll on an already-initialized feed marks >30d historical archive items as read without marking them autoReadMatched
+    store.recordPollSuccess({
+      feedId: created.feed.id,
+      polledAtSeconds: 2_000_000_900,
+      etag: null,
+      lastModified: null,
+      entries: [
+        {
+          guid: "brand-new",
+          url: "https://archive.example.org/brand-new",
+          title: "Brand New Post",
+          author: "A",
+          contentHtml: "",
+          publishedAt: 2_000_000_800,
+          enclosures: [],
+        },
+        {
+          guid: "archive-2016",
+          url: "https://archive.example.org/2016",
+          title: "2016 Historical Archive Post",
+          author: "A",
+          contentHtml: "",
+          publishedAt: 1_456_387_200,
+          enclosures: [],
+        },
+      ],
+    });
+
+    expect(
+      store
+        .queryEntries({ view: "unread", feedId: created.feed.id })
+        .items.map((i) => i.title),
+    ).toEqual(["Brand New Post", "Newest Post", "Older Post"]);
+    const archived = store
+      .queryEntries({ view: "all", feedId: created.feed.id })
+      .items.find((i) => i.title === "2016 Historical Archive Post");
+    expect(archived?.isRead).toBe(true);
+    expect(archived?.autoReadMatched).toBe(false);
   } finally {
     store.close();
   }

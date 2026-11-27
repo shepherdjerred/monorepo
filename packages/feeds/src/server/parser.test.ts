@@ -228,6 +228,21 @@ describe("parseFeedXml sanitization and fallbacks", () => {
         fixedNow,
       ),
     ).toThrow(/truncated/iu);
+    expect(() =>
+      parseFeedXml(
+        "<rss version='2.0'><channel><title>Cut</title></channel></rss><!-- unclosed comment",
+        "https://minimal.example.com/feed.xml",
+        fixedNow,
+      ),
+    ).toThrow(/truncated/iu);
+
+    const withTrailingCacheComments = parseFeedXml(
+      `<rss version="2.0"><channel><title>Krebs</title><item><guid>k1</guid><title>Post</title><link>https://krebsonsecurity.com/p/1</link></item></channel></rss>\r\n<!--\r\nPerformance optimized by W3 Total Cache.\r\n-->\n<?cache-status hit?>\n`,
+      "https://krebsonsecurity.com/feed/",
+      fixedNow,
+    );
+    expect(withTrailingCacheComments.entries).toHaveLength(1);
+    expect(withTrailingCacheComments.entries[0]?.title).toBe("Post");
   });
 });
 

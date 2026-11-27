@@ -59,7 +59,7 @@ export const OPENAI_NOISE_RULES: AutoReadRule = [
   },
   {
     field: "title",
-    pattern: String.raw`(?:^How (?!OpenAI\b|we\b|our\b)[A-Z][\w.&+' -]{1,40} (?:scales?|uses?|builds?|automates?|transforms?|cuts?|accelerates?|brings?|turns?|delivers?|powers?|reimagines?|modernizes?|streamlines?|defends?|ships?|raises?|helped)\b|^[A-Z][\w.&+' -]{1,35} (?:(?:helps|achieves|scales|automates|transforms|reimagines|rethinks|elevates|delivers|uses OpenAI|is changing|is rethinking|searches \d+|doubles revenue|sees improvements|grows product)\b|builds [\w -]+ with (?:OpenAI|Codex|ChatGPT)\b)|\bchief architect on AI\b)`,
+    pattern: String.raw`(?:^How (?!OpenAI\b|we\b|our\b)[A-Z][\w.&+' -]{1,40} (?:scales?|uses?|builds?|automates?|transforms?|cuts?|accelerates?|brings?|turns?|delivers?|powers?|reimagines?|modernizes?|streamlines?|defends?|ships?|raises?|helped|is developing)\b|^[A-Z][\w.&+' -]{1,35} (?:(?:helps|achieves|scales|automates|transforms|reimagines|rethinks|elevates|delivers|uses OpenAI|is changing|is rethinking|is developing|searches \d+|doubles revenue|sees improvements|grows product)\b|builds [\w -]+ with (?:OpenAI|Codex|ChatGPT)\b)|\bchief architect on AI\b)`,
     flags: "",
   },
 ];
