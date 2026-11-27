@@ -126,7 +126,7 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
   ).toBe(RAM_SCRATCH.profile);
   expect(
     emitted.steps[0]?.backend_options.kubernetes.resources.requests["memory"],
-  ).toBe("30Gi");
+  ).toBe("20Gi");
   expect(
     emitted.steps[0]?.backend_options.kubernetes.resources.limits["memory"],
   ).toBe("36Gi");
@@ -134,10 +134,9 @@ test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", ()
     (sum, volume) => sum + gib(volume.size),
     0,
   );
-  expect(
-    gib(candidate.resources.memoryRequest) -
-      gib(TURBO_VERIFY_TIER.memoryRequest),
-  ).toBe(scratch);
+  expect(candidate.resources.memoryRequest).toBe(
+    TURBO_VERIFY_TIER.memoryRequest,
+  );
   expect(
     gib(candidate.resources.memoryLimit) - gib(TURBO_VERIFY_TIER.memoryLimit),
   ).toBe(scratch);
@@ -218,14 +217,13 @@ test("ordinary verify and browser execution pods carry their own scratch profile
     if (profile === undefined) throw new Error("Missing scratch profile");
     expect(step.resources).toEqual(profile.resources);
     const tier = step.key === "verify" ? TURBO_VERIFY_TIER : BROWSER_TIER;
-    // The profile reserves exactly its tmpfs allowance above the lane's tier.
+    // The limit carries exactly the tmpfs allowance above the lane's tier; the
+    // request is the tier's, measured with tmpfs pages included.
     const tmpfs = profile.volumes.reduce(
       (sum, volume) => sum + gib(volume.size),
       0,
     );
-    expect(gib(profile.resources.memoryRequest) - gib(tier.memoryRequest)).toBe(
-      tmpfs,
-    );
+    expect(profile.resources.memoryRequest).toBe(tier.memoryRequest);
     expect(gib(profile.resources.memoryLimit) - gib(tier.memoryLimit)).toBe(
       tmpfs,
     );

@@ -19,13 +19,29 @@ const BRAIN_HOST = "storm-brain";
 const BRAIN_PORT = "18081";
 const BRAIN_TOKEN = "storm-e2e-ci-brain-token";
 
+/**
+ * Paper with a 1G heap. Measured 2026-11-26 (286 pods): memory max 1.8 GiB;
+ * CPU p90 peak 1.1 cores, lifetime average 0.25. A service holds its request
+ * while the step waits for admission, so it reserves only what it uses.
+ */
 const PAPER_SERVICE_TIER = {
-  cpuRequest: "1",
+  cpuRequest: "500m",
   cpuLimit: "4",
-  memoryRequest: "4Gi",
+  memoryRequest: "2Gi",
   memoryLimit: "8Gi",
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "12Gi",
+} as const;
+
+/**
+ * The smoke test drives Paper with scripted clients, which outgrows the
+ * medium tier. Measured 2026-11-26 (286 pods): memory p90 4.2 GiB, max 4.4
+ * GiB; lifetime-average CPU p50 1.95 cores.
+ */
+const STORM_SMOKE_TIER = {
+  ...MEDIUM_TIER,
+  cpuRequest: "2",
+  memoryRequest: "5Gi",
 } as const;
 
 /**
@@ -92,7 +108,7 @@ function stormSmokeStep(images: CiImages): CiStep {
     // The Paper and brain services hold admission quota before their test
     // step starts. Keep their aggregate bounded across all agents and PRs.
     concurrency: { limit: 6, group: "paper-smoke-pr" },
-    resources: MEDIUM_TIER,
+    resources: STORM_SMOKE_TIER,
     secrets: [GITHUB_DOWNLOAD],
     services: [
       {

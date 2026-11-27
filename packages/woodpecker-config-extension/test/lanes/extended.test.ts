@@ -275,7 +275,7 @@ describe("extended verification step", () => {
     });
     expect(
       emitted.steps[0]?.backend_options.kubernetes.resources.requests["memory"],
-    ).toBe("30Gi");
+    ).toBe("20Gi");
   });
 
   test("routes to the PR pool at the lowest priority on the default branch", () => {

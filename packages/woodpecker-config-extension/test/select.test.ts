@@ -447,7 +447,12 @@ describe("Paper smoke lane", () => {
       group: "paper-smoke-pr",
     });
     expect(paperStep?.timeoutMinutes).toBe(10);
-    expect(paperStep?.resources).toEqual(MEDIUM_TIER);
+    // The scripted clients outgrow the medium tier's memory request.
+    expect(paperStep?.resources).toEqual({
+      ...MEDIUM_TIER,
+      cpuRequest: "2",
+      memoryRequest: "5Gi",
+    });
     expect(paperStep?.commands).toEqual([
       "MISE_TOOLCHAIN_SCOPE=minecraft . ci/scripts/toolchain.sh",
       "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/the-storm'",
