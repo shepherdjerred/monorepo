@@ -4,6 +4,7 @@ import type {
   GitHubFacet,
   GitHubOpenPr,
   GitHubRateLimitBucket,
+  MonorepoCodeReview,
   TrackerFacet,
   TrackerNotice,
   TrackerProjectSummary,
@@ -11,6 +12,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLinkIcon } from "lucide-react";
 import { useId } from "react";
+import { Link } from "react-router";
 
 import { ListToggle, useCapped } from "./capped-list.tsx";
 import { facetsQuery } from "./ops-api.ts";
@@ -197,8 +199,10 @@ function RateLimitMeter({
 
 function GitHubStacksPanel({
   github,
+  codeReview,
 }: {
   readonly github: GitHubFacet;
+  readonly codeReview?: MonorepoCodeReview | undefined;
 }): React.JSX.Element {
   const stackContainerId = useId();
   const nonRenovatePrs = github.openPrs
@@ -222,6 +226,25 @@ function GitHubStacksPanel({
         />
       </div>
       <ListToggle list={capped} controls={stackContainerId} />
+      {codeReview === undefined ? null : (
+        <div className="eng-throughput-strip eng-flow-code-review-strip">
+          <Chip
+            label="Review pool ready"
+            value={
+              codeReview.coordinatorObserved
+                ? `${String(codeReview.readyProvidersCount)}/${String(codeReview.activeProvidersCount)}`
+                : "unavailable"
+            }
+          />
+          <Chip
+            label="Re-reviews saved 7d"
+            value={codeReview.outcomes7d.priorRound}
+          />
+          <Link className="eng-ext-link" to="/monorepo#code-review">
+            Code review pool
+          </Link>
+        </div>
+      )}
       <div className="eng-rate-limits">
         <RateLimitMeter
           label="GitHub GraphQL quota used"
@@ -300,7 +323,12 @@ export function FlowEnrichment(): React.JSX.Element | null {
         <StaleNotice errors={loaded.errors} />
       ) : null}
       <div className="eng-flow-grid">
-        {github === undefined ? null : <GitHubStacksPanel github={github} />}
+        {github === undefined ? null : (
+          <GitHubStacksPanel
+            github={github}
+            codeReview={response?.facets.monorepo?.codeReview}
+          />
+        )}
         {tracker === undefined ? null : (
           <TrackerCoordinationPanel tracker={tracker} />
         )}
