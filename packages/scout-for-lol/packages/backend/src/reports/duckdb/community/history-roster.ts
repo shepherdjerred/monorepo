@@ -8,7 +8,7 @@ import {
   withLakePage,
   type LakePage,
 } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 
 const LakeInt = z.union([z.number(), z.bigint()]).transform(Number);
 const HistoryRosterRowSchema = z.object({
@@ -29,12 +29,14 @@ export async function readHistoryRosters(
 ) {
   const source = buildMatchIdsSource(page.files, options.matchIds);
   if (source === undefined) return [];
-  const rows = await page.session.run(
-    `SELECT match_id, participant_id, team_id, champion_name, riot_id_game_name, riot_id_tagline ` +
+  return await runSource({
+    session: page.session,
+    source,
+    sql:
+      `SELECT match_id, participant_id, team_id, champion_name, riot_id_game_name, riot_id_tagline ` +
       `FROM (${source.sql}) ORDER BY match_id, team_id, participant_id, champion_name`,
-    bindParams(page.session, source.params),
-  );
-  return rows.map((row) => HistoryRosterRowSchema.parse(row));
+    schema: HistoryRosterRowSchema,
+  });
 }
 
 export async function fetchHistoryRosters(options: {
