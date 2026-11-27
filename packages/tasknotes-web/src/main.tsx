@@ -1,13 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./app.tsx";
-import "./styles.css";
+import { createBrowserRouter, RouterProvider } from "react-router";
+import { App } from "#app/app.tsx";
+import { registerOfflineShell } from "#app/offline-shell.ts";
+import "#ui/styles.css";
 
 const root = document.querySelector("#root");
 if (root === null) throw new Error("TaskNotes is missing #root");
+const router = createBrowserRouter([{ path: "*", element: <App /> }]);
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </StrictMode>,
 );
+void registerOfflineShell();
