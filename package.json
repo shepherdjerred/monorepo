@@ -105,6 +105,8 @@
     "packages/ci-cache",
     "packages/code-review",
     "packages/config",
+    "packages/console-client",
+    "packages/console-server",
     "packages/console-ui",
     "packages/cooklang-for-obsidian",
     "packages/cooklang-rich-preview",

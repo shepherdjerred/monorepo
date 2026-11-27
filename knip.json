@@ -240,6 +240,14 @@
     "packages/loaded": {
       "project": ["src/**/*.{ts,tsx}"]
     },
+    "packages/console-client": {
+      "entry": ["src/**/*.test.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/console-server": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
     "packages/console-ui": {
       "entry": ["scripts/*.ts"],
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.ts"]
