@@ -14,6 +14,7 @@ import {
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { shellQuote } from "#src/pipeline/emit.ts";
+import { goldenHistoryCommands } from "#src/pipeline/git-history.ts";
 
 export const MaintenanceKindSchema = z.enum([
   "release-notes",
@@ -281,6 +282,7 @@ function workspaceGoldenStep(images: CiImages): CiStep {
       "git clean -ffdxq",
       ". ci/scripts/toolchain.sh",
       "ci/scripts/bun-install.sh --frozen-lockfile",
+      ...goldenHistoryCommands(),
       "bun --no-install ci/scripts/publish-workspace-golden.ts",
     ],
     timeoutMinutes: 30,

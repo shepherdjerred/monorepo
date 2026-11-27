@@ -6,6 +6,10 @@ import { diagnosticCommands } from "#src/pipeline/diagnostics.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
+  GIT_MAINTENANCE_OFF,
+  SHALLOW_HISTORY_DEPTH,
+} from "#src/pipeline/git-history.ts";
+import {
   TURBO_CACHE_TOKEN,
   TURBO_REMOTE_CACHE_ENVIRONMENT,
 } from "#src/pipeline/turbo-cache.ts";
@@ -40,10 +44,11 @@ export function playwrightSteps(
       commands: diagnosticCommands("playwright-e2e", [
         // Postgres scope: several suites need a live database.
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
+        ...GIT_MAINTENANCE_OFF,
         // A PR compares against its target branch even before main has a
         // successful Woodpecker pipeline to supply a changed-file base.
         'if [ "$CI_PIPELINE_EVENT" = "pull_request" ] || [ "$CI_PIPELINE_EVENT" = "pull_request_metadata" ]; then',
-        '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
+        `  if git fetch --no-tags --depth=${SHALLOW_HISTORY_DEPTH.toString()} origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=${SHALLOW_HISTORY_DEPTH.toString()} origin "$CI_COMMIT_TARGET_BRANCH"; then`,
         '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
         "  else",
         '    CI_CHANGED_BASE=""',
