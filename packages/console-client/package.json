@@ -8,6 +8,7 @@
     "./testing": "./src/testing.tsx"
   },
   "scripts": {
+    "build": "bun build ./src/index.ts ./src/testing.tsx --target browser --outdir dist --external react --external react-dom --external react/jsx-runtime",
     "lint": "bunx --no-install eslint --cache . --max-warnings=0",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
