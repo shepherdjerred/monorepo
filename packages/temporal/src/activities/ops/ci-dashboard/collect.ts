@@ -119,13 +119,9 @@ async function recentPipelines(
         summaries.set(row.number, row);
       }
     }
-    if (
-      rows.length < PAGE_SIZE ||
-      [...summaries.values()].filter((row) => !activePipeline(row.status))
-        .length >= RECENT_LIMIT
-    ) {
-      break;
-    }
+    // Woodpecker pages by pipeline number, so a lower-numbered run can
+    // still finish after every run on the first page.
+    if (rows.length < PAGE_SIZE) break;
   }
   return [...summaries.values()];
 }
@@ -182,13 +178,14 @@ async function jobsSample(input: {
     selected,
     async (number) => {
       const detail = await client.pipeline(number, signal);
+      const graph = await requiredWorkflows(client, detail, {
+        signal,
+        onFailure,
+        historical: false,
+      });
       return {
         ...summarizePipeline(detail),
-        requiredWorkflows: await requiredWorkflows(client, detail, {
-          signal,
-          onFailure,
-          historical: false,
-        }),
+        requiredWorkflows: graph.names,
         workflows: pipelineWorkflows(
           detail,
           groupedTasks.get(number) ?? [],

@@ -49,7 +49,7 @@ function requiredNames(
   return includesExactNames ? [...names].sort() : null;
 }
 
-function isPrVerification(pipeline: PipelineDetail): boolean {
+export function isPrVerification(pipeline: PipelineSummary): boolean {
   return (
     !pipeline.isDraft &&
     prNumber(pipeline.ref) !== null &&
@@ -67,14 +67,17 @@ export async function requiredWorkflows(
     onFailure: SourceFailure;
     historical: boolean;
   },
-): Promise<string[] | null> {
-  if (!isPrVerification(pipeline)) return null;
+): Promise<{ names: string[] | null; retry: boolean }> {
+  const missing = { names: null, retry: false };
+  if (!isPrVerification(pipeline)) return missing;
   const gate = pipeline.workflows.find(
     (workflow) => workflow.name === "ci-complete",
   );
-  if (gate === undefined) return null;
+  if (gate === undefined) return missing;
   const recorded = requiredNames(gate.dependsOn, pipeline);
-  if (recorded !== null && !options.historical) return recorded;
+  if (recorded !== null && !options.historical) {
+    return { names: recorded, retry: false };
+  }
   try {
     const config = await client.pipelineConfig(pipeline.number, options.signal);
     const names = readGateConfig(config);
@@ -83,12 +86,12 @@ export async function requiredWorkflows(
       // A mismatch could be a concurrent rerun. Withhold that graph.
       const mismatch =
         recorded !== null && configured?.join("\0") !== recorded.join("\0");
-      return mismatch ? null : configured;
+      return { names: mismatch ? null : configured, retry: false };
     }
-    return recorded;
+    return { names: recorded, retry: false };
   } catch (error: unknown) {
     options.onFailure("woodpecker_pipeline_config", error);
-    return recorded;
+    return { names: recorded, retry: recorded === null };
   }
 }
 
@@ -209,13 +212,13 @@ export function pipelineWorkflows(
 }
 
 /** Each worker finishes all API reads for one pipeline before claiming another. */
-export async function readPipelineDetails<T>(
+export async function readPipelineDetails<T, Row>(
   entries: readonly T[],
-  operation: (entry: T) => Promise<CiRun>,
+  operation: (entry: T) => Promise<Row>,
   onFailure: SourceFailure,
   signal: AbortSignal,
-): Promise<{ runs: CiRun[]; partial: boolean }> {
-  const runs: CiRun[] = [];
+): Promise<{ runs: Row[]; partial: boolean }> {
+  const runs: Row[] = [];
   let next = 0;
   await Promise.all(
     Array.from({ length: Math.min(4, entries.length) }, async () => {

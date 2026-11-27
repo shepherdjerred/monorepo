@@ -315,6 +315,7 @@ export class WoodpeckerClient {
     page: number;
     perPage: number;
     status?: WoodpeckerPipelineStatus;
+    events?: readonly string[];
     after?: string;
     signal?: AbortSignal;
   }): Promise<WoodpeckerPipelineSummary[]> {
@@ -326,6 +327,8 @@ export class WoodpeckerClient {
     url.searchParams.set("perPage", String(options.perPage));
     if (options.status !== undefined)
       url.searchParams.set("status", options.status);
+    if (options.events !== undefined)
+      url.searchParams.set("event", options.events.join(","));
     if (options.after !== undefined)
       url.searchParams.set("after", options.after);
     const pipelines = await this.#read(

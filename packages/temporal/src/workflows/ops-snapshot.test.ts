@@ -19,11 +19,7 @@ import {
 } from "./ops/ci-dashboard.ts";
 import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
-function workflowFile(relativePath: string): string {
-  return fileURLToPath(new URL(relativePath, import.meta.url));
-}
-
-const workflowPath = workflowFile("index.ts");
+const workflowPath = fileURLToPath(new URL("index.ts", import.meta.url));
 
 const summary: OpsPublishSummary = {
   generatedAt: "2026-09-24T12:00:00.000Z",
@@ -67,7 +63,9 @@ test("replays the pre-Tracker collector command and payload unchanged", async ()
   try {
     await runWorkflowWithActivityWorker(environment, {
       activityTaskQueue: TASK_QUEUES.OPS,
-      workflowPath: workflowFile("replay-fixtures/ops-before-tracker.ts"),
+      workflowPath: fileURLToPath(
+        new URL("replay-fixtures/ops-before-tracker.ts", import.meta.url),
+      ),
       activities: {
         ...collectorActivities(attempts),
         collectOpsLinear: () => {
@@ -117,7 +115,9 @@ describe("ops snapshot workflow", () => {
     try {
       await runWorkflowWithActivityWorker(environment, {
         activityTaskQueue: TASK_QUEUES.INFRA,
-        workflowPath: workflowFile("replay-fixtures/ops-before-temporal.ts"),
+        workflowPath: fileURLToPath(
+          new URL("replay-fixtures/ops-before-temporal.ts", import.meta.url),
+        ),
         activities: {
           ...collectorActivities(attempts),
           collectOpsLinear: () =>
@@ -163,7 +163,9 @@ describe("ops snapshot workflow", () => {
       try {
         await runWorkflowWithActivityWorker(environment, {
           activityTaskQueue: TASK_QUEUES.INFRA,
-          workflowPath: workflowFile("replay-fixtures/ops-before-ops-queue.ts"),
+          workflowPath: fileURLToPath(
+            new URL("replay-fixtures/ops-before-ops-queue.ts", import.meta.url),
+          ),
           activities: {
             ...collectorActivities(new Map()),
             collectOpsLinear: () =>

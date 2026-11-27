@@ -58,11 +58,18 @@ export const CiDashboardSampleSchema = z.object({
     .nullable(),
 });
 
-const CiTimingAttemptSchema = z.object({
+const CiTimingIdentitySchema = z.object({
   pipeline: z.int().positive(),
   attempt: CountSchema,
-  event: z.string().min(1),
   finishedAt: TimestampSchema,
+});
+
+export const CI_TIMING_MAX_GRAPH_READS = 3;
+export const CI_TIMING_MAX_SKIPPED_ATTEMPTS = 600;
+
+const CiTimingAttemptSchema = CiTimingIdentitySchema.extend({
+  event: z.string().min(1),
+  graphReadFailures: z.int().min(1).max(CI_TIMING_MAX_GRAPH_READS).optional(),
   requiredWorkflows: z.array(z.string().min(1)).nullable(),
   turnaroundSeconds: z.number().nonnegative().nullable(),
   gateTailSeconds: z.number().nonnegative().nullable(),
@@ -80,6 +87,10 @@ export const CI_TIMING_HISTORY_MS = 7 * 24 * 60 * 60 * 1000;
 export const CiTimingHistorySchema = z.object({
   sampledAt: TimestampSchema,
   attempts: z.array(CiTimingAttemptSchema).max(CI_TIMING_MAX_ATTEMPTS),
+  skippedAttempts: z
+    .array(CiTimingIdentitySchema)
+    .max(CI_TIMING_MAX_SKIPPED_ATTEMPTS)
+    .optional(),
 });
 
 const CiEstimateSchema = z.object({
@@ -393,7 +404,7 @@ export function estimateCiDashboard(
   )
     return estimates;
 
-  const asOf = Date.parse(jobs.sampledAt);
+  const asOf = now.getTime();
   const recent = history.attempts.filter(
     (entry) => Date.parse(entry.finishedAt) >= asOf - CI_TIMING_HISTORY_MS,
   );

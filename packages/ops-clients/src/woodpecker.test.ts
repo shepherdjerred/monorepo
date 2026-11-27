@@ -206,7 +206,13 @@ describe("WoodpeckerClient dashboard reads", () => {
     const wp = client(fetch);
     const after = "2026-09-21T00:00:00.000Z";
     expect(
-      await wp.pipelines({ page: 2, perPage: 50, status: "success", after }),
+      await wp.pipelines({
+        page: 2,
+        perPage: 50,
+        status: "success",
+        events: ["pull_request", "pull_request_metadata"],
+        after,
+      }),
     ).toMatchObject([
       {
         id: 472,
@@ -222,6 +228,7 @@ describe("WoodpeckerClient dashboard reads", () => {
       page: "2",
       perPage: "50",
       status: "success",
+      event: "pull_request,pull_request_metadata",
       after,
     });
     expect(await wp.pipelineConfig(41)).toEqual([

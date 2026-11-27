@@ -218,6 +218,37 @@ describe("Hub CI live collector", () => {
     });
   });
 
+  test("ranks recent completions across full pages ordered by pipeline number", async () => {
+    const oldCompletions = Array.from({ length: 50 }, (_, index) =>
+      pipeline({ number: 100 - index, status: "success", finishedAt: CREATED }),
+    );
+    const latestCompletion = pipeline({
+      number: 40,
+      status: "success",
+      finishedAt: GATE_FINISHED,
+    });
+    const sample = await collectCiDashboard({
+      client: {
+        queue: async () => ({ ...queue(), tasks: [] }),
+        pipelines: async ({ page, status }) =>
+          status === undefined
+            ? page === 1
+              ? oldCompletions
+              : [latestCompletion]
+            : [],
+        pipeline: async () => latestCompletion,
+        pipelineConfig: async () => [],
+      },
+      prometheus,
+      repoId: 1,
+      now: NOW,
+      signal: SIGNAL,
+      onFailure: vi.fn(),
+    });
+    expect(sample.jobs?.recent).toHaveLength(20);
+    expect(sample.jobs?.recent[0]?.pipeline).toBe(40);
+  });
+
   test("detail lookups use at most four concurrent requests", async () => {
     let active = 0;
     let max = 0;
@@ -284,9 +315,9 @@ describe("Hub CI live collector", () => {
   });
 });
 
-test("timing history retains eligible attempts and reads the successful PR gate even with advisory failure", async () => {
+function completePr(options: Partial<PipelineDetail> = {}): PipelineDetail {
   const workflows = pipeline().workflows;
-  const complete = pipeline({
+  return pipeline({
     status: "failure",
     finishedAt: "2026-11-26T19:19:00.000Z",
     workflows: workflows.map((workflow) => ({
@@ -296,7 +327,17 @@ test("timing history retains eligible attempts and reads the successful PR gate 
       finishedAt: workflow.name === "verify" ? CHECK_FINISHED : GATE_FINISHED,
       dependsOn: [],
     })),
+    ...options,
   });
+}
+
+const GATE_CONFIG = {
+  name: "ci-complete",
+  data: "workspace: {}\ndepends_on: [verify]\nsteps: []\n",
+};
+
+test("timing history retains eligible attempts and reads the successful PR gate even with advisory failure", async () => {
+  const complete = completePr();
   const retained: CiTimingAttempt = {
     pipeline: 12,
     attempt: 0,
@@ -311,12 +352,7 @@ test("timing history retains eligible attempts and reads the successful PR gate 
     queue: async () => queue(),
     pipelines: async (input) => (input.status === "failure" ? [complete] : []),
     pipeline: vi.fn(async () => complete),
-    pipelineConfig: vi.fn(async () => [
-      {
-        name: "ci-complete",
-        data: "workspace: {}\ndepends_on: [verify]\nsteps: []\n",
-      },
-    ]),
+    pipelineConfig: vi.fn(async () => [GATE_CONFIG]),
   };
   const result = await collectCiTimingHistory({
     client,
@@ -349,4 +385,121 @@ test("timing history retains eligible attempts and reads the successful PR gate 
     },
     retained,
   ]);
+});
+
+test("the next timing refresh advances past rejected failures and retries an unread attempt", async () => {
+  const good = completePr({ number: 6 });
+  const failed = Array.from({ length: 4 }, (_, index) =>
+    completePr({
+      number: index + 7,
+      workflows: good.workflows.map((workflow) => ({
+        ...workflow,
+        state: "failure",
+      })),
+    }),
+  );
+  const details = new Map([good, ...failed].map((run) => [run.number, run]));
+  const read = vi.fn(async (number: number) => {
+    const run = details.get(number);
+    if (run === undefined) throw new Error("Missing pipeline fixture");
+    return run;
+  });
+  read.mockRejectedValueOnce(new Error("Detail temporarily unavailable"));
+  const input = {
+    client: {
+      queue: async () => queue(),
+      pipelines: async ({ status }) =>
+        status === "failure" ? [...failed, good] : [],
+      pipeline: read,
+      pipelineConfig: async () => [GATE_CONFIG],
+    } satisfies PipelineClient,
+    now: NOW,
+    signal: SIGNAL,
+    onFailure: vi.fn(),
+  };
+  const first = await collectCiTimingHistory({ ...input, previous: null });
+  expect(first.attempts).toEqual([]);
+  expect(first.skippedAttempts?.map((run) => run.pipeline)).toEqual([9, 8, 7]);
+  const second = await collectCiTimingHistory({ ...input, previous: first });
+  expect(read.mock.calls.map(([number]) => number)).toEqual([
+    10, 9, 8, 7, 10, 6,
+  ]);
+  expect(second.attempts.map((run) => run.pipeline)).toEqual([6]);
+  expect(second.skippedAttempts?.map((run) => run.pipeline)).toEqual([
+    10, 9, 8, 7,
+  ]);
+});
+
+test("workflow durations survive failed graph enrichment and are enriched on the next refresh", async () => {
+  const run = completePr();
+  const config = vi.fn(async () => [GATE_CONFIG]);
+  config.mockRejectedValueOnce(new Error("Config temporarily unavailable"));
+  const input = {
+    client: {
+      queue: async () => queue(),
+      pipelines: async ({ status }) => (status === "failure" ? [run] : []),
+      pipeline: async () => run,
+      pipelineConfig: config,
+    } satisfies PipelineClient,
+    now: NOW,
+    signal: SIGNAL,
+    onFailure: vi.fn(),
+  };
+  const first = await collectCiTimingHistory({ ...input, previous: null });
+  expect(first.attempts[0]).toMatchObject({
+    graphReadFailures: 1,
+    requiredWorkflows: null,
+    workflows: [{ name: "verify" }, { name: "ci-complete" }],
+  });
+  const refreshed = await collectCiTimingHistory({ ...input, previous: first });
+  expect(refreshed.attempts[0]).toMatchObject({
+    requiredWorkflows: ["verify"],
+    gateTailSeconds: 60,
+  });
+  expect(refreshed.attempts[0]).not.toHaveProperty("graphReadFailures");
+  expect(config).toHaveBeenCalledTimes(2);
+});
+
+test("newer branch runs cannot displace the retained PR estimate cohort", async () => {
+  const branchRuns: CiTimingAttempt[] = Array.from(
+    { length: 90 },
+    (_, index) => ({
+      pipeline: index + 100,
+      attempt: 0,
+      event: "push",
+      finishedAt: GATE_FINISHED,
+      requiredWorkflows: null,
+      turnaroundSeconds: null,
+      gateTailSeconds: null,
+      workflows: [{ name: "verify", durationSeconds: 9 }],
+    }),
+  );
+  const prRuns = branchRuns.slice(0, 10).map((entry) => ({
+    ...entry,
+    pipeline: entry.pipeline - 80,
+    event: "pull_request",
+    finishedAt: CHECK_FINISHED,
+    requiredWorkflows: ["verify"],
+    turnaroundSeconds: 500,
+    gateTailSeconds: 30,
+  }));
+  const result = await collectCiTimingHistory({
+    client: {
+      queue: async () => queue(),
+      pipelines: async () => [],
+      pipeline: async () => pipeline(),
+      pipelineConfig: async () => [],
+    },
+    previous: {
+      sampledAt: NOW.toISOString(),
+      attempts: [...branchRuns, ...prRuns],
+    },
+    now: NOW,
+    signal: SIGNAL,
+    onFailure: vi.fn(),
+  });
+  expect(result.attempts).toHaveLength(50);
+  expect(
+    result.attempts.filter((run) => run.event === "pull_request"),
+  ).toHaveLength(10);
 });

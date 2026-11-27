@@ -165,20 +165,26 @@ describe("CI dashboard estimates", () => {
   });
 
   test("suppresses estimates when queue evidence is old, jobs are paused, or history is sparse", () => {
-    const active = run(
-      [workflow("verify", "running", -50), workflow("ci-complete", "waiting")],
-      { requiredWorkflows: null },
-    );
+    const verify = workflow("verify", "running", -50);
+    const active = run([verify, workflow("ci-complete", "waiting")], {
+      requiredWorkflows: null,
+    });
     const current = sample([active]);
     expect(estimateCiDashboard(current, history(9), now)).toEqual({
       runs: {},
       workflows: {},
     });
-    expect(estimateCiDashboard(current, history(), new Date(at(180)))).toEqual({
-      runs: {},
-      workflows: {},
-    });
     if (current.queue === null) throw new Error("fixture queue is missing");
+    expect(
+      estimateCiDashboard(current, history(), now).workflows,
+    ).toHaveProperty(ciWorkflowKey(active, verify));
+    expect(
+      estimateCiDashboard(
+        { ...current, queue: { ...current.queue, sampledAt: at(-180) } },
+        history(),
+        now,
+      ),
+    ).toEqual({ runs: {}, workflows: {} });
     expect(
       estimateCiDashboard(
         { ...current, queue: { ...current.queue, paused: true } },
@@ -194,6 +200,23 @@ describe("CI dashboard estimates", () => {
       runs: {},
       workflows: {},
     });
+  });
+
+  test("withholds an expired finish range while its job sample is still fresh", () => {
+    const verify = workflow("verify", "running", -50);
+    const active = run([verify]);
+    const current = sample([active]);
+    const key = ciWorkflowKey(active, verify);
+    expect(estimateCiDashboard(current, history(), now).workflows[key]).toEqual(
+      {
+        kind: "running",
+        earliestAt: at(20),
+        latestAt: at(20),
+      },
+    );
+    expect(
+      estimateCiDashboard(current, history(), new Date(at(30))).workflows[key],
+    ).toBeUndefined();
   });
 
   test("does not predict success when a required workflow fails or after the gate has completed", () => {
