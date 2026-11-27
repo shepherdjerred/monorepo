@@ -38,7 +38,7 @@ export async function startServer(
   const databasePath = Bun.env["FLAGS_DATABASE_PATH"] ?? ":memory:";
   const store = FlagStore.open(databasePath);
   try {
-    const seeded = store.seedFromInventory();
+    const seeded = store.seedFromInventory({ kind: "system", id: "seed" });
     console.warn(
       JSON.stringify({
         message: "flag inventory seed",
