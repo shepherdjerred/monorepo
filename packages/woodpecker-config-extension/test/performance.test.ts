@@ -7,7 +7,11 @@ import { performanceSteps } from "#src/pipeline/performance.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
-import { RAM_SCRATCH, ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
+import {
+  RAM_SCRATCH,
+  RAM_SCRATCH_PROFILES,
+  ramScratchProfile,
+} from "#src/pipeline/ram-scratch.ts";
 import { BROWSER_TIER, TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { MISE_INSTALLS } from "#src/pipeline/cache.ts";
 import { credentiallessHostedAutomationSteps } from "#src/pipeline/steps.ts";
@@ -203,6 +207,16 @@ test("shared mise installs mount wherever the toolchain is sourced, only when en
   );
   for (const step of credentialless)
     expect(step.volumes ?? [], step.key).toEqual([]);
+});
+test("a profile the admission policy admits is not requested until a later change lists it", () => {
+  // The live guard denies a pod carrying a profile ArgoCD has not synced, so
+  // the policy ships first; tofu-validate is admitted but no step requests it.
+  expect(RAM_SCRATCH_PROFILES["tofu-validate"].profile).toBe("tofu-v1");
+  expect(ramScratchProfile("tofu-validate")).toBeUndefined();
+  const scratched = performanceSteps(testPipelineSteps(), enabled, true, false);
+  expect(
+    scratched.find((step) => step.key === "tofu-validate")?.ramScratch,
+  ).not.toBe(true);
 });
 test("ordinary verify and browser execution pods carry their own scratch profile only when enabled", () => {
   const steps = testPipelineSteps();
