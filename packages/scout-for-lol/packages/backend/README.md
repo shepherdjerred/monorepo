@@ -2691,11 +2691,9 @@ stored per UTC day.
   This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
   frame at or before T. A segment written before the crawl kept checkpoints has
   none, and lane data cannot be backfilled from raw segments.
-- **Frontier.** `CrawlFrontier` is the work queue, not a record: the code
-  reads and writes only what scheduling needs (`puuid`, route, `depth`,
-  `nextEligibleAt`, `lastVisitedAt` and the bracket; `seedMatchId`,
-  `visitCount`, `createdAt` and `updatedAt` are retired and keep only their
-  defaults until a later migration drops them), claimed in `(depth, nextEligibleAt)` order
+- **Frontier.** `CrawlFrontier` is the work queue, not a record: it holds only
+  what scheduling reads (`puuid`, route, `depth`, `nextEligibleAt`,
+  `lastVisitedAt` and the bracket), claimed in `(depth, nextEligibleAt)` order
   from an index of that shape. The crawl adds about nine rows per stored match
   and visits a few hundred players a day, so nearly every row waits;
   `crawl-frontier-prune.ts` bounds the table. `scoutCrawlFrontierPruneWorkflow`
