@@ -65,7 +65,15 @@
         ]
       },
       "resolvedDescription": "Riven dashes forward, dealing 45/75/105/135/165 (+60/65/70/75/80% bonus AD) physical damage. She can Recast this Ability twice. The first Recast is the same as the original, but the second has a different effect: Recast: Riven leaps forward and slams, dealing 45/75/105/135/165 (+60/65/70/75/80% bonus AD) physical damage and Knocks Up nearby enemies for 0.75 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Ki Burst",
@@ -109,7 +117,15 @@
         ]
       },
       "resolvedDescription": "Riven's sword emits a burst of runic energy, dealing 65/95/125/155/185 (+100% bonus AD) physical damage and Stunning for 0.75 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.2667,
+        "radius": 250,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Valor",
@@ -160,7 +176,15 @@
         ]
       },
       "resolvedDescription": "Riven quickly dashes and gains 70/95/120/145/170 (+110% bonus AD) Shield for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": null,
+        "radius": 25000,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Blade of the Exile",
@@ -209,7 +233,15 @@
         ]
       },
       "resolvedDescription": "Riven's weapon surges with spiritual energy, granting her 20% AD Attack Damage and increased range on damaging Abilities and Attacks for 15 seconds. While active, she can Recast. Recast: Riven fires a wind slash that deals between 100/150/200 (+55% bonus AD) and 300/450/600 (+165% bonus AD) physical damage, based on their missing Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": 1200,
+        "missiles": []
+      }
     }
   }
 }

@@ -101,7 +101,44 @@
         ]
       },
       "resolvedDescription": "Passive: Ashe's Attacks grant a stack for 4 seconds. At 4 stacks, she may activate this Ability. Active: Ashe gains 20/30/40/50/60% Attack Speed and her Attacks deal 110/115/120/125/130% AD damage instead for 6 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "asheqattack",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "asheqattacknoonhit",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Volley",
@@ -152,7 +189,72 @@
         ]
       },
       "resolvedDescription": "Ashe fires a volley of 7/8/9/10/11 arrows, each dealing 60/95/130/165/200 (+100% bonus AD) physical damage. Enemies can be hit by multiple arrows, but only take damage from the first.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Cone",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "volleyattack",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "volleyattackwithsound",
+            "width": 1,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "volleycenterattack",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "volleyrightattack",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Hawkshot",
@@ -198,7 +300,15 @@
       "resolvedDescription": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies. This Ability has 2 charges ({{ chargecooldown }} second recharge).",
       "unresolved": [
         "chargecooldown"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 299.3,
+        "lineWidth": null,
+        "missileSpeed": 1400,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Enchanted Crystal Arrow",
@@ -252,7 +362,15 @@
         ]
       },
       "resolvedDescription": "Ashe launches a crystal arrow of ice that Stuns the first champion hit and deals 200/400/600 (+120% AP) magic damage. The Stun duration increases with distance travelled, up to 3.5 seconds. Surrounding enemies are Slowed by Frost Shot.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 130,
+        "missileSpeed": 1600,
+        "missiles": []
+      }
     }
   }
 }

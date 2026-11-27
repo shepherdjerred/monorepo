@@ -72,7 +72,44 @@
         ]
       },
       "resolvedDescription": "Nami hurls a bubble, Stunning for 1.5 seconds and dealing 90/145/200/255/310 (+50% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 200,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "namiqdummymissile",
+            "width": 5,
+            "movement": "FixedSpeedMovement",
+            "speed": 100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "namiqmissile",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Ebb and Flow",
@@ -153,7 +190,72 @@
       "resolvedDescription": "Nami unleashes a stream of water that bounces between allied and enemy champions. Each champion can only be hit once, and it hits up to 3 targets.Restores 55/80/105/130/155 (+40% AP) Health to allies and will bounce to a nearby enemy champion. Deals 60/95/130/165/200 (+50% AP) magic damage to enemies and will bounce to a nearby allied champion. The damage and healing value is modified by {{ bouncescaling }} each bounce.",
       "unresolved": [
         "bouncescaling"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 2000,
+        "missiles": [
+          {
+            "name": "namiwally",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "namiwenemy",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "namiwmissileally",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "namiwmissileenemy",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Tidecaller's Blessing",
@@ -234,7 +336,15 @@
       "resolvedDescription": "Nami empowers an allied champion's next 3 Attacks and Abilities for 6 seconds, causing them to Slow their targets by {{ totalslow }} for 1s and deal an additional 20/35/50/65/80 (+20% AP) magic damage.",
       "unresolved": [
         "totalslow"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Tidal Wave",
@@ -293,7 +403,30 @@
         ]
       },
       "resolvedDescription": "Nami summons a tidal wave, Knocking Up for 0.5 seconds, Slowing by 70%, and dealing 150/250/350 (+60% AP) magic damage. The duration of the Slow increases based on distance the wave traveled, up to 4 seconds. Allies hit by the wave gain double the effect of Surging Tides.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.5,
+        "radius": 210,
+        "lineWidth": 325,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "namirmissile",
+            "width": 250,
+            "movement": "FixedSpeedMovement",
+            "speed": 850,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

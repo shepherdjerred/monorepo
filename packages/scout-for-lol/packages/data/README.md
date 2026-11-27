@@ -113,6 +113,12 @@ per-ability numbers for the voice assistant and other fact-answering features:
   cannot resolve stays literal `{{ token }}` text and is listed in that
   ability's `unresolved` array, so consumers can decline honestly instead of
   inventing numbers.
+- **`mechanics`** (optional) is how the ability is aimed and how its missiles
+  travel, read from the same bin and never inferred: `targeting`, `castTime`,
+  `radius`, `lineWidth`, `missileSpeed`, and a `missiles` list with each
+  missile's width, movement, speed, behaviors and `stopsOnFirstHit` (the bin's
+  `DestroyOnHit`). It is what separates "passes through minions" from "stops at
+  the first enemy". The slot omits it when the bin states nothing.
 
 Read them through `getAbilityFacts(championName)` in
 `src/data-dragon/ability-facts.ts`. The input is a user boundary: it accepts
