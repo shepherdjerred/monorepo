@@ -312,10 +312,6 @@
       "clones": 1,
       "tokens": 140
     },
-    "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
       "tokens": 264
