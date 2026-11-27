@@ -6,6 +6,7 @@ type RecordedAudioProbe = {
   starts: {
     id: number;
     frames: number;
+    wavSha256: string;
     delay: number;
     offset: number;
     rate: number;
@@ -27,6 +28,7 @@ export async function installRecordedAudioProbe(page: Page) {
     };
     globalThis.recordedAudioProbe = probe;
     let nextSource = 0;
+    const sourceDigests = new WeakMap<AudioBuffer, string>();
 
     // Decode real media through the browser without opening an audio device.
     class RecordingAudioContext {
@@ -50,8 +52,20 @@ export async function installRecordedAudioProbe(page: Page) {
         return Promise.resolve();
       }
 
-      decodeAudioData(bytes: ArrayBuffer) {
-        return new OfflineAudioContext(2, 1, 44_100).decodeAudioData(bytes);
+      async decodeAudioData(bytes: ArrayBuffer) {
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        const buffer = await new OfflineAudioContext(
+          2,
+          1,
+          44_100,
+        ).decodeAudioData(bytes);
+        sourceDigests.set(
+          buffer,
+          Array.from(new Uint8Array(digest), (byte) =>
+            byte.toString(16).padStart(2, "0"),
+          ).join(""),
+        );
+        return buffer;
       }
 
       createBufferSource() {
@@ -72,9 +86,13 @@ export async function installRecordedAudioProbe(page: Page) {
           start(when = 0, offset = 0) {
             if (this.buffer === null)
               throw new Error("Missing replay audio buffer");
+            const wavSha256 = sourceDigests.get(this.buffer);
+            if (wavSha256 === undefined)
+              throw new Error("Missing recorded replay audio digest");
             probe.starts.push({
               id,
               frames: this.buffer.length,
+              wavSha256,
               delay: when - (performance.now() - started) / 1000,
               offset,
               rate: this.playbackRate.value,

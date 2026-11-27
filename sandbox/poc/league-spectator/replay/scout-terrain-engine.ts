@@ -167,6 +167,14 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "The saved terrain scene does not match this rendering package.",
     );
   const announcerProfile = localManifest.capabilities.announcerPreview;
+  if (
+    announcerProfile === undefined &&
+    scene.workerMotion?.announcerEvents !== undefined
+  )
+    throw new ReplayCapabilityError(
+      "invalid-package",
+      "Replay-derived announcements require the announcer preview capability.",
+    );
   if (announcerProfile !== undefined) {
     const replayDigest = Array.from(
       new Uint8Array(await crypto.subtle.digest("SHA-256", replay)),
@@ -178,14 +186,6 @@ export const createReplayEngine: ReplayEngineFactory = async ({
         "The announcer preview belongs to another saved replay.",
       );
   }
-  const announcer =
-    announcerProfile !== undefined && typeof AudioContext !== "undefined"
-      ? new ScoutTerrainAnnouncer(
-          resources,
-          localManifest.capabilities.replaySha256,
-          signal,
-        )
-      : undefined;
   if (
     scene.workerMotion === undefined ||
     scene.terrainMaterials === undefined ||
@@ -221,6 +221,17 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "engine-unavailable",
       "The motion decoder returned no observed participant positions.",
     );
+  const announcer =
+    announcerProfile !== undefined &&
+    loaded.announcerCues?.length !== 0 &&
+    typeof AudioContext !== "undefined"
+      ? new ScoutTerrainAnnouncer(
+          resources,
+          localManifest.capabilities.replaySha256,
+          signal,
+          loaded.announcerCues,
+        )
+      : undefined;
   const data = prepareScene(loaded.scene, loaded.heights, inventory);
   let perspective: ReplayPerspective = "all";
   function visibilityAt(timeSeconds: number) {

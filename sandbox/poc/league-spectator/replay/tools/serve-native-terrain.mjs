@@ -52,6 +52,7 @@ const { positionals, values } = parseArgs({
     "scout-recovery-db": { type: "string" },
     "private-package-output": { type: "string" },
     "announcer-preview": { type: "string" },
+    "announcer-catalog": { type: "string" },
     "worker-decompressor": { type: "string" },
     "camera-globals": { type: "string" },
     "terrain-materials": { type: "string" },
@@ -84,6 +85,8 @@ const { positionals, values } = parseArgs({
     "nexus-models": { type: "string" },
     "inhibitor-models": { type: "string" },
     "inhibitor-models-sha256": { type: "string" },
+    "authored-inhibitor-catalog": { type: "string" },
+    "authored-inhibitor-catalog-sha256": { type: "string" },
     "world-unit-models": { type: "string" },
     "world-unit-models-sha256": { type: "string" },
     "neutral-unit-models": { type: "string" },
@@ -182,6 +185,21 @@ assert.ok(
   "Authored turret catalogs require a private package and turret placements without prepared structure models",
 );
 const announcerDirectory = values["announcer-preview"];
+const announcerCatalogDirectory = values["announcer-catalog"];
+const inhibitorCatalogPath = values["authored-inhibitor-catalog"];
+const inhibitorCatalogDigest = values["authored-inhibitor-catalog-sha256"];
+assert.equal(
+  inhibitorCatalogPath === undefined,
+  inhibitorCatalogDigest === undefined,
+  "Authored inhibitor catalogs require a matching SHA-256 pin",
+);
+assert.ok(
+  inhibitorCatalogPath === undefined ||
+    (privatePackageOutput !== undefined &&
+      values["turret-placements"] !== undefined &&
+      values["inhibitor-models"] === undefined),
+  "Authored inhibitor catalogs require a private package and turret placements without prepared inhibitor models",
+);
 const championStatInputs = [
   { kind: "health", field: "championHealthTracks" },
   { kind: "resources", field: "championResourceTracks" },
@@ -243,6 +261,11 @@ assert.ok(
 assert.ok(
   announcerDirectory === undefined || privatePackageOutput !== undefined,
   "Announcer playback assets require a private package output",
+);
+assert.ok(
+  announcerCatalogDirectory === undefined ||
+    (announcerDirectory === undefined && privatePackageOutput !== undefined),
+  "Replay-derived announcer audio requires a private package without prepared announcer timing",
 );
 const scoutScene =
   values["scout-css"] !== undefined || privatePackageOutput !== undefined;
@@ -1025,6 +1048,11 @@ async function loadInhibitorModelRoutes(
     new Set(exported.instances.map(({ mapNameHash }) => mapNameHash)).size,
     6,
   );
+  return await loadInhibitorRenderRoutes(manifestPath, exported, observed);
+}
+
+async function loadInhibitorRenderRoutes(manifestPath, exported, observed) {
+  const omissions = observed.presentationOmissions ?? [];
   assert.deepEqual(Object.keys(exported.assets).sort(), [
     "inhibitor-0",
     "inhibitor-3",
@@ -1214,6 +1242,14 @@ assert.ok(
 assert.ok(
   turretCatalogPath === undefined || currentBuild,
   "Authored turret catalogs require the verified current build",
+);
+assert.ok(
+  announcerCatalogDirectory === undefined || currentBuild,
+  "Replay-derived announcer audio requires the verified current build",
+);
+assert.ok(
+  inhibitorCatalogPath === undefined || currentBuild,
+  "Authored inhibitor catalogs require the verified current build",
 );
 if (currentBuild) {
   assert.ok(
@@ -1612,8 +1648,28 @@ if (values["turret-placements"] !== undefined) {
     };
     structureModelRoutes = structures.routes;
   }
-  if (values["inhibitor-models"] !== undefined) {
-    const inhibitors = await loadInhibitorModelRoutes(
+  let inhibitors;
+  if (inhibitorCatalogPath !== undefined) {
+    const { bindNativeTerrainInhibitorCatalog } =
+      await import("./research/native-terrain-inhibitor-catalog.mjs");
+    const catalog = await readPinnedWorldUnitManifest(
+      inhibitorCatalogPath,
+      inhibitorCatalogDigest,
+    );
+    const bound = bindNativeTerrainInhibitorCatalog(
+      prepared,
+      placementReceipt,
+      catalog,
+      decoderOptions,
+      turrets,
+    );
+    inhibitors = await loadInhibitorRenderRoutes(
+      inhibitorCatalogPath,
+      { ...bound, assets: catalog.assets },
+      bound,
+    );
+  } else if (values["inhibitor-models"] !== undefined)
+    inhibitors = await loadInhibitorModelRoutes(
       values["inhibitor-models"],
       values["inhibitor-models-sha256"],
       identity,
@@ -1622,6 +1678,7 @@ if (values["turret-placements"] !== undefined) {
       placementSha,
       decoderOptions,
     );
+  if (inhibitors !== undefined) {
     scene.inhibitorModels = {
       bindings: inhibitors.bindings,
       instances: inhibitors.instances,
@@ -2102,6 +2159,26 @@ if (animationCatalogPath !== undefined) {
   scene.championAnimationCues = cues;
   championAnimationRoutes = routes;
 }
+let announcerFiles;
+if (announcerCatalogDirectory !== undefined) {
+  const { readLocalAnnouncerCatalog } =
+    await import("./local-announcer-preview.mjs");
+  const { events, files } = await readLocalAnnouncerCatalog(
+    announcerCatalogDirectory,
+    identity,
+  );
+  assert.ok(scene.workerMotion, "Announcer catalog requires a motion worker");
+  scene.workerMotion.announcerEvents = events;
+  announcerFiles = files;
+} else if (announcerDirectory !== undefined) {
+  const { readLocalAnnouncerPreview } =
+    await import("./local-announcer-preview.mjs");
+  announcerFiles = await readLocalAnnouncerPreview(
+    announcerDirectory,
+    prepared.packetReader,
+    identity,
+  );
+}
 const source = (name) =>
   Bun.file(new URL(`./research/${name}`, import.meta.url));
 const routes = new Map([
@@ -2162,16 +2239,6 @@ assert.ok(await Bun.file(threeCore).exists(), "Missing local Three.js vendor");
 if (privatePackageOutput !== undefined) {
   const { writeLocalScoutTerrainPackage } =
     await import("./build-local-scout-terrain-package.mjs");
-  let announcerFiles;
-  if (announcerDirectory !== undefined) {
-    const { readLocalAnnouncerPreview } =
-      await import("./local-announcer-preview.mjs");
-    announcerFiles = await readLocalAnnouncerPreview(
-      announcerDirectory,
-      prepared.packetReader,
-      identity,
-    );
-  }
   const result = await writeLocalScoutTerrainPackage({
     output: privatePackageOutput,
     identity,

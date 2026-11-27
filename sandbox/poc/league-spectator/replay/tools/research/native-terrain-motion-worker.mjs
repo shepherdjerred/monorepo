@@ -3,6 +3,7 @@ import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/p
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
 import { createCurrentChampionAnimationCueAccumulator } from "./native-terrain-animation-cue-reader.mjs";
+import { createCurrentMap11AnnouncerCollector } from "./native-terrain-announcer-reader.mjs";
 import {
   createPreparedTerrainByteCodecs,
   currentTerrainPositionBuild,
@@ -19,7 +20,7 @@ import { createRecordedInventoryCollector } from "./recorded-inventory-packets.m
 
 function* observeMotionPackets(packets, observe) {
   // Motion may stop after the game clock. Keep ownership of the underlying
-  // iterator so inventory can still validate the remaining physical packets.
+  // iterator so the collectors can still read the remaining physical packets.
   for (let next = packets.next(); !next.done; next = packets.next()) {
     observe(next.value);
     yield next.value;
@@ -97,6 +98,35 @@ function createChampionAnimationCollector(replay, binding, codecs, catalog) {
   };
 }
 
+function readAnnouncerEventMapping(entries) {
+  if (
+    !Array.isArray(entries) ||
+    entries.length === 0 ||
+    entries.length > 0xffff
+  )
+    throw Error("Expected a nonempty announcer event mapping.");
+  const events = new Map();
+  for (const entry of entries) {
+    if (!Array.isArray(entry) || entry.length !== 2)
+      throw Error("Invalid announcer event mapping entry.");
+    const [event, mediaId] = entry;
+    if (
+      !Number.isInteger(event) ||
+      event <= 0 ||
+      event > 0xffff ||
+      !Number.isInteger(mediaId) ||
+      mediaId <= 0 ||
+      mediaId > 0xffffffff ||
+      events.has(event)
+    )
+      throw Error(
+        "Announcer event mapping requires unique event IDs and valid media IDs.",
+      );
+    events.set(event, mediaId);
+  }
+  return events;
+}
+
 async function prepareMotion({
   identity,
   waypointOrigin,
@@ -107,6 +137,7 @@ async function prepareMotion({
   decodeChampionInventory,
   decodeChampionExperience,
   championAnimationCatalog,
+  announcerEvents,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -162,6 +193,17 @@ async function prepareMotion({
     throw Error(
       "Replay-derived champion animations require the reviewed current build.",
     );
+  if (
+    announcerEvents !== undefined &&
+    (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived announcer cues require the reviewed current build.",
+    );
+  const announcerMapping =
+    announcerEvents === undefined
+      ? undefined
+      : readAnnouncerEventMapping(announcerEvents);
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
@@ -199,7 +241,15 @@ async function prepareMotion({
           codecs,
           championAnimationCatalog,
         );
-  const observers = [inventory, animation].filter(
+  const announcer =
+    announcerMapping === undefined
+      ? undefined
+      : createCurrentMap11AnnouncerCollector(
+          replay,
+          recoverTerrainByteSubstitution(codecs),
+          announcerMapping,
+        );
+  const observers = [inventory, animation, announcer].filter(
     (collector) => collector !== undefined,
   );
   const observe = (packet) => {
@@ -252,6 +302,16 @@ async function prepareMotion({
     ...(animation === undefined
       ? {}
       : { championAnimationCues: animation.finish() }),
+    ...(announcer === undefined
+      ? {}
+      : {
+          announcerCues: announcer
+            .finish()
+            .cues.map(({ timeSeconds, mediaId }) => ({
+              timeSeconds,
+              mediaId,
+            })),
+        }),
   };
 }
 

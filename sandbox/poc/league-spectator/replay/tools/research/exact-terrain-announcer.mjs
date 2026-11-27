@@ -194,6 +194,10 @@ const currentCues = [
   ],
 ];
 
+export function authoredCurrentAnnouncerEvents() {
+  return currentCues.map(([event, sound]) => ({ event, ...sound }));
+}
+
 export function readCurrentAnnouncerCandidates(packetReader, replaySha256) {
   if (replaySha256 !== currentAnnouncerSource.replaySha256)
     throw Error("Expected the reviewed current Map11 replay");

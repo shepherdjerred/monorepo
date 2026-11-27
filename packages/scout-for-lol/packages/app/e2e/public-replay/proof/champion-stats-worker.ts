@@ -68,6 +68,16 @@ const reply = z.object({
   inventoryTracks: inventory.optional(),
   experienceTracks: experience.optional(),
   animationCues: workerAnimationCues.optional(),
+  announcerCues: z
+    .array(
+      z
+        .object({
+          timeSeconds: z.number().nonnegative(),
+          mediaId: z.number().int().positive(),
+        })
+        .strict(),
+    )
+    .optional(),
 });
 
 export async function observeDirectChampionStatsWorker(page: Page) {
@@ -94,11 +104,13 @@ export async function observeDirectChampionStatsWorker(page: Page) {
             object,
             "championAnimationCatalog",
           );
+          const hasAnnouncerEvents = Object.hasOwn(object, "announcerEvents");
           if (
             decodeChampionStats ||
             decodeChampionInventory ||
             decodeChampionExperience ||
-            hasChampionAnimationCatalog
+            hasChampionAnimationCatalog ||
+            hasAnnouncerEvents
           ) {
             const requestKeys = Object.keys(object).sort();
             const captureReady = ({ data }: MessageEvent<unknown>) => {
@@ -127,6 +139,10 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                   response,
                   "championAnimationCues",
                 )?.value;
+                const announcerCues: unknown = Object.getOwnPropertyDescriptor(
+                  response,
+                  "announcerCues",
+                )?.value;
                 Object.defineProperty(
                   globalThis,
                   "__scoutDirectChampionStatsProof",
@@ -142,6 +158,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       inventoryTracks,
                       experienceTracks,
                       animationCues,
+                      announcerCues,
                     },
                   },
                 );
@@ -216,6 +233,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionAnimation: boolean;
     directChampionObservations: boolean;
     championAnimationCueCount: number;
+    announcerEvents?: unknown;
   },
 ) {
   if (!fixture.directChampionObservations)
@@ -232,19 +250,13 @@ export async function verifyDirectChampionStatsWorker(
     throw new Error(
       "Set SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY for direct champion observation verification.",
     );
-  const capture: unknown = await page.evaluate((): unknown => {
-    const observed: unknown = Object.getOwnPropertyDescriptor(
-      globalThis,
-      "__scoutDirectChampionStatsProof",
-    )?.value;
-    return observed;
-  });
-  const actual = reply.parse(capture);
+  const actual = reply.parse(await readDirectWorkerReply(page));
   expect(actual.decodeChampionStats).toBe(directChampionStats);
   expect(actual.decodeChampionInventory).toBe(directChampionInventory);
   expect(actual.decodeChampionExperience).toBe(directChampionExperience);
   expect(actual.hasChampionAnimationCatalog).toBe(directChampionAnimation);
   const optionalKeys = Object.entries({
+    announcerEvents: fixture.announcerEvents !== undefined,
     championAnimationCatalog: directChampionAnimation,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
@@ -331,4 +343,22 @@ export async function verifyDirectChampionStatsWorker(
   }
   expect(actual.animationCues).toBeUndefined();
   return fixture.championAnimationCueCount;
+}
+
+async function readDirectWorkerReply(page: Page): Promise<unknown> {
+  return page.evaluate((): unknown => {
+    const observed: unknown = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "__scoutDirectChampionStatsProof",
+    )?.value;
+    return observed;
+  });
+}
+
+export async function readDirectAnnouncerWorker(page: Page) {
+  const { announcerCues, requestKeys } = reply.parse(
+    await readDirectWorkerReply(page),
+  );
+  expect(requestKeys).toContain("announcerEvents");
+  return announcerCues;
 }

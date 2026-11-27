@@ -3,6 +3,40 @@ import type { ReplaySessionState } from "@scout-for-lol/replay/types";
 import { z } from "zod";
 
 const digest = z.string().regex(/^[0-9a-f]{64}$/);
+const mediaId = z.number().int().positive().max(0xffffffff);
+export const AnnouncerEventsSchema = z
+  .array(z.tuple([z.number().int().positive().max(0xffff), mediaId]))
+  .nonempty()
+  .refine(
+    (events) => new Set(events.map(([event]) => event)).size === events.length,
+  );
+export const AnnouncerCuesSchema = z.array(
+  z.strictObject({
+    mediaId,
+    timeSeconds: z.number().nonnegative(),
+  }),
+);
+type AnnouncerCues = z.infer<typeof AnnouncerCuesSchema>;
+
+export function validateAnnouncerCues(
+  cues: AnnouncerCues,
+  events: z.infer<typeof AnnouncerEventsSchema>,
+  durationSeconds: number,
+) {
+  const media = new Set(events.map(([, id]) => id));
+  if (
+    cues.some(
+      ({ mediaId, timeSeconds }, index) =>
+        !media.has(mediaId) ||
+        timeSeconds > durationSeconds ||
+        timeSeconds < (cues[index - 1]?.timeSeconds ?? 0),
+    )
+  )
+    throw new Error(
+      "Announcer worker cue disagrees with the catalog or replay clock",
+    );
+}
+
 const cue = <Id extends number>(mediaId: Id) =>
   z.strictObject({
     mediaId: z.literal(mediaId),
@@ -37,6 +71,7 @@ export class ScoutTerrainAnnouncer {
     private readonly resources: ReplayResources,
     private readonly replaySha256: string,
     private readonly signal: AbortSignal,
+    private readonly decodedCues?: AnnouncerCues,
   ) {}
 
   async setEnabled(enabled: boolean) {
@@ -67,22 +102,35 @@ export class ScoutTerrainAnnouncer {
     }
   }
 
-  async #loadSounds(context: AudioContext) {
+  async #readCues() {
+    if (this.decodedCues !== undefined) return this.decodedCues;
     const bytes = await this.resources.read("announcer-preview/cues.json");
     const timeline = TimelineSchema.parse(
       JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
     );
     if (timeline.replaySha256 !== this.replaySha256)
       throw new Error("Announcer cue timeline belongs to another replay");
+    return timeline.cues;
+  }
+
+  async #loadSounds(context: AudioContext) {
+    const cues = await this.#readCues();
+    const media = new Map<number, Promise<AudioBuffer>>();
     return Promise.all(
-      timeline.cues.map(async ({ mediaId, timeSeconds }) => {
-        const wav = await this.resources.read(
-          `announcer-preview/${mediaId}.wav`,
-        );
-        this.signal.throwIfAborted();
+      cues.map(async ({ mediaId, timeSeconds }) => {
+        let buffer = media.get(mediaId);
+        if (buffer === undefined) {
+          buffer = this.resources
+            .read(`announcer-preview/${mediaId}.wav`)
+            .then((wav) => {
+              this.signal.throwIfAborted();
+              return context.decodeAudioData(wav.buffer);
+            });
+          media.set(mediaId, buffer);
+        }
         return {
           timeSeconds,
-          buffer: await context.decodeAudioData(wav.buffer),
+          buffer: await buffer,
         };
       }),
     );

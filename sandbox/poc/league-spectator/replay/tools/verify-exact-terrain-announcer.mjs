@@ -6,7 +6,9 @@ import { join, relative, resolve, sep } from "node:path";
 import { zstdDecompressSync } from "node:zlib";
 import { createReplayPacketReader } from "../../../../../packages/scout-for-lol/packages/replay/src/observations/packet-reader.mjs";
 import { readExactMapBin } from "./exact-map-bin.mjs";
+import { createCurrentAnnouncerCatalog } from "./local-announcer-preview.mjs";
 import {
+  authoredCurrentAnnouncerEvents,
   currentAnnouncerSource,
   exactAnnouncerSource,
   heraldAudioSource,
@@ -30,6 +32,7 @@ const [
   installation,
   ...extra
 ] = process.argv.slice(2);
+const catalogOnly = profile === "--current-catalog";
 assert.ok(
   replayPath &&
     packPath &&
@@ -38,11 +41,12 @@ assert.ok(
     extra.length === 0 &&
     (profile === undefined
       ? installation === undefined
-      : profile === "--current-installation" &&
+      : (profile === "--current-installation" || catalogOnly) &&
         installation &&
         infernalPackPath &&
-        heraldBankPath),
-  "Usage: bun verify-exact-terrain-announcer.mjs <saved ROFL> <Female1 English WPK> <vgmstream-cli> <new .cache directory> [elemental transition WPK [Rift Herald audio BNK [--current-installation <League installation>]]]",
+        heraldBankPath) &&
+    catalogOnly === (replayPath === "--no-replay"),
+  "Usage: bun verify-exact-terrain-announcer.mjs <saved ROFL | --no-replay> <Female1 English WPK> <vgmstream-cli> <new .cache directory> [elemental transition WPK [Rift Herald audio BNK [--current-installation | --current-catalog <League installation>]]]",
 );
 const output = resolve(outputPath);
 const cachePath = relative(resolve(".cache"), output);
@@ -53,15 +57,23 @@ assert.ok(
 );
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const replay = await Bun.file(replayPath).arrayBuffer();
-const replaySha256 = sha256(Buffer.from(replay));
-const reader = createReplayPacketReader(replay, (input, target) =>
-  zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
-);
 const current = installation !== undefined;
-const cues = current
-  ? readCurrentAnnouncerCandidates(reader, replaySha256)
-  : readExactTerrainAnnouncerCandidates(reader, replaySha256);
+const replay = catalogOnly
+  ? undefined
+  : await Bun.file(replayPath).arrayBuffer();
+const replaySha256 =
+  replay === undefined ? undefined : sha256(Buffer.from(replay));
+const reader =
+  replay === undefined
+    ? undefined
+    : createReplayPacketReader(replay, (input, target) =>
+        zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+      );
+const cues = catalogOnly
+  ? authoredCurrentAnnouncerEvents()
+  : current
+    ? readCurrentAnnouncerCandidates(reader, replaySha256)
+    : readExactTerrainAnnouncerCandidates(reader, replaySha256);
 
 async function verifyCurrentDefinitions(root) {
   const [wad, global] = await Promise.all([
@@ -193,6 +205,7 @@ if (heraldBankPath) {
 await mkdir(output);
 const { sampleRate } = exactAnnouncerSource;
 const media = [];
+const untimedMedia = new Map();
 for (const { cue, pack, bank, channels } of sources) {
   const wem = bank
     ? embeddedMedia(bank, cue.mediaId)
@@ -209,12 +222,23 @@ for (const { cue, pack, bank, channels } of sources) {
   ]);
   assert.equal(decode.exitCode, 0, decode.stderr.toString());
   const wav = await readFile(decodedPath);
+  if (catalogOnly) {
+    untimedMedia.set(cue.mediaId, wav);
+    continue;
+  }
   media.push({
     cue,
     channels,
     wavSha256: sha256(wav),
     wav: wav.toString("base64"),
   });
+}
+if (catalogOnly) {
+  const catalog = createCurrentAnnouncerCatalog(untimedMedia);
+  await writeFile(join(output, "untimed-catalog.json"), catalog, {
+    flag: "wx",
+  });
+  process.exit(0);
 }
 
 const require = createRequire(

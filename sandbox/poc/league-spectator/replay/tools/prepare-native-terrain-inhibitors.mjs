@@ -8,12 +8,14 @@ import { readExactMapBin } from "./exact-map-bin.mjs";
 import { mapBinHash } from "./map-scene-assets.mjs";
 import { readMap11PlaceableInventory } from "./map11-world-catalog.mjs";
 import { exportNativeTerrainStructureModels } from "./native-terrain-structure-model-export.mjs";
-import { prepareNativeTerrainInhibitors } from "./research/native-terrain-inhibitors.mjs";
+import { bindNativeTerrainInhibitorCatalog } from "./research/native-terrain-inhibitor-catalog.mjs";
 import { championArchiveExecutableHashes } from "./research/native-terrain-champion-model-catalog.mjs";
-import { currentTerrainPositionBuild } from "./research/native-terrain-byte-codecs.mjs";
+import {
+  currentTerrainPositionBuild,
+  terrainPositionProtocol,
+} from "./research/native-terrain-byte-codecs.mjs";
 import {
   currentMap11WadIndexSha256,
-  prepareNativeTerrainTurrets,
   turretPlacementReceiptDigests,
 } from "./research/native-terrain-turrets.mjs";
 import {
@@ -24,16 +26,23 @@ import { openLocalWad } from "./wad.mjs";
 
 const [
   installation,
-  replayFile,
+  replayOrBuild,
   receiptFile,
   archivedMaterials,
   exporter,
   outArg,
+  profile,
   ...extra
 ] = process.argv.slice(2);
-if (!outArg || extra.length)
+const authored = profile === "--authored-catalog";
+if (
+  !outArg ||
+  extra.length ||
+  (profile !== undefined && !authored) ||
+  (authored && replayOrBuild !== currentTerrainPositionBuild)
+)
   throw Error(
-    "Usage: bun prepare-native-terrain-inhibitors.mjs <installation> <saved ROFL> <turret placement receipt> <archived materials.bin> <ordinal exporter bin dir> <new .cache subdirectory>",
+    "Usage: bun prepare-native-terrain-inhibitors.mjs <installation> <saved ROFL | 16.23.841.8428> <turret placement receipt> <archived materials.bin> <ordinal exporter bin dir> <new .cache subdirectory> [--authored-catalog]",
   );
 
 const output = resolve(outArg);
@@ -44,28 +53,34 @@ if (parent !== cache && !parent.startsWith(cache + sep))
 const destination = join(parent, basename(output));
 const bytes = (path) => Bun.file(path).bytes();
 const archive = "DATA/FINAL/Maps/Shipping/Map11.wad.client";
-const replay = Uint8Array.from(await bytes(replayFile));
+const replay = authored
+  ? undefined
+  : Uint8Array.from(await bytes(replayOrBuild));
 const options = { allowCurrentBuild: true };
-const prepared = prepareReplayForSeek(
-  replay.buffer,
-  (input, target) =>
-    zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
-  options,
-);
-const { packetReader } = prepared;
-const current = packetReader.build === currentTerrainPositionBuild;
+const prepared =
+  replay === undefined
+    ? undefined
+    : prepareReplayForSeek(
+        replay.buffer,
+        (input, target) =>
+          zstdDecompressSync(input, { maxOutputLength: target.byteLength }),
+        options,
+      );
+const { build, protocol } = prepared?.packetReader ?? {
+  build: currentTerrainPositionBuild,
+  protocol: terrainPositionProtocol,
+};
+const current = build === currentTerrainPositionBuild;
 const receiptBytes = await bytes(receiptFile);
 const placementReceiptSha256 = sha(receiptBytes);
-if (
-  placementReceiptSha256 !== turretPlacementReceiptDigests[packetReader.build]
-)
+if (placementReceiptSha256 !== turretPlacementReceiptDigests[build])
   throw Error("Unexpected exact Map11 turret placement receipt");
 const receipt = JSON.parse(
   new TextDecoder("utf-8", { fatal: true }).decode(receiptBytes),
 );
 const executable = join(installation, "Game", "League of Legends.exe");
 const installedExeSha256 = sha(await bytes(executable));
-if (installedExeSha256 !== championArchiveExecutableHashes[packetReader.build])
+if (installedExeSha256 !== championArchiveExecutableHashes[build])
   throw Error("Installed game executable differs from reviewed build");
 const wad = await openLocalWad(
   installation,
@@ -88,28 +103,14 @@ const tree = readExactMapBin(archived, receipt.archivedBuild, {
 });
 const inventory = readMap11PlaceableInventory(tree, "09e8f830");
 const chunks = new Map(tree.objects.map((object) => [object.pathHash, object]));
-const { opening } = prepareNativeTerrainTurrets(prepared, receipt, options);
-const inhibitors = prepareNativeTerrainInhibitors(prepared, options);
-const openingInhibitors = new Set(
-  inhibitors.read(0).inhibitors.map(({ context }) => context),
-);
-const turretByName = new Map(opening.map((row) => [row.mapNameHash, row]));
-
-// The ordered Map11 cohort allocates contexts to attackable structures and
-// barracks. Every independently decoded turret name and position must align.
-// The six remaining inhibitor slots must exactly match opcode 947 snapshots.
 const rows = inventory.registration.filter(
   ({ kind, attackableType }) =>
     kind === "barracks" || [0, 1, 2].includes(attackableType),
 );
-const firstContext = turretByName.get(rows[0]?.mapNameHash)?.context;
-if (!firstContext || rows.length !== 38)
+if (rows.length !== 38)
   throw Error("Unexpected exact Map11 registration cohort");
 const installedSpans = new Set();
-const instances = [];
-const turretAnchors = [];
-for (const [index, row] of rows.entries()) {
-  const context = firstContext + index;
+const registration = rows.map((row) => {
   const chunk = chunks.get(row.sourceChunk.slice(1, -1));
   const entry = chunk?.fields[mapBinHash("items")]?.entries.find(
     ({ key }) => key.value === row.keyHash,
@@ -119,57 +120,45 @@ for (const [index, row] of rows.entries()) {
   if (installedSpans.has(installedOffset))
     throw Error("Repeated exact registration span");
   installedSpans.add(installedOffset);
-  if (row.attackableType === 0) {
-    const anchor = turretByName.get(row.mapNameHash);
-    if (
-      anchor?.context !== context ||
-      anchor.worldPosition.some(
-        (coordinate, axis) => coordinate !== row.transform[3][axis],
-      )
-    )
-      throw Error(
-        "Replay turret anchors disagree with authored registration order",
-      );
-    turretAnchors.push(anchor);
-  }
-  if (row.attackableType !== 1) continue;
-  if (!openingInhibitors.delete(context))
-    throw Error("Inhibitor slot lacks independent recorded opening state");
-  const team =
-    row.characterRecord === "Characters/Inhibitor/CharacterRecords/SR_Order" &&
-    row.asset === "inhibitor/0" &&
-    row.explicitTeam === null
-      ? 100
-      : row.characterRecord ===
-            "Characters/Inhibitor/CharacterRecords/SR_Chaos" &&
-          row.asset === "inhibitor/3" &&
-          row.explicitTeam === 200
-        ? 200
-        : undefined;
-  if (team === undefined)
-    throw Error("Unexpected authored inhibitor appearance");
-  instances.push({
-    context,
-    mapNameHash: row.mapNameHash,
-    assetId: row.asset.replace("/", "-"),
-    team,
-    transform: row.transform.flat(),
+  const {
+    kind,
+    attackableType,
+    mapNameHash,
+    characterRecord,
+    asset,
+    explicitTeam,
+    transform,
+  } = row;
+  return {
+    kind,
+    attackableType,
+    mapNameHash,
+    characterRecord,
+    asset,
+    explicitTeam,
+    transform,
     placementSource: {
       archivedOffset: span.offset,
       installedOffset,
       bytes: span.bytes.length,
       sha256: sha(span.bytes),
     },
-  });
-}
-if (
-  turretAnchors.length !== 24 ||
-  openingInhibitors.size ||
-  instances.length !== 6 ||
-  instances.filter(({ team }) => team === 100).length !== 3 ||
-  inhibitors.losses === null
-)
-  throw Error("Incomplete exact inhibitor placement or lifecycle evidence");
+  };
+});
+const catalog = {
+  schema: 1,
+  kind: "exact-native-terrain-inhibitor-catalog",
+  build,
+  protocol,
+  placementReceiptSha256,
+  installedExeSha256,
+  installedMapSha256: receipt.installedSha256,
+  registration,
+};
+const bound =
+  prepared === undefined
+    ? undefined
+    : bindNativeTerrainInhibitorCatalog(prepared, receipt, catalog, options);
 const { assets, toolchain } = await exportNativeTerrainStructureModels({
   archive,
   character: "Inhibitor",
@@ -178,29 +167,32 @@ const { assets, toolchain } = await exportNativeTerrainStructureModels({
   wad,
   requireHiddenRanges: false,
 });
-const manifest = {
-  schema: 1,
-  kind: "exact-native-terrain-inhibitors",
-  build: packetReader.build,
-  protocol: packetReader.protocol,
-  replaySha256: sha(replay),
-  placementReceiptSha256,
-  installedExeSha256,
-  installedMapSha256: receipt.installedSha256,
-  scope:
-    "Authored opening inhibitor models and verified loss clocks. Destroyed meshes, transition animation and respawn presentation are unverified.",
-  assets,
-  toolchain,
-  turretAnchors,
-  instances,
-  losses: inhibitors.losses,
-  ...(current
-    ? {
-        presentationOmissions: inhibitors.presentationOmissions,
-        unresolvedSnapshotStates: inhibitors.unresolvedSnapshotStates,
-      }
-    : {}),
-};
+const manifest =
+  bound === undefined || replay === undefined
+    ? { ...catalog, assets, toolchain }
+    : {
+        schema: 1,
+        kind: "exact-native-terrain-inhibitors",
+        build,
+        protocol,
+        replaySha256: sha(replay),
+        placementReceiptSha256,
+        installedExeSha256,
+        installedMapSha256: receipt.installedSha256,
+        scope:
+          "Authored opening inhibitor models and verified loss clocks. Destroyed meshes, transition animation and respawn presentation are unverified.",
+        assets,
+        toolchain,
+        turretAnchors: bound.turretAnchors,
+        instances: bound.instances,
+        losses: bound.losses,
+        ...(current
+          ? {
+              presentationOmissions: bound.presentationOmissions,
+              unresolvedSnapshotStates: bound.unresolvedSnapshotStates,
+            }
+          : {}),
+      };
 await writeFile(
   join(destination, "manifest.json"),
   JSON.stringify(manifest, null, 2),
@@ -209,7 +201,8 @@ await writeFile(
 console.log(
   JSON.stringify({
     destination,
-    instances: instances.length,
-    losses: inhibitors.losses,
+    ...(bound === undefined
+      ? { registration: catalog.registration.length }
+      : { instances: bound.instances.length, losses: bound.losses }),
   }),
 );

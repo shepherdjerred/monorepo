@@ -113,6 +113,15 @@ const SceneIdentitySchema = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      announcerEvents: z
+        .array(
+          z.tuple([
+            z.number().int().nonnegative(),
+            z.number().int().positive(),
+          ]),
+        )
+        .nonempty()
+        .optional(),
     })
     .optional(),
   championInventory: z.object({ tracks: z.array(z.unknown()) }).optional(),
@@ -291,6 +300,8 @@ export async function readRecordedReplay() {
         .map(({ material }) => material.slice(material.lastIndexOf("/") + 1)) ??
       [],
     unitVisibility: teamVision !== undefined,
+    announcerEvents: scene.workerMotion?.announcerEvents,
+    announcerPreview: inventory.capabilities.announcerPreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
     ...capabilities,
     descriptor: {

@@ -207,13 +207,23 @@ Infernal and Mountain transitions resolve to the same authored fixed stinger.
 The verifier checks the packet witnesses and the audio against the original
 recording.
 
-The verifier uses headless offline audio and selects the default Map11 voice.
-For a private package build, pass `--announcer-preview <verified-timing-directory>`.
-The builder checks the exact saved replay, timing receipt, and authored WAVs.
+For 16.23.841.8428, the authored WAVs can be prepared without a replay.
+Run from this package directory with an exact installation and an unused
+private output directory.
+
+```powershell
+bun tools/verify-exact-terrain-announcer.mjs --no-replay $femaleEnglishWpk `
+  $vgmstreamCli $newAnnouncerCatalogDirectory $elementalWpk $heraldBank `
+  --current-catalog $installation
+```
+
+Pass the verified directory to `--announcer-catalog` on the private package
+builder. The worker reads original announcement times from the ROFL and
+uses the four verified Map11 event-to-media mappings. Prepared timing
+remains available through `--announcer-preview <verified-timing-directory>`.
 The player starts muted. Select **Announcer preview (Female1 English)** to
-enable the replay-clock cues in the verified timing directory. Native
-spectator admission, voice selection, and mixing are still separate
-acceptance checks.
+enable the replay-clock cues. Native spectator admission, voice selection,
+and mixing remain unverified.
 The recorded browser sound test decodes the actual WAVs with offline Web Audio
 and captures scheduling without opening an audio device.
 
@@ -325,6 +335,10 @@ then binds the authored placements and models to the replay's opening actors
 and verifies their losses and snapshots. The package omits actors with
 contradictory turret or unresolved inhibitor lifetimes. Verified inhibitor loss
 events remain in the jump menu.
+For current-build inhibitors, use `--authored-inhibitor-catalog` and
+`--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
+manifest. The builder matches the authored registration order to the replay's
+turret anchors and verifies inhibitor opening states and losses.
 For the current recording the Nexus cutoff uses the verified terminal loss.
 
 Create the turret catalog from the pinned build's WAD and placement
@@ -334,6 +348,9 @@ receipt with the existing ordinal exporter. Use a fresh private output path.
 bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-structures.mjs `
   $installation 16.23.841.8428 $turretPlacementReceipt $archivedMaterials `
   $ordinalExporterBin $newTurretCatalogDirectory --authored-catalog
+bun sandbox/poc/league-spectator/replay/tools/prepare-native-terrain-inhibitors.mjs `
+  $installation 16.23.841.8428 $turretPlacementReceipt $archivedMaterials `
+  $ordinalExporterBin $newInhibitorCatalogDirectory --authored-catalog
 ```
 
 The authored request manifest passed in `--champion-animation-cues` supplies

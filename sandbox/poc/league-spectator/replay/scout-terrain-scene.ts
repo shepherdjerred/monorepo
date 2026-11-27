@@ -5,6 +5,11 @@ import type {
   ReplayScoreboard,
 } from "@scout-for-lol/replay/types";
 import {
+  AnnouncerCuesSchema,
+  AnnouncerEventsSchema,
+  validateAnnouncerCues,
+} from "./scout-terrain-announcer.ts";
+import {
   ChampionAnimationCatalogSchema,
   ChampionAnimationCuesSchema,
   ChampionAnimationWorkerCuesSchema,
@@ -374,6 +379,7 @@ const TerrainSceneFields = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
+      announcerEvents: AnnouncerEventsSchema.optional(),
     })
     .optional(),
   navgrid: z
@@ -449,6 +455,18 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "championAnimationCatalog"],
       message:
         "Replay-derived champion animation requires an exact current rendered-model catalog and no embedded cues or motion.",
+    },
+  )
+  .refine(
+    (scene) =>
+      scene.workerMotion?.announcerEvents === undefined ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.motion === undefined),
+    {
+      path: ["workerMotion", "announcerEvents"],
+      message:
+        "Replay-derived announcements require exact current worker motion.",
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -589,6 +607,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     championExperienceTracks:
       createChampionExperienceTracksSchema(z).optional(),
     championAnimationCues: ChampionAnimationWorkerCuesSchema.optional(),
+    announcerCues: AnnouncerCuesSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -678,6 +697,20 @@ async function loadWorkerMotion(
       validateWorkerAnimationCues(
         result.championAnimationCues,
         animationCatalog,
+      );
+    const announcerEvents = workerMotion.announcerEvents;
+    if (
+      (result.announcerCues !== undefined) !==
+      (announcerEvents !== undefined)
+    )
+      throw new Error(
+        "Replay motion worker returned unexpected announcer coverage.",
+      );
+    if (result.announcerCues !== undefined && announcerEvents !== undefined)
+      validateAnnouncerCues(
+        result.announcerCues,
+        announcerEvents,
+        identity.durationMilliseconds / 1000,
       );
     return result;
   } finally {
@@ -806,6 +839,7 @@ export async function loadSceneMotion(
           }),
     },
     heights,
+    announcerCues: decoded.announcerCues,
   };
 }
 
