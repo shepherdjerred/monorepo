@@ -17,6 +17,7 @@ import type {
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   configureConsumerProfileFeatureTest,
+  createTrackedPlayer,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
@@ -36,39 +37,17 @@ const actor = DiscordAccountIdSchema.parse("300000000000000061");
 const { lakeDir } = profileFeature;
 const created = new Date("2026-08-25T12:00:00.000Z");
 
-async function player(options: {
+function player(options: {
   guildId: DiscordGuildId;
   alias: string;
   puuid: LeaguePuuid;
   discordId?: DiscordAccountId;
 }) {
-  const row = await trpc.prisma.player.create({
-    data: {
-      serverId: options.guildId,
-      alias: options.alias,
-      creatorDiscordId: actor,
-      ...(options.discordId === undefined
-        ? {}
-        : { discordId: options.discordId }),
-      createdTime: created,
-      updatedTime: created,
-    },
+  return createTrackedPlayer(trpc.prisma, {
+    ...options,
+    creatorDiscordId: actor,
+    createdAt: created,
   });
-  await trpc.prisma.account.create({
-    data: {
-      serverId: options.guildId,
-      playerId: row.id,
-      alias: `${options.alias} account`,
-      puuid: options.puuid,
-      region: "AMERICA_NORTH",
-      creatorDiscordId: actor,
-      riotGameName: options.alias,
-      riotTagLine: "NA1",
-      createdTime: created,
-      updatedTime: created,
-    },
-  });
-  return row;
 }
 
 function fact(options: {
@@ -508,6 +487,8 @@ function matchupParticipant(options: {
     inhibitor_kills: 0,
     baron_kills: 0,
     dragon_kills: 0,
+    end_of_game_result: "GameComplete",
+    early_surrendered: false,
     ...testLoadoutColumns,
   };
 }

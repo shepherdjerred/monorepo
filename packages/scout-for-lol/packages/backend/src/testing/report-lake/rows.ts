@@ -39,6 +39,10 @@ export type TestLakeMatchFact = {
   puuid: LeaguePuuid;
   /** A bot or unresolved row is written with a NULL puuid; keep it untracked. */
   participantKind?: "bot" | "unresolved";
+  /** The in-game participant number (1-10); defaults to `playerId`. */
+  participantId?: number;
+  /** Riot ended the game early, before the result counted (a remake). */
+  earlySurrendered?: boolean;
   queue: string | null;
   queueId?: number;
   gameMode?: string;
@@ -118,12 +122,12 @@ function participantIdentity(
     ? {
         puuid: fact.puuid,
         participant_kind: "player",
-        participant_id: fact.playerId,
+        participant_id: fact.participantId ?? fact.playerId,
       }
     : {
         puuid: null,
         participant_kind: fact.participantKind,
-        participant_id: fact.playerId,
+        participant_id: fact.participantId ?? fact.playerId,
       };
 }
 
@@ -194,6 +198,21 @@ export function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   };
 }
 
+/** How the game ended: a remake is an early surrender Riot did not count. */
+function remakeFields(
+  fact: Pick<TestLakeMatchFact, "earlySurrendered">,
+): Pick<
+  MatchLakeRow,
+  "end_of_game_result" | "early_surrendered" | "game_ended_in_early_surrender"
+> {
+  const remake = fact.earlySurrendered === true;
+  return {
+    end_of_game_result: remake ? "Abort_Surrendered" : "GameComplete",
+    early_surrendered: remake,
+    game_ended_in_early_surrender: remake,
+  };
+}
+
 function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
   const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
@@ -225,7 +244,7 @@ function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_version: "16.1.1",
     data_source: "RIOT",
     coverage: "complete",
-    end_of_game_result: "GameComplete",
+    ...remakeFields(fact),
     map_id: fact.mapId ?? 11,
     ...participantIdentity(fact),
     team_id: fact.teamId ?? 100,
@@ -241,9 +260,7 @@ function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     ...matchLoadoutLakeFields(loadout),
     win: fact.win,
     surrendered: fact.surrendered,
-    early_surrendered: false,
     game_ended_in_surrender: fact.surrendered,
-    game_ended_in_early_surrender: false,
     team_early_surrendered: false,
     kills: fact.kills,
     deaths: fact.deaths,
