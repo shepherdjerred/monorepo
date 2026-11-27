@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 103,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 13,
+      "tips": [
+        {
+          "text": "Charm Ryze as he flings Overload toward you, so the first hit lands on you and not your health.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        },
+        {
+          "text": "Don't walk into Ryze while Spell Flux is on you; Overload then deals far more damage to you.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        }
+      ],
+      "inputHash": "91a50cf17cf1c3d51efaa0a7d06597b1439600b3584d2398add9dd4b89c2a9aa",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Keep Charm ready for Akali when she comes in; it stops her dash and sets up your damage.",
+          "cites": [
+            { "kind": "ability", "champion": 103, "slot": "E", "name": "Charm" }
+          ]
+        },
+        {
+          "text": "Do not chase Akali into Twilight Shroud; she turns invisible inside it and can strike from the smoke.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        },
+        {
+          "text": "Poke with Orb of Deception while Akali is low on energy, since she can't answer from range.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c0018b7348ca7af607a9702716f84d1906cbd533c9a9a339368694f0b3484f5f",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 90,
+      "tips": [
+        {
+          "text": "Stay away from minions Malzahar has marked with Malefic Visions; if they die, the visions jump to you.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "E",
+              "name": "Malefic Visions"
+            }
+          ]
+        },
+        {
+          "text": "Poke Malzahar often, since Void Shift only holds while he avoids damage and fades after any hit.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "passive",
+              "name": "Void Shift"
+            }
+          ]
+        },
+        {
+          "text": "Respect Malzahar once he has stacked Void Swarm; that is when his lane presence is most dangerous.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "W",
+              "name": "Void Swarm"
+            }
+          ]
+        }
+      ],
+      "inputHash": "0a84e7e4d630a528d4490fda896e8d668f54a46759544a8a2cc745e87bac75d3",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 112,
+      "tips": [
+        {
+          "text": "Charm Viktor as he steps toward you, then land Orb of Deception while he is held in place.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            }
+          ]
+        },
+        {
+          "text": "Step out of Gravity Field before it drops, since anything caught inside is slowed and stays in Viktor's reach.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        }
+      ],
+      "inputHash": "240e664cc39a0620235ed1aebd6206c32e1ee360176c90c6336f21e4b748dd82",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Land Charm on Zed as he moves in, then follow with Orb of Deception and Fox-Fire while he is held.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            }
+          ]
+        },
+        {
+          "text": "Hold Spirit Rush to escape when Zed dashes in with Death Mark, not before.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "R",
+              "name": "Spirit Rush"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "R",
+              "name": "Death Mark"
+            }
+          ]
+        }
+      ],
+      "inputHash": "5facd56b3c0e547c434a627b39c0446040fc7578c27c8bee49dafa995e45888a",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 517,
+      "tips": [
+        {
+          "text": "Chain Lash slows you, so stay out of its range until it's on cooldown, then trade with Orb of Deception.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "Q",
+              "name": "Chain Lash"
+            },
+            { "kind": "keyword", "id": "slowed" },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            }
+          ]
+        },
+        {
+          "text": "Fox-Fire is strongest when Sylas steps in to trade; keep it for that moment rather than spending it early.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            }
+          ]
+        }
+      ],
+      "inputHash": "9ae4aa039ab518121e6b0cfab472824e9039b3856f1fe04d711cf32f5e740c22",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 103,
+      "opponent": 777,
+      "tips": [
+        {
+          "text": "Charm Yone when he dashes in with Mortal Steel, then follow up with Orb of Deception as he closes the gap.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "Q",
+              "name": "Mortal Steel"
+            }
+          ]
+        },
+        {
+          "text": "Trade with Fox-Fire while Spirit Cleave is on cooldown, then step back out of his reach.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "W",
+              "name": "Spirit Cleave"
+            }
+          ]
+        }
+      ],
+      "inputHash": "bbb37363feef972e7b5e3c2a4710b6843e6d888802a551b701a3e4e7fbd658de",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

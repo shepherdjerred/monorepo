@@ -91,3 +91,11 @@ export {
   getChampionDisplayNameById,
 } from "./data-dragon/images.ts";
 export { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
+export * from "./tips/output/champion-tips.ts";
+export {
+  type ChampionTipsReader,
+  type VisibleGeneralTips,
+  type VisibleTips,
+  committedChampionTips,
+  createChampionTipsReader,
+} from "./tips/output/champion-reader.ts";

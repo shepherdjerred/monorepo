@@ -61,7 +61,9 @@ describe("committed game fact files", () => {
     expect(counts.get("rune")).toBeGreaterThan(50);
     expect(counts.get("summoner-spell")).toBeGreaterThan(10);
     expect(counts.get("item")).toBeGreaterThan(500);
-    expect(counts.has("keyword")).toBe(false);
+    // One keyword file per tips glossary entry, none before a glossary exists.
+    const sources = await loadGameFactSources();
+    expect(counts.get("keyword") ?? 0).toBe(sources.keywords.length);
   });
 
   test("stay within the asset size budget", async () => {

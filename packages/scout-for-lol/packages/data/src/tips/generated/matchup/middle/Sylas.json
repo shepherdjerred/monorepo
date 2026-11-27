@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 517,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 517,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Chain Lash Akali as she closes in; it slows her, then follow up with Kingslayer before she can step away.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "Q",
+              "name": "Chain Lash"
+            },
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "W",
+              "name": "Kingslayer"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Aim Chain Lash's blast into her smoke; the area damage can reveal Akali while she hides inside Twilight Shroud.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "Q",
+              "name": "Chain Lash"
+            },
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        },
+        {
+          "text": "Use Hijack on Akali once Perfect Execution is ready, then copy it to chase her down.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "R",
+              "name": "Hijack"
+            },
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "R",
+              "name": "Perfect Execution"
+            }
+          ]
+        }
+      ],
+      "inputHash": "ffc30ba70817ea14db33cb58fd9fce53410ca0088eb96c82d916a14c1b0ba334",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 517,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Pull Ahri in with Abscond / Abduct once she commits to a spell; the recast knocks up and locks her in place.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "E",
+              "name": "Abscond / Abduct"
+            },
+            { "kind": "keyword", "id": "knocked-up" }
+          ]
+        },
+        {
+          "text": "Hijack Ahri when Spirit Rush is up, copying her dash to chase her down or escape a bad fight.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "R",
+              "name": "Hijack"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "R",
+              "name": "Spirit Rush"
+            }
+          ]
+        }
+      ],
+      "inputHash": "9ae4aa039ab518121e6b0cfab472824e9039b3856f1fe04d711cf32f5e740c22",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 517,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Keep Chain Lash ready to slow Zed as he dashes in, since his shadows make him hard to pin down.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "Q",
+              "name": "Chain Lash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Hold Kingslayer until Zed's Living Shadow is already placed, since he is most vulnerable after using it.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "W",
+              "name": "Kingslayer"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            }
+          ]
+        }
+      ],
+      "inputHash": "6e5647fa646c694a8d7977e578d551cdb2fb6609a4769f98e06ad424bd248899",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

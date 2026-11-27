@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "knocked-up",
+      "term": "Knocked up",
+      "aliases": ["knock up", "knocks up", "knocked"],
+      "definition": "Lifted into the air, unable to move or act until landing.",
+      "cites": []
+    },
+    {
+      "id": "rooted",
+      "term": "Rooted",
+      "aliases": ["root", "roots"],
+      "definition": "Cannot move for a short time, though abilities and attacks still work.",
+      "cites": []
+    },
+    {
+      "id": "silenced",
+      "term": "Silenced",
+      "aliases": ["silence", "silences"],
+      "definition": "Cannot cast abilities for a short time.",
+      "cites": []
+    },
+    {
+      "id": "slowed",
+      "term": "Slowed",
+      "aliases": ["slow", "slows"],
+      "definition": "Moves more slowly for a short time.",
+      "cites": []
+    }
+  ]
+}

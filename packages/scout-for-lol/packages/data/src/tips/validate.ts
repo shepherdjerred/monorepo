@@ -18,6 +18,7 @@ import {
   TIP_TEXT_MAX_LENGTH,
   type Tip,
 } from "#src/tips/schema.ts";
+import { maskAbilityNames } from "#src/tips/ability-names.ts";
 import {
   NEAR_DUPLICATE_SIMILARITY,
   type TextIssue,
@@ -234,6 +235,105 @@ function checkAbilityNames(
   return issues;
 }
 
+/**
+ * A keyword cite only links a word in the text to its glossary entry, so a tip
+ * does not depend on one whose word the text lacks: drop it. A cite to an id
+ * the glossary does not have stays, and fails as a bad cite.
+ */
+export function dropAbsentKeywordCites(
+  tips: readonly Tip[],
+  glossary: ReadonlyMap<GlossaryId, GlossaryEntry>,
+): Tip[] {
+  return tips.map((tip) => {
+    const text = normalizeQuotes(tip.text);
+    const cites = tip.cites.filter((cite) => {
+      if (cite.kind !== "keyword") {
+        return true;
+      }
+      const entry = glossary.get(cite.id);
+      return (
+        entry === undefined ||
+        [entry.term, ...entry.aliases].some((term) => mentions(text, term))
+      );
+    });
+    return cites.length === tip.cites.length ? tip : { ...tip, cites };
+  });
+}
+
+/**
+ * A tip that names an ability of its champions without citing it: the name is
+ * a fact the validator can read, so the cite is added rather than the tip
+ * failed (a passive named in passing, "Headshot", is the usual case).
+ */
+export function addMissingAbilityCites(
+  tips: readonly Tip[],
+  context: TipValidationContext,
+): Tip[] {
+  const unit = new Set(context.champions.map((entry) => entry.championId));
+  return tips.map((tip) => {
+    const text = normalizeQuotes(tip.text);
+    const claimed = citedNameSpans(text, tip.cites);
+    const added: Cite[] = [];
+    for (const owner of context.abilityIndex) {
+      const cited = [...tip.cites, ...added].some(
+        (cite) =>
+          cite.kind === "ability" &&
+          cite.champion === owner.championId &&
+          cite.slot === owner.slot,
+      );
+      if (cited || !unit.has(owner.championId)) {
+        continue;
+      }
+      const named = [...text.matchAll(namePattern(owner.name))].some(
+        (match) =>
+          !claimed.some(
+            ([start, end]) =>
+              match.index < end && start < match.index + match[0].length,
+          ),
+      );
+      if (named) {
+        added.push({
+          kind: "ability",
+          champion: owner.championId,
+          slot: owner.slot,
+          name: owner.name,
+        });
+      }
+    }
+    return added.length === 0
+      ? tip
+      : { ...tip, cites: [...tip.cites, ...added] };
+  });
+}
+
+/**
+ * The text's own words: every ability name counts as one plain word, so the
+ * sentence count, the number check and the length limit never read a name's
+ * punctuation or digits as prose.
+ */
+function proseIssues(
+  text: string,
+  citedNumbers: readonly number[],
+  context: TipValidationContext,
+): TipIssue[] {
+  const masked = maskAbilityNames(text, context.abilityIndex);
+  const own = text.length - masked.nameCharacters;
+  return [
+    ...validateText(masked.text, {
+      maxLength: Number.POSITIVE_INFINITY,
+      citedNumbers,
+    }),
+    ...(own > TIP_TEXT_MAX_LENGTH
+      ? [
+          {
+            code: "length" as const,
+            message: `${own.toString()} characters besides ability names, over the ${TIP_TEXT_MAX_LENGTH.toString()} limit`,
+          },
+        ]
+      : []),
+  ];
+}
+
 export function validateTip(
   tip: Tip,
   context: TipValidationContext,
@@ -243,7 +343,7 @@ export function validateTip(
     cite.kind === "abilityNumber" ? cite.values : [],
   );
   const issues: TipIssue[] = [
-    ...validateText(text, { maxLength: TIP_TEXT_MAX_LENGTH, citedNumbers }),
+    ...proseIssues(text, citedNumbers, context),
     ...tip.cites.flatMap((cite): TipIssue[] => {
       const problem = checkCite(cite, text, context);
       return problem === undefined

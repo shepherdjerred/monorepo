@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 13,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 13,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Spell Flux on Akali, then Overload her while she is marked; the bonus damage hits hard on her.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        },
+        {
+          "text": "Hold Rune Prison for when Akali is marked with Flux, since it roots her instead of slowing her.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "W",
+              "name": "Rune Prison"
+            },
+            { "kind": "keyword", "id": "rooted" }
+          ]
+        },
+        {
+          "text": "Watch for Akali's Twilight Shroud smoke and stay out of it; she can strike from invisibility.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            }
+          ]
+        }
+      ],
+      "inputHash": "a1738d390b619a602361264e46667f969f8e836a1c2e66ebb91cc1505523023c",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 13,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Overload first, then Rune Prison on Ahri; with Spell Flux on her she is rooted, not slowed.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "W",
+              "name": "Rune Prison"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            },
+            { "kind": "keyword", "id": "rooted" },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Spread Spell Flux onto Ahri before you trade, since Overload hits hardest against a target carrying Flux.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        }
+      ],
+      "inputHash": "91a50cf17cf1c3d51efaa0a7d06597b1439600b3584d2398add9dd4b89c2a9aa",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 13,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Land Spell Flux on Zed, then Rune Prison; with Flux on him, Rune Prison leaves him rooted in place.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "W",
+              "name": "Rune Prison"
+            },
+            { "kind": "keyword", "id": "rooted" }
+          ]
+        },
+        {
+          "text": "Hit Zed with Overload while he has Flux on him; that is when its damage jumps the most.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        },
+        {
+          "text": "When his Living Shadow is out, stay back; Zed can dash out of it and close the gap on you quickly.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            }
+          ]
+        }
+      ],
+      "inputHash": "fe807fbc5c7a27362f51e392bfdc2ab5e89b510cb95e75b84c3259a98d4590d9",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}
