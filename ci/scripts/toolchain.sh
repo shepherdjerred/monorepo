@@ -45,6 +45,25 @@ if [ -n "${CI_CARGO_CACHE_DIR:-}" ]; then
   done
 fi
 
+# Cargo reads a per-package profile override only from a config file, never from
+# CARGO_PROFILE_* variables. The pipeline sets CI_CARGO_DEPENDENCY_DEBUG so
+# every non-workspace dependency drops debuginfo while workspace crates keep
+# the debuginfo level its environment chooses. A config file in CARGO_HOME
+# binds only CI steps, leaves the repository's Cargo.toml and a developer's
+# builds alone, and does not move CARGO_HOME. `test` inherits these `dev`
+# overrides. Fail on a config this script did not write rather than shadow it.
+if [ -n "${CI_CARGO_DEPENDENCY_DEBUG:-}" ]; then
+  cargo_home="${CARGO_HOME:-$HOME/.cargo}"
+  cargo_ci_config=$(printf '[profile.dev.package."*"]\ndebug = "%s"\n' "$CI_CARGO_DEPENDENCY_DEBUG")
+  if [ -e "$cargo_home/config.toml" ] &&
+    [ "$(cat "$cargo_home/config.toml")" != "$cargo_ci_config" ]; then
+    echo "toolchain: $cargo_home/config.toml exists and is not the CI dependency debuginfo override" >&2
+    return 1
+  fi
+  mkdir -p "$cargo_home"
+  printf '%s\n' "$cargo_ci_config" >"$cargo_home/config.toml"
+fi
+
 # Stale images without mise (the Playwright image) bootstrap the same release
 # ci-base pins, so both read mise.lock's format identically.
 # renovate: datasource=github-releases depName=jdx/mise

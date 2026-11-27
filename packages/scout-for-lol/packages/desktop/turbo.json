@@ -6,7 +6,11 @@
   // repository toolchain again from the unauthenticated default store.
   "tasks": {
     "build": {
-      "passThroughEnv": ["MISE_DATA_DIR"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ],
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
@@ -32,7 +36,11 @@
       "outputs": []
     },
     "typecheck": {
-      "passThroughEnv": ["MISE_DATA_DIR"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ],
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
@@ -57,7 +65,11 @@
       "outputs": []
     },
     "test": {
-      "passThroughEnv": ["MISE_DATA_DIR"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ],
       "inputs": [
         "scripts/*.ts",
         "$TURBO_ROOT$/packages/native-release/src/**",
@@ -87,7 +99,11 @@
       "outputs": []
     },
     "test:ci": {
-      "passThroughEnv": ["MISE_DATA_DIR"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ],
       "inputs": [
         "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
         "$TURBO_ROOT$/scripts/ci/test-manifest-schema.ts",
@@ -122,7 +138,11 @@
       "outputs": []
     },
     "lint": {
-      "passThroughEnv": ["MISE_DATA_DIR"],
+      "passThroughEnv": [
+        "MISE_DATA_DIR",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_TEST_DEBUG"
+      ],
       "inputs": [
         "**/*.rs",
         "**/Cargo.toml",
