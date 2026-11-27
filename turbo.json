@@ -385,6 +385,7 @@
       "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
+        "scripts/ci/prettier/toolchain.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -408,6 +409,7 @@
       "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
+        "scripts/ci/prettier/toolchain.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -431,6 +433,7 @@
       "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
+        "scripts/ci/prettier/toolchain.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
@@ -456,6 +459,7 @@
       "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
+        "scripts/ci/prettier/toolchain.ts",
         "bun.lock",
         "package.json",
         ".gitignore",
