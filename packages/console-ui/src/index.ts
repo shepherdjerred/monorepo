@@ -36,6 +36,10 @@ export {
   type AppSwitcherProps,
 } from "@shepherdjerred/console-ui/components/shell/app-switcher.tsx";
 export {
+  ButtonLink,
+  type ButtonLinkProps,
+} from "@shepherdjerred/console-ui/components/button-link.tsx";
+export {
   Button,
   type ButtonProps,
   type ButtonSize,

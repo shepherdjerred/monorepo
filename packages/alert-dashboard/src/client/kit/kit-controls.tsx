@@ -1,5 +1,6 @@
 import {
   Button,
+  ButtonLink,
   Chip,
   Dialog,
   DialogClose,
@@ -55,10 +56,10 @@ export function KitControls(): React.JSX.Element {
             <Button variant="primary">Primary</Button>
             <Button variant="danger">Danger</Button>
             <Button disabled>Disabled</Button>
-            <Button render={<a href="#alerts" />} nativeButton={false}>
+            <ButtonLink href="#alerts">
               <External aria-hidden="true" />
               Link
-            </Button>
+            </ButtonLink>
             <IconButton icon={Copy} label="Copy link" />
             <DeleteDialog />
           </div>

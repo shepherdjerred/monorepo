@@ -4,6 +4,7 @@ import { ClockIcon, HouseIcon } from "lucide-react";
 import { describe, expect, test } from "vitest";
 import { Banner } from "@shepherdjerred/console-ui/components/banner.tsx";
 import { Button } from "@shepherdjerred/console-ui/components/button.tsx";
+import { ButtonLink } from "@shepherdjerred/console-ui/components/button-link.tsx";
 import { Chip } from "@shepherdjerred/console-ui/components/chip.tsx";
 import { createCommandPaletteStore } from "@shepherdjerred/console-ui/components/command-palette.tsx";
 import { ConsoleShell } from "@shepherdjerred/console-ui/components/shell/console-shell.tsx";
@@ -169,16 +170,24 @@ describe("StatusGlyph and Chip", () => {
 });
 
 describe("Button", () => {
-  test("has a danger variant and renders links through Base UI", () => {
+  test("has a danger variant; ButtonLink is a real link without role=button", () => {
     expect(
       renderToStaticMarkup(<Button variant="danger">Delete</Button>),
     ).toContain('data-variant="danger"');
     const link = renderToStaticMarkup(
-      <Button render={<a href="/new" />} nativeButton={false}>
+      <ButtonLink href="/new" variant="primary">
         New
-      </Button>,
+      </ButtonLink>,
     );
-    expect(link).toMatch(/^<a href="\/new"[^>]*class="ui-btn"/);
+    expect(link).toMatch(/^<a [^>]*href="\/new"/);
+    expect(link).toContain('class="ui-btn"');
+    expect(link).toContain('data-variant="primary"');
+    expect(link).not.toContain("role=");
+    const routed = renderToStaticMarkup(
+      <ButtonLink render={<a href="/routed" />}>Go</ButtonLink>,
+    );
+    expect(routed).toContain('class="ui-btn"');
+    expect(routed).not.toContain("role=");
   });
 });
 
