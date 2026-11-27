@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
-import { createNativeTerrainChampionCreation88Reader } from "./native-terrain-champion-identities.mjs";
+import { readSelectedChampionAsset } from "./native-terrain-champion-opening.mjs";
+
+export {
+  corroborateChampionModelSelections,
+  readChampionModelSelections,
+} from "./native-terrain-champion-opening.mjs";
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const digestPattern = /^[a-f0-9]{64}$/;
@@ -45,73 +50,6 @@ export function verifyNativeCatalogOpening(opening, selections, replaySha256) {
     );
     rowsByContext.delete(context);
   }
-}
-
-export function readChampionModelSelections(prepared, codecs, options) {
-  const { observations, packetReader } = prepared;
-  const readCreation = createNativeTerrainChampionCreation88Reader(
-    observations,
-    codecs,
-    options,
-  );
-  const { keyframe, packets } = packetReader.read(0);
-  assert.equal(keyframe.timeSeconds, 0);
-  let opcode = null;
-  let context = 0;
-  const creations = [];
-  for (const packet of packets) {
-    if (packet.stream !== 2 || packet.chunkOffset !== keyframe.chunkOffset)
-      break;
-    opcode = packet.explicitOpcode ?? opcode;
-    context =
-      packet.marker & 32
-        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
-        : packet.paramBits;
-    if (opcode !== 88) continue;
-    assert.equal(context, 0, "Unexpected opcode 88 envelope context");
-    creations.push(readCreation(packet.payload, { includeSkin: true }));
-  }
-  return corroborateChampionModelSelections(observations, creations);
-}
-
-export function corroborateChampionModelSelections(observations, creations) {
-  const { binding, roster } = observations;
-  assert.equal(roster.length, 10, "Expected a complete 5v5 footer");
-  assert.equal(binding.unresolved.length, 0, "Roster contexts are unresolved");
-  assert.equal(binding.verified.length, roster.length);
-  assert.equal(
-    creations.length,
-    roster.length,
-    "Expected one creation per participant",
-  );
-  const footerRows = new Map(
-    binding.verified.map(({ context, footerRow }) => [context, footerRow]),
-  );
-  assert.equal(footerRows.size, roster.length, "Duplicate bound context");
-  assert.equal(
-    new Set(footerRows.values()).size,
-    roster.length,
-    "Duplicate footer row",
-  );
-  const contexts = new Set();
-  return creations.map(({ context, champion, skinId }) => {
-    assert.ok(!contexts.has(context), "Duplicate opening creation context");
-    contexts.add(context);
-    const footerRow = footerRows.get(context);
-    assert.ok(
-      Number.isInteger(footerRow) &&
-        footerRow >= 1 &&
-        footerRow <= roster.length,
-    );
-    assert.equal(
-      champion,
-      roster[footerRow - 1].champion,
-      "Opening creation champion disagrees with its footer row",
-    );
-    assert.match(champion, /^[a-z0-9_]+$/i);
-    assert.ok(Number.isSafeInteger(skinId) && skinId >= 0 && skinId <= 10000);
-    return { context, champion, skinId };
-  });
 }
 
 async function readCatalogFile(root, file, maxBytes) {
@@ -194,13 +132,7 @@ export async function openChampionModelCatalog(
   );
   async function readModel({ context, champion, skinId }) {
     const key = `${champion.toLowerCase()}-${skinId}`;
-    assert.ok(
-      Object.hasOwn(catalog.assets, key),
-      `Missing exact champion skin: ${key}`,
-    );
-    const asset = catalog.assets[key];
-    assert.equal(asset.champion, champion);
-    assert.equal(asset.skinId, skinId);
+    const asset = readSelectedChampionAsset(catalog, { champion, skinId });
     const { skinScale, hiddenRanges, model } = asset;
     assert.ok(
       skinScale === null || (Number.isFinite(skinScale) && skinScale > 0),

@@ -169,13 +169,26 @@ async function verifyCurrentNeutralCamps(page: Page, testInfo: TestInfo) {
   );
 }
 
-async function verifyAdditionalCampModels(page: Page, testInfo: TestInfo) {
+async function verifyAdditionalCampModels(
+  page: Page,
+  testInfo: TestInfo,
+  campSkins: [string, number][] | undefined,
+) {
   await page.goto(`${replayPath}?t=85.6`);
   const play = page.getByRole("button", { name: "Play", exact: true });
   await expect(play).toBeVisible();
   const gromp = [12_659.8058, 6440.5835] as const;
   expect(await drawsNear(page, 17_172, gromp)).toBe(true);
   await captureObjective(page, gromp, testInfo.outputPath("current-gromp.png"));
+
+  if (campSkins !== undefined) {
+    const skins = new Map(campSkins);
+    expect(skins.get("sru_blue")).toBe(4);
+    expect(skins.get("sru_red")).toBe(3);
+    expect(skins.has("sru_horde")).toBe(false);
+    await verifyAuthoredCampSkins(page, testInfo);
+    return;
+  }
 
   await page.goto(`${replayPath}?t=473.2950651855469`);
   await expect(play).toBeVisible();
@@ -190,6 +203,48 @@ async function verifyAdditionalCampModels(page: Page, testInfo: TestInfo) {
     [4842, 10_638],
     testInfo.outputPath("current-void-grubs.png"),
   );
+}
+
+async function verifyAuthoredCampSkins(page: Page, testInfo: TestInfo) {
+  const play = page.getByRole("button", { name: "Play", exact: true });
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  for (const { name, clock, position, indices, perspective } of [
+    {
+      name: "blue-sentinel",
+      clock: 56.1,
+      position: [11_052.37, 6945.0064],
+      indices: 26_802,
+      perspective: "red",
+    },
+    {
+      name: "red-brambleback",
+      clock: 77.6,
+      position: [7746.4155, 4000.7678],
+      indices: 26_439,
+      perspective: "blue",
+    },
+    {
+      name: "gromp-keyframe",
+      clock: "180.06082153320312",
+      position: [2112, 8450],
+      indices: 17_172,
+      perspective: "blue",
+    },
+  ] as const) {
+    await page.goto(
+      `${replayPath}?t=${String(clock)}&perspective=${perspective}`,
+    );
+    await expect(play).toBeVisible();
+    await expect(vision).toHaveValue(perspective);
+    await expect.poll(() => drawsNear(page, indices, position)).toBe(true);
+    await captureObjective(
+      page,
+      position,
+      testInfo.outputPath(`current-${name}.png`),
+    );
+    await vision.selectOption(perspective === "red" ? "blue" : "red");
+    await expect.poll(() => drawsNear(page, indices, position)).toBe(false);
+  }
 }
 
 export async function verifyRecordedNeutralObjectives(
@@ -207,7 +262,11 @@ export async function verifyRecordedNeutralObjectives(
     if (fixture.directNeutralCamps) {
       await verifyCurrentNeutralCamps(page, testInfo);
       if (fixture.directNeutralModels.some(([name]) => name === "sru_gromp"))
-        await verifyAdditionalCampModels(page, testInfo);
+        await verifyAdditionalCampModels(
+          page,
+          testInfo,
+          fixture.directNeutralCampSkins,
+        );
     }
     return;
   }

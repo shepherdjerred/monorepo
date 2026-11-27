@@ -15,6 +15,9 @@ const campOracleSha256 =
 const campModelOracleFile = "scout-8428-neutral-camp-model-oracle.json";
 const campModelOracleSha256 =
   "c1173c2aafe9ef0fd2f34ad8390a6f7ac66f43791b633febd968fa31f0380818";
+const campSkinOracleFile = "scout-8428-camp-skin-keyframe-scene-oracle.json";
+const campSkinOracleSha256 =
+  "b033961107f9e90e048b33fc16557392dedd9449c7e9f619c30763365f46a80a";
 const replayDigest =
   "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
 const oracle = z.object({
@@ -48,9 +51,11 @@ export async function verifyDirectNeutralWorker(
   {
     directNeutralModels: models,
     directNeutralCamps: camps,
+    directNeutralCampSkins: campSkins,
   }: {
     directNeutralModels: [string, number][] | undefined;
     directNeutralCamps: boolean;
+    directNeutralCampSkins: [string, number][] | undefined;
   },
   actual: {
     neutralObjectiveInstances?: unknown;
@@ -71,7 +76,11 @@ export async function verifyDirectNeutralWorker(
     camps && models.some(([name]) => name === "sru_gromp");
   let file = oracleFile;
   let digest = oracleSha256;
-  if (extendedCampModels) {
+  if (campSkins !== undefined) {
+    expect(camps).toBe(true);
+    file = campSkinOracleFile;
+    digest = campSkinOracleSha256;
+  } else if (extendedCampModels) {
     file = campModelOracleFile;
     digest = campModelOracleSha256;
   } else if (camps) {

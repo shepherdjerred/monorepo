@@ -104,12 +104,19 @@ const SceneIdentitySchema = z.object({
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
+  playerState: z.unknown().optional(),
+  championEliminations: z.unknown().optional(),
+  winningTeam: z.unknown().optional(),
   workerMotion: z
     .object({
       decodeChampionStats: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       decodeNeutralCamps: z.literal(true).optional(),
+      decodePlayerState: z.literal(true).optional(),
+      neutralCampSkins: z
+        .array(z.tuple([z.string(), z.number().int().nonnegative()]))
+        .optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
       terrainControllerGraph: z.object({}).optional(),
       laneMinionCatalog: z
@@ -244,11 +251,28 @@ function championCapabilities({
   };
 }
 
-function workerCapabilities({
+function usesDirectPlayerState({
   workerMotion,
-  terrainVisibility,
-  teamVision,
+  playerState,
+  championEliminations,
+  winningTeam,
 }: z.infer<typeof SceneIdentitySchema>) {
+  const direct = workerMotion?.decodePlayerState === true;
+  if (
+    direct &&
+    [playerState, championEliminations, winningTeam].some(
+      (value) => value !== undefined,
+    )
+  )
+    throw new Error(
+      "Direct player state requires a scene without baked state.",
+    );
+  return direct;
+}
+
+function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
+  const { workerMotion, terrainVisibility, teamVision } = scene;
+  const directPlayerState = usesDirectPlayerState(scene);
   const directTerrainVisibility =
     workerMotion?.terrainControllerGraph !== undefined;
   if (directTerrainVisibility && terrainVisibility !== undefined)
@@ -265,7 +289,10 @@ function workerCapabilities({
     directLaneModels: workerMotion?.laneMinionCatalog?.models,
     directNeutralModels: workerMotion?.neutralObjectiveModels,
     directNeutralCamps: workerMotion?.decodeNeutralCamps === true,
+    directNeutralCampSkins: workerMotion?.neutralCampSkins,
+    directPlayerState,
     directWorldObservations:
+      directPlayerState ||
       directTerrainVisibility ||
       directTeamVision ||
       workerMotion?.laneMinionCatalog !== undefined ||

@@ -3,6 +3,28 @@ const modelName =
 const campModelName =
   /^sru_(?:blue|crab|gromp|horde|krug(?:mini)?|murkwolf(?:mini)?|razorbeak(?:mini)?|red)$/;
 
+export function readCurrentNeutralCampSkins(rows, modelIds) {
+  if (!Array.isArray(rows)) throw Error("Missing recorded camp skin bindings");
+  const result = new Map();
+  for (const [modelId, skinId] of rows) {
+    if (
+      !campModelName.test(modelId) ||
+      !modelIds.has(modelId) ||
+      !Number.isSafeInteger(skinId) ||
+      skinId < 0 ||
+      skinId > 0xffffffff ||
+      result.has(modelId)
+    )
+      throw Error("Invalid recorded camp skin binding");
+    result.set(modelId, skinId);
+  }
+  if (
+    [...modelIds.keys()].some((id) => campModelName.test(id) && !result.has(id))
+  )
+    throw Error("Missing authored camp model skin binding");
+  return result;
+}
+
 export function readCurrentNeutralObjectiveModelIds(
   models,
   includeCamps = false,
@@ -65,6 +87,20 @@ function neutralPaths(observations, end, worldPoint) {
   });
 }
 
+function includeKeyframePoints(paths, observations, end, worldPoint) {
+  if (observations === undefined) return paths;
+  let index = 0;
+  const points = neutralPaths(observations, end, worldPoint).filter(
+    (anchor) => {
+      while (paths[index]?.endTimeSeconds < anchor.timeSeconds) index++;
+      return !(paths[index]?.timeSeconds <= anchor.timeSeconds);
+    },
+  );
+  return [...paths, ...points].toSorted(
+    (a, b) => a.timeSeconds - b.timeSeconds,
+  );
+}
+
 /** Select exact recorded placement and movement for independently supplied authored models. */
 export function prepareCurrentNeutralObjectiveScene({
   evidence,
@@ -72,6 +108,7 @@ export function prepareCurrentNeutralObjectiveScene({
   waypointOrigin,
   durationSeconds,
   includeCamps = false,
+  campSkins,
 }) {
   if (
     waypointOrigin.length !== 2 ||
@@ -94,6 +131,12 @@ export function prepareCurrentNeutralObjectiveScene({
   const actors = includeCamps
     ? [...evidence.actors, ...evidence.campActors]
     : evidence.actors;
+  const keyframePoints = new Map(
+    (evidence.keyframeAnchors ?? []).map(({ context, observations }) => [
+      context,
+      observations,
+    ]),
+  );
   const neutralObjectiveInstances = actors.flatMap(
     ({
       context,
@@ -101,9 +144,15 @@ export function prepareCurrentNeutralObjectiveScene({
       creationTimeSeconds,
       killTimeSeconds,
       observations,
+      requestedSkinId,
     }) => {
       const participantId = modelIds.get(modelId);
       if (participantId === undefined) return omit("missingAuthoredModel");
+      if (
+        campModelName.test(modelId) &&
+        (!campSkins?.has(modelId) || campSkins.get(modelId) !== requestedSkinId)
+      )
+        return omit("unverifiedRequestedSkin");
       const end = killTimeSeconds ?? durationSeconds;
       if (
         !Number.isFinite(creationTimeSeconds) ||
@@ -121,7 +170,12 @@ export function prepareCurrentNeutralObjectiveScene({
         throw Error(
           "Current neutral objective observation conflicts with its lifetime",
         );
-      const paths = neutralPaths(observations, end, worldPoint);
+      const paths = includeKeyframePoints(
+        neutralPaths(observations, end, worldPoint),
+        keyframePoints.get(context),
+        end,
+        worldPoint,
+      );
       if (paths.length === 0) return omit("missingRecordedMotion");
       return [
         { context, participantId, creationTimeSeconds, killTimeSeconds, paths },

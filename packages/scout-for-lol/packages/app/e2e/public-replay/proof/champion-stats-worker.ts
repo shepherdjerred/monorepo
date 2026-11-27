@@ -93,6 +93,8 @@ const reply = z.object({
   neutralObjectiveKills: z.array(z.unknown()).optional(),
   neutralObjectiveOmissions: z.unknown().optional(),
   neutralCampCoverage: z.unknown().optional(),
+  neutralCampSkins: z.unknown().optional(),
+  recordedPlayerState: z.unknown().optional(),
   announcerCues: z
     .array(
       z
@@ -106,6 +108,8 @@ const reply = z.object({
 });
 
 const oracleFiles = {
+  "scout-8428-recorded-player-state-oracle.json":
+    "cc78e35ebce1cb10a2e7d161a99cf503571aab01ea105dc3aa8da166efd0298b",
   "scout-8428-camp-vision-native-tracks.json":
     "2315749d31b008bd0589141158143c47e4594fdb1131bd44331fe6eef31cf544",
   "scout-8428-v30-neutral-visibility-native-tracks.json":
@@ -178,6 +182,8 @@ export async function verifyDirectChampionStatsWorker(
     directLaneModels: [string, number][] | undefined;
     directNeutralModels: [string, number][] | undefined;
     directNeutralCamps: boolean;
+    directNeutralCampSkins: [string, number][] | undefined;
+    directPlayerState: boolean;
     terrainVisibility:
       z.infer<typeof RecordedTerrainVisibilitySchema> | undefined;
   },
@@ -216,6 +222,8 @@ export async function verifyDirectChampionStatsWorker(
     laneMinionCatalog: fixture.directLaneModels !== undefined,
     neutralObjectiveModels: fixture.directNeutralModels !== undefined,
     decodeNeutralCamps: fixture.directNeutralCamps,
+    neutralCampSkins: fixture.directNeutralCampSkins !== undefined,
+    decodePlayerState: fixture.directPlayerState,
   })
     .filter(([, enabled]) => enabled)
     .map(([key]) => key);
@@ -228,6 +236,13 @@ export async function verifyDirectChampionStatsWorker(
       "replayBytes",
       "waypointOrigin",
     ].sort(),
+  );
+  expect(actual.neutralCampSkins).toEqual(fixture.directNeutralCampSkins);
+  await verifyDirectPlayerState(
+    actual.recordedPlayerState,
+    fixture.directPlayerState,
+    oracleRoot,
+    descriptor.sha256,
   );
   await verifyDirectLaneWorker(
     oracleRoot,
@@ -406,6 +421,37 @@ async function verifyDirectTeamVision(
   expect(tracks?.toSorted((a, b) => a.context - b.context)).toEqual(
     expectedTracks.toSorted((a, b) => a.context - b.context),
   );
+}
+
+async function verifyDirectPlayerState(
+  actual: unknown,
+  enabled: boolean,
+  oracleRoot: string,
+  replaySha256: string,
+) {
+  if (enabled) {
+    const expected = z
+      .strictObject({
+        replaySha256: z.string(),
+        recordedPlayerState: z.strictObject({
+          playerState: z.unknown(),
+          championEliminations: z.array(z.unknown()),
+          winningTeam: z.number().optional(),
+        }),
+      })
+      .parse(
+        decode(
+          await readOracle(
+            oracleRoot,
+            "scout-8428-recorded-player-state-oracle.json",
+          ),
+        ),
+      );
+    expect(expected.replaySha256).toBe(replaySha256);
+    expect(actual).toEqual(expected.recordedPlayerState);
+  } else {
+    expect(actual).toBeUndefined();
+  }
 }
 
 export async function readDirectAnnouncerWorker(page: Page) {

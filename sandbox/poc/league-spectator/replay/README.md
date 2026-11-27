@@ -181,11 +181,16 @@ bun tools/native-terrain-camp-model-catalog.mjs $installation $historicalActorMa
 Add `--neutral-camp-model-catalog` and `--neutral-camp-model-catalog-sha256`
 to the private build alongside the neutral objective catalog. The worker
 derives recorded camp lifetimes and bounded movement and checks Void Grub kill
-credits against the footer. The catalog covers Scuttle, wolves, raptors, Gromp,
-and Void Grubs. Gromp and Void Grubs use the mesh scale from the archived
-constructor's default.
-Actors without verified models or recorded positions are omitted. Camp and
-objective animations remain unverified.
+credits against the footer. It admits the model only when the requested skin
+from the original creation packet matches the catalog binding. The catalog
+covers Scuttle, wolves, raptors, Gromp, Blue Sentinel skin 4, and Red Brambleback
+skin 3. Gromp uses the archived mesh constructor's default scale. Recorded
+Void Grubs in the reviewed replay request skin 1, which lacks a verified GLB.
+
+Keyframe points supplement the ordinary paths only at the original checkpoint
+clock, with a matching actor identity inside its verified lifetime. Actors
+without verified models or recorded positions are omitted. Camp and objective
+animations remain unverified.
 
 Prepare the first lane-minion wave in the reviewed long replay with the
 archived native packet reader and the original Map11 melee and ranged skins.
@@ -617,6 +622,10 @@ Native animation blending and preemption remain unverified.
 The recorded browser test checks team kills, roster statistics, and the
 winner at the exact replay end. It reads expected final scores independently
 from the original ROFL footer and checks that rewinding clears the result.
+With `--player-state-from-replay`, an exact `.8428` package derives the
+scoreboard, player lifecycles, elimination jumps, and winning team in the
+motion worker directly from the original replay. The package carries no
+prepared player checkpoints or elimination timeline in this mode.
 
 With the same manifest and replay inputs, run the 1080p frame submission
 sampler from the app workspace. The default is headless Microsoft Edge.

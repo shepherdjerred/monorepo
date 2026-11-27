@@ -88,6 +88,23 @@ const playerState = z.object({
   level: z.number().int().positive().nullable(),
   alive: z.boolean().nullable(),
 });
+const PlayerStateSchema = z.object({
+  checkpoints: z
+    .array(
+      z.object({
+        timeSeconds: z.number().nonnegative(),
+        players: z.array(playerState).length(10),
+      }),
+    )
+    .nonempty(),
+});
+const ChampionEliminationsSchema = z.array(
+  z.strictObject({
+    timeSeconds: z.number().nonnegative(),
+    killerId: participantId,
+    victimId: participantId,
+  }),
+);
 const terrainFrame = z.object({
   timeSeconds: z.number().nonnegative(),
   markers: z.array(
@@ -300,15 +317,7 @@ const TerrainSceneFields = z.object({
     championExperienceThresholdsSchema(z).optional(),
   championInventory: replayInventorySceneSchema(z).optional(),
   championInventoryItems: z.array(replayItemAssetSchema(z)).optional(),
-  championEliminations: z
-    .array(
-      z.strictObject({
-        timeSeconds: z.number().nonnegative(),
-        killerId: participantId,
-        victimId: participantId,
-      }),
-    )
-    .optional(),
+  championEliminations: ChampionEliminationsSchema.optional(),
   mapBounds: bounds,
   followCameraDefaults: z
     .object({
@@ -350,18 +359,7 @@ const TerrainSceneFields = z.object({
   inhibitorLosses: z
     .array(z.object({ timeSeconds: z.number().positive() }))
     .optional(),
-  playerState: z
-    .object({
-      checkpoints: z
-        .array(
-          z.object({
-            timeSeconds: z.number().nonnegative(),
-            players: z.array(playerState).length(10),
-          }),
-        )
-        .nonempty(),
-    })
-    .optional(),
+  playerState: PlayerStateSchema.optional(),
   participants: z
     .array(
       z.object({
@@ -479,6 +477,7 @@ const TerrainSceneFields = z.object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
       allowCurrentBuild: z.literal(true).optional(),
       decodeChampionStats: z.literal(true).optional(),
+      decodePlayerState: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
@@ -495,6 +494,15 @@ const TerrainSceneFields = z.object({
         .max(19)
         .optional(),
       decodeNeutralCamps: z.literal(true).optional(),
+      neutralCampSkins: z
+        .array(
+          z.tuple([
+            z.union([NeutralCampModelIdSchema, z.literal("sru_horde")]),
+            z.number().int().nonnegative().max(0xffffffff),
+          ]),
+        )
+        .max(11)
+        .optional(),
       decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
@@ -672,6 +680,8 @@ export const SceneSchema = TerrainSceneFields.refine(
       const models = scene.workerMotion?.neutralObjectiveModels;
       const bindings = scene.neutralObjectiveModelBindings;
       const decodeCamps = scene.workerMotion?.decodeNeutralCamps === true;
+      if (decodeCamps !== (scene.workerMotion?.neutralCampSkins !== undefined))
+        return false;
       if (models === undefined) return bindings === undefined && !decodeCamps;
       return (
         bindings !== undefined &&
@@ -698,6 +708,20 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "neutralObjectiveModels"],
       message:
         "Replay-derived objectives require exact current model bindings and no baked objectives or vision.",
+    },
+  )
+  .refine(
+    (scene) =>
+      scene.workerMotion?.decodePlayerState !== true ||
+      (scene.identity.build === currentTerrainPositionBuild &&
+        scene.workerMotion.allowCurrentBuild === true &&
+        scene.playerState === undefined &&
+        scene.championEliminations === undefined &&
+        scene.winningTeam === undefined),
+    {
+      path: ["workerMotion", "decodePlayerState"],
+      message:
+        "Replay-derived player state requires exact current worker motion without prepared state.",
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
@@ -847,6 +871,13 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     neutralObjectiveKills: NeutralObjectiveWorkerKillsSchema.optional(),
     neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
     neutralCampCoverage: NeutralCampCoverageSchema.optional(),
+    recordedPlayerState: z
+      .strictObject({
+        playerState: PlayerStateSchema,
+        championEliminations: ChampionEliminationsSchema,
+        winningTeam: teamId.optional(),
+      })
+      .optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -967,6 +998,11 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    if (
+      (result.recordedPlayerState !== undefined) !==
+      (workerMotion.decodePlayerState === true)
+    )
+      throw Error("Replay motion worker returned unexpected player state.");
     const decodeLanes = workerMotion.laneMinionCatalog !== undefined;
     if (
       (result.laneMinionInstances !== undefined) !== decodeLanes ||
@@ -1451,6 +1487,9 @@ export async function loadSceneMotion(
               animationCues.length === 0 ? undefined : animationCues,
             workerMotion: undefined,
           }),
+      ...(decoded.recordedPlayerState === undefined
+        ? {}
+        : { ...decoded.recordedPlayerState, workerMotion: undefined }),
     },
     heights,
     announcerCues: decoded.announcerCues,

@@ -7,6 +7,7 @@ import {
 } from "./native-terrain-byte-codecs.mjs";
 import {
   prepareCurrentNeutralObjectiveScene,
+  readCurrentNeutralCampSkins,
   readCurrentNeutralObjectiveModelIds,
 } from "./recorded-current-neutral-objective-scene.mjs";
 import { createCurrentNeutralObjectiveCollector } from "./recorded-current-neutral-objectives.mjs";
@@ -176,6 +177,87 @@ test("omits ordinary camps with ambiguous endpoints and rejects malformed packet
   assert.throws(
     () => make("SRU_Red.8.1").observe(packet(1197, 2)),
     /Truncated lane death header/,
+  );
+});
+
+test("requires the recorded camp skin and leaves covered ordinary path intervals intact", () => {
+  const modelIds = readCurrentNeutralObjectiveModelIds(
+    [["sru_horde", 201]],
+    true,
+  );
+  const campSkins = readCurrentNeutralCampSkins([["sru_horde", 1]], modelIds);
+  assert.throws(
+    () => readCurrentNeutralCampSkins([], modelIds),
+    /Missing authored/,
+  );
+  const evidence = {
+    actors: [],
+    campActors: [
+      {
+        context: 130,
+        modelId: "sru_horde",
+        requestedSkinId: 1,
+        creationTimeSeconds: 1,
+        killTimeSeconds: 7,
+        observations: [
+          {
+            timeSeconds: 2,
+            speed: 10,
+            encodedWaypoints: [
+              [0, 0],
+              [10, 0],
+            ],
+          },
+        ],
+      },
+    ],
+    events: [],
+    hordeEvents: [
+      {
+        subjectContext: 130,
+        actorContext: 101,
+        modelId: "sru_horde",
+        timeSeconds: 7,
+      },
+    ],
+    keyframeAnchors: [
+      {
+        context: 130,
+        observations: [3, 5].map((timeSeconds) => ({
+          timeSeconds,
+          speed: 0,
+          encodedWaypoints: [[10, 0]],
+        })),
+      },
+    ],
+  };
+  const project = (skins) =>
+    prepareCurrentNeutralObjectiveScene({
+      evidence,
+      modelIds,
+      waypointOrigin: [7358, 7412],
+      durationSeconds: 10,
+      includeCamps: true,
+      campSkins: skins,
+    });
+  const matches = project(campSkins);
+  assert.deepEqual(
+    matches.neutralObjectiveInstances[0].paths.map(
+      ({ timeSeconds, endTimeSeconds }) => [timeSeconds, endTimeSeconds],
+    ),
+    [
+      [2, 4],
+      [5, 5],
+    ],
+  );
+  const mismatch = project(new Map([["sru_horde", 0]]));
+  assert.deepEqual(mismatch.neutralObjectiveInstances, []);
+  assert.deepEqual(mismatch.neutralObjectiveOmissions, {
+    unverifiedRequestedSkin: 1,
+  });
+  assert.deepEqual(
+    mismatch.neutralObjectiveKills,
+    matches.neutralObjectiveKills,
   );
 });
 

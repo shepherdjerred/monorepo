@@ -17,6 +17,7 @@ import {
 } from "./native-terrain-controller-visibility.mjs";
 import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
 import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
+import { readCurrentRecordedPlayerState } from "./native-terrain-player-state.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
 import { verifyRecordedChampionExperienceFooter } from "./recorded-champion-experience-tracks.mjs";
@@ -24,6 +25,7 @@ import { createRecordedInventoryCollector } from "./recorded-inventory-packets.m
 import { createCurrentNeutralObjectiveCollector } from "./recorded-current-neutral-objectives.mjs";
 import {
   prepareCurrentNeutralObjectiveScene,
+  readCurrentNeutralCampSkins,
   readCurrentNeutralObjectiveModelIds,
 } from "./recorded-current-neutral-objective-scene.mjs";
 import { createCurrentLaneMinionCollector } from "./recorded-lane-minion-tracks.mjs";
@@ -274,6 +276,7 @@ async function prepareMotion({
   decoderBytes,
   allowCurrentBuild = false,
   decodeChampionStats,
+  decodePlayerState,
   decodeChampionInventory,
   decodeChampionExperience,
   championAnimationCatalog,
@@ -283,6 +286,7 @@ async function prepareMotion({
   laneMinionCatalog,
   neutralObjectiveModels,
   decodeNeutralCamps,
+  neutralCampSkins,
   terrainControllerGraph,
 }) {
   if (
@@ -303,11 +307,24 @@ async function prepareMotion({
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
   if (
+    decodePlayerState !== undefined &&
+    (decodePlayerState !== true ||
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived player state requires the reviewed current build.",
+    );
+  if (
     decodeNeutralCamps !== undefined &&
     (decodeNeutralCamps !== true || neutralObjectiveModels === undefined)
   )
     throw Error(
       "Replay-derived camps require authored neutral model bindings.",
+    );
+  if ((decodeNeutralCamps === true) !== (neutralCampSkins !== undefined))
+    throw Error(
+      "Replay-derived camps require verified requested skin bindings.",
     );
   if (
     neutralObjectiveModels !== undefined &&
@@ -323,6 +340,10 @@ async function prepareMotion({
           neutralObjectiveModels,
           decodeNeutralCamps,
         );
+  const campSkins =
+    decodeNeutralCamps === true
+      ? readCurrentNeutralCampSkins(neutralCampSkins, neutralModelIds)
+      : undefined;
   if (
     laneMinionCatalog !== undefined &&
     (laneMinionCatalog === null ||
@@ -424,6 +445,14 @@ async function prepareMotion({
     ...replayPreparation,
     observations: { ...replayPreparation.observations, binding },
   };
+  const recordedPlayerState =
+    decodePlayerState === true
+      ? readCurrentRecordedPlayerState(
+          replay,
+          replayPreparation.observations,
+          binding,
+        )
+      : undefined;
   const keyframes = prepareNativeTerrainChampionKeyframes(
     prepared,
     createPosition944ReaderFromCodecs(codecs),
@@ -490,6 +519,7 @@ async function prepareMotion({
           readWaypoints,
           onBirth: teamVision?.addCandidate,
           includeCamps: decodeNeutralCamps,
+          includeKeyframeAnchors: decodeNeutralCamps,
           onCampBirth: teamVision?.addCandidate,
         });
   const terrain =
@@ -582,6 +612,7 @@ async function prepareMotion({
           waypointOrigin,
           durationSeconds: replay.duration,
           includeCamps: decodeNeutralCamps,
+          campSkins,
         });
   const visibleDynamicContexts = dynamicActors
     ? new Set([
@@ -599,6 +630,7 @@ async function prepareMotion({
     motion,
     coverage,
     ...(championStats === undefined ? {} : { championStats }),
+    ...(recordedPlayerState === undefined ? {} : { recordedPlayerState }),
     ...(inventory === undefined
       ? {}
       : { championInventoryTracks: inventory.finish() }),

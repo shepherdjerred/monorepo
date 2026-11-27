@@ -5,10 +5,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { zstdDecompressSync } from "node:zlib";
-import {
-  createReplayObservationActorSampler,
-  createReplayObservationEliminations,
-} from "../../../../../packages/scout-for-lol/packages/replay/src/observations.ts";
 import { readReplayActorLevels } from "../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-actor-levels.mjs";
 import { prepareReplayForSeek } from "../../../../../packages/scout-for-lol/packages/replay/src/prepare.ts";
 import { replayTimedPacketEnvelopes } from "../replay-packet-clock.mjs";
@@ -26,6 +22,10 @@ import {
   loadChampionModelCatalog,
   readChampionModelSelections,
 } from "./research/native-terrain-champion-model-catalog.mjs";
+import {
+  projectRecordedPlayerState,
+  readCurrentRecordedPlayerState,
+} from "./research/native-terrain-player-state.mjs";
 import { validateRecordedTerrainVisibility } from "./research/recorded-terrain-visibility.mjs";
 
 // Reviewed initial-visibility export of the installed 16.23.840.6595 Map11.
@@ -73,6 +73,7 @@ const { positionals, values } = parseArgs({
     "champion-resources": { type: "string" },
     "champion-resources-sha256": { type: "string" },
     "champion-stats-from-replay": { type: "boolean" },
+    "player-state-from-replay": { type: "boolean" },
     "champion-experience": { type: "string" },
     "champion-experience-sha256": { type: "string" },
     "champion-experience-from-replay": { type: "boolean" },
@@ -1345,6 +1346,13 @@ const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
 const currentBuild = replay.build === currentTerrainPositionBuild;
 assert.ok(
+  !values["player-state-from-replay"] ||
+    (currentBuild &&
+      privatePackageOutput !== undefined &&
+      values["position-decoder"] !== undefined),
+  "Replay-derived player state requires a private exact current worker package",
+);
+assert.ok(
   !decodeChampionStats || currentBuild,
   "Replay-decoded champion stats require the verified current build",
 );
@@ -1586,7 +1594,9 @@ const frames = (trace?.frames ?? []).map(({ timeSeconds, actors }) => ({
 }));
 const scene = {
   identity,
-  ...(replay.winningTeam === null ? {} : { winningTeam: replay.winningTeam }),
+  ...(replay.winningTeam === null || values["player-state-from-replay"]
+    ? {}
+    : { winningTeam: replay.winningTeam }),
   mapBounds: proof.mapBounds,
   meshBounds: proof.meshBounds,
   staticMesh,
@@ -2113,7 +2123,7 @@ if (scoutScene) {
       await import("./native-terrain-neutral-model-catalog.mjs");
     const { createCurrentNeutralObjectiveCollector } =
       await import("./research/recorded-current-neutral-objectives.mjs");
-    const { prepareCurrentNeutralObjectiveScene } =
+    const { prepareCurrentNeutralObjectiveScene, readCurrentNeutralCampSkins } =
       await import("./research/recorded-current-neutral-objective-scene.mjs");
     const { createWaypointReaderFromCodecs } =
       await import("./research/native-terrain-waypoints-reader.mjs");
@@ -2123,6 +2133,7 @@ if (scoutScene) {
       codecs: replayCodecs,
       readWaypoints: createWaypointReaderFromCodecs(replayCodecs),
       includeCamps: neutralCampCatalogPath !== undefined,
+      includeKeyframeAnchors: neutralCampCatalogPath !== undefined,
     });
     for (const packet of replayTimedPacketEnvelopes(
       replayPacketEnvelopes(replay, decompress),
@@ -2134,6 +2145,7 @@ if (scoutScene) {
       values["neutral-model-catalog-sha256"],
       evidence.actors.map(({ modelId }) => modelId),
     );
+    const skinRows = [];
     if (neutralCampCatalogPath !== undefined) {
       const { readCurrentCampModelCatalog } =
         await import("./native-terrain-camp-model-catalog.mjs");
@@ -2147,9 +2159,12 @@ if (scoutScene) {
       );
       for (const [modelId, model] of camps.models) {
         assert.ok(!models.has(modelId), "Duplicate authored neutral model");
-        if (requested.has(modelId)) models.set(modelId, model);
+        if (!requested.has(modelId)) continue;
+        models.set(modelId, model);
+        skinRows.push([modelId, model.requestedSkinId]);
       }
       scene.workerMotion.decodeNeutralCamps = true;
+      scene.workerMotion.neutralCampSkins = skinRows;
     }
     const existing = scene.worldUnitModels ?? { bindings: [], instances: [] };
     const modelIds = new Map();
@@ -2171,6 +2186,10 @@ if (scoutScene) {
       waypointOrigin: proof.navgrid.movementOrigin,
       durationSeconds: replay.duration,
       includeCamps: neutralCampCatalogPath !== undefined,
+      campSkins:
+        neutralCampCatalogPath === undefined
+          ? undefined
+          : readCurrentNeutralCampSkins(skinRows, modelIds),
     });
     const occupied = new Set(existing.instances.map(({ context }) => context));
     assert.ok(
@@ -2267,43 +2286,22 @@ if (scoutScene) {
         timeSeconds,
       }));
   }
-  scene.championEliminations = createReplayObservationEliminations(
-    observations.binding,
-  );
-  if (observations.levels !== null && observations.returns !== null) {
-    const sample = createReplayObservationActorSampler(observations);
-    const times = new Set([0]);
-    for (const { timeSeconds } of [
-      ...observations.binding.events,
-      ...observations.binding.assists,
-      ...observations.levels.events,
-      ...observations.returns,
-    ]) {
-      times.add(timeSeconds);
-    }
-    const participantIds = new Set(
-      participants.map(({ participantId }) => participantId),
+  if (values["player-state-from-replay"]) {
+    assert.ok(scene.workerMotion && currentBuild);
+    readCurrentRecordedPlayerState(
+      replay,
+      replayPreparation.observations,
+      observations.binding,
     );
-    scene.playerState = {
-      checkpoints: [...times]
-        .sort((left, right) => left - right)
-        .map((timeSeconds) => {
-          const actors = sample(timeSeconds);
-          assert.equal(actors.length, participantIds.size);
-          return {
-            timeSeconds,
-            players: actors.map(({ context, footerRow, level, dead, kda }) => {
-              assert.ok(
-                participantIds.has(context) &&
-                  footerRow !== null &&
-                  kda !== null,
-                "Player state lacks a verified scene participant",
-              );
-              return { participantId: context, ...kda, level, alive: !dead };
-            }),
-          };
-        }),
-    };
+    scene.workerMotion.decodePlayerState = true;
+  } else {
+    Object.assign(
+      scene,
+      projectRecordedPlayerState(
+        observations,
+        new Set(participants.map(({ participantId }) => participantId)),
+      ),
+    );
   }
 }
 const itemRoutes = new Map();

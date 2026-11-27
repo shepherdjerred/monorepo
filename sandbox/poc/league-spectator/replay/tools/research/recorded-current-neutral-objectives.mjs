@@ -5,6 +5,8 @@ import {
   swapAdjacentBits as swap,
 } from "./native-terrain-byte-codecs.mjs";
 import { createCurrentLaneMinionPacketReader } from "./recorded-lane-minion-packets.mjs";
+import { readCurrentNeutralRequestedSkinId } from "./recorded-current-neutral-skin-reader.mjs";
+import { createNeutralKeyframeAnchorCollector } from "./recorded-neutral-keyframe-anchors.mjs";
 
 const text = new TextDecoder("utf-8", { fatal: true });
 const dragonName =
@@ -203,10 +205,17 @@ export function createCurrentNeutralObjectiveCollector({
   readWaypoints,
   onBirth,
   includeCamps = false,
+  includeKeyframeAnchors = false,
   onCampBirth,
 }) {
   const readPacket = createCurrentLaneMinionPacketReader(replay, codecs);
   const table = recoverTerrainByteSubstitution(codecs);
+  const keyframes = includeKeyframeAnchors
+    ? createNeutralKeyframeAnchorCollector(
+        (payload) => readCurrentNeutralCreationName(payload, table),
+        readWaypoints,
+      )
+    : undefined;
   const { owners, expected, horde } = readFooter(replay, binding, includeCamps);
   const actors = new Map();
   const camps = new Map();
@@ -215,6 +224,7 @@ export function createCurrentNeutralObjectiveCollector({
   let opcode = null;
   let context = 0;
   function observe(packet) {
+    if (packet.stream === 2) keyframes?.observe(packet);
     if (packet.stream !== 1) return;
     if (packet.blockOffset === 0) {
       opcode = null;
@@ -256,10 +266,15 @@ export function createCurrentNeutralObjectiveCollector({
         owners.has(context)
       )
         throw Error("Duplicate or invalid current objective context");
+      const requestedSkinId =
+        objective === undefined
+          ? readCurrentNeutralRequestedSkinId(payload, table)
+          : undefined;
       (objective === undefined ? camps : actors).set(context, {
         context,
         objectName,
         ...identity,
+        ...(requestedSkinId === undefined ? {} : { requestedSkinId }),
         creationTimeSeconds: timeSeconds,
         observations: [],
       });
@@ -340,7 +355,13 @@ export function createCurrentNeutralObjectiveCollector({
       actors: rendered,
       events: events.toSorted((a, b) => a.timeSeconds - b.timeSeconds),
     };
-    if (!includeCamps) return major;
+    if (!includeCamps)
+      return keyframes === undefined
+        ? major
+        : {
+            ...major,
+            keyframeAnchors: keyframes.finish(rendered, replay.duration),
+          };
     const campActors = [];
     const hordeEvents = [];
     const campCoverage = {
@@ -417,6 +438,14 @@ export function createCurrentNeutralObjectiveCollector({
         (a, b) => a.timeSeconds - b.timeSeconds,
       ),
       campCoverage,
+      ...(keyframes === undefined
+        ? {}
+        : {
+            keyframeAnchors: keyframes.finish(
+              [...rendered, ...campActors],
+              replay.duration,
+            ),
+          }),
     };
   }
   return { observe, finish };

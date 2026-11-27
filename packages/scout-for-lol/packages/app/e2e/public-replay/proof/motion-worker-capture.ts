@@ -16,6 +16,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
       "laneMinionCatalog",
       "neutralObjectiveModels",
       "decodeNeutralCamps",
+      "decodePlayerState",
     ];
     Object.defineProperty(globalThis, "Worker", {
       value: class ObservedWorker extends OriginalWorker {
@@ -85,6 +86,11 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                     neutralCampCoverage: property(
                       response,
                       "neutralCampCoverage",
+                    ),
+                    neutralCampSkins: property(request, "neutralCampSkins"),
+                    recordedPlayerState: property(
+                      response,
+                      "recordedPlayerState",
                     ),
                   },
                 },

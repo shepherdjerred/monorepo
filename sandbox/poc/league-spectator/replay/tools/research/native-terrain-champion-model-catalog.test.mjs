@@ -10,6 +10,7 @@ import {
   loadChampionModelCatalog,
   openChampionModelCatalog,
 } from "./native-terrain-champion-model-catalog.mjs";
+import { indexCurrentChampionOpening } from "./native-terrain-champion-opening.mjs";
 
 const identity = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -46,6 +47,65 @@ test("requires a one-to-one corroborated opening roster", () => {
       ...heroes.slice(1),
     ]),
   ).toThrow("Duplicate opening creation context");
+});
+
+test("indexes only original selections from the independent exact-build catalog", () => {
+  const current = { ...observations, ...identity, build: currentChampionBuild };
+  const assets = Object.fromEntries(
+    heroes.map((hero) => [
+      `${hero.champion.toLowerCase()}-${hero.skinId}`,
+      hero,
+    ]),
+  );
+  const catalog = {
+    schema: 1,
+    kind: "exact-native-terrain-champion-catalog",
+    build: current.build,
+    protocol: current.protocol,
+    selectionKind: "archive",
+    assets,
+  };
+  const reordered = heroes.toReversed();
+  expect([...indexCurrentChampionOpening(catalog, current, reordered)]).toEqual(
+    reordered.map((hero) => [hero.context, hero]),
+  );
+  expect(() =>
+    indexCurrentChampionOpening(catalog, { ...current, ...identity }, heroes),
+  ).toThrow("exact current champion opening");
+  expect(() =>
+    indexCurrentChampionOpening(
+      catalog,
+      { ...current, protocol: "foreign" },
+      heroes,
+    ),
+  ).toThrow("exact current champion opening");
+  expect(() =>
+    indexCurrentChampionOpening(
+      { ...catalog, nativeOpening: {} },
+      current,
+      heroes,
+    ),
+  ).toThrow("independent exact-build");
+  expect(() =>
+    indexCurrentChampionOpening(
+      { ...catalog, replaySha256: "fixture" },
+      current,
+      heroes,
+    ),
+  ).toThrow("independent exact-build");
+  expect(() =>
+    indexCurrentChampionOpening(catalog, current, [
+      { ...heroes[0], skinId: 99 },
+      ...heroes.slice(1),
+    ]),
+  ).toThrow("Missing exact champion skin");
+  expect(() =>
+    indexCurrentChampionOpening(
+      { ...catalog, assets: { ...assets, "champion0-0": heroes[1] } },
+      current,
+      heroes,
+    ),
+  ).toThrow("disagrees with its opening skin selector");
 });
 
 test("loads pinned build-authored GLBs for the decoded skin selectors", async () => {
