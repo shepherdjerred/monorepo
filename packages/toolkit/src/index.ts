@@ -14,7 +14,9 @@ import {
 } from "#lib/version/staleness.ts";
 import {
   handleWoodpeckerPipelineLsJson,
+  handleWoodpeckerPipelineShowJson,
   isWoodpeckerPipelineLsJson,
+  isWoodpeckerPipelineShowJson,
 } from "#lib/woodpecker/pipeline-ls.ts";
 
 const TOOLKIT_VERSION = "0.1.0";
@@ -350,6 +352,11 @@ async function main(): Promise<void> {
 
   if (isWoodpeckerPipelineLsJson(command, args.slice(1))) {
     await handleWoodpeckerPipelineLsJson(args.slice(1));
+    return;
+  }
+
+  if (isWoodpeckerPipelineShowJson(command, args.slice(1))) {
+    await handleWoodpeckerPipelineShowJson(args.slice(1));
     return;
   }
 

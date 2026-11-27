@@ -43,6 +43,38 @@ export const WoodpeckerPipelineSchema = WoodpeckerSummarySchema.extend({
   errors: z.array(z.unknown()).nullish(),
 });
 export type WoodpeckerPipeline = z.infer<typeof WoodpeckerPipelineSchema>;
+
+const PipelineErrorEntrySchema = z.looseObject({
+  type: z.string().optional(),
+  message: z.string(),
+  is_warning: z.boolean().optional(),
+});
+
+export type WoodpeckerPipelineError = {
+  readonly type: string;
+  readonly message: string;
+};
+
+/** Extract non-warning pipeline-level errors (e.g., `/ciconfig` fetch or parse failures). */
+export function nonWarningPipelineErrors(
+  pipeline: Pick<WoodpeckerPipeline, "errors">,
+): WoodpeckerPipelineError[] {
+  const out: WoodpeckerPipelineError[] = [];
+  for (const entry of pipeline.errors ?? []) {
+    const parsed = PipelineErrorEntrySchema.safeParse(entry);
+    if (
+      parsed.success &&
+      parsed.data.is_warning !== true &&
+      parsed.data.message.trim().length > 0
+    ) {
+      out.push({
+        type: parsed.data.type ?? "generic",
+        message: parsed.data.message.trim(),
+      });
+    }
+  }
+  return out;
+}
 export type WoodpeckerConfig = {
   readonly baseUrl: string;
   readonly token: string;

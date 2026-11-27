@@ -4,10 +4,11 @@
  */
 
 /** Named auth flows a package's routes may require before navigating. */
-export type AuthFlow = "scout-dev-login";
+export type AuthFlow = "scout-dev-login" | "streambot-preview-login";
 
 /** How `ensureDevServer` passes an isolated bound port to `devCommand`. */
-export type DevRunner = "astro" | "vite" | "scout-dev-web";
+export type DevRunner =
+  "astro" | "vite" | "port-env" | "hub-dev-fixture" | "scout-dev-web";
 
 /** A screenshot-able package and how to boot/reach it. */
 export type PackageEntry = {

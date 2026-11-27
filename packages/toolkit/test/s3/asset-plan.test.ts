@@ -7,6 +7,7 @@ import {
   planFile,
   type PlannedInput,
   renderPlannedGifs,
+  resolveAssetProfile,
 } from "#commands/pr/asset.ts";
 import { AWS_CREDENTIAL_PROFILES } from "#commands/brokered/aws-credential.ts";
 import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
@@ -240,6 +241,8 @@ describe("assetCommand uploads", () => {
     sent = [];
     profiles = [];
     lines = [];
+    vi.stubEnv("AWS_PROFILE", "");
+    vi.stubEnv("AWS_ACCESS_KEY_ID", "");
     vi.spyOn(console, "log").mockImplementation((message: unknown) => {
       lines.push(String(message));
     });
@@ -247,6 +250,7 @@ describe("assetCommand uploads", () => {
 
   afterEach(async () => {
     process.exitCode = undefined;
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     await rm(dir, { recursive: true, force: true });
   });
@@ -321,5 +325,38 @@ describe("agent-share credentials", () => {
       kind: "op",
       ref: "op://v64ocnykdqju4ui6j6pua56xw4/6ycjkzs7gxdadqp5wnbqy3xjta/secret-access-key",
     });
+  });
+});
+
+describe("resolveAssetProfile", () => {
+  test("defaults to agent-share when no profile or static AWS key is set", () => {
+    expect(resolveAssetProfile(undefined, {})).toBe("agent-share");
+    expect(
+      resolveAssetProfile("", { AWS_PROFILE: "", AWS_ACCESS_KEY_ID: "" }),
+    ).toBe("agent-share");
+  });
+
+  test("prefers explicit --profile over AWS_PROFILE and AWS_ACCESS_KEY_ID", () => {
+    expect(
+      resolveAssetProfile("custom", {
+        AWS_PROFILE: "other",
+        AWS_ACCESS_KEY_ID: "AKIAEXAMPLE",
+      }),
+    ).toBe("custom");
+  });
+
+  test("uses AWS_PROFILE when --profile is omitted", () => {
+    expect(
+      resolveAssetProfile(undefined, {
+        AWS_PROFILE: "env-profile",
+        AWS_ACCESS_KEY_ID: "AKIAEXAMPLE",
+      }),
+    ).toBe("env-profile");
+  });
+
+  test("returns undefined when AWS_ACCESS_KEY_ID is set without a profile", () => {
+    expect(
+      resolveAssetProfile(undefined, { AWS_ACCESS_KEY_ID: "AKIAEXAMPLE" }),
+    ).toBeUndefined();
   });
 });
