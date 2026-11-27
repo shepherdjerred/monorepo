@@ -49,17 +49,19 @@ async function reconcileEnvironment(
     where: {
       environmentId: row.id,
       OR: [
-        { kind: { notIn: ["adopt-worker", "repair-trmnl"] } },
+        // A settled retirement does not replace the last release attempt.
+        { kind: { notIn: ["adopt-worker", "repair-trmnl", "retire-host"] } },
         { status: { in: ["queued", "awaiting_approval", "running"] } },
+        { kind: "retire-host", recoveryRequired: true },
       ],
     },
     orderBy: { createdAt: "desc" },
   });
   // D2: a recovery-required failure holds the environment until its reader
-  // settles it (D5). A settled failure of any kind suppresses only its own set
-  // revision, as a cancellation does (automaticSelectionBlocked), so a newer
-  // revision still deploys. A request awaiting approval is superseded only
-  // when it is automatic and undecided (D3).
+  // settles it (D5). A settled release failure or cancellation suppresses only
+  // its own set revision (automaticSelectionBlocked), so a newer revision
+  // still deploys. A request awaiting approval is superseded only when it is
+  // automatic and undecided (D3).
   if (
     last !== null &&
     (last.status === "running" ||

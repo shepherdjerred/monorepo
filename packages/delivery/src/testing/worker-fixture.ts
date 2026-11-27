@@ -61,7 +61,7 @@ export async function workerFixture(
       },
     },
   });
-  async function requestedRelease(number: number) {
+  async function publishRelease(number: number) {
     const image = target === "central" ? "temporal-worker" : "scout-for-lol";
     const artifactId = `${target}/image/${String(number)}`;
     const published = await delivery.publish(
@@ -98,6 +98,10 @@ export async function workerFixture(
     const version = await delivery.database.versionSet.findUniqueOrThrow({
       where: { qualifiedBuildId: published.buildId },
     });
+    return { artifactId, version };
+  }
+  async function requestedRelease(number: number) {
+    const release = await publishRelease(number);
     const env = await delivery.database.environment.findUniqueOrThrow({
       where: { id: environmentId },
     });
@@ -105,13 +109,13 @@ export async function workerFixture(
       {
         requestId: `${target}/accept/${String(number)}`,
         environmentId,
-        versionSetRevisionId: version.id,
+        versionSetRevisionId: release.version.id,
         expectedGeneration: env.generation,
         kind: "deploy",
       },
       testOperator,
     );
-    return { artifactId, version, deployment };
+    return { ...release, deployment };
   }
   async function acceptedRelease(number: number) {
     const release = await requestedRelease(number);
@@ -268,6 +272,7 @@ export async function workerFixture(
     host,
     environmentId,
     workerPipeline,
+    publishRelease,
     acceptedRelease,
     requestedRelease,
     requestedBaseline,
