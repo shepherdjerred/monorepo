@@ -7,7 +7,6 @@ import {
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-  type DiscordAccountId,
   type DiscordGuildId,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
@@ -20,6 +19,8 @@ import {
 } from "#src/testing/consumer-profile-feature-test.ts";
 import { resetFlagOverrides } from "#src/configuration/flags.ts";
 import { countReportSlotsTaken } from "#src/reports/duckdb/instance.ts";
+import type * as FixturesModule from "#src/testing/consumer-player-fixtures.ts";
+import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
@@ -35,22 +36,10 @@ import type { TestLakeMatchFact } from "#src/testing/report-lake/rows.ts";
 // spectator snapshot; the object store is not part of this suite.
 const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
 vi.mock("#src/report-lake/receipted-archive.ts", async () => {
-  const actual: object = await vi.importActual(
-    "#src/report-lake/receipted-archive.ts",
-  );
-  return {
-    ...actual,
-    readArchivedPrematchSnapshot: (
-      _descriptor: unknown,
-      matchId: RiotMatchId,
-    ) => {
-      const snapshot = archivedSnapshots.get(matchId);
-      if (snapshot === undefined) {
-        throw new Error(`No archived snapshot stubbed for ${matchId}`);
-      }
-      return Promise.resolve(snapshot);
-    },
-  };
+  const { stubArchivedPrematchSnapshots } = await vi.importActual<
+    typeof FixturesModule
+  >("#src/testing/consumer-player-fixtures.ts");
+  return await stubArchivedPrematchSnapshots(archivedSnapshots);
 });
 
 // Discord membership is the one boundary the harness cannot make unavailable.
@@ -111,43 +100,8 @@ registerConsumerProfileFeatureTestLifecycle({
   },
 });
 
-async function seedPlayer(options: {
-  serverId: DiscordGuildId;
-  alias: string;
-  discordId?: DiscordAccountId;
-  puuids: LeaguePuuid[];
-}) {
-  const now = new Date();
-  const player = await testPrisma.player.create({
-    data: {
-      alias: options.alias,
-      ...(options.discordId === undefined
-        ? {}
-        : { discordId: options.discordId }),
-      serverId: options.serverId,
-      creatorDiscordId: actorDiscordId,
-      createdTime: now,
-      updatedTime: now,
-    },
-  });
-  await testPrisma.account.createMany({
-    data: options.puuids.map((puuid, index) => ({
-      alias: `${options.alias}-${index.toString()}`,
-      puuid,
-      region: "AMERICA_NORTH",
-      playerId: player.id,
-      serverId: options.serverId,
-      creatorDiscordId: actorDiscordId,
-      riotGameName: `${options.alias} Riot ${index.toString()}`,
-      riotTagLine: "NA1",
-      riotIdUpdatedAt: now,
-      lastMatchTime: now,
-      lastCheckedAt: now,
-      createdTime: now,
-      updatedTime: now,
-    })),
-  });
-  return player;
+function seedPlayer(options: Parameters<typeof seedConsumerPlayer>[2]) {
+  return seedConsumerPlayer(testPrisma, actorDiscordId, options);
 }
 
 let matchCounter = 0;

@@ -20,6 +20,7 @@ import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
+import type * as FixturesModule from "#src/testing/consumer-player-fixtures.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { seedConsumerPlayer } from "#src/testing/consumer-player-seed.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -29,22 +30,10 @@ import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
 // snapshot; the object store is not part of this suite.
 const archivedSnapshots = vi.hoisted(() => new Map<string, object>());
 vi.mock("#src/report-lake/receipted-archive.ts", async () => {
-  const actual: object = await vi.importActual(
-    "#src/report-lake/receipted-archive.ts",
-  );
-  return {
-    ...actual,
-    readArchivedPrematchSnapshot: (
-      _descriptor: unknown,
-      matchId: RiotMatchId,
-    ) => {
-      const snapshot = archivedSnapshots.get(matchId);
-      if (snapshot === undefined) {
-        throw new Error(`No archived snapshot stubbed for ${matchId}`);
-      }
-      return Promise.resolve(snapshot);
-    },
-  };
+  const { stubArchivedPrematchSnapshots } = await vi.importActual<
+    typeof FixturesModule
+  >("#src/testing/consumer-player-fixtures.ts");
+  return await stubArchivedPrematchSnapshots(archivedSnapshots);
 });
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000041");
