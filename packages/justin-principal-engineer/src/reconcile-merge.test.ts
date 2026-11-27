@@ -351,6 +351,51 @@ describe("completeTask", () => {
   });
 });
 
+function setupStaleBaseMergeFixture(
+  headSha: string,
+  staleBase: NonNullable<
+    Awaited<ReturnType<GitHubClient["health"]>>["staleBase"]
+  >,
+) {
+  const runner = fakeTrackerRunner();
+  const github = new GitHubClient(
+    "owner/repo",
+    {
+      approver: { login: "owner", id: 1 },
+      expectedBotLogin: "app/justin-principal-engineer",
+    },
+    runner,
+    {},
+  );
+  const pr: PullRequest = {
+    number: 7,
+    url: "https://example.com/pr/7",
+    headRefOid: headSha,
+    headRefName: "agent/xx-1",
+    baseRefName: "main",
+    isDraft: false,
+    state: "OPEN",
+    mergedAt: null,
+    mergeCommit: null,
+    author: { login: "app/justin-principal-engineer", is_bot: true },
+  };
+  vi.spyOn(github, "pullRequest").mockResolvedValue(pr);
+  vi.spyOn(github, "hasExactHeadApproval").mockResolvedValue(true);
+  vi.spyOn(github, "feedback").mockResolvedValue([]);
+  const healthSpy = vi.spyOn(github, "health").mockResolvedValue({
+    prNumber: 7,
+    prUrl: pr.url,
+    overallStatus: "HEALTHY",
+    nextSteps: [],
+    checks: [
+      { name: "Merge Conflicts", status: "HEALTHY", details: [] },
+      { name: "CI Status", status: "HEALTHY", details: [] },
+    ],
+    staleBase,
+  });
+  return { runner, github, pr, healthSpy };
+}
+
 describe("merge-time stale-base restack and DeliveryAuthorization.mergeReady", () => {
   test("mergeReady refuses staleBase.stale === true and accepts disjoint_clean", async () => {
     const home = await mkdtemp(path.join(os.tmpdir(), "jpe-stale-auth-"));
@@ -361,45 +406,10 @@ describe("merge-time stale-base restack and DeliveryAuthorization.mergeReady", (
           path.join(import.meta.dirname, "../config.example.json"),
         ).json(),
       );
-      const runner = fakeTrackerRunner();
-      const github = new GitHubClient(
-        "owner/repo",
-        {
-          approver: { login: "owner", id: 1 },
-          expectedBotLogin: "app/justin-principal-engineer",
-        },
-        runner,
-        {},
-      );
       const head = "a".repeat(40);
-      const pr: PullRequest = {
-        number: 7,
-        url: "https://example.com/pr/7",
-        headRefOid: head,
-        headRefName: "agent/xx-1",
-        baseRefName: "main",
-        isDraft: false,
-        state: "OPEN",
-        mergedAt: null,
-        mergeCommit: null,
-        author: { login: "app/justin-principal-engineer", is_bot: true },
-      };
-      vi.spyOn(github, "pullRequest").mockResolvedValue(pr);
-      vi.spyOn(github, "hasExactHeadApproval").mockResolvedValue(true);
-      vi.spyOn(github, "feedback").mockResolvedValue([]);
-      const git = new GitWorkspace(config, runner);
-      vi.spyOn(git, "headSha").mockResolvedValue(head);
-
-      const healthSpy = vi.spyOn(github, "health").mockResolvedValue({
-        prNumber: 7,
-        prUrl: pr.url,
-        overallStatus: "HEALTHY",
-        nextSteps: [],
-        checks: [
-          { name: "Merge Conflicts", status: "HEALTHY", details: [] },
-          { name: "CI Status", status: "HEALTHY", details: [] },
-        ],
-        staleBase: {
+      const { runner, github, pr, healthSpy } = setupStaleBaseMergeFixture(
+        head,
+        {
           stale: true,
           headSha: head,
           mergeBaseSha: "b".repeat(40),
@@ -408,7 +418,9 @@ describe("merge-time stale-base restack and DeliveryAuthorization.mergeReady", (
           verdict: "stale_overlap",
           reasons: ["main modified bun.lock"],
         },
-      });
+      );
+      const git = new GitWorkspace(config, runner);
+      vi.spyOn(git, "headSha").mockResolvedValue(head);
 
       const auth = new DeliveryAuthorization({
         config,
@@ -459,53 +471,18 @@ describe("merge-time stale-base restack and DeliveryAuthorization.mergeReady", (
       const telemetry = new JustinTelemetry(paths, 45, () => Promise.resolve());
       await telemetry.begin();
 
-      const runner = fakeTrackerRunner();
-      const github = new GitHubClient(
-        "owner/repo",
-        {
-          approver: { login: "owner", id: 1 },
-          expectedBotLogin: "app/justin-principal-engineer",
-        },
-        runner,
-        {},
-      );
       const oldHead = "a".repeat(40);
       const newHead = "d".repeat(40);
-      const pr: PullRequest = {
-        number: 7,
-        url: "https://example.com/pr/7",
-        headRefOid: oldHead,
-        headRefName: "agent/xx-1",
-        baseRefName: "main",
-        isDraft: false,
-        state: "OPEN",
-        mergedAt: null,
-        mergeCommit: null,
-        author: { login: "app/justin-principal-engineer", is_bot: true },
-      };
-      vi.spyOn(github, "pullRequest").mockResolvedValue(pr);
-      vi.spyOn(github, "hasExactHeadApproval").mockResolvedValue(true);
-      vi.spyOn(github, "feedback").mockResolvedValue([]);
-      const mergeSpy = vi.spyOn(github, "merge");
-      vi.spyOn(github, "health").mockResolvedValue({
-        prNumber: 7,
-        prUrl: pr.url,
-        overallStatus: "HEALTHY",
-        nextSteps: [],
-        checks: [
-          { name: "Merge Conflicts", status: "HEALTHY", details: [] },
-          { name: "CI Status", status: "HEALTHY", details: [] },
-        ],
-        staleBase: {
-          stale: true,
-          headSha: oldHead,
-          mergeBaseSha: "b".repeat(40),
-          mainHeadSha: "c".repeat(40),
-          behindBy: 3,
-          verdict: "stale_overlap",
-          reasons: ["workspace dependency overlap: @shepherdjerred/toolkit"],
-        },
+      const { runner, github, pr } = setupStaleBaseMergeFixture(oldHead, {
+        stale: true,
+        headSha: oldHead,
+        mergeBaseSha: "b".repeat(40),
+        mainHeadSha: "c".repeat(40),
+        behindBy: 3,
+        verdict: "stale_overlap",
+        reasons: ["workspace dependency overlap: @shepherdjerred/toolkit"],
       });
+      const mergeSpy = vi.spyOn(github, "merge");
 
       const restack = vi.fn(() => Promise.resolve(null));
       const submitUpdate = vi.fn(() => Promise.resolve());

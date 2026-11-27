@@ -5,11 +5,8 @@ export const ImpactReceiptSchema = z.object({
   pr: z.number().int().positive(),
   headSha: z.string(),
   mergeBaseSha: z.string(),
-  mainHeadSha: z.string(),
-  behindBy: z.number().int().nonnegative(),
   verdict: z.enum(["up_to_date", "disjoint_clean", "stale_overlap"]),
   bypassed: z.boolean(),
-  reasons: z.array(z.string()),
 });
 export type ImpactReceipt = z.infer<typeof ImpactReceiptSchema>;
 

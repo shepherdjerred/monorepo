@@ -61,50 +61,66 @@ export const SYNTHESIS_WORKSPACES = new Set([
   "@shepherdjerred/feature-flags",
 ]);
 
-/**
- * Cross-workspace files read directly by `@shepherdjerred/root-scripts` tests
- * (mirrors `ROOT_SCRIPTS_EXTERNAL_INPUTS` in `scripts/verify.ts`).
- */
-export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
-  "packages/version-catalog/src/catalog.json",
-  "packages/tasks-for-obsidian/ios/ci_scripts/",
-  "packages/dotfiles/dot_local/bin/executable_cf",
-  "packages/discord-plays-pokemon/Dockerfile",
-  "packages/streambot/Dockerfile",
-  "packages/homelab/src/talos/liskov/patches/image.yaml",
-  "packages/homelab/src/talos/torvalds/patches/image.yaml",
-  "packages/discord-plays-pokemon/wasm-src/upstream.json",
-  "packages/discord-plays-mario-kart/Dockerfile",
-  "packages/homelab/images/redlib/Dockerfile",
+function pkgInput(workspaceRelPath: string): string {
+  return `packages/${workspaceRelPath}`;
+}
+
+const ROOT_SCRIPTS_CONTAINER_INPUTS = [
+  "docker-bake.hcl",
   "ci/ci-playwright/Dockerfile",
-  "packages/windows-cross-compiler/",
-  "packages/macos-cross-compiler/",
+  "ci/application-image-smoke.Dockerfile",
+  pkgInput("delivery/Dockerfile"),
+  pkgInput("discord-plays-mario-kart/Dockerfile"),
+  pkgInput("discord-plays-pokemon/Dockerfile"),
+  pkgInput("homelab/images/redlib/Dockerfile"),
+  pkgInput("media/Dockerfile"),
+  pkgInput("scout-for-lol/packages/backend/Dockerfile"),
+  pkgInput("streambot/Dockerfile"),
+  pkgInput("temporal/Dockerfile"),
+] as const;
+
+const ROOT_SCRIPTS_PIN_AND_MANIFEST_INPUTS = [
   ".mise.toml",
   "global.json",
-  "docker-bake.hcl",
-  "ci/application-image-smoke.Dockerfile",
-  "packages/scout-for-lol/packages/backend/Dockerfile",
-  "packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh",
-  "packages/homelab/mac-ci/bootstrap.sh",
-  "packages/homelab/mac-ci/provision-host.sh",
-  "packages/feature-flags/src/managed-flag-inventory.ts",
-  "packages/feature-flags/src/flags-drift.ts",
-  "packages/feature-flags/src/flags-reconcile.ts",
-  "packages/feature-flags/src/managed-flag-inventory.json",
-  "packages/temporal/Dockerfile",
-  "packages/media/Dockerfile",
-  "packages/delivery/Dockerfile",
-  "packages/fonts/patch-berkeley-mono.py",
-  "packages/toolkit/src/lib/brim/capture/engine.ts",
-  "packages/the-storm/plugin/gradle/libs.versions.toml",
-  "packages/the-storm/server/plugins.json",
-  "packages/the-storm/tests/e2e/harness/pins.ts",
-  "packages/mc-harness/src/pins.ts",
-  "packages/the-storm/plugin/dist/build.gradle.kts",
-  "packages/the-storm/plugin/settings.gradle.kts",
-  "packages/woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts",
-  "packages/media/scripts/subtitle-requirements.txt",
+  pkgInput("version-catalog/src/catalog.json"),
+  pkgInput("discord-plays-pokemon/wasm-src/upstream.json"),
+  pkgInput("homelab/src/talos/liskov/patches/image.yaml"),
+  pkgInput("homelab/src/talos/torvalds/patches/image.yaml"),
+  pkgInput("mc-harness/src/pins.ts"),
+  pkgInput("media/scripts/subtitle-requirements.txt"),
+  pkgInput("the-storm/plugin/dist/build.gradle.kts"),
+  pkgInput("the-storm/plugin/gradle/libs.versions.toml"),
+  pkgInput("the-storm/plugin/settings.gradle.kts"),
+  pkgInput("the-storm/server/plugins.json"),
+  pkgInput("the-storm/tests/e2e/harness/pins.ts"),
+  pkgInput("woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts"),
 ] as const;
+
+const ROOT_SCRIPTS_HOST_AND_FLAG_INPUTS = [
+  pkgInput("dotfiles/dot_local/bin/executable_cf"),
+  pkgInput("feature-flags/src/flags-drift.ts"),
+  pkgInput("feature-flags/src/flags-reconcile.ts"),
+  pkgInput("feature-flags/src/managed-flag-inventory.json"),
+  pkgInput("feature-flags/src/managed-flag-inventory.ts"),
+  pkgInput("fonts/patch-berkeley-mono.py"),
+  pkgInput("homelab/mac-ci/bootstrap.sh"),
+  pkgInput("homelab/mac-ci/provision-host.sh"),
+  pkgInput("homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh"),
+  pkgInput("macos-cross-compiler/"),
+  pkgInput("tasks-for-obsidian/ios/ci_scripts/"),
+  pkgInput("toolkit/src/lib/brim/capture/engine.ts"),
+  pkgInput("windows-cross-compiler/"),
+] as const;
+
+/**
+ * Cross-workspace files read directly by `@shepherdjerred/root-scripts` tests
+ * (sorted domain union matching `scripts/verify.ts` external inputs).
+ */
+export const ROOT_SCRIPTS_EXTERNAL_INPUTS: readonly string[] = [
+  ...ROOT_SCRIPTS_CONTAINER_INPUTS,
+  ...ROOT_SCRIPTS_PIN_AND_MANIFEST_INPUTS,
+  ...ROOT_SCRIPTS_HOST_AND_FLAG_INPUTS,
+];
 
 /**
  * Undeclared cross-workspace edges from `scripts/verify.ts` and
@@ -120,19 +136,19 @@ const EXTRA_WORKSPACE_REVERSE_EDGES: Readonly<
 };
 
 const EXTRA_PATH_REVERSE_TARGETS: readonly {
-  readonly prefix: string;
+  readonly prefixes: readonly string[];
   readonly targetWorkspaces: readonly string[];
 }[] = [
   {
-    prefix: "packages/ts-mc-docs/src/content/docs/",
+    prefixes: ["packages/ts-mc-docs/src/content/docs/"],
     targetWorkspaces: ["@shepherdjerred/storm-theme"],
   },
   {
-    prefix: "packages/scout-for-lol/scripts/contract-hash.ts",
+    prefixes: ["packages/scout-for-lol/scripts/contract-hash.ts"],
     targetWorkspaces: ["@scout-for-lol/backend"],
   },
   {
-    prefix: "packages/scout-for-lol/tsconfig.base.json",
+    prefixes: ["packages/scout-for-lol/tsconfig.base.json"],
     targetWorkspaces: [
       "scout-for-lol",
       "@scout-for-lol/app",
@@ -148,7 +164,7 @@ const EXTRA_PATH_REVERSE_TARGETS: readonly {
     ],
   },
   {
-    prefix: "packages/homelab/tsconfig.base.json",
+    prefixes: ["packages/homelab/tsconfig.base.json"],
     targetWorkspaces: [
       "homelab",
       "@homelab/cdk8s",
@@ -156,81 +172,47 @@ const EXTRA_PATH_REVERSE_TARGETS: readonly {
     ],
   },
   {
-    prefix: "packages/toolkit/",
+    prefixes: [
+      "packages/toolkit/",
+      "ci/scripts/images/harden-codex-launcher.ts",
+      "packages/the-storm/maintenance-status.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
+    ],
     targetWorkspaces: ["@shepherdjerred/temporal"],
   },
   {
-    prefix: "ci/scripts/images/harden-codex-launcher.ts",
-    targetWorkspaces: ["@shepherdjerred/temporal"],
-  },
-  {
-    prefix: "packages/discord-plays-mario-kart/Dockerfile",
+    prefixes: [
+      "packages/discord-plays-mario-kart/Dockerfile",
+      "packages/discord-plays-mario-kart/spaghetti-src/",
+      "packages/discord-plays-pokemon/Dockerfile",
+      "packages/discord-plays-pokemon/wasm-src/",
+    ],
     targetWorkspaces: ["@arcade/backend"],
   },
   {
-    prefix: "packages/discord-plays-mario-kart/spaghetti-src/",
-    targetWorkspaces: ["@arcade/backend"],
-  },
-  {
-    prefix: "packages/discord-plays-pokemon/Dockerfile",
-    targetWorkspaces: ["@arcade/backend"],
-  },
-  {
-    prefix: "packages/discord-plays-pokemon/wasm-src/",
-    targetWorkspaces: ["@arcade/backend"],
-  },
-  {
-    prefix: "packages/the-storm/package.json",
+    prefixes: ["packages/the-storm/package.json"],
     targetWorkspaces: [
       "@shepherdjerred/storm-forum",
       "@shepherdjerred/temporal",
     ],
   },
   {
-    prefix: "packages/the-storm/public-status.json",
+    prefixes: ["packages/the-storm/public-status.json"],
     targetWorkspaces: ["@shepherdjerred/storm-forum", "homelab"],
   },
   {
-    prefix: "packages/the-storm/maintenance-status.json",
-    targetWorkspaces: ["@shepherdjerred/temporal"],
-  },
-  {
-    prefix:
-      "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
-    targetWorkspaces: ["@shepherdjerred/temporal"],
-  },
-  {
-    prefix: "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
-    targetWorkspaces: ["@shepherdjerred/temporal"],
-  },
-  { prefix: "packages/the-storm/plugin/", targetWorkspaces: ["homelab"] },
-  { prefix: "packages/the-storm/server/", targetWorkspaces: ["homelab"] },
-  {
-    prefix: "packages/feature-flags/src/managed-flag-inventory.json",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/storm-brain/contracts/companion-chat.json",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/glitter-boys-launcher/.dockerignore",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/glitter-boys-launcher/Cargo.lock",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/glitter-boys-launcher/Cargo.toml",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/glitter-boys-launcher/Dockerfile",
-    targetWorkspaces: ["homelab"],
-  },
-  {
-    prefix: "packages/glitter-boys-launcher/crates/",
+    prefixes: [
+      "packages/the-storm/plugin/",
+      "packages/the-storm/server/",
+      "packages/feature-flags/src/managed-flag-inventory.json",
+      "packages/storm-brain/contracts/companion-chat.json",
+      "packages/glitter-boys-launcher/.dockerignore",
+      "packages/glitter-boys-launcher/Cargo.lock",
+      "packages/glitter-boys-launcher/Cargo.toml",
+      "packages/glitter-boys-launcher/Dockerfile",
+      "packages/glitter-boys-launcher/crates/",
+    ],
     targetWorkspaces: ["homelab"],
   },
 ];
@@ -444,7 +426,7 @@ function collectExtraPathTargets(
 ): void {
   for (const filePath of paths) {
     for (const rule of EXTRA_PATH_REVERSE_TARGETS) {
-      if (!pathMatchesInput(filePath, rule.prefix)) {
+      if (!rule.prefixes.some((prefix) => pathMatchesInput(filePath, prefix))) {
         continue;
       }
       for (const targetWorkspace of rule.targetWorkspaces) {
