@@ -124,5 +124,11 @@
     "file": "src/styles/visuals.css",
     "count": 3,
     "reason": "Baseline at CU1. Hub moves onto the shared pieces in H1–H4."
+  },
+  {
+    "rule": "deprecated-class",
+    "file": "src/client/ops/pages/renovate-ranking.tsx",
+    "count": 1,
+    "reason": "Native ui-select on the Renovate queue filter (#5272, after the CU1 baseline). The shared Select arrives in CU4; Hub moves onto it in H3/H4."
   }
 ]
