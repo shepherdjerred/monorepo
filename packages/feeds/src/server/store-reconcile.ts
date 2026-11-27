@@ -7,7 +7,6 @@ import {
   applyRetroactiveAutoReadForFeedInDb,
   bumpSubscriptionsEtagInDb,
   ensureCategoryInDb,
-  type IdRow,
 } from "./store-sql.ts";
 
 const MANAGED_CATEGORY_ORDER: readonly {
@@ -49,9 +48,10 @@ function upsertCatalogFeedsInDb(
   managedIds: ReadonlyMap<ManagedCategory, number>,
 ): { readonly declaredUrls: ReadonlySet<string>; readonly changed: boolean } {
   const upsertStmt = db.query(UPSERT_DECLARED_FEED_SQL);
-  const feedIdByUrlStmt = db.query<IdRow, [string]>(
-    "SELECT id FROM feeds WHERE url = ?",
-  );
+  const priorFeedStmt = db.query<
+    { readonly id: number; readonly auto_read_json: string | null },
+    [string]
+  >("SELECT id, auto_read_json FROM feeds WHERE url = ?");
   const declaredUrls = new Set<string>();
   let changed = false;
 
@@ -63,6 +63,8 @@ function upsertCatalogFeedsInDb(
     }
     const autoJson =
       feed.autoRead === undefined ? null : JSON.stringify(feed.autoRead);
+    const priorFeed = priorFeedStmt.get(feed.url);
+    const priorAutoJson = priorFeed?.auto_read_json ?? null;
     const res = upsertStmt.run(
       feed.url,
       feed.title,
@@ -73,10 +75,11 @@ function upsertCatalogFeedsInDb(
       autoJson,
     );
     changed = changed || res.changes > 0;
-    if (feed.autoRead !== undefined) {
-      const feedRow = feedIdByUrlStmt.get(feed.url);
-      if (feedRow !== null) {
-        applyRetroactiveAutoReadForFeedInDb(db, feedRow.id, feed.autoRead);
+    const ruleChanged = priorAutoJson !== autoJson;
+    if (ruleChanged && feed.autoRead !== undefined) {
+      const feedId = priorFeed?.id ?? priorFeedStmt.get(feed.url)?.id;
+      if (feedId !== undefined) {
+        applyRetroactiveAutoReadForFeedInDb(db, feedId, feed.autoRead);
       }
     }
   }

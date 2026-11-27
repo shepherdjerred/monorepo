@@ -111,15 +111,6 @@ export function mapEntryRow(row: EntryRow): StoredEntry {
   };
 }
 
-function parseEntryCategoriesJson(rawJson: string): readonly string[] {
-  try {
-    const parsed = CategoriesArraySchema.safeParse(JSON.parse(rawJson));
-    return parsed.success ? parsed.data : [];
-  } catch {
-    return [];
-  }
-}
-
 export function applyRetroactiveAutoReadForFeedInDb(
   db: Database,
   feedId: number,
@@ -149,7 +140,9 @@ export function applyRetroactiveAutoReadForFeedInDb(
   );
   let matchedCount = 0;
   for (const row of unreadRows) {
-    const categories = parseEntryCategoriesJson(row.categories_json);
+    const categories = CategoriesArraySchema.parse(
+      JSON.parse(row.categories_json),
+    );
     if (
       matchesAutoReadRule(rule, {
         title: row.title,

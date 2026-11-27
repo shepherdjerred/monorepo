@@ -222,7 +222,10 @@ describe("createFeedsPoller refreshAll", () => {
         }
         return {
           status: 206,
-          headers: new Headers({ etag: '"etag-v2"' }),
+          headers: new Headers({
+            etag: '"etag-v2"',
+            "content-range": "bytes 0-199/200",
+          }),
           body: `<rss version="2.0"><channel><title>Rel</title>
             <item><guid>1</guid><title>v2.0.0-canary.1</title></item>
             <item><guid>2</guid><title>v2.0.0</title></item>

@@ -11,7 +11,7 @@ export const PRERELEASE_RULE: SingleAutoReadRule = {
 
 export const PATCH_VERSION_RULE: SingleAutoReadRule = {
   field: "title",
-  pattern: String.raw`\bv?\d+\.\d+\.[1-9]\d*\b`,
+  pattern: String.raw`^[^\d]*\bv?\d+\.\d+\.[1-9]\d*\b`,
   flags: "i",
 };
 

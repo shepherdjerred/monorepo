@@ -134,6 +134,11 @@ test("FeedsStore migrates legacy SQLite schemas, cleans up obsolete managed cate
     expect(entries[1]?.isStarred).toBe(true);
     expect(entries[2]?.isRead).toBe(false);
 
+    // Re-running reconcileCatalog when autoRead rule is unchanged preserves manual unread state
+    store.updateEntriesState({ ids: [1001], isRead: false });
+    store.reconcileCatalog(SAMPLE_CATALOG);
+    expect(store.getEntriesByIds([1001])[0]?.isRead).toBe(false);
+
     // Updating a user feed's autoRead rule also sweeps existing unread entries
     store.recordPollSuccess({
       feedId: 11,
@@ -171,6 +176,19 @@ test("FeedsStore migrates legacy SQLite schemas, cleans up obsolete managed cate
     expect(userUnread.items.map((i) => i.title)).toEqual([
       "Kernel sched_ext deep dive",
     ]);
+
+    // Title-only user feed update does not re-sweep manually unread entries
+    const promoEntry = store
+      .queryEntries({ view: "all", feedId: 11 })
+      .items.find((i) => i.title === "Join our webinar");
+    if (promoEntry === undefined) {
+      throw new Error("Expected promo entry");
+    }
+    store.updateEntriesState({ ids: [promoEntry.id], isRead: false });
+    expect(store.updateUserFeed(11, { title: "Renamed User Feed" }).ok).toBe(
+      true,
+    );
+    expect(store.getEntriesByIds([promoEntry.id])[0]?.isRead).toBe(false);
     store.close();
   } finally {
     await rm(dir, { recursive: true, force: true });

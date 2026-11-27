@@ -142,7 +142,12 @@ export function updateUserFeedInDb(
       nextAuto === null ? null : JSON.stringify(nextAuto),
       id,
     );
-    applyRetroactiveAutoReadForFeedInDb(db, id, nextAuto);
+    if (
+      body.autoRead !== undefined &&
+      JSON.stringify(body.autoRead) !== JSON.stringify(existing.autoRead)
+    ) {
+      applyRetroactiveAutoReadForFeedInDb(db, id, nextAuto);
+    }
     bumpSubscriptionsEtagInDb(db);
   })();
   const updated = getFeedByIdFromDb(db, id);

@@ -68,6 +68,33 @@ function computeNextPollAfterSeconds(
   return now + delay;
 }
 
+const COMPLETE_CONTENT_RANGE_PATTERN = /^bytes\s+0-(\d+)\/(\d+)$/iu;
+
+function isCompletePollResponse(response: SafeFetchResult): boolean {
+  if (response.status === 200) {
+    return true;
+  }
+  if (response.status !== 206) {
+    return false;
+  }
+  const contentRange = response.headers.get("content-range");
+  if (contentRange === null) {
+    return false;
+  }
+  const match = COMPLETE_CONTENT_RANGE_PATTERN.exec(contentRange.trim());
+  if (match?.[1] === undefined || match[2] === undefined) {
+    return false;
+  }
+  const endByte = Number(match[1]);
+  const totalBytes = Number(match[2]);
+  return (
+    Number.isSafeInteger(endByte) &&
+    Number.isSafeInteger(totalBytes) &&
+    totalBytes > 0 &&
+    endByte + 1 === totalBytes
+  );
+}
+
 function buildPollHeaders(feed: StoredFeed): Record<string, string> {
   const headers: Record<string, string> = {
     Accept: POLL_ACCEPT_HEADER,
@@ -82,6 +109,36 @@ function buildPollHeaders(feed: StoredFeed): Record<string, string> {
   return headers;
 }
 
+function recordFailedFeedPoll(options: {
+  readonly store: FeedsRepository;
+  readonly feed: StoredFeed;
+  readonly now: number;
+  readonly status: number | null;
+  readonly rawMessage: string;
+  readonly retryAfter: string | null;
+}): SingleFeedPollResult {
+  const { store, feed, now, status, rawMessage, retryAfter } = options;
+  const safeError = sanitizeErrorMessage(rawMessage, feed.url);
+  const nextPollAfterSeconds = computeNextPollAfterSeconds(
+    now,
+    feed.consecutiveFailures,
+    retryAfter,
+  );
+  store.recordPollFailure({
+    feedId: feed.id,
+    polledAtSeconds: now,
+    status,
+    errorMessage: safeError,
+    nextPollAfterSeconds,
+  });
+  return {
+    status: "failed",
+    newEntries: 0,
+    autoReadEntries: 0,
+    error: safeError,
+  };
+}
+
 async function pollOneFeed(options: {
   readonly store: FeedsRepository;
   readonly fetchFeed: typeof safeFetch;
@@ -93,26 +150,14 @@ async function pollOneFeed(options: {
   try {
     response = await fetchFeed(feed.url, { headers: buildPollHeaders(feed) });
   } catch (error) {
-    const rawMessage = error instanceof Error ? error.message : String(error);
-    const safeError = sanitizeErrorMessage(rawMessage, feed.url);
-    const nextPollAfterSeconds = computeNextPollAfterSeconds(
+    return recordFailedFeedPoll({
+      store,
+      feed,
       now,
-      feed.consecutiveFailures,
-      null,
-    );
-    store.recordPollFailure({
-      feedId: feed.id,
-      polledAtSeconds: now,
       status: null,
-      errorMessage: safeError,
-      nextPollAfterSeconds,
+      rawMessage: error instanceof Error ? error.message : String(error),
+      retryAfter: null,
     });
-    return {
-      status: "failed",
-      newEntries: 0,
-      autoReadEntries: 0,
-      error: safeError,
-    };
   }
 
   if (response.status === 304) {
@@ -125,55 +170,32 @@ async function pollOneFeed(options: {
     return { status: "not-modified", newEntries: 0, autoReadEntries: 0 };
   }
 
-  if (response.status < 200 || response.status >= 300) {
-    const safeError = sanitizeErrorMessage(
-      `HTTP ${String(response.status)}`,
-      feed.url,
-    );
-    const nextPollAfterSeconds = computeNextPollAfterSeconds(
+  if (!isCompletePollResponse(response)) {
+    return recordFailedFeedPoll({
+      store,
+      feed,
       now,
-      feed.consecutiveFailures,
-      response.headers.get("retry-after"),
-    );
-    store.recordPollFailure({
-      feedId: feed.id,
-      polledAtSeconds: now,
       status: response.status,
-      errorMessage: safeError,
-      nextPollAfterSeconds,
+      rawMessage:
+        response.status === 206
+          ? "HTTP 206 incomplete Content-Range"
+          : `HTTP ${String(response.status)}`,
+      retryAfter: response.headers.get("retry-after"),
     });
-    return {
-      status: "failed",
-      newEntries: 0,
-      autoReadEntries: 0,
-      error: safeError,
-    };
   }
 
   let parsed: ParsedFeedDocument;
   try {
     parsed = parseFeedXml(response.body, response.finalUrl, now);
   } catch (error) {
-    const rawMessage = error instanceof Error ? error.message : String(error);
-    const safeError = sanitizeErrorMessage(rawMessage, feed.url);
-    const nextPollAfterSeconds = computeNextPollAfterSeconds(
+    return recordFailedFeedPoll({
+      store,
+      feed,
       now,
-      feed.consecutiveFailures,
-      null,
-    );
-    store.recordPollFailure({
-      feedId: feed.id,
-      polledAtSeconds: now,
       status: response.status,
-      errorMessage: safeError,
-      nextPollAfterSeconds,
+      rawMessage: error instanceof Error ? error.message : String(error),
+      retryAfter: null,
     });
-    return {
-      status: "failed",
-      newEntries: 0,
-      autoReadEntries: 0,
-      error: safeError,
-    };
   }
 
   const recorded = store.recordPollSuccess({
@@ -356,19 +378,14 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
         const index = nextIndex;
         nextIndex += 1;
         const feed = feedsToPoll[index];
-        if (feed === undefined) {
-          return;
-        }
+        if (feed === undefined) return;
         const res = await pollOneFeed({ store, fetchFeed, feed, now });
-        if (res.status === "not-modified") {
-          notModified += 1;
-        } else if (res.status === "updated") {
+        if (res.status === "not-modified") notModified += 1;
+        else if (res.status === "updated") {
           updated += 1;
           newEntries += res.newEntries;
           autoReadEntries += res.autoReadEntries;
-        } else {
-          failed += 1;
-        }
+        } else failed += 1;
       }
     });
 
@@ -401,12 +418,8 @@ export function createFeedsPoller(deps: CreateFeedsPollerDeps): FeedsPoller {
 
   return {
     refreshAll(options) {
-      if (activeRefresh !== null) {
-        return activeRefresh;
-      }
-      const promise = runSingleFlightRefresh(options);
-      activeRefresh = promise;
-      return promise;
+      activeRefresh ??= runSingleFlightRefresh(options);
+      return activeRefresh;
     },
 
     async refreshFeed(feedId, options) {

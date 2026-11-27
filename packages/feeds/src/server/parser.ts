@@ -404,6 +404,9 @@ function defaultTitleFromUrl(feedUrl: string): string {
   }
 }
 
+const CLOSING_FEED_ROOT_PATTERN =
+  /<\/(?:rss|feed|atom:feed|rdf:RDF|RDF)\s*>\s*$/iu;
+
 export function parseFeedXml(
   xml: string,
   feedUrl: string,
@@ -412,6 +415,9 @@ export function parseFeedXml(
   const cleaned = xml.replace(/^\u{FEFF}/u, "").trim();
   if (cleaned.length === 0) {
     throw new Error("Feed XML body is empty");
+  }
+  if (!CLOSING_FEED_ROOT_PATTERN.test(cleaned)) {
+    throw new Error("Feed XML body is truncated or missing closing root tag");
   }
   const doc = asRecord(XML_PARSER.parse(cleaned));
   if (doc === undefined) {

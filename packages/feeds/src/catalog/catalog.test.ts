@@ -93,6 +93,11 @@ test("strict release rules auto-read snapshots, sub-tags, and x.y.z patches whil
   );
   expect(
     matchesAutoReadRule(STRICT_RELEASE_RULES, {
+      title: "v2.0.0: requires Kubernetes 1.34.1",
+    }),
+  ).toBe(false);
+  expect(
+    matchesAutoReadRule(STRICT_RELEASE_RULES, {
       title: "Version 3.54.0",
     }),
   ).toBe(false);

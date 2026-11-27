@@ -26,17 +26,22 @@ Never commit a credential-bearing URL to `catalog.ts`. Add private subscriber
 feeds through the web console or NetNewsWire instead.
 :::
 
-Use `autoRead` (a single rule or an array of rules evaluated across `title`,
-`url`, or XML `category`) to mark noisy entries read automatically:
+Use `autoRead` in
+[`rules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/catalog/rules.ts)
+(evaluated by
+[`auto-read.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/server/auto-read.ts))
+or `hidden` (enforced by
+[`store-sql.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feeds/src/server/store-sql.ts))
+when adding high-volume feeds:
 
-- `STRICT_RELEASE_RULES` marks snapshots, monorepo sub-module tags, and patch
-  bumps (`x.y.z` where `z >= 1`) read so only `x.y.0` releases surface.
-- `BLOG_PRERELEASE_RULE` marks alpha, beta, RC, and canary blog posts read
-  without matching prose mentions of nightly builds.
-- `negate: true` marks entries read unless the pattern matches, such as
-  `AI_SDK_ONLY_RULE` (negated `category` rules skip entries without categories).
-- `hidden: true` hides high-volume feeds from the default `Unread` and `All`
-  streams while retaining them in search and category filters.
+- Apply `STRICT_RELEASE_RULES` to raw release feeds so only `x.y.0` releases
+  remain unread.
+- Apply `BLOG_PRERELEASE_RULE` to project blogs to mark alpha, beta, RC, and
+  canary announcements read.
+- Set `negate: true` (such as `AI_SDK_ONLY_RULE`) when only matching entries
+  should stay unread.
+- Set `hidden: true` to exclude a feed from the default `Unread` and `All`
+  views while keeping it in search and folder views.
 
 Validate the catalog and server locally:
 

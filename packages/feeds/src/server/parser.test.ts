@@ -220,6 +220,14 @@ describe("parseFeedXml sanitization and fallbacks", () => {
     expect(parsed.entries[1]?.guid).toMatch(/^sha256:[0-9a-f]{64}$/u);
     expect(parsed.entries[1]?.url).toBe("https://minimal.example.com/feed.xml");
     expect(parsed.entries[1]?.publishedAt).toBe(fixedNow);
+
+    expect(() =>
+      parseFeedXml(
+        "<rss version='2.0'><channel><title>Cut</title><item><title>1</title></item>",
+        "https://minimal.example.com/feed.xml",
+        fixedNow,
+      ),
+    ).toThrow(/truncated/iu);
   });
 });
 
