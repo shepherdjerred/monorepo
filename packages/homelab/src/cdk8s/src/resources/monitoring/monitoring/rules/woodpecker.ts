@@ -1,6 +1,9 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import { getWoodpeckerQueueAlertRules } from "./woodpecker-queue.ts";
+import {
+  getWoodpeckerQueueAlertRules,
+  getWoodpeckerQueueRecordingRules,
+} from "./woodpecker-queue.ts";
 import { escapePrometheusTemplate } from "./shared.ts";
 
 /**
@@ -368,6 +371,11 @@ export function getWoodpeckerRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
         },
       ],
+    },
+    {
+      name: "woodpecker-agent-slots-recording",
+      interval: "1m",
+      rules: getWoodpeckerQueueRecordingRules(),
     },
     {
       name: "woodpecker-ci-io-alerts",

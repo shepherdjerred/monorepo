@@ -59,6 +59,8 @@ describe("dashboard query health", () => {
       "woodpecker_pending_steps",
       "woodpecker_running_steps",
       "woodpecker_worker_count",
+      // Recorded by woodpecker-queue.ts as the expected agent slot total.
+      "woodpecker:agent_configured_slots:sum",
       "nvme_data_units_written_total",
       "nvme_host_write_commands_total",
       "nvme_percentage_used_ratio",

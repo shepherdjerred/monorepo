@@ -10,6 +10,7 @@
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import {
+  CI_AGENT_CONFIGURED_SLOTS_METRIC,
   CI_NODE_CPU_HEADROOM_IDLE_RATIO,
   CI_PENDING_QUEUE_FOR,
   CI_PENDING_STEPS_THRESHOLD,
@@ -58,7 +59,7 @@ export function addCiAgentQueuePanels(
           legend: "idle agent slots",
         },
       ],
-      gridPos: { x: 0, y: 82, w: 12, h: 8 },
+      gridPos: { x: 0, y: 82, w: 8, h: 8 },
     }),
   );
 
@@ -80,7 +81,27 @@ export function addCiAgentQueuePanels(
           legend: "CPU busy percent",
         },
       ],
-      gridPos: { x: 12, y: 82, w: 12, h: 8 },
+      gridPos: { x: 8, y: 82, w: 8, h: 8 },
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Agent Slots: Connected vs Expected",
+      description:
+        "Connected slots are idle plus running steps. Expected capacity is what the available agent Deployments are configured to run (their ci.sjer.red/max-workflows labels times available replicas), so it follows a cap change when the agent rollout lands, not when the source merges. A gap that persists means a running agent has lost its connection: WoodpeckerAgentDisconnected.",
+      targets: [
+        {
+          query:
+            'max(woodpecker_worker_count{namespace="woodpecker"}) + on () max(woodpecker_running_steps{namespace="woodpecker"})',
+          legend: "connected slots (idle + running)",
+        },
+        {
+          query: CI_AGENT_CONFIGURED_SLOTS_METRIC,
+          legend: "expected capacity (configured)",
+        },
+      ],
+      gridPos: { x: 16, y: 82, w: 8, h: 8 },
     }),
   );
 }
