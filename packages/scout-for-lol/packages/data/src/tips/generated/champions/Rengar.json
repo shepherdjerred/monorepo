@@ -260,7 +260,18 @@
         }
       ],
       "opponent": "Kayn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Bola Strike's slow and reveal can pin Kayn down so Savagery and Battle Roar land instantly.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Kayn", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Rengar-Q", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Rengar-W", "start": 64, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -331,7 +342,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Bola Strike reveals Kha'Zix and slows him, so the buffered Q and W follow up instantly.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Khazix", "start": 20, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -390,7 +410,17 @@
         }
       ],
       "opponent": "Kindred",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Buffered Bola Strike slows Kindred, and Battle Roar follows instantly to heal off damage taken.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Rengar-W", "start": 40, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -448,7 +478,18 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Buffered Bola Strike, Savagery and Battle Roar fire at once, so Lee Sin gets little time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Rengar-Q", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Rengar-W", "start": 35, "end": 46 },
+            { "kind": "champion", "key": "LeeSin", "start": 64, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -755,7 +796,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Buffered Q and W after Bola Strike come out instantly, giving Sylas little time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Sylas", "start": 62, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -912,7 +962,18 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Rengar:combo:1",
+          "note": "Bola Strike with buffered Savagery and Battle Roar fires fast, slowing Xin Zhao and trading burst.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Rengar-Q", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Rengar-W", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "XinZhao", "start": 71, "end": 79 }
+          ]
+        }
+      ]
     }
   ]
 }

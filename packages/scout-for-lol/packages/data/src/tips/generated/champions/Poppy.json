@@ -290,7 +290,17 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash charged ult lets Poppy knock Leona back from range without her seeing the approach.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Leona", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -350,7 +360,16 @@
         }
       ],
       "opponent": "Lulu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash during the R charge gives a surprise knockback on Lulu, who can't easily react to the close-in.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lulu", "start": 56, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -418,7 +437,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flashing mid-charge lets Keeper's Verdict knock Lux back from range without her seeing you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 25, "end": 41 },
+            { "kind": "champion", "key": "Lux", "start": 48, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -809,7 +837,16 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flashing mid-charge hides Poppy's approach, so Senna gets little warning before the knockback lands.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Senna", "start": 47, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -994,7 +1031,16 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash during the charged ult repositions unseen, so Thresh can't easily dodge or hook around it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Thresh", "start": 52, "end": 58 }
+          ]
+        }
+      ]
     }
   ]
 }

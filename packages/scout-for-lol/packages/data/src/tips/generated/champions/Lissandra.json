@@ -210,7 +210,15 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lissandra:combo:1",
+          "note": "Instant self-cast Tomb gives stasis and destroys projectiles aimed at her, countering Akali's burst.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 86, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -585,7 +593,15 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lissandra:combo:1",
+          "note": "Instant self-cast Tomb destroys projectiles aimed at her, so it can dodge Orianna's Shockwave burst.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 74, "end": 81 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -705,7 +721,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lissandra:combo:1",
+          "note": "Instant self-cast Frozen Tomb dodges Sylas's burst and Abduct, which are projectiles aimed at her.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-R", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

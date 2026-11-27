@@ -503,7 +503,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Trundle:combo:0",
+          "note": "Pillar blocks the path and slows a fleeing Naafiri, who must walk around it after her dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 43, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -615,7 +623,15 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Trundle:combo:0",
+          "note": "Pillar blocks a path and slows, and Shyvana's listed abilities include no dash to escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 36, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

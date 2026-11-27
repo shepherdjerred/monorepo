@@ -595,7 +595,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Neeko:combo:0",
+          "note": "Disguised Pop Blossom hides the warning, so Pantheon has less time to react to her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Pantheon", "start": 44, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -803,7 +812,16 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Neeko:combo:0",
+          "note": "Disguised Pop Blossom hides the warning, so Sona has less time to react to the engage.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Sona", "start": 44, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

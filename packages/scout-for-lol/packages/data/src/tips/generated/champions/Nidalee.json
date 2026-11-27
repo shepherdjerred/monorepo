@@ -383,7 +383,18 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nidalee:combo:0",
+          "note": "A long Javelin Toss hit lets her dive Lee, though Safeguard can shield and dash him away.",
+          "refs": []
+        },
+        {
+          "comboId": "jungle:Nidalee:combo:2",
+          "note": "Mid-dash Takedown bursts fast, but Lee's Safeguard can escape before the empowered attack lands.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -482,7 +493,24 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nidalee:combo:0",
+          "note": "Javelin hit lets Nidalee dive Naafiri, but Naafiri's Call of the Pack untargetability can dodge the follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 },
+            { "kind": "champion", "key": "Naafiri", "start": 43, "end": 50 }
+          ]
+        },
+        {
+          "comboId": "jungle:Nidalee:combo:1",
+          "note": "Hunted Pounce closes the gap on Naafiri when she stays outside normal Pounce range after the Javelin.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -578,7 +606,15 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nidalee:combo:1",
+          "note": "Hunted Pounce closes a big gap after a Javelin hit, so Shyvana has a harder time staying out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 55, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -818,7 +854,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nidalee:combo:1",
+          "note": "Javelin Toss hit lets Pounce close a big gap onto Xin Zhao and cuts its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 50, "end": 58 }
+          ]
+        }
+      ]
     }
   ]
 }

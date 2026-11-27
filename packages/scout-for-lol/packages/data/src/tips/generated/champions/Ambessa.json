@@ -274,7 +274,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's brace and shield let her hold through Briar's Blood Frenzy and still smash a target out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -337,7 +346,16 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield and brace let her smash through Darius's damage, and the dash closes the gap to him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Darius", "start": 53, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -439,7 +457,15 @@
         }
       ],
       "opponent": "Gangplank",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield and brace let her dash through damage and smash a target out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -556,7 +582,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Queued dash during Repudiation's brace lets the smash reach Jayce even if his knockback or range separates you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 19, "end": 30 },
+            { "kind": "champion", "key": "Jayce", "start": 60, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -802,7 +837,16 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield braces through Rumble's damage, and the queued dash lets the smash reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Rumble", "start": 36, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1022,7 +1066,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's brace lets her absorb Yone's damage, then dash-smash to hit him if he is out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

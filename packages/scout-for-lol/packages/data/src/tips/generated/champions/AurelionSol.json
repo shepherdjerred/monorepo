@@ -684,7 +684,27 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Astral Flight lets Breath of Light channel freely to burn Orianna while chasing or kiting her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 0,
+              "end": 13
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 19,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Orianna", "start": 58, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -807,7 +827,21 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Astral Flight's beam chase keeps burning Sylas when he dashes in and out with Abscond.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 0,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1109,7 +1143,13 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Yone's spirit form and dashes make him slippery, but the unlimited-duration beam keeps burning him in flight.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "middle",

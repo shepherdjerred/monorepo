@@ -348,7 +348,17 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Shaco:combo:0",
+          "note": "Dropping a Jack In The Box while invisible sets a trap for Kha'Zix without revealing Shaco.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-W", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Khazix", "start": 59, "end": 66 },
+            { "kind": "champion", "key": "Shaco", "start": 85, "end": 90 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -465,7 +475,22 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Shaco:combo:0",
+          "note": "Lee's Sonic Wave and Tempest reveal Shaco, so the invisible box drop can be exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 36, "end": 41 }
+          ]
+        },
+        {
+          "comboId": "jungle:Shaco:combo:2",
+          "note": "Deceive over a wall breaks line of sight, but Tempest reveals him and Safeguard lets Lee follow.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 0, "end": 7 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -681,7 +706,16 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Shaco:combo:0",
+          "note": "Dropping a box while invisible sets a trap for Shyvana during a chase without revealing Shaco.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 47, "end": 54 },
+            { "kind": "champion", "key": "Shaco", "start": 88, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -939,7 +973,26 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Shaco:combo:0",
+          "note": "Deceive then Jack In The Box drops a trap without breaking invisibility against a charging Xin Zhao.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Shaco-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "XinZhao", "start": 91, "end": 99 }
+          ]
+        },
+        {
+          "comboId": "jungle:Shaco:combo:2",
+          "note": "Deceive over a thin wall breaks line of sight so Shaco can slip away from Xin Zhao.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-Q", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Shaco", "start": 49, "end": 54 },
+            { "kind": "champion", "key": "XinZhao", "start": 74, "end": 82 }
+          ]
+        }
+      ]
     }
   ]
 }

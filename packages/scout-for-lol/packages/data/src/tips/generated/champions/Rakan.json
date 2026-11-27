@@ -310,7 +310,16 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Leona is a melee engager, so Rakan's charm and knock-up from R then W can punish her for diving in.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Rakan", "start": 29, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -516,7 +525,13 @@
         }
       ],
       "opponent": "Nami",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Nami is a squishy target, so R then W charm and knock-up can start a fight on her.",
+          "refs": [{ "kind": "champion", "key": "Nami", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -784,7 +799,17 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "The Quickness charm and Grand Entrance knock-up can lock down Seraphine, who is squishy.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Rakan-W", "start": 24, "end": 38 },
+            { "kind": "champion", "key": "Seraphine", "start": 62, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -831,7 +856,17 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Sona is squishy, so The Quickness into Grand Entrance can charm and knock her up before she reacts.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rakan-R", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Rakan-W", "start": 39, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

@@ -199,7 +199,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Charm then Beat Drop stuns Anivia, giving allies a longer lockdown window against her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -505,7 +514,17 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Encore's charm can catch Camille, and Beat Drop then stuns her, though her ultimate can untarget her.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Camille", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 38, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1137,7 +1156,17 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Encore's charm is an immobilize, so Beat Drop stuns Nautilus, locking him down for his allies to punish.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 36, "end": 45 },
+            { "kind": "champion", "key": "Nautilus", "start": 52, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1439,7 +1468,17 @@
         }
       ],
       "opponent": "Rakan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Encore charms Rakan, then Beat Drop stuns him, locking down a mobile champion.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Rakan", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 26, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1496,7 +1535,17 @@
         }
       ],
       "opponent": "Rell",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Charm then Beat Drop stun gives lockdown to punish Rell's engage, since Rell must close in.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Rell", "start": 51, "end": 55 },
+            { "kind": "champion", "key": "Rell", "start": 72, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1606,7 +1655,17 @@
         }
       ],
       "opponent": "Shen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Encore's charm makes Beat Drop stun instead of slow, locking Shen down after he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 21, "end": 30 },
+            { "kind": "champion", "key": "Shen", "start": 61, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1662,7 +1721,13 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Sona's listed kit has no escape from a charm, so R into E turns it into a longer stun lockdown.",
+          "refs": [{ "kind": "champion", "key": "Sona", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1834,7 +1899,15 @@
         }
       ],
       "opponent": "TahmKench",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Charm then Beat Drop gives a longer lockdown, enough to punish Tahm if he is caught after engaging.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1945,7 +2018,16 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Charm then Beat Drop stuns, a longer lockdown on Thresh if he is caught without his lantern or box.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Thresh", "start": 49, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2003,7 +2085,16 @@
         }
       ],
       "opponent": "Velkoz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Charm then Beat Drop stuns, and Vel'Koz has no listed dash or escape to avoid the lockdown.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Velkoz", "start": 32, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2227,7 +2318,17 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Seraphine:combo:0",
+          "note": "Encore's charm sets up a Beat Drop stun on Zyra, who can't act while locked down in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 25, "end": 34 },
+            { "kind": "champion", "key": "Zyra", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -283,7 +283,16 @@
         }
       ],
       "opponent": "Karma",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Two spread Dazzle beams are harder to sidestep, so Karma struggles to dodge and escape the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Karma", "start": 51, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -337,7 +346,16 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Split Dazzle's two beams from different angles are hard to dodge, so Leona has trouble escaping the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Leona", "start": 69, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -568,7 +586,16 @@
         }
       ],
       "opponent": "Nami",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Two spread Dazzle beams make it harder for Nami to sidestep and avoid the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -635,7 +662,16 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Split Dazzle gives two stun beams from different angles, which helps catch Nautilus as he dodges.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Nautilus", "start": 75, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -805,7 +841,16 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Split Dazzle gives two stun beams from different spots, tough for Senna to sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Senna", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -868,7 +913,16 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Split Dazzle gives two stun beams to dodge, which helps catch Seraphine as she repositions between her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Seraphine", "start": 62, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -921,7 +975,16 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Taric:combo:0",
+          "note": "Split Dazzle's two spread beams are hard to sidestep, so they can catch Sona when she dodges.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Sona", "start": 72, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

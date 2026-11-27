@@ -1010,7 +1010,30 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Fiora:combo:1",
+          "note": "Riposte negates Heimerdinger's grenade stun and turns the stab into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 16,
+              "end": 28
+            }
+          ]
+        },
+        {
+          "comboId": "top:Fiora:combo:0",
+          "note": "Riposte mid-Lunge lets Fiora dodge a grenade thrown at her while dashing in.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 23, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1246,7 +1269,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Fiora:combo:1",
+          "note": "Riposte can negate Jayce's Thundering Blow knockback and turn the parry into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1672,7 +1704,16 @@
         }
       ],
       "opponent": "Nasus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Fiora:combo:1",
+          "note": "Nasus's listed abilities include no stun, snare or knock-up, so Riposte has little to negate.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-W", "start": 64, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1784,7 +1825,16 @@
         }
       ],
       "opponent": "Ornn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Fiora:combo:1",
+          "note": "Riposte can negate Ornn's knock-up or slow and turn the stab into a stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Ornn", "start": 19, "end": 23 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2631,7 +2681,16 @@
         }
       ],
       "opponent": "Vladimir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Fiora:combo:1",
+          "note": "Riposte can negate a crowd control effect from Vladimir and stun him, but his listed abilities show no stun or snare.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Vladimir", "start": 47, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

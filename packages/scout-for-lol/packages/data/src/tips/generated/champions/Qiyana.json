@@ -619,7 +619,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Qiyana:combo:1",
+          "note": "Dashing in with E then Q lets the slash hit without aiming at Naafiri, who is mobile and hard to line up.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 62, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -808,7 +816,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Qiyana:combo:2",
+          "note": "Dashing with W into E lets Qiyana engage and gather an element at once, a quick way to close on Sylas.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 27, "end": 33 },
+            { "kind": "champion", "key": "Sylas", "start": 96, "end": 101 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1251,7 +1268,24 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:1",
+          "note": "Audacity into Q closes the gap on Cassiopeia and lands the Q on her right away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 34, "end": 44 }
+          ]
+        },
+        {
+          "comboId": "middle:Qiyana:combo:2",
+          "note": "Dash Terrashape closes distance on Cassiopeia while gathering an element and keeping your Q.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 35, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1292,7 +1326,17 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:1",
+          "note": "Audacity into Elemental Wrath lets Qiyana close and hit Fizz before his Playful hop can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Qiyana", "start": 35, "end": 41 },
+            { "kind": "champion", "key": "Fizz", "start": 56, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1350,7 +1394,17 @@
         }
       ],
       "opponent": "Malzahar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:2",
+          "note": "Dashing with Terrashape and Audacity closes the gap fast to threaten Malzahar after his silence.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 28, "end": 36 },
+            { "kind": "champion", "key": "Malzahar", "start": 69, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1404,7 +1458,25 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:1",
+          "note": "Audacity into Elemental Wrath closes the gap onto Orianna and lands Q on her right away.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Orianna", "start": 50, "end": 57 }
+          ]
+        },
+        {
+          "comboId": "middle:Qiyana:combo:2",
+          "note": "Dashing with Terrashape then Audacity closes on Orianna fast while keeping Q ready.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 29, "end": 37 },
+            { "kind": "champion", "key": "Orianna", "start": 48, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1652,7 +1724,16 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:2",
+          "note": "Dashing with Terrashape then E and Q closes fast on Viktor, who has no listed dash to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 52, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1762,7 +1843,23 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:1",
+          "note": "Dashing in with E lets Q land on Yone, who is a melee champion that stays close to fight.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 33, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "middle:Qiyana:combo:0",
+          "note": "A second Q from Terrashape gives another Q with an element's bonus when Yone is on you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 16, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 72, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1810,7 +1907,27 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Qiyana:combo:1",
+          "note": "Audacity into Q lets Qiyana close on Zed and hit him with Elemental Wrath in one fast chain.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Qiyana", "start": 21, "end": 27 },
+            { "kind": "champion", "key": "Zed", "start": 37, "end": 40 }
+          ]
+        },
+        {
+          "comboId": "middle:Qiyana:combo:2",
+          "note": "Dashing with Terrashape then Audacity gets Qiyana onto Zed while she keeps her Q ready.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 29, "end": 37 },
+            { "kind": "champion", "key": "Qiyana", "start": 43, "end": 49 },
+            { "kind": "champion", "key": "Zed", "start": 55, "end": 58 }
+          ]
+        }
+      ]
     }
   ]
 }

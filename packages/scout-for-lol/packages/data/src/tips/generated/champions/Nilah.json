@@ -231,7 +231,15 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Nilah:combo:0",
+          "note": "The dash and Q wave give poke and a safe trade while keeping you mobile against Caitlyn's net and trap.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 80, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

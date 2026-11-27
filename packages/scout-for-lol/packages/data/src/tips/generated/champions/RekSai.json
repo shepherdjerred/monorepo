@@ -622,7 +622,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:RekSai:combo:1",
+          "note": "Right-click Unburrow knocks up Sylas without a separate cast, useful to engage him after his spells.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

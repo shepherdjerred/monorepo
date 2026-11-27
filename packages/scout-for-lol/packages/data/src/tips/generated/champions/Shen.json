@@ -268,7 +268,17 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Shadow Dash taunts Aatrox, so you can follow with Twilight Assault and an empowered attack to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Shen-Q", "start": 50, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -324,7 +334,17 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Briar's Blood Frenzy self-taunts her, so Shen's taunt-based Dash into Twilight Assault trade is safer.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Shen", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Shen-Q", "start": 70, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -390,7 +410,17 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Taunting Darius with Shadow Dash lets Twilight Assault slow him and your empowered hits land in the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Shen-E", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Shen-Q", "start": 38, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -504,7 +534,17 @@
         }
       ],
       "opponent": "Gangplank",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Shadow Dash taunts Gangplank, and Twilight Assault then slows him so you can hit him with empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Gangplank", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Shen-Q", "start": 34, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -898,7 +938,18 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash into Twilight Assault lets Shen taunt and pull Rumble, slowing him so Shen's attacks land.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Shen", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Rumble", "start": 52, "end": 58 },
+            { "kind": "champion", "key": "Shen", "start": 75, "end": 79 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -953,7 +1004,16 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Sion, then Twilight Assault slows him and empowers your attacks for a clean trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Shen-Q", "start": 23, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -999,7 +1059,17 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Teemo, and Twilight Assault slows him so Shen can hit him right after landing.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Shen", "start": 53, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1056,7 +1126,17 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Vayne, then Twilight Assault slows her and empowers attacks so Shen can trade.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Shen", "start": 75, "end": 79 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1102,7 +1182,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dashing E into Q taunts-trade and slows Yone, so you can land basic attacks on him right away.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 40, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1167,7 +1255,16 @@
         }
       ],
       "opponent": "Bard",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Dashing into Twilight Assault slows Bard, who has no listed dash to escape the taunt follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Bard", "start": 36, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1235,7 +1332,16 @@
         }
       ],
       "opponent": "Braum",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Braum then pulling Twilight Assault through him slows him and sets up your empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 28, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1288,7 +1394,25 @@
         }
       ],
       "opponent": "Karma",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Karma when she stays just out of Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Karma", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Shen-E", "start": 65, "end": 76 }
+          ]
+        },
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Karma and throwing Twilight Assault back slows her and gets empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 28, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1334,7 +1458,16 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Slowing a taunted Leona with Twilight Assault helps against her melee all-in kit.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Shen-Q", "start": 29, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1396,7 +1529,17 @@
         }
       ],
       "opponent": "Lulu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Lulu when she kites out of Shadow Dash range with her slows.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lulu", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Shen-E", "start": 59, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1451,7 +1594,24 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Lux, who is easy to reach for a taunt only if she stays just out of range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lux", "start": 32, "end": 35 }
+          ]
+        },
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Lux then throwing Twilight Assault slows her and sets up empowered attacks on a fragile target.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Shen-Q", "start": 27, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1496,7 +1656,17 @@
         }
       ],
       "opponent": "Milio",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach, which helps catch Milio when he stays just outside Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Milio", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Shen-E", "start": 75, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1558,7 +1728,16 @@
         }
       ],
       "opponent": "Nami",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Nami, who must otherwise stay out of range to avoid being engaged.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Nami", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1620,7 +1799,17 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Nautilus then throwing Twilight Assault back slows him and sets up Shen's empowered attack.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 32, "end": 48 },
+            { "kind": "champion", "key": "Shen", "start": 76, "end": 80 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1674,7 +1863,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Throwing Twilight Assault back through the taunted Pantheon slows him as he tries to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Pantheon", "start": 51, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1774,7 +1972,17 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Senna and slowing her with Twilight Assault lets Shen land empowered attacks on her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 36, "end": 52 },
+            { "kind": "champion", "key": "Shen", "start": 58, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1876,7 +2084,15 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Dashing into a Spirit Blade slows a taunted Sona, who is otherwise hard to pin down.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 44, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1931,7 +2147,17 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch a Thresh who stays just outside Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Shen-E", "start": 64, "end": 75 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -513,7 +513,18 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps you close in on Jayce, and Ki Burst stuns him before Broken Wings follows up.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Jayce", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Riven-W", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Riven-Q", "start": 74, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -630,7 +641,19 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield and Ki Burst's stun help Riven close the gap on Malphite and follow up with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Riven", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Malphite", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Riven-Q", "start": 91, "end": 103 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -777,7 +800,18 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps absorb Rumble's poke while Ki Burst stuns him as you close in with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Rumble", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Riven-W", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Riven-Q", "start": 88, "end": 100 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -881,7 +915,18 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield and Ki Burst's stun help Riven close the gap on a kiting Teemo.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Riven", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Teemo", "start": 72, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1008,7 +1053,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps absorb Yone's poke when you engage, and Ki Burst adds a stun to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Riven-W", "start": 61, "end": 69 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -178,7 +178,15 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "E then Q then attack punishes Ahri with big damage once she is asleep and cannot dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 30, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -232,7 +240,26 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw Sleepy Trouble Bubble from range, then blink back from Akali.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Zoe-E", "start": 39, "end": 60 },
+            { "kind": "champion", "key": "Akali", "start": 94, "end": 99 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Sleep then Paddle Star! gives big burst on Akali while she is asleep and cannot dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 43, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -291,7 +318,23 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal bubble lets Zoe throw Sleepy Trouble Bubble from far away while safely blinking back.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Zoe-E", "start": 29, "end": 50 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "After the bubble lands, the long-travel star hits hard on a sleeping Anivia.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 69, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -346,7 +389,18 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then Sleepy Trouble Bubble lets Zoe throw from range and blink back out of Aurora's reach.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Zoe-E", "start": 17, "end": 38 },
+            { "kind": "champion", "key": "Zoe", "start": 44, "end": 47 },
+            { "kind": "champion", "key": "Aurora", "start": 87, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -401,7 +455,18 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw Sleepy Trouble Bubble from range, away from Cassiopeia's poison.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Zoe-E", "start": 39, "end": 60 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 83, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -454,7 +519,24 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Sleep then Paddle Star! punishes Fizz if the bubble lands, since Playful can't be used while asleep.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal bubble throws Sleepy Trouble Bubble from range and lands her safely away from Fizz's dash.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 21, "end": 42 },
+            { "kind": "champion", "key": "Fizz", "start": 85, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -898,7 +980,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw the sleep from range and land safely away from Yone's dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "champion", "key": "Yone", "start": 86, "end": 90 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -949,7 +1041,13 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Once the bubble sleeps Zed, a long-travel star hits for double damage and the empowered attack follows.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 23, "end": 26 }]
+        }
+      ]
     }
   ]
 }

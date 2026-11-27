@@ -385,7 +385,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Walking through walls lets Kayn escape or flank around Briar's leaps and stun, and heals him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 27, "end": 31 },
+            { "kind": "champion", "key": "Briar", "start": 55, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1075,7 +1084,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Wall-hop Shadow Step lets Kayn escape or flank around Jayce's To the Skies! leap and Slow.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-E", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Jayce", "start": 54, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1387,7 +1406,17 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Shadow Step lets Kayn pass through walls to flee or flank Master Yi, who must chase through terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Kayn", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "MasterYi", "start": 58, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1527,7 +1556,17 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Shadow Step through walls lets Kayn escape Nidalee's Pounce chase and Javelin Toss lines.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Nidalee", "start": 43, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1729,7 +1768,17 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Walking through walls with Shadow Step lets Kayn avoid Qiyana's terrain-detonating ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-E", "start": 27, "end": 38 },
+            { "kind": "champion", "key": "Kayn", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Qiyana", "start": 55, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2250,7 +2299,17 @@
         }
       ],
       "opponent": "Udyr",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kayn:combo:0",
+          "note": "Shadow Step through walls lets Kayn escape Udyr's Stampede stun-dash and Storm slow.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Udyr", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

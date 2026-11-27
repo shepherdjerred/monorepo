@@ -347,7 +347,16 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Ambessa's dashes can sidestep the blade, so dashing Umbral Dash mid-wind-up helps shift where it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 52, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -407,7 +416,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Anivia, which helps Darkin Blade land and lets Umbral Dash line up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 69, "end": 80 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -526,7 +545,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Briar, making Darkin Blade easier to land, though Blood Frenzy gives her speed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -727,7 +755,13 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the knock-up from Blade may be wasted.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "top",
@@ -937,7 +971,16 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow helps Darkin Blade land, but Gnar's Hop can leap out of the blade's edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Gnar", "start": 51, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -993,7 +1036,16 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing during the Darkin Blade wind-up shifts where it lands, so Gragas has a harder time dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Gragas", "start": 66, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1107,7 +1159,20 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow helps land Darkin Blade on Heimerdinger, who relies on turrets and grenade to keep range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 39,
+              "end": 51
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1172,7 +1237,17 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Illaoi so the Darkin Blade is easier to land, and the dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Illaoi", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1240,7 +1315,17 @@
         }
       ],
       "opponent": "Irelia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Irelia, making The Darkin Blade easier to land as she dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Irelia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1344,7 +1429,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Jayce, making the Darkin Blade easier to land as he leaps in or swaps stances.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 36, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1525,7 +1620,17 @@
         }
       ],
       "opponent": "Kennen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kennen, which makes The Darkin Blade easier to land for the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kennen", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 42, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1573,7 +1678,17 @@
         }
       ],
       "opponent": "Kled",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kled first, so The Darkin Blade is easier to land on his charging approach.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kled", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1618,7 +1733,17 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow makes The Darkin Blade easier to land, and Umbral Dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 65, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1812,7 +1937,16 @@
         }
       ],
       "opponent": "Nasus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing with Umbral Dash mid-Darkin Blade helps land the blade on Nasus, who may step out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Nasus", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1922,7 +2056,16 @@
         }
       ],
       "opponent": "Ornn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing during the Darkin Blade wind-up helps it land when Ornn steps out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Ornn", "start": 59, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1978,7 +2121,17 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Pantheon, making The Darkin Blade easier to land for the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 39, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2046,7 +2199,17 @@
         }
       ],
       "opponent": "Quinn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows the target, which makes The Darkin Blade easier to land on Quinn.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 46, "end": 62 },
+            { "kind": "champion", "key": "Quinn", "start": 81, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2146,7 +2309,16 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Riven, making Darkin Blade easier to land as she dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Riven", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2342,7 +2514,17 @@
         }
       ],
       "opponent": "Singed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow helps land The Darkin Blade on Singed, who is slowed while he runs and poisons.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 33, "end": 49 },
+            { "kind": "champion", "key": "Singed", "start": 53, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2388,7 +2570,16 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow sets up the Darkin Blade knock-up against Sion, who is hard to hit while charging Q.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 20, "end": 36 },
+            { "kind": "champion", "key": "Sion", "start": 54, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2501,7 +2692,18 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows, so The Darkin Blade is easier to land on Teemo, and Umbral Dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 26, "end": 42 },
+            { "kind": "champion", "key": "Teemo", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 75, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2556,7 +2758,17 @@
         }
       ],
       "opponent": "Tryndamere",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Opening with Infernal Chains slows Tryndamere, so the Darkin Blade is easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Tryndamere", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 50, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2667,7 +2879,16 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing mid-wind-up shifts the blade, helping it land on Varus, who can sidestep the Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 81, "end": 97 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2731,7 +2952,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow Vayne first, making The Darkin Blade easier to land and dash-adjust for the knock-up.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2886,7 +3116,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing mid-wind-up shifts the Blade, making it harder for Xin Zhao to sidestep after his charge.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 59, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2994,7 +3232,26 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Yone so The Darkin Blade is easier to land, setting up the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 }
+          ]
+        },
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Umbral Dash during the Darkin Blade wind-up shifts the blade against Yone's dashing sidesteps.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Yone", "start": 69, "end": 73 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3149,7 +3406,17 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Graves, making the Darkin Blade follow-up easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3193,7 +3460,15 @@
         }
       ],
       "opponent": "JarvanIV",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Chains slow and pull Jarvan, so the Darkin Blade is easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3249,7 +3524,17 @@
         }
       ],
       "opponent": "Kayn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows the target, which makes the Darkin Blade easier to land on Kayn.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 46, "end": 62 },
+            { "kind": "champion", "key": "Kayn", "start": 81, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3297,7 +3582,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kha'Zix and the pull helps set up a Darkin Blade sweetspot on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3344,7 +3638,17 @@
         }
       ],
       "opponent": "Kindred",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows and pulls Kindred, which helps set up the Darkin Blade sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kindred", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 60, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3396,7 +3700,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Lee Sin, making the following Darkin Blade easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3452,7 +3765,16 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows and pulls Yi, making the Darkin Blade easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 43, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3507,7 +3829,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:0",
+          "note": "E during the Q wind-up helps sweetspot a mobile Naafiri who keeps darting in and out.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 48, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3605,7 +3935,22 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Chains slow and pull help land Q on Shyvana, who is slowed by nothing of her own but can shield.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 36, "end": 43 }
+          ]
+        },
+        {
+          "comboId": "jungle:Aatrox:combo:0",
+          "note": "Dashing during the Q wind-up helps sweetspot the blade on Shyvana as she moves in and out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 58, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3757,7 +4102,17 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains' slow and pull help land The Darkin Blade on Talon, who can leap in and out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Talon", "start": 61, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

@@ -930,7 +930,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gnar:combo:0",
+          "note": "Hop into Boomerang slows Vayne as Gnar closes in, which helps against her Tumble-based kiting.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Gnar", "start": 34, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

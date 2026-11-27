@@ -165,7 +165,16 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork's dash and shield close the gap on Aatrox, then the empowered Q slows and pulls him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Aatrox", "start": 44, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -219,7 +228,18 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable while he chains Q and All Out, so Akali's slow can't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "KSante-R", "start": 59, "end": 66 },
+            { "kind": "champion", "key": "Akali", "start": 71, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -273,7 +293,16 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dashes onto Ambessa, then the empowered Q pulls her in when she is close.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Ambessa", "start": 21, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -339,7 +368,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork closes the gap to Anivia, then Ntofo Strikes slows and pulls her in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "KSante-Q", "start": 40, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -393,7 +432,16 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes him Unstoppable, so Aurora's Weirding slow won't stop the Q and R chain.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Aurora", "start": 37, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -440,7 +488,17 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork then empowered Q lets K'Sante close on Briar and fling her, even through a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "KSante", "start": 31, "end": 38 },
+            { "kind": "champion", "key": "Briar", "start": 48, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -496,7 +554,16 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Camille back through a thin wall, which counters her Hookshot-based engages.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Camille", "start": 15, "end": 22 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -608,7 +675,17 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dashes you onto Darius so empowered Ntofo Strikes can slow him and fling him behind you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Darius", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 45, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -658,7 +735,18 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the R stun and knock-up may be wasted.",
+          "refs": []
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the Q pull may be absorbed.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "top",
@@ -706,7 +794,17 @@
         }
       ],
       "opponent": "Fiora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, so it is hard for Fiora to disrupt the chained Q and R.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Fiora", "start": 56, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -886,7 +984,16 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Gnar back, and a thin wall behind him adds a second hit plus a stun and knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Gnar", "start": 15, "end": 19 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -932,7 +1039,16 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Gragas back through a thin wall, then stuns him, which punishes his positioning in lane.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Gragas", "start": 15, "end": 21 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1049,7 +1165,21 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dash into the empowered Q closes distance on Heimerdinger and flings him away from his turrets.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 54,
+              "end": 66
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1101,7 +1231,16 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Knocking Illaoi through a wall with All Out gives a second hit and a stun, which also interrupts her.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "KSante-R", "start": 36, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1264,7 +1403,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, so Jayce's To the Skies! slow won't stop the chained Q and R.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Jayce", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1375,7 +1524,17 @@
         }
       ],
       "opponent": "Kennen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable while charging, so Kennen's stun mark cannot stop that chain.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Kennen", "start": 56, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1412,7 +1571,26 @@
         }
       ],
       "opponent": "Kled",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Kled back, and a wall behind him adds a second hit, stun and knock up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Kled", "start": 15, "end": 19 }
+          ]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork gets K'Sante onto Kled so the empowered Ntofo Strikes can fling him behind.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "KSante", "start": 14, "end": 21 },
+            { "kind": "champion", "key": "Kled", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 49, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1528,7 +1706,15 @@
         }
       ],
       "opponent": "Mordekaiser",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "R wall slam stuns and knocks up Mordekaiser, a strong punish when he is near a wall in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 32, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1578,7 +1764,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling with Q lets you reach Naafiri when she's close to you in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 53, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1751,7 +1945,17 @@
         }
       ],
       "opponent": "Ornn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, and R refreshes it, which helps him chain through Ornn's slows.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Ornn", "start": 88, "end": 92 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1920,7 +2124,16 @@
         }
       ],
       "opponent": "Renekton",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out's wall slam stuns and knocks up Renekton, punishing him when he stands near a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Renekton", "start": 40, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2019,7 +2232,17 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Going All Out refreshes W, letting K'Sante chain Q and R during the dash to threaten Rumble.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "KSante", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Rumble", "start": 85, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2146,7 +2369,17 @@
         }
       ],
       "opponent": "Shen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker can be chained with Q and All Out, giving a strong burst window against Shen.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "KSante-R", "start": 37, "end": 44 },
+            { "kind": "champion", "key": "Shen", "start": 83, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2371,7 +2604,16 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork into Q closes on Teemo and pulls him, punishing a squishy champion who needs distance.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2492,7 +2734,16 @@
         }
       ],
       "opponent": "Urgot",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker into Q and R chains dashes and damage, and R refreshes W, all usable against Urgot.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Urgot", "start": 88, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2603,7 +2854,24 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Vayne through a thin wall for a second hit, then stuns her, and she has no listed stun escape.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Vayne", "start": 15, "end": 20 }
+          ]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork into empowered Q closes the gap on Vayne and flings her behind him, even through a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2694,7 +2962,15 @@
         }
       ],
       "opponent": "Volibear",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling with Q lets you reposition against Volibear's close-range all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 66, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2853,7 +3129,20 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Slamming Yone through a wall with R stuns and knocks him up, so he can't use his dashes to escape.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 9, "end": 13 }]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling Yone with Q lets you control close-range trades against his melee poke.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2906,7 +3195,16 @@
         }
       ],
       "opponent": "Yorick",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Yorick back, and a thin wall behind him adds a second hit, stun and knock up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Yorick", "start": 15, "end": 21 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2974,7 +3272,15 @@
         }
       ],
       "opponent": "Zaahen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "R wall slam stuns and knocks up Zaahen, helping punish his dash-ins near a lane wall.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 32, "end": 38 }
+          ]
+        }
+      ]
     }
   ]
 }

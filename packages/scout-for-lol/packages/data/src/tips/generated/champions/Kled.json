@@ -438,7 +438,17 @@
         }
       ],
       "opponent": "Garen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Kled:combo:0",
+          "note": "Dash-casting the trap hooks Garen and keeps Kled close, so the tether holds while Garen has to chase.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Kled", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Garen", "start": 82, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -481,7 +491,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Kled:combo:0",
+          "note": "Jousting into Bear Trap on a Rope can hook Jayce, who has to leap in with To the Skies! to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Kled-Q", "start": 14, "end": 33 },
+            { "kind": "champion", "key": "Jayce", "start": 43, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -767,7 +787,16 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Kled:combo:0",
+          "note": "Jousting into Bear Trap keeps you close to Sion, who has no dash to avoid the tether.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Sion", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -863,7 +892,17 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Kled:combo:0",
+          "note": "Casting the trap mid-Jousting dash keeps the tether on Vayne while Kled closes in on her.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Vayne", "start": 55, "end": 60 },
+            { "kind": "champion", "key": "Kled", "start": 67, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -908,7 +947,18 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Kled:combo:0",
+          "note": "Jousting into the trap keeps Kled close to Yone, so he can pull him in and stay on him as Yone dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Kled", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Yone", "start": 43, "end": 47 },
+            { "kind": "champion", "key": "Yone", "start": 90, "end": 94 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -238,7 +238,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence stops Akali's abilities, and its move speed and lunge help Garen close on her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 32, "end": 37 },
+            { "kind": "champion", "key": "Garen", "start": 85, "end": 90 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -298,7 +308,16 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence can stop Ambessa's ability-based dashes and shields, and its speed helps close on her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Ambessa", "start": 35, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -439,7 +458,17 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's move speed and silence help Garen close in on Aurora and cut off her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 46, "end": 51 },
+            { "kind": "champion", "key": "Aurora", "start": 64, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -622,7 +651,15 @@
         }
       ],
       "opponent": "Chogath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Q's move speed helps close on Cho'Gath and its silence stops him from casting back in the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 30, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -986,7 +1023,16 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike removes slows, so Gnar's Boomerang Throw slow is cleared as you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Gnar", "start": 34, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1053,7 +1099,16 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's speed helps close on Gragas, and the empowered attack silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Gragas", "start": 39, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1206,7 +1261,16 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike removes Slows and adds Move Speed, so it helps Garen close past Electron Storm Grenade's slow.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1261,7 +1325,16 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence stops Illaoi casting her abilities and its move speed helps close in on her.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Illaoi", "start": 32, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1442,7 +1515,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's move speed helps close on Jayce, and its silence stops his swaps and spells.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1634,7 +1716,16 @@
         }
       ],
       "opponent": "Kennen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence stops Kennen from casting his abilities during the trade, and its speed helps close on him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kennen", "start": 32, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2179,7 +2270,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence on the empowered attack stops Pantheon from casting while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 56, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2293,7 +2393,16 @@
         }
       ],
       "opponent": "Renekton",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence can stop Renekton from casting his Fury-empowered abilities during a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Renekton", "start": 35, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2424,7 +2533,17 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence on the empowered attack stops Rumble casting spells, and its move speed helps Garen close in.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Rumble", "start": 56, "end": 62 },
+            { "kind": "champion", "key": "Garen", "start": 104, "end": 109 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2492,7 +2611,17 @@
         }
       ],
       "opponent": "Sett",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's move speed and silence help Garen close on Sett and start the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 46, "end": 51 },
+            { "kind": "champion", "key": "Sett", "start": 61, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3004,7 +3133,15 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Q's move speed and lunge silence close the gap on Varus, who has no listed dash, to cut off his poke.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 50, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3245,7 +3382,16 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's move speed helps close on Xin Zhao, and its silence stops him casting during a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 44, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3301,7 +3447,16 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's silence stops Yasuo's dashes, and its move speed helps close on him.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3361,7 +3516,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Q's move speed and silence help Garen close on Yone and stop him from casting abilities mid-trade.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 32, "end": 37 },
+            { "kind": "champion", "key": "Yone", "start": 47, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3425,7 +3589,16 @@
         }
       ],
       "opponent": "Yorick",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Decisive Strike's speed helps close on Yorick and its silence stops him from casting abilities in the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yorick", "start": 39, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3500,7 +3673,16 @@
         }
       ],
       "opponent": "Zaahen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Garen:combo:0",
+          "note": "Q's move speed and silenced lunge help Garen close in on Zaahen and start the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Zaahen", "start": 57, "end": 63 }
+          ]
+        }
+      ]
     }
   ]
 }

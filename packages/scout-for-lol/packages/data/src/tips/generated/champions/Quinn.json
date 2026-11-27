@@ -572,7 +572,15 @@
         }
       ],
       "opponent": "KSante",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Quinn:combo:0",
+          "note": "Vaulting over a thin wall can break away from K'Sante's chase when he has no dash to follow.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 46, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

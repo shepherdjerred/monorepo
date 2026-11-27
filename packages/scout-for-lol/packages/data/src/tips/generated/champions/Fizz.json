@@ -271,7 +271,16 @@
         }
       ],
       "opponent": "Akshan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:0",
+          "note": "Q then E lets Fizz dash in and hop untargetable to dodge Akshan's reaction.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Akshan", "start": 57, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -590,7 +599,16 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double hop dodges Brand's spell, then lets Fizz close in or escape unpredictably.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -984,7 +1002,15 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double hop dodges Hwei's spells with untargetable time, then closes the gap or escapes his Torment.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 18, "end": 22 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1130,7 +1156,24 @@
         }
       ],
       "opponent": "Katarina",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:0",
+          "note": "Playful's untargetable hop after Urchin Strike can dodge Katarina's reaction to the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Katarina", "start": 57, "end": 65 }
+          ]
+        },
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful dodges a spell, then lets Fizz re-dash toward or away from Katarina unpredictably.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Katarina", "start": 74, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1186,7 +1229,15 @@
         }
       ],
       "opponent": "Leblanc",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful dodges a LeBlanc spell, and each aimed dash is hard for her to predict.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 24, "end": 31 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1521,7 +1572,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:0",
+          "note": "After Urchin Strike, the Playful hop is untargetable and can dodge Orianna's Shockwave reaction.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Orianna", "start": 67, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1742,7 +1802,15 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful hops dodge Syndra's spheres and let you close the gap or escape her burst.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 26, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1859,7 +1927,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful lets Fizz dodge Talon's leap, then dash again to close in or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 31, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2028,7 +2105,13 @@
         }
       ],
       "opponent": "Vex",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double hop is untargetable, but Vex's empowered fear can interrupt dashes and her mark punishes dashing.",
+          "refs": [{ "kind": "champion", "key": "Vex", "start": 32, "end": 35 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2242,7 +2325,24 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:0",
+          "note": "Playful's untargetable hop can dodge Xin Zhao's reaction after Fizz dashes in with Urchin Strike.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 37, "end": 45 },
+            { "kind": "champion", "key": "Fizz", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 83, "end": 96 }
+          ]
+        },
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful hops let Fizz dodge a spell and aim each dash separately to escape or close in.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2457,7 +2557,13 @@
         }
       ],
       "opponent": "Zoe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Fizz:combo:1",
+          "note": "Double Playful hop gives untargetable dodges against Zoe's bubble and star, and is hard to predict.",
+          "refs": [{ "kind": "champion", "key": "Zoe", "start": 53, "end": 56 }]
+        }
+      ]
     }
   ]
 }

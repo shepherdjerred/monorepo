@@ -222,7 +222,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Azir:combo:1",
+          "note": "The wall lands as Azir arrives, so Emperor's Divide knocks back Akali if she dives onto him.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Azir-R", "start": 35, "end": 51 },
+            { "kind": "champion", "key": "Akali", "start": 64, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -276,7 +286,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Azir:combo:1",
+          "note": "Shuffle into Emperor's Divide knocks back Anivia, and the dash lets Azir close on her quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Anivia", "start": 42, "end": 48 },
+            { "kind": "champion", "key": "Azir", "start": 68, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -444,7 +464,15 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Azir:combo:1",
+          "note": "Wall can knock back Fizz, but his untargetable Playful hop can dodge it, so it can fail.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 20, "end": 24 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -566,7 +594,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Azir:combo:1",
+          "note": "Emperor's Divide knocks back enemies, which can push Orianna away from her ball before Shockwave.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Orianna", "start": 53, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

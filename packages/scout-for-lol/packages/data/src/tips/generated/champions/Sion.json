@@ -360,7 +360,22 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash for a full stun on Anivia, who has no listed dash to escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 50, "end": 56 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Anivia behind it with the slow and armor shred while she waves minions.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 32, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -533,7 +548,15 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion shreds Camille's armor, which helps against her physical damage trades.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 34, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -590,7 +613,15 @@
         }
       ],
       "opponent": "Chogath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Cho'Gath behind them, shredding armor and slowing him during lane trades.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 28, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -662,7 +693,15 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion slows Darius and shreds armor, which helps against his close-range trades.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -719,7 +758,13 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Mundo's passive resists the first immobilizing effect, so the Q stun would be wasted on it.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "top",
@@ -952,7 +997,20 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Gnar's Hop gap-close lets him leave a stun, but Roar's slow gives time to charge Smash.",
+          "refs": [{ "kind": "champion", "key": "Gnar", "start": 0, "end": 4 }]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Gnar behind it with the same slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1009,7 +1067,15 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off minions hits Gragas, who has no listed ability to block that poke.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 31, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1062,7 +1128,15 @@
         }
       ],
       "opponent": "Gwen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Gwen behind it with damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1116,7 +1190,33 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Heimerdinger behind his wave, slowing him and shredding his armor.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 28,
+              "end": 40
+            }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "E's slow helps Sion charge Q to a full stun on Heimerdinger, who otherwise walks out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 15, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 47,
+              "end": 59
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1169,7 +1269,16 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps you charge Decimating Smash for the stun before Illaoi can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 29, "end": 45 },
+            { "kind": "champion", "key": "Illaoi", "start": 66, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1284,7 +1393,13 @@
         }
       ],
       "opponent": "Jax",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Roar knocks a minion back into Jax, dealing the same damage plus slow and armor shred.",
+          "refs": [{ "kind": "champion", "key": "Jax", "start": 31, "end": 34 }]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1342,7 +1457,15 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash, so Jayce's leap and knockback have less room to escape the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1531,7 +1654,15 @@
         }
       ],
       "opponent": "Kennen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Kennen with slow and armor shred when he stands behind his wave.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 28, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1769,7 +1900,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion hits Naafiri behind it with slow and armor shred, even with her packmates around.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2070,7 +2209,15 @@
         }
       ],
       "opponent": "Quinn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion hits Quinn for slow and armor shred when she stands behind minions.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 29, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2140,7 +2287,15 @@
         }
       ],
       "opponent": "Renekton",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions reaches Renekton in lane, dealing damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 31, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2372,7 +2527,15 @@
         }
       ],
       "opponent": "Shen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Shen and shreds his armor while he stays behind the wave.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 39, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2432,7 +2595,15 @@
         }
       ],
       "opponent": "Singed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Singed often poisons from behind minions, so bouncing E off a minion still hits him with slow and shred.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 0, "end": 6 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2609,7 +2780,15 @@
         }
       ],
       "opponent": "Tryndamere",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Tryndamere and shreds his armor from range.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 39, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2718,7 +2897,17 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Varus lane minions can block Sion, so bouncing E off a minion still hits Varus with slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Varus", "start": 73, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2774,7 +2963,15 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Vayne and shreds her armor when minions block the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 39, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2820,7 +3017,22 @@
         }
       ],
       "opponent": "Vladimir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Slow from E gives time to charge Q for the stun if Vladimir tries to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 51, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion still hits Vladimir behind it for damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 35, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2931,7 +3143,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:2",
+          "note": "Xin trades in melee with empowered attacks, so Sion's W shield and pop fit those short fights.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 47, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3065,7 +3285,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "The E slow helps charge Q's stun against Yone, who has dashes that could otherwise carry him out.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 41, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3120,7 +3348,22 @@
         }
       ],
       "opponent": "Yorick",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash for the stun, so Yorick can't easily walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 48, "end": 54 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Roar bounced off a minion hits Yorick behind it, a way to poke him when his Mist Walkers or wave block.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 31, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3175,7 +3418,15 @@
         }
       ],
       "opponent": "Zaahen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Zaahen with slow and armor shred when he stands behind his wave.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 28, "end": 34 }
+          ]
+        }
+      ]
     }
   ]
 }

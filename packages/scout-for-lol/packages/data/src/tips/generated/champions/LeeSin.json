@@ -270,7 +270,16 @@
         }
       ],
       "opponent": "Amumu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Amumu back after Sonic Wave, and the second Q lets Lee follow him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Amumu", "start": 21, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -370,7 +379,16 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After Resonating Strike, Safeguard lets Lee Sin kite back out of Brand's range quickly.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Brand", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -420,7 +438,15 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard right after the second Q lets Lee dash in and kite back out of Briar's leaps.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 73, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -538,7 +564,16 @@
         }
       ],
       "opponent": "Diana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Diana back, and the recast Q follows her, countering her dive.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Diana", "start": 21, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -685,7 +720,16 @@
         }
       ],
       "opponent": "Evelynn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Sonic Wave reveals Evelynn's target, and Dragon's Rage kicks her back, so Q then R then Q punishes her.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 41, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -906,7 +950,16 @@
         }
       ],
       "opponent": "Hecarim",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Hecarim back mid-charge, and the follow-up Q keeps Lee on him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Hecarim", "start": 21, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -990,7 +1043,13 @@
         }
       ],
       "opponent": "JarvanIV",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Resonating Strike lets Lee dash in and quickly retreat from Jarvan.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1080,7 +1139,23 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Q lets Lee kite back out of Jayce's hammer leap and knockback range.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 55, "end": 60 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Kick knocks Jayce back, and the recast Q follows him, which helps punish Jayce swapping forms.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 73, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1130,7 +1205,15 @@
         }
       ],
       "opponent": "Karthus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Q into kick gaps a ranged Karthus, and the recast Q follows him to stay on him after the kick.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 26, "end": 33 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1229,7 +1312,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Kha'Zix back, so Q into kick can punish him when he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Khazix", "start": 21, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1511,7 +1603,15 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After Sonic Wave lands, Safeguard lets Lee kite back out of Nidalee's Pounce and Takedown dive.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 60, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1816,7 +1916,15 @@
         }
       ],
       "opponent": "RekSai",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After the second Q, Safeguard lets Lee kite back out of Rek'Sai's Queen's Wrath and Furious Bite range.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 56, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1985,7 +2093,22 @@
         }
       ],
       "opponent": "Shaco",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Sonic Wave grants True Sight of Shaco, so the mark and kick can still hit him while he is invisible.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 32, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Landing Sonic Wave grants True Sight of Shaco, then Safeguard lets Lee retreat from his traps.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 40, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2078,7 +2201,15 @@
         }
       ],
       "opponent": "Skarner",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "The ward hop after the second Q lets Lee kite back out of Skarner's Shattered Earth boulder and Quaking attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 58, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2178,7 +2309,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Talon back after Sonic Wave marks him, interrupting his dive on Lee.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2284,7 +2424,23 @@
         }
       ],
       "opponent": "Udyr",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Dash in with Q, then ward hop out to avoid Udyr's Stampede stun and Storm damage.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 43, "end": 47 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:0",
+          "note": "Ward hop helps Lee escape Udyr's Stampede Stance, which gives Udyr Move Speed and a dash-stun on attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Udyr", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2378,7 +2534,23 @@
         }
       ],
       "opponent": "Viego",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Viego back after Sonic Wave marks him, and Q follows up on him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 21, "end": 26 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Q lets Lee dash in, then retreat from Viego.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2532,7 +2704,17 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks back Xin Zhao, and Q first lets Lee Sin follow the knocked-back target.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "champion", "key": "LeeSin", "start": 53, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

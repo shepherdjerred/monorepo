@@ -790,7 +790,17 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain Dredge Line gives a more reliable engage, then Riptide slows Lux, who has few ways to stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 55, "end": 62 },
+            { "kind": "champion", "key": "Lux", "start": 69, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1133,7 +1143,17 @@
         }
       ],
       "opponent": "Neeko",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain-anchored Dredge Line gives a more reliable hit to pull Neeko in, then Riptide slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Neeko", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 78, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1383,7 +1403,17 @@
         }
       ],
       "opponent": "Rakan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain Dredge Line lands reliably, and Riptide's slow helps keep Rakan from dashing away.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Rakan", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1559,7 +1589,17 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain Dredge Line makes the hook easier to land on Seraphine, and Riptide slows her after the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Seraphine", "start": 53, "end": 62 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1671,7 +1711,17 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain Dredge Line makes the engage more reliable, and Riptide's slow helps hold Sona after the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 56, "end": 63 },
+            { "kind": "champion", "key": "Sona", "start": 82, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1872,7 +1922,16 @@
         }
       ],
       "opponent": "TahmKench",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Terrain-anchored Dredge Line dash can close on Tahm, and Riptide slows after the landing.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 57, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2195,7 +2254,17 @@
         }
       ],
       "opponent": "Yuumi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Nautilus:combo:0",
+          "note": "Dredge Line then Riptide closes on Yuumi, and the slow helps hold her if the anchor lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Yuumi", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

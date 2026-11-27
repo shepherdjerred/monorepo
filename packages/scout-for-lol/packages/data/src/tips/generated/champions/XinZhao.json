@@ -1350,7 +1350,16 @@
         }
       ],
       "opponent": "Belveth",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Basic attack then Crescent Guard keeps Bel'Veth in close while others get knocked away.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 18, "end": 32 },
+            { "kind": "champion", "key": "Belveth", "start": 39, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1406,7 +1415,24 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning's slow and extended charge range help close on Brand, who must be caught to fight.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "champion", "key": "Brand", "start": 70, "end": 75 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Charging in and casting Three Talon Strike mid-dash lets Xin hit Brand the moment he arrives.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 24, "end": 42 },
+            { "kind": "champion", "key": "Brand", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1452,7 +1478,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning's slow and extra charge range help catch Briar when she leaps away.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "champion", "key": "Briar", "start": 64, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1512,7 +1547,15 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Ultimate knocks others away but keeps your attacked target close, so Darius stays in the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 69, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1626,7 +1669,18 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the Q knock-up may only be absorbed once.",
+          "refs": []
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "The longer charge range helps close on Mundo, but his passive can absorb the knock-up.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1738,7 +1792,16 @@
         }
       ],
       "opponent": "Evelynn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking first keeps Evelynn Challenged so Crescent Guard doesn't knock her back and she stays in the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 44, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1890,7 +1953,15 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Ultimate knocks others away while keeping Graves Challenged and in melee range of Xin.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 42, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1944,7 +2015,16 @@
         }
       ],
       "opponent": "Gwen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeps Gwen as the Challenged target so Crescent Guard does not knock her back out of the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 39, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2000,7 +2080,15 @@
         }
       ],
       "opponent": "Hecarim",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Hecarim first keeps him in the ultimate, so he isn't knocked back from the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 10, "end": 17 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2100,7 +2188,15 @@
         }
       ],
       "opponent": "JarvanIV",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Jarvan first keeps him Challenged, so Crescent Guard won't knock him back out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 48, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2205,7 +2301,22 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Challenge gap close helps chase Jayce, who gets Move Speed when swapping weapons.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Casting Q mid-dash lands the knock up fast on Jayce as the charge arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 46, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2364,7 +2475,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Kha'Zix wants to isolate targets, and Crescent Guard keeps your attacked target Challenged and in place.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 38, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2420,7 +2540,22 @@
         }
       ],
       "opponent": "Kindred",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "W's thrust slows and extends E's range, helping catch Kindred, whose Q vault lets her slip away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 54, "end": 61 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Kindred first keeps her in the ultimate while others are knocked away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 10, "end": 17 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2466,7 +2601,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking first keeps Lee Sin Challenged, so Crescent Guard won't knock him back, which holds him in.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 45, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2521,7 +2665,16 @@
         }
       ],
       "opponent": "Lillia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Hitting Lillia first keeps her Challenged so Crescent Guard won't knock her back out of the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 45, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2569,7 +2722,15 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "The Wind Becomes Lightning thrust slows Yi and extends the charge to reach him.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 4, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2636,7 +2797,15 @@
         }
       ],
       "opponent": "MonkeyKing",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeps Wukong in the ultimate's sweep unharmed by knockback if you hit him first, so he can't escape it.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 6, "end": 12 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2681,7 +2850,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeping Naafiri Challenged means R won't knock her back while her packmates get thrown away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 8, "end": 15 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2724,7 +2901,25 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeps a Challenged Nidalee from being knocked back by Crescent Guard, so she can't escape the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 54, "end": 68 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning slows and extends Audacious Charge range to catch Nidalee when she runs.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Nidalee", "start": 73, "end": 80 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2994,7 +3189,16 @@
         }
       ],
       "opponent": "Rammus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Rammus first keeps him Challenged so Crescent Guard does not knock him back.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 47, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3038,7 +3242,16 @@
         }
       ],
       "opponent": "RekSai",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning's slow and the longer charge help catch Rek'Sai, who can burrow away.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "champion", "key": "RekSai", "start": 63, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3083,7 +3296,16 @@
         }
       ],
       "opponent": "Rengar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Rengar first keeps him Challenged so Crescent Guard doesn't knock him back.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 47, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3128,7 +3350,16 @@
         }
       ],
       "opponent": "Sejuani",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning's slow won't matter much since Sejuani's Frost Armor grants slow immunity.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "champion", "key": "Sejuani", "start": 54, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3181,7 +3412,22 @@
         }
       ],
       "opponent": "Shaco",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "The Challenge gap close lets Xin reach Shaco when he repositions or flees just beyond normal charge range.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 39, "end": 44 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Charging with Q cast mid-dash lets Xin land the knock-up as soon as he reaches Shaco.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 79, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3224,7 +3470,15 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Casting Q mid-dash lands the knock-up as soon as you arrive, before Shyvana can react.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3371,7 +3625,24 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Wind Becomes Lightning's thrust slows Talon and extends the charge, helping Xin catch him.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 0, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Talon first keeps him Challenged so Crescent Guard doesn't knock him away.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 46, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3474,7 +3745,22 @@
         }
       ],
       "opponent": "Udyr",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Challenge extends charge range, helping Xin catch Udyr when his Stampede Stance gives him Move Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 50, "end": 54 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Casting Q mid-dash lands the knock-up on arrival, before Udyr can react to the engage.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 57, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3522,7 +3808,18 @@
         }
       ],
       "opponent": "Vi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Vi first keeps her Challenged, so Xin's ultimate does not knock her back.",
+          "refs": []
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Challenge gap close lets Xin chase Vi just outside normal charge range and knock her up.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3567,7 +3864,16 @@
         }
       ],
       "opponent": "Viego",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Attacking Viego first keeps him Challenged so Crescent Guard doesn't knock him back, keeping him in the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 46, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3624,7 +3930,15 @@
         }
       ],
       "opponent": "Volibear",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeps Volibear in the fight while the ultimate knocks others away, so he can't easily slip out.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 6, "end": 14 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3680,7 +3994,16 @@
         }
       ],
       "opponent": "Warwick",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Hitting Warwick first keeps him Challenged so Crescent Guard won't knock him back from your team.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 46, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3785,7 +4108,16 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:2",
+          "note": "Keeps Zed Challenged so Crescent Guard does not knock him back after he is marked.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 24, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3841,7 +4173,22 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:XinZhao:combo:0",
+          "note": "Challenge extends the charge's range, helping close on Zyra, who is rooted or squishy in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 55, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "jungle:XinZhao:combo:1",
+          "note": "Charging in and casting Q mid-dash lands the knock-up quickly once on Zyra.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 70, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3895,7 +4242,15 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:XinZhao:combo:0",
+          "note": "The Challenged mark extends your charge range, helping you close on Ahri when she dashes away.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 68, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4127,7 +4482,16 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:XinZhao:combo:0",
+          "note": "The W thrust marks Cassiopeia so Audacious Charge reaches her, closing the gap she wants to keep.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 33, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4681,7 +5045,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:XinZhao:combo:0",
+          "note": "Thrust mark extends charge range, helping close on Yone when he stays just outside reach.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 51, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

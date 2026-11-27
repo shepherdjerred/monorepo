@@ -154,7 +154,16 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your Alpha Strike landing side lets you step away from Aatrox's Darkin Blade line.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Aatrox", "start": 64, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1598,7 +1607,15 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your landing side while vanished helps you step away from or past Nidalee's Javelin Toss.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 75, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1822,7 +1839,15 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your landing side while untargetable helps you avoid Qiyana's Edge of Ixtal slash or land away from her.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 62, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2244,7 +2269,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your reappear side lets you step out of line of Abduct's thrown chains after Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 86, "end": 98 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

@@ -163,7 +163,16 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Taliyah:combo:1",
+          "note": "The slowing boulder from the double Threaded Volley can punish Ahri when she steps up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 36, "end": 51 },
+            { "kind": "champion", "key": "Ahri", "start": 63, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -443,7 +452,16 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Taliyah:combo:0",
+          "note": "Fizz's Playful makes him untargetable, so he can hop out of Seismic Shove before the stun lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 60, "end": 73 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -685,7 +703,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Taliyah:combo:0",
+          "note": "Unraveled Earth stones detonate when enemies dash, so Sylas's Abscond dash can set them off.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 54, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -792,7 +819,16 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Taliyah:combo:1",
+          "note": "Cheap slowing Threaded Volley pokes Viktor from range while he is in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Viktor", "start": 36, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

@@ -320,7 +320,18 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Aatrox to a wall, and Condemn's terrain collision adds damage on a target who dashes in.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Vayne-E", "start": 41, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -377,7 +388,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Akali to a wall for terrain damage when her dashes leave her near terrain.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 19, "end": 24 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -484,7 +505,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash during Condemn's cast sets the angle to pin Anivia into a wall for the bonus terrain damage.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 50, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -683,7 +714,17 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash during Condemn's cast fixes the angle so Camille is pinned into the wall for the collision damage.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Camille", "start": 47, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -809,7 +850,18 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn can pin Darius to a wall for Condemn's terrain damage, punishing him when he closes in.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Vayne-E", "start": 43, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1188,7 +1240,18 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn fixes the angle to pin Gragas to a wall, and Condemn's terrain collision adds damage.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Gragas", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Vayne-E", "start": 59, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1253,7 +1316,18 @@
         }
       ],
       "opponent": "Gwen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Gwen to a wall for Condemn's terrain damage, and it is a way to punish her close-range fighting.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Gwen", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1374,7 +1448,18 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Illaoi to a wall for Condemn's terrain damage, though she spawns tentacles on nearby terrain.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Illaoi", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Vayne-E", "start": 40, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1531,7 +1616,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Jayce's Thundering Blow knocks back and his leap closes in, so Flash Condemn can pin him to a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "summoner-spell", "key": "4", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Vayne-E", "start": 69, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1596,7 +1691,18 @@
         }
       ],
       "opponent": "KSante",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn can pin K'Sante to a wall for Condemn's terrain damage while he is in lane.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Vayne-E", "start": 44, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1750,7 +1856,18 @@
         }
       ],
       "opponent": "Kled",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn gets a wall angle to pin Kled, so Condemn's terrain collision damage can be dealt.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Kled", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Vayne-E", "start": 48, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1797,7 +1914,18 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn can pin Malphite to a wall for extra damage, since Condemn's knockback hits harder on terrain collision.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Malphite", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Vayne-E", "start": 65, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2233,7 +2361,17 @@
         }
       ],
       "opponent": "Quinn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Quinn to a wall for the terrain damage, punishing her short-range, dash-based all-ins.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Quinn", "start": 19, "end": 24 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2528,7 +2666,18 @@
         }
       ],
       "opponent": "Shen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn can pin Shen to a wall after he dashes in, since Condemn's angle is set at cast end.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Shen", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Vayne-E", "start": 63, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2909,7 +3058,18 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Vayne:combo:0",
+          "note": "Flash Condemn pins Varus to a wall for a stun, since Varus has no listed escape from it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Varus", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Varus", "start": 53, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3423,7 +3583,16 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:1",
+          "note": "Tumble attack reset boosts trades against Caitlyn, who has long range but few ways to punish short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Caitlyn", "start": 42, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3483,7 +3652,17 @@
         }
       ],
       "opponent": "Ezreal",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:1",
+          "note": "Tumble attack reset boosts Vayne's auto trading damage in lane against Ezreal's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Vayne", "start": 27, "end": 32 },
+            { "kind": "champion", "key": "Ezreal", "start": 71, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3540,7 +3719,17 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:0",
+          "note": "Flash Condemn can pin Jhin to a wall, since his listed abilities show no escape from the knockback.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-E", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3612,7 +3801,17 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:0",
+          "note": "Jinx's Flame Chompers root and Zap slow are risky to use, but Flash Condemn can knock her into a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "summoner-spell", "key": "4", "start": 62, "end": 67 },
+            { "kind": "ability", "key": "Vayne-E", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3681,7 +3880,16 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:1",
+          "note": "Tumble attack reset adds auto damage to trade against Kai'Sa's Plasma stacking autos.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Kaisa", "start": 54, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3841,7 +4049,17 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Vayne:combo:1",
+          "note": "Tumble attack reset boosts Vayne's auto damage when trading with Smolder in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Vayne", "start": 27, "end": 32 },
+            { "kind": "champion", "key": "Smolder", "start": 65, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

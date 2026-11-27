@@ -258,7 +258,15 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "A stunned Ahri can't dodge, so the fangs keep landing; she must avoid facing you or the stun fails.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 10, "end": 14 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -621,7 +629,16 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "A stun stops Aurora from dodging, so Twin Fang keeps landing while she is held in place.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 37, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -811,7 +828,25 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Briar's Blood Frenzy makes her face you, so Petrifying Gaze stuns her and fangs can all land.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 44, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "middle:Cassiopeia:combo:0",
+          "note": "Flash Petrifying Gaze can stun Briar if she is facing you, setting up a kill.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 31, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1080,7 +1115,13 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Fizz's Playful makes him untargetable, so land the stun first and then spam fangs on him.",
+          "refs": [{ "kind": "champion", "key": "Fizz", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1233,7 +1274,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Hwei's Grim Visage makes enemies flee, so a stunned, poisoned Hwei can't dodge the fang spam.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Hwei", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1315,7 +1365,18 @@
         }
       ],
       "opponent": "Irelia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Petrifying Gaze stuns Irelia if she faces Cassiopeia, so Twin Fang keeps landing for the whole stun.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Irelia", "start": 22, "end": 28 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 42, "end": 52 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 57, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1932,7 +1993,17 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Petrifying Gaze stuns Orianna, and Twin Fang then keeps hitting her for the whole stun.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 35, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2006,7 +2077,22 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Stunned Qiyana can't dodge, so Twin Fang keeps landing on her while Petrifying Gaze holds her.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 8, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 31,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 68, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2222,7 +2308,16 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:0",
+          "note": "Flash gaze can catch Syndra just outside range if she faces you, stunning her for a kill.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Syndra", "start": 21, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2421,7 +2516,15 @@
         }
       ],
       "opponent": "TwistedFate",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "A gaze stun stops Twisted Fate from moving while the fangs keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 18, "end": 30 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2472,7 +2575,17 @@
         }
       ],
       "opponent": "Veigar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "Petrifying Gaze stuns a facing Veigar, so Twin Fang can land through the whole stun.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Veigar", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 42, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2548,7 +2661,22 @@
         }
       ],
       "opponent": "Vex",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:0",
+          "note": "Flash into Petrifying Gaze can stun a Vex who is just out of range and facing you.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 11,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Vex", "start": 38, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2961,7 +3089,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Cassiopeia:combo:1",
+          "note": "A stunned Yone can't dodge or move, so the poisoned fang spam keeps landing and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 10, "end": 14 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

@@ -223,7 +223,16 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rell:combo:0",
+          "note": "Chaining crowd control after Magnet Storm helps lock down Leona, who must reach melee range to engage.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Leona", "start": 58, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -695,7 +704,16 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rell:combo:0",
+          "note": "Magnet Storm pulls Seraphine in and the empowered attack stun adds CC, so she is hard to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Seraphine", "start": 19, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -751,7 +769,15 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Rell:combo:0",
+          "note": "The charging stun from the final attack adds crowd control on Sona, who has no listed escape from it.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

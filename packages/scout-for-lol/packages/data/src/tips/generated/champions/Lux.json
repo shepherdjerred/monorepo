@@ -447,7 +447,15 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps land Binding on Anivia, who has no listed way to avoid being rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 41, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -514,7 +522,16 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Light Binding hit Aurora, who has hops and slows to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Aurora", "start": 43, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -594,7 +611,15 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Cassiopeia, who is approaching to land her poison.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 41, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -660,7 +685,16 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Fizz's Playful makes him untargetable, so Light Binding can miss, but the slow helps when he dashes in.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lux-Q", "start": 42, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -799,7 +833,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow makes Light Binding easier to land on Orianna, who has no listed way to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Orianna", "start": 57, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -922,7 +965,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Sylas, whose Abscond dash and Abduct can dodge or close in.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1004,7 +1055,15 @@
         }
       ],
       "opponent": "TwistedFate",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Slowing with the singularity first helps land Binding on Twisted Fate as he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 57, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1271,7 +1330,13 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Zed, whose shadow dashes can otherwise dodge it.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 41, "end": 44 }]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1323,7 +1388,17 @@
         }
       ],
       "opponent": "Ashe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "Slow from Lucent Singularity helps Light Binding hit Ashe, who has no listed dash or escape to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "Ashe", "start": 53, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1452,7 +1527,16 @@
         }
       ],
       "opponent": "Ezreal",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "Singularity's slow makes Light Binding easier to land on Ezreal, who relies on skillshots.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Ezreal", "start": 57, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1528,7 +1612,17 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "The slow from Lucent Singularity helps Light Binding land on Jhin, who has no listed escape or dash.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 14, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 39, "end": 52 },
+            { "kind": "champion", "key": "Jhin", "start": 61, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1846,7 +1940,15 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "The singularity's slow helps land the root on Smolder, who has no listed escape besides a short flight.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 46, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1951,7 +2053,17 @@
         }
       ],
       "opponent": "Alistar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lucent Singularity's slow helps Light Binding root Alistar, who is slow to close the gap himself.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Alistar", "start": 51, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2006,7 +2118,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lucent Singularity's slow helps Light Binding root Anivia, who is slowed and stays in place.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Anivia", "start": 51, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2661,7 +2783,16 @@
         }
       ],
       "opponent": "Mel",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:1",
+          "note": "Lux's wand return shield can help absorb Mel's poke when an ally is close.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "champion", "key": "Mel", "start": 41, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2896,7 +3027,16 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow-then-root setup helps Light Binding land and catch Nautilus, who wants to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Nautilus", "start": 60, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3090,7 +3230,17 @@
         }
       ],
       "opponent": "Poppy",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Slowing with Lucent Singularity first makes Light Binding easier to land on Poppy before the detonation.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Lux-Q", "start": 44, "end": 57 },
+            { "kind": "champion", "key": "Poppy", "start": 76, "end": 81 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3159,7 +3309,17 @@
         }
       ],
       "opponent": "Pyke",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Slowing with Lucent Singularity before Light Binding helps root Pyke before he can hook or dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Lux-Q", "start": 39, "end": 52 },
+            { "kind": "champion", "key": "Pyke", "start": 64, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3397,7 +3557,15 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Seraphine has no listed escape or dodge, so the slow-then-root setup is hard for her to avoid.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3550,7 +3718,15 @@
         }
       ],
       "opponent": "Soraka",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow-then-root setup helps catch Soraka in lane, so she can't easily dodge or escape the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 37, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3613,7 +3789,16 @@
         }
       ],
       "opponent": "Swain",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lux's slow-then-root lands the root to catch Swain, who has no listed dash to escape the lane trade.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "champion", "key": "Swain", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3873,7 +4058,16 @@
         }
       ],
       "opponent": "Velkoz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The singularity slow helps land Light Binding on Vel'Koz, who is slow to dodge and has no escape listed.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Velkoz", "start": 49, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4099,7 +4293,16 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow and root let Lux catch Zyra, who has no listed dash, and her plants can't dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "champion", "key": "Zyra", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     }
   ]
 }

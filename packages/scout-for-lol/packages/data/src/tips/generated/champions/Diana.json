@@ -472,7 +472,17 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Diana:combo:0",
+          "note": "Lunar Rush closes the gap on Lee Sin, then Moonfall pulls and slows him, setting up burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Diana-R", "start": 43, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -575,7 +585,17 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Diana:combo:0",
+          "note": "Moonfall pulls in Naafiri and her packmates, and Pale Cascade's shield helps against their burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Diana-W", "start": 49, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1024,7 +1044,18 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls in and slows Akali, so Diana can catch her after Akali dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Diana", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Akali", "start": 64, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1275,7 +1306,16 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls Fizz in and slows him, but his Playful untargetable hop can dodge the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1510,7 +1550,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls Sylas in and slows him, countering his Abscond dash to escape or close in.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

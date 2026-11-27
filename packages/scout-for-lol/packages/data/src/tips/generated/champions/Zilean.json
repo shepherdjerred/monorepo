@@ -868,7 +868,16 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Zilean:combo:0",
+          "note": "The double bomb stuns Sona without waiting on Time Bomb's cooldown, and she has no listed dash or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 46, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

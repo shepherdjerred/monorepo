@@ -713,7 +713,16 @@
         }
       ],
       "opponent": "Pyke",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Janna:combo:0",
+          "note": "Quick uncharged Howling Gale knocks up Pyke to interrupt his dash or dive before he gets going.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -771,7 +780,16 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Janna:combo:0",
+          "note": "A quick uncharged Howling Gale can interrupt Senna's dashes or dives, but its short range makes it easy to be outpoked.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 18, "end": 30 },
+            { "kind": "champion", "key": "Senna", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

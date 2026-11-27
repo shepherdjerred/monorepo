@@ -479,7 +479,17 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting Shadow Assault mid-leap gives Talon invisibility while he closes on Brand.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Brand", "start": 76, "end": 81 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -527,7 +537,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting Shadow Assault mid-leap adds blade damage and invisibility while Briar's taunt-based Blood Frenzy is active.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Briar", "start": 73, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1268,7 +1287,22 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:0",
+          "note": "Vaulting a wall with E then Q closes fast, countering Jayce's slow and knockback kiting tools.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 54, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting R mid-leap gets Talon in quickly, but Thundering Blow can knock him back after the dash.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1737,7 +1771,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting R mid-leap gives invisibility, which helps when diving through Naafiri's packmates.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 71, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1790,7 +1832,17 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting Shadow Assault mid-leap gives Talon invisibility and blade damage while closing on Nidalee.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Nidalee", "start": 91, "end": 98 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1942,7 +1994,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting R mid-leap gives Talon invisibility and blade damage while he closes on Pantheon.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Pantheon", "start": 80, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2077,7 +2138,17 @@
         }
       ],
       "opponent": "RekSai",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:0",
+          "note": "Assassin's Path vault into a melee Noxian Diplomacy gives a crit gap-close on Rek'Sai, who can burrow away.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Talon-Q", "start": 35, "end": 51 },
+            { "kind": "champion", "key": "RekSai", "start": 78, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2382,7 +2453,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:1",
+          "note": "Casting Shadow Assault mid-leap gets Talon's invisibility and damage going before Sylas can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "Sylas", "start": 82, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2589,7 +2670,17 @@
         }
       ],
       "opponent": "Viego",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Talon:combo:0",
+          "note": "Vaulting a wall with Assassin's Path closes fast on Viego, and the melee Noxian Diplomacy leap crits.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Viego", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Talon-Q", "start": 73, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2988,7 +3079,16 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:2",
+          "note": "Vaulting past Ahri then meleeing with Q gets the crit version, letting Talon trade when close.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 71, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3235,7 +3335,17 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:1",
+          "note": "Invisible approach with Shadow Assault lets Talon leap in with Q before Cassiopeia can react.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 24, "end": 38 },
+            { "kind": "champion", "key": "Talon", "start": 44, "end": 49 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 72, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3302,7 +3412,13 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:1",
+          "note": "Fizz's Playful makes him untargetable, so a Q leap after the ultimate can be dodged, though Chum gives True Sight.",
+          "refs": [{ "kind": "champion", "key": "Fizz", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3407,7 +3523,25 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:2",
+          "note": "Vaulting next to Orianna and using Q at melee range gives the critical Noxian Diplomacy hit.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Talon-Q", "start": 71, "end": 87 }
+          ]
+        },
+        {
+          "comboId": "middle:Talon:combo:1",
+          "note": "Shadow Assault invisibility lets him approach unseen, then Noxian Diplomacy leaps onto Orianna.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Talon-Q", "start": 59, "end": 75 },
+            { "kind": "champion", "key": "Orianna", "start": 87, "end": 94 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3702,7 +3836,16 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:2",
+          "note": "Vaulting in with E then a melee Q crit gets Talon on top of Viktor, who is weak up close.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 44, "end": 49 },
+            { "kind": "champion", "key": "Viktor", "start": 60, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3763,7 +3906,16 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:0",
+          "note": "Assassin's Path vaults mid walls to roam or cut off Yasuo, though each wall has its own cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3815,7 +3967,24 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Talon:combo:1",
+          "note": "Shadow Assault's stealth lets Talon close in and burst Yone with Q before he can respond.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Yone", "start": 55, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "middle:Talon:combo:2",
+          "note": "Vaulting past Yone with E into melee Q gives a strong trade against his short-range kit.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 14, "end": 18 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

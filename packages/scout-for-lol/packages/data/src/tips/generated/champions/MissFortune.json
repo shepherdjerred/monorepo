@@ -202,7 +202,21 @@
         }
       ],
       "opponent": "Aphelios",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Bouncing Double Up off minions lets her poke Aphelios when he stays behind his wave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 9,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Aphelios", "start": 45, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -446,7 +460,16 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to poke Caitlyn, who outranges you and punishes standing in lane.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Caitlyn", "start": 39, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -541,7 +564,22 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:1",
+          "note": "Flash redirect of Bullet Time can catch Cassiopeia off guard when she dodges the cone's original direction.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 18,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Cassiopeia", "start": 40, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -704,7 +742,30 @@
         }
       ],
       "opponent": "Draven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Draven when he stands behind the wave and you can't poke directly.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Draven", "start": 38, "end": 44 }
+          ]
+        },
+        {
+          "comboId": "adc:MissFortune:combo:1",
+          "note": "Flash redirect can catch Draven off guard if he tries to dodge or sidestep Bullet Time's cone.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Draven", "start": 25, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 75,
+              "end": 86
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -850,7 +911,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces past minions to poke Hwei, who launches abilities from range.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Hwei", "start": 39, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -931,7 +1001,16 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Jhin when he stands behind his wave.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Jhin", "start": 38, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1006,7 +1085,16 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces through minions to hit Jinx when she stays behind her wave to avoid poke.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Jinx", "start": 41, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1090,7 +1178,16 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Kai'Sa and can crit, poking her when she stays behind the wave.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Kaisa", "start": 38, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1182,7 +1279,16 @@
         }
       ],
       "opponent": "Kalista",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion onto Kalista, who can stand behind her wave to dodge direct poke.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Kalista", "start": 36, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1496,7 +1602,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Lux behind the wave when she stays back to poke.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Lux", "start": 38, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1572,7 +1687,16 @@
         }
       ],
       "opponent": "Nilah",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Nilah when she stands behind her wave and you can't poke directly.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Nilah", "start": 38, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1730,7 +1854,22 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:1",
+          "note": "Flash redirect catches Senna off guard when she tries to dodge Bullet Time.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Senna", "start": 23, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 63,
+              "end": 74
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2023,7 +2162,16 @@
         }
       ],
       "opponent": "Twitch",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Twitch, who can't be poked directly behind his wave.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Twitch", "start": 38, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2211,7 +2359,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to poke Vayne when she hangs behind her wave.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Vayne", "start": 39, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2296,7 +2453,30 @@
         }
       ],
       "opponent": "Veigar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Veigar behind the wave, so you can poke him without trading directly.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Veigar", "start": 38, "end": 44 }
+          ]
+        },
+        {
+          "comboId": "adc:MissFortune:combo:1",
+          "note": "Flash redirect of Bullet Time can catch Veigar off guard, since he must dodge the cone.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 18,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Veigar", "start": 40, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2371,7 +2551,21 @@
         }
       ],
       "opponent": "Xayah",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Bouncing Double Up off a minion reaches Xayah when she stands behind her wave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 9,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Xayah", "start": 40, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2547,7 +2741,16 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:MissFortune:combo:0",
+          "note": "Double Up bounces off a minion to hit Yunara, who can hold a position behind the wave.",
+          "refs": [
+            { "kind": "ability", "key": "MissFortune-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Yunara", "start": 38, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

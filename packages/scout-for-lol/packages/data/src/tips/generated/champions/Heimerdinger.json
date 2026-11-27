@@ -347,7 +347,15 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "The upgraded grenade's guaranteed stun can catch Darius as he dives, and rockets then hit the stunned target.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 49, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -595,7 +603,15 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "The upgraded grenade's stun can catch Jayce when he leaps in with To the Skies! and rockets follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 38, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -708,7 +724,15 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "The upgraded grenade's wider stun can catch Malphite as he dives, and rockets then hit the stunned target.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 44, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -797,7 +821,15 @@
         }
       ],
       "opponent": "Mordekaiser",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "The wide upgraded grenade stun can stop Mordekaiser when he dives, setting up rockets on him.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 40, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -847,7 +879,22 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:1",
+          "note": "Turret then grenade charges turrets fast, punishing Rumble when he trades into them.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 52, "end": 58 }
+          ]
+        },
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "Upgraded grenade gives a wider stun to land rockets if Rumble dives in.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 55, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -956,7 +1003,15 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:1",
+          "note": "Turret plus grenade and rockets give burst against Teemo, who is slowed by the grenade's Slow.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 51, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1005,7 +1060,22 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Heimerdinger:combo:0",
+          "note": "The upgraded grenade's wider stun can catch Vayne when she dives or tumbles in, so rockets follow.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ]
+        },
+        {
+          "comboId": "top:Heimerdinger:combo:1",
+          "note": "Grenade slows Vayne and charges the turrets, so she takes turret beams when she trades near them.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 14, "end": 19 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

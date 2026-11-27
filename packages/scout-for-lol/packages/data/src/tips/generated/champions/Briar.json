@@ -439,7 +439,24 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush during the Blood Frenzy dash stuns Aatrox almost instantly, cutting off his Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Aatrox", "start": 45, "end": 51 }
+          ]
+        },
+        {
+          "comboId": "top:Briar:combo:0",
+          "note": "Chilling Scream ends Blood Frenzy early, letting her walk out of Aatrox's Darkin Blade line.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Aatrox", "start": 65, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -484,7 +501,15 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Stunning at the start of the Blood Frenzy dash locks Akali down before she can use her dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 53, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -537,7 +562,17 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Ambessa almost instantly as Briar engages, before she can react with her dash.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 26, "end": 33 },
+            { "kind": "champion", "key": "Briar", "start": 54, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -587,7 +622,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Anivia almost instantly, so she has little time to answer the engage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 26, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -799,7 +843,16 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush during the dash stuns Darius almost instantly, which stops him from reacting.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Darius", "start": 32, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -938,7 +991,16 @@
         }
       ],
       "opponent": "Gangplank",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush stuns at the start of the engage, which can stop Gangplank from placing or shooting kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Gangplank", "start": 59, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1146,7 +1208,23 @@
         }
       ],
       "opponent": "Gwen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush during the Blood Frenzy dash stuns Gwen almost instantly before she can set up her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Gwen", "start": 45, "end": 49 }
+          ]
+        },
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "A full-charge scream can stun Gwen against a wall, since she must stay close to use her empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 30, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1190,7 +1268,21 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush during the Blood Frenzy dash stuns Heimerdinger almost instantly, cutting off his turret and grenade setup.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 45,
+              "end": 57
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1246,7 +1338,24 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "Illaoi spawns Tentacles on nearby terrain, so a full-charge Scream knockback into a wall can stun and hurt her.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 0, "end": 6 }
+          ]
+        },
+        {
+          "comboId": "top:Briar:combo:0",
+          "note": "Casting Chilling Scream ends Blood Frenzy early, letting Briar walk out of a bad spot near Illaoi's Tentacles.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 8, "end": 23 },
+            { "kind": "champion", "key": "Briar", "start": 57, "end": 62 },
+            { "kind": "champion", "key": "Illaoi", "start": 91, "end": 97 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1407,7 +1516,13 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "Jayce's Thundering Blow knocks back, but a full-charge scream near a wall stuns and hurts him.",
+          "refs": [{ "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1656,7 +1771,15 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "Full-charge scream knocks Malphite back, and a wall hit adds big bonus damage and a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 26, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1725,7 +1848,16 @@
         }
       ],
       "opponent": "Mordekaiser",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns almost instantly, which helps you open an engage on Mordekaiser.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 78, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1777,7 +1909,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:0",
+          "note": "Ending Blood Frenzy early with the scream lets you walk back out of a bad spot when Naafiri's packmates pile on.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 84, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2023,7 +2163,16 @@
         }
       ],
       "opponent": "Quinn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "Full-charge Chilling Scream knocks Quinn back, and a wall hit adds damage and a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Quinn", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2121,7 +2270,18 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Riven almost instantly, so Briar can start the fight before Riven reacts.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Riven", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Briar", "start": 53, "end": 58 },
+            { "kind": "champion", "key": "Riven", "start": 86, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2166,7 +2326,16 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-casting Head Rush stuns Rumble almost instantly at the start of her Blood Frenzy engage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Rumble", "start": 29, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2428,7 +2597,16 @@
         }
       ],
       "opponent": "TahmKench",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Head Rush during the Blood Frenzy dash stuns almost instantly, giving Briar a fast engage start on Tahm.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 70, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2517,7 +2695,16 @@
         }
       ],
       "opponent": "Tryndamere",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Tryndamere almost instantly at the start of the engage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Tryndamere", "start": 26, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2620,7 +2807,16 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "A full-charge Chilling Scream into a wall stuns Varus, who is rooted or slowed by his own spells.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Varus", "start": 48, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2676,7 +2872,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Vayne almost instantly at the start of a Blood Frenzy engage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2724,7 +2929,16 @@
         }
       ],
       "opponent": "Vladimir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Stunning at the start of the engage with Head Rush stops Vladimir before he can easily react.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 41, "end": 50 },
+            { "kind": "champion", "key": "Vladimir", "start": 57, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2866,7 +3080,16 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "A full-charge Chilling Scream knocks back, so Yasuo near a wall takes bonus damage and is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Yasuo", "start": 46, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2913,7 +3136,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Stunning at the start of a Blood Frenzy dash gives Briar a quick stun to lock Yone down before he can respond.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 51, "end": 56 },
+            { "kind": "champion", "key": "Yone", "start": 78, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3030,7 +3262,24 @@
         }
       ],
       "opponent": "Zaahen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Briar:combo:1",
+          "note": "Dash-cast Head Rush stuns Zaahen right as Blood Frenzy starts, helping Briar start the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Zaahen", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "Briar", "start": 71, "end": 76 }
+          ]
+        },
+        {
+          "comboId": "top:Briar:combo:2",
+          "note": "A full-charge scream into a wall stuns Zaahen if he stands near terrain, even after he engages.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 39, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3078,7 +3327,16 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:1",
+          "note": "Chilling Scream removes Blood Frenzy at once, letting her regain control and heal against Graves.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 90, "end": 96 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3334,7 +3592,15 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:2",
+          "note": "Casting Head Rush mid-dash lands the stun quickly, before Lee can react with Safeguard.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 8, "end": 17 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3422,7 +3688,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:1",
+          "note": "Cancelling Blood Frenzy with E lets Briar escape a bad target when Naafiri's packmates and dashes pull the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 36, "end": 41 },
+            { "kind": "champion", "key": "Naafiri", "start": 67, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3608,7 +3883,24 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:1",
+          "note": "Chilling Scream cancels Blood Frenzy at once, letting Briar take back control of her movement.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 54, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "jungle:Briar:combo:2",
+          "note": "Blood Frenzy into Head Rush lands a stun on arrival, so Sylas has little time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 18, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 56, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3660,7 +3952,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:2",
+          "note": "Blood Frenzy into Head Rush closes fast and lands the stun on Talon before he can leap away.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 18, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 62, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -3758,7 +4059,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Briar:combo:1",
+          "note": "Chilling Scream cancels Blood Frenzy at once, giving damage reduction and healing against his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3894,7 +4203,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dash-casting Head Rush stuns Anivia sooner on arrival, giving her less time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 29, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4009,7 +4327,25 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Casting Head Rush mid-dash stuns Cassiopeia sooner, cutting her time to react with her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 8, "end": 17 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 }
+          ]
+        },
+        {
+          "comboId": "middle:Briar:combo:1",
+          "note": "Chilling Scream ends Blood Frenzy, so Briar can stop chasing and heal against Cassiopeia's poison.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 78, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4053,7 +4389,24 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dash-casting Head Rush stuns Fizz sooner, before he can answer with Playful.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 }
+          ]
+        },
+        {
+          "comboId": "middle:Briar:combo:1",
+          "note": "Chilling Scream ends the forced attacking, so she can stop chasing Fizz and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 67, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4160,7 +4513,17 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dash-casting Head Rush stuns Orianna sooner, so she has less time to react to Briar's engage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Orianna", "start": 29, "end": 36 },
+            { "kind": "champion", "key": "Briar", "start": 78, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4385,7 +4748,15 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dashing in with Q right after W closes on Viktor fast and stuns him before he can set up his spells.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 42, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4499,7 +4870,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dashing in with Head Rush gets the stun on Yone fast, before he can react with his dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 16, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 43, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4554,7 +4934,16 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Briar:combo:0",
+          "note": "Dash-cast Head Rush stuns Zed on arrival, so he has less time to react with his shadow tools.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 }
+          ]
+        }
+      ]
     }
   ]
 }

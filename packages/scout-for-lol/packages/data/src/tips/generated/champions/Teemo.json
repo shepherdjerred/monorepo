@@ -280,7 +280,15 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:0",
+          "note": "Deep mushrooms slow Ambessa, whose dashes close the gap, so traps ahead of her punish her approach.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 20, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -350,7 +358,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush lets Teemo open with fast hits when Anivia walks close, since she has no listed way to see him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "champion", "key": "Anivia", "start": 52, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -697,7 +714,13 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Brush ambush gets fast first hits on Mundo, who has no listed way to hit a hidden target.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "top",
@@ -803,7 +826,16 @@
         }
       ],
       "opponent": "Gangplank",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Gangplank is melee, so he must step close to the brush where Teemo's hidden attack-speed burst hits first.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Teemo", "start": 61, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1122,7 +1154,21 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Brush ambush gives fast first hits, but Heimerdinger's turrets and grenade punish Teemo once he is revealed.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 40,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Teemo", "start": 82, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1184,7 +1230,16 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Illaoi's Tentacles spawn on terrain, but Teemo's brush ambush gets fast first hits as she walks close.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Teemo", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1375,7 +1430,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush keeps Teemo invisible, so Jayce's leap and swaps have no target until Teemo attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Jayce", "start": 42, "end": 47 },
+            { "kind": "champion", "key": "Teemo", "start": 86, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2196,7 +2261,13 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Riven has no listed stealth reveal, so a brush ambush can open a fast attack-speed trade on her.",
+          "refs": [{ "kind": "champion", "key": "Riven", "start": 0, "end": 5 }]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2607,7 +2678,15 @@
         }
       ],
       "opponent": "Tryndamere",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Faster first hits from the brush ambush help against Tryndamere, who is a melee champion that must walk up to you.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 53, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2730,7 +2809,17 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hidden in brush, Teemo's faster first hits can punish Varus walking close, as Varus is a ranged champion.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Varus", "start": 54, "end": 59 },
+            { "kind": "champion", "key": "Varus", "start": 78, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3069,7 +3158,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush lets Teemo open with fast hits on Yone if he walks close, before Yone's dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Yone", "start": 81, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

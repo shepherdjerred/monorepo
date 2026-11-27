@@ -354,7 +354,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Irelia:combo:1",
+          "note": "Chasing Briar, the Unsteady Bladesurge reset lets you dash again to keep up as she moves.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 28, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -687,7 +696,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Irelia:combo:0",
+          "note": "Stunning as she arrives with Flawless Duet can stop Jayce from swapping forms or knocking her back.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Jayce", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -949,7 +967,16 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Irelia:combo:1",
+          "note": "Bladesurge resets on Unsteady targets, so she can keep dashing at Rumble through his Equalizer slow.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Rumble", "start": 66, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1063,7 +1090,17 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Irelia:combo:0",
+          "note": "Stunning with Flawless Duet as she arrives lets Irelia lock Teemo down so he cannot kite or flee.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 14, "end": 27 },
+            { "kind": "champion", "key": "Irelia", "start": 48, "end": 54 },
+            { "kind": "champion", "key": "Teemo", "start": 60, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1174,7 +1211,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Irelia:combo:0",
+          "note": "Stun on arrival can lock Yone down as you dash in, since Flawless Duet lands during Bladesurge.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Irelia-E", "start": 57, "end": 70 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 84, "end": 94 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1299,7 +1346,29 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun marks Akali Unsteady, so Bladesurge resets and keeps Irelia on her after Akali's dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 46, "end": 56 },
+            { "kind": "champion", "key": "Irelia", "start": 74, "end": 80 },
+            { "kind": "champion", "key": "Akali", "start": 94, "end": 99 }
+          ]
+        },
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Akali Unsteady so Bladesurge returns fast, letting Irelia follow her dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 40, "end": 50 },
+            { "kind": "champion", "key": "Irelia", "start": 73, "end": 79 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1364,7 +1433,26 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Anivia Unsteady so Bladesurge can reach her and return almost at once.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 41, "end": 51 }
+          ]
+        },
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun marks Anivia Unsteady, letting Bladesurge chain right back onto her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 52, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1433,7 +1521,17 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Aurora Unsteady, so Bladesurge resets and keeps you on her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 42, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1507,7 +1605,27 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun then Bladesurge resets let Irelia chain dashes to stay on Cassiopeia.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 26, "end": 36 },
+            { "kind": "champion", "key": "Irelia", "start": 48, "end": 54 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 79, "end": 89 }
+          ]
+        },
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Cassiopeia Unsteady so Bladesurge hits and returns almost at once to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 22, "end": 32 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 45, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1565,7 +1683,25 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Fizz Unsteady so Bladesurge resets, letting her dash back on after he hops away.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 39, "end": 49 }
+          ]
+        },
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Her stun and Bladesurge reset let her stay on Fizz, who can move through units and hop away with Playful.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 46, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1629,7 +1765,17 @@
         }
       ],
       "opponent": "Malzahar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun and Bladesurge resets let her keep dashing onto Malzahar to punish his silence-reliant kit.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 25, "end": 35 },
+            { "kind": "champion", "key": "Malzahar", "start": 69, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1681,7 +1827,26 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun marks Orianna Unsteady so Bladesurge resets and you can chain dashes onto her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Orianna", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 47, "end": 57 }
+          ]
+        },
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Orianna Unsteady so Bladesurge hits and returns almost at once to stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 42, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1741,7 +1906,18 @@
         }
       ],
       "opponent": "Ryze",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge then Bladesurge engages Ryze and keeps Bladesurge ready to close on him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 21, "end": 31 },
+            { "kind": "champion", "key": "Ryze", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 55, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1795,7 +1971,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Sylas Unsteady so Bladesurge returns fast, letting you keep chasing him after his dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 40, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1861,7 +2047,23 @@
         }
       ],
       "opponent": "TwistedFate",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge then Bladesurge engages Twisted Fate and keeps Bladesurge ready to follow him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 21, "end": 31 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 40,
+              "end": 52
+            },
+            { "kind": "ability", "key": "Irelia-Q", "start": 63, "end": 73 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1918,7 +2120,18 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Viktor so Bladesurge returns fast, letting Irelia engage and stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 32, "end": 42 },
+            { "kind": "champion", "key": "Irelia", "start": 65, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1976,7 +2189,17 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun marks Yasuo Unsteady, so Bladesurge resets and keeps you chaining dashes on him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 46, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2044,7 +2267,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:2",
+          "note": "Vanguard's Edge marks Yone Unsteady, so Bladesurge hits the mark and returns almost at once to chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 40, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2092,7 +2325,17 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Irelia:combo:1",
+          "note": "Flawless Duet's stun marks Zed Unsteady, letting Bladesurge chain again to keep up with his shadows.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 49, "end": 59 }
+          ]
+        }
+      ]
     }
   ]
 }

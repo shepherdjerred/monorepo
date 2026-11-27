@@ -208,7 +208,16 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Gatling Gun's instant turn keeps the cone on Caitlyn while you auto her in a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Caitlyn", "start": 45, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -381,7 +390,16 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Keeps Gatling Gun's cone on Jinx while auto attacking, so she can't easily sidestep out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Jinx", "start": 28, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -630,7 +648,16 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Keeps Gatling Gun's cone on Yunara while trading, even as she moves with Kanmei's Steps.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 28, "end": 34 }
+          ]
+        }
+      ]
     }
   ]
 }

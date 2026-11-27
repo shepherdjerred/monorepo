@@ -328,7 +328,17 @@
         }
       ],
       "opponent": "Karma",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt-Pulverize locks Karma down beside your team, and her listed abilities have no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 9, "end": 18 },
+            { "kind": "champion", "key": "Karma", "start": 25, "end": 30 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -384,7 +394,17 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt into Pulverize knocks Leona up and keeps her beside your team, so she can't easily dive.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 14, "end": 23 },
+            { "kind": "champion", "key": "Leona", "start": 31, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -499,7 +519,17 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Lux has no listed dash or escape, so Headbutt into Pulverize locks her down beside your team.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Alistar-W", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 51, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -623,7 +653,17 @@
         }
       ],
       "opponent": "Nami",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt-Pulverize locks down Nami, who has no listed dash or escape to avoid the engage.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 9, "end": 18 },
+            { "kind": "champion", "key": "Nami", "start": 30, "end": 34 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -680,7 +720,27 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt-Pulverize locks down Nautilus, who has no listed way to escape the knockup.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 9, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 }
+          ]
+        },
+        {
+          "comboId": "support:Alistar:combo:2",
+          "note": "Flash Headbutt-Pulverize can surprise Nautilus and knock him up beside your team.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Alistar-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Nautilus", "start": 38, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -844,7 +904,27 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt into Pulverize locks down Senna, who has no listed dash or escape to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 14, "end": 23 },
+            { "kind": "champion", "key": "Senna", "start": 35, "end": 40 }
+          ]
+        },
+        {
+          "comboId": "support:Alistar:combo:2",
+          "note": "Flash Headbutt-Pulverize gives a surprise angle to catch Senna, who has no listed escape.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Alistar-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Senna", "start": 57, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -901,7 +981,27 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Alistar:combo:0",
+          "note": "Headbutt into Pulverize locks down Seraphine, who has no listed dash or escape to avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 14, "end": 23 },
+            { "kind": "champion", "key": "Seraphine", "start": 35, "end": 44 }
+          ]
+        },
+        {
+          "comboId": "support:Alistar:combo:2",
+          "note": "Flash Headbutt-Pulverize gives a surprise angle to catch Seraphine and knock her into your team.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Alistar-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 57, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

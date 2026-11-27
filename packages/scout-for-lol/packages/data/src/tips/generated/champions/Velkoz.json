@@ -361,7 +361,15 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Angled Q split can hit Leona from beyond her engage range, using the side bolts to poke her.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 23, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -418,7 +426,15 @@
         }
       ],
       "opponent": "Lulu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Angled split bolts can reach Lulu when she stands behind minions or off the first bolt's path.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -475,7 +491,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The angled split can hit Lux when minions block Plasma Fission's straight path to her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 48, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -527,7 +552,15 @@
         }
       ],
       "opponent": "Milio",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split bolts reach Milio when he stands behind minions or off the bolt's path, as in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -649,7 +682,15 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split bolts can hit Nautilus when he hides behind minions or stands off to the side of the bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 24, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -827,7 +868,15 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Split Q can reach Senna when she stands behind minions or off to the side, where a direct bolt can't.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 18, "end": 23 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -890,7 +939,16 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split Plasma Fission bolts can reach Seraphine when she stands behind minions or off to the side.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 41, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

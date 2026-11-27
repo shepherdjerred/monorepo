@@ -343,7 +343,16 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "Portal then Q lets Bard and an ally engage through a wall and bind Brand before he casts.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 67, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -565,7 +574,16 @@
         }
       ],
       "opponent": "Karma",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "Portal then Q lets Bard flank Karma, who has no listed dash to escape the bind.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Karma", "start": 30, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -618,7 +636,17 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "Portal engage lets Bard and an ally flank, then stun Leona with Cosmic Binding as they emerge.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Leona", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Bard-Q", "start": 64, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -722,7 +750,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Cosmic Binding into a wall stuns Lux, who has no listed way to avoid the bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1012,7 +1049,21 @@
         }
       ],
       "opponent": "Nami",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Nami has no listed escape, so a Q that pins her against a wall gets a stun with no second target.",
+          "refs": [{ "kind": "champion", "key": "Nami", "start": 0, "end": 4 }]
+        },
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "Portal then Q lets Bard and an ally surprise Nami, who has no listed dash or escape to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 45, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1357,7 +1408,13 @@
         }
       ],
       "opponent": "Rakan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Rakan's dashes and knock-up keep him mobile, but a bolt into a wall still stuns him when he's cornered.",
+          "refs": [{ "kind": "champion", "key": "Rakan", "start": 0, "end": 5 }]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1446,7 +1503,25 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Cosmic Binding into a wall stuns Senna, who has to stand close to lane walls to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Senna", "start": 33, "end": 38 }
+          ]
+        },
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "Magical Journey into Cosmic Binding gives a surprise engage on Senna, who has no listed dash.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Bard-Q", "start": 21, "end": 35 },
+            { "kind": "champion", "key": "Senna", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1607,7 +1682,13 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Sona is a squishy support, so a wall-pinned bolt stuns her without needing a second target.",
+          "refs": [{ "kind": "champion", "key": "Sona", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1652,7 +1733,15 @@
         }
       ],
       "opponent": "Soraka",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:1",
+          "note": "A portal flank ending in Q can catch Soraka, who has no listed dash to escape the bind.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 37, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1830,7 +1919,16 @@
         }
       ],
       "opponent": "Taric",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Taric has no listed escape, so Cosmic Binding into a wall stuns him if he stands near one.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Bard-Q", "start": 31, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1943,7 +2041,16 @@
         }
       ],
       "opponent": "Velkoz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Bard:combo:0",
+          "note": "Cosmic Binding into a wall stuns Vel'Koz, who needs to stay in place to channel his ray.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Velkoz", "start": 33, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

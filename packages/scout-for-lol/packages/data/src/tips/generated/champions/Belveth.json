@@ -264,7 +264,15 @@
         }
       ],
       "opponent": "Kayn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:0",
+          "note": "Tail slam dash reset lets her keep dashing in a fight, which helps trade against Kayn's slows.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 81, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -317,7 +325,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:1",
+          "note": "In true form, Void Surge through walls lets her flee a Kha'Zix gank or cut across the jungle.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-Q", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Khazix", "start": 55, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -415,7 +432,13 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:0",
+          "note": "Tail slam knocks Lee up and its dash reset lets her follow through his Safeguard escapes.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -461,7 +484,15 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:0",
+          "note": "Tail slam knocks Yi up, and the refreshed dash lets Bel'Veth keep trading while chasing him.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 52, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -507,7 +538,24 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:0",
+          "note": "Repeated dashes let Bel'Veth weave attacks and reposition against Naafiri's packmates and dash engage.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Naafiri", "start": 66, "end": 73 }
+          ]
+        },
+        {
+          "comboId": "jungle:Belveth:combo:1",
+          "note": "True form wall dash lets Bel'Veth flee a Naafiri gank by cutting through thin jungle walls.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 25, "end": 33 },
+            { "kind": "champion", "key": "Naafiri", "start": 41, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -773,7 +821,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Belveth:combo:0",
+          "note": "Tail slam knocks Talon up and refreshes the dash, letting Bel'Veth keep dashing and attacking him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Belveth", "start": 58, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

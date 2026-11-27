@@ -598,7 +598,15 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Aurora:combo:0",
+          "note": "Rift hop is untargetable during the dash, so it dodges Jayce's leap or Thundering Blow knockback.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 55, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1918,7 +1926,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Aurora:combo:0",
+          "note": "The rift dash makes Aurora untargetable, so it can dodge Hwei's Devastating Fire or Grim Visage.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Hwei", "start": 57, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2614,7 +2631,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Aurora:combo:0",
+          "note": "Her rift dash is untargetable, so it can dodge Sylas's Abduct recast while he trades in the rift.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 47, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

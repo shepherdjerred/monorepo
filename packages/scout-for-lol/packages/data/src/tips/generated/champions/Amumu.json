@@ -480,7 +480,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Amumu:combo:0",
+          "note": "Despair ticking on landing hits Naafiri and her packmates early, which matters since her packmates join fights.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

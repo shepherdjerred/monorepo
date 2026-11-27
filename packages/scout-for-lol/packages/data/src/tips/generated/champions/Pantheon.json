@@ -377,7 +377,15 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Pantheon:combo:0",
+          "note": "Tapping Q pokes often, which keeps Aatrox from trading freely and limits his healing from hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 35, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -500,7 +508,15 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Pantheon:combo:0",
+          "note": "Tap Q pokes from range, letting you trade often without having to fight Darius up close.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 72, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -756,7 +772,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Pantheon:combo:0",
+          "note": "Tap Q pokes often, which suits trading with Jayce's Cannon poke; Jayce's Hammer leap can punish.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 },
+            { "kind": "champion", "key": "Jayce", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1007,7 +1032,17 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Pantheon:combo:0",
+          "note": "Tapping Comet Spear refunds cooldown, so Pantheon can poke Rumble often and keep his Heat contested.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 41, "end": 49 },
+            { "kind": "champion", "key": "Rumble", "start": 59, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1184,7 +1219,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Pantheon:combo:0",
+          "note": "Tap Q refunds cooldown, so Pantheon can poke Vayne often and she must close in to trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Vayne", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1454,7 +1498,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Pantheon:combo:0",
+          "note": "Recasting Aegis Assault slams at once, so it can hit Kha'Zix when he leaps or turns invisible to flee.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Khazix", "start": 53, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1561,7 +1614,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Pantheon:combo:0",
+          "note": "Early Aegis Assault slam can catch Lee Sin as he dashes away with Safeguard.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1861,7 +1923,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Pantheon:combo:0",
+          "note": "Recasting E early slams at once, so it can catch Sylas as he dashes away with Abscond.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 49, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1924,7 +1994,15 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Pantheon:combo:0",
+          "note": "Recasting E early slams at once, helping hit Talon when he turns invisible or vaults away.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2616,7 +2694,15 @@
         }
       ],
       "opponent": "Leona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:1",
+          "note": "Recasting E early slams right away, so Leona can't easily slip out of the cone before it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 39, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3166,7 +3252,24 @@
         }
       ],
       "opponent": "Neeko",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:0",
+          "note": "Tapping Comet Spear lets you poke Neeko again quickly while she is zoned in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 34, "end": 39 }
+          ]
+        },
+        {
+          "comboId": "support:Pantheon:combo:1",
+          "note": "Recasting Aegis Assault early slams right away, so Neeko has less time to react to the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Neeko", "start": 51, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3319,7 +3422,16 @@
         }
       ],
       "opponent": "Rakan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:0",
+          "note": "Tap Q poke gets Comet Spear back fast, useful for trading into Rakan's shield-reliant, dash-based play.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Rakan", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -3904,7 +4016,17 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:0",
+          "note": "Tapping Q lets Pantheon poke Thresh again sooner, keeping pressure up between Thresh's hooks.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "champion", "key": "Thresh", "start": 29, "end": 35 },
+            { "kind": "champion", "key": "Thresh", "start": 78, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4027,7 +4149,16 @@
         }
       ],
       "opponent": "Xerath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:1",
+          "note": "Early E recast slams fast, and Aegis Assault blocks damage from the direction Xerath fires from.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Xerath", "start": 78, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4199,7 +4330,15 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Pantheon:combo:0",
+          "note": "Tap Q pokes often, which suits trading with Zyra and keeping her off her seeds.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 44, "end": 48 }
+          ]
+        }
+      ]
     }
   ]
 }

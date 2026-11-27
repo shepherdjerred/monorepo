@@ -1777,7 +1777,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Rumble:combo:0",
+          "note": "A dragged Equalizer wall can cut off Naafiri's dashes and punish her when she flees or dives in.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 37, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2755,7 +2763,15 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Rumble:combo:0",
+          "note": "A dragged Equalizer wall can cut off Varus's escape path after he is rooted or slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 37, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

@@ -340,7 +340,25 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Cancelling Decimate into Crippling Strike speeds up the trade once Akali is in melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Darius-W", "start": 25, "end": 41 },
+            { "kind": "champion", "key": "Akali", "start": 67, "end": 72 }
+          ]
+        },
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Akali for full damage, a bleed stack and healing when she stands at range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 20, "end": 25 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -757,7 +775,15 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate hits at range, heals you, and stacks bleed, helping you trade against Mundo's cleavers.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1178,7 +1204,17 @@
         }
       ],
       "opponent": "Gwen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Gwen and heals Darius, offsetting her on-hit damage and healing in short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Gwen", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Darius", "start": 35, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1500,7 +1536,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Jayce's Thundering Blow knocks back, so edge-hitting Decimate pokes him back and heals Darius.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Darius-Q", "start": 53, "end": 61 },
+            { "kind": "champion", "key": "Darius", "start": 87, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1705,7 +1751,17 @@
         }
       ],
       "opponent": "Kennen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Decimate's edge poke hits Kennen at range, applying a bleed stack and healing Darius.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Kennen", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "Darius", "start": 78, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1783,7 +1839,17 @@
         }
       ],
       "opponent": "Kled",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Crippling Strike's slow helps Darius stay on Kled in melee and win the short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "champion", "key": "Kled", "start": 45, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1997,7 +2063,17 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Naafiri safely and heals Darius, helping him win the early lane trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2060,7 +2136,17 @@
         }
       ],
       "opponent": "Nasus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Decimate's edge poke hits at long range and heals Darius, helping him trade before Nasus closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Darius", "start": 50, "end": 56 },
+            { "kind": "champion", "key": "Nasus", "start": 83, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2122,7 +2208,16 @@
         }
       ],
       "opponent": "Olaf",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes for full damage and a bleed stack while Olaf stands at the edge of range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Olaf", "start": 60, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2376,7 +2471,16 @@
         }
       ],
       "opponent": "Renekton",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Renekton from range, and its bleed and heal help you trade against his Fury-based attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Renekton", "start": 20, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2681,7 +2785,18 @@
         }
       ],
       "opponent": "Singed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Crippling Strike's slow helps Darius stick to Singed and land Decimate in a fast melee trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "champion", "key": "Singed", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Darius-Q", "start": 62, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2751,7 +2866,17 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate hits full damage and heals Darius, which is good for poking Sion at the edge of range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 41, "end": 47 },
+            { "kind": "champion", "key": "Sion", "start": 74, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3045,7 +3170,17 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Varus is a ranged poker, so Decimate's edge lets Darius harass him while he stays at range.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Darius-Q", "start": 28, "end": 36 },
+            { "kind": "champion", "key": "Darius", "start": 49, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3230,7 +3365,18 @@
         }
       ],
       "opponent": "Volibear",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "The fast Crippling Strike and Decimate trade lets Darius burst before Volibear's attack speed stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Darius-Q", "start": 30, "end": 38 },
+            { "kind": "champion", "key": "Darius", "start": 50, "end": 56 },
+            { "kind": "champion", "key": "Volibear", "start": 70, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3404,7 +3550,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Hitting Yone with Decimate's outer edge pokes him, heals you, and stacks bleed in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Darius-Q", "start": 18, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3524,7 +3679,16 @@
         }
       ],
       "opponent": "Zaahen",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes heal you, which offsets Zaahen's Darkin Glaive healing in extended trades.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Zaahen", "start": 44, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

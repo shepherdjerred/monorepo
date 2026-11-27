@@ -385,7 +385,17 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes the gap onto Brand, who has no listed escape from it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Brand", "start": 56, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -445,7 +455,17 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Briar's Blood Frenzy self-taunts her, so a buffered Leap into Taste Their Fear can close on her fast.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 62, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -733,7 +753,27 @@
         }
       ],
       "opponent": "Evelynn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes the gap fast on an isolated Evelynn, which empowers the slash.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Evelynn", "start": 71, "end": 78 }
+          ]
+        },
+        {
+          "comboId": "jungle:Khazix:combo:1",
+          "note": "Flash mid-Leap extends reach to catch Evelynn just out of range with Taste Their Fear.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Evelynn", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 69, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1182,7 +1222,15 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leaping in and buffering Q closes the gap fast, but Thundering Blow can knock Kha'Zix back after.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 78, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1242,7 +1290,18 @@
         }
       ],
       "opponent": "Karthus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Closing with Leap into buffered Taste Their Fear lets Kha'Zix reach Karthus, who has no listed dash.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 32, "end": 48 },
+            { "kind": "champion", "key": "Khazix", "start": 54, "end": 61 },
+            { "kind": "champion", "key": "Karthus", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1401,7 +1460,18 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Taste Their Fear on landing helps Kha'Zix hit Lee Sin as soon as the Leap finishes.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "LeeSin", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "Khazix-E", "start": 78, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1615,7 +1685,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Closing in with Leap into Q punishes Naafiri when she is isolated, but her packmates attack with her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 37, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1661,7 +1740,17 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes on an isolated Nidalee, who is often alone in the jungle.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Nidalee", "start": 58, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1774,7 +1863,16 @@
         }
       ],
       "opponent": "Nunu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Taste Their Fear after Leap closes on an isolated Nunu, who has no listed dash to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Khazix-E", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2146,7 +2244,17 @@
         }
       ],
       "opponent": "Shaco",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear quickly closes the gap onto a Shaco who is isolated.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Shaco", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2487,7 +2595,25 @@
         }
       ],
       "opponent": "Udyr",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Q after Leap closes on Udyr fast, but his Stampede stun on attack can punish a bad dive.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Udyr", "start": 32, "end": 36 }
+          ]
+        },
+        {
+          "comboId": "jungle:Khazix:combo:1",
+          "note": "Flash mid-Leap extends reach to catch Udyr, who can gain Move Speed from Stampede to run.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Udyr", "start": 38, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

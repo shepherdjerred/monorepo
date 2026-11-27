@@ -240,7 +240,17 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Vex:combo:0",
+          "note": "Looming Darkness can carry the empowered fear to Anivia from range, away from Vex's position.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 49, "end": 55 },
+            { "kind": "champion", "key": "Vex", "start": 78, "end": 81 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -637,7 +647,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Vex:combo:0",
+          "note": "Sylas relies on dashes like Abscond, and the Looming Darkness fear can scatter him away from the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vex-E", "start": 45, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -888,7 +907,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Vex:combo:0",
+          "note": "Fear from Looming Darkness sends Yone fleeing from the blast center, away from Vex when he dives.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Vex", "start": 79, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

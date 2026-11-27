@@ -317,7 +317,16 @@
         }
       ],
       "opponent": "Belveth",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:0",
+          "note": "Quickdraw reload keeps his shots going, which helps in fights against Bel'Veth's attack-speed stacking.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Belveth", "start": 70, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -682,7 +691,15 @@
         }
       ],
       "opponent": "Evelynn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Evelynn less time to walk out of the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 49, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1097,7 +1114,15 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugged Q detonates fast, so Jayce has less time to walk out or knock himself clear.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 33, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1314,7 +1339,16 @@
         }
       ],
       "opponent": "Kindred",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates sooner, so Kindred has less time to walk out of End of the Line.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Graves-Q", "start": 73, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1359,7 +1393,15 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates fast, leaving Lee less time to dodge or Safeguard out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1417,7 +1459,15 @@
         }
       ],
       "opponent": "Lillia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Lillia less time to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 49, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1466,7 +1516,16 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "A wall-detonated End of the Line hits fast, leaving Master Yi little time to walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 17, "end": 32 },
+            { "kind": "champion", "key": "MasterYi", "start": 52, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1630,7 +1689,16 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates at once, so Nidalee has less time to leave the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Nidalee", "start": 51, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1793,7 +1861,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates fast, giving Pantheon less time to walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Pantheon", "start": 52, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1995,7 +2072,15 @@
         }
       ],
       "opponent": "Rengar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Rengar less time to leap out or escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 49, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2305,7 +2390,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates quickly on terrain, giving Talon less time to leave after a vault.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Talon", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2361,7 +2455,15 @@
         }
       ],
       "opponent": "Trundle",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Hitting a wall with Q detonates it fast, so Trundle has less time to leave before the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 44, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2467,7 +2569,13 @@
         }
       ],
       "opponent": "Vi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates sooner, so Vi has less time to walk out of it or dash clear.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2620,7 +2728,15 @@
         }
       ],
       "opponent": "Warwick",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast, giving Warwick less time to leave the blast when he lunges in.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 38, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2668,7 +2784,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Q detonates fast on a wall, so Xin Zhao has little time to walk out of it when he engages.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2723,7 +2847,17 @@
         }
       ],
       "opponent": "Zac",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:0",
+          "note": "Quickdraw's dash after the second shot helps Graves reposition away from Zac's engage during a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Graves", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Zac", "start": 73, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2839,7 +2973,15 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast, so Zyra has less time to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 34, "end": 38 }
+          ]
+        }
+      ]
     }
   ]
 }

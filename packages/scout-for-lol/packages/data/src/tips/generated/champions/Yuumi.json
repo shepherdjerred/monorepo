@@ -535,7 +535,16 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Yuumi:combo:0",
+          "note": "A steered Prowling Projectile can curve around minions to slow Nautilus as he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 10, "end": 29 },
+            { "kind": "champion", "key": "Nautilus", "start": 63, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -580,7 +589,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Yuumi:combo:0",
+          "note": "A steered Prowling Projectile can curve around minions to hit Pantheon and slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 10, "end": 29 },
+            { "kind": "champion", "key": "Pantheon", "start": 62, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -751,7 +769,15 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Yuumi:combo:0",
+          "note": "Steered Q can curve around minions to hit Seraphine and slow her, which suits poking her in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 42, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -852,7 +878,15 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Yuumi:combo:0",
+          "note": "Steering Q around minions can hit Thresh when he sits behind them or dodges, slowing him.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 }
+          ]
+        }
+      ]
     }
   ]
 }

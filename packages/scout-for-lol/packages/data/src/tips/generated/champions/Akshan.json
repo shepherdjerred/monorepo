@@ -240,7 +240,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Heroic Swing lets Akshan reposition or dive off terrain to close on or escape Akali.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Akshan", "start": 18, "end": 24 },
+            { "kind": "champion", "key": "Akali", "start": 78, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -285,7 +295,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Swinging in with Heroic Swing closes the gap on Anivia, who has no listed dash or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Anivia", "start": 48, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -337,7 +356,16 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:2",
+          "note": "Avengerang mid-dive adds burst as you land, useful to punish Aurora when she is slowed or hopping.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Aurora", "start": 61, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -430,7 +458,16 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:2",
+          "note": "Avengerang mid-dive adds burst, but Fizz's untargetable Playful can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Fizz", "start": 36, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -881,7 +918,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Swing and dive lets Akshan close the gap or reposition around terrain against Yone's dashing, mobile kit.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 78, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

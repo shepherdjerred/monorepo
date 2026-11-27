@@ -1102,7 +1102,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through the sphere stuns Akali if she is caught chasing, even while Ekko is untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "Ekko", "start": 80, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1311,7 +1321,17 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through a Parallel Convergence stuns Fizz even if he dives in with Playful untargetability.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ekko-W", "start": 22, "end": 42 },
+            { "kind": "champion", "key": "Fizz", "start": 49, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1426,7 +1446,18 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through a Parallel Convergence stuns Orianna and lets Ekko escape her Shockwave burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ekko-W", "start": 22, "end": 42 },
+            { "kind": "champion", "key": "Orianna", "start": 49, "end": 56 },
+            { "kind": "champion", "key": "Ekko", "start": 66, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1540,7 +1571,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak's stun trap can stop Sylas if he dives in on you, since Ekko is untargetable during it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "champion", "key": "Ekko", "start": 68, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

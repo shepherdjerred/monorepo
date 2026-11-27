@@ -536,7 +536,15 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:0",
+          "note": "Camille's Hextech Ultimatum locks her in an area, so she can't leave the overlapping keg blasts.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -895,7 +903,17 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:2",
+          "note": "Remove Scurvy clears Gnar's Boomerang Throw slow so you can still set up kegs and Parrrley.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Gnar", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 82, "end": 90 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1055,7 +1073,15 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:2",
+          "note": "Remove Scurvy clears the slow from Electron Storm Grenade, and the stun from the upgraded grenade, so you can still set off kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1114,7 +1140,16 @@
         }
       ],
       "opponent": "Illaoi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:2",
+          "note": "Remove Scurvy clears Illaoi's Test of Spirit-style crowd control only if it disables you; otherwise it just heals.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Illaoi", "start": 21, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1272,7 +1307,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:2",
+          "note": "Remove Scurvy clears the slow from Jayce's To the Skies! so you can still set off kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1742,7 +1786,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:1",
+          "note": "Quick keg and Parrrley burst suits a fight where Naafiri's packmates swarm you in close range.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 14, "end": 22 },
+            { "kind": "champion", "key": "Naafiri", "start": 49, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2142,7 +2195,15 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:0",
+          "note": "Triple keg chain bursts and slows, but Riven's dashes can carry her out of the overlapping blasts.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 39, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -3004,7 +3065,16 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gangplank:combo:2",
+          "note": "Remove Scurvy clears crowd control, which helps you keep setting off kegs in a trade with Yasuo.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 90, "end": 95 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

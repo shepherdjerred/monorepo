@@ -308,7 +308,18 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Arcane Shift blinks Ezreal out of Akali's reach after Mystic Shot when she tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Akali", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 54, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -644,7 +655,17 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Mystic Shot cuts cooldowns so Arcane Shift returns sooner to blink away from Orianna's Shockwave.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 30, "end": 42 },
+            { "kind": "champion", "key": "Orianna", "start": 77, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -767,7 +788,18 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Arcane Shift can blink Ezreal out of range after Mystic Shot when Sylas closes in with his dash.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 49, "end": 60 },
+            { "kind": "champion", "key": "Sylas", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1143,7 +1175,16 @@
         }
       ],
       "opponent": "Aphelios",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot lets Ezreal trade with Aphelios in lane, refunding mana and cutting cooldowns on a hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Aphelios", "start": 38, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1320,7 +1361,15 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot lets you trade at range, and Caitlyn's net only slows after she fires it.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 44, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1552,7 +1601,15 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot trades well against Hwei when both skillshots are up, and Q hits shorten your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 35, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1925,7 +1982,17 @@
         }
       ],
       "opponent": "KogMaw",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot detonating Essence Flux trades well while Kog'Maw's short base range keeps him in reach.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "KogMaw", "start": 54, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1987,7 +2054,17 @@
         }
       ],
       "opponent": "Lucian",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot's cooldown cuts let Ezreal keep trading against Lucian's short-range poke in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 32, "end": 38 },
+            { "kind": "champion", "key": "Lucian", "start": 60, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2427,7 +2504,16 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mana refund and Q cooldown cuts let Ezreal keep poking Smolder while his Q stacks build.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 36, "end": 42 },
+            { "kind": "champion", "key": "Smolder", "start": 55, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -2789,7 +2875,17 @@
         }
       ],
       "opponent": "Xayah",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot's hit cuts cooldowns and refunds mana, helping Ezreal sustain trades with Xayah.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 59, "end": 65 },
+            { "kind": "champion", "key": "Xayah", "start": 86, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3019,7 +3115,15 @@
         }
       ],
       "opponent": "Ziggs",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot trades well into Ziggs, and Q hits cut your cooldowns to keep up poke.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 32, "end": 37 }
+          ]
+        }
+      ]
     }
   ]
 }

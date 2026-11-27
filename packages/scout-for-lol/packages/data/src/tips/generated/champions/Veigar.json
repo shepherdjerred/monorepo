@@ -287,7 +287,16 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Akali is a melee assassin who dives in, so a self-centered Event Horizon stuns her when she crosses its edge.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Veigar-E", "start": 59, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -461,7 +470,16 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Event Horizon's stun can catch Cassiopeia if she walks in, but she is ranged and needn't cross it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 31, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -518,7 +536,16 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Event Horizon on yourself stuns Fizz when he dives, though Playful can make him untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Fizz", "start": 32, "end": 36 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -708,7 +735,13 @@
         }
       ],
       "opponent": "Ryze",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Ryze is a ranged mage, not a diver, so a self-centered cage stun rarely triggers against him.",
+          "refs": [{ "kind": "champion", "key": "Ryze", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1037,7 +1070,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Yone is a melee diver, so a self-centered Event Horizon stuns him as he crosses the edge to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Veigar-E", "start": 42, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1104,7 +1146,16 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Zed is a melee assassin who dives in, so a self-centered Event Horizon stuns him as he crosses the edge.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Veigar-E", "start": 57, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1158,7 +1209,16 @@
         }
       ],
       "opponent": "Ashe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Ashe is ranged, not a jumper, so a self-centred Event Horizon cage has little to punish here.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Veigar-E", "start": 48, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1412,7 +1472,13 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Jinx has no dash or jump listed, so a self-cage stuns her only if she walks out through its edge.",
+          "refs": [{ "kind": "champion", "key": "Jinx", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1624,7 +1690,13 @@
         }
       ],
       "opponent": "Sivir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Sivir is ranged, not a jumper, so a self-centered cage is rarely the right answer to her.",
+          "refs": [{ "kind": "champion", "key": "Sivir", "start": 0, "end": 5 }]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1692,7 +1764,15 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Smolder is a ranged ADC, so the cage stops no jump-in; it only helps if he flies at you.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

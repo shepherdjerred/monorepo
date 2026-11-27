@@ -500,7 +500,17 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Sejuani:combo:0",
+          "note": "Hiding Glacial Prison's cast with Arctic Assault makes it harder for Naafiri to react before the ult lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 7, "end": 21 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 34, "end": 48 },
+            { "kind": "champion", "key": "Naafiri", "start": 69, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

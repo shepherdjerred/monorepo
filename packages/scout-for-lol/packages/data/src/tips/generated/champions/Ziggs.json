@@ -219,7 +219,16 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "The satchel recast knocks enemies back and launches Ziggs away, helping him break a Caitlyn dive.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 52, "end": 57 },
+            { "kind": "champion", "key": "Caitlyn", "start": 84, "end": 91 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -530,7 +539,16 @@
         }
       ],
       "opponent": "MissFortune",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Satchel escape knocks back and launches Ziggs away if Miss Fortune dives him.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "MissFortune", "start": 54, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -639,7 +657,16 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Satchel escape knocks Smolder back and launches Ziggs away if he dives.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "champion", "key": "Ziggs", "start": 48, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -692,7 +719,15 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Knockback and launch help break away when Yunara dives in, though her move speed buff closes gaps fast.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 42, "end": 48 }
+          ]
+        }
+      ]
     }
   ]
 }

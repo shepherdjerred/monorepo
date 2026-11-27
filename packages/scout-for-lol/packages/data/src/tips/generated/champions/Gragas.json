@@ -231,7 +231,17 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Barrel Roll thrown with Body Slam adds a slow to the knock up when Briar leaps in with Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 },
+            { "kind": "champion", "key": "Briar", "start": 67, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -295,7 +305,17 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:0",
+          "note": "Flash during Body Slam lets the knock up land at a new spot, so Darius has a hard time dodging it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Gragas-E", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 64, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -540,7 +560,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Barrel Roll's slow goes out with Body Slam's knock up, which helps catch Jayce after his Hammer Form swaps.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Gragas-E", "start": 33, "end": 42 },
+            { "kind": "champion", "key": "Jayce", "start": 73, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1013,7 +1043,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Body Slam and Barrel Roll go out together, so the stun and slow can catch Yone when he dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 74, "end": 78 }
+          ]
+        }
+      ]
     }
   ]
 }

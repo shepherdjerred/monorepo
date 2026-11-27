@@ -484,7 +484,17 @@
         }
       ],
       "opponent": "Kindred",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:2",
+          "note": "Death Mark shadow escape lets Zed swap back after the mark, leaving Kindred's slow behind.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "champion", "key": "Kindred", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -527,7 +537,13 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst stores damage, but Lee's Safeguard shield and dashes can help him survive the detonation.",
+          "refs": [{ "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 }]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -620,7 +636,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst can kill a squishy Naafiri before the mark detonates, though her packmates may follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Naafiri", "start": 36, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -815,7 +840,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst can kill a squishy Sylas before the mark detonates, since all damage is stored.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 36, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1477,7 +1511,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q then shadow swap pokes Briar and repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Zed", "start": 47, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1540,7 +1583,17 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Swapping back with the shadow after Razor Shuriken repositions Zed out of Cassiopeia's retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 36, "end": 50 },
+            { "kind": "champion", "key": "Zed", "start": 63, "end": 66 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 74, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1845,7 +1898,23 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Shadow Q swap lets Zed poke and swap out of range before Hwei's skillshots can retaliate.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 19, "end": 22 },
+            { "kind": "champion", "key": "Hwei", "start": 57, "end": 61 }
+          ]
+        },
+        {
+          "comboId": "middle:Zed:combo:0",
+          "note": "The double W swap gives a quick blink to dodge Hwei's Devastating Fire or Grim Visage skillshots.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 47, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2029,7 +2098,16 @@
         }
       ],
       "opponent": "Leblanc",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q from two positions pokes LeBlanc, then the W swap repositions Zed out of her retaliation range.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 27, "end": 34 },
+            { "kind": "champion", "key": "Zed", "start": 64, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2135,7 +2213,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q from two positions pokes Lux, then the swap repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "champion", "key": "Zed", "start": 58, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2608,7 +2695,16 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q poke then swapping with the shadow with W repositions Zed out of Syndra's retaliation range.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 56, "end": 59 },
+            { "kind": "champion", "key": "Syndra", "start": 67, "end": 73 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2663,7 +2759,17 @@
         }
       ],
       "opponent": "Taliyah",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Swapping out after Razor Shuriken pokes Taliyah and repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 19, "end": 33 },
+            { "kind": "champion", "key": "Taliyah", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Zed", "start": 64, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2854,7 +2960,17 @@
         }
       ],
       "opponent": "Veigar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Poking with Razor Shuriken then swapping with the shadow lets Zed leave range of Veigar's retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Zed", "start": 62, "end": 65 },
+            { "kind": "champion", "key": "Veigar", "start": 81, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

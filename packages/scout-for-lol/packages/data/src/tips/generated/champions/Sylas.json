@@ -2897,7 +2897,25 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas to Akali and knocks up, and Kingslayer follows to heal in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Sylas-W", "start": 47, "end": 57 }
+          ]
+        },
+        {
+          "comboId": "middle:Sylas:combo:0",
+          "note": "Casting Kingslayer during the Abscond dash closes on Akali and heals before the Abduct recast.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 53, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2952,7 +2970,17 @@
         }
       ],
       "opponent": "Akshan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's pull and knock-up catches Akshan, then Kingslayer heals Sylas and adds burst.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Sylas-W", "start": 48, "end": 58 },
+            { "kind": "champion", "key": "Sylas", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3011,7 +3039,16 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's pull and knock-up plus Kingslayer burst can catch Anivia, whose listed kit has no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 32, "end": 42 },
+            { "kind": "champion", "key": "Anivia", "start": 59, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3070,7 +3107,15 @@
         }
       ],
       "opponent": "Annie",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's pull and knock-up can catch Annie to burst her before she gets her stun going.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 37, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3223,7 +3268,17 @@
         }
       ],
       "opponent": "Azir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas onto Azir and knocks him up, so Kingslayer and an empowered attack can burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Azir", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sylas-W", "start": 51, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3415,7 +3470,17 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's recast pulls Sylas onto Cassiopeia, and Kingslayer heals him as he bursts her.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Sylas-W", "start": 49, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3467,7 +3532,17 @@
         }
       ],
       "opponent": "Diana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas in and knocks up Diana, then Kingslayer heals him while he bursts her.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Diana", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Sylas-W", "start": 48, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3627,7 +3702,13 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Fizz's untargetable Playful can dodge the Abduct recast, so the combo can fail if he reacts.",
+          "refs": [{ "kind": "champion", "key": "Fizz", "start": 0, "end": 4 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3741,7 +3822,17 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas onto Hwei and knocks him up, then Kingslayer bursts and heals before he casts.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Hwei", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sylas-W", "start": 53, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3888,7 +3979,16 @@
         }
       ],
       "opponent": "Katarina",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's recast pulls and knocks up, so it can catch Katarina, then Kingslayer heals and bursts her.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Sylas-W", "start": 68, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4294,7 +4394,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct into Kingslayer closes the gap on Orianna and bursts her, since her listed spells have no dash.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Orianna", "start": 41, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4347,7 +4456,17 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas onto Qiyana, then Kingslayer heals him and the empowered attack adds burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Qiyana", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Sylas-W", "start": 37, "end": 47 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4459,7 +4578,16 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas onto Syndra and knocks her up, which counters her habit of fighting from range.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Syndra", "start": 24, "end": 30 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4576,7 +4704,25 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct into Kingslayer pulls Sylas onto Talon and bursts him before he can vault away.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 },
+            { "kind": "champion", "key": "Talon", "start": 40, "end": 45 }
+          ]
+        },
+        {
+          "comboId": "middle:Sylas:combo:0",
+          "note": "Casting Kingslayer during Abscond closes distance and heals when Talon tries to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 65, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4785,7 +4931,15 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's pull and knockup can catch Viktor, who must stand in range to cast his abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 36, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -4886,7 +5040,16 @@
         }
       ],
       "opponent": "Xerath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:0",
+          "note": "Kingslayer during the Abscond dash closes distance and heals in a trade against Xerath's long-range pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Xerath", "start": 80, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -5053,7 +5216,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct's recast pulls in and knocks up Yone, setting up Kingslayer and an empowered attack for burst.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Sylas-W", "start": 56, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -5108,7 +5280,17 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls and knocks up Zed, then Kingslayer heals Sylas while bursting the squishy assassin.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Sylas-W", "start": 37, "end": 47 },
+            { "kind": "champion", "key": "Sylas", "start": 54, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -5160,7 +5342,17 @@
         }
       ],
       "opponent": "Zoe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Sylas:combo:1",
+          "note": "Abduct pulls Sylas onto Zoe and knocks her up, then Kingslayer heals him while she is caught.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Zoe", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Sylas-W", "start": 52, "end": 62 }
+          ]
+        }
+      ]
     }
   ]
 }

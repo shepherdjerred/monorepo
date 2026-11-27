@@ -215,7 +215,15 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Syndra:combo:0",
+          "note": "Instant stun can catch Akali as she closes in, shutting down her approach before she follows up.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -271,7 +279,15 @@
         }
       ],
       "opponent": "Anivia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Syndra:combo:0",
+          "note": "Instant sphere stun gives Anivia little time to react at close or medium range.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 26, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -407,7 +423,15 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Syndra:combo:0",
+          "note": "The instant sphere stun can catch Cassiopeia at close or medium range with little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 34, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -466,7 +490,17 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Syndra:combo:0",
+          "note": "Instant Dark Sphere then Scatter the Weak gives little reaction time, but Fizz's Playful makes him untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Syndra-E", "start": 25, "end": 41 },
+            { "kind": "champion", "key": "Fizz", "start": 74, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -565,7 +599,15 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Syndra:combo:0",
+          "note": "Instant Q then E stuns Orianna before she can react, and her Shockwave needs the ball nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 23, "end": 30 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

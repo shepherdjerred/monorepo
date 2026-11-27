@@ -345,7 +345,17 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Aatrox's Darkin Blade can knock Yasuo up, which lets Last Breath through Q follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 53, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -657,7 +667,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Jayce's Thundering Blow knocks back, but Last Breath needs an Airborne enemy, so it needs another source.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 41, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1139,7 +1158,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Needs an airborne enemy to land R; Yone's listed abilities include no knock-up, so it hinges on allies.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1196,7 +1223,15 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The instant dash-Q knock-up can punish Ahri when she is near a minion, since it gives little warning.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 39, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1251,7 +1286,16 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "Dashing with Sweeping Blade into a buffered Q gives Akali no wind-up to react to.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Akali", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1652,7 +1696,15 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-buffered Q extends the knock-up reach to close on Brand, who has no listed escape.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 56, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1710,7 +1762,15 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The instant circle knock-up gives Briar little warning to react once she is near a minion or your dash path.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2622,7 +2682,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-extended Q can knock up Naafiri when she stays just out of dash range after poking.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2846,7 +2914,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Sylas's Abduct recast knocks up, but Last Breath needs an airborne target, so Yasuo's own knock-up is the setup.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Yasuo", "start": 78, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2901,7 +2979,17 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "The knock-up into Last Breath leaves Syndra almost no time to react, and Last Breath needs an Airborne target.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Syndra", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 73, "end": 84 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3075,7 +3163,22 @@
         }
       ],
       "opponent": "TwistedFate",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The dash-buffered Q knock-up has no visible wind-up, so Twisted Fate gets little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 56, "end": 68 }
+          ]
+        },
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-buffered Q extends knock-up reach to catch Twisted Fate who stays just outside dash range.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 49, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3349,7 +3452,23 @@
         }
       ],
       "opponent": "Xerath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "Dash-buffered Q gives a knock-up with no visible wind-up, so Xerath gets little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 61, "end": 67 }
+          ]
+        },
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash extends the Q circle's reach, helping close on Xerath when he stands just beyond dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Xerath", "start": 53, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3405,7 +3524,16 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Xin Zhao's listed abilities show no way to avoid the knock-up, so buffering Last Breath leaves him little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 76, "end": 87 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3581,7 +3709,16 @@
         }
       ],
       "opponent": "Zoe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Last Breath follows the Q knock-up, which punishes Zoe if she is caught in the circle.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 51, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -3688,7 +3825,15 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Yasuo:combo:0",
+          "note": "Dash-Q gives a circular hit that can knock up, but Caitlyn's Net and Snap Trap can punish the close approach.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 51, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -4185,7 +4330,15 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Yasuo:combo:0",
+          "note": "E-Q dash gives a circular Q that can knock up, but Yunara's slow-and-speed kit eases escaping it.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 51, "end": 57 }
+          ]
+        }
+      ]
     }
   ]
 }

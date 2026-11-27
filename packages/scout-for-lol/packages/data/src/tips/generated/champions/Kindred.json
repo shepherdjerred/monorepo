@@ -204,7 +204,15 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Q resets the attack timer for an extra hit when trading or kiting, useful against Ambessa's melee dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 82, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -305,7 +313,16 @@
         }
       ],
       "opponent": "Belveth",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Dance of Arrows resets the attack timer, adding an extra hit while trading with Bel'Veth in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Belveth", "start": 80, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1100,7 +1117,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "The Q attack reset lets Kindred kite Jayce, whose Thundering Blow knocks back and slows her approach.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Jayce", "start": 37, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1515,7 +1541,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Q reset fits an extra hit when trading or kiting Naafiri, whose dashes and packmates close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 49, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1865,7 +1899,15 @@
         }
       ],
       "opponent": "RekSai",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Rek'Sai's Queen's Wrath adds attack speed and burst, so the extra hit from the Q reset helps you trade and kite.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 0, "end": 7 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2488,7 +2530,16 @@
         }
       ],
       "opponent": "Volibear",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Extra hit from the reset lets Kindred trade while Volibear's Relentless Storm attack speed is still building.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 30, "end": 37 },
+            { "kind": "champion", "key": "Volibear", "start": 50, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

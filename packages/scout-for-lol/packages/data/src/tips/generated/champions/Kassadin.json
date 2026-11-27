@@ -416,7 +416,25 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:0",
+          "note": "Flash during Riftwalk gives extra blink distance to escape or reach Cassiopeia after her stun.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 68, "end": 78 }
+          ]
+        },
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade reset restores mana when trading in melee, which helps against Cassiopeia's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 76, "end": 86 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -595,7 +613,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade reset restores mana when trading in melee range against Orianna's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Orianna", "start": 69, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -665,7 +692,16 @@
         }
       ],
       "opponent": "Ryze",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade then auto restores mana when trading, helping against Ryze's mana-based spell pressure.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ryze", "start": 67, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -916,7 +952,17 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:0",
+          "note": "Flash during Riftwalk adds blink distance to escape a Yasuo gank or catch him when he dashes away.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 54, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -975,7 +1021,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade's bonus range and reset help Kassadin regain mana while trading against Yone's melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Kassadin", "start": 42, "end": 50 },
+            { "kind": "champion", "key": "Yone", "start": 85, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

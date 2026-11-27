@@ -563,7 +563,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Hallowed Mist stays on Gwen after her dash, shielding her from Jayce's ranged poke outside the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Gwen", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Jayce", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -818,7 +828,16 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Mist moving with her dash keeps Gwen untargetable to Rumble's Flamethrower and Harpoon while she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Rumble", "start": 53, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1006,7 +1025,16 @@
         }
       ],
       "opponent": "Vayne",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Mist follows the dash, so Gwen can close on Vayne while staying untargetable outside the mist.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

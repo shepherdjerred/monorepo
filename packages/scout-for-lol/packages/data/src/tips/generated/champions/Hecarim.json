@@ -396,7 +396,15 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Hecarim:combo:0",
+          "note": "Flash into Charge closes the gap fast, but Lee's Safeguard can dash away from the follow-up.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

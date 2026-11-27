@@ -256,7 +256,23 @@
         }
       ],
       "opponent": "Akshan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:0",
+          "note": "Shockwave knocks enemies toward the ball, which can pull Akshan out of his swing and dive range.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 57, "end": 63 }
+          ]
+        },
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Protect then Attack keeps up Command: Attack poke on Akshan, who has little to answer it from range.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 29, "end": 44 },
+            { "kind": "champion", "key": "Akshan", "start": 53, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -368,7 +384,15 @@
         }
       ],
       "opponent": "Annie",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance gives speed and a slowing field to help escape once Annie's stun threatens a chase.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -498,7 +522,15 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance gives speed and a slowing field to help you get away when Aurora chases you.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 69, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -551,7 +583,15 @@
         }
       ],
       "opponent": "Azir",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:0",
+          "note": "Shockwave pulls enemies toward the ball, which can drag Azir off his soldiers and out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 56, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -618,7 +658,15 @@
         }
       ],
       "opponent": "Brand",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Protect pulls the ball back so Attack can poke again, keeping up pressure on Brand's lane.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 77, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -674,7 +722,15 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance leaves a field that slows chasers, which helps when Briar leaps in and chases you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 63, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -721,7 +777,15 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance's speed burst and slowing field help her escape when Cassiopeia chases her.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 64, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -902,7 +966,16 @@
         }
       ],
       "opponent": "Ezreal",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Protect then Attack lets her keep poking Ezreal with Command: Attack even when the ball is left behind.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 53, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1132,7 +1205,15 @@
         }
       ],
       "opponent": "Irelia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance gives you speed and slows chasers, which helps when Irelia dashes onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 63, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1179,7 +1260,17 @@
         }
       ],
       "opponent": "Kassadin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Self-Protect poke lets Orianna re-throw the ball for Command: Attack harass against Kassadin.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 53, "end": 68 },
+            { "kind": "champion", "key": "Kassadin", "start": 84, "end": 92 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1235,7 +1326,16 @@
         }
       ],
       "opponent": "Katarina",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance's speed burst and slowing field help Orianna get away when Katarina chases her.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 48, "end": 55 },
+            { "kind": "champion", "key": "Katarina", "start": 70, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1442,7 +1542,13 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance's speed and slow field help you get away if Lux roots you or slows you with her zone.",
+          "refs": [{ "kind": "champion", "key": "Lux", "start": 55, "end": 58 }]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1620,7 +1726,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Pulling the ball back with Protect then Q lets you keep poking Naafiri's lane presence.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 63, "end": 70 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1675,7 +1789,17 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Protect then Attack lets Orianna keep poking Qiyana from range with Command: Attack.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 25, "end": 32 },
+            { "kind": "champion", "key": "Qiyana", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 68, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1968,7 +2092,22 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance's speed burst and slowing field help her get away if Talon leaps onto her.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 64, "end": 69 }
+          ]
+        },
+        {
+          "comboId": "middle:Orianna:combo:1",
+          "note": "Protect then Attack lets her poke again at once, keeping the ball ready against Talon.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 80, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2375,7 +2514,15 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance gives speed and its field slows chasers, which helps when Xin Zhao charges in.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 69, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2596,7 +2743,16 @@
         }
       ],
       "opponent": "Zoe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Orianna:combo:2",
+          "note": "Dissonance gives speed and a slowing field, helping Orianna escape when Zoe's bubble or portal pressure chases her.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 52, "end": 59 },
+            { "kind": "champion", "key": "Zoe", "start": 72, "end": 75 }
+          ]
+        }
+      ]
     }
   ]
 }

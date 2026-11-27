@@ -1332,7 +1332,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Volibear:combo:1",
+          "note": "Sky Splitter covering Volibear up close gives a shield, which helps in a brawl against Lee's Tempest and Q.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1433,7 +1442,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Volibear:combo:1",
+          "note": "Sky Splitter's shield helps in close fights against Naafiri and her packmates' burst.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Naafiri", "start": 52, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1588,7 +1606,16 @@
         }
       ],
       "opponent": "Skarner",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Volibear:combo:1",
+          "note": "Sky Splitter's bolt lands late, so cast it where the fight will be, as Skarner charges in.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Skarner", "start": 71, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

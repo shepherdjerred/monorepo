@@ -218,7 +218,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "If Akali's burst stuns or catches Galio, he can still release Shield of Durand to taunt and damage her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 3, "end": 8 },
+            { "kind": "champion", "key": "Galio", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Galio-W", "start": 62, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -713,7 +723,24 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:1",
+          "note": "Sylas's Abduct is a skillshot, and stepping back with Justice Punch early can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-E", "start": 54, "end": 67 }
+          ]
+        },
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "If Sylas's Abduct knocks you up, you can still release Shield of Durand to taunt and damage him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Galio-W", "start": 55, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -923,7 +950,17 @@
         }
       ],
       "opponent": "Yasuo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while knocked up lets Galio taunt and damage Yasuo instead of waiting.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 49, "end": 54 },
+            { "kind": "champion", "key": "Yasuo", "start": 72, "end": 77 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -977,7 +1014,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while crowd controlled lets Galio taunt Yone instead of waiting it out.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 55, "end": 60 },
+            { "kind": "champion", "key": "Yone", "start": 67, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1039,7 +1086,17 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while stunned lets Galio taunt Zed even when caught.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 46, "end": 51 },
+            { "kind": "champion", "key": "Zed", "start": 58, "end": 61 }
+          ]
+        }
+      ]
     }
   ]
 }

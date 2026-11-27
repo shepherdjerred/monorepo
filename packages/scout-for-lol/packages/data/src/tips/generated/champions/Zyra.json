@@ -1533,7 +1533,16 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Zyra:combo:0",
+          "note": "Seeding after Grasping Roots grows a Vine Lasher from a seed Pantheon cannot see beforehand.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Pantheon", "start": 61, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1651,7 +1660,15 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Zyra:combo:0",
+          "note": "Roots then a hidden seed grows a Vine Lasher to punish Senna, who must stay close to land her attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 55, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",

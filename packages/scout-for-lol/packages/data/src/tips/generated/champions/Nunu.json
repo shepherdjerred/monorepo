@@ -162,7 +162,17 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nunu:combo:0",
+          "note": "Consume plus Smite can secure objectives before Graves, who has no listed objective steal, can contest.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "11", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 48, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -568,7 +578,17 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nunu:combo:0",
+          "note": "Consume plus Smite can finish objectives fast, useful when Naafiri's dash and packmates contest them.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "11", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 59, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -673,7 +693,17 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nunu:combo:0",
+          "note": "Consume plus Smite finishes objectives fast, which helps contest Shyvana's dragon-focused clears.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "11", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 65, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -790,7 +820,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Nunu:combo:0",
+          "note": "Consume plus Smite secures objectives fast, denying Sylas a window to contest or steal them.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "11", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

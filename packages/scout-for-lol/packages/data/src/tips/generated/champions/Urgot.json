@@ -211,7 +211,17 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Urgot:combo:0",
+          "note": "Disdain stun then Purge keeps damage on Briar, who is self-taunted into the fight during Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Urgot-W", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Briar", "start": 40, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -522,7 +532,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Urgot:combo:0",
+          "note": "Disdain's stun can set up Purge for follow-up damage, though Jayce's hammer knockback can disrupt the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Urgot-W", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Jayce", "start": 61, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

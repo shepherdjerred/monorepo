@@ -213,7 +213,17 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force can catch Akali off guard and knock her up before she can dash away.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -488,7 +498,16 @@
         }
       ],
       "opponent": "Camille",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Camille's Hextech Ultimatum locks one target, so a Flash ultimate can still knock up her team.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "4", "start": 51, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -967,7 +986,17 @@
         }
       ],
       "opponent": "Gragas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force gives a surprise engage on Gragas, who has no dash that avoids it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Gragas", "start": 56, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1086,7 +1115,23 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force lets Malphite reach Heimerdinger's turrets and him from an unexpected spot.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Malphite", "start": 34, "end": 42 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 49,
+              "end": 61
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2099,7 +2144,17 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force can land a knock-up on Riven even when she thinks she is out of range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Riven", "start": 52, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2218,7 +2273,17 @@
         }
       ],
       "opponent": "Sett",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:1",
+          "note": "Sett's Show Stopper is a grab, so a faster, harder-to-dodge Unstoppable Force dash helps Malphite engage.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Malphite-R", "start": 60, "end": 77 },
+            { "kind": "champion", "key": "Malphite", "start": 89, "end": 97 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

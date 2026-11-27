@@ -236,7 +236,16 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Akali, and Voidlings keep up pressure on her if she dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1347,7 +1356,17 @@
         }
       ],
       "opponent": "Irelia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings from Malefic Visions and Call of the Void add pressure on Irelia, who can dash through them.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 21, "end": 36 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Irelia", "start": 74, "end": 80 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1819,7 +1838,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings can help clear Naafiri's packmates and push the wave, though she can still dash in on Malzahar.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 25, "end": 32 },
+            { "kind": "champion", "key": "Malzahar", "start": 96, "end": 104 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1889,7 +1917,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings and Malefic Visions pressure Orianna, whose Attack and Dissonance must deal with the Voidlings.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 20, "end": 35 },
+            { "kind": "champion", "key": "Orianna", "start": 45, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1949,7 +1986,16 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Qiyana, and the Voidlings keep hitting her if she dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 26, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2205,7 +2251,17 @@
         }
       ],
       "opponent": "Taliyah",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings and Malefic Visions pressure Taliyah in lane, and Call of the Void's silence blocks her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Taliyah", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 60, "end": 76 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2277,7 +2333,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Talon, which can stop his dash or stealth spells while Voidlings chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2724,7 +2789,15 @@
         }
       ],
       "opponent": "Xerath",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings add pressure to push the wave against Xerath, who relies on poking with long-range spells.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 54, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2926,7 +2999,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings from the stack help push the wave and pressure Yone, whose listed abilities include no ranged poke.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 57, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

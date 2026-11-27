@@ -235,7 +235,16 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Kalista:combo:1",
+          "note": "Hopping back as Pierce launches lets her poke while stepping out of Caitlyn's long-range return fire.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 16, "end": 22 },
+            { "kind": "champion", "key": "Caitlyn", "start": 68, "end": 75 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -396,7 +405,16 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Kalista:combo:1",
+          "note": "Pierce hop pokes Jinx from range and steps out of the return fire.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Jinx", "start": 17, "end": 21 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -444,7 +462,17 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Kalista:combo:1",
+          "note": "Pierce hop pokes Kai'Sa from range while the hop steps Kalista back out of her return fire.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Kaisa", "start": 17, "end": 23 },
+            { "kind": "champion", "key": "Kalista", "start": 55, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -728,7 +756,16 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Kalista:combo:1",
+          "note": "Pierce hop pokes Yunara while stepping out of range of her on-hit attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-Q", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Yunara", "start": 17, "end": 23 }
+          ]
+        }
+      ]
     }
   ]
 }

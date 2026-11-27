@@ -421,7 +421,17 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration always applies Ablaze, so Sear stuns Graves even when he would dodge a skillshot.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Graves", "start": 51, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -574,7 +584,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration always applies Ablaze, so Sear stuns him without aiming the first spell.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 40, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -679,7 +698,17 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:0",
+          "note": "Pillar of Flame sets him ablaze first, so Sear still stuns even if Lee Sin tries to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Brand-Q", "start": 42, "end": 46 },
+            { "kind": "champion", "key": "LeeSin", "start": 67, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -731,7 +760,16 @@
         }
       ],
       "opponent": "MasterYi",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration is targeted and sets Yi ablaze, so Sear stuns without aiming even if Yi is dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 49, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -787,7 +825,17 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration is targeted, so the Ablaze-then-Sear stun still lands when Naafiri dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 46, "end": 50 },
+            { "kind": "champion", "key": "Naafiri", "start": 73, "end": 80 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -908,7 +956,17 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Targeted Conflagration guarantees Ablaze, so Sear stuns Shyvana without her dodging a skillshot.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Brand-Q", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Shyvana", "start": 56, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1023,7 +1081,17 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Targeted Conflagration guarantees Ablaze, so Sear stuns even if Sylas dashes with Abscond.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Brand-Q", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Sylas", "start": 64, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1080,7 +1148,17 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration is targeted, so Sear stuns Talon with no aim needed even if he vaults or turns invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Talon", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1189,7 +1267,25 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Brand:combo:1",
+          "note": "Conflagration always sets Xin ablaze, so Sear stuns him with no need to aim the first spell.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Brand-Q", "start": 41, "end": 45 }
+          ]
+        },
+        {
+          "comboId": "jungle:Brand:combo:0",
+          "note": "Pillar of Flame sets Xin ablaze, so Sear then stuns him even if he dodges Sear.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Brand-Q", "start": 74, "end": 78 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1665,7 +1761,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Brand:combo:0",
+          "note": "Pillar of Flame is delayed, so Orianna's Shockwave knockback can disrupt aim; best against a slowed or stuck target.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 31, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

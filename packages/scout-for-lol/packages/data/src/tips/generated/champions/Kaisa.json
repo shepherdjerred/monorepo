@@ -599,7 +599,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Kaisa:combo:0",
+          "note": "Casting Q or W mid-dash lets Kai'Sa deal damage on landing, even if Hwei's Grim Visage makes her flee.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 29, "end": 35 },
+            { "kind": "champion", "key": "Hwei", "start": 68, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

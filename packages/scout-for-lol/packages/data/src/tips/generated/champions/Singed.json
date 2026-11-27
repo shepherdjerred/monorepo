@@ -211,7 +211,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Singed:combo:0",
+          "note": "Fling can pull Briar away from a wall escape and into your team, which helps against her leaps.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Briar", "start": 15, "end": 20 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

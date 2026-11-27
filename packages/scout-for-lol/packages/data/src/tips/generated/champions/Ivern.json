@@ -306,7 +306,17 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Ivern:combo:0",
+          "note": "Rootcaller roots Kha'Zix, then the recast dashes Ivern onto him to lock him down.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Khazix", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Ivern", "start": 49, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -414,7 +424,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Ivern:combo:0",
+          "note": "Rootcaller roots Lee, and recasting dashes Ivern onto him, closing the gap on a mobile target.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Ivern", "start": 43, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -518,7 +537,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Ivern:combo:0",
+          "note": "Rooting Naafiri with Q then recasting dashes Ivern onto her to engage or peel when she dives.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 8, "end": 15 },
+            { "kind": "champion", "key": "Ivern", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

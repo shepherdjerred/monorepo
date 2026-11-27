@@ -218,7 +218,15 @@
         }
       ],
       "opponent": "Ashe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Q through a minion pokes Ashe, who has no listed ability that blocks or stops it.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 34, "end": 38 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -287,7 +295,15 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Q pierces through a minion to slow and poke Caitlyn, who outranges lane trades with her rifle.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 44, "end": 51 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -403,7 +419,16 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness through a minion still reaches Jhin behind it, slowing him so he's easier to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Jhin", "start": 49, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -503,7 +528,16 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness through a minion slows and pokes Kai'Sa, making it harder for her to stack Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Kaisa", "start": 51, "end": 57 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -597,7 +631,16 @@
         }
       ],
       "opponent": "MissFortune",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness passes through a minion to slow and poke Miss Fortune behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "MissFortune", "start": 59, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -711,7 +754,15 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Q pierces through a minion to slow and poke Yunara, who has no listed way to block the shot.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 44, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -861,7 +912,16 @@
         }
       ],
       "opponent": "Bard",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness pokes through a minion to hit Bard, who can't easily answer it from range.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 48, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1141,7 +1201,16 @@
         }
       ],
       "opponent": "Janna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Janna from past normal range and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1356,7 +1425,16 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Lux from beyond range before she can poke or root.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 41, "end": 44 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1513,7 +1591,16 @@
         }
       ],
       "opponent": "Milio",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Milio, who has no listed way to block or dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1687,7 +1774,16 @@
         }
       ],
       "opponent": "Nautilus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Nautilus from range, so he struggles to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 41, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1743,7 +1839,16 @@
         }
       ],
       "opponent": "Neeko",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Neeko, who has no listed way to block the beam.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Neeko", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1989,7 +2094,17 @@
         }
       ],
       "opponent": "Rakan",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion lets Senna poke Rakan from range when he stands behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Rakan", "start": 51, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2047,7 +2162,16 @@
         }
       ],
       "opponent": "Rell",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness pokes through a minion to hit Rell from beyond her reach before she can engage.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Rell", "start": 48, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2315,7 +2439,16 @@
         }
       ],
       "opponent": "Swain",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Swain from range, which helps vs his Soul Fragment healing.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Swain", "start": 41, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2535,7 +2668,17 @@
         }
       ],
       "opponent": "Velkoz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion or ally lets Senna poke Vel'Koz from beyond her normal range.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 48, "end": 53 },
+            { "kind": "champion", "key": "Velkoz", "start": 59, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2740,7 +2883,18 @@
         }
       ],
       "opponent": "Zyra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Zyra from long range, keeping Senna away from Zyra's roots.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Senna", "start": 71, "end": 76 },
+            { "kind": "champion", "key": "Zyra", "start": 87, "end": 91 }
+          ]
+        }
+      ]
     }
   ]
 }

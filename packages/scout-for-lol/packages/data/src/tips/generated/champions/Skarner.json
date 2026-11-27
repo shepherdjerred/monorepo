@@ -174,7 +174,15 @@
         }
       ],
       "opponent": "Ambessa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q before engaging means Skarner's E charge lands with empowered hits right away.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -527,7 +535,13 @@
         }
       ],
       "opponent": "DrMundo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q then charging with E is risky into Mundo, whose passive resists the first Immobilizing effect.",
+          "refs": []
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -932,7 +946,16 @@
         }
       ],
       "opponent": "Ivern",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q readies empowered attacks, so Skarner can hit at once after charging in on Ivern.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 44, "end": 51 },
+            { "kind": "champion", "key": "Ivern", "start": 89, "end": 94 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1067,7 +1090,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner dive in fast, so Jayce's knockback Thundering Blow has less time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1335,7 +1367,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Shattered Earth lets Skarner charge with Ixtal's Impact and hit with empowered attacks at once.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1388,7 +1429,16 @@
         }
       ],
       "opponent": "Lillia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E and hit fast, giving Lillia less time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Lillia", "start": 65, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1601,7 +1651,16 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E at once, closing on Nidalee before she can kite.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Nidalee", "start": 64, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1806,7 +1865,16 @@
         }
       ],
       "opponent": "Qiyana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner's E charge in with empowered attacks ready, useful to catch a dashing Qiyana.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Qiyana", "start": 97, "end": 103 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1950,7 +2018,16 @@
         }
       ],
       "opponent": "Rengar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q then charging in with E lets Skarner commit fast onto Rengar when he leaps from brush.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "Rengar", "start": 68, "end": 74 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2014,7 +2091,16 @@
         }
       ],
       "opponent": "Sejuani",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E and hit fast, though Sejuani's Frost Armor makes slowing her harder.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Sejuani", "start": 65, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2157,7 +2243,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q means Skarner's engage isn't delayed, giving Sylas less time to react with Abscond.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 59, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2202,7 +2297,17 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Shattered Earth lets Skarner charge with Ixtal's Impact and hit instantly, giving Talon little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 },
+            { "kind": "champion", "key": "Talon", "start": 94, "end": 99 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -2302,7 +2407,16 @@
         }
       ],
       "opponent": "Udyr",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner engage with E ready, though Udyr's Stampede stun can interrupt.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Udyr", "start": 55, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

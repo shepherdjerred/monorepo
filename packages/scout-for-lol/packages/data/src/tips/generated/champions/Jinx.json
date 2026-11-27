@@ -149,7 +149,15 @@
         }
       ],
       "opponent": "Aphelios",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Ramping the minigun then swapping to rockets gives a strong opening hit in a trade against Aphelios.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 91, "end": 99 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -592,7 +600,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Ramped-up rocket opener gives Jinx burst to punish Hwei when he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Hwei", "start": 51, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1341,7 +1358,15 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Opening rocket hit after minigun ramp-up can punish Smolder when he steps in to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 52, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

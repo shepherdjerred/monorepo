@@ -448,7 +448,15 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q stays attached through Lee Sin's Safeguard dash, so he can't easily ward-hop away.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 30, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -661,7 +669,16 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q keeps Warwick attached through Shyvana's dashes and teleports, so she struggles to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 38, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -750,7 +767,15 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q stays attached through Sylas's Abscond dash, so he can't easily escape the chase.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

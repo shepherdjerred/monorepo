@@ -258,7 +258,18 @@
         }
       ],
       "opponent": "Amumu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Viego:combo:0",
+          "note": "Camouflage from Harrowed Path hides Viego's approach before Spectral Maw starts the gank on Amumu.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Viego", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Viego-W", "start": 60, "end": 72 },
+            { "kind": "champion", "key": "Amumu", "start": 92, "end": 97 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1639,7 +1650,16 @@
         }
       ],
       "opponent": "Nidalee",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Viego:combo:0",
+          "note": "Camouflage from Harrowed Path hides his gank start, though Nidalee's Bushwhack traps can still catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Nidalee", "start": 59, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

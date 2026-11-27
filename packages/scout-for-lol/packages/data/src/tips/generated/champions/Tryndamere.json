@@ -503,7 +503,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Tryndamere:combo:0",
+          "note": "Casting Bloodlust mid-windup heals and builds Fury while closing on Jayce, who can knock you back with Thundering Blow.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 8, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 68, "end": 73 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -985,7 +994,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Tryndamere:combo:0",
+          "note": "Weaving Bloodlust into attack windup keeps Fury and healing flowing in melee trades against Yone's attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 8, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 92, "end": 96 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -970,7 +970,15 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Ornn:combo:0",
+          "note": "The double R knocks up enemies it hits, which can catch Yone in a teamfight if he gets in range.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 56, "end": 60 }
+          ]
+        }
+      ]
     }
   ]
 }

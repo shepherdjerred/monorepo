@@ -283,7 +283,16 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:1",
+          "note": "The Tough It Out reset speeds up your follow-up auto in melee trades against Darius.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 77, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -513,7 +522,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:2",
+          "note": "Ragnarok cleanses and blocks the slow from Jayce's To the Skies! and the knockback from Thundering Blow.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Jayce", "start": 43, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -629,7 +647,16 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:1",
+          "note": "Tough It Out resets autos for a quicker follow-up in melee trades against Malphite.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Malphite", "start": 74, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

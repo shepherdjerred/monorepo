@@ -625,7 +625,16 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Leblanc:combo:0",
+          "note": "The W return puts LeBlanc back out of range, so Orianna's Ball has less time to punish her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "champion", "key": "Orianna", "start": 48, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -998,7 +1007,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Leblanc:combo:0",
+          "note": "The W return lets LeBlanc poke with Q and escape before Yone can easily trade back in melee range.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 56, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",

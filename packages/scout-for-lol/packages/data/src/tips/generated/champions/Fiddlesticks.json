@@ -657,7 +657,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:0",
+          "note": "Flash after Harvest lets you reach Lee Sin if he uses Safeguard to dash away from the fight.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -815,7 +824,27 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:1",
+          "note": "Crowstorm into Reap fears from the fog before Naafiri's packmates can react to you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 0,
+              "end": 9
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 15,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 46, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -967,7 +996,27 @@
         }
       ],
       "opponent": "Shyvana",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:1",
+          "note": "Crowstorm into Reap fears Shyvana from the fog before she can react to your arrival.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 0,
+              "end": 9
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 15,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Shyvana", "start": 26, "end": 33 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1125,7 +1174,41 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:1",
+          "note": "Crowstorm into Reap fears Sylas right after the blink, before he can lash or dash away with Abscond.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 0,
+              "end": 9
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 15,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 }
+          ]
+        },
+        {
+          "comboId": "jungle:Fiddlesticks:combo:0",
+          "note": "Flash after Bountiful Harvest lets you reach Sylas if he dashes away with Abscond after the fear.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 12,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Sylas", "start": 45, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1201,7 +1284,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:0",
+          "note": "Flash after Harvest lets you follow Talon if he turns invisible or vaults away mid-fight.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Talon", "start": 36, "end": 41 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1389,7 +1481,27 @@
         }
       ],
       "opponent": "XinZhao",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Fiddlesticks:combo:1",
+          "note": "Crowstorm into Reap lands a slow from the fog, which counters Xin Zhao's engage and keeps him from closing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 0,
+              "end": 9
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 15,
+              "end": 19
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 62, "end": 70 }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -213,7 +213,15 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from range, which suits dodging Aatrox's Darkin Blade and chains while he heals.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 55, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -466,7 +474,15 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:1",
+          "note": "Leaping in with Lightning Field running punishes Briar when she stays close in her Blood Frenzy.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 49, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -765,7 +781,15 @@
         }
       ],
       "opponent": "Gangplank",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Long-range Shock Blast through the Gate pokes Gangplank from afar, out of keg range.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 46, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -881,7 +905,16 @@
         }
       ],
       "opponent": "Gnar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Gnar from long range, and Gnar's Boomerang Throw is the main poke he can answer with.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Gnar", "start": 49, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1055,7 +1088,20 @@
         }
       ],
       "opponent": "Heimerdinger",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Heimerdinger from long range, so he has to fight away from his turrets.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 23,
+              "end": 35
+            }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1607,7 +1653,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:1",
+          "note": "Lightning Field mid-leap starts damaging at landing, hitting Naafiri and the packmates around her.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 61, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1958,7 +2012,15 @@
         }
       ],
       "opponent": "Riven",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Riven from long range, so she must close the gap through the bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 23, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2077,7 +2139,16 @@
         }
       ],
       "opponent": "Sett",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, keeping Jayce away from Sett's short-range punches.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 48, "end": 53 },
+            { "kind": "champion", "key": "Sett", "start": 64, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2219,7 +2290,15 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, safely outside Sion's short-range Roar and Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 55, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -2378,7 +2457,15 @@
         }
       ],
       "opponent": "Tryndamere",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, so Tryndamere has to close the gap through the bolt's range.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 43, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",

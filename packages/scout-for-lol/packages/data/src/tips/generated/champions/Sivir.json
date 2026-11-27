@@ -387,7 +387,15 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "The auto-reset trade gives Sivir quick extra damage in a short window against a squishy mage.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 27, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -551,7 +559,16 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Resetting autos with Ricochet gives faster trades against Kai'Sa and her Plasma-stacking autos.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Kaisa", "start": 58, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -606,7 +623,17 @@
         }
       ],
       "opponent": "Kalista",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Ricochet's attack-speed boost and bounce help Sivir win auto trades against Kalista's hopping kite.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Sivir", "start": 46, "end": 51 },
+            { "kind": "champion", "key": "Kalista", "start": 76, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -824,7 +851,16 @@
         }
       ],
       "opponent": "MissFortune",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Resetting autos with Ricochet wins trades against Miss Fortune, who has no way to block or punish it.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "MissFortune", "start": 50, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -945,7 +981,16 @@
         }
       ],
       "opponent": "Smolder",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Resetting autos with Ricochet gives faster trades against Smolder, who has no hard CC to stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Smolder", "start": 58, "end": 65 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1151,7 +1196,16 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Resetting autos with Ricochet gives faster, bouncing hits to win short trades against Yunara.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Yunara", "start": 86, "end": 92 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1215,7 +1269,15 @@
         }
       ],
       "opponent": "Ziggs",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Sivir:combo:0",
+          "note": "Ricochet auto reset wins trades while Ziggs' poke is mostly abilities, and bounce hits his turrets' targets.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-W", "start": 0, "end": 8 }
+          ]
+        }
+      ]
     }
   ]
 }

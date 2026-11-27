@@ -344,7 +344,16 @@
         }
       ],
       "opponent": "Aatrox",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize can block Aatrox's path when he walks in, and the stun holds him in place.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 22, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -402,7 +411,16 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize can block Briar's path, and the wall plus stun helps hold her when she engages.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -455,7 +473,16 @@
         }
       ],
       "opponent": "Darius",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize can block Darius's path, and the stun holds him while he tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -694,7 +721,17 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize can block Jayce's path, and the Flash Frost stun holds him back from leaping or knocking you away.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 44, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -816,7 +853,17 @@
         }
       ],
       "opponent": "Malphite",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize can block Malphite's path, and the Flash Frost stun holds him in place before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Malphite", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 47, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1001,7 +1048,16 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:0",
+          "note": "Detonating Flash Frost early stuns Sion before he can walk out of it, since Smash only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1049,7 +1105,17 @@
         }
       ],
       "opponent": "Teemo",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize blocks Teemo's path so the Flash Frost stun can hold him while he tries to retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Teemo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 39, "end": 50 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1171,7 +1237,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Anivia:combo:1",
+          "note": "Crystallize blocks Yone's path, so Flash Frost's stun can hold him in place when he dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 35, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1227,7 +1303,15 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early detonation stuns at once, which helps catch Ahri when she walks into the ice or dashes in.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 50, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1274,7 +1358,15 @@
         }
       ],
       "opponent": "Akali",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early detonation stuns at once, so Akali has less time to dodge the ice or dash out.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1468,7 +1560,16 @@
         }
       ],
       "opponent": "AurelionSol",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost stun is harder to dodge when Aurelion Sol flies or is dragged near the ice.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "AurelionSol", "start": 47, "end": 59 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2106,7 +2207,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost recast stuns sooner, so Hwei has less time to dodge the ice in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Hwei", "start": 42, "end": 46 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2434,7 +2544,16 @@
         }
       ],
       "opponent": "Lissandra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost stun is harder to dodge, so it helps land the stun on Lissandra when she walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Lissandra", "start": 72, "end": 81 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -2984,7 +3103,16 @@
         }
       ],
       "opponent": "Syndra",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost stun is harder to dodge, which helps catch Syndra when she steps toward the ice.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Syndra", "start": 61, "end": 67 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3105,7 +3233,15 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early detonation stuns at once, so Talon has less time to dodge the ice when he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 35, "end": 40 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3230,7 +3366,16 @@
         }
       ],
       "opponent": "Veigar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost stun is hard to dodge, so it can catch Veigar when he walks into the ice.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Veigar", "start": 57, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3680,7 +3825,16 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "Early Flash Frost recast stuns sooner, which helps catch Yone when he dashes or closes in on her.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 57, "end": 61 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -3813,7 +3967,16 @@
         }
       ],
       "opponent": "Zoe",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Anivia:combo:0",
+          "note": "The early Flash Frost stun is harder to dodge, which helps catch Zoe when she closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Zoe", "start": 65, "end": 68 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4117,7 +4280,16 @@
         }
       ],
       "opponent": "Lulu",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Recasting Flash Frost early gets the stun on Lulu fast, before she can slow or polymorph back.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Lulu", "start": 45, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4483,7 +4655,16 @@
         }
       ],
       "opponent": "Pyke",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Early Flash Frost burst gives a quick stun and slow to punish Pyke's approach before he can dive in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4540,7 +4721,15 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Early burst lands the stun and refreshes the slow on Senna, who is slowed by it and must stay close to poke.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 53, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4595,7 +4784,16 @@
         }
       ],
       "opponent": "Seraphine",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Early Flash Frost burst stuns Seraphine fast, punishing her when she is close without waiting for max range.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 30, "end": 39 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4648,7 +4846,16 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Quick Flash Frost recast stuns Sona in range before she can walk out of its slow ice path.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 31, "end": 35 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -4699,7 +4906,15 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Anivia:combo:0",
+          "note": "Early detonation stuns Thresh fast when he closes in, and the refreshed slow punishes his approach.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 23, "end": 29 }
+          ]
+        }
+      ]
     }
   ]
 }

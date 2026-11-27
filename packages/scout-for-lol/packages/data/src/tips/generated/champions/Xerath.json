@@ -285,7 +285,17 @@
         }
       ],
       "opponent": "Ahri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow helps land Arcanopulse on Ahri when she walks around poking with Orb.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Ahri", "start": 52, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -453,7 +463,17 @@
         }
       ],
       "opponent": "Aurora",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow helps land Arcanopulse on Aurora when she walks around in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Aurora", "start": 52, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -516,7 +536,17 @@
         }
       ],
       "opponent": "Cassiopeia",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow makes Arcanopulse easier to land on Cassiopeia as she walks around lane.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 62, "end": 72 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -573,7 +603,17 @@
         }
       ],
       "opponent": "Fizz",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction slows, but Fizz's Playful makes him untargetable, so the slowed Arcanopulse can be dodged.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 83, "end": 94 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -705,7 +745,17 @@
         }
       ],
       "opponent": "Orianna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow makes the slowed Arcanopulse beam easier to land on Orianna.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 43, "end": 54 },
+            { "kind": "champion", "key": "Orianna", "start": 78, "end": 85 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -958,7 +1008,17 @@
         }
       ],
       "opponent": "Viktor",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow helps land Arcanopulse on Viktor as he moves around, poking him in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Viktor", "start": 52, "end": 58 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1108,7 +1168,17 @@
         }
       ],
       "opponent": "Yone",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow makes Arcanopulse easier to land on Yone as he walks and dashes in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Yone", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "middle",
@@ -1166,7 +1236,17 @@
         }
       ],
       "opponent": "Zed",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "middle:Xerath:combo:0",
+          "note": "Eye of Destruction's slow helps land Arcanopulse on Zed, who walks around lane and pokes with shurikens.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Zed", "start": 52, "end": 55 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1759,7 +1839,17 @@
         }
       ],
       "opponent": "Pantheon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Xerath:combo:0",
+          "note": "Eye of Destruction slows Pantheon, making the long Arcanopulse beam easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 0, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 51, "end": 62 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -2055,7 +2145,16 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Xerath:combo:0",
+          "note": "Thresh has no listed dash or escape, so the slow makes the long Arcanopulse beam easy to land on him.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 64, "end": 75 }
+          ]
+        }
+      ]
     }
   ]
 }

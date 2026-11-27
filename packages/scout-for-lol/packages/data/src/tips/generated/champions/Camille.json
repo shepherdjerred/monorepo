@@ -1118,7 +1118,16 @@
         }
       ],
       "opponent": "Bard",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Camille:combo:0",
+          "note": "Hookshot flash dive reaches Bard even when he stands out of range, such as after using his portal.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Bard", "start": 28, "end": 32 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1745,7 +1754,16 @@
         }
       ],
       "opponent": "Sona",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Camille:combo:0",
+          "note": "The Flash-extended Hookshot dive reaches Sona, a champion who has no listed dash to escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-E", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Sona", "start": 41, "end": 45 }
+          ]
+        }
+      ]
     },
     {
       "lane": "support",
@@ -1803,7 +1821,16 @@
         }
       ],
       "opponent": "Thresh",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "support:Camille:combo:0",
+          "note": "The Flash-extended Hookshot stun can reach a Thresh standing outside normal Wall Dive range.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-E", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Thresh", "start": 45, "end": 51 }
+          ]
+        }
+      ]
     }
   ]
 }

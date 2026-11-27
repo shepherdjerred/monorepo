@@ -504,7 +504,22 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MonkeyKing:combo:2",
+          "note": "Nimbus into Crushing Blow lets Wukong close on Lee Sin fast and land an empowered hit on arrival.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-Q",
+              "start": 12,
+              "end": 25
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 31, "end": 37 },
+            { "kind": "champion", "key": "LeeSin", "start": 47, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -611,7 +626,15 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:MonkeyKing:combo:0",
+          "note": "The decoy can pull aggro from Naafiri and her packmates, who attack whatever she targets.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

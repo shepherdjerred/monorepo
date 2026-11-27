@@ -133,7 +133,16 @@
         }
       ],
       "opponent": "Aphelios",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "A trap-marked Aphelios gets rooted by Deadly Flourish, so he can't easily reposition in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Jhin-W", "start": 38, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -645,7 +654,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "The trap-into-Flourish root gives Jhin a ranged lockdown against Hwei, who has no listed escape.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Hwei", "start": 65, "end": 69 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -699,7 +717,16 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "Jinx's Flame Chompers root only on contact, while Jhin's trap-into-Flourish root is a ranged setup.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jhin", "start": 50, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1053,7 +1080,17 @@
         }
       ],
       "opponent": "Lux",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "Trap into Deadly Flourish gives Jhin a root from range, which helps him punish Lux when she steps up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Jhin", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Lux", "start": 79, "end": 82 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1327,7 +1364,16 @@
         }
       ],
       "opponent": "Senna",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "The trap and Deadly Flourish root can catch Senna, who lacks a dash and relies on slow poke.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Senna", "start": 44, "end": 49 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1631,7 +1677,17 @@
         }
       ],
       "opponent": "Varus",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Jhin:combo:0",
+          "note": "Captive Audience trap then Deadly Flourish roots Varus from range, setting up a punish on him.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 0, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 27, "end": 42 },
+            { "kind": "champion", "key": "Varus", "start": 49, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

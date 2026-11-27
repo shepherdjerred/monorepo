@@ -254,7 +254,26 @@
         }
       ],
       "opponent": "Caitlyn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Samira:combo:0",
+          "note": "Wild Rush into Flair lets Samira close on Caitlyn and burst her with explosives when the dash ends.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Samira-Q", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Samira", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "Caitlyn", "start": 42, "end": 49 }
+          ]
+        },
+        {
+          "comboId": "adc:Samira:combo:2",
+          "note": "Flashing mid-dash lets Samira reposition and still burst Caitlyn, who is hard to reach otherwise.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Caitlyn", "start": 57, "end": 64 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -361,7 +380,16 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Samira:combo:2",
+          "note": "Flashing mid-dash lets Samira change where she lands to catch Jhin by surprise.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Jhin", "start": 62, "end": 66 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -553,7 +581,18 @@
         }
       ],
       "opponent": "MissFortune",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Samira:combo:0",
+          "note": "Wild Rush into Flair lets Samira close on Miss Fortune and burst her with the explosives.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Samira-Q", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Samira", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "MissFortune", "start": 42, "end": 54 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -671,7 +710,16 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Samira:combo:1",
+          "note": "Buffered Inferno Trigger fires at once after the dash, so Yunara has little room to react.",
+          "refs": [
+            { "kind": "ability", "key": "Samira-R", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Yunara", "start": 58, "end": 64 }
+          ]
+        }
+      ]
     }
   ]
 }

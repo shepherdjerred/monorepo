@@ -294,7 +294,18 @@
         }
       ],
       "opponent": "Briar",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:1",
+          "note": "Empower into Leap Strike gives Jax a strong trade when he engages Briar.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jax-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Jax", "start": 31, "end": 34 },
+            { "kind": "champion", "key": "Briar", "start": 66, "end": 71 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -593,7 +604,16 @@
         }
       ],
       "opponent": "Jayce",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges Jayce's basic attacks, so the stun and leap can punish him as he pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -640,7 +660,17 @@
         }
       ],
       "opponent": "KSante",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges K'Sante's basic attacks, which his abilities mark for extra damage, before Leap Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Jax-Q", "start": 97, "end": 108 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -825,7 +855,17 @@
         }
       ],
       "opponent": "Rumble",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:0",
+          "note": "Ward-jumping with Leap Strike gets Jax out of range when Rumble's Equalizer trail and slows pin him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Jax", "start": 35, "end": 38 },
+            { "kind": "champion", "key": "Rumble", "start": 57, "end": 63 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -872,7 +912,17 @@
         }
       ],
       "opponent": "Sion",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges Sion's basic attacks, then Leap Strike closes the gap onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Jax-Q", "start": 49, "end": 60 }
+          ]
+        }
+      ]
     },
     {
       "lane": "top",
@@ -1099,7 +1149,13 @@
         }
       ],
       "opponent": "Graves",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Graves' basic attacks, and his shotgun pellets are basic attacks.",
+          "refs": [{ "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 }]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1202,7 +1258,16 @@
         }
       ],
       "opponent": "Kayn",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Kayn's basic attacks, and its stun can interrupt a melee brawl.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Kayn", "start": 22, "end": 26 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1256,7 +1321,16 @@
         }
       ],
       "opponent": "Khazix",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks, then stuns nearby enemies, which helps when Kha'Zix closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 81, "end": 88 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1360,7 +1434,16 @@
         }
       ],
       "opponent": "LeeSin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Lee Sin's basic attacks, including his Flurry-empowered ones, then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1454,7 +1537,16 @@
         }
       ],
       "opponent": "Naafiri",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks from Naafiri and her melee packmates, then stuns them nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 41, "end": 48 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1620,7 +1712,16 @@
         }
       ],
       "opponent": "Skarner",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Skarner's empowered basic attacks, and the recast stun hits him if he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1663,7 +1764,16 @@
         }
       ],
       "opponent": "Sylas",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Sylas's basic attacks, including the Petricite Burst-empowered ones, then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",
@@ -1720,7 +1830,16 @@
         }
       ],
       "opponent": "Talon",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks, including the Wound-stack attack that triggers Talon's bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 84, "end": 89 }
+          ]
+        }
+      ]
     },
     {
       "lane": "jungle",

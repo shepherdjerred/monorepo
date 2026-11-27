@@ -599,7 +599,16 @@
         }
       ],
       "opponent": "Hwei",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Caitlyn:combo:0",
+          "note": "The E net hop gives Caitlyn a way to back out of Hwei's Grim Visage fear and slow pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Hwei", "start": 49, "end": 53 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1041,7 +1050,16 @@
         }
       ],
       "opponent": "Lucian",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Caitlyn:combo:0",
+          "note": "The net recoil lets Caitlyn escape backwards from Lucian's close-range burst and dash pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Lucian", "start": 50, "end": 56 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",

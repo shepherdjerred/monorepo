@@ -1345,7 +1345,17 @@
         }
       ],
       "opponent": "Jhin",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Jhin has no listed escape from the root, so Chain of Corruption into Piercing Arrow can burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Varus-R", "start": 44, "end": 63 },
+            { "kind": "ability", "key": "Varus-Q", "start": 69, "end": 83 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1398,7 +1408,17 @@
         }
       ],
       "opponent": "Jinx",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Jinx's Flame Chompers root only after contact, so Varus can root her with Chain of Corruption and detonate with Q.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Varus", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Varus-R", "start": 74, "end": 93 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1456,7 +1476,17 @@
         }
       ],
       "opponent": "Kaisa",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Chain of Corruption roots Kai'Sa, and Piercing Arrow then detonates the Blight stacks for burst damage.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Varus-Q", "start": 38, "end": 52 }
+          ]
+        }
+      ]
     },
     {
       "lane": "adc",
@@ -1650,7 +1680,17 @@
         }
       ],
       "opponent": "Yunara",
-      "comboRefs": []
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Chain of Corruption roots Yunara so the charged Piercing Arrow can burst her before she kites.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Yunara", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Varus-Q", "start": 48, "end": 62 }
+          ]
+        }
+      ]
     }
   ]
 }
