@@ -132,7 +132,13 @@ therefore splits identities:
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the
   in-repo fork of `@dank074/discord-video-stream` (seekable player, VAAPI
-  hardware-encode pipeline, stream observer for metrics).
+  hardware-encode pipeline, stream observer for metrics). The resolve-time
+  ffprobe records how the chosen video stream is meant to be shown (display
+  aspect after pixel aspect and rotation, frame rate, interlacing, colour) and
+  the audio layout. Video is encoded at that display aspect fitted inside
+  `STREAM_WIDTH`×`STREAM_HEIGHT` (a 2.39:1 film plays at 1920×804, a portrait
+  clip at 608×1080); Discord letterboxes it. Rotated sources decode to system
+  memory so ffmpeg can autorotate them. A failed probe keeps the full box.
 
 The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the

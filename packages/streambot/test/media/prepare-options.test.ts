@@ -323,3 +323,54 @@ describe("buildVideoPrepareOptions", () => {
     });
   });
 });
+
+function sizedOptions(
+  displayAspect: number,
+  rotation: 0 | 90 | 180 | 270,
+  pipelineMode: "hw" | "sw",
+) {
+  return buildVideoPrepareOptions({
+    stream: { ...stream, width: 1920, height: 1080 },
+    resolved: {
+      ...VIDEO,
+      probedVideo: { displayAspect, rotation, interlaced: false },
+    },
+    startSeconds: 0,
+    volumePercent: 100,
+    pipelineMode,
+  });
+}
+
+function fittedSize(displayAspect: number) {
+  const options = sizedOptions(displayAspect, 0, "hw");
+  return { width: options.width, height: options.height };
+}
+
+describe("buildVideoPrepareOptions output size", () => {
+  test("fits the source's display aspect inside the configured box instead of stretching", () => {
+    expect(fittedSize(2.39)).toEqual({ width: 1920, height: 804 });
+    expect(fittedSize(16 / 9)).toEqual({ width: 1920, height: 1080 });
+    expect(fittedSize(4 / 3)).toEqual({ width: 1440, height: 1080 });
+    expect(fittedSize(9 / 16)).toEqual({ width: 608, height: 1080 });
+  });
+
+  test("keeps the configured box when the source was never probed", () => {
+    const options = buildVideoPrepareOptions({
+      stream,
+      resolved: VIDEO,
+      startSeconds: 0,
+      volumePercent: 100,
+      pipelineMode: "hw",
+    });
+    expect(options.width).toBe(stream.width);
+    expect(options.height).toBe(stream.height);
+  });
+
+  test("decodes rotated sources to system memory so ffmpeg can autorotate them", () => {
+    expect(sizedOptions(9 / 16, 90, "hw").hardwarePipelineMode).toBe("upload");
+    expect(sizedOptions(16 / 9, 180, "hw").hardwarePipelineMode).toBe("upload");
+    expect(sizedOptions(16 / 9, 0, "hw").hardwarePipelineMode).toBeUndefined();
+    // The software rung decodes to system memory already and must not ask for a GPU upload.
+    expect(sizedOptions(9 / 16, 90, "sw").hardwarePipelineMode).toBeUndefined();
+  });
+});
