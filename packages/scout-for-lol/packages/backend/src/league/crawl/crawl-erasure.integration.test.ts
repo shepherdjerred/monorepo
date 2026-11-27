@@ -5,6 +5,7 @@ import {
   RiotMatchIdSchema,
 } from "@scout-for-lol/data";
 import { ERASURE_REDACTION_NOTICE } from "#src/explore/inspection/erasure-redaction.ts";
+import { runRawErasureSweep } from "#src/report-lake/crawl/crawl-raw-erasure.ts";
 import { createPrismaRawErasureStore } from "#src/report-lake/crawl/crawl-raw-erasure-store.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -17,6 +18,7 @@ import {
   crawlErasureComplete,
   planCrawlErasure,
 } from "./crawl-erasure.ts";
+import { pruneCrawlFrontierBatch } from "./crawl-frontier-prune.ts";
 import { createPrismaCrawlStore } from "./crawl-prisma-store.ts";
 import { CrawlErasureFenceError } from "./crawl-store.ts";
 
@@ -94,7 +96,6 @@ describe("applyCrawlErasure", () => {
         puuid: ERASED,
         platformRoute: "NA1",
         depth: 1,
-        seedMatchId: RiotMatchIdSchema.parse("NA1_1"),
         nextEligibleAt: NOW,
       },
     });
@@ -159,6 +160,132 @@ describe("applyCrawlErasure", () => {
       lakeErasedAt: null,
     });
     expect(crawlErasureComplete(progress)).toBe(false);
+  });
+});
+
+/** Long after the cooldown and the lookback: the pruner drops every row. */
+async function pruneEverything() {
+  const later = new Date(NOW.getTime() + 60 * 86_400_000);
+  await pruneCrawlFrontierBatch(prisma, {
+    now: later,
+    batchSize: 1000,
+    backlogCap: 1_000_000,
+  });
+  expect(await prisma.crawlFrontier.count()).toBe(0);
+}
+
+describe("erasure after the frontier was pruned", () => {
+  const MATCH = RiotMatchIdSchema.parse("NA1_9700000021");
+  const KEPT = RiotMatchIdSchema.parse("NA1_9700000022");
+  const OTHER = LeaguePuuidSchema.parse(distinctCrawlPuuid("other"));
+
+  function newcomer(depth: number) {
+    return {
+      puuid: ERASED,
+      platformRoute: "NA1",
+      depth,
+      seedMatchId: KEPT,
+    };
+  }
+
+  /** The player visited and crawled, as one committed tick leaves them. */
+  async function crawledPlayer() {
+    const store = createPrismaCrawlStore(prisma);
+    await store.admit([newcomer(1)], NOW);
+    const segment = await crawlSegmentOf(DAY, [
+      { matchId: MATCH, player: ERASED },
+      { matchId: KEPT },
+    ]);
+    await store.commit({
+      now: NOW,
+      erasureMark: await store.erasureMark(),
+      segments: [
+        {
+          segment,
+          matches: [MATCH, KEPT].map((riotMatchId) => ({
+            riotMatchId,
+            platformRoute: "NA1",
+            queueId: 420,
+            gameCreatedAt: NOW,
+            depth: 1,
+            visitedPuuid: riotMatchId === MATCH ? ERASED : OTHER,
+            timelineSampled: false,
+          })),
+        },
+      ],
+      visits: [{ puuid: ERASED, rank: null }],
+      children: [],
+    });
+    return { store, segment };
+  }
+
+  test("still finds the player's matches, erases them and refuses them back", async () => {
+    const { store, segment } = await crawledPlayer();
+    await pruneEverything();
+
+    const target = { puuid: ERASED };
+    expect(await planCrawlErasure(prisma, target)).toMatchObject({
+      frontierRow: false,
+      matchesVisited: 1,
+    });
+    expect(await applyCrawlErasure(prisma, target)).toMatchObject({
+      newlyRecorded: true,
+      frontierRowsDeleted: 0,
+    });
+
+    // The raw sweep finds the player by what the segment holds, not by a row.
+    const objects = new Map([[segment.objectKey, segment.bytes]]);
+    const summary = await runRawErasureSweep({
+      store: createPrismaRawErasureStore(prisma),
+      objects: {
+        read: (key) => Promise.resolve(objects.get(key) ?? new Uint8Array()),
+        put: (replacement) => {
+          objects.set(replacement.objectKey, replacement.bytes);
+          return Promise.resolve();
+        },
+        delete: (key) => {
+          objects.delete(key);
+          return Promise.resolve();
+        },
+      },
+      segmentBudget: 100,
+    });
+    expect(summary).toMatchObject({
+      segmentsRewritten: 1,
+      matchesRemoved: 1,
+      swept: [puuidHash(ERASED)],
+    });
+    const remainingMatches = await prisma.crawlMatch.findMany();
+    expect(remainingMatches.map((row) => row.riotMatchId)).toEqual([KEPT]);
+    for (const bytes of objects.values()) {
+      expect(
+        new TextDecoder().decode(Bun.zstdDecompressSync(bytes)),
+      ).not.toContain(ERASED);
+    }
+
+    // A later crawled match naming the pruned, erased player cannot re-admit them.
+    expect(await store.admit([newcomer(1)], NOW)).toEqual({
+      admitted: 0,
+      erased: 1,
+    });
+    expect(await prisma.crawlFrontier.count()).toBe(0);
+  });
+
+  test("deletes the row of a player the pruner dropped and a later match re-admitted", async () => {
+    const { store } = await crawledPlayer();
+    await pruneEverything();
+    expect(await store.admit([newcomer(2)], NOW)).toEqual({
+      admitted: 1,
+      erased: 0,
+    });
+
+    const result = await applyCrawlErasure(prisma, { puuid: ERASED });
+
+    expect(result).toMatchObject({
+      newlyRecorded: true,
+      frontierRowsDeleted: 1,
+    });
+    expect(await prisma.crawlFrontier.count()).toBe(0);
   });
 });
 

@@ -2655,6 +2655,36 @@ stored per UTC day.
   This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
   frame at or before T. A segment written before the crawl kept checkpoints has
   none, and lane data cannot be backfilled from raw segments.
+- **Frontier.** `CrawlFrontier` is the work queue, not a record: the code
+  reads and writes only what scheduling needs (`puuid`, route, `depth`,
+  `nextEligibleAt`, `lastVisitedAt` and the bracket; `seedMatchId`,
+  `visitCount`, `createdAt` and `updatedAt` are retired and keep only their
+  defaults until a later migration drops them), claimed in `(depth, nextEligibleAt)` order
+  from an index of that shape. The crawl adds about nine rows per stored match
+  and visits a few hundred players a day, so nearly every row waits;
+  `crawl-frontier-prune.ts` bounds the table. `scoutCrawlFrontierPruneWorkflow`
+  (Schedule `scout-{stage}-crawl-frontier-prune`, every 15 minutes, overlap
+  SKIP, created paused like the crawl) calls `pruneCrawlFrontier` on the crawl
+  queue in batches of 2,000 deletes, at most 50 a run, each locking only the
+  rows it removes and skipping rows a crawl commit holds. Two rules:
+  a row unclaimed 28 days after it became eligible goes (visited or not), and
+  each depth keeps its newest `3 ×` daily-match-budget unvisited rows (at
+  least 20,000), dropping the oldest, so the crawl keeps visiting the players
+  surfaced most recently. A pruned player is admitted again when a later
+  crawled match names them; a commit for a player pruned mid-tick is a no-op.
+  Crawled matches and raw segments are never pruned. Erasure does not need the
+  row: it finds a player's matches through the segments and `ErasedPuuid`
+  (and counts them through `CrawlMatch_visitedPuuid_idx`, so the lookup does
+  not scan the permanent match table), and admission refuses an erased PUUID however often a match names them.
+  `scout_crawl_frontier_pruned_total{reason}` counts deletions.
+  - **Cost per match.** The frontier plateaus (about 55 MB, 125,000 rows, at
+    20,000 matches a day) and only `CrawlMatch` and `CrawlSegment` keep growing:
+    about 450 bytes per crawled match, so about 9 MB a day at 20,000 matches a
+    day and about 25 MB a day at 55,000. Without the pruner the frontier added
+    about 2.4 to 2.9 KB per match (beta measured 2.9 KB in total), about 50 to
+    60 MB a day at 20,000. Measured on a generated 30-day run against local
+    PostgreSQL (`CrawlFrontier` 55 MB against 1.35 GB, 538 against 2,700 bytes
+    per crawled match in total after the month).
 - **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
   retries and no payload capture; every call is the `crawl` priority class, so
   the budget ledger stops it at a quarter of each window. A 429 ends the tick.
