@@ -2794,6 +2794,19 @@ stored per UTC day.
     a build, rune, boots, keystone, spell, game-length or item entry 20, a
     matchup 30. A spell pair inside a matchup follows the matchup floor (30)
     and is listed only under a matchup that is itself listed.
+  - **Lane rates (partials v3).** `lane` and `lane_matchup` partials
+    (`report-lake/crawl/meta-partials-lane.ts`) count the games with a 15:00
+    checkpoint in `timeline_checkpoints_crawl` and, in `wins`, the games the
+    champion had strictly more gold than its same-role opponent: the rule of
+    the app's `buildRoleMatchups`. A game without a checkpoint (under 15
+    minutes, timeline not sampled, crawled before checkpoints existed) is a
+    game in every other figure and absent from the lane figure. A slice's
+    `lane` follows the entry floor (20) and a matchup opponent's `lane` the
+    matchup floor (30), and each carries its own game count, the ahead count,
+    the Wilson interval and its share of the slice's or matchup's games. Lane
+    data cannot be backfilled, so the manifest's `lane` names the first and
+    last ingest day that has any; the retained window is longer until it
+    rolls past the day checkpoints began.
     The `meta/v1` schemas gained optional, additive fields, so files written
     before them still parse: per slice `durations`, `boots`, `keystones`,
     `singleSpells` and `itemsAfterCore`, per matchup opponent `spells`. Each
@@ -2803,7 +2816,7 @@ stored per UTC day.
     and the boots; a slice with no build path above the floor serves none. Tier grades use the win-rate
     interval's lower bound, and every slice states its patch, queue, bracket
     and sample.
-  - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`
+  - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:id,matchups/:a/:b}`
     (`http/meta-routes.ts`) and the Explore tools `lookup_champion_meta` and
     `list_champion_tiers` read the serving JSON of `CURRENT` through
     `meta/meta-reader.ts`, never the lake. The API is public and read-only,

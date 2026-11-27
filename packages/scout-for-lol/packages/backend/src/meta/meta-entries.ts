@@ -55,6 +55,16 @@ function counted(games: number, wins: number, denominator: number) {
   };
 }
 
+/** A lane row: `wins` holds the games ahead at 15:00 (`meta-partials-lane.ts`). */
+function laneFigure(entry: RollupRow, denominator: number) {
+  return {
+    games: entry.games,
+    ahead: entry.wins,
+    aheadRate: wilsonInterval(entry.wins, entry.games),
+    share: wilsonInterval(entry.games, Math.max(denominator, entry.games)),
+  };
+}
+
 function byGamesThenKey<T extends { games: number }>(
   entries: readonly (readonly [string, T])[],
 ): T[] {
@@ -144,6 +154,7 @@ export type SliceEntries = Pick<
   | "keystones"
   | "singleSpells"
   | "itemsAfterCore"
+  | "lane"
 >;
 
 const BOOTS = new Set(BOOTS_ITEM_IDS);
@@ -201,8 +212,32 @@ export function matchupSpellsOf(
   );
 }
 
+/** The lane figure of each listed opponent of a matchup slice, keyed by opponent id. */
+export function matchupLanesOf(
+  rows: SliceRows,
+): Map<string, NonNullable<MatchupSlice["opponents"][number]["lane"]>> {
+  const matchupGames = new Map(
+    (rows.get("matchup") ?? []).map((entry) => [entry.key1, entry.games]),
+  );
+  const lanes = new Map<
+    string,
+    NonNullable<MatchupSlice["opponents"][number]["lane"]>
+  >();
+  for (const entry of rows.get("lane_matchup") ?? []) {
+    const games = matchupGames.get(entry.key1);
+    // A lane figure is only listed under a matchup that is itself listed.
+    if (games === undefined) continue;
+    lanes.set(entry.key1, {
+      ...laneFigure(entry, games),
+      denominator: "matchup_games",
+    });
+  }
+  return lanes;
+}
+
 export function entriesOf(rows: SliceRows, sliceGames: number): SliceEntries {
   const of = (kind: MetaPartialKind) => rows.get(kind) ?? [];
+  const [lane] = of("lane");
   const allCoreItems = byGamesThenKey(
     of("item").map((entry) => [
       entry.key1,
@@ -221,6 +256,14 @@ export function entriesOf(rows: SliceRows, sliceGames: number): SliceEntries {
   ).at(0);
   return {
     coreItems: allCoreItems.slice(0, CORE_ITEM_LIMIT),
+    ...(lane === undefined
+      ? {}
+      : {
+          lane: {
+            ...laneFigure(lane, sliceGames),
+            denominator: "slice_games" as const,
+          },
+        }),
     itemsAfterCore: itemsAfterCoreOf(
       allCoreItems,
       topPath === undefined ? undefined : ids(topPath.key),
