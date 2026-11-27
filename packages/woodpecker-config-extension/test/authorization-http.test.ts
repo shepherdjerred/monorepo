@@ -404,9 +404,14 @@ describe("signed workflow routing", () => {
     expect(
       ready.configs.some((entry) => entry.name.includes("tofu-validate")),
     ).toBe(true);
-    expect(
-      ready.configs.some((entry) => entry.name.includes("playwright-e2e")),
-    ).toBe(true);
+    // The browser and Paper lanes left pull requests: even with unknown
+    // changed paths (everything selected) neither is emitted.
+    for (const lane of ["playwright-e2e", "paper-smoke"]) {
+      expect(
+        ready.configs.some((entry) => entry.name.includes(lane)),
+        lane,
+      ).toBe(false);
+    }
     const completion = ready.configs.find((entry) =>
       entry.name.endsWith("/ci-complete.yaml"),
     );
@@ -570,14 +575,26 @@ describe("signed extended verification routing", () => {
     expect(response.status).toBe(400);
     expect(imageFetcher).not.toHaveBeenCalled();
   });
-  test("a request for the tip emits one verify-extended workflow in the PR pool at draft priority", async () => {
+  test("a request for the tip emits verify-extended and the Paper smoke in the PR pool at draft priority", async () => {
     const { app, base, changedBase, cancelSupersededPr } = enabled();
     const response = await app.request(await request(manual));
     expect(response.status).toBe(200);
     const body = ConfigResponseSchema.parse(await response.json());
     expect(body.configs.map((config) => config.name)).toEqual([
       ".woodpecker/verify-extended.yaml",
+      ".woodpecker/paper-smoke-nightly.yaml",
     ]);
+    const paper: unknown = parse(body.configs[1]?.data ?? "");
+    expect(paper).toMatchObject({
+      labels: {
+        "ci-pool": "pr",
+        "kueue.x-k8s.io/priority-class": "ci-draft",
+      },
+      concurrency: { limit: 1, group: "paper-smoke-nightly" },
+    });
+    expect(paper).not.toHaveProperty("depends_on");
+    expect(body.configs[1]?.data).not.toContain("TURBO_TOKEN");
+    expect(body.configs[1]?.data).not.toContain("SEAWEEDFS_HANDOFF");
     const workflow = z
       .object({
         labels: z.record(z.string(), z.string()),
@@ -652,7 +669,10 @@ describe("signed extended verification routing", () => {
     const body = ConfigResponseSchema.parse(await response.json());
     expect(body.configs.map((config) => config.name)).toEqual([
       ".woodpecker/verify-extended.yaml",
+      ".woodpecker/paper-smoke-nightly.yaml",
     ]);
+    expect(body.configs[1]?.data).toContain(verified);
+    expect(body.configs[1]?.data).not.toContain(fixture.pipeline.commit);
     expect(body.configs[0]?.data).toContain("checkout.sh");
     expect(body.configs[0]?.data).toContain(verified);
     expect(body.configs[0]?.data).toContain("woodpecker-source-main");

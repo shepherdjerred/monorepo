@@ -4,8 +4,15 @@
  * pipeline carrying that prefix as busy, and the nightly is not maintenance.
  */
 export const CI_EXTENDED_VERIFY_PREFIX = "ci-extended-verify/";
-/** The one workflow the config extension emits for an accepted request. */
+/** The extended test tier workflow the config extension emits for an accepted request. */
 export const CI_EXTENDED_VERIFY_WORKFLOW = "verify-extended";
+/** The nightly Paper smoke: the request's second workflow, off pull requests. */
+export const CI_EXTENDED_PAPER_SMOKE_WORKFLOW = "paper-smoke-nightly";
+/** Every workflow an accepted request must run, and pass, to be green. */
+export const CI_EXTENDED_REQUIRED_WORKFLOWS: readonly string[] = [
+  CI_EXTENDED_VERIFY_WORKFLOW,
+  CI_EXTENDED_PAPER_SMOKE_WORKFLOW,
+];
 /** Emitted instead when the requested source is no longer the verified main. */
 export const CI_EXTENDED_SUPERSEDED_WORKFLOW = "extended-superseded";
 
@@ -79,15 +86,20 @@ export function supersededReceipt(receipt: ExtendedVerifyReceipt): boolean {
   );
 }
 
-/** A green receipt ran the verification workflow; a skipped one is not green. */
+/** Required workflows the receipt does not list at all. */
+function missingWorkflows(receipt: ExtendedVerifyReceipt): string[] {
+  const names = new Set(receipt.workflows.map((workflow) => workflow.name));
+  return CI_EXTENDED_REQUIRED_WORKFLOWS.filter((name) => !names.has(name));
+}
+
+/**
+ * A green receipt ran every required workflow (verification and the Paper
+ * smoke) to success; a skipped or missing one is not green.
+ */
 export function extendedVerifySucceeded(receipt: ExtendedVerifyReceipt) {
   return (
     receipt.status === "success" &&
-    receipt.workflows.some(
-      (workflow) =>
-        workflow.name === CI_EXTENDED_VERIFY_WORKFLOW &&
-        workflow.state === "success",
-    ) &&
+    missingWorkflows(receipt).length === 0 &&
     receipt.workflows.every((workflow) => workflow.state === "success")
   );
 }
@@ -100,14 +112,14 @@ export function extendedVerifyFailureMessage(
   const failed = receipt.workflows
     .filter((workflow) => workflow.state !== "success")
     .map((workflow) => `${workflow.name}=${workflow.state}`);
-  const ran = receipt.workflows.some(
-    (workflow) => workflow.name === CI_EXTENDED_VERIFY_WORKFLOW,
+  const missing = missingWorkflows(receipt).map(
+    (name) => `no ${name} workflow ran`,
   );
-  const detail = ran
-    ? failed.length === 0
+  const problems = [...failed, ...missing];
+  const detail =
+    problems.length === 0
       ? "no workflow reported failure"
-      : failed.join(", ")
-    : `no ${CI_EXTENDED_VERIFY_WORKFLOW} workflow ran`;
+      : problems.join(", ");
   const commit = (source ?? receipt.commit).slice(0, 12);
   return `Extended verify pipeline ${receipt.number.toString()} ended ${receipt.status} at ${commit} (${detail}): ${receipt.url}`;
 }

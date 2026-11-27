@@ -149,7 +149,10 @@ describe("extended verification step", () => {
   if (step === undefined) throw new Error("Missing extended step");
 
   test("is one verify-shaped workflow running the extended tier with diagnostics", () => {
-    expect(steps).toHaveLength(1);
+    expect(steps.map((candidate) => candidate.key)).toEqual([
+      EXTENDED_STEP_KEY,
+      "paper-smoke-nightly",
+    ]);
     expect(step.key).toBe(EXTENDED_STEP_KEY);
     expect(step.image).toBe(TEST_IMAGES.base);
     expect(step.dependsOn).toEqual([]);
@@ -303,9 +306,41 @@ describe("extended verification step", () => {
     });
   });
 
-  test("is not part of the selected graph", () => {
-    expect(testPipelineSteps().map((candidate) => candidate.key)).not.toContain(
-      EXTENDED_STEP_KEY,
+  test("adds the Paper smoke as an independent second workflow without verify's identities", () => {
+    const paper = steps[1];
+    if (paper === undefined) throw new Error("Missing Paper smoke step");
+    expect(paper.dependsOn).toEqual([]);
+    expect(paper.concurrency).toEqual({
+      limit: 1,
+      group: "paper-smoke-nightly",
+    });
+    expect(paper.events).toBeUndefined();
+    expect(paper.changed).toBeUndefined();
+    expect(paper.services?.map((service) => service.name)).toEqual([
+      "paper",
+      "storm-brain",
+    ]);
+    // Distinct concurrency groups: neither workflow queues behind the other.
+    expect(paper.concurrency?.group).not.toBe(step.concurrency?.group);
+    // It holds only the checkout download grant, none of verify's cache or
+    // handoff write identities.
+    expect(paper.secrets?.map((grant) => grant.env)).toEqual([
+      "GITHUB_DOWNLOAD_TOKEN",
+    ]);
+    expect(Object.keys(paper.environment ?? {})).not.toContain("TURBO_TOKEN");
+    const claims = paper.volumes?.map((volume) => volume.claim) ?? [];
+    expect(claims).toContain(BUN_CACHE.claim);
+    const emitted: unknown = parse(
+      emitWorkflow(paper, { ...TEST_IDENTITY, event: "manual" }),
     );
+    expect(emitted).toMatchObject({
+      concurrency: { limit: 1, group: "paper-smoke-nightly" },
+    });
+  });
+
+  test("is not part of the selected graph", () => {
+    const selected = testPipelineSteps().map((candidate) => candidate.key);
+    expect(selected).not.toContain(EXTENDED_STEP_KEY);
+    expect(selected).not.toContain("paper-smoke-nightly");
   });
 });

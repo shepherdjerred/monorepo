@@ -4,6 +4,7 @@
   "scripts": {
     "verify": "bun scripts/verify.ts",
     "verify:extended": "bun scripts/verify-extended.ts",
+    "e2e:affected": "bun scripts/e2e-affected.ts",
     "check-flag-inventory": "bun scripts/checks/check-flag-inventory.ts",
     "pr:fleet": "bunx turbo run build --filter=@shepherdjerred/pr-fleet-web && bun run --cwd packages/pr-fleet-controller start",
     "pr:fleet:inspect": "bun run --cwd packages/pr-fleet-controller inspect",

@@ -19,6 +19,7 @@ const receipt = (
   status: string,
   workflows: ExtendedVerifyReceipt["workflows"] = [
     { name: "verify-extended", state: status },
+    { name: "paper-smoke-nightly", state: status },
   ],
 ): ExtendedVerifyReceipt => ({
   number: 77,
@@ -81,7 +82,7 @@ const scenarios: Scenario[] = [
     submissions: [{ kind: "submitted", receipt: receipt("running") }],
     polls: [receipt("failure")],
     expected: {
-      failure: `ended failure at ${"a".repeat(12)} (verify-extended=failure): ${url}`,
+      failure: `ended failure at ${"a".repeat(12)} (verify-extended=failure, paper-smoke-nightly=failure): ${url}`,
     },
     submitted: 1,
     described: 1,

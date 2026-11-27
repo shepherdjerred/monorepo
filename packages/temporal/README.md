@@ -787,8 +787,11 @@ one-hour catchup window and a four-hour execution timeout. The Workflow runs on
 `newestVerifiedMaintenanceSource` the coordinator uses), then POSTs one manual
 `main` pipeline with message `ci-extended-verify/<request-uuid>` and variables
 `CI_EXTENDED_REQUEST` and `CI_EXTENDED_SOURCE`. The config extension emits the
-`verify-extended` workflow for that request, or an `extended-superseded`
-no-work step when main's verified head moved first. The message is not a
+`verify-extended` and `paper-smoke-nightly` workflows for that request, or an
+`extended-superseded` no-work step when main's verified head moved first. The
+Workflow reads only the pipeline's workflow states and requires both
+`verify-extended` and `paper-smoke-nightly` to be present and green, so a red or
+missing `paper-smoke-nightly` fails the night like a red `verify-extended`. The message is not a
 `ci-maintenance/` message, so maintenance admission ignores the nightly run.
 
 The write has one attempt. A lost response is read back by request ID after a

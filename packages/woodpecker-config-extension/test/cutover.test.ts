@@ -165,43 +165,60 @@ describe("complete PR status", () => {
     "packages/delivery/src/client/app.tsx",
     "packages/delivery/e2e/delivery.spec.ts",
     "packages/delivery/prisma/schema.prisma",
-  ])("requires browser acceptance for Delivery-only change %s", (path) => {
-    const selected = selectSteps(testPipelineSteps(), {
-      event: "pull_request",
-      branch: "feature/delivery",
-      defaultBranch: "main",
-      changedFiles: [path],
-    });
-    expect(selected.some((step) => step.key === "playwright-e2e")).toBe(true);
-    expect(completionStep(selected, TEST_IMAGES.base).dependsOn).toContain(
-      "playwright-e2e",
-    );
-  });
+  ])(
+    "does not require browser acceptance of Delivery-only change %s on a PR",
+    (path) => {
+      const selected = selectSteps(testPipelineSteps(), {
+        event: "pull_request",
+        branch: "feature/delivery",
+        defaultBranch: "main",
+        changedFiles: [path],
+      });
+      expect(selected.some((step) => step.key === "playwright-e2e")).toBe(
+        false,
+      );
+      expect(
+        completionStep(selected, TEST_IMAGES.base).dependsOn,
+      ).not.toContain("playwright-e2e");
+    },
+  );
 
-  test("browser work runs independently but completion and sites wait for both gates", () => {
+  test("browser work is a main-only gate that sites waits on, and a PR gate never lists it", () => {
     const steps = testPipelineSteps();
-    const selected = selectSteps(steps, {
+    const changedFiles = ["packages/sjer.red/src/pages/index.astro"];
+    const pr = selectSteps(steps, {
+      event: "pull_request",
+      branch: "feature/sjer",
+      defaultBranch: "main",
+      changedFiles,
+    });
+    expect(pr.some((step) => step.key === "playwright-e2e")).toBe(false);
+    const prComplete = completionStep(pr, TEST_IMAGES.base);
+    expect(prComplete.dependsOn).not.toContain("playwright-e2e");
+    expect(
+      JSON.parse(prComplete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
+    ).not.toContain("ci/woodpecker/pr/playwright-e2e");
+
+    // A pull request whose target branch is main reports branch "main"; the
+    // lane is still not selected because the event is not a push.
+    const prToMain = selectSteps(steps, {
       event: "pull_request",
       branch: "main",
       defaultBranch: "main",
-      changedFiles: ["packages/sjer.red/src/pages/index.astro"],
+      changedFiles,
     });
-    const browser = selected.find((step) => step.key === "playwright-e2e");
+    expect(prToMain.some((step) => step.key === "playwright-e2e")).toBe(false);
+
+    const main = selectSteps(steps, {
+      event: "push",
+      branch: "main",
+      defaultBranch: "main",
+      changedFiles,
+    });
+    const browser = main.find((step) => step.key === "playwright-e2e");
     expect(browser).toBeDefined();
     expect(browser?.dependsOn).toBeUndefined();
-    const complete = completionStep(selected, TEST_IMAGES.base);
-    expect(complete.dependsOn).toEqual(
-      expect.arrayContaining(["verify", "playwright-e2e"]),
-    );
-    expect(
-      JSON.parse(complete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
-    ).toEqual(
-      expect.arrayContaining([
-        "ci/woodpecker/pr/verify",
-        "ci/woodpecker/pr/playwright-e2e",
-      ]),
-    );
-    expect(steps.find((step) => step.key === "sites")?.dependsOn).toEqual(
+    expect(main.find((step) => step.key === "sites")?.dependsOn).toEqual(
       expect.arrayContaining(["verify", "playwright-e2e"]),
     );
   });

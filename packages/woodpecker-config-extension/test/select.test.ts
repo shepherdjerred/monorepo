@@ -10,6 +10,10 @@ import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { HANDOFF_KEYS, VALIDATED_STACKS } from "#src/pipeline/lanes/tofu.ts";
+import {
+  PAPER_SMOKE_STEP_KEY,
+  stormE2eSteps,
+} from "#src/pipeline/lanes/storm-e2e.ts";
 import { TEST_IDENTITY, TEST_IMAGES as IMAGES } from "./identity.ts";
 
 function step(key: string, overrides: Partial<CiStep> = {}): CiStep {
@@ -372,25 +376,32 @@ describe("ported lanes", () => {
 });
 
 describe("Paper smoke lane", () => {
-  test("The Storm source and E2E harness select the Paper smoke lane", () => {
-    expect(
-      keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
-    ).toContain("paper-smoke-pr");
-    expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
-      "paper-smoke-pr",
-    );
-    expect(
-      keysFor(["packages/the-storm/tests/full/modules.test.ts"]),
-    ).toContain("paper-smoke-pr");
-    expect(
-      keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
-    ).not.toContain("paper-smoke-pr");
+  test("pull requests never select the Paper smoke, whatever they change", () => {
+    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+    expect(steps.map((item) => item.key)).not.toContain(PAPER_SMOKE_STEP_KEY);
+    expect(steps.map((item) => item.key)).not.toContain("paper-smoke-pr");
+    for (const path of [
+      "packages/the-storm/plugin/core/src/main/java/Example.java",
+      "packages/the-storm/tests/e2e/boot.test.ts",
+      "packages/the-storm/tests/full/modules.test.ts",
+    ]) {
+      for (const branch of ["feature", "main"]) {
+        expect(keysFor([path], branch).join(","), path).not.toContain("paper-");
+      }
+    }
+  });
+
+  test("Paper smoke is a nightly-only step with no PR event or path guard", () => {
+    const [smoke, ...rest] = stormE2eSteps(IMAGES);
+    expect(rest).toEqual([]);
+    expect(smoke?.key).toBe("paper-smoke-nightly");
+    expect(smoke?.events).toBeUndefined();
+    expect(smoke?.changed).toBeUndefined();
   });
 
   test("Paper smoke loads shared plugins and copies config", () => {
-    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const lane = "paper-smoke-pr";
-    const candidate = steps.find((item) => item.key === lane);
+    const lane = PAPER_SMOKE_STEP_KEY;
+    const candidate = stormE2eSteps(IMAGES).find((item) => item.key === lane);
     if (candidate === undefined) throw new Error(`missing lane ${lane}`);
     const paper = candidate.services?.find(
       (service) => service.name === "paper",
@@ -425,26 +436,14 @@ describe("Paper smoke lane", () => {
   });
 
   test("Paper CI has one bounded smoke lane with a plugin-only build", () => {
-    const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const paperSteps = steps.filter((candidate) =>
-      candidate.key.startsWith("paper-"),
-    );
-    expect(paperSteps.map((candidate) => candidate.key)).toEqual([
-      "paper-smoke-pr",
+    const steps = stormE2eSteps(IMAGES);
+    expect(steps.map((candidate) => candidate.key)).toEqual([
+      "paper-smoke-nightly",
     ]);
-    expect(
-      steps
-        .filter((candidate) =>
-          candidate.commands.some((command) =>
-            command.includes("MISE_TOOLCHAIN_SCOPE=minecraft"),
-          ),
-        )
-        .map((candidate) => candidate.key),
-    ).toEqual(["paper-smoke-pr"]);
-    const paperStep = paperSteps[0];
+    const paperStep = steps[0];
     expect(paperStep?.concurrency).toEqual({
-      limit: 6,
-      group: "paper-smoke-pr",
+      limit: 1,
+      group: "paper-smoke-nightly",
     });
     expect(paperStep?.timeoutMinutes).toBe(10);
     // The scripted clients outgrow the medium tier's memory request.
@@ -467,20 +466,14 @@ describe("Paper smoke lane", () => {
   });
 
   test("Paper smoke uses the pinned Paper image and service-host addressing", () => {
-    const paperStep = buildPipelineSteps({
-      images: IMAGES,
-      changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-smoke-pr");
+    const paperStep = stormE2eSteps(IMAGES)[0];
     expect(paperStep?.services?.[0]?.image).toMatch(/@sha256:[a-f0-9]{64}$/u);
     expect(paperStep?.environment?.["STORM_E2E_HOST"]).toBe("paper");
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
   });
 
   test("Paper loads the shared plugin tree and copies Bukkit configuration", () => {
-    const paperStep = buildPipelineSteps({
-      images: IMAGES,
-      changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-smoke-pr");
+    const paperStep = stormE2eSteps(IMAGES)[0];
     const paperService = paperStep?.services?.find(
       (service) => service.name === "paper",
     );
@@ -497,10 +490,7 @@ describe("Paper smoke lane", () => {
   });
 
   test("Paper smoke connects its fake brain through the service network", () => {
-    const paperStep = buildPipelineSteps({
-      images: IMAGES,
-      changedBase: "x",
-    }).find((candidate) => candidate.key === "paper-smoke-pr");
+    const paperStep = stormE2eSteps(IMAGES)[0];
     expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
       "storm-brain",
     );
@@ -672,10 +662,51 @@ describe("selected lane contracts", () => {
     expect(playwright?.environment?.["CI_PLAYWRIGHT_IMAGE"]).toBe(
       IMAGES.playwright,
     );
-    // Removing serialization must not remove verification from the PR graph.
-    expect(keysFor(["packages/sjer.red/src/pages/index.astro"])).toEqual(
-      expect.arrayContaining(["verify", "playwright-e2e"]),
+    // Browser suites run on the default branch only; agents run the affected
+    // projects locally (`bun run e2e:affected`) before marking a PR ready.
+    expect(playwright?.defaultBranchOnly).toBe(true);
+    const pr = keysFor(["packages/sjer.red/src/pages/index.astro"]);
+    expect(pr).toContain("verify");
+    expect(pr).not.toContain("playwright-e2e");
+    const main = keysFor(["packages/sjer.red/src/pages/index.astro"], "main");
+    expect(main).toEqual(
+      expect.arrayContaining(["verify", "playwright-e2e", "sites"]),
     );
+    // sites ships the bundles playwright-e2e publishes.
+    expect(steps.find((s) => s.key === "sites")?.dependsOn).toContain(
+      "playwright-e2e",
+    );
+  });
+
+  test("a ci-playwright promotion PR still runs the browser lane before it auto-merges", () => {
+    // The files ciImagePromotionFiles("ci-playwright") writes
+    // (ci/scripts/images/update-ci-image-pin-core.ts).
+    const promotion = [
+      "ci/ci-playwright/DIGEST",
+      "ci/ci-playwright/STATE.json",
+      "ci/ci-playwright/PACKAGE_VERSION",
+      "packages/sjer.red/package.json",
+      "packages/alert-dashboard/package.json",
+      "bun.lock",
+    ];
+    expect(keysFor(promotion)).toContain("playwright-e2e");
+    // The digest and state files alone are enough: every promotion rewrites them.
+    expect(keysFor(["ci/ci-playwright/DIGEST"])).toContain("playwright-e2e");
+    // Main selects it as before.
+    expect(keysFor(promotion, "main")).toContain("playwright-e2e");
+  });
+
+  test("an ordinary lockfile or root manifest PR does not bring the browser lane back", () => {
+    for (const files of [
+      ["bun.lock"],
+      ["package.json"],
+      ["bun.lock", "package.json", "packages/sjer.red/package.json"],
+      ["ci/ci-image/DIGEST"],
+    ])
+      expect(keysFor(files), files.join(",")).not.toContain("playwright-e2e");
+    // An unknown changed-file list fails open for ordinary lanes, never for
+    // the exception.
+    expect(keysFor([])).not.toContain("playwright-e2e");
   });
 
   test("tofu validate lanes carry no provider credentials", () => {
@@ -704,22 +735,23 @@ describe("selected lane contracts", () => {
   });
 });
 
-test("a shared checkout selector change still selects Playwright", () => {
+test("a shared checkout selector change selects Playwright on main only", () => {
   const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
   for (const path of [
     "ci/scripts/migration-core.ts",
     "ci/scripts/selectors/ci-changed.ts",
     "ci/scripts/selectors/ensure-ancestor.ts",
   ]) {
-    const selected = selectSteps(steps, {
-      event: "pull_request",
-      branch: "feature",
-      defaultBranch: "main",
-      changedFiles: [path],
-    });
-    expect(
-      selected.map((item) => item.key),
-      path,
-    ).toContain("playwright-e2e");
+    const select = (event: string, branch: string) =>
+      selectSteps(steps, {
+        event,
+        branch,
+        defaultBranch: "main",
+        changedFiles: [path],
+      }).map((item) => item.key);
+    expect(select("push", "main"), path).toContain("playwright-e2e");
+    expect(select("pull_request", "feature"), path).not.toContain(
+      "playwright-e2e",
+    );
   }
 });

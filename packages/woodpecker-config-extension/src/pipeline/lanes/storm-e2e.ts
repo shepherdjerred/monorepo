@@ -1,7 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, SERVICE_TIER } from "#src/pipeline/tiers.ts";
-import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 const PAPER_SERVER_IMAGE =
@@ -68,7 +67,14 @@ function paperStartCommand(dataDir: string, pluginDir: string): string {
   ].join("; ");
 }
 
-/** Light Paper smoke checks; extended Minecraft acceptance is committer-run. */
+export const PAPER_SMOKE_STEP_KEY = "paper-smoke-nightly";
+
+/**
+ * Light Paper smoke check. It is not part of the pull-request graph: the
+ * nightly extended pipeline (`extended.ts`) runs it as a second workflow on
+ * the newest verified main commit, and committers run `test:smoke` locally.
+ * Extended Minecraft acceptance is committer-run.
+ */
 export function stormE2eSteps(images: CiImages): CiStep[] {
   return [stormSmokeStep(images)];
 }
@@ -78,7 +84,7 @@ function stormSmokeStep(images: CiImages): CiStep {
   const pluginDir = `${workspace}/plugins`;
   const dataDir = `${workspace}/data`;
   return {
-    key: "paper-smoke-pr",
+    key: PAPER_SMOKE_STEP_KEY,
     label: "Paper 26.3 + The Storm smoke",
     image: images.base,
     commands: [
@@ -106,8 +112,8 @@ function stormSmokeStep(images: CiImages): CiStep {
     },
     timeoutMinutes: 10,
     // The Paper and brain services hold admission quota before their test
-    // step starts. Keep their aggregate bounded across all agents and PRs.
-    concurrency: { limit: 6, group: "paper-smoke-pr" },
+    // step starts. One nightly request runs at a time.
+    concurrency: { limit: 1, group: PAPER_SMOKE_STEP_KEY },
     resources: STORM_SMOKE_TIER,
     secrets: [GITHUB_DOWNLOAD],
     services: [
@@ -160,27 +166,5 @@ function stormSmokeStep(images: CiImages): CiStep {
         resources: SERVICE_TIER,
       },
     ],
-    changed: {
-      include: [
-        ...GLOBAL_SELECTOR_INPUTS,
-        "bun.lock",
-        "bunfig.toml",
-        "package.json",
-        ".mise.toml",
-        "mise.lock",
-        "patches/**",
-        "turbo.json",
-        "ci/scripts/bun-install.sh",
-        "ci/scripts/toolchain.sh",
-        "ci/scripts/migration-core.ts",
-        "ci/scripts/selectors/ci-changed.ts",
-        "scripts/ci-test-manifest.json",
-        "scripts/ci-test-manifest.schema.json",
-        "packages/the-storm/**",
-        "packages/mc-harness/**",
-        "packages/eslint-config/**",
-      ],
-    },
-    events: ["pull_request"],
   };
 }

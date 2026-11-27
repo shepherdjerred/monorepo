@@ -17,11 +17,13 @@ layout, layering table and commands.
 - Parse config, content and player input once, at the adapter, into records
   with `StrictYaml`. No defaults or fallbacks for missing or unknown values.
 - The plugin never writes files the repository owns (config and content YAML).
-- CI runs unit tests and the explicit `test:smoke` selection only. Keep the
-  smoke selection to quick startup, plugin loading and client interactions;
-  extended gameplay, all-module, load and native-client acceptance belongs to
-  the committer outside CI. Run the applicable local suites and record results
-  (see README.md). Paper suites stay in `excludedSuites`, outside both test
+- Pull-request CI runs unit tests only. The explicit `test:smoke` selection
+  runs nightly on main (`paper-smoke-nightly`) and the committer runs it
+  locally after a change that could affect it. Keep the smoke selection to
+  quick startup, plugin loading and client interactions; extended gameplay,
+  all-module, load and native-client acceptance belongs to the committer
+  outside CI. Run the applicable local suites and record results (see
+  README.md). Paper suites stay in `excludedSuites`, outside both test
   tiers of the repository-wide rule in the root `AGENTS.md`.
 - Tag tests that play whole matches or long scenarios `@Tag("simulation")`.
   PR `test` excludes the tag; `:rwfbots:simulationTest` runs in the `extended`
