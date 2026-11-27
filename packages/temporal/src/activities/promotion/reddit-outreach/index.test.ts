@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
 import { PromotionTaskJournal } from "#activities/promotion/publication/task.ts";
 import type { PromotionTaskResult } from "#activities/promotion/publication/task-contract.ts";
@@ -8,8 +8,12 @@ import {
   assertFreshRedditRequest,
 } from "./index.ts";
 import {
+  claimRedditReply,
+  finishRedditReply,
   readRedditReplyRecord,
+  readRedditReplyReservations,
   reserveRedditReplyAllowance,
+  type RedditReplyRecord,
 } from "./ledger.ts";
 import { RedditAccountBusy, withRedditPromotionAccount } from "./ownership.ts";
 
@@ -113,6 +117,141 @@ function harness(uncertain = false) {
   };
   return { input, store, runs: () => runs };
 }
+
+async function seedPriorReply(
+  store: ReturnType<typeof memoryPromotionStore>,
+  timestamp: string,
+  options: {
+    subreddit?: string;
+    status?: RedditReplyRecord["status"];
+    release?: boolean;
+  } = {},
+) {
+  const {
+    subreddit = "minecraftserver",
+    status = "verified",
+    release = false,
+  } = options;
+  const postId = "prior";
+  const occurrenceId = "earlier/reply/prior";
+  const reservedAt = new Date(timestamp);
+  const url = `https://www.reddit.com/r/${subreddit}/comments/${postId}/`;
+  const releaseAllowance = await reserveRedditReplyAllowance(
+    store,
+    postId,
+    10,
+    reservedAt,
+  );
+  if (releaseAllowance === null)
+    throw new Error("Failed to reserve earlier reply");
+  expect(
+    await claimRedditReply(store, occurrenceId, reservedAt, {
+      post: { ...post, id: postId, subreddit, url },
+      replyText: reply.replace(" :) ", " :)\n\n"),
+      relevanceReason: "Explicitly seeks a small survival server",
+    }),
+  ).toBe(true);
+  if (status !== "claimed")
+    await finishRedditReply(store, {
+      postId,
+      occurrenceId,
+      status,
+      completedAt: reservedAt.toISOString(),
+      receiptUrl: status === "verified" ? `${url}comment/earlier/` : null,
+      summary: "Earlier reply attempt",
+    });
+  if (release) await releaseAllowance();
+}
+
+describe("Reddit reply repetition", () => {
+  it.each(["verified", "claimed", "uncertain", "blocked"] as const)(
+    "rejects repeating a reserved %s reply from the prior Pacific date before opening Reddit",
+    async (status) => {
+      const test = harness();
+      await seedPriorReply(test.store, "2026-11-15T07:45:00Z", { status });
+      const validate = vi.fn(() => Promise.resolve(true));
+      const inspect = vi.fn(test.input.inspect);
+      const result = await executeRedditOutreachReply({
+        ...test.input,
+        validate,
+        inspect,
+      });
+      expect(result).toMatchObject({
+        status: "duplicate",
+        summary: expect.stringContaining(
+          "same outreach reply in the last 24 hours",
+        ),
+      });
+      expect(validate).not.toHaveBeenCalled();
+      expect(inspect).not.toHaveBeenCalled();
+      expect(test.runs()).toBe(0);
+      expect(await readRedditReplyRecord(test.store, post.id)).toBeUndefined();
+      expect(
+        await readRedditReplyReservations(test.store, "2026-11-15"),
+      ).toEqual([]);
+    },
+  );
+
+  it("checks the third Pacific date when the last 24 hours span spring-forward", async () => {
+    const test = harness();
+    await seedPriorReply(test.store, "2026-03-08T07:50:00Z");
+    const springPost = { ...post, createdAt: "2026-03-09T07:00:00Z" };
+    expect(
+      await executeRedditOutreachReply({
+        ...test.input,
+        post: springPost,
+        inspect: () => Promise.resolve(springPost),
+        now: () => new Date("2026-03-09T07:15:00Z"),
+      }),
+    ).toMatchObject({ status: "duplicate" });
+    expect(test.runs()).toBe(0);
+  });
+
+  it("keeps a reservation for the new Pacific date when midnight follows the initial reservation", async () => {
+    const test = harness();
+    const put = test.store.put;
+    let clock = new Date("2026-11-16T07:59:59Z");
+    test.store.put = async (key, ...args) => {
+      const written = await put(key, ...args);
+      if (key === "reddit-outreach/daily/2026-11-15.json")
+        clock = new Date("2026-11-16T08:00:00Z");
+      return written;
+    };
+    expect(
+      await executeRedditOutreachReply({ ...test.input, now: () => clock }),
+    ).toMatchObject({ status: "verified" });
+    expect(await readRedditReplyReservations(test.store, "2026-11-16")).toEqual(
+      [post.id],
+    );
+  });
+
+  it("allows the same text in another subreddit", async () => {
+    const test = harness();
+    await seedPriorReply(test.store, "2026-11-15T07:45:00Z", {
+      subreddit: "MinecraftSMPs",
+    });
+    expect(await executeRedditOutreachReply(test.input)).toMatchObject({
+      status: "verified",
+    });
+  });
+
+  it("allows old or proven unsent text to be used again in the same subreddit", async () => {
+    const older = harness();
+    await seedPriorReply(older.store, "2026-11-14T17:59:00Z");
+    expect(await executeRedditOutreachReply(older.input)).toMatchObject({
+      status: "verified",
+    });
+
+    const unsent = harness();
+    await seedPriorReply(unsent.store, "2026-11-15T07:45:00Z", {
+      status: "blocked",
+      release: true,
+    });
+    expect(await executeRedditOutreachReply(unsent.input)).toMatchObject({
+      status: "verified",
+    });
+  });
+});
 
 describe("Reddit reply execution", () => {
   it("publishes once, verifies a comment receipt, and suppresses subsequent sweeps", async () => {

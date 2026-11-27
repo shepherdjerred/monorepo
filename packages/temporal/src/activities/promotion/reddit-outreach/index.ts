@@ -17,6 +17,7 @@ import {
 import {
   claimRedditReply,
   finishRedditReply,
+  hasRecentRedditReply,
   readRedditReplyRecord,
   reserveRedditReplyAllowance,
 } from "./ledger.ts";
@@ -128,6 +129,18 @@ export async function executeRedditOutreachReply(
       input.store,
       input.occurrenceId,
       async () => {
+        if (
+          await hasRecentRedditReply(
+            input.store,
+            post.subreddit,
+            replyText,
+            now(),
+          )
+        )
+          return outcome(
+            "duplicate",
+            "This subreddit received or may have received the same outreach reply in the last 24 hours",
+          );
         if (!(await rulesStillMatch()))
           return outcome(
             "deferred",
@@ -137,11 +150,12 @@ export async function executeRedditOutreachReply(
           post,
           RedditRequestPostSchema.parse(await input.inspect()),
         );
+        const reservedAt = now();
         const releaseAllowance = await reserveRedditReplyAllowance(
           input.store,
           post.id,
           input.settings.maxRepliesPerDay,
-          now(),
+          reservedAt,
         );
         if (releaseAllowance === null)
           return outcome(
@@ -163,7 +177,7 @@ export async function executeRedditOutreachReply(
         }
         const target = redditReplyTarget(post);
         const releases = [releaseAllowance];
-        const reservedDays = new Set([promotionSpendDay(now())]);
+        const reservedDays = new Set([promotionSpendDay(reservedAt)]);
         let state = await updatePromotionState(
           input.store,
           target.id,
@@ -243,13 +257,17 @@ export async function executeRedditOutreachReply(
         const attempt = state.attempts.find(
           (item) => item.occurrenceId === input.occurrenceId,
         );
+        const attemptStatus = attempt?.status ?? "no-action";
         const verified = attempt?.status === "verified";
-        const uncertain = attempt?.status === "uncertain";
+        const uncertain = attemptStatus === "uncertain";
         const receiptUrl = verified ? attempt.receiptUrl : null;
         await finishRedditReply(input.store, {
           postId: post.id,
           occurrenceId: input.occurrenceId,
-          status: verified ? "verified" : uncertain ? "uncertain" : "blocked",
+          status:
+            attemptStatus === "verified" || attemptStatus === "uncertain"
+              ? attemptStatus
+              : "blocked",
           completedAt: now().toISOString(),
           summary,
           receiptUrl,
@@ -262,7 +280,7 @@ export async function executeRedditOutreachReply(
             blockedReason: verified ? null : summary,
           };
         });
-        if (attempt === undefined || attempt.status === "no-action")
+        if (attemptStatus === "no-action")
           for (const release of releases) await release();
         return {
           ...outcome(verified ? "verified" : "blocked", summary),

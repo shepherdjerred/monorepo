@@ -47,14 +47,15 @@ const invite: RedditInviteDraft = {
   ],
   caveats: [],
 };
+const exampleCopy =
+  "hi! our server has crossplay, so your Java and Bedrock friends can play together :)";
 const selection = {
-  greeting: "hi" as const,
+  copy: exampleCopy,
   detail: "Java and Bedrock" as const,
   reason: invite.reason,
   evidence: { requestQuote: "Java and Bedrock", factQuote: CROSSPLAY_FACT },
 };
-const shortReply =
-  "hi! our server supports Java and Bedrock. feel free to try us out :)\nhttps://join.ts-mc.net/";
+const shortReply = `${exampleCopy}\nhttps://join.ts-mc.net/`;
 const usage = {
   tokens: {
     input: 10,
@@ -126,7 +127,7 @@ describe("Reddit invite drafting", () => {
 
   it("permits an honest decline without changing the qualified decision", async () => {
     const decline = {
-      greeting: null,
+      copy: null,
       detail: null,
       reason: "We cannot establish the required hosting location.",
       evidence: null,
@@ -162,8 +163,8 @@ describe("Reddit invite drafting", () => {
       expect(call.system).toContain("no execution tools");
       expect(call.system).toContain("Jerred's voice");
       expect(call.system).toContain("Pick at most one");
-      expect(call.system).toContain("final reply is rendered");
-      expect(call.system).toContain("without describing age in the reply");
+      expect(call.system).toContain("only that detail");
+      expect(call.system).toContain("Do not mention age");
       expect(call.prompt).toContain(input.serverFacts);
       expect(call.prompt).toContain(input.communityRules);
       return { selection, usage };
@@ -192,7 +193,12 @@ describe("Short live Reddit copy", () => {
       factQuote: "It is aimed at adults (18+) and has no hard age cutoff.",
     };
     const outcome = await draftRedditInvite(adult, async () => ({
-      selection: { ...selection, detail: null, evidence },
+      selection: {
+        ...selection,
+        copy: "hi! feel free to try our server :)",
+        detail: null,
+        evidence,
+      },
       usage,
     }));
     expect(outcome.draft).toMatchObject({
@@ -203,7 +209,7 @@ describe("Short live Reddit copy", () => {
     expect(guardRedditInviteDraft(outcome.draft, adult)).toEqual(outcome.draft);
   });
 
-  it("renders only US West when a specific location is requested", async () => {
+  it("accepts US West when a specific location is requested", async () => {
     const west = {
       ...input,
       post: { ...input.post, title: "Looking for a server near Seattle" },
@@ -212,14 +218,14 @@ describe("Short live Reddit copy", () => {
     const outcome = await draftRedditInvite(west, async () => ({
       selection: {
         ...selection,
-        greeting: "hey",
+        copy: "hey! our server is in US West if you want to give it a try :)",
         detail: "US West",
         evidence: { requestQuote: "Seattle", factQuote: US_WEST_FACT },
       },
       usage,
     }));
     expect(outcome.draft.reply).toBe(
-      "hey! our server is hosted in US West. you're welcome to check us out :)\nhttps://join.ts-mc.net/",
+      "hey! our server is in US West if you want to give it a try :)\nhttps://join.ts-mc.net/",
     );
   });
 
@@ -249,13 +255,63 @@ describe("Short live Reddit copy", () => {
     expect(outcome.draft.reply).toBeNull();
   });
 
-  it("rejects extra model-generated reply text instead of rendering it", async () => {
+  it("rejects replies that provide more than one copy field", async () => {
     await expect(
       draftRedditInvite(input, async () => ({
         selection: { ...selection, reply: "Try my amazing server now!" },
         usage,
       })),
     ).rejects.toThrow();
+  });
+
+  it.each([
+    "hey! our server is 18+ and you're welcome to check it out :)",
+    "hi! i run an adults-only server if you want to join",
+    "hi! our server has crossplay. we have towns. we have quests.",
+    `hey! our server supports crossplay. ${"you're welcome to join us ".repeat(5)}`,
+  ])("declines short-invite copy outside its format %s", async (copy) => {
+    const outcome = await draftRedditInvite(input, async () => ({
+      selection: { ...selection, copy },
+      usage,
+    }));
+    expect(outcome.draft.reply).toBeNull();
+  });
+
+  it("uses a period in place of a model-generated em dash", async () => {
+    const outcome = await draftRedditInvite(input, async () => ({
+      selection: {
+        ...selection,
+        copy: "hi! our server supports crossplay—feel free to try us out :)",
+      },
+      usage,
+    }));
+    expect(outcome.draft.reply).toBe(
+      "hi! our server supports crossplay. feel free to try us out :)\nhttps://join.ts-mc.net/",
+    );
+  });
+
+  it.each([
+    "hey, our small community could be a nice place to make Minecraft friends.",
+    "if you're hoping to make friends, ours is a small Minecraft community.",
+  ])("accepts clear affiliation in conversational copy %s", async (copy) => {
+    const social = {
+      ...input,
+      post: { ...input.post, title: "Looking for server to make friends" },
+      serverFacts: REDDIT_OUTREACH_FACTS,
+    };
+    const outcome = await draftRedditInvite(social, async () => ({
+      selection: {
+        ...selection,
+        copy,
+        detail: "small community",
+        evidence: {
+          requestQuote: "make friends",
+          factQuote: "The Storm is a small Minecraft community",
+        },
+      },
+      usage,
+    }));
+    expect(outcome.draft.reply).toBe(`${copy}\nhttps://join.ts-mc.net/`);
   });
 });
 

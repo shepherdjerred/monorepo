@@ -22,6 +22,7 @@ export type RedditReplyRecord = z.infer<typeof RedditReplyRecordSchema>;
 const DailySchema = z.strictObject({
   reservations: z.record(z.string(), z.literal(true)),
 });
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function dailyReplyKey(day: string) {
   return `reddit-outreach/daily/${day}.json`;
@@ -63,6 +64,45 @@ export async function readRedditReplyRecord(
     RedditReplyRecordSchema,
   );
   return record?.value;
+}
+
+function normalizeReplyText(text: string) {
+  return text.replaceAll(/\s+/gu, " ").trim();
+}
+
+/** Check under the Reddit account lock, before reserving a new reply. */
+export async function hasRecentRedditReply(
+  store: PromotionStore,
+  subreddit: string,
+  replyText: string,
+  now: Date,
+): Promise<boolean> {
+  const cutoff = now.getTime() - DAY_MS;
+  // Iterate Pacific calendar date labels in UTC. A 24-hour window across
+  // spring-forward can intersect three Pacific dates.
+  const firstDay = Date.parse(promotionSpendDay(new Date(cutoff)));
+  const lastDay = Date.parse(promotionSpendDay(now));
+  const days: string[] = [];
+  for (let day = firstDay; day <= lastDay; day += DAY_MS)
+    days.push(new Date(day).toISOString().slice(0, 10));
+  const reservations = await Promise.all(
+    days.map((day) => readRedditReplyReservations(store, day)),
+  );
+  // Proven no-send outcomes release their reservation. Retained reservations
+  // still count when the record is claimed, uncertain, or blocked.
+  const records = await Promise.all(
+    [...new Set(reservations.flat())].map((id) =>
+      readRedditReplyRecord(store, id),
+    ),
+  );
+  const community = subreddit.toLowerCase();
+  const content = normalizeReplyText(replyText);
+  return records.some(
+    (record) =>
+      record?.post.subreddit.toLowerCase() === community &&
+      Date.parse(record.completedAt ?? record.claimedAt) > cutoff &&
+      normalizeReplyText(record.replyText) === content,
+  );
 }
 
 /** Conditional creation is global across sweeps, workflow retries and workers. */
