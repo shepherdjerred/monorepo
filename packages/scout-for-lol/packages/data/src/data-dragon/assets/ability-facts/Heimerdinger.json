@@ -108,7 +108,58 @@
         ]
       },
       "resolvedDescription": "Heimerdinger constructs a Turret that attacks nearby enemies. Heimerdinger can have 3 turrets active at once. Turrets slowly build up charge. At max charge, they fire a stronger attack. If Heimerdinger gets too far away, his Turrets will deactivate after 8 seconds. This Ability has 3 charges.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": [
+          {
+            "name": "heimerdingerqspell1",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerqspell2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerqspell3",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Hextech Micro-Rockets",
@@ -173,7 +224,58 @@
         ]
       },
       "resolvedDescription": "Heimerdinger unleashes a barrage of 5 rockets that deal 50/75/100/125/150 (+55% AP) magic damage to the first enemy hit. Additional rocket hits deal reduced damage. Max Damage: 90/135/180/225/270 (+103% AP) magic damage. Nearby Turrets gain 20% charge per rocket that hits a champion.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": 200,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "heimerdingerwattack2",
+            "width": 40,
+            "movement": "AcceleratingMovement",
+            "speed": 750,
+            "minSpeed": 750,
+            "maxSpeed": 3000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerwattack2_ult",
+            "width": 60,
+            "movement": "AcceleratingMovement",
+            "speed": 750,
+            "minSpeed": 750,
+            "maxSpeed": 3000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerwattack2ult",
+            "width": 60,
+            "movement": "AcceleratingMovement",
+            "speed": 750,
+            "minSpeed": 750,
+            "maxSpeed": 3000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "CH-2 Electron Storm Grenade",
@@ -233,7 +335,72 @@
       "resolvedDescription": "Heimerdinger hurls a grenade that deals 60/100/140/180/220 (+60% AP) magic damage in an area and Slows by {{ slowpercent.0*100 }}% for 2 seconds. Enemies in the center are also Stunned for 1.5 seconds. Hitting a champion fully charges nearby Turrets.",
       "unresolved": [
         "slowpercent.0*100"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": 120,
+        "missileSpeed": 2500,
+        "missiles": [
+          {
+            "name": "heimerdingerespell",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerespell_ult",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerespell_ult2",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "heimerdingerespell_ult3",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "UPGRADE!!!",
@@ -307,7 +474,15 @@
         ]
       },
       "resolvedDescription": "Heimerdinger upgrades his next non-ultimate Ability. H-28Q Apex Turret: Place an upgraded Turret for 8 seconds that doesn't count towards Heimerdinger's max turrets, deals 80/100/120 (+35% AP) magic damage per shot and 100/140/180 (+70% AP) magic damage per charged shot. Its attacks deal damage in an area, Slow by 25% for 2 seconds, and it is immune to crowd control. Hextech Rocket Swarm: Fires 4 waves of rockets that each deal 135/180/225 (+45% AP) magic damage. Champions and jungle monsters hit by additional rockets take reduced damage, and minions take increased damage. Max Damage: 503/697.5/892 (+183% AP) magic damage. CH-3X Lightning Grenade: Throws a bouncing grenade that discharges three times, dealing 100/200/300 (+60% AP) magic damage. The Stun and Slow areas are larger. Recast: Cancel this Ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 21,
+        "lineWidth": null,
+        "missileSpeed": 347.8,
+        "missiles": []
+      }
     }
   }
 }

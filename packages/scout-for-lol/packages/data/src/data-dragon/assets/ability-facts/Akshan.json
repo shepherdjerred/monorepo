@@ -39,7 +39,30 @@
         ]
       },
       "resolvedDescription": "Every three hits from Akshan's Attacks and Abilities deals bonus damage and grants him a Shield if the target was a champion. When Akshan Attacks, he fires an additional Attack for reduced damage. If he cancels the additional Attack, he instead gains Move Speed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "akshanpassiveattack",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Avengerang",
@@ -127,7 +150,44 @@
       "resolvedDescription": "Akshan throws a boomerang that deals 45/75/105/135/165 (+70% bonus AD) physical damage, extending the range each time an enemy is hit. Champion hits grant Akshan {{ totalhaste }} Move Speed decaying over 1 second.",
       "unresolved": [
         "totalhaste"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": 60,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "akshanqmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akshanqmissilereturn",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 2400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Going Rogue",
@@ -257,7 +317,15 @@
       "resolvedDescription": "{{ Spell_AkshanW_Tooltip_{{ gamemodeinteger }} }}",
       "unresolved": [
         "Spell_AkshanW_Tooltip_{{ gamemodeinteger"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.5,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Heroic Swing",
@@ -387,7 +455,72 @@
       "resolvedDescription": "First Cast: Akshan fires a grappling hook, attaching to the first terrain hit. Second Cast: Akshan swings around the terrain, repeatedly firing at the nearest enemy for {{ damagetodeal }} physical damage per shot. Third Cast: Akshan dives off the rope, firing a final shot. Colliding with an enemy Champion or terrain ends the swing early. Champion takedowns refresh this Ability's Cooldown.",
       "unresolved": [
         "damagetodeal"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.1,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "akshaneattack",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akshanemissile",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 2500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "TriggerOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akshaneorbitalclockwise",
+            "width": 10,
+            "movement": "CircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "TriggerOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akshaneorbitalcounterclockwise",
+            "width": 10,
+            "movement": "CircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "TriggerOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Comeuppance",
@@ -459,7 +592,45 @@
       "unresolved": [
         "damageperbulletwithcrit",
         "maxdamageperbullet"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "akshanrammo",
+            "width": 40,
+            "movement": "SyncCircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "TriggerOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "akshanrmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

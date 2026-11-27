@@ -95,7 +95,15 @@
       "resolvedDescription": "Passive: Gain a stack (max 1/2/3/4/5) every 15 seconds and when hitting a Bravado Attack. Active: Consume all stacks to restore 25 (+15% AP) (+1% max Health) Health per stack to nearby ally champions ({{ maxstackhealing }} at 1/2/3/4/5 stacks).",
       "unresolved": [
         "maxstackhealing"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 325,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Bastion",
@@ -160,7 +168,29 @@
         ]
       },
       "resolvedDescription": "Passive: Taric gains 6/7/8/9/10% Armor Armor and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains 6/7/8/9/10% Armor Armor and Taric casts all his Abilities from both himself and his linked ally. Active: Taric binds to an ally champion, granting a 7/8/9/10/11% max Health Shield for 2.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 125,
+        "lineWidth": 60,
+        "missileSpeed": 1700,
+        "missiles": [
+          {
+            "name": "taricwallybuffmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Dazzle",
@@ -211,7 +241,15 @@
         ]
       },
       "resolvedDescription": "Taric projects a beam of starlight, bursting after 1 second to deal 90/130/170/210/250 (+50% AP) (+50% bonus Armor) magic damage and Stun enemies for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 100,
+        "missileSpeed": 1750,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Cosmic Radiance",
@@ -245,7 +283,15 @@
         ]
       },
       "resolvedDescription": "Taric calls down protection from the heavens. After 2.5 seconds, nearby ally champions become invulnerable for 2.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }
