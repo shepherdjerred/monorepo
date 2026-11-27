@@ -422,11 +422,6 @@ export function labelTasks(
     .sort(sortTasks);
 }
 
-export function subtaskCount(tasks: readonly Task[], parentId: string): number {
-  return tasks.filter((task) => !task.is_deleted && task.parent_id === parentId)
-    .length;
-}
-
 export function projectDepth(
   projects: readonly Project[],
   project: Project,

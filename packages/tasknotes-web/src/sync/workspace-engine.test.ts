@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { project, task } from "#workspace/fixtures.ts";
 import { LOCAL_INBOX_ID } from "./local-projection.ts";
-import type { KeyValueStore } from "./session.ts";
+import { memoryStore } from "./session-test-store.ts";
 import type { SyncFetch } from "./sync.ts";
 import { WorkspaceEngine } from "./workspace-engine.ts";
 import {
@@ -14,19 +14,6 @@ import {
   type WorkspaceRecord,
   type WorkspaceStorage,
 } from "./workspace-storage.ts";
-
-function memoryValues(): KeyValueStore {
-  const values = new Map<string, string>();
-  return {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => {
-      values.set(key, value);
-    },
-    removeItem: (key) => {
-      values.delete(key);
-    },
-  };
-}
 
 function memoryWorkspace(): WorkspaceStorage {
   const records = new Map<string, WorkspaceRecord>();
@@ -93,7 +80,7 @@ function requestUrl(input: RequestInfo | URL): string {
 
 function setup(fetchImpl: SyncFetch) {
   const storage = memoryWorkspace();
-  const stores = { local: memoryValues(), session: memoryValues() };
+  const stores = { local: memoryStore(), session: memoryStore() };
   const createEngine = () =>
     new WorkspaceEngine({
       storage,

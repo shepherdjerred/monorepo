@@ -14,7 +14,6 @@ import {
   type TaskDeleteArgs,
   type TaskRescheduleArgs,
   type TaskScheduleEntry,
-  type TaskUncompleteArgs,
   type TaskUpdateArgs,
 } from "@shepherdjerred/facet-protocol";
 import { SyncResponseSchema } from "./sync-response.ts";
@@ -112,13 +111,6 @@ export function taskCompleteCommand(
   ids: CommandIds,
 ): QueuedCommand {
   return queuedCommand({ type: "TaskComplete", args }, ids);
-}
-
-export function taskUncompleteCommand(
-  args: TaskUncompleteArgs,
-  ids: CommandIds,
-): QueuedCommand {
-  return queuedCommand({ type: "TaskUncomplete", args }, ids);
 }
 
 export function taskDeleteCommand(

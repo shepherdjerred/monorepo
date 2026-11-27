@@ -1,24 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { memoryStore } from "./session-test-store.ts";
 import {
   clearSession,
   loadSession,
   saveSession,
   syncEndpoint,
-  type KeyValueStore,
 } from "./session.ts";
-
-function memoryStore(): KeyValueStore {
-  const values = new Map<string, string>();
-  return {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => {
-      values.set(key, value);
-    },
-    removeItem: (key) => {
-      values.delete(key);
-    },
-  };
-}
 
 describe("session", () => {
   test("uses the dev proxy for the local server", () => {
