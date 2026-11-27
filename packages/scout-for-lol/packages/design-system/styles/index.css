@@ -2,6 +2,7 @@
 @import "./fonts.css";
 @import "./components.css";
 @import "./friendly.css";
+@import "./friendly-domain.css";
 
 * {
   border-color: var(--scout-color-border);
