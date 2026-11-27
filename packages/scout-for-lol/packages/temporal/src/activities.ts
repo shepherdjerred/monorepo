@@ -63,6 +63,7 @@ import type {
   ScoutNotificationOutcomeInput,
   ScoutNotificationRenderResult,
   ScoutNotificationTransitionResult,
+  ScoutLiveRosterFormResult,
   ScoutPostMatchScanResult,
   ScoutPrematchArchiveResult,
   ScoutPrematchScanResult,
@@ -215,6 +216,14 @@ export type ScoutPipelineActivities = {
     input: ScoutGameRef,
   ) => Promise<ScoutPrematchArchiveResult>;
   planPrematchFanOut: (input: ScoutMatchRef) => Promise<ScoutFanOutResult>;
+  /**
+   * Fetch the last five ranked games of the untracked players in one live
+   * game and store a short summary on its roster row. Background: it is
+   * advisory enrichment of a page, never ahead of a live match.
+   */
+  recordLiveRosterRecentForm: (
+    input: ScoutGameRef,
+  ) => Promise<ScoutLiveRosterFormResult>;
   openPrematchMarkets: (
     input: ScoutMatchRef,
   ) => Promise<ScoutGuardedEffectResult>;

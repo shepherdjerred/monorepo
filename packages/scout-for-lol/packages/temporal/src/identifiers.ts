@@ -610,6 +610,7 @@ export const SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES = {
   planMatchFanOut: "realtime",
   archivePrematchSnapshot: "realtime",
   planPrematchFanOut: "realtime",
+  recordLiveRosterRecentForm: "background",
   openPrematchMarkets: "realtime",
   runPrematchMaintenance: "realtime",
   markNotificationReady: "realtime",

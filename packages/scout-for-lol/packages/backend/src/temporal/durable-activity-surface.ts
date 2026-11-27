@@ -20,6 +20,7 @@ export type ScoutBackgroundActivities = Pick<
   | "closeRecoveryBatch"
   | "scanPipelineReconciliationPage"
   | "backfillSilentPostmatchArtifact"
+  | "recordLiveRosterRecentForm"
 >;
 
 export type ScoutLakeActivities = Pick<

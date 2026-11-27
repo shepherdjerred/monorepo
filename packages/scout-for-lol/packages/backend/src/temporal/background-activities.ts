@@ -98,6 +98,20 @@ export function createScoutBackgroundActivities(): ScoutBackgroundActivities {
           return await scanPipelineReconciliationPage(input);
         },
       ),
+    // The Live game page's strangers: their last five ranked games, read at
+    // `backfill` priority after the capture, never in front of it.
+    recordLiveRosterRecentForm: async (input) =>
+      await heartbeatWhile(
+        {
+          gameRef: `${input.gameRef.platform}_${input.gameRef.gameId}`,
+          phase: "recording-live-roster-form-v2",
+        },
+        async () => {
+          const { recordLiveRosterRecentFormActivity } =
+            await import("#src/live-roster/live-roster-activity.ts");
+          return await recordLiveRosterRecentFormActivity(input);
+        },
+      ),
     // The operator's silent post-match backfill: the render and nothing
     // else, for a match the V2 core finished without minting its report.
     backfillSilentPostmatchArtifact: async (input) =>

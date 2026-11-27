@@ -28,7 +28,10 @@ import {
   scoutTaskQueues,
 } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { realtimePipelineActivities } from "./activity-options.ts";
+import {
+  backgroundPipelineActivities,
+  realtimePipelineActivities,
+} from "./activity-options.ts";
 import { planMatchFanOutChildren } from "./match-fan-out.ts";
 import { startMatchFanOutChildren } from "./match.ts";
 import { issuedWorkflowType } from "./generation-rename.ts";
@@ -226,6 +229,13 @@ export async function scoutPrematchGameWorkflow(
     `**Phase:** planned ${String(children.length)} notification children, started ${String(notifications)}`,
   );
 
+  // Histories that predate the roster step have no marker, so they replay
+  // without it. Last, and not a failure of the capture: the page it feeds
+  // shows what it has.
+  if (observedSomething && patched(SCOUT_PREMATCH_LIVE_ROSTER_PATCH)) {
+    await recordLiveRosterForm(input);
+  }
+
   return scoutPrematchGameResultCodec.serialize({
     status: observedSomething ? "completed" : "no-op",
     riotMatchId,
@@ -249,6 +259,39 @@ export const SCOUT_PREMATCH_DELIVERY_PATCH = "scout-v2-prematch-delivery";
  * in a release after this one.
  */
 export const SCOUT_PREMATCH_MAINTENANCE_PATCH = "scout-v2-prematch-maintenance";
+
+/**
+ * The patch that gave the per-game core its live-roster recent-form step.
+ * Recorded histories will name this id; never rename it.
+ */
+export const SCOUT_PREMATCH_LIVE_ROSTER_PATCH = "scout-v2-prematch-live-roster";
+
+/**
+ * Read the untracked players' recent ranked form onto the live roster.
+ *
+ * On the background queue at `backfill` priority: nothing waits on it, and the
+ * notification children are already started. A failure after the Activity's
+ * own retries is logged and swallowed, because the capture it follows is
+ * complete and a failed game Workflow would be replaced by the next poll and
+ * capture the game again.
+ */
+async function recordLiveRosterForm(input: {
+  stage: ScoutStage;
+  gameRef: ScoutPrematchGameRef;
+}): Promise<void> {
+  setWorkflowPhase("**Phase:** reading the lobby's recent form");
+  try {
+    await backgroundPipelineActivities(input.stage).recordLiveRosterRecentForm(
+      input,
+    );
+  } catch (error) {
+    if (isCancellation(error)) throw error;
+    log.error("Live roster recent form failed; the capture stands", {
+      gameRef: `${input.gameRef.platform}_${input.gameRef.gameId}`,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
 
 /** Preserve the Activity command order of retained prematch histories. */
 async function openGameMarkets(
