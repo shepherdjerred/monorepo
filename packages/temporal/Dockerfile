@@ -517,6 +517,8 @@ COPY --parents \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/scripts/argocd/argocd-apply-safety.ts \
+  packages/homelab/scripts/argocd/argocd-comparison.ts \
+  packages/homelab/scripts/argocd/argocd-field-managers.ts \
   packages/homelab/scripts/argocd/argocd-rendered-targets.ts \
   packages/homelab/scripts/argocd/argocd-destructive-changes.ts \
   packages/homelab/scripts/argocd/argocd-hooks.ts \
