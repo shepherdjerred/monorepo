@@ -37,12 +37,19 @@ export const VERIFY_TIER: ResourceTier = {
  * Measured 2026-11-26 (1,651 RAM-scratch pods, tmpfs included): memory p50
  * 10.9 GiB, p90 19.7 GiB, p99 31.6 GiB, max 35.9 GiB; lifetime-average CPU p50
  * 5.6 cores, peak p90 11.6 cores; duration p50 4 min, p90 8.5 min. Half of
- * each pod's life sits below about 6 GiB, so peaks rarely coincide: three
- * verify pods fit the compute quota by both memory and CPU.
+ * each pod's life sits below about 6 GiB, so peaks rarely coincide.
+ *
+ * Memory is requested at the measured p90, but CPU stays at 8 cores, above
+ * the 5.6-core lifetime average: liskov saturates on CPU before memory. While
+ * a temporary policy halved CPU requests of 4 or more, liskov CPU went from
+ * 22-38% busy to 79-93% busy and CPU pressure ("some") from about 5% to
+ * 43-49%, and unrelated PRs timed out on tight-deadline steps. Requests at the
+ * average leave no headroom for bursts, so overlapping verify pods saturate
+ * the node.
  */
 export const TURBO_VERIFY_TIER: ResourceTier = {
   ...VERIFY_TIER,
-  cpuRequest: "6",
+  cpuRequest: "8",
   memoryRequest: "20Gi",
 };
 
@@ -170,9 +177,14 @@ export const CONTAINED_TIER: ResourceTier = {
  * Measured 2026-11-26 (1,357 RAM-scratch pods, tmpfs included): memory p90
  * 3.2 GiB, max 4.4 GiB; lifetime-average CPU p50 2.0 cores, peak p90 5.0
  * cores. The existing hard limits are retained.
+ *
+ * Memory is requested at the measured p90, but CPU stays at 3 cores, above
+ * the 2.0-core lifetime average, for the same reason as `TURBO_VERIFY_TIER`:
+ * liskov saturates on CPU first (79-93% busy with halved requests, against
+ * 22-38% before), and playwright-e2e timed out at 30 minutes.
  */
 export const BROWSER_TIER: ResourceTier = {
-  cpuRequest: "2",
+  cpuRequest: "3",
   cpuLimit: "8",
   memoryRequest: "4Gi",
   memoryLimit: "12Gi",
