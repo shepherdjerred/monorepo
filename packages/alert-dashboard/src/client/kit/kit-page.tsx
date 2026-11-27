@@ -20,7 +20,12 @@ import { KitDetailForms } from "./kit-detail-forms.tsx";
 import { KitControls } from "./kit-controls.tsx";
 import { KitData } from "./kit-data.tsx";
 import { KitOverlays } from "./kit-overlays.tsx";
-import { KIT_GROUPS, KitTabs, type KitAlert } from "./kit-parts.tsx";
+import {
+  KIT_GROUPS,
+  KitDisabledTabs,
+  KitTabs,
+  type KitAlert,
+} from "./kit-parts.tsx";
 import "./kit.css";
 
 type Scope = "all" | "firing" | "silenced";
@@ -293,6 +298,9 @@ export function KitPage(): React.JSX.Element {
       </Section>
       <Section title="Silences" count={0}>
         <EmptyTable />
+      </Section>
+      <Section title="Disabled tab" headingLevel={3}>
+        <KitDisabledTabs />
       </Section>
       <Section title="Wrapping cells" headingLevel={3}>
         <WrapTable />

@@ -4,6 +4,8 @@ export type TabOption<Value extends string> = {
   readonly value: Value;
   readonly label: string;
   readonly count?: number | string;
+  /** Not selectable and skipped by the arrow keys, e.g. a plain-text tab when the message has no text part. */
+  readonly disabled?: boolean;
 };
 
 export type TabsProps<Value extends string> = {
@@ -31,6 +33,35 @@ export function tabTargetIndex(
   if (step !== undefined) return (current + step + count) % count;
   if (key === "Home") return 0;
   return key === "End" ? count - 1 : undefined;
+}
+
+/**
+ * The enabled option index a key moves to, stepping past disabled options;
+ * undefined to ignore the key or when nothing else is enabled.
+ */
+export function enabledTargetIndex(
+  key: string,
+  current: number,
+  disabled: readonly boolean[],
+): number | undefined {
+  const count = disabled.length;
+  const step = STEP[key];
+  if (step !== undefined) {
+    for (let hop = 1; hop <= count; hop += 1) {
+      const index = (((current + step * hop) % count) + count) % count;
+      if (disabled[index] !== true) return index;
+    }
+    return undefined;
+  }
+  if (key === "Home") {
+    const index = disabled.findIndex((off) => !off);
+    return index === -1 ? undefined : index;
+  }
+  if (key === "End") {
+    const index = disabled.findLastIndex((off) => !off);
+    return index === -1 ? undefined : index;
+  }
+  return undefined;
 }
 
 /**
@@ -77,10 +108,10 @@ export function RadioOptions<Value extends string>({
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
-    const target = tabTargetIndex(
+    const target = enabledTargetIndex(
       event.key,
       options.findIndex((option) => option.value === value),
-      options.length,
+      options.map((option) => option.disabled === true),
     );
     if (target === undefined) return;
     event.preventDefault();
@@ -106,6 +137,7 @@ export function RadioOptions<Value extends string>({
             role="radio"
             className={optionClass}
             aria-checked={selected}
+            disabled={option.disabled === true}
             tabIndex={selected ? 0 : -1}
             onClick={() => {
               onChange(option.value);
