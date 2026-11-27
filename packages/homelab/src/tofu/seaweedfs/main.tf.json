@@ -137,7 +137,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.ci_handoff.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 7
+        }
       },
       "llm_archive_lifecycle": {
         "input": {
@@ -152,7 +157,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.llm_archive.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 365
+        }
       },
       "private_sjer_red_lifecycle": {
         "input": {
@@ -167,7 +177,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.private_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 30
+        }
       },
       "private_sjer_red_seed": {
         "input": {
@@ -182,7 +197,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.private_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "index_md5": "${filemd5(\"${path.module}/private/index.html\")}"
+        }
       },
       "public_sjer_red_lifecycle": {
         "input": {
@@ -197,7 +217,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "rules": "${jsonencode({ Rules = [{ ID = \"expire-pr-assets\", Status = \"Enabled\", Filter = { Prefix = \"pr/assets/\" }, Expiration = { Days = 365 } }, { ID = \"expire-share-tmp\", Status = \"Enabled\", Filter = { Prefix = \"share/tmp/\" }, Expiration = { Days = 30 } }] })}"
+        }
       },
       "public_sjer_red_seed": {
         "input": {
@@ -213,7 +238,13 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "index_md5": "${filemd5(\"${path.module}/public/index.html\")}",
+          "not_found_md5": "${filemd5(\"${path.module}/public/404.html\")}"
+        }
       },
       "scout_desktop_seed": {
         "input": {
@@ -229,7 +260,13 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.scout_desktop.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "index_md5": "${filemd5(\"${path.module}/scout-desktop/index.html\")}",
+          "not_found_md5": "${filemd5(\"${path.module}/scout-desktop/404.html\")}"
+        }
       },
       "static_site_asset_lifecycle": {
         "depends_on": [
@@ -259,7 +296,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${each.key}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "rules": "${jsonencode({ Rules = [for idx, prefix in each.value : { ID = \"expire-old-hashed-${idx}\", Status = \"Enabled\", Filter = { Prefix = prefix }, Expiration = { Days = 90 } }] })}"
+        }
       },
       "streambot_voice_captures_lifecycle": {
         "input": {
@@ -274,7 +316,12 @@
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }
-        ]
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.streambot_voice_captures.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 90
+        }
       }
     }
   },

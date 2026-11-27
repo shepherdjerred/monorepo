@@ -158,8 +158,8 @@ function expiry(bucket: string, days: number, rule: string, prefix: string) {
   };
 }
 
-/** Every `terraform_data` resource of the stack, in full. */
-const TERRAFORM_DATA = {
+/** Every `terraform_data` resource of the stack, before replacement triggers. */
+const PROVISIONED = {
   static_site_asset_lifecycle: {
     for_each: "${local.static_site_immutable_prefixes}",
     depends_on: [
@@ -270,6 +270,18 @@ const TERRAFORM_DATA = {
   ci_handoff_lifecycle: expiry("ci_handoff", 7, "expire-ci-handoff", ""),
 };
 
+/**
+ * Every `terraform_data` resource of the stack, in full. Each replaces when
+ * any value its provisioner reads changes: an `input` change alone is an
+ * in-place update, and a provisioner runs only on create or replace.
+ */
+const TERRAFORM_DATA = Object.fromEntries(
+  Object.entries(PROVISIONED).map(([id, resource]) => [
+    id,
+    { ...resource, triggers_replace: resource.input },
+  ]),
+);
+
 describe("seaweedfs", () => {
   test("keeps every bucket address, its protection, imports and the forgotten bucket", async () => {
     const { resource, terraform, ...stack } = await seaweedfs();
@@ -363,6 +375,28 @@ describe("seaweedfs", () => {
     // OpenTofu never plans a provisioner change, so the zero-change plan
     // cannot see one: the scripts are pinned here instead.
     expect(resource.terraform_data).toEqual(TERRAFORM_DATA);
+  });
+
+  test("every provisioner re-runs by replacement when a value it reads changes", async () => {
+    const { resource } = await seaweedfs();
+    const ProvisionedSchema = z.looseObject({
+      input: z.record(z.string(), z.unknown()),
+      provisioner: z.array(z.unknown()).min(1),
+      triggers_replace: z.record(z.string(), z.unknown()),
+    });
+    const entries = Object.entries(resource.terraform_data);
+    expect(entries.length).toBeGreaterThan(0);
+    for (const [id, data] of entries) {
+      const parsed = ProvisionedSchema.parse(data);
+      expect(
+        Object.keys(parsed.triggers_replace).length,
+        `${id} triggers_replace`,
+      ).toBeGreaterThan(0);
+      // `input` alone is an in-place update that never re-runs a provisioner.
+      expect(parsed.triggers_replace, `${id} triggers_replace`).toEqual(
+        parsed.input,
+      );
+    }
   });
 
   test("every bucket gets exactly one lifecycle configuration holding all its rules", async () => {
