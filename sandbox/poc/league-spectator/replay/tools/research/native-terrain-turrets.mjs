@@ -141,52 +141,148 @@ export function readOpeningBindings(packetReader, placements, observeOpening) {
   return bindings;
 }
 
-function findCurrentPresentationOmissions(packetReader, losses) {
-  if (losses.length === 0) return [];
-  const lossByContext = new Map(losses.map((loss) => [loss.context, loss]));
-  const firstLoss = Math.min(...losses.map(({ timeSeconds }) => timeSeconds));
-  const omissions = new Map();
-  for (const { timeSeconds, chunkOffset } of packetReader.keyframes) {
-    if (timeSeconds <= firstLoss) continue;
-    const { packets } = packetReader.read(timeSeconds);
-    const states = new Map();
-    let opcode;
-    let context = 0;
-    for (const packet of packets) {
-      if (packet.stream !== 2 || packet.chunkOffset !== chunkOffset) break;
-      opcode = packet.explicitOpcode ?? opcode;
-      context =
-        packet.marker & 32
-          ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
-          : packet.paramBits;
-      if (opcode !== 1012 || packet.payload.length !== 41) continue;
-      const loss = lossByContext.get(context);
-      if (
-        loss === undefined ||
-        timeSeconds <= loss.timeSeconds ||
-        omissions.has(context)
-      )
-        continue;
-      const state = packet.payload[13];
-      const previous = states.get(context);
-      if (previous !== undefined && ((previous ^ state) & 8) !== 0)
-        throw Error("Conflicting turret bits in the indexed snapshot");
-      if (previous === undefined) states.set(context, state);
+/** Collect original state bytes for opening-proven turret contexts in one packet pass. */
+export function createCurrentTurretSnapshotCollector(
+  packetReader,
+  openingContexts,
+) {
+  const { keyframes } = packetReader;
+  const turretContexts = new Set(openingContexts);
+  const snapshots = new Map(
+    keyframes.map(({ chunkOffset }) => [chunkOffset, new Map()]),
+  );
+  let previousChunk;
+  let opcode;
+  let context;
+  function observe(packet) {
+    if (packet.stream !== 2) return;
+    const states = snapshots.get(packet.chunkOffset);
+    if (states === undefined) return;
+    if (packet.chunkOffset !== previousChunk || packet.blockOffset === 0) {
+      previousChunk = packet.chunkOffset;
+      opcode = null;
+      context = 0;
     }
-    for (const [context, state] of states) {
-      if ((state & 8) === 0) continue;
-      const loss = lossByContext.get(context);
-      omissions.set(context, {
+    opcode = packet.explicitOpcode ?? opcode;
+    context =
+      packet.marker & 32
+        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
+        : packet.paramBits;
+    if (
+      opcode !== 1012 ||
+      packet.payload.length !== 41 ||
+      !turretContexts.has(context)
+    )
+      return;
+    const state = packet.payload[13];
+    const previous = states.get(context);
+    if (previous === undefined) states.set(context, { state, conflict: false });
+    else if (((previous.state ^ state) & 8) !== 0) previous.conflict = true;
+  }
+  function presentationOmissions(losses) {
+    const lossByContext = new Map(losses.map((loss) => [loss.context, loss]));
+    const omissions = new Map();
+    for (const { timeSeconds, chunkOffset } of keyframes) {
+      for (const [context, { state, conflict }] of snapshots.get(chunkOffset)) {
+        const loss = lossByContext.get(context);
+        if (
+          loss === undefined ||
+          timeSeconds <= loss.timeSeconds ||
+          omissions.has(context)
+        )
+          continue;
+        if (conflict)
+          throw Error("Conflicting turret bits in the indexed snapshot");
+        if ((state & 8) !== 0)
+          omissions.set(context, {
+            context,
+            mapNameHash: loss.mapNameHash,
+            reason:
+              "Recorded turret snapshot indicates alive after verified loss",
+            lossTimeSeconds: loss.timeSeconds,
+            snapshotTimeSeconds: timeSeconds,
+            snapshotStateByte: state,
+          });
+      }
+    }
+    return [...omissions.values()];
+  }
+  function corroborateSnapshots(instances) {
+    const counts = new Map(
+      instances.map(({ context }) => [
         context,
-        mapNameHash: loss.mapNameHash,
-        reason: "Recorded turret snapshot indicates alive after verified loss",
-        lossTimeSeconds: loss.timeSeconds,
-        snapshotTimeSeconds: timeSeconds,
-        snapshotStateByte: state,
-      });
+        { alive: 0, dead: 0, missing: 0 },
+      ]),
+    );
+    const lastFrame = keyframes.at(-1);
+    for (const frame of keyframes) {
+      const states = snapshots.get(frame.chunkOffset);
+      for (const { context, destroyedAtSeconds } of instances) {
+        const observed = states.get(context);
+        if (observed?.conflict)
+          throw Error("Conflicting recorded turret snapshot state");
+        if (frame.timeSeconds === destroyedAtSeconds) continue;
+        if (observed === undefined) {
+          if (
+            frame.timeSeconds === 0 ||
+            (frame === lastFrame && destroyedAtSeconds === null)
+          )
+            throw Error("Required opening or surviving turret snapshot absent");
+          counts.get(context).missing++;
+          continue;
+        }
+        const dead = (observed.state & 8) === 0;
+        if (
+          dead !==
+          (destroyedAtSeconds !== null &&
+            frame.timeSeconds > destroyedAtSeconds)
+        )
+          throw Error(
+            "Recorded turret state disagrees with verified loss history",
+          );
+        counts.get(context)[dead ? "dead" : "alive"]++;
+      }
+    }
+    return {
+      lastSnapshotSeconds: lastFrame.timeSeconds,
+      keyframes: keyframes.length,
+      counts: Object.fromEntries(counts),
+    };
+  }
+  return {
+    observe,
+    finish() {
+      return { presentationOmissions, corroborateSnapshots };
+    },
+  };
+}
+
+export function readIndexedTurretSnapshots(
+  packetReader,
+  contexts,
+  afterSeconds = -1,
+) {
+  const collector = createCurrentTurretSnapshotCollector(
+    packetReader,
+    contexts,
+  );
+  for (const { timeSeconds, chunkOffset } of packetReader.keyframes) {
+    if (timeSeconds <= afterSeconds) continue;
+    for (const packet of packetReader.read(timeSeconds).packets) {
+      if (packet.stream !== 2 || packet.chunkOffset !== chunkOffset) break;
+      collector.observe(packet);
     }
   }
-  return Array.from(omissions.values());
+  return collector.finish();
+}
+
+function findCurrentPresentationOmissions(packetReader, losses) {
+  if (losses.length === 0) return [];
+  return readIndexedTurretSnapshots(
+    packetReader,
+    losses.map(({ context }) => context),
+    Math.min(...losses.map(({ timeSeconds }) => timeSeconds)),
+  ).presentationOmissions(losses);
 }
 
 /** Place only the corroborated turret losses and their seek-state cohort. */
@@ -215,7 +311,8 @@ export function prepareNativeTerrainTurrets(
   const losses = observations.turrets.map(withPlacement);
   const presentationOmissions =
     packetReader.build === currentTerrainPositionBuild
-      ? findCurrentPresentationOmissions(packetReader, losses)
+      ? (options?.turretSnapshots?.presentationOmissions(losses) ??
+        findCurrentPresentationOmissions(packetReader, losses))
       : [];
   const omittedContexts = new Set(
     presentationOmissions.map(({ context }) => context),

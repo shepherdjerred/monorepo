@@ -136,6 +136,9 @@ const modelBinding = z.object({
       /^\/(?:champion|structure|nexus|inhibitor|world-unit)-models\/[a-f0-9]{64}\.glb$/,
     ),
 });
+const inhibitorModelBinding = modelBinding.extend({
+  inactiveModelRange: z.literal("Destroyed").optional(),
+});
 const ChampionModelsSchema = z.object({
   bindings: z
     .array(modelBinding.extend({ skinId: z.number().int().nonnegative() }))
@@ -597,7 +600,7 @@ const TerrainSceneFields = z.object({
       return contexts.length === 6 && new Set(contexts).size === 6;
     }, "Expected six accounted-for inhibitor contexts")
     .optional(),
-  inhibitorModelBindings: z.array(modelBinding).length(2).optional(),
+  inhibitorModelBindings: z.array(inhibitorModelBinding).length(2).optional(),
   worldUnitModels: z
     .object({
       bindings: z.array(modelBinding).nonempty(),
@@ -679,6 +682,7 @@ export const SceneSchema = TerrainSceneFields.refine(
         scene.inhibitorLosses === undefined &&
         ids.size === 2 &&
         bindings !== undefined &&
+        bindings[0]?.inactiveModelRange === bindings[1]?.inactiveModelRange &&
         bindings.every(
           ({ participantId, url }) =>
             ids.delete(participantId) && url.startsWith("/inhibitor-models/"),
@@ -925,7 +929,7 @@ type MaterialBindings = Map<
     sourceAlphaBlend: boolean;
   }
 >;
-type ModelBindings = z.infer<typeof modelBinding>[];
+type ModelBindings = z.infer<typeof inhibitorModelBinding>[];
 type LoadedChampionModels = Map<number, unknown>;
 export type RendererModule = {
   loadChampionModels: (

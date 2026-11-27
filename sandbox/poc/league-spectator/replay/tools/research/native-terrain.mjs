@@ -452,6 +452,12 @@ export function createTerrainRenderer(
   const worldUp = new Vector3(0, 1, 0);
   let dragView;
   let modelRenderer;
+  const inactiveInhibitorModels = new Set(
+    (scene.inhibitorModels?.bindings ?? []).flatMap(
+      ({ participantId, inactiveModelRange }) =>
+        inactiveModelRange === "Destroyed" ? [participantId] : [],
+    ),
+  );
   let disposed = false;
   function dispose() {
     if (disposed) return;
@@ -655,15 +661,22 @@ export function createTerrainRenderer(
           ),
         );
       }
-      if (inhibitorModels !== undefined)
+      if (inhibitorModels !== undefined) {
         modelRenderer.draw(
           viewProjection.elements,
-          scene.inhibitorModels.instances.filter(
-            (instance) =>
-              visible(instance.context) &&
-              inhibitorIsActive(instance, frame.timeSeconds),
-          ),
+          scene.inhibitorModels.instances.flatMap((instance) => {
+            if (!visible(instance.context)) return [];
+            if (inhibitorIsActive(instance, frame.timeSeconds))
+              return [instance];
+            if (
+              instance.inactiveRanges === undefined ||
+              !inactiveInhibitorModels.has(instance.participantId)
+            )
+              return [];
+            return [{ ...instance, inactive: true }];
+          }),
         );
+      }
       gl.useProgram(program);
     }
     if (structureModels === undefined && scene.turretLosses?.length > 0) {

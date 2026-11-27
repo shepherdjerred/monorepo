@@ -1857,7 +1857,10 @@ if (values["turret-placements"] !== undefined) {
       assetIds,
       placementReceipt,
     );
-    scene.inhibitorModelBindings = bindings;
+    scene.inhibitorModelBindings = bindings.map((binding) => ({
+      ...binding,
+      inactiveModelRange: "Destroyed",
+    }));
     inhibitorModelRoutes = routes;
   } else if (inhibitorCatalogPath !== undefined) {
     const [

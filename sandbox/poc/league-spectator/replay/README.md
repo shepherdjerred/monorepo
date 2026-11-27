@@ -447,8 +447,9 @@ turret anchors and checks all indexed inhibitor states against the original
 loss and return packets. Add `--inhibitors-from-replay` to resolve the six
 opening inhibitors and verify their lifetimes in the browser's existing
 motion scan. The package supplies the authored order and model bindings.
-The standing model hides on loss and returns at the recorded time when
-seeking or playing forward.
+The viewer displays the supplied `Destroyed` mesh during each verified
+inactive interval. It switches to the standing mesh at the recorded return
+time and uses the same visibility filter when seeking or playing forward.
 Use `--authored-nexus-catalog` and `--authored-nexus-catalog-sha256` with the
 same placement receipt to bind both Nexus models and verify the terminal loss.
 The terminal loss supplies the Nexus cutoff. The transition animation remains

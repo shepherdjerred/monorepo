@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { prepareNativeTerrainTurrets } from "./native-terrain-turrets.mjs";
+import {
+  createCurrentTurretSnapshotCollector,
+  prepareNativeTerrainTurrets,
+} from "./native-terrain-turrets.mjs";
 
 const nameForms = [
   [0x3b, 26, [12, 9, 10, 23, 16, 21, 22, 19, 20, 17]],
@@ -196,5 +199,57 @@ test("rejects an incompatible build or installed receipt", () => {
   assert.throws(
     () => prepareNativeTerrainTurrets(prepared, receipt),
     /exact-build Map11 replay turret observations/,
+  );
+});
+
+test("reconciles incremental indexed snapshots without treating the loss clock as state evidence", () => {
+  const keyframes = [0, 10, 20].map((timeSeconds, chunkOffset) => ({
+    timeSeconds,
+    chunkOffset,
+  }));
+  const collector = createCurrentTurretSnapshotCollector(
+    { keyframes },
+    [101, 102],
+  );
+  function observe(chunkOffset, context, state, stream = 2) {
+    const payload = new Uint8Array(41);
+    payload[13] = state;
+    collector.observe({
+      stream,
+      chunkOffset,
+      explicitOpcode: 1012,
+      paramBits: context,
+      payload,
+    });
+  }
+  observe(0, 101, 8);
+  observe(0, 102, 8);
+  observe(1, 101, 8); // Same clock as the loss, so it is not corroborating.
+  observe(2, 101, 0);
+  observe(2, 102, 8);
+  observe(2, 102, 0, 1); // A gameplay envelope cannot contradict a snapshot.
+  const snapshots = collector.finish();
+  const losses = [{ context: 101, timeSeconds: 10 }];
+  const instances = [
+    { context: 101, destroyedAtSeconds: 10 },
+    { context: 102, destroyedAtSeconds: null },
+  ];
+  assert.deepEqual(snapshots.presentationOmissions(losses), []);
+  assert.deepEqual(snapshots.corroborateSnapshots(instances), {
+    lastSnapshotSeconds: 20,
+    keyframes: 3,
+    counts: {
+      101: { alive: 1, dead: 1, missing: 0 },
+      102: { alive: 2, dead: 0, missing: 1 },
+    },
+  });
+  observe(2, 101, 8);
+  assert.throws(
+    () => snapshots.presentationOmissions(losses),
+    /Conflicting turret bits/,
+  );
+  assert.throws(
+    () => snapshots.corroborateSnapshots(instances),
+    /Conflicting recorded turret snapshot/,
   );
 });

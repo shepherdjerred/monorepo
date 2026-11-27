@@ -10,16 +10,22 @@ export const recordedInhibitorReturnWitnesses = [
   {
     position: [13_599.171, 11_319.917],
     indices: 4452,
+    destroyedIndices: 5715,
+    visibleToBlue: false,
     returnedAt: 1920.73898046875,
   },
   {
     position: [11_593.575, 11_669.565],
     indices: 4452,
+    destroyedIndices: 5715,
+    visibleToBlue: false,
     returnedAt: 2005.531666015625,
   },
   {
     position: [3210.616, 3217.527],
     indices: 6675,
+    destroyedIndices: 9543,
+    visibleToBlue: true,
     returnedAt: 2362.538064453125,
   },
 ] as const;
@@ -92,6 +98,36 @@ async function readInhibitorInstances(
   return ready?.inhibitorModels?.instances;
 }
 
+type InhibitorWitness = (typeof recordedInhibitorReturnWitnesses)[number];
+
+async function expectInhibitorDraw(
+  page: Page,
+  { indices, destroyedIndices, position }: InhibitorWitness,
+  standing: boolean,
+  destroyed: boolean,
+) {
+  await expect
+    .poll(async () =>
+      Promise.all([
+        drawsNear(page, indices, position),
+        drawsNear(page, destroyedIndices, position),
+      ]),
+    )
+    .toEqual([standing, destroyed]);
+}
+
+async function verifyDestroyedInhibitorVision(
+  page: Page,
+  witness: InhibitorWitness,
+) {
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  await vision.selectOption("blue");
+  await expectInhibitorDraw(page, witness, false, witness.visibleToBlue);
+  await vision.selectOption("red");
+  await expectInhibitorDraw(page, witness, false, true);
+  await vision.selectOption("all");
+}
+
 export async function verifyRecordedInhibitorReturns(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -109,11 +145,8 @@ export async function verifyRecordedInhibitorReturns(
   const canvas = page.getByLabel("League of Legends replay scene");
   const zoomIn = page.getByRole("button", { name: "Zoom in" });
   const overview = page.getByRole("button", { name: "Map overview" });
-  for (const {
-    position,
-    indices,
-    returnedAt,
-  } of recordedInhibitorReturnWitnesses) {
+  for (const witness of recordedInhibitorReturnWitnesses) {
+    const { position, returnedAt } = witness;
     const [x, depth] = position;
     const instance = instances.find(
       ({ position: [px, , pz] }) => Math.hypot(x - px, depth - pz) < 0.001,
@@ -137,13 +170,20 @@ export async function verifyRecordedInhibitorReturns(
       { seconds: before, visible: false, frame: "rewound" },
     ] as const) {
       await seek(page, seconds);
-      await expect.poll(() => drawsNear(page, indices, position)).toBe(visible);
+      await expectInhibitorDraw(
+        page,
+        witness,
+        visible,
+        fixture.destroyedInhibitors && !visible,
+      );
       await canvas.screenshot({
         path: testInfo.outputPath(
           `recorded-inhibitor-return-${Math.floor(returnedAt).toString()}-${frame}.png`,
         ),
       });
     }
+    if (fixture.destroyedInhibitors && fixture.unitVisibility)
+      await verifyDestroyedInhibitorVision(page, witness);
     await overview.click();
   }
 }

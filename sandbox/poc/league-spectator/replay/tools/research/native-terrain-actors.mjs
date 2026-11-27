@@ -150,7 +150,10 @@ export function readOrdinalAccessor(
   };
 }
 
-function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
+function prepareGlb(
+  bytes,
+  { participantId, skinScale, hiddenRanges, inactiveModelRange },
+) {
   const { gltf, binary } = readOrdinalChampionGlb(bytes);
   const meshNode = gltf.nodes[gltf.scenes[gltf.scene ?? 0].nodes[0]];
   const skin = gltf.skins?.[meshNode.skin];
@@ -163,6 +166,13 @@ function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
   )
     throw Error(`Invalid ordinal skin palette for champion ${participantId}`);
   const hide = new Set(hiddenRanges.map((name) => name.toLowerCase()));
+  if (
+    inactiveModelRange !== undefined &&
+    (inactiveModelRange !== "Destroyed" || !hide.has("destroyed"))
+  )
+    throw Error(
+      "Inactive model range must be an authored hidden Destroyed range",
+    );
   const hidden = new Set();
   const textures = new Map();
   const primitives = [];
@@ -172,9 +182,10 @@ function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
     if (!material?.name)
       throw Error(`Missing ordinal material for champion ${participantId}`);
     const name = material.name.toLowerCase();
+    const inactive = inactiveModelRange !== undefined && name === "destroyed";
     if (hide.has(name)) {
       hidden.add(name);
-      continue;
+      if (!inactive) continue;
     }
     const textureInfo = material.pbrMetallicRoughness?.baseColorTexture;
     const texture = gltf.textures?.[textureInfo?.index];
@@ -205,17 +216,19 @@ function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
       { 5126: 4 },
       3,
     );
-    const vertexBytes = new DataView(
-      positions.data.buffer,
-      positions.data.byteOffset,
-      positions.data.byteLength,
-    );
-    for (
-      let vertex = 0, offset = positions.offset + 4;
-      vertex < positions.count;
-      vertex++, offset += positions.stride
-    ) {
-      topY = Math.max(topY, vertexBytes.getFloat32(offset, true));
+    if (!inactive) {
+      const vertexBytes = new DataView(
+        positions.data.buffer,
+        positions.data.byteOffset,
+        positions.data.byteLength,
+      );
+      for (
+        let vertex = 0, offset = positions.offset + 4;
+        vertex < positions.count;
+        vertex++, offset += positions.stride
+      ) {
+        topY = Math.max(topY, vertexBytes.getFloat32(offset, true));
+      }
     }
     const uv = readOrdinalAccessor(
       gltf,
@@ -261,6 +274,7 @@ function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
     )
       throw Error(`Invalid ordinal triangles for champion ${participantId}`);
     primitives.push({
+      inactive,
       positions,
       uv,
       indices,
@@ -273,6 +287,8 @@ function prepareGlb(bytes, { participantId, skinScale, hiddenRanges }) {
   if (
     primitives.length === 0 ||
     hide.size !== hidden.size ||
+    (inactiveModelRange !== undefined &&
+      !primitives.some(({ inactive }) => inactive)) ||
     !Number.isFinite(topY)
   )
     throw Error(
@@ -420,8 +436,10 @@ export function createChampionModelRenderer(gl, models, createProgram) {
         uploaded.set(image, texture);
       }
       const parts = [];
+      const inactiveParts = [];
       const attributesUploaded = new Map();
       for (const {
+        inactive = false,
         positions,
         uv,
         indices,
@@ -468,7 +486,7 @@ export function createChampionModelRenderer(gl, models, createProgram) {
             );
         }
         uploadBuffer(gl.ELEMENT_ARRAY_BUFFER, indices.data);
-        parts.push({
+        (inactive ? inactiveParts : parts).push({
           array,
           indexCount: indices.count,
           indexType: indices.type,
@@ -479,7 +497,7 @@ export function createChampionModelRenderer(gl, models, createProgram) {
       }
       if (gl.getError() !== gl.NO_ERROR)
         throw Error(`Could not upload champion model ${id}`);
-      actors.set(id, { skinScale, paletteSize, parts });
+      actors.set(id, { skinScale, paletteSize, parts, inactiveParts });
     }
   } catch (error) {
     dispose();
@@ -493,7 +511,12 @@ export function createChampionModelRenderer(gl, models, createProgram) {
       gl.activeTexture(gl.TEXTURE0);
       gl.uniform1i(jointPalette, 1);
       gl.uniformMatrix4fv(viewProjection, false, matrix);
-      for (const { participantId, position, basis = identity } of markers) {
+      for (const {
+        participantId,
+        position,
+        basis = identity,
+        inactive = false,
+      } of markers) {
         const actor = actors.get(participantId);
         if (
           !actor ||
@@ -541,7 +564,7 @@ export function createChampionModelRenderer(gl, models, createProgram) {
           indexOffset,
           texture,
           alphaCutoff: cutoff,
-        } of actor.parts) {
+        } of inactive ? actor.inactiveParts : actor.parts) {
           gl.bindVertexArray(array);
           gl.bindTexture(gl.TEXTURE_2D, texture);
           gl.uniform1f(alphaCutoff, cutoff);

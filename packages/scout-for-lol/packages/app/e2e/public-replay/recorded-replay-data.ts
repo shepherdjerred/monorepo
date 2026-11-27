@@ -101,7 +101,10 @@ const SceneIdentitySchema = z.object({
       ),
     })
     .optional(),
-  inhibitorModelBindings: z.array(z.unknown()).length(2).optional(),
+  inhibitorModelBindings: z
+    .array(z.object({ inactiveModelRange: z.literal("Destroyed").optional() }))
+    .length(2)
+    .optional(),
   inhibitorLosses: z.array(z.unknown()).optional(),
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
@@ -338,6 +341,10 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
     directPlayerState,
     directChampionModels,
     directInhibitors,
+    destroyedInhibitors:
+      scene.inhibitorModelBindings?.every(
+        ({ inactiveModelRange }) => inactiveModelRange === "Destroyed",
+      ) === true,
     preparedChampionModels: scene.championModels,
     directWorldObservations: [
       directInhibitors,
