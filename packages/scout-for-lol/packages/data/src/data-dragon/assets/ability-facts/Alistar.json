@@ -30,7 +30,30 @@
         ]
       },
       "resolvedDescription": "Alistar charges his roar by stunning or displacing enemy champions or when nearby enemies die. When fully charged he heals himself all nearby allied champions.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "alistarpassivehealmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Pulverize",
@@ -88,7 +111,15 @@
         ]
       },
       "resolvedDescription": "Alistar smashes the ground, Knocking Up enemies for 1 second and dealing 60/100/140/180/220 (+80% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 365,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Headbutt",
@@ -153,7 +184,15 @@
         ]
       },
       "resolvedDescription": "Alistar rams into an enemy, Knocking them Back and dealing 55/110/165/220/275 (+100% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Trample",
@@ -253,7 +292,15 @@
         ]
       },
       "resolvedDescription": "Alistar begins trampling the ground, becoming Ghosted and dealing 80/110/140/170/200 (+70% AP) magic damage over 5 seconds to nearby enemies. Each pulse that damages a champion grants a stack. At 5 stacks, Alistar's next Attack against champions Stuns for 1 second and deals an additional 20-275 (based on level) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 575,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Unbreakable Will",
@@ -287,7 +334,15 @@
         ]
       },
       "resolvedDescription": "Alistar immediately cleanses all Disabling effects and takes 55/65/75% reduced damage for 7 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 828.5,
+        "missiles": []
+      }
     }
   }
 }

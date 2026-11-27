@@ -11,7 +11,15 @@
       "rangeByRank": [],
       "dataValues": {},
       "resolvedDescription": "Karma's damaging abilities will reduce the cooldown of Mantra.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Inner Flame",
@@ -69,7 +77,46 @@
         ]
       },
       "resolvedDescription": "Karma fires a blast of energy, dealing 60/110/160/210/260 (+70% AP) magic damage to the first target hit and surrounding enemies, and Slowing them by 40% for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 90,
+        "missileSpeed": 902,
+        "missiles": [
+          {
+            "name": "karmaqmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          },
+          {
+            "name": "karmaqmissilemantra",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Focused Resolve",
@@ -134,7 +181,15 @@
         ]
       },
       "resolvedDescription": "Karma tethers herself to a champion or jungle monster, dealing 40/65/90/115/140 (+45% AP) magic damage and revealing them for 2s. If the tether remains unbroken, the target takes 40/65/90/115/140 (+45% AP) magic damage again and is Rooted for 1.6/1.7/1.8/1.9/2s.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 175,
+        "lineWidth": 60,
+        "missileSpeed": 2200,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Inspire",
@@ -199,7 +254,30 @@
         ]
       },
       "resolvedDescription": "Karma grants an allied champion 80/130/180/230/280 (+60% AP) Shield for 2.5s and 40% Move Speed for 2s.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "scarmaawesomewavespeed",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Mantra",
@@ -306,7 +384,15 @@
       "resolvedDescription": "Karma empowers her next Ability used within 8 seconds. Inner Flame: Deals an additional 40/100/160/220 (+30% AP) magic damage and leaves behind a circle of flame, Slowing enemies and dealing an additional 40/130/220/310 (+50% AP) magic damage.Focused Resolve: Karma will restore {{ rwhealamount }} missing Health at the beginning and end of the tether, and Root for 0.5/0.75/1/1.25s longer.Inspire: Karma shields her target for 45/85/125/165 (+45% AP) more Shield, and also shields allies near her target, granting them 45/85/125/165 (+45% AP) Shield and 15% Move Speed.",
       "unresolved": [
         "rwhealamount"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 275,
+        "lineWidth": null,
+        "missileSpeed": 1300,
+        "missiles": []
+      }
     }
   }
 }

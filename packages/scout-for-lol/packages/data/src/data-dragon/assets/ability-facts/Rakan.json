@@ -15,7 +15,15 @@
         ]
       },
       "resolvedDescription": "Rakan periodically gains a shield.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Gleaming Quill",
@@ -80,7 +88,44 @@
         ]
       },
       "resolvedDescription": "Rakan flings a magical feather that deals 70/115/160/205/250 (+70% AP) magic damage to the first enemy hit. If the feather hits a champion or epic jungle monster, Rakan restores 40-210 (based on level) (+55% AP) Health to himself and nearby allies after 3 seconds or when he touches an allied champion.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 175,
+        "lineWidth": 65,
+        "missileSpeed": 1850,
+        "missiles": [
+          {
+            "name": "rakanqmis",
+            "width": 65,
+            "movement": "FixedSpeedMovement",
+            "speed": 1850,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "rakanqreturnmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1850,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Grand Entrance",
@@ -131,7 +176,15 @@
         ]
       },
       "resolvedDescription": "Rakan dashes, then spirals into the air, Knocking Up for 1 second and dealing 70/120/170/220/270 (+80% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 275,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Battle Dance",
@@ -203,7 +256,15 @@
         ]
       },
       "resolvedDescription": "Rakan dashes to an allied champion, granting them 50/75/100/125/150 (+70% AP) Shield for 3 seconds. Rakan can Recast this Ability once within 5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": null,
+        "radius": 175,
+        "lineWidth": 50,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "The Quickness",
@@ -262,7 +323,15 @@
         ]
       },
       "resolvedDescription": "Rakan gains 75% Move Speed for 4 seconds. Rakan deals 100/200/300 (+50% AP) magic damage and Charms enemies for 1/1.25/1.5 second(s) the first time he touches them. The first champion touched grants Rakan 150% decaying Move Speed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

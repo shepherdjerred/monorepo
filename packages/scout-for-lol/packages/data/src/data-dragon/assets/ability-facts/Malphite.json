@@ -62,7 +62,15 @@
         ]
       },
       "resolvedDescription": "Malphite launches a shard of earth at an enemy, dealing 70/120/170/220/270 (+60% AP) magic damage and Slowing them by 20/25/30/35/40% for 3 seconds. Malphite also steals the amount Slowed, gaining it as Move Speed for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 780,
+        "lineWidth": null,
+        "missileSpeed": 1200,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Thunderclap",
@@ -179,7 +187,15 @@
       "unresolved": [
         "f1",
         "f2"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Ground Slam",
@@ -230,7 +246,15 @@
         ]
       },
       "resolvedDescription": "Malphite slams the ground, dealing 60/95/130/165/200 (+40% Armor) (+60% AP) magic damage and reducing Attack Speed by 30/35/40/45/50% for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.2419,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Unstoppable Force",
@@ -264,7 +288,15 @@
         ]
       },
       "resolvedDescription": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite Knocks Up for 1.5 seconds and deals 200/300/400 (+90% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 270,
+        "lineWidth": 160,
+        "missileSpeed": 700,
+        "missiles": []
+      }
     }
   }
 }
