@@ -434,6 +434,7 @@ describe("upload responses", () => {
       uploadId: ID,
       missing: [SHA],
       expiresAt: NOW,
+      deduplicated: false,
     });
     expect(parsed.missing).toEqual([SHA]);
     expect(
@@ -441,6 +442,7 @@ describe("upload responses", () => {
         uploadId: ID,
         missing: [],
         expiresAt: NOW,
+        deduplicated: true,
       }).missing,
     ).toEqual([]);
   });
@@ -476,8 +478,11 @@ describe("upload responses", () => {
       number: 1,
       reviewUrl: "https://artifacts.tailnet-1a49.ts.net/a/x?v=1",
       boardUrl: "https://artifacts.tailnet-1a49.ts.net/b/concepts",
+      deduplicated: false,
     };
     expect(CommitUploadResponseSchema.parse(commit)).toEqual(commit);
+    const { deduplicated: _omitted, ...without } = commit;
+    expect(() => CommitUploadResponseSchema.parse(without)).toThrow();
     expect(() =>
       CommitUploadResponseSchema.parse({ ...commit, number: 0 }),
     ).toThrow();

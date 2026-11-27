@@ -26,10 +26,10 @@ COPY --parents bun.lock bunfig.toml patches/ ./
 COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/artifacts'
 
-# Add each workspace dependency's directory to this COPY and to the runtime
-# stage's as the service gains them.
+# Each workspace dependency's directory is in this COPY and in the runtime
+# stage's.
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/artifacts packages/eslint-config ./
+COPY --parents tsconfig.base.json packages/artifacts packages/config packages/feature-flags packages/eslint-config ./
 RUN cd packages/artifacts && bun run build
 
 FROM base AS prod-deps
@@ -44,6 +44,7 @@ RUN bun /tools/complete-bin-links.ts node_modules/.bun
 FROM base AS runtime
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/artifacts /app/packages/artifacts
+COPY --parents packages/config packages/feature-flags ./
 WORKDIR /app/packages/artifacts
 # The Bugsink release; declared after the build steps so it never busts caches.
 ARG VERSION=dev
@@ -58,6 +59,17 @@ FROM runtime AS smoke
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 ARG SMOKE_TARGET=artifacts
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
-RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
+# The service boots without reaching its database, object store or Flags, and
+# answers /healthz on the internal host class: the smoke's Host (127.0.0.1)
+# must differ from both origins below. The values are placeholders, set on the
+# one command so they never enter an image layer's environment.
+RUN DATABASE_URL=postgresql://smoke:smoke@127.0.0.1:15432/artifacts \
+    S3_ENDPOINT=http://127.0.0.1:19000 \
+    AWS_ACCESS_KEY_ID=smoke AWS_SECRET_ACCESS_KEY=smoke \
+    ARTIFACTS_APP_ORIGIN=http://artifacts.smoke.test \
+    ARTIFACTS_CONTENT_ORIGIN=http://artifacts-content.smoke.test \
+    ARTIFACTS_OPERATOR_LOGINS=smoke@example.test \
+    ENVIRONMENT=test FEATURE_FLAGS_MODE=disabled \
+    bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

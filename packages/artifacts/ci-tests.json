@@ -4,14 +4,24 @@
   "steps": [
     {
       "runner": "vitest",
-      "args": ["src/shared", "src/server/server.test.ts"]
+      "args": [
+        "src/shared",
+        "src/domain",
+        "src/application",
+        "src/bridge",
+        "src/server",
+        "--testTimeout",
+        "30000",
+        "--hookTimeout",
+        "30000"
+      ]
     },
     {
       "runner": "vitest",
       "name": "postgres-integration",
       "tier": "extended",
       "args": [
-        "src/server/postgres.integration.test.ts",
+        "src/integration",
         "--testTimeout",
         "60000",
         "--hookTimeout",
