@@ -1,0 +1,3208 @@
+{
+  "schemaVersion": 1,
+  "champion": "Malphite",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "31ad1a7b5cbfab9444b9041b59ba99fddc9e3581ed486de0ae0c6ef0e388f68e",
+      "tips": [
+        {
+          "id": "top:Malphite:general:0",
+          "text": "Poke with Seismic Shard when the enemy steps up to last-hit. It slowed them and gives you their lost Move Speed, so you can walk up and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:general:1",
+          "text": "Use Ground Slam in a trade against enemies who rely on basic attacks. It cuts their Attack Speed for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:general:2",
+          "text": "Hit with Thunderclap to start a trade. It gives bonus range and extra damage, and your next attacks keep hitting in a cone.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Malphite:general:3",
+          "text": "Don't cast Seismic Shard or Ground Slam while Thunderclap's empowered attack is winding up. You can't cast them until it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Malphite-E", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Malphite-W", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:general:4",
+          "text": "Fight while Granite Shield is up. It makes your Thunderclap armor much bigger, so back off and let it recharge between trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:general:5",
+          "text": "Use Unstoppable Force to close in on a target or to start a fight. Nothing can stop the dash, and it knocks up everyone you land on.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 101, "end": 110 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Malphite:general:6",
+          "text": "Aim Unstoppable Force at where the enemy will be. It travels in a line and the hit area is limited, so a good aim matters.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Malphite:combo:0",
+          "name": "Flash Unstoppable Force",
+          "category": "trick",
+          "sequence": [
+            { "kind": "summoner-spell", "key": "2202" },
+            { "kind": "ability", "key": "Malphite-R" }
+          ],
+          "when": "You need to engage a backline target that expects to be out of your ultimate range.",
+          "whenRefs": [],
+          "text": "Flash toward the enemy and cast the ultimate right away so the knock-up lands from a spot they didn't expect. Aim it at the middle of the group.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 }
+          ]
+        },
+        {
+          "id": "top:Malphite:combo:1",
+          "name": "Fast ultimate through a wall",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Malphite-R" }],
+          "when": "A thin wall sits between you and the enemies, such as a jungle wall or a river wall.",
+          "whenRefs": [],
+          "text": "Aim the ultimate at the middle of the wall so you end up on the far side. The dash gets much faster, so it is harder to dodge.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "a71e590b33b91cba0547ad435d55c0e62eb6f609634097215ee0241eac098bb3",
+      "tips": [
+        {
+          "id": "top:Malphite:Aatrox:0",
+          "text": "Use Seismic Shard when Aatrox walks up to trade; the slow cuts how well he can line up his attacks, and you gain speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Malphite:Aatrox:1",
+          "text": "Cast Ground Slam when Aatrox is in melee range; it cuts his Attack Speed, so he hits you less often while he tries to heal.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Aatrox", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Malphite:Aatrox:2",
+          "text": "Trade while Granite Shield is up, because Thunderclap gives much more Armor then. Back off and let the shield recharge between fights.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Malphite:Aatrox:3",
+          "text": "Save Unstoppable Force for when Aatrox commits to a fight. It can't be stopped once started, so use it to knock him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5fb23af8d6b972d9b5325bd05ca2f2fcc9dac9fbc92a2f5396d792b1e07d38d7",
+      "tips": [
+        {
+          "id": "top:Malphite:Akali:0",
+          "text": "Keep Granite Shield up before Akali engages; it triples the Armor from Thunderclap and makes her physical-looking burst far weaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Malphite-W", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Malphite:Akali:1",
+          "text": "Hit Akali with Seismic Shard when she dashes in or tries to leave. She is slowed and you gain Move Speed to chase her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Malphite:Akali:2",
+          "text": "Use Ground Slam as she jumps on you. It cuts her Attack Speed, so her follow-up attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Malphite:Akali:3",
+          "text": "Save Unstoppable Force for when Akali commits. It cannot be stopped mid-dash and it knocks her up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Akali", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Akali:4",
+          "text": "Don't chase her into Twilight Shroud. You can't see her inside, so wait outside or poke the smoke with area abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force can catch Akali off guard and knock her up before she can dash away.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "eee10066184c8f19076b757cc6703e461cc064de0586a852728c3314e8848d8f",
+      "tips": [
+        {
+          "id": "top:Malphite:Ambessa:0",
+          "text": "Hit Ambessa with Seismic Shard when she walks up; she is slowed and you gain speed, so you can pick the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Ambessa:1",
+          "text": "Use Ground Slam when she commits to a fight; her attacks slow down and her damage comes mostly from attacks and Medarda Maxim.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Ambessa:2",
+          "text": "Keep Granite Shield up before trading, since Thunderclap gives much more Armor while it is active.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Malphite:Ambessa:3",
+          "text": "Save Unstoppable Force for when she dives you or tries to run; the dash can't be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "eb9c30fc1bd91f11e439a6d71bd4df6ceb9ea93ff39df95cde699e97c1e61964",
+      "tips": [
+        {
+          "id": "top:Malphite:Anivia:0",
+          "text": "Walk at Anivia in a way that dodges Flash Frost; the ice is a wide, slow-moving missile that can be sidestepped, and its stun is nasty if you get caught.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 36, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Malphite:Anivia:1",
+          "text": "Use Seismic Shard on Anivia to slow her and speed yourself up so you can close the gap to her.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Malphite:Anivia:2",
+          "text": "Hold Unstoppable Force for when Anivia is within reach; the dash can't be deterred, so her wall won't stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:Anivia:3",
+          "text": "Hit Anivia with Ground Slam when you reach her; it cuts her Attack Speed and does heavy damage when you have armor.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-E", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Anivia:4",
+          "text": "Her egg is easy to hurt early on; after Rebirth triggers, kill it quickly or wait for her to come back at full health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 40,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "52aaac6fe7d249d63ef72aaad40472c07e20ce68a78ac6349e2d94a8addf8d26",
+      "tips": [
+        {
+          "id": "top:Malphite:Aurora:0",
+          "text": "Hit Aurora with Seismic Shard when she walks up to trade; she is slowed and you gain speed to close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Aurora:1",
+          "text": "Use Ground Slam when she commits to an all-in; it cuts her Attack Speed, which weakens her basic attack trades.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Malphite:Aurora:2",
+          "text": "Save Unstoppable Force for after she shows her hop. It can't be stopped mid-dash, so use it to knock her up and kill her.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Malphite:Aurora:3",
+          "text": "Trade when Granite Shield is up; it triples the Armor from Thunderclap, so her basic attacks hurt less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Malphite:Aurora:4",
+          "text": "Don't chase when Aurora turns invisible with Across the Veil; wait and aim your next spell where she appears.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Aurora-W", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e56ca54a7dd20b5be3e4651fd11f1e5d571ca01500b4adb13fed146c2511c2d",
+      "tips": [
+        {
+          "id": "top:Malphite:Briar:0",
+          "text": "Use Ground Slam when Briar is in Blood Frenzy; it cuts her Attack Speed so her fast hits and healing drop.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Malphite:Briar:1",
+          "text": "Hit Briar with Seismic Shard as she closes in; she is slowed and you gain Move Speed to walk away from her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Malphite:Briar:2",
+          "text": "Keep Granite Shield up before she jumps on you; it triples the Armor from Thunderclap, so her physical damage hurts less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 74, "end": 85 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Malphite:Briar:3",
+          "text": "Use Unstoppable Force when Briar commits to a fight, since the dash can't be stopped by crowd control. It knocks her up at the end.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b588a1e0194b5099467a7e5e044591c363155f0d036231a9881c14c4e15f9d2b",
+      "tips": [
+        {
+          "id": "top:Malphite:Camille:0",
+          "text": "Use Ground Slam when Camille runs in to trade; it cuts her Attack Speed and her fights get weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Camille", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Malphite:Camille:1",
+          "text": "Hit Camille with Seismic Shard when she dashes in or tries to leave; she is slowed and you gain Move Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Malphite:Camille:2",
+          "text": "Keep Granite Shield up before you fight; it makes the armor from Thunderclap much bigger against her physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Malphite:Camille:3",
+          "text": "Save Unstoppable Force for when Camille commits to a dive or trade; it dashes without being stopped and knocks her up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Camille", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Camille:4",
+          "text": "If Camille traps you with The Hextech Ultimatum, fight inside it with Ground Slam and Thunderclap; you can't leave, so make her trade costly.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Camille-R", "start": 26, "end": 47 },
+            { "kind": "ability", "key": "Malphite-E", "start": 70, "end": 81 },
+            { "kind": "ability", "key": "Malphite-W", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Camille's Hextech Ultimatum locks one target, so a Flash ultimate can still knock up her team.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "summoner-spell", "key": "4", "start": 51, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a55496c7dcaf65917a1871bec4e3e33fb0a9a31bd30b46cd791f0692f6edbd4c",
+      "tips": [
+        {
+          "id": "top:Malphite:Chogath:0",
+          "text": "Keep poking with Seismic Shard; Cho'Gath cannot dodge it and you get faster while he is slowed.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 },
+            { "kind": "champion", "key": "Chogath", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Malphite:Chogath:1",
+          "text": "Watch the smoke cloud from Rupture and step out of it before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Chogath:2",
+          "text": "Stay outside his short Feral Scream range when you need your spells, or you will be silenced.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 23, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Malphite:Chogath:3",
+          "text": "Use Ground Slam when Cho'Gath attacks with Vorpal Spikes; it cuts his Attack Speed and his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Chogath", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Chogath-E", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Malphite:Chogath:4",
+          "text": "Deny Cho'Gath minion kills when you can; each Feast stack makes him bigger and tankier.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Chogath-R", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e779c88170bc73830480a3a9d6f8bf3a02c45eb22769dc485ace026c5806de60",
+      "tips": [
+        {
+          "id": "top:Malphite:Darius:0",
+          "text": "Hit Darius with Seismic Shard when he walks up; he is slowed and you gain move speed to walk away from his pull.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Darius:1",
+          "text": "Use Ground Slam when Darius swings at you; it cuts his Attack Speed and weakens his trades.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Darius:2",
+          "text": "Trade right after Darius uses Apprehend; he is easier to poke while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Darius-E", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Darius:3",
+          "text": "Let your Granite Shield recharge before the next fight; it boosts the Armor from Thunderclap against his physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 9,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Malphite:Darius:4",
+          "text": "Save Unstoppable Force to knock Darius up when he commits. You dash without being pushed off by his crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4f841b58fc371affcf8c1557aa6c1c619fc096b785b4bfc6ec3653eb0f148a84",
+      "tips": [
+        {
+          "id": "top:Malphite:DrMundo:0",
+          "text": "Use Seismic Shard on Mundo to slow him and speed yourself up. You can then walk away from his Infected Bonesaw fights.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Malphite:DrMundo:1",
+          "text": "Mundo's Goes Where He Pleases resists the first knock up. Do not spend Unstoppable Force on him until it is used.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 8,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Malphite-R", "start": 71, "end": 88 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Malphite:DrMundo:2",
+          "text": "Step on his dropped canister to destroy it. That denies his heal and keeps his passive on cooldown.",
+          "refs": [],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Malphite:DrMundo:3",
+          "text": "Use Ground Slam when Mundo walks in to hit you with Blunt Force Trauma. It cuts his Attack Speed and blunts his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "DrMundo-E", "start": 52, "end": 70 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Malphite:DrMundo:4",
+          "text": "Take his Heart Zapper trade seriously. Back out of its range while it charges, or he heals the damage you deal to him.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3e577b79666858829184b7bd4f13963878a55f84fad2169c2e2845759f5e19f4",
+      "tips": [
+        {
+          "id": "top:Malphite:Fiora:0",
+          "text": "Cast Seismic Shard on Fiora when she walks up or backs off; it slows her and gives you extra Move Speed to chase or leave.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:Fiora:1",
+          "text": "Use Ground Slam when Fiora commits to a trade; it cuts her Attack Speed, which weakens her fast attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Fiora", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Fiora:2",
+          "text": "Do not start a fight by locking Fiora down with Unstoppable Force while Riposte is ready; she can turn the knock up into a stun on you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Malphite-R", "start": 48, "end": 65 },
+            { "kind": "ability", "key": "Fiora-W", "start": 72, "end": 79 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 107,
+              "end": 115
+            },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Malphite:Fiora:3",
+          "text": "Wait for Fiora to spend Riposte, then use Unstoppable Force to land the knock up safely.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Malphite-R", "start": 42, "end": 59 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Malphite:Fiora:4",
+          "text": "Keep Granite Shield up before a trade; Thunderclap then gives much more Armor against her physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad316e9f435592b9a899bb26beaa2407212df70104fd204bf8df66998e8d0bc7",
+      "tips": [
+        {
+          "id": "top:Malphite:Gangplank:0",
+          "text": "Save Unstoppable Force for when Gangplank cannot cleanse it; Remove Scurvy clears the knock up, so bait it out first.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 61, "end": 74 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Malphite:Gangplank:1",
+          "text": "Use Seismic Shard on Gangplank to slow him and gain speed, then walk up and trade with Thunderclap.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Malphite-W", "start": 87, "end": 98 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:Gangplank:2",
+          "text": "Stay out of the area around his Powder Keg, since an explosion slows you and hurts. Step out of the blast before he shoots it.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Malphite:Gangplank:3",
+          "text": "Cast Ground Slam when Gangplank is in range; it cuts his Attack Speed, which hurts his Trial by Fire hits and his trades.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 22, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-passive",
+              "start": 87,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "38da13d9ac8f6fc337134a985fc3f0b6a4a187aed6b431a595bfd85ed92b5a05",
+      "tips": [
+        {
+          "id": "top:Malphite:Garen:0",
+          "text": "Use Seismic Shard on Garen to slow him and run faster yourself; it is a safe way to start a trade from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Malphite:Garen:1",
+          "text": "Garen's Decisive Strike removes slows from him, so do not count on Seismic Shard to hold him once he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Garen:2",
+          "text": "Cast Ground Slam when Garen starts Judgment; it cuts his Attack Speed, so his spins hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Garen-E", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Malphite:Garen:3",
+          "text": "Trade when Granite Shield is up; Thunderclap gives you much more Armor then, which blunts Garen's physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 33, "end": 44 },
+            { "kind": "champion", "key": "Garen", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Malphite:Garen:4",
+          "text": "Garen is silenced by nothing you have, so stay out of reach when Decisive Strike is ready; his silence stops your spells.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "silenced", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Garen-Q", "start": 65, "end": 80 },
+            { "kind": "keyword", "key": "silenced", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Malphite:Garen:5",
+          "text": "Hit Garen with Unstoppable Force when you fight together with your team; the knock up gives allies time to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-R", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e7082014cece4cdf4388e6cc1c3accffe1954a2388260a7d7ead504a71ccf7d",
+      "tips": [
+        {
+          "id": "top:Malphite:Gnar:0",
+          "text": "Gnar outranges you as mini. Hit him with Seismic Shard when he steps up to last-hit, and use the speed it gives you to close in.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Malphite:Gnar:1",
+          "text": "Use Ground Slam when Gnar goes for a trade. It cuts his Attack Speed, which weakens his mini-form fighting and the attack-speed boost from Hop.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Gnar", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Malphite:Gnar:2",
+          "text": "Trade with Thunderclap while Granite Shield is up. Your Armor is much higher then, and the empowered hit also has extra reach.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 29,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Gnar:3",
+          "text": "Stay away from walls when Gnar turns Mega, because GNAR! stuns you if it throws you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gnar-R", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Gnar:4",
+          "text": "Save Unstoppable Force for when Gnar is Mega or has just used his stun. At level 6 it knocks him up and the dash can't be stopped.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Gnar", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "355f85d4ac333f5427d78519a42103787b15fe2337bd7be9abab266835a3b80c",
+      "tips": [
+        {
+          "id": "top:Malphite:Gragas:0",
+          "text": "Use Seismic Shard on Gragas when he walks up, then chase with the speed it gives you. It slows him, so he can't easily roll away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gragas", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Malphite:Gragas:1",
+          "text": "Cast Ground Slam before Gragas hits you with an empowered attack. It cuts his Attack Speed and hurts him more as you stack Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Gragas", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Malphite:Gragas:2",
+          "text": "Keep Granite Shield up before you trade; it makes Thunderclap give you much more Armor. Back off briefly so it recharges after a fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Gragas:3",
+          "text": "Save Unstoppable Force for when Gragas has used Body Slam. You dash without being stopped, and the knock up sets up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Gragas", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Gragas-E", "start": 48, "end": 57 },
+            { "kind": "keyword", "key": "knocked-up", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force gives a surprise engage on Gragas, who has no dash that avoids it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Gragas", "start": 56, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "d18fe16e9d595987520b1ed8e458cd00e6a56623413c36523c9bc75c07c13006",
+      "tips": [
+        {
+          "id": "top:Malphite:Gwen:0",
+          "text": "Use Seismic Shard on Gwen when she tries to close in or leave; she is slowed and you gain Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gwen", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Malphite:Gwen:1",
+          "text": "Gwen's attacks lean on Attack Speed, so use Ground Slam when she commits to a trade to cut her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Malphite-E", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Malphite:Gwen:2",
+          "text": "Don't waste Unstoppable Force while Hallowed Mist is up; she can't be targeted from outside it. Wait until she leaves the mist, then dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 12, "end": 29 },
+            { "kind": "ability", "key": "Gwen-W", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Malphite:Gwen:3",
+          "text": "Gwen's damage is magic, so Granite Shield and armor won't help much against it; trade carefully when she has her stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 27,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Malphite:Gwen:4",
+          "text": "Use Thunderclap for a burst of damage when she steps up to attack you, and keep hitting while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3107a13eccea70cdb53a02639bb00f10783516cc98b1ac6153e47ab5af618e5b",
+      "tips": [
+        {
+          "id": "top:Malphite:Heimerdinger:0",
+          "text": "Use Unstoppable Force to dash onto Heimerdinger when he is out of position; the dash can't be stopped by crowd control, and he is knocked up on arrival.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 35,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 130, "end": 140 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Heimerdinger:1",
+          "text": "Hit Heimerdinger with Seismic Shard to close the gap; it slows him and speeds you up, so you can reach him before his turrets matter.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Malphite-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Malphite:Heimerdinger:2",
+          "text": "Trade with Thunderclap and Ground Slam when you are next to him, away from his turrets.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Malphite-E", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Malphite:Heimerdinger:3",
+          "text": "Let Granite Shield refill before you walk up. Thunderclap gives far more Armor while the shield is up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force lets Malphite reach Heimerdinger's turrets and him from an unexpected spot.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Malphite", "start": 34, "end": 42 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 49,
+              "end": 61
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a0a2dabbd64b102058606c13a127b3fd8507222d687712e43f9ceb644672c426",
+      "tips": [
+        {
+          "id": "top:Malphite:Illaoi:0",
+          "text": "Stay away from Tentacles when you trade. Illaoi fights far better near them, so poke her with Seismic Shard from range and leave when they appear.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 41, "end": 47 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 94, "end": 107 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Malphite:Illaoi:1",
+          "text": "Use Ground Slam when Illaoi jumps in with Harsh Lesson; her Attack Speed drops and her trade gets weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Illaoi", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Malphite:Illaoi:2",
+          "text": "Seismic Shard slows Illaoi and speeds you up. Cast it to walk away when she pulls out your spirit and tries to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 19 },
+            { "kind": "champion", "key": "Illaoi", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Malphite:Illaoi:3",
+          "text": "Hold Unstoppable Force for when Illaoi commits to a fight; it knocks her up and the dash can't be stopped.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Illaoi", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Malphite:Illaoi:4",
+          "text": "Keep Granite Shield up before a trade by not taking damage first; it triples the armor from Thunderclap and blunts her physical hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 92, "end": 103 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dd70bb204109d4de3375e534ad6c275176025e7bd60713db79004e20025815e2",
+      "tips": [
+        {
+          "id": "top:Malphite:Irelia:0",
+          "text": "Hold Ground Slam until Irelia dashes in; it cuts her Attack Speed, which her Ionian Fervor stacks depend on.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Irelia", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 77,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Malphite:Irelia:1",
+          "text": "Do not waste Unstoppable Force on Defiant Dance; wait until she finishes and is open to a knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 13, "end": 30 },
+            { "kind": "ability", "key": "Irelia-W", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "knocked-up", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Malphite:Irelia:2",
+          "text": "Fight her when her Ionian Fervor stacks have run out; she is weakest then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 19,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Malphite:Irelia:3",
+          "text": "Fight her away from the minion wave, where Bladesurge has fewer targets to dash through.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Irelia:4",
+          "text": "Use Seismic Shard on her when she tries to leave; the slow gives you speed to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a017645c447fe50d16734a8eda9781a1b938fd1100f6a83951b026bd708844e",
+      "tips": [
+        {
+          "id": "top:Malphite:Jax:0",
+          "text": "Hold Seismic Shard for when Jax leaps onto you; the slow stops him from running you down.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jax", "start": 28, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Malphite:Jax:1",
+          "text": "Do not attack while Jax is in Counter Strike; wait until his stance ends and the stun is gone, then hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 20, "end": 23 },
+            { "kind": "ability", "key": "Jax-E", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Malphite:Jax:2",
+          "text": "Use Ground Slam when Jax starts hitting you; it cuts his Attack Speed, which he depends on to deal damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jax", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Jax:3",
+          "text": "Trade in short bursts and back off; a long fight lets Jax build Attack Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 54, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Jax:4",
+          "text": "Save Unstoppable Force for when Jax has used Counter Strike and Leap Strike, so he cannot escape or dodge the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Jax", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Jax-E", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "Jax-Q", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "214ace77f07f6f8595cd1844e2b7b6106131708123949dd75c3a8d6c9fe0e365",
+      "tips": [
+        {
+          "id": "top:Malphite:Jayce:0",
+          "text": "Hit Jayce with Seismic Shard when he steps up to trade; the slow makes it hard for him to leap away, and you gain the speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Malphite:Jayce:1",
+          "text": "Use Ground Slam when Jayce attacks you up close; it cuts his Attack Speed and hurts his Hyper Charge burst.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Malphite:Jayce:2",
+          "text": "Fight while Granite Shield is up. It triples the Armor from Thunderclap, so Jayce's physical hits do less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 60, "end": 71 },
+            { "kind": "champion", "key": "Jayce", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Malphite:Jayce:3",
+          "text": "Play around his poke early and avoid taking Shock Blast hits for free. Trade back only once he has used it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Malphite:Jayce:4",
+          "text": "Use Unstoppable Force to dash onto Jayce when he is in range. He can't stop it, and it knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2f7cb22a846820d8a2124de9ad21d5b31581fb2bd2b012e94f091a899f0afbcf",
+      "tips": [
+        {
+          "id": "top:Malphite:KSante:0",
+          "text": "Walk up and hit K'Sante with Seismic Shard when he steps forward; it slows him and gives you extra speed to stay on him.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 29, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:KSante:1",
+          "text": "Use Ground Slam when K'Sante runs in to fight; it cuts his Attack Speed and hurts more as you stack Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "KSante", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:KSante:2",
+          "text": "Fight with Granite Shield up, since Thunderclap then gives much more Armor. Back off to let it recharge after a trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Malphite:KSante:3",
+          "text": "Save Unstoppable Force to knock K'Sante up when he commits, or to join a fight. Its dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "KSante", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c59e7a83eed9448328286243fc680314a2e5329c0958dff7e6b492236edae848",
+      "tips": [
+        {
+          "id": "top:Malphite:Kayle:0",
+          "text": "Fight Kayle early, while Divine Ascent has not yet given her range. Walk up and trade with Thunderclap.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 25,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Malphite:Kayle:1",
+          "text": "Use Seismic Shard to chase Kayle. She is fragile, and the slow gives you extra Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kayle", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Kayle:2",
+          "text": "Ground Slam cuts her Attack Speed, which weakens her stacking attacks. Use it when she trades with you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Malphite:Kayle:3",
+          "text": "After level 6, Kayle outranges you, so stay away from her and look for a way in with Unstoppable Force.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Malphite-R", "start": 85, "end": 102 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Malphite:Kayle:4",
+          "text": "If Kayle uses Divine Judgment, wait out the invulnerability. You can still slow her, so hit her once it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Kayle-R", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8dee1661b086ac8222be155bb1c7a0a8198dfcc2a2b86323da6792f708786ee",
+      "tips": [
+        {
+          "id": "top:Malphite:Kennen:0",
+          "text": "Use Seismic Shard on Kennen when he walks up to trade; it slows him and gives you extra Move Speed to chase or step away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kennen", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Kennen:1",
+          "text": "Hit Kennen with Ground Slam when he tries to fight you; his Attack Speed drops, so his trade with Attack Speed from Lightning Rush is weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-E", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Kennen-E", "start": 116, "end": 130 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Kennen:2",
+          "text": "Kennen is fragile, so fight him once Unstoppable Force is ready. Dash onto him and he is knocked up with nowhere to go.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Malphite-R", "start": 37, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Malphite:Kennen:3",
+          "text": "Stay out of his poke range while Granite Shield is down. Let it recharge before you step up to trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 33,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Malphite:Kennen:4",
+          "text": "Trade with Thunderclap while Granite Shield is up; your Armor is much higher then, which helps in longer auto-attack trades.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 29,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7846a94a917da28dc6985dfe2b6d02fc9be459444d5c9890954e4c04d5701218",
+      "tips": [
+        {
+          "id": "top:Malphite:Kled:0",
+          "text": "Hit Kled with Ground Slam right before he lands his fourth attack; it cuts his Attack Speed, so Violent Tendencies loses much of its burst.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Malphite-E", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Kled-W", "start": 96, "end": 114 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Malphite:Kled:1",
+          "text": "Use Seismic Shard on Kled when he runs at you; it leaves him slowed and gives you extra Move Speed to walk away or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kled", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Malphite:Kled:2",
+          "text": "Trade when Granite Shield is up; it makes Thunderclap give far more Armor against Kled's physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 42, "end": 53 },
+            { "kind": "champion", "key": "Kled", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Kled:3",
+          "text": "Once Kled loses Skaarl, he has to fight to regain courage. Keep pressing him with Seismic Shard so he cannot easily remount.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Malphite:Kled:4",
+          "text": "Save Unstoppable Force for when Kled commits with Jousting or Chaaaaaaaarge!!!; it cannot be stopped by crowd control and knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Kled", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Kled-E", "start": 50, "end": 58 },
+            { "kind": "ability", "key": "Kled-R", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc71e5a1156eeeed3e726565499416dff3741451d8eb4853327faa4c1fd349d7",
+      "tips": [
+        {
+          "id": "top:Malphite:Mordekaiser:0",
+          "text": "Use Seismic Shard to slow Mordekaiser when he steps up, then trade with Thunderclap while you are faster.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 26,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Mordekaiser:1",
+          "text": "Cast Ground Slam when Mordekaiser attacks you; it cuts his Attack Speed, so his empowered hits land less often.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Malphite:Mordekaiser:2",
+          "text": "Keep Granite Shield up before a trade by staying out of poke; Thunderclap gives much more Armor while it is active.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Malphite-W", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Malphite:Mordekaiser:3",
+          "text": "Do not fight him in a long drawn-out trade; his Darkness Rise aura grows deadly once he lands three hits. Trade in short bursts and step away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 48,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Malphite:Mordekaiser:4",
+          "text": "Save Unstoppable Force for a gap-close or escape; it cannot be stopped by crowd control. Be ready for Death's Grasp pulling you back.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 102,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f3eb6dadf30dd03d086ac0ee9a3c540188ced0a47fada97808c856916dc7ab3f",
+      "tips": [
+        {
+          "id": "top:Malphite:Naafiri:0",
+          "text": "Use Ground Slam when Naafiri runs in; her attack damage is physical and the attack speed cut weakens her trade and her Packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Malphite:Naafiri:1",
+          "text": "Keep Granite Shield up before a trade; it triples the Armor from Thunderclap, which helps against her physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Malphite:Naafiri:2",
+          "text": "Hit Naafiri with Seismic Shard to slow her and get away or chase; you also gain Move Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Naafiri:3",
+          "text": "Hold Unstoppable Force for when she commits to a dive; the dash cannot be stopped and it knocks up everyone it lands on.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c879ea5fc588c54f6bebbf8a15b3eac774ba47fdc9e909aae1018eaad66f70a9",
+      "tips": [
+        {
+          "id": "top:Malphite:Nasus:0",
+          "text": "Poke Nasus with Seismic Shard when he walks up to last-hit; the slow makes him miss his Siphoning Strike farm and you gain speed.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Malphite:Nasus:1",
+          "text": "Use Ground Slam when Nasus goes for an attack; it cuts his Attack Speed, so his trades hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nasus", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Malphite:Nasus:2",
+          "text": "Keep Granite Shield up before you trade. It makes Thunderclap give far more Armor against his physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Malphite:Nasus:3",
+          "text": "Trade hard early, before Nasus has stacked Siphoning Strike. Use Thunderclap and then keep attacking him.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 43, "end": 59 },
+            { "kind": "ability", "key": "Malphite-W", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Malphite:Nasus:4",
+          "text": "Do not fight inside Fury of the Sands. Back off and use Unstoppable Force only when you can kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 20, "end": 37 },
+            { "kind": "ability", "key": "Malphite-R", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "683b0053521fe061a634e1da18695023ce82a866eba51f592f43bf2f1a71b51c",
+      "tips": [
+        {
+          "id": "top:Malphite:Olaf:0",
+          "text": "Hit Olaf with Seismic Shard when he walks up for the axe; the slow keeps him away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Malphite:Olaf:1",
+          "text": "Stay out of a straight line with Olaf when he has Undertow ready; sidestep it to avoid the slow and the Armor loss.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 50, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Malphite:Olaf:2",
+          "text": "Use Ground Slam when Olaf closes in; it cuts his Attack Speed, which he relies on for his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Olaf", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Malphite:Olaf:3",
+          "text": "Wait until Olaf uses Ragnarok before committing Unstoppable Force; he is immune to the knock up while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Olaf-R", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Malphite-R", "start": 48, "end": 65 },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Olaf:4",
+          "text": "Don't fight Olaf at low health for long; he gets stronger the more damage he has taken, so back off instead of chasing him.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aa5d0d90f825a37d56159b09d2b406ab38735f44919d00cbaf3308b0898ec654",
+      "tips": [
+        {
+          "id": "top:Malphite:Ornn:0",
+          "text": "Stay away from walls when Ornn has Searing Charge ready; if he rams terrain next to you, you get knocked up and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ornn-E", "start": 35, "end": 49 },
+            { "kind": "keyword", "key": "knocked-up", "start": 97, "end": 107 },
+            { "kind": "keyword", "key": "stunned", "start": 112, "end": 119 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Ornn:1",
+          "text": "Hit Ornn with Seismic Shard when he walks up to trade. It slows him and speeds you up, so you can pick the fight or walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Malphite:Ornn:2",
+          "text": "Use Ground Slam when Ornn attacks you. It cuts his Attack Speed, and his Volcanic Rupture and Searing Charge are his only other ways to damage you in a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ornn", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 73, "end": 89 },
+            { "kind": "ability", "key": "Ornn-E", "start": 94, "end": 108 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Malphite:Ornn:3",
+          "text": "Keep Granite Shield up before you step in. It makes Thunderclap's armor much bigger, so Ornn's trades hurt less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 52, "end": 63 },
+            { "kind": "champion", "key": "Ornn", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Malphite:Ornn:4",
+          "text": "Sidestep Volcanic Rupture; its pillar blocks the lane and you can get stuck behind it. Don't dash with Unstoppable Force into a spot he is about to wall.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Malphite-R", "start": 103, "end": 120 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20ee89a8fd0c10679587d56acc7841d94e45cdf33d801d2e46556c359978d2ec",
+      "tips": [
+        {
+          "id": "top:Malphite:Pantheon:0",
+          "text": "Cast Ground Slam when Pantheon commits to a fight; it cuts his Attack Speed, which weakens his attacks and the Shield Vault follow-up hits.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 111, "end": 123 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Malphite:Pantheon:1",
+          "text": "Use Seismic Shard on Pantheon as he leaves a trade; he is slowed and you gain Move Speed to chase or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Malphite:Pantheon:2",
+          "text": "Do not hit Pantheon from the front while he channels Aegis Assault; he takes no damage from that direction. Wait it out or step around behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Malphite:Pantheon:3",
+          "text": "Keep Granite Shield recharged by staying out of his poke; Thunderclap gives much more Armor while the shield is up, which blunts his physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Malphite-W", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Malphite:Pantheon:4",
+          "text": "When Grand Starfall is announced, move out of the target area, or save Unstoppable Force to land on him when he arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Malphite-R", "start": 71, "end": 88 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "74bf3c7edbf7d4de8c0d131c0787fc4c6e79479fea4bc26b5d4903f5c067fed7",
+      "tips": [
+        {
+          "id": "top:Malphite:Quinn:0",
+          "text": "Use Ground Slam when Quinn commits to attacking you; it cuts her Attack Speed and blunts her trades.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Quinn", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:Quinn:1",
+          "text": "Hit Quinn with Seismic Shard to slow her and gain Move Speed, then walk up and trade or chase.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:Quinn:2",
+          "text": "Use Unstoppable Force at level 6 to knock her up when she is low; she cannot escape once you land.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Malphite:Quinn:3",
+          "text": "Let Granite Shield recharge before you trade; it makes Thunderclap give you much more Armor against her physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "76d77ff2dd2f8eea8ed97263c8eaa89e7aad740a31752bbb07fb45a9d86e4e05",
+      "tips": [
+        {
+          "id": "top:Malphite:Renekton:0",
+          "text": "Use Ground Slam when Renekton dives onto you; it cuts his Attack Speed and weakens his follow-up hits.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Renekton", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Renekton:1",
+          "text": "Hit Renekton with Seismic Shard when he walks up; he is slowed and you gain Move Speed to walk away from his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Malphite:Renekton:2",
+          "text": "Keep Granite Shield up before trading; it triples the Armor from Thunderclap, which helps against his physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Malphite:Renekton:3",
+          "text": "Trade with Seismic Shard from range while his Fury is low; he cannot punish you easily until he fights and builds Fury.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Malphite:Renekton:4",
+          "text": "Save Unstoppable Force for when Renekton commits to a fight; the dash cannot be stopped by crowd control and knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Renekton", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0eaba9cf34a425ae7b601e8fd684b07f2166923425ff4b269fbc3a3b8f0dd1a5",
+      "tips": [
+        {
+          "id": "top:Malphite:Riven:0",
+          "text": "Use Ground Slam when Riven dives in to trade; it cuts her Attack Speed and hits harder the more Armor you have.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Riven", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Riven:1",
+          "text": "Hit Riven with Seismic Shard to slow her, then walk away; the speed you steal helps you leave her range.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Riven:2",
+          "text": "Trade while Granite Shield is up, because Thunderclap gives far more Armor then, and all of Riven's damage is physical.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 42, "end": 53 },
+            { "kind": "champion", "key": "Riven", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Malphite:Riven:3",
+          "text": "Hold Unstoppable Force until Riven has spent her dashes and stun. Her Valor shield is short, so strike when it has worn off.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Riven", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Riven-E", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Malphite:Riven:4",
+          "text": "Stay out of Ki Burst range when you can; being stunned lets her finish her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 12, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:0",
+          "note": "Flash into Unstoppable Force can land a knock-up on Riven even when she thinks she is out of range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Riven", "start": 52, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b5c4ee41e30da5928766b40bb43e2c1e2abe6f1518de29827385e63c4414b006",
+      "tips": [
+        {
+          "id": "top:Malphite:Rumble:0",
+          "text": "Hit Rumble with Seismic Shard to slow him, then walk up and trade; you also gain Move Speed from the steal.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Rumble:1",
+          "text": "Use Ground Slam when Rumble starts hitting you with attacks. It cuts his Attack Speed, which matters most when he is Overheated.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rumble", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Rumble:2",
+          "text": "Rumble deals mostly magic damage, so Granite Shield is only a small buffer. Let it recharge between trades by staying out of his range.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 37,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Malphite:Rumble:3",
+          "text": "When Rumble overheats and cannot cast, dash in with Unstoppable Force and fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Malphite-R", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Malphite:Rumble:4",
+          "text": "Start your Thunderclap trade while your shield is up. Your bonus Armor is much higher then, so his attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9453c81dd590bd849e09847269e5ba1e040665d7650bf8c0646f9aa3fd1886de",
+      "tips": [
+        {
+          "id": "top:Malphite:Sett:0",
+          "text": "Use Seismic Shard on Sett when he walks up to trade; the slow gives you speed to close in or to walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Sett:1",
+          "text": "Cast Ground Slam when Sett starts punching. It cuts his Attack Speed, and your Armor makes it hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sett", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Malphite:Sett:2",
+          "text": "Let Granite Shield refill before you trade. Thunderclap gives much more Armor while the shield is up, so don't trade when it is broken.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Malphite:Sett:3",
+          "text": "Sett's Haymaker turns damage he takes into a shield. Poke him with Seismic Shard from range instead of trading blows, so he has little to store.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-W", "start": 7, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Malphite:Sett:4",
+          "text": "Aim Unstoppable Force at Sett once he is committed to a fight. He can't dodge it by being slowed or pulled, and it knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Sett", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": [
+        {
+          "comboId": "top:Malphite:combo:1",
+          "note": "Sett's Show Stopper is a grab, so a faster, harder-to-dodge Unstoppable Force dash helps Malphite engage.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Malphite-R", "start": 60, "end": 77 },
+            { "kind": "champion", "key": "Malphite", "start": 89, "end": 97 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5b28ea715b81650bba930d03c8783af88fb9f7641432d1cadccbd0eb1e73e120",
+      "tips": [
+        {
+          "id": "top:Malphite:Shen:0",
+          "text": "Use Seismic Shard on Shen when he walks up to trade; it slows him and gives you Move Speed to walk away or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Shen:1",
+          "text": "Cast Ground Slam when Shen starts hitting you with his empowered attacks; it cuts his Attack Speed and his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Malphite:Shen:2",
+          "text": "Trade while Granite Shield is up; Thunderclap gives much more Armor then, so Shen's attacks hurt less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Shen", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Malphite:Shen:3",
+          "text": "Look out for Shen's global teleport at level 6. Do not chase a hurt Shen if his allies could shield him and arrive.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 13, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Malphite:Shen:4",
+          "text": "Save Unstoppable Force for when Shen is committed to a dash or fight. Once you start the dash, crowd control cannot stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Shen", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "351496f345e326309e5d7d4d9626065f504ea0c21a2e065810d850d663cbcbb3",
+      "tips": [
+        {
+          "id": "top:Malphite:Singed:0",
+          "text": "Use Seismic Shard on Singed when he comes close. You gain speed from his slow and can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Singed", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Malphite:Singed:1",
+          "text": "Stay out of Mega Adhesive when Singed throws it. Singed can Fling you into it and you will be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Singed", "start": 31, "end": 37 },
+            { "kind": "champion", "key": "Singed", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Singed-E", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Malphite:Singed:2",
+          "text": "Use Ground Slam when Singed is on top of you. It deals good damage and weakens his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Singed", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Malphite:Singed:3",
+          "text": "Do not chase Singed through his Poison Trail. Fight him away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Singed-Q", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Singed:4",
+          "text": "Save Unstoppable Force for when Singed is stuck or hurt. Nothing stops the dash once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Singed", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4bad6bdd51dbbae4f3a870c6c7ff18f2319169fb797bdd85883ec45b4f2bcf9d",
+      "tips": [
+        {
+          "id": "top:Malphite:Sion:0",
+          "text": "Stay out of Sion's charge line while he winds up Decimating Smash. Step sideways out of the line before he lets go, because a full charge stuns.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 49, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 138, "end": 143 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Malphite:Sion:1",
+          "text": "Use Seismic Shard on Sion to slow him and gain speed, which makes his charged Decimating Smash harder to land.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Sion-Q", "start": 78, "end": 94 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Malphite:Sion:2",
+          "text": "Trade with Thunderclap and Ground Slam while your Granite Shield is up. Ground Slam cuts his Attack Speed, so his Soul Furnace trades go worse.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Malphite-E", "start": 27, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 50,
+              "end": 64
+            },
+            { "kind": "ability", "key": "Malphite-E", "start": 72, "end": 83 },
+            { "kind": "ability", "key": "Sion-W", "start": 114, "end": 126 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Malphite:Sion:3",
+          "text": "Keep Unstoppable Force for when Sion is stunned or slowed, or for a kill. Don't fight him right after he dies, since Glory in Death makes him hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 32, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 117,
+              "end": 131
+            }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "25b9d2174727bfbd7c99378f8f0996df588a3fac16536b26edfd696d0d26d2c4",
+      "tips": [
+        {
+          "id": "top:Malphite:TahmKench:0",
+          "text": "Use Seismic Shard to slow Tahm Kench when he walks up to trade; you also gain Move Speed to chase or leave.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "TahmKench", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:TahmKench:1",
+          "text": "Cast Ground Slam when Tahm Kench trades with you; it cuts his Attack Speed so his stacks build slower.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "TahmKench", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Malphite:TahmKench:2",
+          "text": "Hit Tahm Kench with Thunderclap's empowered attack while your Granite Shield is up, since your Armor is far higher then.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Malphite-W", "start": 20, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 62,
+              "end": 76
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Malphite:TahmKench:3",
+          "text": "Do not rely on Unstoppable Force to dodge Abyssal Dive's knock up; it is a dash, so cast it before he lands, or hit him after.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 15, "end": 32 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Malphite:TahmKench:4",
+          "text": "Trade in short bursts. Tahm Kench stores damage with Thick Skin and heals it back if you stop hitting him, so keep pressure on or burst him down.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8f8268987771c8a1ed4bf827a91b26d00b40136e38ffa6d1c1c3fc305debd0fa",
+      "tips": [
+        {
+          "id": "top:Malphite:Teemo:0",
+          "text": "Walk up to Teemo with Seismic Shard to slow him and gain Move Speed. Then close in before his Toxic Shot wears you down.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Teemo-E", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Malphite:Teemo:1",
+          "text": "Use Ground Slam when Teemo is in range. It cuts his Attack Speed, so his Toxic Shot poison is applied less often.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Teemo-E", "start": 73, "end": 83 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Malphite:Teemo:2",
+          "text": "Ward the bushes, since Teemo can hide in them while moving with Guerrilla Warfare. Walk around spots where a stealthed Noxious Trap could be.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 64,
+              "end": 81
+            },
+            { "kind": "ability", "key": "Teemo-R", "start": 119, "end": 131 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Malphite:Teemo:3",
+          "text": "Use Unstoppable Force to jump on Teemo when he is chasing a wave or standing still. Blinding Dart can't stop the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 84, "end": 97 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5fd502b63ee13a70b710aff9038d8fdfbdfac5f6d0292f7dcb40ddb0057c70df",
+      "tips": [
+        {
+          "id": "top:Malphite:Tryndamere:0",
+          "text": "Use Ground Slam when Tryndamere attacks you; it cuts his Attack Speed and blunts his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Tryndamere", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Malphite:Tryndamere:1",
+          "text": "Harass with Seismic Shard so Tryndamere can't build Fury and heal with Bloodlust.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Tryndamere", "start": 29, "end": 39 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 71, "end": 80 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Malphite:Tryndamere:2",
+          "text": "Don't spend Unstoppable Force on a Tryndamere who still has Undying Rage; wait until it is used.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 12, "end": 29 },
+            { "kind": "champion", "key": "Tryndamere", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Malphite:Tryndamere:3",
+          "text": "Keep Granite Shield recharged between trades; it strengthens your Armor through Thunderclap.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8b27a6c64b122d3a004b9cbaceaff3e0f5c8e3f1cb5c056fc29ad0d5ba81d426",
+      "tips": [
+        {
+          "id": "top:Malphite:Urgot:0",
+          "text": "Use Seismic Shard on Urgot to slow him and run you faster, then close in for a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Urgot", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Malphite:Urgot:1",
+          "text": "Cast Ground Slam when Urgot is close; it cuts his Attack Speed, which weakens his leg shots.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Urgot", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Malphite:Urgot:2",
+          "text": "Step aside from Corrosive Charge; it explodes after a brief delay, so move before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Malphite:Urgot:3",
+          "text": "Watch for Disdain; it stuns the first champion hit and Urgot gets a shield, so do not trade into it.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 10, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Urgot", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Malphite:Urgot:4",
+          "text": "Stay above the low-health line when Fear Beyond Death hits you, or Urgot can drag you in and kill you.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-R", "start": 36, "end": 53 },
+            { "kind": "champion", "key": "Urgot", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b60f72934c262334f5f62cd3275cd83b6328b510d48e9f0bd0248a0a06e9f6d8",
+      "tips": [
+        {
+          "id": "top:Malphite:Varus:0",
+          "text": "Use Seismic Shard on Varus to slow him and speed yourself up, then walk in and trade before he can set up his long-range shots.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Varus", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Malphite:Varus:1",
+          "text": "Cast Ground Slam when Varus trades with his basic attacks. It cuts his Attack Speed, which weakens his Blight stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Varus", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Malphite:Varus:2",
+          "text": "Stay out of the long reach of Piercing Arrow. If you stand far away, he can snipe you for free, so walk up to him with Seismic Shard.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 30, "end": 44 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 119, "end": 132 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Malphite:Varus:3",
+          "text": "Use Unstoppable Force on Varus when he is charging Piercing Arrow or has used his escape. The dash can't be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Varus", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Varus-Q", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Malphite:Varus:4",
+          "text": "Let Granite Shield refill between trades. It makes Thunderclap give you much more Armor against his physical damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c13684cfcf5d3f651739f508e323534d5dcc2a36256fcd363c93c26902aa6227",
+      "tips": [
+        {
+          "id": "top:Malphite:Vayne:0",
+          "text": "Hit Vayne with Seismic Shard early and often; she is slowed and you gain Move Speed to run her down.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Vayne:1",
+          "text": "Use Ground Slam when Vayne is about to trade; it cuts her Attack Speed, which weakens her Silver Bolts rhythm.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Vayne-W", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Malphite:Vayne:2",
+          "text": "Keep Granite Shield up before you step in; it makes Thunderclap give you much more Armor against her attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Malphite:Vayne:3",
+          "text": "Stay away from walls when Vayne has Condemn ready; being pinned means a stun and big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:Vayne:4",
+          "text": "At level 6, use Unstoppable Force to dash onto Vayne; it can't be stopped by Condemn's knockback and it knocks her up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 16, "end": 33 },
+            { "kind": "champion", "key": "Vayne", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Vayne-E", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f9b35822b0bd618d8fbfe64be2568b984d244d8297e16d59c5ef909cdd67e382",
+      "tips": [
+        {
+          "id": "top:Malphite:Vladimir:0",
+          "text": "Poke Vladimir with Seismic Shard when he walks up to last-hit. It slows him and gives you extra Move Speed.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Vladimir:1",
+          "text": "Use Ground Slam when Vladimir trades with you; it cuts his Attack Speed and damages him.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Vladimir", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Malphite:Vladimir:2",
+          "text": "Hold Unstoppable Force until Sanguine Pool is on cooldown, or he can become untargetable and avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Malphite:Vladimir:3",
+          "text": "Stay out of the pool's area while Vladimir is in it, since it slows you and damages you.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Malphite:Vladimir:4",
+          "text": "Fight him before Hemoplague bursts; that burst heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cb035ffd68d58c1e6934f3474998941fbb146f1e9c92857138cb6466514250c4",
+      "tips": [
+        {
+          "id": "top:Malphite:Volibear:0",
+          "text": "Use Seismic Shard on Volibear as he runs at you; he is slowed and you gain his lost speed, so you can walk away from his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Volibear", "start": 21, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Malphite:Volibear:1",
+          "text": "Cast Ground Slam when Volibear commits to a fight; it cuts his Attack Speed, which weakens his attack-based damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Malphite:Volibear:2",
+          "text": "Trade while Granite Shield is up; Thunderclap gives much more Armor then, which makes Volibear's physical hits weaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Volibear", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Malphite:Volibear:3",
+          "text": "Keep your distance from his Thundering Smash; if he reaches you, he leaps onto you and stuns you. Step back when he glows.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Malphite:Volibear:4",
+          "text": "Use Unstoppable Force to knock Volibear up when he is low on health, then follow up with your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Volibear", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8d9cd5e078a66e07e3feb2f3b0bfbb01acbf5de74873eab163acad58c93197bd",
+      "tips": [
+        {
+          "id": "top:Malphite:XinZhao:0",
+          "text": "Use Seismic Shard to slow Xin Zhao when he walks up. It also gives you speed to get away from his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Malphite:XinZhao:1",
+          "text": "Use Ground Slam when Xin Zhao charges in. It cuts his Attack Speed, which weakens his Three Talon Strike and the attacks he lands with it.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Malphite:XinZhao:2",
+          "text": "Keep Granite Shield up by staying out of poke. Your Thunderclap armor is triple while it lasts, so Xin Zhao's attacks do much less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Malphite-W", "start": 52, "end": 63 },
+            { "kind": "champion", "key": "XinZhao", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Malphite:XinZhao:3",
+          "text": "Do not stand in a line with Xin Zhao's Wind Becomes Lightning. Getting hit slows you and marks you as Challenged.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 39, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Malphite:XinZhao:4",
+          "text": "Save Unstoppable Force for when Xin Zhao has used his charge. Nothing stops the dash, and the knock up lets your team finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a5f3f4ceddd115beb4bce7bfa68b609f8389e9941d8c5f250ae8a5923f3387f",
+      "tips": [
+        {
+          "id": "top:Malphite:Yasuo:0",
+          "text": "Use Seismic Shard on Yasuo when he walks up to last-hit; it slows him and gives you speed to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Malphite:Yasuo:1",
+          "text": "Cast Ground Slam when Yasuo commits to a trade; it cuts his Attack Speed, which weakens his basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Yasuo:2",
+          "text": "Hold Unstoppable Force for when Yasuo is close. Its knock up lets him use Last Breath, so be ready for allies to join the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "knocked-up", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 74, "end": 85 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Malphite:Yasuo:3",
+          "text": "Trade with Thunderclap while Granite Shield is up; your armor is much higher then, so Yasuo's attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 11, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 29,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "acf0b0245e7b2d4d7aac9e41828e6452bfa5fd679bd4d589559afa0d0db0acda",
+      "tips": [
+        {
+          "id": "top:Malphite:Yone:0",
+          "text": "Use Unstoppable Force on Yone when he commits to a fight; the dash can't be stopped by crowd control, and it knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Yone:1",
+          "text": "Cast Ground Slam when Yone is about to hit you; it cuts his Attack Speed and he relies on attacks to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Malphite:Yone:2",
+          "text": "Hit Seismic Shard on Yone to slow him and gain Move Speed. Then you can walk up and trade or step away.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Yone:3",
+          "text": "Trade while Granite Shield is up, because Thunderclap gives much more Armor then. Let the shield recharge before you trade again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Malphite:Yone:4",
+          "text": "Hold Unstoppable Force while Yone's Soul Unbound is up and he is far from his body. Knock him up and he snaps back to it.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Yone-E", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ed94ea31e31aaf9cdc1ce9884a200ce99e03602fc5bc7fea0ed32139cedebfa9",
+      "tips": [
+        {
+          "id": "top:Malphite:Yorick:0",
+          "text": "Use Seismic Shard on Yorick when he walks up to hit minions; it slows him and gives you extra Move Speed to follow up or leave.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yorick", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Malphite:Yorick:1",
+          "text": "Cast Ground Slam when Yorick commits to an attack; it cuts his Attack Speed and weakens his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yorick", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Malphite:Yorick:2",
+          "text": "Hit Yorick with Thunderclap while Granite Shield is up; your Armor is much higher then and his physical hits do little.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-W", "start": 16, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 34,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Malphite:Yorick:3",
+          "text": "Clear Mist Walkers with Ground Slam or Thunderclap before you fight; they die fast and cannot help him if they are gone.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Malphite-W", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Malphite:Yorick:4",
+          "text": "Save Unstoppable Force for when Yorick is out of position; it cannot be stopped mid-dash, and it knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yorick", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e163a397104413ecd8e4bdea3a9e3822edda44efc61f236e3a89befe3373dda3",
+      "tips": [
+        {
+          "id": "top:Malphite:Zaahen:0",
+          "text": "Use Ground Slam when Zaahen commits to a fight; it cuts his Attack Speed and slows down his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zaahen", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Malphite:Zaahen:1",
+          "text": "Hit Zaahen with Seismic Shard to leave him slowed and to gain Move Speed yourself, then walk away from his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Malphite:Zaahen:2",
+          "text": "Fight when Granite Shield is up, because Thunderclap gives you much more Armor then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Malphite:Zaahen:3",
+          "text": "Save Unstoppable Force for when Zaahen is low or pulled in; it knocks him up and cannot be stopped mid-dash.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Zaahen", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

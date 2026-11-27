@@ -1,0 +1,2987 @@
+{
+  "schemaVersion": 1,
+  "champion": "Graves",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "69416d380bb8ce3678bb0c941866bbf5f6acb2f2cd297ced753fe31628f45d87",
+      "tips": [
+        {
+          "id": "jungle:Graves:general:0",
+          "text": "Dash toward an enemy champion with Quickdraw when you want to fight; it gives extra armor and magic resist and reloads a shell.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Graves:general:1",
+          "text": "Land your shots up close. Each pellet of a basic attack hits harder when more of them connect on one target.",
+          "refs": [],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Graves:general:2",
+          "text": "Fire End of the Line down a long line of enemies. It hits once on the way out and again when the trail explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Graves:general:3",
+          "text": "Aim End of the Line so it hits a wall close by. The trail then explodes almost at once, and the enemy has little time to step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Graves:general:4",
+          "text": "Throw Smoke Screen at enemies chasing you or at a target you are chasing. They are slowed, and enemies inside can't see far.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Graves:general:5",
+          "text": "Use Collateral Damage to finish a fight or to get away. It throws you backward as you fire, so aim it with your exit in mind.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Graves:general:6",
+          "text": "Do not rely on Collateral Damage while you are rooted. You will not be thrown back, but the shot still fires.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Graves:combo:0",
+          "name": "Quickdraw reload reset",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            "attack",
+            { "kind": "ability", "key": "Graves-E" },
+            "attack"
+          ],
+          "when": "After both shells are spent, such as in the middle of a jungle camp or a fight.",
+          "whenRefs": [],
+          "text": "Quickdraw reloads a shell and resets his attack timer. Dash right after the second shot to skip the long reload and fire again straight away.",
+          "textRefs": [
+            { "kind": "ability", "key": "Graves-E", "start": 0, "end": 9 }
+          ]
+        },
+        {
+          "id": "jungle:Graves:combo:1",
+          "name": "Wall-hugging Q",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Graves-Q" }],
+          "when": "When an enemy or camp is standing near a wall and you can aim at that wall.",
+          "whenRefs": [],
+          "text": "The shell blows up almost at once when it hits terrain, so the second hit lands much sooner. Enemies have less time to walk out of it.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "e6c9cb8d7cd67f352a03558a8b54b40bf429b6d3e73b00ea9274081264254a40",
+      "tips": [
+        {
+          "id": "jungle:Graves:Aatrox:0",
+          "text": "Keep your distance from Aatrox and shoot him as he walks up; his Darkin Blade is a telegraphed line, so sidestep it instead of trading into it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Graves:Aatrox:1",
+          "text": "Use Quickdraw to dodge his Darkin Blade, then fire back while he is still recovering.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Graves:Aatrox:2",
+          "text": "Leave Infernal Chains by moving toward the sides, or toward Aatrox, or use Quickdraw, before the pull lands.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 60, "end": 66 },
+            { "kind": "ability", "key": "Graves-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Graves:Aatrox:3",
+          "text": "Fire Smoke Screen at Aatrox when he dives in. It slows him and cuts his sight, which makes it hard for him to aim Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Graves:Aatrox:4",
+          "text": "Aatrox heals a lot in a long fight, so burst him with point-blank shots and Collateral Damage instead of poking for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Graves-R", "start": 76, "end": 93 },
+            { "kind": "keyword", "key": "poke", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Graves:Aatrox:5",
+          "text": "After Aatrox uses World Ender, stay far away so he cannot get a quick takedown that extends it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6f3930db5cf8520f388291654157ab738512e8ed263682558546ce79bcd4cfbd",
+      "tips": [
+        {
+          "id": "jungle:Graves:Ambessa:0",
+          "text": "Save Quickdraw to dash away when Ambessa closes in; Lacerate slows hard, so leave before she gets in range.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Ambessa", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Graves:Ambessa:1",
+          "text": "Dash toward Ambessa with Quickdraw before you shoot; the extra armor and magic resist make her physical hits weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Graves-E", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Graves:Ambessa:2",
+          "text": "Drop Smoke Screen on Ambessa when she dives in; it slows her and cuts her sight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Graves:Ambessa:3",
+          "text": "Fire End of the Line at her from long range as she approaches; the round hits twice if she stays in the trail.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Graves:Ambessa:4",
+          "text": "Use Collateral Damage to blast yourself away when she lands on you; it also hurts her.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Graves:Ambessa:5",
+          "text": "Stay at range; Ambessa's empowered attacks reach farther after she casts, so give her room to waste abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1b779d8cf772cf6d40698aeff47673266be4b9b12a6b5fd0c99c1bb657ee498f",
+      "tips": [
+        {
+          "id": "jungle:Graves:Amumu:0",
+          "text": "Keep your distance from Amumu and stay out of a straight line with him; Bandage Toss ends at the first enemy it hits, so put a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Graves:Amumu:1",
+          "text": "Don't bunch up with your team when Amumu has Curse of the Sad Mummy ready; it stuns everyone close to him.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Amumu-R", "start": 45, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Graves:Amumu:2",
+          "text": "Hold Quickdraw to get away after Amumu has used his Bandage Toss charges, and use Smoke Screen on him if he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Amumu", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 52, "end": 64 },
+            { "kind": "ability", "key": "Graves-W", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Graves:Amumu:3",
+          "text": "Don't waste physical damage on Amumu in a long fight, since Tantrum reduces it; End of the Line from range does better.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Amumu-E", "start": 60, "end": 67 },
+            { "kind": "ability", "key": "Graves-Q", "start": 80, "end": 95 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a982402a54a36132c468d67d37b83a0ef566a2ea4482eca97581154494d28dc4",
+      "tips": [
+        {
+          "id": "jungle:Graves:Belveth:0",
+          "text": "Fire End of the Line at Bel'Veth when she dashes in; the trail detonates behind it and catches her if she stays in the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Belveth", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Graves:Belveth:1",
+          "text": "Throw Smoke Screen at her feet when she jumps on you; she is slowed and her vision shrinks, so she has a harder time chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Graves:Belveth:2",
+          "text": "Dash toward her with Quickdraw before a fight to gain extra armor and magic resist, then shoot at point blank.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Graves:Belveth:3",
+          "text": "Use Collateral Damage to finish her when she is low; it also throws you backward, away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Graves:Belveth:4",
+          "text": "Do not stand and trade when she has built up attack speed from kills. Keep your distance and fight on your terms.",
+          "refs": [],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:0",
+          "note": "Quickdraw reload keeps his shots going, which helps in fights against Bel'Veth's attack-speed stacking.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Belveth", "start": 70, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bb13627da7dfd8721459f6a52bb8632c2cc07fb7d379ea44e2e583aa4697b14e",
+      "tips": [
+        {
+          "id": "jungle:Graves:Brand:0",
+          "text": "Dodge Brand's first Sear or Pillar of Flame. Without an ablaze target his combo can't start.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Brand-W", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Graves:Brand:1",
+          "text": "Walk sideways out of Pillar of Flame as it forms. It has a delay before it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Graves:Brand:2",
+          "text": "Close in with Quickdraw and shoot Brand up close. His range is long, but he is fragile once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 14, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Graves:Brand:3",
+          "text": "Throw Smoke Screen on Brand to slow him and cut his sight, then fire End of the Line through the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Graves-Q", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Graves:Brand:4",
+          "text": "Stay away from your allies when Brand casts Pyroclasm. The fireball starts slowly, so you have time to move.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Brand-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d7cec9d634d4ef50582fc20f2a19c6d676ae8a3cb17bf5ff2b6a6b6177edc9d4",
+      "tips": [
+        {
+          "id": "jungle:Graves:Briar:0",
+          "text": "Throw Smoke Screen on Briar when she leaps in; she is slowed and can only see a short way, so she has a hard time chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Graves:Briar:1",
+          "text": "Dash toward Briar with Quickdraw before you fight; it gives extra Armor and Magic Resist for her physical and magic damage.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Graves-E", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Graves:Briar:2",
+          "text": "Hit Briar with End of the Line as she runs at you; it hits her on the way out and again when it blows up.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Graves-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Graves:Briar:3",
+          "text": "Hold Collateral Damage for when Briar is low on Health; she heals herself back up quickly if the fight drags on.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Briar", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "82124f9598c282e20a0252efa8c5c2370661937b35ae808f33306cacaec49d67",
+      "tips": [
+        {
+          "id": "jungle:Graves:Darius:0",
+          "text": "Stay at long range and kite Darius with your shotgun. Use Quickdraw to dash away whenever he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Graves-E", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:Darius:1",
+          "text": "Throw Smoke Screen at Darius as he runs at you. He is slowed inside it, so keep fighting from the edge of the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Graves:Darius:2",
+          "text": "Fire End of the Line down a narrow path he must walk, then back away while it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:Darius:3",
+          "text": "After Darius uses Apprehend, he is open to poke. Trade with your shotgun then.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Graves:Darius:4",
+          "text": "Use Collateral Damage to blast yourself backward when Darius gets on top of you. It also damages him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "feeaf069329ebdece39f80cb2481c44743985f37d2644f07af4533d03e81cef2",
+      "tips": [
+        {
+          "id": "jungle:Graves:Diana:0",
+          "text": "Aim Smoke Screen at Diana when she dives in; she is slowed inside it and can't easily get back out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Graves:Diana:1",
+          "text": "Dash toward Diana with Quickdraw before she reaches you; the extra armor and magic resist make her burst weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Graves-E", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Graves:Diana:2",
+          "text": "Step out of the way of Crescent Strike. If you are marked with Moonlight, she can dash to you right away with Lunar Rush.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Diana-E", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Graves:Diana:3",
+          "text": "Stay away from other enemies when Diana has Moonfall. It pulls you in and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Diana-R", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Graves:Diana:4",
+          "text": "Hold Collateral Damage for when Diana is in range after she has used her dash. It gives a long-range finish and knocks you back to safety.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Diana", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77f0872ef5def5ce9500ea1d9a8be4b10782a7ef0c89f3b3fca9abb3065ba24f",
+      "tips": [
+        {
+          "id": "jungle:Graves:DrMundo:0",
+          "text": "Keep Mundo at range and shoot from a distance, stepping out of the line of his Infected Bonesaw.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 79, "end": 95 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Graves:DrMundo:1",
+          "text": "Do not count on a stun or root to stop Mundo; use Smoke Screen to slow him and buy distance.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 50, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Graves:DrMundo:2",
+          "text": "Dash away with Quickdraw when Mundo closes in; it also reloads a shell for you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Graves:DrMundo:3",
+          "text": "Fire End of the Line down the lane as Mundo walks at you; it hits once on the way out and again when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Graves:DrMundo:4",
+          "text": "Burst Mundo hard when he uses Maximum Dosage; he will heal through slow damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f66bfb5851fa3de359e446c75900cf932668b09b3f5c62c07abd2e8b37c7f9aa",
+      "tips": [
+        {
+          "id": "jungle:Graves:Ekko:0",
+          "text": "Shoot Ekko with End of the Line when he walks into a fight; he is easy to hit when he dashes in and the second blast catches him.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Graves-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Graves:Ekko:1",
+          "text": "Drop Smoke Screen on Ekko when he tries to chase or escape; he is slowed inside it and cannot easily see out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Graves:Ekko:2",
+          "text": "Dash toward Ekko with Quickdraw before you fight to gain extra armor and magic resistance against his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Graves-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Graves:Ekko:3",
+          "text": "Save Collateral Damage for when Chronobreak is spent. Ekko is much weaker then and cannot rewind out of your kill.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Ekko-R", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Ekko", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Graves:Ekko:4",
+          "text": "Step out of the Parallel Convergence circle once it appears, or stay far from where he aims it. Being stunned inside it gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e05a4c380f4d39018c596745696689ae13969443f848c45103ae630bef36af81",
+      "tips": [
+        {
+          "id": "jungle:Graves:Evelynn:0",
+          "text": "Place Smoke Screen on Evelynn when she dashes in, to slow her down. Her stealth does not stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Evelynn", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:Evelynn:1",
+          "text": "Keep Quickdraw ready when an arrow shows Allure has matured on you. Dash away or toward your team before she can touch you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Graves:Evelynn:2",
+          "text": "Stay near allies and ward the jungle. Evelynn is far weaker when she cannot catch you alone.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Graves:Evelynn:3",
+          "text": "Fire Collateral Damage at Evelynn when she is close. The blast pushes you away from her and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Evelynn", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Graves:Evelynn:4",
+          "text": "Build up Quickdraw stacks before you fight her; the armor and Magic Resist help against her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 9, "end": 18 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Evelynn less time to walk out of the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 49, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e83cb31018f8b2a98a57b14ac82dd119911924f2f0b74fa94477851a3b6f7f88",
+      "tips": [
+        {
+          "id": "jungle:Graves:Fiddlesticks:0",
+          "text": "Ward the brush and your jungle entrances; Fiddlesticks wants to start fights unseen so his Terrify passive fears you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 42,
+              "end": 54
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 91,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Graves:Fiddlesticks:1",
+          "text": "Keep Quickdraw ready to dodge Reap, because being silenced in the center of it stops you from escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 30,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "silenced", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Graves:Fiddlesticks:2",
+          "text": "Throw Smoke Screen on Fiddlesticks when he runs at you; it slows him and shrinks his sight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 22,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Graves:Fiddlesticks:3",
+          "text": "Shoot End of the Line at Fiddlesticks while he channels Crowstorm or Bountiful Harvest; knocking him out of range helps you escape.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 6, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 25,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 56,
+              "end": 65
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 69,
+              "end": 86
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Graves:Fiddlesticks:4",
+          "text": "Hit Fiddlesticks up close with your shotgun; stay out of his reach and keep your Collateral Damage to knock yourself back from a dive.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Graves-R", "start": 81, "end": 98 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a7aa4a4ca3fac165420385c8e3b2d38e452f10452604f1e099266f1bd3e901a1",
+      "tips": [
+        {
+          "id": "jungle:Graves:Gwen:0",
+          "text": "Hit Gwen with Smoke Screen when she tries to fight or run; she is slowed, and she can shrug it off by walking out of the cloud.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Graves-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Graves:Gwen:1",
+          "text": "Do not waste damage on Gwen while she stands in Hallowed Mist; she cannot be targeted from outside it. Wait for her to step out, or fight inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Gwen-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Graves:Gwen:2",
+          "text": "Gwen needs a few attacks to build up her damage, so jump her first. Dash in with Quickdraw and shoot before she is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Graves-E", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Graves:Gwen:3",
+          "text": "Dash toward Gwen with Quickdraw to get extra Armor and Magic Resist before she trades with you.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Graves-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Graves:Gwen:4",
+          "text": "Step out of the way between Needlework casts. She has to hit something to recast it, so dodging cuts her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 28, "end": 38 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d3f88087e18710116b556eb64a8f094f81bed8f8c06eccd715daa93e1d1f6827",
+      "tips": [
+        {
+          "id": "jungle:Graves:Hecarim:0",
+          "text": "Put Smoke Screen on Hecarim when he charges in; he is slowed and his Devastating Charge hits less often.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Hecarim", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 69, "end": 87 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Graves:Hecarim:1",
+          "text": "Hecarim lacks durability, so open with End of the Line and finish with point-blank shotgun hits before he heals from Spirit of Dread.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Graves-Q", "start": 39, "end": 54 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 117, "end": 132 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Graves:Hecarim:2",
+          "text": "Keep Quickdraw ready to dash away when Hecarim closes in; his Devastating Charge knocks you back and stuns you briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Hecarim", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 62, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Hecarim:3",
+          "text": "Aim Collateral Damage at Hecarim as he rides in. It hits hard and the recoil throws you backward, away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Hecarim", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Graves:Hecarim:4",
+          "text": "Spread your fights out so his fear from Onslaught of Shadows catches fewer people. Do not stand clumped with allies.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 40, "end": 60 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9b58f69654fbe6d9487b61280277036380b35d31b43c0bb03edb5b5b169d47a8",
+      "tips": [
+        {
+          "id": "jungle:Graves:Ivern:0",
+          "text": "Ivern can't be hurt by jungle monsters, so he clears fast and safe. Track his camps and invade when he is busy channeling a grove.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Graves:Ivern:1",
+          "text": "Hit Ivern when he plants a grove; damage interrupts the channel and he can't free the camp.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Graves:Ivern:2",
+          "text": "Dodge Rootcaller by sidestepping or using Quickdraw; if you are rooted, Ivern and Daisy get free hits on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Graves-E", "start": 42, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 },
+            { "kind": "champion", "key": "Ivern", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Graves:Ivern:3",
+          "text": "Use End of the Line on Ivern when he sits in brush; the trail goes through the area and punishes him for staying there.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ivern", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Ivern:4",
+          "text": "Don't chase Ivern far. Fight him away from Daisy, who can knock you up on her third hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Ivern:5",
+          "text": "Finish Ivern with Collateral Damage when he is low, since Triggerseed shields can save him.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Graves-R", "start": 18, "end": 35 },
+            { "kind": "ability", "key": "Ivern-E", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4a113aab2bb7070f603657e5a86f153a18b80f00894cf7e0b828f3a893ae498e",
+      "tips": [
+        {
+          "id": "jungle:Graves:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike through it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Graves:JarvanIV:1",
+          "text": "Save Quickdraw for after Jarvan's Dragon Strike or Cataclysm. Dash away or fire Collateral Damage to get out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 34, "end": 47 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 51, "end": 60 },
+            { "kind": "ability", "key": "Graves-R", "start": 80, "end": 97 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Graves:JarvanIV:2",
+          "text": "Drop Smoke Screen on Jarvan when he jumps in. It slows him and cuts his vision.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Graves:JarvanIV:3",
+          "text": "Hit Jarvan with point-blank shotgun blasts. His Golden Aegis shield is bigger the more enemies it catches, so fight him alone.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "733b23c306d633f2aa5093c70a12115fe1babcb67b94fd75615e80416e419c77",
+      "tips": [
+        {
+          "id": "jungle:Graves:Jax:0",
+          "text": "Do not trade basic attacks right as Jax lands; wait out his Counter Strike, then hit him when it ends and he stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Jax-E", "start": 60, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Graves:Jax:1",
+          "text": "Use Smoke Screen on Jax when he jumps in; it slows him and gives you room to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jax", "start": 20, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:Jax:2",
+          "text": "Keep Quickdraw ready to dash away from Jax after he leaps; it also gives you Armor against his physical hits.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Jax", "start": 39, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Graves:Jax:3",
+          "text": "Fire End of the Line at Jax as he closes in. Hit him from range before he builds Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jax", "start": 24, "end": 27 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e1b98d34603497cd556a214c249c370f84009da127274150ec76699c6f4e44c6",
+      "tips": [
+        {
+          "id": "jungle:Graves:Jayce:0",
+          "text": "Use Smoke Screen on Jayce when he leaps in or you want to leave; he is slowed inside it and cannot see out of the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Graves:Jayce:1",
+          "text": "Dash toward Jayce with Quickdraw before a fight; facing an enemy champion gives extra armor and magic resist, so his burst hurts less.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Graves-E", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Graves:Jayce:2",
+          "text": "Fire End of the Line along the path Jayce takes; the blast goes off a moment later and hits him again if he stays in the trail.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Graves:Jayce:3",
+          "text": "Stay at a distance in Jayce's hammer form; Thundering Blow / Acceleration Gate and To the Skies! / Shock Blast need him close, so shoot him as he walks up.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Jayce-E", "start": 43, "end": 78 },
+            { "kind": "ability", "key": "Jayce-Q", "start": 83, "end": 110 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Graves:Jayce:4",
+          "text": "Keep Collateral Damage for when Jayce is low; it hits the first enemy for heavy damage and throws you backward, away from his hammer.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugged Q detonates fast, so Jayce has less time to walk out or knock himself clear.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 33, "end": 38 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "809f4191de5bec97a112ad816f363bc0c2e92d4f5d35ff1f801bf2690d7d6770",
+      "tips": [
+        {
+          "id": "jungle:Graves:Karthus:0",
+          "text": "Stay healthy enough to survive Requiem, and back off before you drop too low. Karthus can hit you from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 31, "end": 38 },
+            { "kind": "champion", "key": "Karthus", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Graves:Karthus:1",
+          "text": "Use Quickdraw to get close, then fire your shotgun at point blank. Karthus has little to stop you once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Karthus", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Graves:Karthus:2",
+          "text": "Use Collateral Damage from range to burst Karthus. It also throws you backward, away from his Defile.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Karthus", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Karthus-E", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Graves:Karthus:3",
+          "text": "Move away from Karthus's corpse after you kill him. He can keep casting during Death Defied.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 79,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Graves:Karthus:4",
+          "text": "Smoke Screen on Karthus when he is on top of you. It slows him, and leaving the cloud ends the effect.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Karthus", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c8e545a0b7459154cce6f62b3f3743dea01d48443671e7958e2f17315be66af",
+      "tips": [
+        {
+          "id": "jungle:Graves:Kayn:0",
+          "text": "Aim Smoke Screen at Kayn when he commits with Blade's Reach or Umbral Trespass; it slows him and shrinks what he can see outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Kayn-W", "start": 46, "end": 59 },
+            { "kind": "ability", "key": "Kayn-R", "start": 63, "end": 78 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Graves:Kayn:1",
+          "text": "Hit Kayn while he walks through walls with Shadow Step; damage cuts it short and leaves him exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayn-E", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Kayn:2",
+          "text": "Dash toward Kayn with Quickdraw before a fight; you gain extra armor and magic resist, which helps against his physical burst.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Graves-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Graves:Kayn:3",
+          "text": "Fire End of the Line along the path Kayn will dash, so the delayed blast catches him as he dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Graves:Kayn:4",
+          "text": "Use Collateral Damage to knock Kayn back out of a dive when he lands on you; the recoil also pushes you away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f569c3d7814b63ebf89218b09ddd6c9e3393fcd268fb7e770e124a8eee6143d2",
+      "tips": [
+        {
+          "id": "jungle:Graves:Khazix:0",
+          "text": "Fight next to your minions or allies. Kha'Zix's Taste Their Fear hits much harder on a target that is isolated, so stay close to help.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "isolated", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Graves:Khazix:1",
+          "text": "Throw Smoke Screen on Kha'Zix when he jumps in. He is slowed and cannot easily chase you or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Graves:Khazix:2",
+          "text": "Dash toward Kha'Zix with Quickdraw before a fight to gain extra armor, then shoot him up close.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Graves-E", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Graves:Khazix:3",
+          "text": "Attack him when his Leap and Void Assault are on cooldown. He has few ways to reach you or get away.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Khazix-R", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Graves:Khazix:4",
+          "text": "Aim Collateral Damage at him once he commits. It deals big damage and the recoil throws you away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c42316934de619ccb213823de10d3daefe8dffa62d322b644afdf08c85e2fc27",
+      "tips": [
+        {
+          "id": "jungle:Graves:Kindred:0",
+          "text": "Fight Kindred when she has used Dance of Arrows; she is fragile, so a quick burst with Quickdraw into point-blank shots can kill her.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Graves-E", "start": 87, "end": 96 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Graves:Kindred:1",
+          "text": "Throw Smoke Screen on Kindred when she tries to chase or escape; she is slowed while inside.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Graves:Kindred:2",
+          "text": "Do not finish Kindred inside Lamb's Respite; nobody can die there. Wait until it ends, or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Kindred-R", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Graves:Kindred:3",
+          "text": "Use Collateral Damage to finish her from long range when she is low, but not while Lamb's Respite is active.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Kindred-R", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates sooner, so Kindred has less time to walk out of End of the Line.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Graves-Q", "start": 73, "end": 88 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bff2d08e08edf4eaac2af8cd872e4e841ccbac402b2a78091139eec0c55dac30",
+      "tips": [
+        {
+          "id": "jungle:Graves:LeeSin:0",
+          "text": "Keep Lee Sin away from you. Smoke Screen on him when he dashes in; it slows him and its damage is magic, which his tools are weakest against.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Graves-W", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Graves:LeeSin:1",
+          "text": "Save Quickdraw to get out after Lee Sin lands Sonic Wave; dashing away makes his follow-up dash harder to use well.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Graves:LeeSin:2",
+          "text": "Stay spread from your team and don't stand behind a teammate Lee Sin can kick, or Dragon's Rage will knock you up too.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 61, "end": 68 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Graves:LeeSin:3",
+          "text": "Fire End of the Line down the lane he must walk through; it hits twice along its path, so Lee Sin is punished for rushing in.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates fast, leaving Lee less time to dodge or Safeguard out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbeac1fcee9396c9c0de0655d79da404e116f037c688abd542ac92d970bffeaa",
+      "tips": [
+        {
+          "id": "jungle:Graves:Lillia:0",
+          "text": "Throw Smoke Screen at Lillia when she jumps in with Watch Out! Eep!; she is slowed and can't see you outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Lillia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Lillia-W", "start": 52, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Graves:Lillia:1",
+          "text": "Dash away with Quickdraw when Lillia winds up Watch Out! Eep!; she can't move until the strike lands, so step out of the center.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Lillia", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Lillia-W", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Graves:Lillia:2",
+          "text": "Fire End of the Line down a straight line when Lillia is slowed by Swirlseed and chasing you; she often walks into the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Lillia", "start": 47, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Lillia-E", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Graves:Lillia:3",
+          "text": "Use Collateral Damage to burst Lillia when she is low or to blast yourself away from her when she gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Lillia", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Graves:Lillia:4",
+          "text": "Keep your distance once Lillia has hit you with an ability; Lilting Lullaby only works on enemies she has marked, so avoid her early pokes.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Lillia-R", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Lillia less time to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 49, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49941cb1949d3b8e5f5a97834983c92e05e17c662943b8b57d99c165673e89cc",
+      "tips": [
+        {
+          "id": "jungle:Graves:MasterYi:0",
+          "text": "Place Smoke Screen on Master Yi when he jumps in so he is slowed. Do it before he activates Highlander, because after that he can't be slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 22, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 92, "end": 102 },
+            { "kind": "keyword", "key": "slowed", "start": 135, "end": 141 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Graves:MasterYi:1",
+          "text": "Use Quickdraw toward Master Yi to gain extra armor, then shoot him point blank. He deals mostly physical damage, so the armor helps.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "MasterYi", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Graves:MasterYi:2",
+          "text": "Save Collateral Damage for when Master Yi commits; it hits hard. Don't fire it as he becomes untargetable with Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "MasterYi", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 111, "end": 123 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Graves:MasterYi:3",
+          "text": "Hit Master Yi a few times so he has to spend mana on Meditate to heal. Fire End of the Line down the lane when he is far away.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Graves-Q", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "A wall-detonated End of the Line hits fast, leaving Master Yi little time to walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 17, "end": 32 },
+            { "kind": "champion", "key": "MasterYi", "start": 52, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "137d9c2acaa2185cf82e7bc41773bd0972ab08cba0106f1fdb778a92546ad1ea",
+      "tips": [
+        {
+          "id": "jungle:Graves:MonkeyKing:0",
+          "text": "Keep Wukong at range with End of the Line when he jumps in. Shoot it toward him before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Graves-Q", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Graves:MonkeyKing:1",
+          "text": "Put Smoke Screen on Wukong when he commits, so he is slowed and cannot see beyond the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Graves:MonkeyKing:2",
+          "text": "Wait a moment before firing, because Wukong often leaves a clone behind with Warrior Trickster. Aim at the real one.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 77, "end": 94 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Graves:MonkeyKing:3",
+          "text": "Use Quickdraw to dash away from Wukong's Nimbus Strike, and fight him only when he cannot jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Graves:MonkeyKing:4",
+          "text": "Stay out of reach when Wukong has Cyclone up. If you are knocked up in a fight, you take heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 34,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ec2ca0c338d45b4a4d4da76b2dd281f5ca79b687748fcbec2b6630a70107a390",
+      "tips": [
+        {
+          "id": "jungle:Graves:Naafiri:0",
+          "text": "Throw Smoke Screen on Naafiri when she dives in; she is slowed and the smoke cuts what she sees outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Graves:Naafiri:1",
+          "text": "Step out of Smoke Screen's cloud only when you want to leave; staying in it keeps her sight short.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Graves:Naafiri:2",
+          "text": "Fire End of the Line along the path she must run to reach you. It keeps going through her packmates and hits again when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Graves:Naafiri:3",
+          "text": "Use Quickdraw toward her when she commits. You gain extra armor and magic resist, so her burst hits softer.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Graves:Naafiri:4",
+          "text": "Save Collateral Damage for when she lands on you; it launches you backward and the blast hurts her and her packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Graves:Naafiri:5",
+          "text": "Hit her at point blank with your shotgun; all four pellets only land up close, and the extra damage helps you win a fight.",
+          "refs": [],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac8e18d6446e69fda7462670c5831ec85b73ab2205472c00978536f2c5a6c37e",
+      "tips": [
+        {
+          "id": "jungle:Graves:Nidalee:0",
+          "text": "Dodge Nidalee's Javelin Toss, especially from far away. A hit marks you as Hunted and lets her jump onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Graves:Nidalee:1",
+          "text": "Save Quickdraw for when she jumps in. Dash away to make her Pounce and Takedown awkward.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Graves:Nidalee:2",
+          "text": "Throw Smoke Screen at your own feet when she goes in as a cougar. It slows her and her damage pays for the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Graves:Nidalee:3",
+          "text": "Shoot suspicious brush before walking in, since her traps are invisible. Your basic attacks can destroy them.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Graves:Nidalee:4",
+          "text": "Use End of the Line on her when she is up close. She has to be near you to hit with Takedown, and the blast punishes it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates at once, so Nidalee has less time to leave the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Nidalee", "start": 51, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0c3adba564d93e5917b2886a0947ad0f21ea78dd323e99895f0dcfa721ba2991",
+      "tips": [
+        {
+          "id": "jungle:Graves:Nocturne:0",
+          "text": "Keep Quickdraw ready for when Nocturne dashes in or tries to tether you. Dash away to break Unspeakable Horror before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nocturne", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 92, "end": 110 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Graves:Nocturne:1",
+          "text": "Stay near your team when Nocturne casts Paranoia; he dashes at one champion and is deadly to a lone Graves.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 },
+            { "kind": "champion", "key": "Graves", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Graves:Nocturne:2",
+          "text": "Don't throw End of the Line or Smoke Screen into Nocturne's Shroud of Darkness; it blocks the next ability. Wait until it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Graves-W", "start": 31, "end": 43 },
+            { "kind": "champion", "key": "Nocturne", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 60, "end": 78 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Graves:Nocturne:3",
+          "text": "Drop Smoke Screen on Nocturne when he commits so he is slowed and hit by your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nocturne", "start": 21, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Graves:Nocturne:4",
+          "text": "Watch Duskbringer's trail: it lets Nocturne run faster and hit harder, so avoid fighting him while he stands on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Nocturne", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1ad0c143c95491b9acee017c0e5a62461e83aaa330a7381dc87ef0a03d938e05",
+      "tips": [
+        {
+          "id": "jungle:Graves:Nunu:0",
+          "text": "Keep your distance from Nunu. Fight him from range and don't let him reach you with a snowball.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Graves:Nunu:1",
+          "text": "Watch for Biggest Snowball Ever! and dodge it with Quickdraw or a sharp turn. It cannot turn fast, so don't run in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 10, "end": 32 },
+            { "kind": "ability", "key": "Graves-E", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Graves:Nunu:2",
+          "text": "Use Smoke Screen when Nunu dives in, to slow him and cut his view. It also helps you get away.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Graves:Nunu:3",
+          "text": "Leave Snowball Barrage range once it hits you, because the root comes a few seconds later. Quickdraw out before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Graves-E", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Graves:Nunu:4",
+          "text": "Collateral Damage can hit Nunu from far away and throws you backward. Use it to stay out of Absolute Zero.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 0, "end": 17 },
+            { "kind": "ability", "key": "Nunu-R", "start": 92, "end": 105 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b7d11c78d164ba19cb14279083973cd033054e34c65c16d0c05ded7930d5c325",
+      "tips": [
+        {
+          "id": "jungle:Graves:Pantheon:0",
+          "text": "Hit Pantheon with End of the Line when he jumps in; it deals damage twice along its path if he stays in it.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Graves-Q", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Graves:Pantheon:1",
+          "text": "Walk around behind Pantheon while he uses Aegis Assault; it only protects him from the front.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Graves:Pantheon:2",
+          "text": "Stay healthy near Pantheon; a thrown Comet Spear deals extra damage to low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Graves:Pantheon:3",
+          "text": "Move away from the marked area when Grand Starfall begins; it gives several seconds of warning. Use Smoke Screen on him to slow his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 36, "end": 50 },
+            { "kind": "ability", "key": "Graves-W", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Graves:Pantheon:4",
+          "text": "Keep Quickdraw ready to escape after Pantheon uses Shield Vault. The stun is the main danger.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates fast, giving Pantheon less time to walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Pantheon", "start": 52, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f8a97e6ec480f8f6990b83458d19533332420f2ca20bc62fce76b9ff3a4d3426",
+      "tips": [
+        {
+          "id": "jungle:Graves:Qiyana:0",
+          "text": "Save Quickdraw to dash toward Qiyana when she jumps on you; it gives extra armor and magic resistance that help in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Qiyana", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:Qiyana:1",
+          "text": "Hold Collateral Damage until she is committed. It blasts you backward, so use it to open distance and hit her at once.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Graves:Qiyana:2",
+          "text": "Throw Smoke Screen on her when she dashes in; she is slowed while inside, so she struggles to chase or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Graves:Qiyana:3",
+          "text": "Fire End of the Line along a wall or a narrow path where she must run. It explodes a second time on its trail.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1ed82054e935abd20b7b58c88ab62165322ea53ced5ffde508446b893f45a8fd",
+      "tips": [
+        {
+          "id": "jungle:Graves:Rammus:0",
+          "text": "Don't shoot Rammus while Defensive Ball Curl is up, since his thorns hurt you. Wait until it ends, or hit him with Smoke Screen's magic damage instead.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Rammus-W", "start": 25, "end": 44 },
+            { "kind": "ability", "key": "Graves-W", "start": 115, "end": 127 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Graves:Rammus:1",
+          "text": "Keep your distance from Rammus. Use Quickdraw to dash away when Powerball is rolling at you, as it picks up speed the longer it rolls.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Graves-E", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 64, "end": 73 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Graves:Rammus:2",
+          "text": "Rammus's Frenzying Taunt forces you to attack him, so stay out of its short range. Don't walk up to him for point-blank shots.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rammus-E", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Graves:Rammus:3",
+          "text": "Fire End of the Line at Rammus when his Defensive Ball Curl is off. He has much lower defenses then, so it hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Rammus", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Rammus-W", "start": 40, "end": 59 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2abd0ae5e3954a60a4a2027e6dc974b43711418077209ef3e26097a51dd782c5",
+      "tips": [
+        {
+          "id": "jungle:Graves:RekSai:0",
+          "text": "Throw Smoke Screen at Rek'Sai when she tries to jump on you; she is slowed and has trouble seeing you from outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "RekSai", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Graves:RekSai:1",
+          "text": "Dash toward Rek'Sai with Quickdraw before a fight to gain extra armor and magic resistance, then shoot her at point blank range.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Graves-E", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Graves:RekSai:2",
+          "text": "Hold End of the Line for when Rek'Sai is close to a wall; it detonates right away on terrain and hits her more reliably.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "RekSai", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Graves:RekSai:3",
+          "text": "Step away from Rek'Sai when she emerges from a tunnel, since Unburrow knocks you up; keep Quickdraw ready to dash out afterward.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Graves-E", "start": 90, "end": 99 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Graves:RekSai:4",
+          "text": "Stand on a Rek'Sai tunnel entrance for a moment to destroy it and take away her escape and ganking route.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d05a7d060e63364a8c6d3c40370e59d53b80634ff16812716f0ff1a16bf3455d",
+      "tips": [
+        {
+          "id": "jungle:Graves:Rengar:0",
+          "text": "Aim Smoke Screen at Rengar when he leaps in; it slows him and the smoke blocks his vision outside it. Step out of the cloud yourself if the fight goes badly.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rengar", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Graves:Rengar:1",
+          "text": "Fight Rengar when his Ferocity is low, since his empowered ability is the dangerous one. Stay away from brush, where Unseen Predator lets him leap onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 117,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Graves:Rengar:2",
+          "text": "Hold Quickdraw to get away from Rengar after he lands on you. It also gives you armor, which helps against his physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Rengar", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Graves:Rengar:3",
+          "text": "When Rengar is camouflaged during Thrill of the Hunt, watch for the mark over your head. Face his approach and keep Quickdraw ready.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Rengar-R", "start": 34, "end": 52 },
+            { "kind": "ability", "key": "Graves-E", "start": 116, "end": 125 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Graves:Rengar:4",
+          "text": "Use Collateral Damage to knock Rengar back when he is on top of you. It also blasts you backward, so he can't stay close.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Rengar", "start": 31, "end": 37 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast on terrain, giving Rengar less time to leap out or escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 49, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6326d499c2e013ca2d7cf116d06d64544320060bb0a608e77cced1b4570128e4",
+      "tips": [
+        {
+          "id": "jungle:Graves:Sejuani:0",
+          "text": "Keep your distance from Sejuani when she has melee allies near; their attacks stack Frost, and Permafrost then stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 95, "end": 105 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Graves:Sejuani:1",
+          "text": "Sidestep Arctic Assault. Dodging her charge keeps you from being knocked up and from taking her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Graves:Sejuani:2",
+          "text": "Use Quickdraw to sidestep Glacial Prison. Your armor stacks help, but her damage is magic, so stay out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Graves:Sejuani:3",
+          "text": "Throw Smoke Screen when she dives you. Her Frost Armor makes her immune to slows, so it will not slow her, but the smoke still does damage and hides her view.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Graves:Sejuani:4",
+          "text": "Fire End of the Line at her from range when she walks up. She is a tank, so keep hitting her from a distance.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "66b3b24b8e036530d240a0b2ac488a85f5879f4f7c21ab59483d770532752ace",
+      "tips": [
+        {
+          "id": "jungle:Graves:Shaco:0",
+          "text": "Hold Quickdraw for when Shaco jumps on you. Dashing away breaks his angle, and the armor helps against his hit.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Shaco", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Graves:Shaco:1",
+          "text": "Shoot Shaco as he appears with End of the Line; it hits all along its path. He is fragile once he is out of his stealth.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Graves-Q", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Graves:Shaco:2",
+          "text": "Do not walk into bushes and camps blindly; Shaco's Jack In The Box is hidden and will fear and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Shaco-W", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Graves:Shaco:3",
+          "text": "Use Smoke Screen on Shaco when he commits to slow him and block his vision of your team.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shaco", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:Shaco:4",
+          "text": "Once Shaco has used Deceive to dive in, he cannot quickly use it again to escape. Burst him with Collateral Damage.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Graves-R", "start": 97, "end": 114 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e36e69e64ccb4871478e4f78a81174cefa178504b802941a1d3a3d6e360e92df",
+      "tips": [
+        {
+          "id": "jungle:Graves:Shyvana:0",
+          "text": "Keep your distance from Shyvana and shoot her as she approaches; she is weak when she cannot hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Graves:Shyvana:1",
+          "text": "Throw Smoke Screen at your feet when Shyvana runs in; it slows her and blocks her vision outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Graves:Shyvana:2",
+          "text": "Use Quickdraw to dodge back out of her reach, not toward her. It also reloads your shotgun.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:Shyvana:3",
+          "text": "Hit her with End of the Line while she has low Fury; it is a long-range poke that keeps her from turning into a dragon.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Graves:Shyvana:4",
+          "text": "Save Collateral Damage for when she lands in Dragon Form; it blasts you backward, out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "34e1123cae7175bd0d4488b36bf71d91fae65a0a3b4b767cdc278dc5e8de614e",
+      "tips": [
+        {
+          "id": "jungle:Graves:Skarner:0",
+          "text": "Keep your distance and shoot Skarner with End of the Line as he approaches. Smoke Screen only slows him, so it will not stop his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Graves-Q", "start": 42, "end": 57 },
+            { "kind": "ability", "key": "Graves-W", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Graves:Skarner:1",
+          "text": "Keep Quickdraw ready to dodge Impale, and move out of its reach before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Skarner-R", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Graves:Skarner:2",
+          "text": "Do not fight near walls when Skarner is close; Ixtal's Impact can drag you into one and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Graves:Skarner:3",
+          "text": "Don't let Skarner stick to you in a long fight, since his Quaking damage builds up. Slow him and back away.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 10, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56835570a65b84e5be0d70424e9776e03181c9dd9a0de4aad17c6716e2bd6dc2",
+      "tips": [
+        {
+          "id": "jungle:Graves:Sylas:0",
+          "text": "Use Smoke Screen on Sylas when he dives in; he is slowed inside it and cannot see far outside it, so he struggles to chase you or pick a target.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:Sylas:1",
+          "text": "Dash with Quickdraw toward Sylas before a fight. It gives extra Armor and Magic Resist, which helps against his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Graves:Sylas:2",
+          "text": "Do not fight Sylas when he is low on health. Kingslayer heals him more the lower he is, so finish him fast or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Graves:Sylas:3",
+          "text": "Hold Collateral Damage for when Sylas is hurt. It hits hard and throws you backward, which also pulls you out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Graves:Sylas:4",
+          "text": "Keep Quickdraw ready when Sylas is near. Abduct is easy to dodge if you dash sideways as the chains leave.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fb77cc9a387a48a351928dee806517bbc36c4845a6d5973963004d90a34bf5e7",
+      "tips": [
+        {
+          "id": "jungle:Graves:Talon:0",
+          "text": "Hold Quickdraw for when Talon jumps on you. Dash toward him to gain armor, and keep shooting to refresh it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Graves:Talon:1",
+          "text": "Drop Smoke Screen on Talon as he commits. It slows him and hides what is outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Graves:Talon:2",
+          "text": "Talon's damage is all physical, so stack armor early and avoid fighting him when your abilities are down.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Graves:Talon:3",
+          "text": "Fire End of the Line at Talon when he vanishes with Shadow Assault. It hits along its whole path.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Talon-R", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Graves:Talon:4",
+          "text": "Hit Talon with Collateral Damage once he has used Shadow Assault. It is a big hit and knocks you away from him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Graves-R", "start": 15, "end": 32 },
+            { "kind": "ability", "key": "Talon-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging End of the Line detonates quickly on terrain, giving Talon less time to leave after a vault.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Talon", "start": 66, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "af33cee34b0020f898c0fac7131dfd0865620424a8f9b8e0058e3685573f6e72",
+      "tips": [
+        {
+          "id": "jungle:Graves:Trundle:0",
+          "text": "Do not fight Trundle on his Frozen Domain. He is much faster and hits harder there, so pull the fight away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Trundle-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Graves:Trundle:1",
+          "text": "Keep your distance and hit Trundle with End of the Line from range. Do not let him close in for Chomp.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Graves-Q", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Graves:Trundle:2",
+          "text": "Throw Smoke Screen at Trundle when he closes in. It slows him and limits what he can see.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Trundle", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Graves:Trundle:3",
+          "text": "Walk out of Pillar of Ice quickly, because its slow makes you easy to catch. Save Quickdraw to dash away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Graves-E", "start": 82, "end": 91 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Graves:Trundle:4",
+          "text": "Use Collateral Damage to shoot Trundle once he commits Subjugate, or to knock yourself back out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Trundle", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Trundle-R", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Hitting a wall with Q detonates it fast, so Trundle has less time to leave before the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 44, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a8ab0c113c736edfde05f8a82fa1be836265bd766c22250c76520d418ed2e7b7",
+      "tips": [
+        {
+          "id": "jungle:Graves:Udyr:0",
+          "text": "Keep your distance from Udyr and shoot him as he walks up; he has few ways to hit you from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Graves:Udyr:1",
+          "text": "Throw Smoke Screen at Udyr when he charges in. It slows him, and he loses the slow as soon as he leaves it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Udyr", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Graves:Udyr:2",
+          "text": "Save Quickdraw to dash away once Udyr stuns you or gets close, instead of using it to approach him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Udyr", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Graves:Udyr:3",
+          "text": "Use Collateral Damage to knock yourself back when Udyr is on top of you. It also hits him hard.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Udyr", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9e243a1d4fdae8ece0e856009a095f47b5022e93282d6bff935ed1d83ac3418d",
+      "tips": [
+        {
+          "id": "jungle:Graves:Vi:0",
+          "text": "Save Quickdraw to dash away from Vi's engage or to line up a point-blank shotgun blast on her. Each dash toward her also makes you sturdier.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Vi", "start": 33, "end": 35 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Graves:Vi:1",
+          "text": "Drop Smoke Screen on Vi when she closes in; she is slowed inside it, which gives you time to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Graves:Vi:2",
+          "text": "Don't trade blows in a long brawl; Vi's third hit on you cuts your Armor and speeds her up. Poke from range and step back.",
+          "refs": [
+            { "kind": "champion", "key": "Vi", "start": 35, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Graves:Vi:3",
+          "text": "Stay away from your team when Vi is up at level 6. Cease and Desist can't be stopped by crowd control, so don't waste your tools trying.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Graves:Vi:4",
+          "text": "Use Collateral Damage to knock yourself back out of reach when Vi charges in, and keep your damage on her as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Graves:Vi:5",
+          "text": "When Vi starts charging Vault Breaker, step out of its line or dash aside with Quickdraw. A long charge hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Graves-E", "start": 79, "end": 88 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates sooner, so Vi has less time to walk out of it or dash clear.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7fe58a53d28b54e61f62b9609dcaf1eba409403ef77a1c50da27c9b17bc0f90a",
+      "tips": [
+        {
+          "id": "jungle:Graves:Viego:0",
+          "text": "Throw Smoke Screen at Viego when he dashes in or when you want to leave; it slows him and cuts his vision outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Graves:Viego:1",
+          "text": "Dash toward Viego with Quickdraw before a fight; dashing at an enemy champion gives extra armor and magic resist.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Graves-E", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Graves:Viego:2",
+          "text": "Hold End of the Line for when Viego commits or chases you; it hits twice along its path, so aim it where he must walk.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Graves:Viego:3",
+          "text": "Fight Viego early in a duel; he gets stronger after a takedown, so avoid dying next to a fallen champion where he can take over their body.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Graves:Viego:4",
+          "text": "Use Collateral Damage to finish a low-health Viego or to push back when he lands on you; the recoil throws you away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Viego", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "25817217d52f938dd6fdbff9bf998251d5841ab43a990ab0b35fb735c025f773",
+      "tips": [
+        {
+          "id": "jungle:Graves:Volibear:0",
+          "text": "Keep your distance from Volibear and shoot him as he approaches; once Thundering Smash lands he stuns you, so kite him before that.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 70, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Graves:Volibear:1",
+          "text": "Cast Quickdraw away from Volibear when he runs at you; his Thundering Smash gets much faster toward enemy champions, so do not walk into it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Volibear", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Volibear:2",
+          "text": "Move out of the Sky Splitter circle when you see his cast animation; the bolt lands after a delay and leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Graves:Volibear:3",
+          "text": "Throw Smoke Screen on him when he leaps in with Stormbringer or chases you; it slows him and blocks his vision outside the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Volibear-R", "start": 48, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Graves:Volibear:4",
+          "text": "Save Collateral Damage to knock him back out of a fight; it also throws you backward, so use it to escape when he is on top of you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c1a62915e0a45b28de335dc1d98dc6701a675187f88e18fb279c89ec4f2e0aed",
+      "tips": [
+        {
+          "id": "jungle:Graves:Warwick:0",
+          "text": "Keep Warwick away from you. Use Quickdraw to stay out of his reach and to line up your close-range shots.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Graves-E", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Graves:Warwick:1",
+          "text": "Throw Smoke Screen at Warwick when he jumps in. It slows him and makes it hard to follow you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Warwick", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Graves:Warwick:2",
+          "text": "Stay healthy. Warwick hunts low-health targets and heals from attacking you when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Graves:Warwick:3",
+          "text": "Watch out for Infinite Duress at level 6. Keep Quickdraw ready and stay near teammates so you aren't picked off alone.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Graves-E", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast, giving Warwick less time to leave the blast when he lunges in.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 38, "end": 45 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0d3576eb0918bbe9ffe317ee4ac9772b60519d3da2fed4d41e4ab1185d4d866d",
+      "tips": [
+        {
+          "id": "jungle:Graves:XinZhao:0",
+          "text": "Keep Quickdraw ready for when Xin Zhao charges in. Dash away to avoid the knock up and the Crescent Guard sweep.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 82 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Graves:XinZhao:1",
+          "text": "Throw Smoke Screen at Xin Zhao's feet when he engages. It slows him and he can hardly see out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:XinZhao:2",
+          "text": "Don't let Xin Zhao finish his Three Talon Strike combo. Slow or move him away before the third hit.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 30, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:XinZhao:3",
+          "text": "Use End of the Line on Xin Zhao when he lines up with his Wind Becomes Lightning. Both of its hits hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 58, "end": 80 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Q detonates fast on a wall, so Xin Zhao has little time to walk out of it when he engages.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "df6fe5998f68e3a67962fd0d90b69c98cf94ff5ddbbf133c9a66f54cdabc43ee",
+      "tips": [
+        {
+          "id": "jungle:Graves:Zac:0",
+          "text": "Step on Zac's goo chunks to destroy them. It takes away his healing and keeps him from sustaining through a fight.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 8, "end": 11 }],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Graves:Zac:1",
+          "text": "Hit Zac with Smoke Screen as he charges in. He is slowed, and cannot see out of the cloud, so he has a hard time following you.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Graves-W", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Graves:Zac:2",
+          "text": "Use Quickdraw to sidestep when Zac's Elastic Slingshot lands. Dash out of the landing zone early, because you can't act once knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zac", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Zac-E", "start": 37, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 125, "end": 135 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Graves:Zac:3",
+          "text": "When Zac splits into bloblets, kill them all with End of the Line or Collateral Damage. If every bloblet dies, he does not come back.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Graves-Q", "start": 50, "end": 65 },
+            { "kind": "ability", "key": "Graves-R", "start": 69, "end": 86 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Graves:Zac:4",
+          "text": "Keep your distance and shoot Zac from range. Graves hits hard point blank, and Zac wants to be close.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 29, "end": 32 },
+            { "kind": "champion", "key": "Graves", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Zac", "start": 79, "end": 82 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:0",
+          "note": "Quickdraw's dash after the second shot helps Graves reposition away from Zac's engage during a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Graves", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Zac", "start": 73, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c86f98003ca834a081c9754b20924fd64dddc7405d11c9f6cc38b029bd818b2",
+      "tips": [
+        {
+          "id": "jungle:Graves:Zed:0",
+          "text": "Throw Smoke Screen on Zed when he jumps in with Death Mark; the slow makes it harder for him to run you down.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Zed-R", "start": 48, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Graves:Zed:1",
+          "text": "Stack Armor from Quickdraw before fighting Zed. He deals mostly physical damage, so the Armor blunts his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 17, "end": 26 },
+            { "kind": "champion", "key": "Zed", "start": 43, "end": 46 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Graves:Zed:2",
+          "text": "Dash toward Zed with Quickdraw to gain extra stacks of defence before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Graves-E", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Graves:Zed:3",
+          "text": "Save Collateral Damage to finish Zed when he commits, or to blast yourself away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 33, "end": 36 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Graves:Zed:4",
+          "text": "Hit Zed with End of the Line when he is close and committed; the shot and the blast both deal damage.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Graves-Q", "start": 13, "end": 28 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "58a9188affd4a106989c5bd9619a2d539d0ab108e95f1ee8b610247957c2941f",
+      "tips": [
+        {
+          "id": "jungle:Graves:Zyra:0",
+          "text": "Walk through Zyra's seeds before she grows them. Stepping on a seed destroys it, so she gets no plants from them.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Graves:Zyra:1",
+          "text": "Dash toward Zyra with Quickdraw to gain extra armor and magic resist, which makes her magic damage hurt less.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Graves-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Graves:Zyra:2",
+          "text": "Leave Smoke Screen's cloud quickly when Zyra throws it on you; stepping out ends the slow right away.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Zyra", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Graves:Zyra:3",
+          "text": "Hit Zyra with End of the Line when she is stuck standing still, because the second blast hits again after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Graves-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Graves:Zyra:4",
+          "text": "Kill Zyra first in a fight. Her plants die easily and she is fragile, so use Collateral Damage on her once she is in range.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Graves-R", "start": 77, "end": 94 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Graves:Zyra:5",
+          "text": "Fight Zyra away from her seeds. Pulling the fight to a new area leaves her with fewer plants.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Graves:combo:1",
+          "note": "Wall-hugging Q detonates fast, so Zyra has less time to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 34, "end": 38 }
+          ]
+        }
+      ]
+    }
+  ]
+}

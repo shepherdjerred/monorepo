@@ -1,0 +1,1053 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zoe",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "b9340a22159664e2fb73465182de3e16ad398eb68776292191fafc67bead0c1f",
+      "tips": [
+        {
+          "id": "middle:Zoe:general:0",
+          "text": "Cast Paddle Star! away from the enemy first, then recast it back through them; the longer it flies, the harder it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zoe:general:1",
+          "text": "Land Sleepy Trouble Bubble first, then hit them with your biggest damage; sleeping enemies take double damage when woken.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Zoe:general:2",
+          "text": "Fire Sleepy Trouble Bubble from a bush or fog of war. It flies farther over walls, so you can catch enemies who think they are out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zoe:general:3",
+          "text": "Use Portal Jump to line up a Paddle Star! or bubble, but only when the enemy can't punish you, since you can't move while there.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Zoe:general:4",
+          "text": "Walk over spell shards dropped by enemies or marked minions to steal their summoner spell or item active with Spell Thief.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-W", "start": 110, "end": 121 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zoe:general:5",
+          "text": "Weave an attack after each spell; More Sparkles! adds bonus magic damage to your next basic attack.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-passive", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Zoe:general:6",
+          "text": "Sleepy Trouble Bubble slows the target before they fall asleep, so cast it when they step up to farm and follow with Paddle Star!.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 0, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 117, "end": 129 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Zoe:combo:0",
+          "name": "Backwards Q redirect",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zoe-Q" },
+            { "kind": "ability", "key": "Zoe-Q" }
+          ],
+          "when": "Poking or finishing an enemy at a distance when you have room to angle the star.",
+          "whenRefs": [],
+          "text": "Cast the star behind or away from the target. Recast it toward the enemy so it flies further and hits much harder.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Zoe:combo:1",
+          "name": "Wall bubble from fog",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Zoe-E" }],
+          "when": "Setting up a long-range sleep from a bush or hidden spot near a wall.",
+          "whenRefs": [],
+          "text": "The bubble flies much further when it crosses a wall. Stand in fog of war, kick it over the wall and catch an enemy who can't see you.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Zoe:combo:2",
+          "name": "Portal bubble",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zoe-R" },
+            { "kind": "ability", "key": "Zoe-E" }
+          ],
+          "when": "Throwing a bubble from far away without leaving yourself exposed.",
+          "whenRefs": [],
+          "text": "Cast Portal Jump, then kick the bubble right as you blink back. The bubble still flies to the spot you aimed at, and you land safely.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 5, "end": 16 }
+          ]
+        },
+        {
+          "id": "middle:Zoe:combo:3",
+          "name": "Sleep then Q break",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Zoe-E" },
+            { "kind": "ability", "key": "Zoe-Q" },
+            "attack"
+          ],
+          "when": "After the bubble lands and the enemy is falling asleep.",
+          "whenRefs": [],
+          "text": "Wait for the sleep, then hit with a long-travel star as the big wake-up hit for double damage. Finish with the empowered attack.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "e8dd7ae612071c753cf179fda2a42bb61be2797387609c486391d867b11fb016",
+      "tips": [
+        {
+          "id": "middle:Zoe:Ahri:0",
+          "text": "Land Sleepy Trouble Bubble, then break the sleep with your biggest hit, because it deals bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zoe:Ahri:1",
+          "text": "Fire Paddle Star! from far away, since it hits harder the further it flies.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zoe:Ahri:2",
+          "text": "Stay out of Charm range, and keep minions between you and Ahri. Charm stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Ahri-E", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Zoe:Ahri:3",
+          "text": "Use Portal Jump only when Ahri's Charm is on cooldown. You can't move while you're away, so Charm would punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-E", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Ahri-E", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Zoe:Ahri:4",
+          "text": "Look for the best time to trade when Ahri's Spirit Rush is on cooldown, because she is much easier to kill without it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ahri-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "E then Q then attack punishes Ahri with big damage once she is asleep and cannot dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 30, "end": 34 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a7b1144c32039f25af2227e9728a8eceb30c49a21fdfc62e069768108b98ef6b",
+      "tips": [
+        {
+          "id": "middle:Zoe:Akali:0",
+          "text": "Aim Sleepy Trouble Bubble at Akali when she walks up to trade; sleep gives you a free window, and your damage while she sleeps hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Akali", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Zoe:Akali:1",
+          "text": "Hit Akali with Paddle Star! from long range; it deals more damage the farther it flies.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zoe:Akali:2",
+          "text": "Keep your distance from Akali when she has her ultimate and you are low, since Perfect Execution finishes weakened targets.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Akali-R", "start": 79, "end": 96 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Zoe:Akali:3",
+          "text": "When Akali drops Twilight Shroud, hit the smoke with area spells; that briefly reveals her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Zoe:Akali:4",
+          "text": "Do not use Portal Jump to poke close to Akali; you cannot move there, so she can jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 11, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Akali", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw Sleepy Trouble Bubble from range, then blink back from Akali.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Zoe-E", "start": 39, "end": 60 },
+            { "kind": "champion", "key": "Akali", "start": 94, "end": 99 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Sleep then Paddle Star! gives big burst on Akali while she is asleep and cannot dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Akali", "start": 43, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "755fffccdb4d764a030e672a094b91ebe573df809f53115a4f21fb07a8b18296",
+      "tips": [
+        {
+          "id": "middle:Zoe:Anivia:0",
+          "text": "Sleepy Trouble Bubble is your best tool against Anivia. Aim it at her when she walks up to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 0, "end": 21 },
+            { "kind": "champion", "key": "Anivia", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Zoe:Anivia:1",
+          "text": "Sidestep Flash Frost. It is a slow, wide missile, and its recast stuns anyone who stands near the ice.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Zoe:Anivia:2",
+          "text": "Do not stand in Glacial Storm. It slows you, and a fully formed storm hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Zoe:Anivia:3",
+          "text": "Do not use Portal Jump when Anivia has Flash Frost ready. You cannot move while you wait to be pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Anivia", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Zoe:Anivia:4",
+          "text": "Fight Anivia before she has her egg. Rebirth makes her hard to kill, so do not waste your burst on her egg.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 37,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal bubble lets Zoe throw Sleepy Trouble Bubble from far away while safely blinking back.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Zoe-E", "start": 29, "end": 50 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "After the bubble lands, the long-travel star hits hard on a sleeping Anivia.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 69, "end": 75 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "363bf470b0603b75fdf7f88f8841084ca365f77568b83143acb2bb04988249f4",
+      "tips": [
+        {
+          "id": "middle:Zoe:Aurora:0",
+          "text": "Land Sleepy Trouble Bubble when Aurora hops back with The Weirding or lands from Across the Veil, then wake her with your biggest hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Aurora", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Aurora-E", "start": 54, "end": 66 },
+            { "kind": "ability", "key": "Aurora-W", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Zoe:Aurora:1",
+          "text": "Fire Paddle Star! from long range and redirect it; Aurora has to stay close to trade, so make her pay for it.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Zoe:Aurora:2",
+          "text": "Stay out of Twofold Hex range; its bolt is a straight line, so sidestep it and keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Zoe:Aurora:3",
+          "text": "When Aurora turns invisible with Across the Veil, do not chase blindly; wait for her to reappear before you throw your spells.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Zoe:Aurora:4",
+          "text": "Avoid fighting inside Between Worlds at level 6; enemies who touch its edge are slowed and Aurora can hop across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 22, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 },
+            { "kind": "champion", "key": "Aurora", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then Sleepy Trouble Bubble lets Zoe throw from range and blink back out of Aurora's reach.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Zoe-E", "start": 17, "end": 38 },
+            { "kind": "champion", "key": "Zoe", "start": 44, "end": 47 },
+            { "kind": "champion", "key": "Aurora", "start": 87, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9dd1b4e1be34a0b8602f06db8b3fc16b66281fbd2c7ca4c180e3389afa717628",
+      "tips": [
+        {
+          "id": "middle:Zoe:Cassiopeia:0",
+          "text": "Hit Cassiopeia with Sleepy Trouble Bubble, then break the sleep with a big hit for bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Zoe-E", "start": 20, "end": 41 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zoe:Cassiopeia:1",
+          "text": "Cast Paddle Star from far away, then redirect it. Distance makes it hit harder.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Zoe:Cassiopeia:2",
+          "text": "Stay out of Miasma. It slows you and stops you from dashing or blinking away.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zoe:Cassiopeia:3",
+          "text": "Face away from Cassiopeia when Petrifying Gaze goes off, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 31,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Zoe:Cassiopeia:4",
+          "text": "Use Portal Jump carefully. You can't move there and she can hit you before you return.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw Sleepy Trouble Bubble from range, away from Cassiopeia's poison.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Zoe-E", "start": 39, "end": 60 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 83, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9422f5e92092e6e4f17bfdfa0db1f34b0a13e90d1f9077bef5e6bc2f95a7502d",
+      "tips": [
+        {
+          "id": "middle:Zoe:Fizz:0",
+          "text": "Land Sleepy Trouble Bubble on Fizz when he has used Playful, because he can't dodge it then.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Fizz", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Zoe:Fizz:1",
+          "text": "Fire Paddle Star from long range at Fizz; it hits harder the farther it flies, and he must close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zoe:Fizz:2",
+          "text": "Stay away from Fizz when Urchin Strike is ready; he can dash onto you through minions and burst you.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Zoe:Fizz:3",
+          "text": "Don't use Portal Jump while Fizz is close; you can't move and he can dive you.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zoe:Fizz:4",
+          "text": "Keep distance when Fizz has Chum the Waters; being slowed lets him follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Fizz-R", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Sleep then Paddle Star! punishes Fizz if the bubble lands, since Playful can't be used while asleep.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal bubble throws Sleepy Trouble Bubble from range and lands her safely away from Fizz's dash.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 21, "end": 42 },
+            { "kind": "champion", "key": "Fizz", "start": 85, "end": 89 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "109bf7f4ca7b614fc55f19df13a8f8b78fe8b460c6470671470e3169fa8b7c7f",
+      "tips": [
+        {
+          "id": "middle:Zoe:Malzahar:0",
+          "text": "Stay out of Malzahar's Call of the Void range; if you get silenced, you can't cast Portal Jump to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Zoe-R", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Zoe:Malzahar:1",
+          "text": "Don't trade while Malzahar has Void Shift up; he takes far less damage and can't be slowed or put to sleep.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 18, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 31,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Zoe:Malzahar:2",
+          "text": "Hit Malzahar with Paddle Star! from long range so it deals more damage, then redirect it for a bigger hit.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Zoe:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Zoe:Malzahar:4",
+          "text": "Avoid being the target of Nether Grasp: don't stand within reach of Malzahar once he reaches level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 26, "end": 38 },
+            { "kind": "champion", "key": "Malzahar", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "634169036b6cee049c579a1e3f9e2450520067a49a6c622e6ed78e6d1efd2e63",
+      "tips": [
+        {
+          "id": "middle:Zoe:Orianna:0",
+          "text": "Cast Paddle Star! from far away and redirect it; it hits hardest after a long flight.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zoe:Orianna:1",
+          "text": "Aim Sleepy Trouble Bubble when Orianna commits to a trade; if it hits, finish with your biggest damage while she sleeps.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Orianna", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Zoe:Orianna:2",
+          "text": "Be careful with Portal Jump near Orianna. You cannot move for a moment, and her Command: Shockwave can punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Orianna", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Orianna-R", "start": 80, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zoe:Orianna:3",
+          "text": "Watch where Orianna's Ball is; her abilities only hit around it. Stand away from it and her damage drops.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zoe:Orianna:4",
+          "text": "Walk out of Command: Dissonance's field. You are slowed while inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 12, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e835e4edd9441ed1c07ad7dd84320b4f1a95387566d7b498fb7ec1f57cfeb0e2",
+      "tips": [
+        {
+          "id": "middle:Zoe:Ryze:0",
+          "text": "Avoid being hit by Spell Flux, because it marks you and lets Ryze root you with Rune Prison. Stay behind minions so his orb is harder to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 19, "end": 29 },
+            { "kind": "champion", "key": "Ryze", "start": 61, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Ryze-W", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Zoe:Ryze:1",
+          "text": "Cast Sleepy Trouble Bubble when Ryze is rooted or low on room to move. If it hits, you can follow up with Paddle Star.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Ryze", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zoe:Ryze:2",
+          "text": "Fire Paddle Star from far away, then redirect it at Ryze. The longer it flies, the more it hurts, and he cannot hide inside the minion wave.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Zoe:Ryze:3",
+          "text": "Watch Ryze's Realm Warp. Stun or sleep him while it charges to cancel the portal for his team.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Ryze-R", "start": 13, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8eafe13d76f209d9c77e7df72b5a046563321018aceff89535e08d4cca3f9c73",
+      "tips": [
+        {
+          "id": "middle:Zoe:Sylas:0",
+          "text": "Hit Sylas with Sleepy Trouble Bubble from long range, then follow with Paddle Star! while he sleeps, because attacks and ability hits wake him for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zoe-E", "start": 15, "end": 36 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Zoe:Sylas:1",
+          "text": "Stay out of Abduct range. If he is stunned and pulled onto you, you have little time to react, so keep your distance.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Zoe:Sylas:2",
+          "text": "Poke Sylas with Paddle Star! from far away, where it hits hardest, to keep him from closing in with Kingslayer.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Sylas-W", "start": 100, "end": 110 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Zoe:Sylas:3",
+          "text": "Do not trade when Sylas is low. Kingslayer heals him more the lower his health is, so finish him with burst or leave him alone.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Zoe:Sylas:4",
+          "text": "Before a fight, remember that Sylas can steal your Portal Jump at level 6. Use it to disengage rather than in the middle of a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Zoe-R", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e7e1eae24c9b9c1f92ba821fd527b439a5388159a8887e6446b33165d70c0008",
+      "tips": [
+        {
+          "id": "middle:Zoe:TwistedFate:0",
+          "text": "Fire Paddle Star! from far away, or cast it behind you and redirect it, to hit Twisted Fate hard.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "TwistedFate", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zoe:TwistedFate:1",
+          "text": "Don't let Twisted Fate land the Gold Card from Pick a Card. When you see him shuffling, stay out of his attack range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 10,
+              "end": 22
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 47,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Zoe:TwistedFate:2",
+          "text": "Land Sleepy Trouble Bubble, then hit him with your biggest damage to wake him up for double damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Zoe:TwistedFate:3",
+          "text": "When Twisted Fate uses Destiny, expect a gank or a teleport. Back off to safety and don't push forward.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Zoe:TwistedFate:4",
+          "text": "Use Portal Jump carefully; you are stuck there and open to Wild Cards. Jump only when his Wild Cards is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 4, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 59,
+              "end": 69
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 90,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "82cf698cd383dcf8bc9be5131eff6854ca6bd8fcb55b8d0d7de5cf339a7d37e8",
+      "tips": [
+        {
+          "id": "middle:Zoe:Viktor:0",
+          "text": "Cast Paddle Star! from far away or redirect it for max damage; Viktor has to fight your poke.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zoe:Viktor:1",
+          "text": "Land Sleepy Trouble Bubble on Viktor, then burst him while he sleeps. He cannot shield out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Zoe:Viktor:2",
+          "text": "Move sideways to dodge Hextech Ray rather than backing away in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zoe:Viktor:3",
+          "text": "Leave Gravity Field as soon as it appears. Staying inside gets you slowed, then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Zoe:Viktor:4",
+          "text": "Do not Portal Jump into Viktor's range; you cannot move while there, so his Gravity Field and Hextech Ray hit you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 7, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Viktor-W", "start": 76, "end": 89 },
+            { "kind": "ability", "key": "Viktor-E", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fd424df5362563c5d325d67d81b6f94bf44c392bd776e47260f2bc50f457eecf",
+      "tips": [
+        {
+          "id": "middle:Zoe:Yasuo:0",
+          "text": "Aim Sleepy Trouble Bubble at Yasuo when he dashes with Sweeping Blade or walks up to a minion. Once he is asleep, hit him with your biggest damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Zoe:Yasuo:1",
+          "text": "Hold Paddle Star! while Wind Wall is up; it blocks your star and bubble.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Zoe:Yasuo:2",
+          "text": "Use Paddle Star! from long range; it hurts more the further it flies.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zoe:Yasuo:3",
+          "text": "Stay away from his whirlwind when he has two Steel Tempest stacks. Being knocked up lets him use Last Breath on you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 45, "end": 58 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 83 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Zoe:Yasuo:4",
+          "text": "Hit him with Paddle Star! just after he dashes with Sweeping Blade, when he is committed and exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9da2747b7e02624e4c632dc34b96791889e0b997f9e3780ea3689970e63d278b",
+      "tips": [
+        {
+          "id": "middle:Zoe:Yone:0",
+          "text": "Land Sleepy Trouble Bubble on Yone before he reaches you; once he is asleep, a follow-up hit deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zoe:Yone:1",
+          "text": "Fire Paddle Star! from far away and redirect it, so it hits harder than a close-range cast.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zoe:Yone:2",
+          "text": "Stay away from Yone when his Fate Sealed is ready. It stuns and pulls you in, so keep your distance from him once he reaches level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-R", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Zoe:Yone:3",
+          "text": "Poke him while he last-hits, since his Spirit Cleave only hits in a short cone in front of him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:2",
+          "note": "Portal Jump then bubble lets Zoe throw the sleep from range and land safely away from Yone's dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 29, "end": 32 },
+            { "kind": "champion", "key": "Yone", "start": 86, "end": 90 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d782251d8ef04b8ee2e3da012f85644f6cae1ad35ed7d605d6f2ce7bd524fa26",
+      "tips": [
+        {
+          "id": "middle:Zoe:Zed:0",
+          "text": "Land Sleepy Trouble Bubble on Zed when he commits, then break the sleep with your biggest hit for double damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zoe:Zed:1",
+          "text": "Stay at long range and hit Zed with Paddle Star! while he has no Shadow out; the further it flies, the harder it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Zoe:Zed:2",
+          "text": "After Zed sends out Living Shadow, he is easiest to punish, so trade with him then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Zed-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zoe:Zed:3",
+          "text": "Use Portal Jump to step out of range of his dash in, but remember you cannot move while it lasts and will snap back.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zoe:Zed:4",
+          "text": "When Death Mark lands on you, don't fight back and take extra damage. Stay away from him until it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zoe:combo:3",
+          "note": "Once the bubble sleeps Zed, a long-travel star hits for double damage and the empowered attack follows.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 23, "end": 26 }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,910 @@
+{
+  "schemaVersion": 1,
+  "champion": "Evelynn",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "933f2430076ca90aad74586089845ff109a7d9f31e165452cfd0dd95892930e3",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:general:0",
+          "text": "Cast Allure on a target early and wait before you hit them. A mark that has matured charms them and cuts their Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Evelynn:general:1",
+          "text": "Use Allure on big monsters too. A matured mark charms the monster and adds heavy damage, which speeds up your clears.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Evelynn:general:2",
+          "text": "Open with Hate Spike, then hit the same enemy with attacks and abilities. They deal extra damage to the marked target.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-Q", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Evelynn:general:3",
+          "text": "Recast Hate Spike when enemies are lined up. The spikes hit everything in the line and need a visible enemy nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-Q", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Evelynn:general:4",
+          "text": "After you enter Demon Shade, Whiplash is refreshed and its next cast dashes to the target. Use it to close the gap and hit enemies along the path.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 16,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Evelynn-E", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Evelynn:general:5",
+          "text": "Hold Last Caress for targets at low health, where it hurts far more. It makes you untargetable, so it also works as an escape.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Evelynn:general:6",
+          "text": "Watch for the glowing eyes over enemy champions when you are stealthed. They show you are close to being detected.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Evelynn:general:7",
+          "text": "When you are low on health, back off and let Demon Shade heal you. Then return and surprise the enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 45,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Evelynn:general:8",
+          "text": "Casting Allure does not break Demon Shade. Mark a target from stealth, then wait for the mark to mature before you strike.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 8, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 30,
+              "end": 41
+            },
+            { "kind": "summoner-spell", "key": "32", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Evelynn:combo:0",
+          "name": "Whiplash into buffered Last Caress",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Evelynn-E" },
+            { "kind": "ability", "key": "Evelynn-R" }
+          ],
+          "when": "When you dash onto a target with empowered Whiplash and want to finish them with no delay.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Evelynn-E", "start": 43, "end": 51 }
+          ],
+          "text": "Last Caress can be buffered during the empowered dash. Queue it while dashing and it fires the moment you land.",
+          "textRefs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 0, "end": 11 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "e05a4c380f4d39018c596745696689ae13969443f848c45103ae630bef36af81",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Graves:0",
+          "text": "Wait for Allure to mature before you strike; the charm and lowered Magic Resist make your kill much easier. Do not rush it.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 9, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Evelynn:Graves:1",
+          "text": "Charm Graves with Allure before you commit. Without his dash he cannot easily get out of your burst.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Evelynn:Graves:2",
+          "text": "Finish Graves with Last Caress once he is low on health; it hurts him far more then, and you become untargetable while you cast.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Evelynn:Graves:3",
+          "text": "Do not fight inside Smoke Screen. You are slowed and cannot see out of it, so wait for it to fade or step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Evelynn:Graves:4",
+          "text": "Stay in Demon Shade and approach Graves from the dark. Then use the empowered Whiplash to dash onto him and burst him before he reacts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 8,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Graves", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49459bb2d92122e58a1ad2f1406f92ec7a84cb74307dc6910abf519dfcd695d8",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:JarvanIV:0",
+          "text": "Stay in Demon Shade and wait for a moment when Jarvan IV has used his abilities, then open with Allure so the charm is ready when you strike.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 8,
+              "end": 19
+            },
+            { "kind": "champion", "key": "JarvanIV", "start": 47, "end": 56 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Evelynn:JarvanIV:1",
+          "text": "Use Allure from long range and hit him after the mark has matured; the charm and lowered Magic Resist let you burst him down.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Evelynn:JarvanIV:2",
+          "text": "Jarvan IV's Cataclysm walls you in. Use Last Caress to blink out, since you cannot be targeted while casting it.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Evelynn:JarvanIV:3",
+          "text": "Do not fight near his Demacian Standard; Dragon Strike can pull him through you and knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 22, "end": 39 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Evelynn:JarvanIV:4",
+          "text": "Finish him with Last Caress once he is low on health; it hits much harder on weakened targets.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0fde900e83a23fc5ed9597cc2004234a2fc2760de7c8dea4deb9f704db8c1534",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Kayn:0",
+          "text": "Mark Kayn with Allure and wait for the mark to mature before you hit him; the charm lets you burst him down.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Evelynn:Kayn:1",
+          "text": "Open on Kayn with Hate Spike, then use Whiplash and recast Hate Spike while he is stuck charmed.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Evelynn:Kayn:2",
+          "text": "Finish Kayn with Last Caress when he is low on health; it hits much harder then, and you are untargetable as you cast it.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Evelynn:Kayn:3",
+          "text": "Stay hidden in Demon Shade until Kayn walks into the open; he cannot easily react to you when you strike from stealth.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 15,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Kayn", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "907704f99a67ec1f774b9f7d29fd43da20ee1f5ca4b28458153fb61d5908ac54",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Khazix:0",
+          "text": "Hit Kha'Zix with Allure and wait for the mark to ripen before you strike; the charm and lost Magic Resist let you win a short fight.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Evelynn:Khazix:1",
+          "text": "Stay near your minions, allies or turret so Kha'Zix can't treat you as alone and hit you with a boosted Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 44, "end": 51 },
+            { "kind": "keyword", "key": "isolated", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 104, "end": 120 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Evelynn:Khazix:2",
+          "text": "Use Last Caress to finish Kha'Zix when he is low; it hurts more against low health and you can't be targeted while it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Evelynn:Khazix:3",
+          "text": "Open with Hate Spike on Kha'Zix, then attack him; the marked hits deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-Q", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2cffe3d3967ef4b0c2a30e1e1014f000571dbee9acc1749837588a800017e13c",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Kindred:0",
+          "text": "Wait for Allure to be marked for a while before you hit Kindred; the longer mark gives the charm and cuts her Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 9, "end": 15 },
+            { "kind": "champion", "key": "Kindred", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Evelynn:Kindred:1",
+          "text": "Kindred is fragile, so go for her with Whiplash once Demon Shade has made it stronger, and hit her from the dark.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 39, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 53,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Evelynn:Kindred:2",
+          "text": "Do not use Last Caress while Kindred's Lamb's Respite is active; nobody inside can die, so save it until the zone ends.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Kindred", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Kindred-R", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Evelynn:Kindred:3",
+          "text": "Charm Kindred and she is stuck in place, so go all in before she can use Dance of Arrows to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 73, "end": 88 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "531cff694123d29fd012ebf9249eec1c0f656a72fe671f7318544573d0a2b5a9",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:LeeSin:0",
+          "text": "Wait until Allure's mark has fully formed before you strike, so the charm lands and Lee Sin loses Magic Resist. Then burst him with your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Evelynn:LeeSin:1",
+          "text": "Lee Sin is weak to magic damage, so Hate Spike and Whiplash hurt him. Land Hate Spike first so your follow-up hits deal extra.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Evelynn:LeeSin:2",
+          "text": "Save Last Caress for when Lee Sin is low on health, where it deals far more damage. It also makes you untargetable, which dodges his Dragon's Rage.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 133, "end": 146 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Evelynn:LeeSin:3",
+          "text": "Stay in Demon Shade and avoid fights until you are level 6. Before that, Lee Sin's early pressure can catch you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 8,
+              "end": 19
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "560e5edb8f82933482c793730eb016108d73f5c5b42fb1d8005c69438cc17c9f",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:MasterYi:0",
+          "text": "Mark Master Yi with Allure early and wait for the mark to fully form before you hit him; the charm and lowered magic resist make him easy to kill.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Evelynn:MasterYi:1",
+          "text": "Do not rely on the slow from Allure once he casts Highlander; he cannot be slowed then, so stay out of reach or use the charm instead.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 50, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Evelynn:MasterYi:2",
+          "text": "Wait for him to spend Alpha Strike before you commit with Whiplash or Last Caress; he cannot be targeted while it runs.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Evelynn:MasterYi:3",
+          "text": "Hit him a few times while he heals; Meditate costs mana and he takes less damage while channeling, so burst him before or after it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Evelynn:MasterYi:4",
+          "text": "Use Last Caress on him once he is below low health; it does far more damage then, and you step away from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b592a137fb08913156afa9cae1d173aa0b798e48ebe241b813b860aa1a51879",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Naafiri:0",
+          "text": "Mark Naafiri with Allure early and wait for the mark to mature before you hit her; the charm and lowered Magic Resist make the trade easy to win.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Evelynn:Naafiri:1",
+          "text": "Land Hate Spike on Naafiri, then recast it and attack her to add extra damage from the mark.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Evelynn:Naafiri:2",
+          "text": "Look for Naafiri when she is low on health; Last Caress deals much more damage to low-health enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Evelynn:Naafiri:3",
+          "text": "Stay in Demon Shade and strike first with the empowered Whiplash to dash onto Naafiri, because her packmates only join after she acts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 8,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Evelynn-E", "start": 56, "end": 64 },
+            { "kind": "champion", "key": "Naafiri", "start": 78, "end": 85 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56b9015ef6a7d8b670f3fc4a73519f9d726ee2db2a6cb4fbdb02baad417dca58",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Nocturne:0",
+          "text": "Wait for Allure's mark to fully form before you hit Nocturne; only then does it charm him and cut his Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 9, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Evelynn:Nocturne:1",
+          "text": "Hold Last Caress for when Nocturne is low on health; it hurts him far more then, and you can't be targeted while you cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nocturne", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Evelynn:Nocturne:2",
+          "text": "Bait out Shroud of Darkness with Hate Spike before you commit Allure. The shield blocks the next ability, and Allure can't be wasted on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Evelynn:Nocturne:3",
+          "text": "Don't fight Nocturne while he is on his Duskbringer trail; he moves faster and hits harder there.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Evelynn:Nocturne:4",
+          "text": "Stay hidden in Demon Shade and ambush Nocturne after he uses Paranoia, when his own sight is not the problem but his allies' sight is.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 15,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Nocturne", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8fb826fb05541468c15e483ef6cfa9701e3db0998d351ceeee4fc90cc6601289",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Shyvana:0",
+          "text": "Wait for Allure's mark to mature before you hit Shyvana; the charm and lowered Magic Resist make the fight yours. Hitting too soon only slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 9, "end": 15 },
+            { "kind": "champion", "key": "Shyvana", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 136, "end": 141 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Evelynn:Shyvana:1",
+          "text": "Finish Shyvana with Last Caress when she is low on health; it hits much harder then, and you are untargetable while you cast it.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Evelynn:Shyvana:2",
+          "text": "Gank and fight her before she has Dragon Fury for her ultimate. Once she is a dragon she is much tougher, so back off or burst her fast.",
+          "refs": [],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Evelynn:Shyvana:3",
+          "text": "Stay hidden in Demon Shade and strike when she is alone. Hate Spike followed by Whiplash gives a quick burst before she can trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 15,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Evelynn-Q", "start": 57, "end": 67 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4c5f53dbe2ac2bbcebbabdc863aec1d5edd2a1cfe34339d579495749752723d6",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Skarner:0",
+          "text": "Let Allure sit on Skarner until the mark is fully formed before you hit him; then he is charmed and loses Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Skarner", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Evelynn:Skarner:1",
+          "text": "Skarner is a tank, so fight him only after Allure has stripped his Magic Resist, and stack your magic damage onto that window.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Evelynn:Skarner:2",
+          "text": "Do not fight Skarner when he has Shattered Earth ready and you are low; his empowered attacks and slow make trades costly.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Evelynn:Skarner:3",
+          "text": "Use Last Caress to become untargetable and dodge Impale, then blink away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Skarner-R", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Evelynn:Skarner:4",
+          "text": "Skarner's Ixtal's Impact can drag you into a wall for a stun. Stay away from walls when he charges, and kill him from a distance when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "701a6bc3df5e3818259c285510520fee89d119512dc56a66f036a6016e8093fc",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Sylas:0",
+          "text": "Mark Sylas with Allure early and wait for it to ripen before you hit him; the charm and magic resist cut make the kill easy.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Evelynn:Sylas:1",
+          "text": "Sylas can heal with Kingslayer when he is low, so finish him fast with Last Caress once he is under the damage threshold.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Evelynn:Sylas:2",
+          "text": "Sylas can use Abduct to pull himself to you. Stay hidden in Demon Shade until your gank is ready, so he cannot see you coming.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 60,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a0eb5718997b53b15747e09531ce9b869d7516762d8e34add84ad9053a50411",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Talon:0",
+          "text": "Put Allure on Talon early and wait for the mark to fully form before you hit him. Then the charm and Magic Resist cut let you kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Talon", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Evelynn:Talon:1",
+          "text": "Stay in Demon Shade while you look for him. Whiplash is ready the moment you enter it, so you can dash onto him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 8,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Evelynn-E", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Evelynn:Talon:2",
+          "text": "Finish Talon with Last Caress when he is low on health. It hits much harder against low-health enemies and you become untargetable while you cast it.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Evelynn:Talon:3",
+          "text": "Talon can turn invisible and run, so keep him slowed or charmed to stop his escape.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d2fe13211d8c26ff5a5246d2ed9fa6090cd87eac48552128832070aa0dea4ada",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:Viego:0",
+          "text": "Mark Viego with Allure and wait for the mark to fully form before you hit him; then he is charmed and loses Magic Resist.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Evelynn:Viego:1",
+          "text": "Use Last Caress when Viego is low on health; it hits much harder then, and you become untargetable while you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Evelynn:Viego:2",
+          "text": "Hate Spike's first dart stops at the first enemy it hits, so aim it at Viego rather than a minion in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Viego", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Evelynn:Viego:3",
+          "text": "If a champion dies near Viego, he may possess the corpse. He is untargetable while he winds up on the Mist Wraith, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Evelynn:Viego:4",
+          "text": "Do not rush at Viego on his Harrowed Path mist; he is hidden there. Ward the area before you walk in.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Viego-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3d768ba2d9c4b66f378ed56fd327f2286db9424d17b25f485993f123edf01b24",
+      "tips": [
+        {
+          "id": "jungle:Evelynn:XinZhao:0",
+          "text": "Don't fight Xin Zhao head on early; Three Talon Strike and his charge make him far sturdier in a straight brawl than you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Evelynn:XinZhao:1",
+          "text": "Put Allure on Xin Zhao, then wait for the mark to mature. A full mark charms him and cuts his Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "XinZhao", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Evelynn:XinZhao:2",
+          "text": "Be careful when you are low on health, since Xin Zhao's Crescent Guard deals extra damage based on current health and knocks you back.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Evelynn:XinZhao:3",
+          "text": "Use Last Caress to escape if he pins you; you are untargetable at the start and blink away.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Evelynn:XinZhao:4",
+          "text": "Keep Whiplash ready to dash after Demon Shade starts; the empowered cast gives you a way to close in or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-E", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 34,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

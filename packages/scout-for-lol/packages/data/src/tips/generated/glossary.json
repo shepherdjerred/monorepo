@@ -2,10 +2,31 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "id": "ablaze",
+      "term": "Ablaze",
+      "aliases": ["ablaze"],
+      "definition": "Burning from a recent hit, taking damage over time. Some follow-up attacks become stronger against a burning target.",
+      "cites": []
+    },
+    {
+      "id": "isolated",
+      "term": "Isolated",
+      "aliases": ["isolated", "alone"],
+      "definition": "An enemy with no allied champions, minions or outer turrets close to them. Some abilities do extra damage to them.",
+      "cites": []
+    },
+    {
       "id": "knocked-up",
       "term": "Knocked up",
       "aliases": ["knock up", "knocks up", "knocked"],
       "definition": "Lifted into the air, unable to move or act until landing.",
+      "cites": []
+    },
+    {
+      "id": "poke",
+      "term": "Poke",
+      "aliases": ["poking"],
+      "definition": "Hitting an enemy from a distance to wear down their health before a real fight starts.",
       "cites": []
     },
     {
@@ -27,6 +48,13 @@
       "term": "Slowed",
       "aliases": ["slow", "slows"],
       "definition": "Moves more slowly for a short time.",
+      "cites": []
+    },
+    {
+      "id": "stunned",
+      "term": "Stunned",
+      "aliases": ["stun", "stuns"],
+      "definition": "Unable to move, attack or cast for a short time.",
       "cites": []
     }
   ]

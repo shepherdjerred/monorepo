@@ -1,0 +1,841 @@
+{
+  "schemaVersion": 1,
+  "champion": "Amumu",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "b23e15e66edfba005c645ecbe5df4eaa1af3618dd605dae9d0803a2228528997",
+      "tips": [
+        {
+          "id": "jungle:Amumu:general:0",
+          "text": "Aim Bandage Toss carefully; it stops at the first enemy it hits, so a minion in the way takes the stun instead. Line it up on the champion you want.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Amumu:general:1",
+          "text": "Keep a second Bandage Toss charge for escaping or chasing. It also pulls you to the target, so don't throw both charges early in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Amumu:general:2",
+          "text": "Turn on Despair as soon as you are next to enemies, and turn it off when the fight ends so you don't waste mana. It hurts high-health enemies the most.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Amumu:general:3",
+          "text": "Use Tantrum when enemies are close. Being hit with attacks shortens its cooldown, so it comes back quickly when you tank damage.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Amumu:general:4",
+          "text": "Save Curse of the Sad Mummy for a fight where it catches several enemies. It stuns everyone close to you, so move into the middle of them first.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Amumu:general:5",
+          "text": "Hit enemies with attacks or Despair before magic damage from your team lands. Cursed Touch makes them take extra true damage from magic.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 28, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Amumu-passive",
+              "start": 78,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Amumu:general:6",
+          "text": "Look for ganks where Bandage Toss lands first. Follow the stun with your team's damage while the enemy cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Amumu:combo:0",
+          "name": "Despair during Bandage dash",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Amumu-Q" },
+            { "kind": "ability", "key": "Amumu-W" }
+          ],
+          "when": "When you engage on a target and want Despair damage and Curse to start as early as possible.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 37, "end": 44 }
+          ],
+          "text": "Despair can be cast while Amumu is still dashing from Bandage Toss. Toggle it on mid-dash so it ticks the moment you land.",
+          "textRefs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Amumu", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 54, "end": 66 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "1b779d8cf772cf6d40698aeff47673266be4b9b12a6b5fd0c99c1bb657ee498f",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Graves:0",
+          "text": "Hit Graves with Bandage Toss to stun him and pull yourself in, then follow with Curse of the Sad Mummy once his friends are close enough to be caught too.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Amumu-R", "start": 80, "end": 102 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Amumu:Graves:1",
+          "text": "Graves deals mostly physical damage, so keep Tantrum ready; it cuts physical damage and recharges faster each time he hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Amumu-E", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Amumu:Graves:2",
+          "text": "Turn on Despair once you are on top of Graves; it hurts a lot more against a tanky target than a squishy one, so use it on whoever has the most Health.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 8, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Amumu:Graves:3",
+          "text": "Aim Bandage Toss with care when Graves stands behind a minion, because it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Graves", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "191e9402148224d4d681c9a52b9d447eda637eeb05c7485fe3c10397b982a719",
+      "tips": [
+        {
+          "id": "jungle:Amumu:JarvanIV:0",
+          "text": "Aim Bandage Toss at Jarvan when he stands behind his Demacian Standard; the stun lands on the first enemy hit, so keep other units out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 53, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Amumu:JarvanIV:1",
+          "text": "Jarvan's Cataclysm terrain does not stop Bandage Toss from pulling you in, so you can still reach him inside his ring.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Amumu:JarvanIV:2",
+          "text": "Keep Despair on while you fight him; it hurts a high-Health fighter and refreshes your Curse so your magic damage hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Amumu:JarvanIV:3",
+          "text": "Let him hit you in a fight; Tantrum comes back sooner with every attack he lands and softens his physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Amumu:JarvanIV:4",
+          "text": "Save Curse of the Sad Mummy for when Jarvan and his team group up together, ideally after he has used his Cataclysm.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 106, "end": 115 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "12db8b5a182c558fd249fee65710ee5ec6d2349288583923ab6a07b5af7e28f8",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Kayn:0",
+          "text": "Aim Bandage Toss at Kayn before he reaches terrain; he is stunned and can't slip into a wall to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Amumu:Kayn:1",
+          "text": "Hold Curse of the Sad Mummy for when Kayn commits on you or a teammate; it stuns him in place so he can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Kayn", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Amumu:Kayn:2",
+          "text": "Keep Despair on while fighting Kayn; he has high health, so the damage adds up, and it keeps him Cursed.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Amumu:Kayn:3",
+          "text": "Use Tantrum when Kayn is hitting you with attacks; it takes less physical damage and its cooldown shortens with each hit.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Kayn", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b00af7f603d80a4dc27e7bc38ded34e836681f15db44edd841c3302278bc0cf9",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Khazix:0",
+          "text": "Look for Kha'Zix when he is alone and throw Bandage Toss at him. The stun gives your team time to kill him.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 44, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Amumu:Khazix:1",
+          "text": "Kha'Zix has to jump in to kill you. Use Curse of the Sad Mummy when he commits so he is stunned and cannot get away.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Amumu-R", "start": 40, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Amumu:Khazix:2",
+          "text": "Stay close to your allies. Kha'Zix hits much harder on targets that are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "isolated", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Amumu:Khazix:3",
+          "text": "Keep Despair on when he is next to you. It hurts him over time and works well against his Health.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Amumu:Khazix:4",
+          "text": "Tantrum reduces physical damage, so use it in a fight with Kha'Zix. Every hit he lands also shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Khazix", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f15391f1e067ee17336db9b7df22734dfda560710a45a2678eb20291ee257e90",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Kindred:0",
+          "text": "Hit Kindred with Bandage Toss when she vaults in close; she is fragile, and the stun keeps her in reach for the rest of your combo.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Amumu:Kindred:1",
+          "text": "Keep Curse of the Sad Mummy for when Kindred and her team are bunched up. Hold it if she has Lamb's Respite ready, since nobody can die inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Kindred", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Kindred-R", "start": 93, "end": 107 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Amumu:Kindred:2",
+          "text": "Stay on Kindred with Despair once you have jumped on her. It keeps your Curse up so your magic damage hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Amumu-W", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Amumu:Kindred:3",
+          "text": "Her Mounting Dread slows you and ends in a pounce. Use Tantrum to trade back, since every hit on you shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Amumu-E", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7b02db0dc47da6596a5f6b0984a4fe5704e6f6c9f28c565f33b51a0066277943",
+      "tips": [
+        {
+          "id": "jungle:Amumu:LeeSin:0",
+          "text": "Hold Curse of the Sad Mummy until Lee Sin is inside its range, then stun him. Without his abilities he can't chain his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "LeeSin", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Amumu:LeeSin:1",
+          "text": "Lee Sin hits with physical damage, so Tantrum cuts each hit he lands. Take his basic attacks and the cooldown comes back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Amumu-E", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Amumu:LeeSin:2",
+          "text": "Aim Bandage Toss at Lee Sin when he walks up to fight. The first enemy it hits is stunned, and you pull yourself onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Amumu:LeeSin:3",
+          "text": "Turn on Despair once you are on him. It hurts a high-Health target more, and it refreshes your Curse.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "02d1af632e644fa2330d70887e4b039a1a2364b68bcaf0f74d925f527f657ae0",
+      "tips": [
+        {
+          "id": "jungle:Amumu:MasterYi:0",
+          "text": "Aim Bandage Toss at Master Yi when he is not using Alpha Strike. A stun on him usually decides the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MasterYi", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Amumu:MasterYi:1",
+          "text": "Save Curse of the Sad Mummy for when Master Yi jumps in on your team. Highlander does not stop the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "MasterYi", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Amumu:MasterYi:2",
+          "text": "Keep Despair on while he attacks you; it hurts him steadily and keeps Curse up.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Amumu:MasterYi:3",
+          "text": "Tantrum cuts his physical hits, and every hit on you shortens its cooldown. Stand and fight him once it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "afefbbeaf0af8c09ea0e167a030cd615e54d1f1baf175d5f2df8fc82e64cee44",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Naafiri:0",
+          "text": "Use Curse of the Sad Mummy when Naafiri dives in; it stuns her and her packmates are caught around you too.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 4, "end": 26 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Amumu:Naafiri:1",
+          "text": "Aim Bandage Toss at Naafiri herself; it stops at the first enemy hit, so a packmate in the line can soak it.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Amumu:Naafiri:2",
+          "text": "Do not throw Bandage Toss while Naafiri is untargetable after The Call of the Pack; wait until she shows up again.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 62, "end": 82 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Amumu:Naafiri:3",
+          "text": "Keep Despair on when you fight beside her packmates; it hits everything close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Amumu:Naafiri:4",
+          "text": "Tantrum softens her physical hits, so trade with her in close range and keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Amumu:combo:0",
+          "note": "Despair ticking on landing hits Naafiri and her packmates early, which matters since her packmates join fights.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Naafiri", "start": 32, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dae55fabbfac4d404c283452a6be63ba580046d4a6b5c72a11c5f7e224291b2f",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Nocturne:0",
+          "text": "Nocturne's Shroud of Darkness blocks the next enemy ability, so bait it with Tantrum or a spare Bandage Toss charge before you commit Curse of the Sad Mummy.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "Amumu-E", "start": 77, "end": 84 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 96, "end": 108 },
+            { "kind": "ability", "key": "Amumu-R", "start": 134, "end": 156 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Amumu:Nocturne:1",
+          "text": "Use Curse of the Sad Mummy when Nocturne dives in with Paranoia; the stun stops him from killing your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 4, "end": 26 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 55, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Amumu:Nocturne:2",
+          "text": "Stay near your allies in fights. Nocturne wants to jump on someone alone, and you can stun him with Bandage Toss when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Amumu:Nocturne:3",
+          "text": "Keep Despair on while you fight Nocturne. It hurts him steadily and keeps your Curse on him.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6ad4b7da02b744e48e58da3eceef26b855d9ac520b7a27a7b4f69a0bf24a8d44",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Shyvana:0",
+          "text": "Hit Shyvana with Bandage Toss when she is away from her team; it stuns her and pulls you in, so she can't walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Amumu:Shyvana:1",
+          "text": "Keep Despair on while you fight her; it deals damage based on her max Health, and she is a tanky target.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Amumu:Shyvana:2",
+          "text": "Save Curse of the Sad Mummy for when she has used her Dragon Form, or for when her team is clumped up near her.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Amumu:Shyvana:3",
+          "text": "Use Tantrum when she hits you with attacks; it takes off some physical damage and recovers faster each time she hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7ef3838f09c75695c6ae9f78ea86cf7a8d1ccdb69cb2fd2b2a91f89866421a1f",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Skarner:0",
+          "text": "Hit Skarner with Bandage Toss when he starts Ixtal's Impact; a stun ends his charge and drops anyone he grabbed.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Skarner-E", "start": 45, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Amumu:Skarner:1",
+          "text": "Stay in range of Skarner with Despair in a long fight; it hurts high-Health targets the most.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Amumu-W", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Amumu:Skarner:2",
+          "text": "Skarner's attacks are mostly physical, so Tantrum shrugs off some of them and comes back sooner each time he hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Amumu-E", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Amumu:Skarner:3",
+          "text": "Save Curse of the Sad Mummy until Skarner has used Ixtal's Impact; without it he struggles to catch you or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Skarner", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Skarner-E", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f80c12ec9ccd4f4536681966808d933b26025f038f3f87eea445aa6fc7b70b9e",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Sylas:0",
+          "text": "Aim Bandage Toss at Sylas when he is away from minions; it stuns him and pulls you in, so his Abscond dash will not save him from your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Amumu:Sylas:1",
+          "text": "Save Curse of the Sad Mummy for when Sylas commits to a fight, so he is stunned and cannot chain his spells together.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Amumu:Sylas:2",
+          "text": "Sylas's magic damage hurts more once he is Cursed, so hit him with a basic attack before your team jumps in.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Amumu:Sylas:3",
+          "text": "Do not hold back in a long brawl. Despair and Tantrum keep hurting Sylas while his Kingslayer heals him, so burst him fast.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Amumu-E", "start": 46, "end": 53 },
+            { "kind": "champion", "key": "Sylas", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Sylas-W", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e325df91531d8ca05b28b493cd37124c8776455a24706f8160161e865d93dd79",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Talon:0",
+          "text": "Keep Curse of the Sad Mummy ready for when Talon dives in; his burst is short, and a stun lets your team kill him before he escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Talon", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Amumu:Talon:1",
+          "text": "Hit Talon with Bandage Toss when he lands near you; it stuns him and pulls you onto him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Amumu:Talon:2",
+          "text": "Talon deals physical damage, so Tantrum cuts his hits. Keep getting hit by his attacks and Tantrum comes back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Amumu-E", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Amumu-E", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Amumu:Talon:3",
+          "text": "Toggle Despair on when you fight him; it keeps hurting him and refreshes your Curse so your mage allies hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 7, "end": 14 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Amumu:Talon:4",
+          "text": "Talon turns invisible with Shadow Assault to flee. Save Bandage Toss for when he reappears, since you cannot aim at what you cannot see.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 27, "end": 41 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "374e25be85f83ab7dc4bfb768a0203c996b2ffc25e6f20947c58320a4d2a80e0",
+      "tips": [
+        {
+          "id": "jungle:Amumu:Viego:0",
+          "text": "Throw Bandage Toss at Viego when he steps forward to fight; the stun stops his Blade of the Ruined King and his Spectral Maw.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Viego-Q", "start": 79, "end": 103 },
+            { "kind": "ability", "key": "Viego-W", "start": 112, "end": 124 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Amumu:Viego:1",
+          "text": "Keep Curse of the Sad Mummy for when Viego commits to a fight, so the whole fight stays stunned together.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 5, "end": 27 },
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Amumu:Viego:2",
+          "text": "Stay on Viego with Despair when he fights you; it hurts a high-health target and refreshes your Curse so your magic damage hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Amumu-W", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Amumu:Viego:3",
+          "text": "Use Tantrum against Viego's attacks; it cuts his physical damage, and each hit he lands on you shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Viego", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Amumu:Viego:4",
+          "text": "Hold a Bandage Toss charge in case Viego turns camouflaged from Harrowed Path, then stun him when he reveals himself.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Viego-E", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ff5e81c56bc3bc1dafaf1c0810f1ee4df683c4067a9ecf990e1ee734a231c22b",
+      "tips": [
+        {
+          "id": "jungle:Amumu:XinZhao:0",
+          "text": "Aim Bandage Toss at Xin Zhao as he engages; it stuns him and pulls you in. Hold a charge for when he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Amumu:XinZhao:1",
+          "text": "Turn on Despair when you fight Xin Zhao; he has high health, so it deals real damage while he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 8, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Amumu:XinZhao:2",
+          "text": "Use Curse of the Sad Mummy when Xin Zhao is in range; the stun stops his Three Talon Strike combo.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-R", "start": 4, "end": 26 },
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Amumu:XinZhao:3",
+          "text": "Let Xin Zhao hit you while Tantrum is on cooldown; each attack shortens it, so you can throw it again sooner.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Amumu-E", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

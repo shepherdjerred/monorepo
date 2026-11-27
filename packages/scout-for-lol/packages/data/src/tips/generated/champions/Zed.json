@@ -1,0 +1,3402 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zed",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "ade01831049570b0b8912e72f172e10f7762b23c2eb3951f755f56d69a91d788",
+      "tips": [
+        {
+          "id": "jungle:Zed:general:0",
+          "text": "Throw Razor Shuriken through a line of enemies or monsters; the first target takes full damage and the others take less.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zed:general:1",
+          "text": "Send out Living Shadow first, then use Razor Shuriken and Shadow Slash so the Shadow copies them. When you hit the same target with both, you get Energy back.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Zed-Q", "start": 39, "end": 53 },
+            { "kind": "ability", "key": "Zed-E", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zed:general:2",
+          "text": "Place Living Shadow before you jump in with Death Mark. Recast it to swap back to safety when the fight turns.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Zed:general:3",
+          "text": "Use Shadow Slash when your Shadow is next to the enemy. Only the Shadow's slash slows, so being close to them gets you the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 },
+            { "kind": "keyword", "key": "slowed", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Zed:general:4",
+          "text": "Hold your Energy and cooldowns until Death Mark lands. It repeats part of the damage you deal while the mark is on them.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Zed:general:5",
+          "text": "Finish enemies below half health with a basic attack. Contempt for the Weak adds bonus magic damage, but only once every few seconds on the same champion.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-passive", "start": 54, "end": 75 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zed:general:6",
+          "text": "Hitting an enemy with Shadow Slash lowers Living Shadow's cooldown, so land it on champions to get the Shadow back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Zed-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Zed:combo:0",
+          "name": "Shuriken swap mid-cast",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-W" },
+            { "kind": "ability", "key": "Zed-Q" },
+            { "kind": "ability", "key": "Zed-W" }
+          ],
+          "when": "When you want the shuriken thrown from a better angle or want to swap in while attacking.",
+          "whenRefs": [],
+          "text": "Place a shadow, start Razor Shuriken, then recast Living Shadow during the cast. Zed releases the shuriken from where he stood, swaps, then throws it again.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 22, "end": 36 },
+            { "kind": "ability", "key": "Zed-W", "start": 50, "end": 63 },
+            { "kind": "champion", "key": "Zed", "start": 81, "end": 84 }
+          ]
+        },
+        {
+          "id": "jungle:Zed:combo:1",
+          "name": "Double-tap escape",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-W" },
+            { "kind": "ability", "key": "Zed-W" }
+          ],
+          "when": "When a gank goes wrong or you need to leave a fight quickly.",
+          "whenRefs": [],
+          "text": "Cast Living Shadow away from the enemies and recast it straight away. Zed teleports to the shadow and is out of reach.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 70, "end": 73 }
+          ]
+        },
+        {
+          "id": "jungle:Zed:combo:2",
+          "name": "Death Mark shadow escape",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-R" },
+            { "kind": "ability", "key": "Zed-R" }
+          ],
+          "when": "After the mark is applied and you have dealt your damage, or when the fight turns against you.",
+          "whenRefs": [],
+          "text": "Death Mark leaves a shadow where you started. Recast to swap back to it and escape while the mark still detonates.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 }
+          ]
+        },
+        {
+          "id": "jungle:Zed:combo:3",
+          "name": "Death Mark burst",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-R" },
+            { "kind": "ability", "key": "Zed-W" },
+            { "kind": "ability", "key": "Zed-E" },
+            { "kind": "ability", "key": "Zed-Q" },
+            "attack"
+          ],
+          "when": "When ganking a squishy target and you want to kill it before the mark detonates.",
+          "whenRefs": [],
+          "text": "Dash in with Death Mark first, then add the shadow, slash, shuriken and an attack. All of that damage is stored and returned when the mark goes off.",
+          "textRefs": [
+            { "kind": "ability", "key": "Zed-R", "start": 13, "end": 23 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c59e638badc1d39e12814c176a127dea679cbd7a27387b21eac8f17b87bb6234",
+      "tips": [
+        {
+          "id": "middle:Zed:general:0",
+          "text": "Throw Razor Shuriken through the minion wave so it also hits the enemy champion behind it. It keeps flying after each hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:general:1",
+          "text": "Send Living Shadow out first, then use Razor Shuriken so you and the Shadow both hit the same enemy. Hitting with both gives you Energy back.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Zed-Q", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Zed:general:2",
+          "text": "Use Shadow Slash when your Shadow is next to the enemy. A slash from the Shadow slows them, and a slash from Zed alone does not.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 },
+            { "kind": "champion", "key": "Zed", "start": 109, "end": 112 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Zed:general:3",
+          "text": "Double tap Living Shadow to swap back to the Shadow and escape. Swap forward instead if you want to catch someone.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:general:4",
+          "text": "Hit the enemy with Shadow Slash to cut Living Shadow's cooldown. That lets you reposition or attack again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Zed-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Zed:general:5",
+          "text": "Save your Energy and cooldowns for the fight after Death Mark. The mark repeats part of the damage you deal while it is on them.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Zed:general:6",
+          "text": "Place Living Shadow before Death Mark so you have a safe way out. Swap back to the Shadow left behind before the mark triggers if the fight goes badly.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Zed:general:7",
+          "text": "Auto attack enemies who are low on health. Contempt for the Weak adds bonus damage on the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-passive", "start": 43, "end": 64 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Zed:combo:0",
+          "name": "Double tap shadow escape",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-W" },
+            { "kind": "ability", "key": "Zed-W" }
+          ],
+          "when": "You need to escape fast or dodge an incoming skillshot or ability.",
+          "whenRefs": [],
+          "text": "Cast the shadow and recast right away to swap with it. This works as a quick blink back, or forward to dodge a spell.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Zed:combo:1",
+          "name": "Shadow Q swap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Zed-W" },
+            { "kind": "ability", "key": "Zed-Q" },
+            { "kind": "ability", "key": "Zed-W" }
+          ],
+          "when": "You want to poke with Q and then swap out of retaliation range.",
+          "whenRefs": [],
+          "text": "Recast the shadow while Zed is still throwing the shuriken. The shuriken is released from both positions, and you end up safely repositioned.",
+          "textRefs": [
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "9c86f98003ca834a081c9754b20924fd64dddc7405d11c9f6cc38b029bd818b2",
+      "tips": [
+        {
+          "id": "jungle:Zed:Graves:0",
+          "text": "Graves hits hardest up close, so throw Razor Shuriken from range and avoid walking into his shotgun.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zed-Q", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zed:Graves:1",
+          "text": "Leave Smoke Screen's cloud quickly; the slow ends as soon as you step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zed:Graves:2",
+          "text": "Graves gains Armor from Quickdraw, so do not start a fight while he has many stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Graves-E", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zed:Graves:3",
+          "text": "Place a Shadow with Living Shadow before Death Mark so you can swap away from Graves after the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 41, "end": 51 },
+            { "kind": "champion", "key": "Graves", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c17c98725004243bf7191ceb8cbfcea09f89faa222e93de9216677036d869e08",
+      "tips": [
+        {
+          "id": "jungle:Zed:JarvanIV:0",
+          "text": "Stay away from the line between Jarvan and his Demacian Standard; Dragon Strike along it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 47, "end": 64 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Zed:JarvanIV:1",
+          "text": "Place a Living Shadow before Death Mark so you can swap away to safety after the mark.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Zed-R", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zed:JarvanIV:2",
+          "text": "Hit Jarvan with Razor Shuriken from both you and your shadow to get your energy back.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Zed:JarvanIV:3",
+          "text": "Do not dive when Golden Aegis is ready; it slows you and shields him.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zed:JarvanIV:4",
+          "text": "Jarvan's Cataclysm walls trap you, but your Death Mark dash can't be targeted while it starts. Don't fight inside his arena without a shadow to swap to.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Zed-R", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "66783756e07bac6e354536533a81d4a665a69900a119aedfee9d56841143da90",
+      "tips": [
+        {
+          "id": "jungle:Zed:Kayn:0",
+          "text": "Dodge Blade's Reach when you can. Kayn needs to damage you first to use Umbral Trespass at long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Kayn-R", "start": 72, "end": 87 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Zed:Kayn:1",
+          "text": "Watch for the warning on the terrain edge when Kayn is in a wall, and keep your Living Shadow ready to swap away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Zed-W", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Zed:Kayn:2",
+          "text": "Hit Kayn with Razor Shuriken while he is in a wall to cut Shadow Step short.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zed-Q", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Kayn-E", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Zed:Kayn:3",
+          "text": "Hold Death Mark if you are about to be hit by Kayn's burst. Use it to escape after you have placed a shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Kayn", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "203ea2f14251552c3d6de7c214a91eab4596aa76fa0d40f302b3e26c6bc5e9b5",
+      "tips": [
+        {
+          "id": "jungle:Zed:Khazix:0",
+          "text": "Stay near your minions or allies so Kha'Zix cannot find you isolated. His Taste Their Fear then does much less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "isolated", "start": 60, "end": 68 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 74, "end": 90 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Zed:Khazix:1",
+          "text": "Do not trade with Kha'Zix after he disappears; his next basic attack hits harder and slows you. Wait until you see him.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Zed:Khazix:2",
+          "text": "Look for the fight when Kha'Zix has used Leap and Void Assault. He is easiest to catch without them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Khazix-E", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Khazix-R", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zed:Khazix:3",
+          "text": "Place Living Shadow before you use Death Mark on Kha'Zix, so you can swap back out safely after the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 },
+            { "kind": "champion", "key": "Khazix", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a18331dfa19c2a1821b46d7a520f0b9e5bd52c0bd5f0dad8f9cbe4814b1473c0",
+      "tips": [
+        {
+          "id": "jungle:Zed:Kindred:0",
+          "text": "Look for Kindred when she has used Dance of Arrows. Dive in then with Death Mark, since she is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 35, "end": 50 },
+            { "kind": "ability", "key": "Zed-R", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Zed:Kindred:1",
+          "text": "Don't use Death Mark if Kindred has Lamb's Respite ready. She can survive inside it, and the mark's damage is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Kindred-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Zed:Kindred:2",
+          "text": "Stay out of Lamb's Respite. You can't kill anyone inside it, so wait for it to end before you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Zed:Kindred:3",
+          "text": "Hit Kindred with Razor Shuriken and Shadow Slash from your shadow together to catch her out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zed-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Zed-E", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:2",
+          "note": "Death Mark shadow escape lets Zed swap back after the mark, leaving Kindred's slow behind.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Zed", "start": 30, "end": 33 },
+            { "kind": "champion", "key": "Kindred", "start": 68, "end": 75 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f321577b57a51e4eefdb08fb9ea0301e85368c3c6178447d5370f55187d39e13",
+      "tips": [
+        {
+          "id": "jungle:Zed:LeeSin:0",
+          "text": "Throw Razor Shuriken so both you and your shadow hit Lee Sin, and you get Energy back.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Zed:LeeSin:1",
+          "text": "Place Living Shadow before Lee Sin dives you so you can swap away from his Resonating Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Zed:LeeSin:2",
+          "text": "Lee Sin is weak to magic damage, so use Contempt for the Weak when he is low on health to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Zed-passive", "start": 40, "end": 61 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Zed:LeeSin:3",
+          "text": "Death Mark makes you untargetable as you jump in; use it to dodge a Sonic Wave and then hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst stores damage, but Lee's Safeguard shield and dashes can help him survive the detonation.",
+          "refs": [{ "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 }]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "15818a6d39c1381f06d8b3a3f7691244ea5080fe1bd7ad6501f5f939dfbbca1e",
+      "tips": [
+        {
+          "id": "jungle:Zed:MasterYi:0",
+          "text": "Zed, throw Razor Shuriken from both you and your shadow at Master Yi for extra damage, since he often dives in alone.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-Q", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "MasterYi", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Zed:MasterYi:1",
+          "text": "Don't rely on Shadow Slash to slow Master Yi once he has Highlander active. He is immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "MasterYi", "start": 35, "end": 44 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 57, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Zed:MasterYi:2",
+          "text": "Save Death Mark for after he uses Alpha Strike, since it leaves him with a long cooldown. Then burst him down.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Zed:MasterYi:3",
+          "text": "Master Yi heals with Meditate, so burst him fast and don't poke him slowly.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 21, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e673cf94d0615953b671b05381f27bd73d3b9810f667a0266570b3a4b5d59a4b",
+      "tips": [
+        {
+          "id": "jungle:Zed:Naafiri:0",
+          "text": "Cast Death Mark on Naafiri only once her Hounds' Pursuit is spent; while she is channeling, hold your burst for the right moment.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Zed:Naafiri:1",
+          "text": "Use Shadow Slash when her Packmates gather around her; the slash hits all nearby enemies, so it clears them while hurting her.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Zed:Naafiri:2",
+          "text": "Put your Living Shadow down before you trade, so you can swap out when she dives in with Eviscerate.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 9, "end": 22 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Zed:Naafiri:3",
+          "text": "Aim Razor Shuriken so it passes through Naafiri and her Packmates; it keeps going after the first hit and still hurts every unit in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst can kill a squishy Naafiri before the mark detonates, though her packmates may follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Naafiri", "start": 36, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a61cd8ee7894de65f0ddc7b0ae5abb28cc62cdef2b973796019fe80b7357c153",
+      "tips": [
+        {
+          "id": "jungle:Zed:Nocturne:0",
+          "text": "Avoid using Death Mark while Nocturne's Shroud of Darkness is ready. It blocks the mark and you lose your main damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Zed:Nocturne:1",
+          "text": "Bait Shroud of Darkness with Razor Shuriken first, then commit once it is used.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Zed-Q", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Zed:Nocturne:2",
+          "text": "Place a Living Shadow before Nocturne fears you; swap to it to escape. Fear needs the tether unbroken, so get out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 8, "end": 21 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Zed:Nocturne:3",
+          "text": "Stay near allies when Nocturne casts Paranoia. His dash cannot be stopped by crowd control, so expect him to come for you.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ebf5a109ea0611de9872bda21435451a5a3c62b65b47ba51ec20776b35f08402",
+      "tips": [
+        {
+          "id": "jungle:Zed:Shyvana:0",
+          "text": "Keep your distance from Shyvana early; she is weak against enemies who stay out of reach and poke her.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zed:Shyvana:1",
+          "text": "Avoid fighting inside her Inferno Aegis; the shield grows with you near and it explodes after.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Zed:Shyvana:2",
+          "text": "Throw Razor Shuriken at Shyvana when she is low on fury, before she can turn into a dragon.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Zed:Shyvana:3",
+          "text": "Place Living Shadow before you commit with Death Mark so you can swap out of her dragon form.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c86b6c0973af2564cf0a0c00102ff02fd330ce83bff2805a523fc7cbc7c68bd9",
+      "tips": [
+        {
+          "id": "jungle:Zed:Skarner:0",
+          "text": "Do not run at Skarner in a straight line. Ixtal's Impact grabs the first champion it hits, and a nearby wall stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Skarner-E", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Zed:Skarner:1",
+          "text": "Keep Living Shadow ready to swap away if Skarner charges at you. Do not use it up on a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Skarner", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Zed:Skarner:2",
+          "text": "Death Mark makes you untargetable as you dash, so you can dodge Impale or Skarner's engage. Do not burn it while Skarner's abilities are ready.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Skarner-R", "start": 64, "end": 70 },
+            { "kind": "champion", "key": "Skarner", "start": 74, "end": 81 },
+            { "kind": "champion", "key": "Skarner", "start": 113, "end": 120 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Zed:Skarner:3",
+          "text": "Skarner is tanky and keeps hitting you. Poke him with Razor Shuriken and leave when he has Shattered Earth up.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Zed-Q", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "82e32b8076bd3d1b145eb415fe8588dc2fa9f107f6e879bbce2bf513c30d9364",
+      "tips": [
+        {
+          "id": "jungle:Zed:Sylas:0",
+          "text": "Place Living Shadow before you use Death Mark so you can swap out of Sylas's reach once the fight turns bad.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 },
+            { "kind": "champion", "key": "Sylas", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zed:Sylas:1",
+          "text": "Sylas heals when he hits you with Kingslayer, so burst him down quickly instead of trading slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Zed:Sylas:2",
+          "text": "Stay out of a straight line from Sylas. Abscond / Abduct stuns you and pulls him to you, and Zed has no way to dodge once it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Sylas-E", "start": 40, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 },
+            { "kind": "champion", "key": "Zed", "start": 93, "end": 96 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Zed:Sylas:3",
+          "text": "Death Mark makes you untargetable while you dash, so use it to avoid Sylas's Kingslayer or Chain Lash.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "Sylas-W", "start": 77, "end": 87 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Zed:Sylas:4",
+          "text": "Sylas can take your ultimate with Hijack, so be careful about when you use Death Mark in a fight he can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-R", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Zed-R", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Zed:combo:3",
+          "note": "Death Mark burst can kill a squishy Sylas before the mark detonates, since all damage is stored.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 36, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77d90030e04e905a4296701f1c0644121d7a2fdbf0145249705abd8c172ceb4f",
+      "tips": [
+        {
+          "id": "jungle:Zed:Talon:0",
+          "text": "Dodge Rake by stepping out of its cone, then fight when it is on cooldown. Its returning blades slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Zed:Talon:1",
+          "text": "Start your fight with Death Mark when Talon's Shadow Assault is down, because he is much easier to catch then.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 22, "end": 32 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Talon-R", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Zed:Talon:2",
+          "text": "Place Living Shadow before you use Death Mark so you have a way out when the mark ends.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Zed:Talon:3",
+          "text": "Hit Talon with Shadow Slash when he jumps in. You deal damage, and his Wound stacks need several of his abilities to land.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zed-E", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1599309582348ea13340b9ab6a134c033194fa4455205f4e90add2163dc58ec3",
+      "tips": [
+        {
+          "id": "jungle:Zed:Viego:0",
+          "text": "Do not try to run from Viego's Spectral Maw in a straight line; sidestep it, because it hits the first enemy in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Viego-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Zed:Viego:1",
+          "text": "Place Living Shadow before you use Death Mark, so you have a safe way out if Viego stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 },
+            { "kind": "champion", "key": "Viego", "start": 77, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zed:Viego:2",
+          "text": "Avoid fighting near Viego's Harrowed Path mist; he can sit in it unseen and gains Attack Speed there.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Viego-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Zed:Viego:3",
+          "text": "Do not die while Viego is near, because he can take your body and use your abilities. Back off when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Zed:Viego:4",
+          "text": "Use Razor Shuriken and Shadow Slash while Viego is in the open, and avoid long trades in his Blade of the Ruined King strikes.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Zed-E", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "Viego", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Viego-Q", "start": 93, "end": 117 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e1f36ab63a0d5e241b0359b41c06427092e60bac71eaa94eff1428d06c8ad0c8",
+      "tips": [
+        {
+          "id": "jungle:Zed:XinZhao:0",
+          "text": "Don't use Death Mark on Xin Zhao when his Crescent Guard is ready; he can knock you back and you lose the combo.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Zed:XinZhao:1",
+          "text": "Keep Living Shadow ready as an escape; Xin Zhao's Audacious Charge closes distance fast, so swap away after he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Zed:XinZhao:2",
+          "text": "Poke Xin Zhao with Razor Shuriken while he has no target to charge, and avoid fighting once he is stacking his three attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Zed-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "afeef505c862d8bf7e1f64167828df6e6c023aee1a65c3d8412f6222671cbc6f",
+      "tips": [
+        {
+          "id": "middle:Zed:Ahri:0",
+          "text": "Stay behind minions when Ahri has Charm ready; it stops at the first enemy it hits, so minions in the way protect you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zed:Ahri:1",
+          "text": "Walk out of the line of Orb of Deception, and avoid standing in its return path after it turns around.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Zed:Ahri:2",
+          "text": "Look for your all-in when Ahri's Charm is on cooldown; she is much easier to kill and cannot easily stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-E", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zed:Ahri:3",
+          "text": "Hold Death Mark until Spirit Rush is down; Ahri has far less safety to escape when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ahri-R", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Ahri", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Zed:Ahri:4",
+          "text": "Hit Ahri with Shadow Slash and Razor Shuriken from both you and your shadow; that restores energy and shortens Living Shadow's cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zed-E", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Zed-Q", "start": 31, "end": 45 },
+            { "kind": "ability", "key": "Zed-W", "start": 111, "end": 124 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ec589dcf5dcf57ea41a01dac5543eb6855fa6bfea3bae6b92f217c7180ada0bd",
+      "tips": [
+        {
+          "id": "middle:Zed:Akali:0",
+          "text": "Do not walk into Akali's smoke after Twilight Shroud; she is invisible inside it and can hit you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Akali-W", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Zed:Akali:1",
+          "text": "Use Shadow Slash from a shadow to slow Akali when she dashes in, then swap away with Living Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Akali", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Zed-W", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Zed:Akali:2",
+          "text": "Akali's Five Point Strike hurts most at long range. Step in close so you dodge its slow and trade with Razor Shuriken.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-Q", "start": 8, "end": 25 },
+            { "kind": "ability", "key": "Zed-Q", "start": 103, "end": 117 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Zed:Akali:3",
+          "text": "Place a shadow with Living Shadow before Death Mark so you can swap out of Akali's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Zed-R", "start": 41, "end": 51 },
+            { "kind": "champion", "key": "Akali", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Zed:Akali:4",
+          "text": "Respect Perfect Execution at low health; Akali can jump you and hit again for big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 8, "end": 25 },
+            { "kind": "champion", "key": "Akali", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d19628222142795a4ae40c79a811916d47df737273e381c2ffeab354f9b8b85c",
+      "tips": [
+        {
+          "id": "middle:Zed:Akshan:0",
+          "text": "Do not stand still near Akshan when your Living Shadow is on cooldown; Shadow Slash alone cannot slow him.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Zed-W", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Zed-E", "start": 71, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Zed:Akshan:1",
+          "text": "Akshan's Avengerang comes back after it goes out, so step out of its line to avoid being hit twice.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Zed:Akshan:2",
+          "text": "Watch for Akshan's Heroic Swing hooks on walls. He can swing away from your Death Mark, so wait until he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Akshan-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Zed-R", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Zed:Akshan:3",
+          "text": "Akshan can disappear with Going Rogue near walls and brush. Do not chase him blindly into it.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Akshan-W", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a3715d53d27513a4004964fe43fdd881062da5d6ad31ede0a0852433c711ebe2",
+      "tips": [
+        {
+          "id": "middle:Zed:Anivia:0",
+          "text": "Walk around Crystallize rather than into it; the wall is solid and pushes you aside. Wait until it melts before you dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Zed:Anivia:1",
+          "text": "Sidestep Flash Frost. Getting hit leaves you slowed and open to a strong Frostbite, and the end of its range stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Anivia-E", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:Anivia:2",
+          "text": "Aim Razor Shuriken so it passes through Anivia and any minions in the way; it keeps going after a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Zed:Anivia:3",
+          "text": "Leave Glacial Storm quickly, because it slows you and grows stronger the longer it stays. Death Mark gives a safe exit by swapping back to your Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Zed-R", "start": 90, "end": 100 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Zed:Anivia:4",
+          "text": "Do not rely on killing her at the first chance. Rebirth brings her back to full health unless her egg is killed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 48,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1da6d2cd8d74e93d0a39ad5bc246a89de2f9f678826bc2cc36fbfec0ed1fd8af",
+      "tips": [
+        {
+          "id": "middle:Zed:Annie:0",
+          "text": "Throw Razor Shuriken through minions to hit Annie. Her fireballs lock onto a target, so stay out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Annie", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Zed:Annie:1",
+          "text": "Do not walk in when Annie's Pyromania is full. A stun in the middle of your combo gets you killed.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 20, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 28,
+              "end": 37
+            },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zed:Annie:2",
+          "text": "Place Living Shadow before Death Mark so you have a safe swap out when Annie's Tibbers arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 27, "end": 37 },
+            { "kind": "champion", "key": "Annie", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7b99897dffd239b809829c6ce3fd9b1a4d39c60b60f90bee8cfdc3c6531457ac",
+      "tips": [
+        {
+          "id": "middle:Zed:AurelionSol:0",
+          "text": "Trade with Shadow Slash after placing Living Shadow, so the shadow's slash slows Aurelion Sol and you can close in.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Zed-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 },
+            { "kind": "champion", "key": "AurelionSol", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Zed:AurelionSol:1",
+          "text": "Stay out of Falling Star's target area when you can; getting stunned in it means a lot of damage with no way to react.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Zed:AurelionSol:2",
+          "text": "Don't stand in Singularity; it drags you toward the center and can finish you off when you're low on health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 15,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:AurelionSol:3",
+          "text": "Place a Living Shadow before using Death Mark so you can swap out before the mark pops.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92f8d16150d39ffd7c4d7a9e8db9e3363730ff52273e5127be59062ba237be14",
+      "tips": [
+        {
+          "id": "middle:Zed:Aurora:0",
+          "text": "Use Death Mark on Aurora when she has no Across the Veil ready; she can't easily dodge the mark's damage once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Aurora", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Aurora-W", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Zed:Aurora:1",
+          "text": "Aurora's The Weirding slows hard and knocks her back, so don't dash in with Living Shadow when it is ready. Bait it first.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-E", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Zed-W", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Zed:Aurora:2",
+          "text": "Stay out of a straight line with her Twofold Hex; Razor Shuriken is a good answer back when she throws it and you step aside.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-Q", "start": 37, "end": 48 },
+            { "kind": "ability", "key": "Zed-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Zed:Aurora:3",
+          "text": "When Aurora turns invisible with Across the Veil, don't chase. Wait for her to reappear and then trade with Shadow Slash.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 33, "end": 48 },
+            { "kind": "ability", "key": "Zed-E", "start": 108, "end": 120 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Zed:Aurora:4",
+          "text": "Avoid fighting inside the rift from Between Worlds. Enemies touching its edge are slowed, and she can hop across it to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 36, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9e54597a112c79b5bf519b874b3e278a9fce992d133fe29912fcd98bab2636e5",
+      "tips": [
+        {
+          "id": "middle:Zed:Azir:0",
+          "text": "Dash in with Living Shadow and Razor Shuriken together so both hit; Azir has little burst of his own, so trade when his Sand Soldiers are away.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Zed-Q", "start": 31, "end": 45 },
+            { "kind": "champion", "key": "Azir", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Zed:Azir:1",
+          "text": "Death Mark him once Emperor's Divide is spent; it is his best answer to a dive, so play safer while it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Azir-R", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Zed:Azir:2",
+          "text": "Azir's Sand Soldiers deal his damage and stay put. Fight away from them, or burst him before he can reposition them.",
+          "refs": [{ "kind": "champion", "key": "Azir", "start": 0, "end": 4 }],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Zed:Azir:3",
+          "text": "Do not stand in a line where Emperor's Divide can reach you; it knocks you back and leaves a wall behind that blocks your path.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 29, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Zed:Azir:4",
+          "text": "Place a Living Shadow before you use Death Mark so you can swap out safely from the wall or his Shifting Sands.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Zed-R", "start": 37, "end": 47 },
+            { "kind": "ability", "key": "Azir-E", "start": 96, "end": 110 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ef0d04fb2773d323d15e20de49cbcf241e42971a91ea5ffc33ba2a3518a24d2f",
+      "tips": [
+        {
+          "id": "middle:Zed:Brand:0",
+          "text": "Dodge Sear. Without a first hit Brand can't start his combo, and a stun from Sear leaves you open.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 },
+            { "kind": "ability", "key": "Brand-Q", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Zed:Brand:1",
+          "text": "Stand behind minions so Brand's Sear hits them first; it ends at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Brand-Q", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:Brand:2",
+          "text": "Move after Brand casts Pillar of Flame; it lands after a short delay, so a step sideways avoids it.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zed:Brand:3",
+          "text": "Go in with Death Mark after Brand uses his key spells. His Pyroclasm is slow at first, and Death Mark makes you untargetable while you dash.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Brand-R", "start": 59, "end": 68 },
+            { "kind": "ability", "key": "Zed-R", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Zed:Brand:4",
+          "text": "Brand is fragile, so Shadow Slash and Razor Shuriken from a placed Living Shadow can punish him once his Sear is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Zed-E", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Zed-Q", "start": 38, "end": 52 },
+            { "kind": "ability", "key": "Zed-W", "start": 67, "end": 80 },
+            { "kind": "ability", "key": "Brand-Q", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3cb07fb46ba4943fbc959bd1466e8e3b6b82bf6996f290fb0a46b34596b594b1",
+      "tips": [
+        {
+          "id": "middle:Zed:Briar:0",
+          "text": "Keep distance from Briar; Head Rush stuns you, so avoid standing where she can reach you with it.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Briar-Q", "start": 26, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:Briar:1",
+          "text": "Place Living Shadow before Death Mark so you have a safe way out if Briar commits to you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 27, "end": 37 },
+            { "kind": "champion", "key": "Briar", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Zed:Briar:2",
+          "text": "Do not fight beside a wall when Briar is charging Chilling Scream; a full charge can knock you into it and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Briar-E", "start": 50, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:Briar:3",
+          "text": "Briar heals by biting and bleeding you, so shorten trades with Shadow Slash and Razor Shuriken and then back away.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Zed-E", "start": 63, "end": 75 },
+            { "kind": "ability", "key": "Zed-Q", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q then shadow swap pokes Briar and repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Zed", "start": 47, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8e278d1e8ea0d06eaf507b1e6d5a412505cce4af0b3f430d4ad34c97930f3018",
+      "tips": [
+        {
+          "id": "middle:Zed:Cassiopeia:0",
+          "text": "Keep your distance from Cassiopeia's Miasma; if it grounds you, Living Shadow swaps and Death Mark escapes won't work.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 37,
+              "end": 43
+            },
+            { "kind": "ability", "key": "Zed-W", "start": 64, "end": 77 },
+            { "kind": "ability", "key": "Zed-R", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Zed:Cassiopeia:1",
+          "text": "Look away from her when she casts Petrifying Gaze so you are only slowed, not stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 34,
+              "end": 49
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Zed:Cassiopeia:2",
+          "text": "Trade when Noxious Blast is on cooldown; her damage with Twin Fang drops a lot when she can't poison you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 11,
+              "end": 24
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Zed:Cassiopeia:3",
+          "text": "Hit her with Razor Shuriken from both Zed and the shadow, then Shadow Slash to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Zed", "start": 38, "end": 41 },
+            { "kind": "ability", "key": "Zed-E", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Swapping back with the shadow after Razor Shuriken repositions Zed out of Cassiopeia's retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 36, "end": 50 },
+            { "kind": "champion", "key": "Zed", "start": 63, "end": 66 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 74, "end": 84 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "afed302e419411169451d9e0ac54fa8c37ff1d2bc62235e3c65d3e187c349593",
+      "tips": [
+        {
+          "id": "middle:Zed:Diana:0",
+          "text": "Dodge Crescent Strike. If you are marked by Moonlight, back away, because Lunar Rush then comes back quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Diana-E", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Zed:Diana:1",
+          "text": "Don't trade into Pale Cascade while the orbs last. Wait until the shield is gone to start your Razor Shuriken combo.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Zed-Q", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Zed:Diana:2",
+          "text": "Stay out of Moonfall range when it is ready. Diana pulls you in and slows you, which wrecks your Living Shadow setup.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 12, "end": 20 },
+            { "kind": "champion", "key": "Diana", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Zed-W", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Zed:Diana:3",
+          "text": "Place Living Shadow before you use Death Mark so you can swap out of danger afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "36cf25c0ca9cc560cf00f37283dd9d1c9a7f21ce62870041eae1e02d406f93c8",
+      "tips": [
+        {
+          "id": "middle:Zed:Ekko:0",
+          "text": "Throw Razor Shuriken through the enemy and your Living Shadow together; Zed gets Energy back when both hit the same target.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "ability", "key": "Zed-W", "start": 48, "end": 61 },
+            { "kind": "champion", "key": "Zed", "start": 72, "end": 75 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Zed:Ekko:1",
+          "text": "Step out of Parallel Convergence before it arms. Ekko only stuns if he walks into it, so do not fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 12, "end": 32 },
+            { "kind": "champion", "key": "Ekko", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Zed:Ekko:2",
+          "text": "Hold Death Mark while Chronobreak is on cooldown. Ekko can rewind out of your combo if it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ekko-R", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Ekko", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Zed:Ekko:3",
+          "text": "Dodge the second pass of Timewinder; it hurts more than the first. Do not stand in its field, where you are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 25, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Zed:Ekko:4",
+          "text": "Use Shadow Slash with your Shadow on Ekko to slow him harder and cut the Living Shadow cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ekko", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Zed-W", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "355a91156a5e0da3cd195f0df64ef53c747c990edf2845e30a8e094ca1952d44",
+      "tips": [
+        {
+          "id": "middle:Zed:Ezreal:0",
+          "text": "Hit Ezreal with Razor Shuriken when he walks up to farm. Your shadow's shuriken adds to the damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Zed-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Zed:Ezreal:1",
+          "text": "Stay out of a straight line from Ezreal and walk behind minions, since Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:Ezreal:2",
+          "text": "Use Shadow Slash with your shadow to leave Ezreal slowed. That makes it hard for him to kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zed:Ezreal:3",
+          "text": "Wait until Ezreal has used Arcane Shift, then go in with Death Mark. He has no easy way out.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Zed:Ezreal:4",
+          "text": "Place Living Shadow before you commit to Ezreal, so you have a way out after the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "03d7381ce288a69ce9db7783a582b860130793ddc4f3950fe9f67ff9cd8959e7",
+      "tips": [
+        {
+          "id": "middle:Zed:Fizz:0",
+          "text": "Place Living Shadow first, then look for a Shadow Slash or Razor Shuriken hit. Shadow hits slow Fizz and make him easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-E", "start": 43, "end": 55 },
+            { "kind": "ability", "key": "Zed-Q", "start": 59, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 },
+            { "kind": "champion", "key": "Fizz", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zed:Fizz:1",
+          "text": "Fizz can't be targeted while he is on his trident. Wait for Playful to run out before you use Death Mark on him.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zed-R", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Zed:Fizz:2",
+          "text": "Stay out of Fizz's Urchin Strike range when it is ready. Seastone Trident then adds burst if he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Fizz-W", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Zed:Fizz:3",
+          "text": "Keep Zed's shadow swap ready once Fizz has used Chum the Waters. Swapping away before the shark erupts can avoid the knock up.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "champion", "key": "Fizz", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Fizz-R", "start": 48, "end": 63 },
+            { "kind": "keyword", "key": "knocked-up", "start": 117, "end": 125 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2e45957c889e24f50e2ab7238a991825d72ac8fb672559922b26376589c54301",
+      "tips": [
+        {
+          "id": "middle:Zed:Galio:0",
+          "text": "Don't dive on Galio when Shield of Durand is charging or ready. Its taunt will pull you into his Justice Punch.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Galio-W", "start": 25, "end": 41 },
+            { "kind": "ability", "key": "Galio-E", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Zed:Galio:1",
+          "text": "Galio's Justice Punch can't pass through walls, so stay near terrain when you reposition.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-E", "start": 8, "end": 21 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Zed:Galio:2",
+          "text": "Galio's magic shield returns after a while without damage. Poke him first, then use Razor Shuriken to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Zed-Q", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Zed:Galio:3",
+          "text": "Swap with your Shadow to escape when Galio's Hero's Entrance lands. Winds of War is slow and can be dodged.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Galio-R", "start": 45, "end": 60 },
+            { "kind": "ability", "key": "Galio-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0495dd3a5fbc820c247b9957004c52765e1507cf0d6e3202856e735cfd94e5d",
+      "tips": [
+        {
+          "id": "middle:Zed:Hwei:0",
+          "text": "Dash in right after Hwei uses a Torment spell; he is slow to react then and easy to rush down.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Zed:Hwei:1",
+          "text": "Stay out of the line of Grim Visage and Gaze of the Abyss until they are used, then dash in with Death Mark and force a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 97, "end": 107 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Zed:Hwei:2",
+          "text": "Move sideways while Hwei aims; Severing Bolt lands after a delay and hits harder on someone who is isolated or cannot move.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "isolated", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:Hwei:3",
+          "text": "Use Living Shadow before Death Mark so you can swap back out of a fight when the mark is about to go off.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Zed-R", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Zed:Hwei:4",
+          "text": "Hit Hwei with Razor Shuriken from both you and your shadow to get energy back and keep poking him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zed-Q", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Shadow Q swap lets Zed poke and swap out of range before Hwei's skillshots can retaliate.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 19, "end": 22 },
+            { "kind": "champion", "key": "Hwei", "start": 57, "end": 61 }
+          ]
+        },
+        {
+          "comboId": "middle:Zed:combo:0",
+          "note": "The double W swap gives a quick blink to dodge Hwei's Devastating Fire or Grim Visage skillshots.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 47, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f841f4d7989ac190375bcd51f5d69ff794aa21ccc47c8fc229681f3c89abd110",
+      "tips": [
+        {
+          "id": "middle:Zed:Irelia:0",
+          "text": "Poke with Razor Shuriken from range, and throw Living Shadow first so a second shuriken comes from the shadow.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zed-Q", "start": 10, "end": 24 },
+            { "kind": "ability", "key": "Zed-W", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Zed:Irelia:1",
+          "text": "Do not stand in a minion wave with Irelia, because Bladesurge lets her dash in and out freely.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Zed:Irelia:2",
+          "text": "Do not spend your burst on Defiant Dance. Wait for her to release it, then strike.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Zed:Irelia:3",
+          "text": "Hold Death Mark until Irelia has used Flawless Duet, because it stuns you when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Irelia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Irelia-E", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "451f294debc0f4c0b7a3de0f74d13029db3ce1a1d0c22af937d96b527b5df906",
+      "tips": [
+        {
+          "id": "middle:Zed:Kassadin:0",
+          "text": "Do not rely on Razor Shuriken to poke Kassadin down; Null Sphere gives him a shield and his passive cuts magic damage, so go for short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Kassadin", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Zed:Kassadin:1",
+          "text": "Kassadin's Force Pulse slows you, so stay out of its cone when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 11, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zed:Kassadin:2",
+          "text": "Be careful when you use Death Mark on Kassadin. He can blink away with Riftwalk, but his mana runs out if he keeps chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 24, "end": 34 },
+            { "kind": "champion", "key": "Kassadin", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Zed:Kassadin:3",
+          "text": "Look for the kill before Kassadin reaches level 6; Riftwalk gives him an easy way out afterward.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "07ff646ee8b9cb62bd396f3218851d0392d44697440e14a4fe2ce5e8635725bf",
+      "tips": [
+        {
+          "id": "middle:Zed:Katarina:0",
+          "text": "Katarina's Death Lotus can be interrupted. Fight her when she has used it, or threaten her with crowd control when she starts channeling.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Katarina-R", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zed:Katarina:1",
+          "text": "Katarina's abilities all deal magic damage and she has lots of mobility. Hit her with Razor Shuriken when she Shunpos in, because she must come close to you.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Zed-Q", "start": 86, "end": 100 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Zed:Katarina:2",
+          "text": "Use Death Mark to dodge Katarina's burst, since you are untargetable while you dash. Swap back with your Shadow to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Katarina", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Zed:Katarina:3",
+          "text": "Daggers disappear after a few seconds. Stay out of range of Bouncing Blade, and punish her with Shadow Slash when she steps in to pick up a dagger.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-Q", "start": 60, "end": 74 },
+            { "kind": "ability", "key": "Zed-E", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5d23e95624f853a1e95321433cdf17f81b43c1f56e6def33a952b94db3c2aef6",
+      "tips": [
+        {
+          "id": "middle:Zed:Leblanc:0",
+          "text": "Do not walk up to LeBlanc carelessly. Ethereal Chains roots you if you stay tethered, so move out of the tether before it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Zed:Leblanc:1",
+          "text": "Use Razor Shuriken to hit LeBlanc and her fake image from range. Her mark and Distortion burst you if you stay close.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Leblanc", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Zed:Leblanc:2",
+          "text": "Attack LeBlanc first when she has just used Distortion; she can only return to safety with its recast.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Zed:Leblanc:3",
+          "text": "Use Death Mark on LeBlanc when her Distortion is on cooldown, then swap back to your shadow before the mark goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q from two positions pokes LeBlanc, then the W swap repositions Zed out of her retaliation range.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 27, "end": 34 },
+            { "kind": "champion", "key": "Zed", "start": 64, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "de72c79e7601b4bcc46aa66d375e4b01ec4f1b5ea548001fdfa8fadd6cb5d423",
+      "tips": [
+        {
+          "id": "middle:Zed:Lissandra:0",
+          "text": "Stay out of Ring of Frost range before you dash in; being rooted next to Lissandra gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 64 },
+            { "kind": "champion", "key": "Lissandra", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Zed:Lissandra:1",
+          "text": "Wait for Lissandra to spend Frozen Tomb before you go all in; she can cancel your Death Mark by freezing herself.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "middle:Zed:Lissandra:2",
+          "text": "Sidestep Ice Shard; it slows you only on the first hit, so line up shots so a minion is not in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 9, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Zed:Lissandra:3",
+          "text": "Use Living Shadow to swap away if Lissandra's Ring of Frost is about to land, unless you are already rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lissandra", "start": 34, "end": 43 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1abadf60afcc4621c5f5d7531e6d9fe7620f1ab07b87d8a1102652e0c6d1df55",
+      "tips": [
+        {
+          "id": "middle:Zed:Lux:0",
+          "text": "Dodge Light Binding by standing behind minions. It roots only the first two enemies it hits, so make it hit them first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Zed:Lux:1",
+          "text": "Do not walk into Lucent Singularity; it slows you and shows where you are. Step around it, or go in once Lux has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 17, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Lux", "start": 105, "end": 108 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Zed:Lux:2",
+          "text": "Go in with Death Mark when Lux's Light Binding is on cooldown, since it is her best answer to you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Lux-Q", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Zed:Lux:3",
+          "text": "Use Living Shadow to attack from a side angle. Lux's Final Spark is a line and is easy to sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 47, "end": 50 },
+            { "kind": "ability", "key": "Lux-R", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Zed:Lux:4",
+          "text": "Hit Lux with Razor Shuriken and Shadow Slash together to cut your Living Shadow cooldown and keep your pressure up.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Zed-Q", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Zed-E", "start": 32, "end": 44 },
+            { "kind": "ability", "key": "Zed-W", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q from two positions pokes Lux, then the swap repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "champion", "key": "Zed", "start": 58, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bbf0637092e91bc3c98408ff05fbb99ad262871b689c113806baffd767cca9ed",
+      "tips": [
+        {
+          "id": "middle:Zed:Malzahar:0",
+          "text": "Don't dive Malzahar while Void Shift is up; he takes little damage and ignores your slows. Poke him first to break it.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 26,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Zed:Malzahar:1",
+          "text": "Stay out of Call of the Void's portals. Being silenced stops you from using Living Shadow or Death Mark.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "Zed-W", "start": 76, "end": 89 },
+            { "kind": "ability", "key": "Zed-R", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Zed:Malzahar:2",
+          "text": "Wait until Malzahar has used Nether Grasp before you go all in on him or his team.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zed:Malzahar:3",
+          "text": "Keep away from minions carrying Malefic Visions; when they die it jumps to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:Malzahar:4",
+          "text": "Slash Voidlings or step away from them; Malzahar's Void Swarm adds extra damage on a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Malzahar-W", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "807f73d7b4b13b5e04af10c3f8eb8a08ab0d3d013870d02b94a1c95ba9b7e7a8",
+      "tips": [
+        {
+          "id": "middle:Zed:Mel:0",
+          "text": "Don't throw Razor Shuriken or Living Shadow into Mel while Rebuttal is up; her nova destroys projectiles. Wait until it is spent, then go in.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Zed-W", "start": 30, "end": 43 },
+            { "kind": "champion", "key": "Mel", "start": 49, "end": 52 },
+            { "kind": "ability", "key": "Mel-W", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Zed:Mel:1",
+          "text": "Death Mark is not a projectile, so Rebuttal can't stop the dash. Use it to get on Mel when she has spent her nova.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Mel-W", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Mel", "start": 82, "end": 85 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Zed:Mel:2",
+          "text": "Stay out of a straight line from Mel; Solar Snare roots you, and a rooted Zed can't recast Living Shadow to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Mel-E", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 73 },
+            { "kind": "champion", "key": "Zed", "start": 74, "end": 77 },
+            { "kind": "ability", "key": "Zed-W", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Zed:Mel:3",
+          "text": "Back off when you are low and Mel has been hitting you; her Overwhelm stacks can execute you on her next hit.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Zed:Mel:4",
+          "text": "Place a Death Mark shadow before you commit; swapping back with it gets you out after the mark pops, even if Mel has rooted the area.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Mel", "start": 109, "end": 112 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9cd1c5695df1fbf50bcd6c0b0714a929f8bc79ebaba5d40eb6a25068098a0e9b",
+      "tips": [
+        {
+          "id": "middle:Zed:Naafiri:0",
+          "text": "Throw Razor Shuriken through Naafiri and her Packmates; it keeps flying after a hit and hurts everything in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Zed:Naafiri:1",
+          "text": "Place Living Shadow first, then use Shadow Slash when you are close. The Shadow's slash slows her, and you cannot slow her with your own slash alone.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-E", "start": 36, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Zed:Naafiri:2",
+          "text": "Do not run away while Naafiri's Hounds' Pursuit is channeling. Use Death Mark's untargetable dash, or swap away with Living Shadow, to get out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Zed-R", "start": 67, "end": 77 },
+            { "kind": "ability", "key": "Zed-W", "start": 117, "end": 130 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Zed:Naafiri:3",
+          "text": "Put a Living Shadow down before Death Mark so you can swap out safely once the burst is done.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zed:Naafiri:4",
+          "text": "Naafiri turns untargetable with The Call of the Pack, so hold your damage until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 32, "end": 52 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Zed:Naafiri:5",
+          "text": "Use Shadow Slash when Naafiri dashes in with Eviscerate and the Packmates come with her. Her trade will cost her.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "39926042b0ad973998eb1c3813ed58ae233cbb808799d8e2c44bfcdd8c449bfc",
+      "tips": [
+        {
+          "id": "middle:Zed:Orianna:0",
+          "text": "Dodge Command: Attack by staying out of its path. Step aside once the ball is committed, then trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Zed:Orianna:1",
+          "text": "Do not use Death Mark when Orianna's ball is near and her ultimate is ready. She can pull you in and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Orianna", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Zed:Orianna:2",
+          "text": "Her ball only affects the area around it. Fight where the ball is not, and watch where it lands.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Zed:Orianna:3",
+          "text": "Throw Razor Shuriken through her and her minions to poke. Shadows add extra throws, so place a Living Shadow first.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Zed-W", "start": 95, "end": 108 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Zed:Orianna:4",
+          "text": "Place a Living Shadow before Death Mark so you can swap out safely once the mark is on.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Zed-R", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cf0e0eee99271c5b728ff5766b5fc416e08445b7bbc3d19c25187037cea597b4",
+      "tips": [
+        {
+          "id": "middle:Zed:Qiyana:0",
+          "text": "Armor is your enemy's best answer to you, so trade early, before Qiyana can build it, and look to end the fight quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Zed:Qiyana:1",
+          "text": "Dodge Elemental Wrath / Edge of Ixtal when you can; Qiyana is stuck without Terrashape, and the rock version hits hard once you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-Q", "start": 6, "end": 37 },
+            { "kind": "champion", "key": "Qiyana", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Zed:Qiyana:2",
+          "text": "Keep Living Shadow ready for when Qiyana dashes in with Audacity; swap away from the fight if she lands on you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Qiyana", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Zed:Qiyana:3",
+          "text": "Stay away from walls and river when Qiyana has level 6; her Supreme Display of Talent stuns you near terrain, so use Death Mark's Shadow to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 60, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 },
+            { "kind": "ability", "key": "Zed-R", "start": 117, "end": 127 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Zed:Qiyana:4",
+          "text": "Use Shadow Slash with your Shadow to hit her from two sides and slow her, then finish with Razor Shuriken.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 },
+            { "kind": "ability", "key": "Zed-Q", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0570239459763e22832c5b9a9cd241ed8a5a82c657511223429d0ed00ec14e67",
+      "tips": [
+        {
+          "id": "middle:Zed:Ryze:0",
+          "text": "Throw Razor Shuriken through Ryze and any minions in the way. It passes through every unit it hits, so it keeps going after the first.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Zed:Ryze:1",
+          "text": "Stay out of Spell Flux range. Once Ryze marks you with Flux, his Rune Prison roots you and his Overload hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Ryze", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ryze-W", "start": 65, "end": 76 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 82 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Zed:Ryze:2",
+          "text": "Place Living Shadow before you commit. Then Shadow Slash from both positions slows Ryze and cuts the cooldown of Living Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-E", "start": 44, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 },
+            { "kind": "champion", "key": "Ryze", "start": 83, "end": 87 },
+            { "kind": "ability", "key": "Zed-W", "start": 113, "end": 126 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Zed:Ryze:3",
+          "text": "Hit Ryze with Death Mark when his Rune Prison is on cooldown. Otherwise you can be rooted after you land.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zed-R", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Ryze-W", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zed:Ryze:4",
+          "text": "Stun or otherwise disable Ryze while he channels Realm Warp if you can, since that cancels the portal. Roam with your team when he opens one.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ryze-R", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dbc56b3656bfc708009d309501bc13bde50e3dff2580ef65d9662d9da71556f5",
+      "tips": [
+        {
+          "id": "middle:Zed:Sylas:0",
+          "text": "Stay out of Abduct's line; if the chains hit you, Sylas pulls himself to you and you are knocked up. Walk around minions so the chains have no clear path.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Zed:Sylas:1",
+          "text": "Throw Razor Shuriken through the wave to poke Sylas. Your shadow's throw hits him too, so use it from a different angle.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Zed:Sylas:2",
+          "text": "Trade when Sylas has used Chain Lash or Abscond / Abduct, because his burst and escape are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Sylas-E", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Zed:Sylas:3",
+          "text": "Do not rely on staying alive at low health in a fight. Kingslayer heals Sylas when he is hurt, so finish him quickly or back off.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 55, "end": 65 },
+            { "kind": "champion", "key": "Sylas", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Zed:Sylas:4",
+          "text": "Before you use Death Mark, check that Sylas can't steal it. Once he copies it, he can cast it at you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Sylas", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Zed:Sylas:5",
+          "text": "Death Mark makes you untargetable as you dash in, so use it to dodge Sylas's chains or a Kingslayer lunge.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "Sylas-W", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a68a9ddb9ab585804f08ad5be900e5e4bd22c4a2b958f5e0fe412810c35f9a3d",
+      "tips": [
+        {
+          "id": "middle:Zed:Syndra:0",
+          "text": "Bait out Scatter the Weak before you go in. After she uses it she has no way to push you away.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Zed:Syndra:1",
+          "text": "Stay away from Dark Spheres on the ground. If Syndra pushes one into you, you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Zed:Syndra:2",
+          "text": "Dodge Syndra's Force of Will and Dark Sphere. Sidestep after a hit, because the slow makes the next spell hard to avoid.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Syndra-W", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 33, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Zed:Syndra:3",
+          "text": "Syndra's Unleashed Power hits harder with many spheres out. Avoid fighting near a pile of them, and never sit at low health.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Syndra-R", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Zed:Syndra:4",
+          "text": "Place Living Shadow before using Death Mark, so you have a safe way out when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Q poke then swapping with the shadow with W repositions Zed out of Syndra's retaliation range.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 56, "end": 59 },
+            { "kind": "champion", "key": "Syndra", "start": 67, "end": 73 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c9f75fe6eeb813235d896b88ec56654406945bbb14748c37758f6a93bc9381ad",
+      "tips": [
+        {
+          "id": "middle:Zed:Taliyah:0",
+          "text": "Step out of the way of Taliyah's Threaded Volley; it flies in a fixed direction. Don't walk through her Worked Ground.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Zed:Taliyah:1",
+          "text": "Don't dash through Unraveled Earth stones with Living Shadow or Death Mark. Detonating them stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Zed-W", "start": 47, "end": 60 },
+            { "kind": "ability", "key": "Zed-R", "start": 64, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Zed:Taliyah:2",
+          "text": "When Taliyah casts Unraveled Earth, watch for Seismic Shove and stay out of the stones.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zed:Taliyah:3",
+          "text": "Death Mark is untargetable on the dash, so use it to dodge her big spells. Then she can't easily punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Zed:Taliyah:4",
+          "text": "Go in after Taliyah has used Seismic Shove, since it has a long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Swapping out after Razor Shuriken pokes Taliyah and repositions Zed away from her retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 19, "end": 33 },
+            { "kind": "champion", "key": "Taliyah", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Zed", "start": 64, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bd422f8f90e3a6399765b81f293efa40337fb136ced504bb49c8ff5ad5351036",
+      "tips": [
+        {
+          "id": "middle:Zed:Talon:0",
+          "text": "Place Living Shadow before you go in, so you can swap back out if Talon dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Zed:Talon:1",
+          "text": "Dodge Rake by stepping sideways; it hits twice, so a hit leaves you slowed and feeds Talon's passive.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "champion", "key": "Talon", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Zed:Talon:2",
+          "text": "Talon can vault walls with Assassin's Path to get behind you, so stay away from walls when his jump is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-E", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Zed:Talon:3",
+          "text": "When Talon's Shadow Assault is down, he is much easier to catch, so look to trade or kill him with Death Mark then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Zed-R", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Zed:Talon:4",
+          "text": "Use Razor Shuriken through minions and Talon together to poke him; its damage is reduced on later targets, so aim at Talon first.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 },
+            { "kind": "champion", "key": "Talon", "start": 117, "end": 122 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "02308d654999c05892855f23acbdb3ef0f5b6c906344cacc7cc543ac74576d65",
+      "tips": [
+        {
+          "id": "middle:Zed:TwistedFate:0",
+          "text": "Stay out of Twisted Fate's Wild Cards. Cross the lane at an angle and use Living Shadow to get around it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 12,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 27,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Zed-W", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Zed:TwistedFate:1",
+          "text": "Do not walk up to Twisted Fate while he is shuffling Pick a Card, because the Gold Card stuns you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 18,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 53,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Zed:TwistedFate:2",
+          "text": "Watch for Destiny. When Twisted Fate uses it and then recasts to teleport, he can show up behind you, so keep your Living Shadow ready to swap out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Zed-W", "start": 115, "end": 128 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Zed:TwistedFate:3",
+          "text": "Hit Twisted Fate with Shadow Slash and Razor Shuriken together, so your Shadow's hits also slow him.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Zed-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Zed-Q", "start": 39, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "aec9c8441abfe963f6cff267945908c6a62f125d82aa7e3d35871e1a821fc0df",
+      "tips": [
+        {
+          "id": "middle:Zed:Veigar:0",
+          "text": "Walk through the edge of Event Horizon only if you must; if you stand inside the cage you aren't stunned. Check where Veigar puts it before you jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Veigar", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Zed:Veigar:1",
+          "text": "Move as soon as you see the Dark Matter circle, because it lands after a short delay and can be sidestepped.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Zed:Veigar:2",
+          "text": "Aim Razor Shuriken through the minions at Veigar. It hits every enemy in its path, so it can poke him from behind the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Veigar", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Zed:Veigar:3",
+          "text": "Save Living Shadow until Veigar's Event Horizon is on cooldown, so you can go in and swap out safely.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Veigar", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Veigar-E", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Zed:Veigar:4",
+          "text": "Veigar is fragile; Death Mark and a full combo can kill him quickly, so go in once Event Horizon is used.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zed-R", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Veigar-E", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": [
+        {
+          "comboId": "middle:Zed:combo:1",
+          "note": "Poking with Razor Shuriken then swapping with the shadow lets Zed leave range of Veigar's retaliation.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Zed", "start": 62, "end": 65 },
+            { "kind": "champion", "key": "Veigar", "start": 81, "end": 87 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "86fe30f9e85d52c076fc0df2a3bd1d667065e1b69de31b54367adb8c49e1469b",
+      "tips": [
+        {
+          "id": "middle:Zed:Vex:0",
+          "text": "Keep Living Shadow and Death Mark dashes in mind: Vex's Doom 'n Gloom marks you when you dash near her, and her next hit on you deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Zed-R", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Vex", "start": 50, "end": 53 },
+            { "kind": "ability", "key": "Vex-passive", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Zed:Vex:1",
+          "text": "Dashing in while Vex has Doom 'n Gloom ready is risky, because her next basic ability can fear you and interrupt the dash. Wait for her to spend it first.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 17, "end": 20 },
+            { "kind": "ability", "key": "Vex-passive", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Zed:Vex:2",
+          "text": "Step out of the wide Mistral Bolt line, which is slow at first. Then use Razor Shuriken to poke her back while she waits on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Zed-Q", "start": 73, "end": 87 },
+            { "kind": "keyword", "key": "poke", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Zed:Vex:3",
+          "text": "Death Mark makes you untargetable as you dash, so use it to avoid Vex's Shadow Surge. Her spell then cannot be recast on you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Vex", "start": 66, "end": 69 },
+            { "kind": "ability", "key": "Vex-R", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Zed:Vex:4",
+          "text": "Look for the all-in when Personal Space is on cooldown. Without its shield and shockwave, Vex is much easier to burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 25, "end": 39 },
+            { "kind": "champion", "key": "Vex", "start": 90, "end": 93 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Zed:Vex:5",
+          "text": "Stay out of Looming Darkness's landing spot, since it slows you. Your Living Shadow can still threaten her from a different angle.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-E", "start": 12, "end": 28 },
+            { "kind": "ability", "key": "Zed-W", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "800d096b95ecc1a131412b5c254795f5c7e6ca16dc0696d578b2756db9669b78",
+      "tips": [
+        {
+          "id": "middle:Zed:Viktor:0",
+          "text": "Walk out of Gravity Field the moment it lands; staying inside gets you slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zed:Viktor:1",
+          "text": "Wait until Viktor has used Gravity Field before you dive in with Death Mark.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Viktor-W", "start": 27, "end": 40 },
+            { "kind": "ability", "key": "Zed-R", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zed:Viktor:2",
+          "text": "Hit Viktor with Razor Shuriken while he walks up for a last hit, then use Shadow Slash to slow him and lower Living Shadow's cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Zed-Q", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Zed-E", "start": 74, "end": 86 },
+            { "kind": "ability", "key": "Zed-W", "start": 109, "end": 122 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Zed:Viktor:3",
+          "text": "Dodge the Hextech Ray line by stepping sideways; it is narrow, and the aftershock explodes along the same line a moment later.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:Viktor:4",
+          "text": "Leave Arcane Storm's area quickly; it follows you, so get out of it with a Living Shadow swap.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Zed-W", "start": 75, "end": 88 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f16f3e2ca025b85cb378831ba85dff7a429533263ef7d3f3ed91ab01547d5e2b",
+      "tips": [
+        {
+          "id": "middle:Zed:Vladimir:0",
+          "text": "Don't use Death Mark on Vladimir while Sanguine Pool is ready. He can become untargetable and punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Vladimir", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Zed:Vladimir:1",
+          "text": "Stay out of Sanguine Pool. Wait until it ends before you go in, since it slows you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Zed:Vladimir:2",
+          "text": "Don't trade into Transfusion early. It heals Vladimir and he wins long fights, so look for short bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Vladimir", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Zed:Vladimir:3",
+          "text": "Hit Vladimir with Razor Shuriken from range while his Sanguine Pool is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Zed-Q", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "323fcbe4b9de353673c87045b244ef94d7dc2a59e5a22f3887d327a94f20e051",
+      "tips": [
+        {
+          "id": "middle:Zed:Xerath:0",
+          "text": "Close the distance on Xerath; he is strong at range, and most of his spells are weaker when you are on top of him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Zed:Xerath:1",
+          "text": "Sidestep Shocking Orb; it only stuns the first enemy it hits, so keep minions away from the line when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 9, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Zed:Xerath:2",
+          "text": "Walk sideways while Xerath charges Arcanopulse; it is harder to hit when you move across its line.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Zed:Xerath:3",
+          "text": "When Xerath channels Rite of the Arcane, dodge each blast as it lands; Death Mark makes you untargetable while you dash in.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 21, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Zed:Xerath:4",
+          "text": "Use Living Shadow to get out of Eye of Destruction's slow, and swap back to the Shadow to flee after you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Xerath-W", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f069098ffaa3875b095c3b688e4b33a96b9175aa21d4fb4ccff42601fbcfe883",
+      "tips": [
+        {
+          "id": "middle:Zed:XinZhao:0",
+          "text": "Stay out of Xin Zhao's range when Three Talon Strike is ready. The third hit knocks you up, which gets you killed.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 34, "end": 52 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Zed:XinZhao:1",
+          "text": "Use Razor Shuriken from far away to poke Xin Zhao. He has no long-range answer except Audacious Charge.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "XinZhao", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Zed:XinZhao:2",
+          "text": "Do not use Death Mark right into Crescent Guard. Wait until he has used it, or Zed's team will be unable to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 33, "end": 47 },
+            { "kind": "champion", "key": "Zed", "start": 79, "end": 82 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Zed:XinZhao:3",
+          "text": "Keep a Living Shadow ready to swap away when Xin Zhao charges in with Audacious Charge.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 70, "end": 86 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f8401e402c1e7ab4300de39b42cbc3093e3fd11ccabd4ae834a4165dea72d75d",
+      "tips": [
+        {
+          "id": "middle:Zed:Yasuo:0",
+          "text": "Don't waste Razor Shuriken when Yasuo can raise Wind Wall; wait until it is on cooldown, then throw it.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Zed:Yasuo:1",
+          "text": "Yasuo can knock you up with his whirlwind, and Last Breath then pulls him to you. Dodge the whirlwind when he has two stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Zed:Yasuo:2",
+          "text": "Swap with your shadow from Death Mark to escape after the mark goes on Yasuo, since he can't reach you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 27, "end": 37 },
+            { "kind": "champion", "key": "Yasuo", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Zed:Yasuo:3",
+          "text": "Use Shadow Slash with your shadow in range so Yasuo is slowed. It also shortens Living Shadow's cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Zed-W", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cda1456d7eeb36e1a960a812f5a75c9ab4dc15a0d40f8700b1e88a25f85a066a",
+      "tips": [
+        {
+          "id": "middle:Zed:Yone:0",
+          "text": "Throw Razor Shuriken so it passes through minions and also hits Yone, and send a Living Shadow out first so its shuriken hits as well.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 64, "end": 68 },
+            { "kind": "ability", "key": "Zed-W", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Zed:Yone:1",
+          "text": "Use Shadow Slash from your Shadow's side so Yone is slowed, then step back out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zed:Yone:2",
+          "text": "Do not fight in the few seconds after Yone's Mortal Steel reaches its second hit. His knock up dash wrecks a Zed who stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Yone-Q", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 94 },
+            { "kind": "champion", "key": "Zed", "start": 109, "end": 112 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Zed:Yone:3",
+          "text": "Save Death Mark for when Yone has used Soul Unbound, or hit him with your full combo first so the mark stores lots of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Yone-E", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Zed:Yone:4",
+          "text": "Place a Shadow with Death Mark before he trades back, then swap to it so you escape before the mark triggers.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d782251d8ef04b8ee2e3da012f85644f6cae1ad35ed7d605d6f2ce7bd524fa26",
+      "tips": [
+        {
+          "id": "middle:Zed:Zoe:0",
+          "text": "Use Living Shadow to reach past Zoe's range, and swap in only when her Sleepy Trouble Bubble is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zoe", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Zoe-E", "start": 71, "end": 92 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Zed:Zoe:1",
+          "text": "Sidestep Paddle Star! at long range; it hurts a lot more the further it has flown.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Zed:Zoe:2",
+          "text": "Don't walk into the fog or walls near Zoe; Sleepy Trouble Bubble flies much further over walls and puts you to sleep.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 38, "end": 41 },
+            { "kind": "ability", "key": "Zoe-E", "start": 43, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Zed:Zoe:3",
+          "text": "Death Mark Zoe when her Sleepy Trouble Bubble is used; she has little to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Zed-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Zoe", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Zoe-E", "start": 24, "end": 45 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Zed:Zoe:4",
+          "text": "Hit Zoe right after she uses Portal Jump; she cannot move and must return to her start.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Zoe-R", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

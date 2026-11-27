@@ -1,0 +1,733 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ziggs",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "8eafeef22f8d626dc4a5f316159c83e0c6b6db89e66d2821edc7d39c5c975661",
+      "tips": [
+        {
+          "id": "adc:Ziggs:general:0",
+          "text": "Throw Bouncing Bomb at the enemy's feet to poke, and aim it past them so the bounces can still reach if they step back.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ziggs:general:1",
+          "text": "Drop Hexplosive Minefield on the spot where the enemy has to stand to last-hit. It slows them and lets you follow up with your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 5, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ziggs:general:2",
+          "text": "Use Satchel Charge to jump away from danger, and detonate it when an enemy is next to it to knock them back. Save it for when someone dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ziggs:general:3",
+          "text": "Cast an ability just before a basic attack. Casting shortens the cooldown on Short Fuse, so your next auto hits harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ziggs-passive",
+              "start": 77,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Ziggs:general:4",
+          "text": "Use Satchel Charge on enemy towers. It destroys a tower that is low on health, so it helps you finish a push.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ziggs:general:5",
+          "text": "From level 6, look for kills across the map with Mega Inferno Bomb. It lands slowly, so aim it at enemies who are slowed or stuck in place.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 49, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ziggs:general:6",
+          "text": "Try to hit with the center of Mega Inferno Bomb, because it does less damage at the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 30, "end": 47 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Ziggs:combo:0",
+          "name": "Satchel wall hop",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Ziggs-W" }],
+          "when": "When you need to escape or chase over a thin wall, such as between the jungle and the lane.",
+          "whenRefs": [],
+          "text": "Throw the satchel next to a thin wall and recast it while standing close to it. The blast launches Ziggs over the wall, and you can cast abilities mid-dash.",
+          "textRefs": [
+            { "kind": "champion", "key": "Ziggs", "start": 99, "end": 104 }
+          ]
+        },
+        {
+          "id": "adc:Ziggs:combo:1",
+          "name": "Satchel escape",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Ziggs-W" },
+            { "kind": "ability", "key": "Ziggs-W" }
+          ],
+          "when": "When an enemy dives you and you need to get away or break up a gank.",
+          "whenRefs": [],
+          "text": "Throw the satchel at your feet or just behind you and recast it right away. The blast knocks nearby enemies back and launches you away from them.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "dce2b1035fc309751534e766824cfc45810db5b55a1ef373f0f9262229f4de3f",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Ashe:0",
+          "text": "Throw Hexplosive Minefield where Ashe will walk or stand. Once she is slowed, follow up with Bouncing Bomb.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Ashe", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 93, "end": 106 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ziggs:Ashe:1",
+          "text": "Ashe has few escapes, so be wary of her Enchanted Crystal Arrow. Your Satchel Charge can knock you out of her reach.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ashe-R", "start": 40, "end": 63 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ziggs:Ashe:2",
+          "text": "Bouncing Bomb can go over minions, so use it to poke Ashe from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 },
+            { "kind": "champion", "key": "Ashe", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ziggs:Ashe:3",
+          "text": "Step out of Volley's cone instead of walking through it; it slows you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ziggs:Ashe:4",
+          "text": "Use Mega Inferno Bomb from far away to hit Ashe when she is stuck in a fight or a retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Ashe", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a7b635ab376775a97fe6dd91cd6d7a8aabc7d62796ad3c9eb498069ea91461f4",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Caitlyn:0",
+          "text": "Caitlyn outranges you. Stay out of Piltover Peacemaker's line and keep minions between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Ziggs:Caitlyn:1",
+          "text": "Throw Bouncing Bomb at Caitlyn when she steps forward to last-hit. It has a short cooldown, so use it often.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Ziggs:Caitlyn:2",
+          "text": "Watch for Yordle Snap Trap near brush and on your path. Being rooted by it makes her headshots hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ziggs:Caitlyn:3",
+          "text": "Drop Hexplosive Minefield on Caitlyn's side of the lane or on her traps. It slows her and keeps her from walking up on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Ziggs:Caitlyn:4",
+          "text": "Use Satchel Charge to get away when Caitlyn closes in, or to knock her back. Save it for when you need it.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Caitlyn", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ziggs:Caitlyn:5",
+          "text": "Catch Caitlyn right after she fires her net, while it recharges, and trade hard.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "The satchel recast knocks enemies back and launches Ziggs away, helping him break a Caitlyn dive.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 52, "end": 57 },
+            { "kind": "champion", "key": "Caitlyn", "start": 84, "end": 91 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6643aa265fee9e234802e4543cd0cc7ec70282469492897059a4f9a05681727b",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Ezreal:0",
+          "text": "Lay Hexplosive Minefield in front of Ezreal's path or where he stands to poke. Mines slow him, so your next spell is easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Ezreal", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Ziggs:Ezreal:1",
+          "text": "Throw Bouncing Bomb over minions at Ezreal. It can be thrown over units and he has no way to block it.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "adc:Ziggs:Ezreal:2",
+          "text": "Satchel Charge is your escape. Detonate it so it throws you away when Ezreal closes in, and it knocks him back as well.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Ezreal", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Ziggs:Ezreal:3",
+          "text": "Stay behind minions. Mystic Shot stops at the first enemy it hits, so minions block it before it reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ziggs:Ezreal:4",
+          "text": "Hit Ezreal after he uses Arcane Shift; it has a long cooldown, so he can't escape easily.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a3c1f99c45ad69b7ca7b64649cd86118fcd226f77dc088de63d614242fff4d71",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Jhin:0",
+          "text": "Put Hexplosive Minefield on Jhin when he walks up to last-hit. He is slowed, and your Bouncing Bomb is easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Jhin", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 86, "end": 99 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ziggs:Jhin:1",
+          "text": "Poke Jhin with Bouncing Bomb while he reloads, because he cannot basic attack back during that time.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jhin", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ziggs:Jhin:2",
+          "text": "Stay out of Jhin's long-range Deadly Flourish line when an ally has just hit you. It roots you, so do not stand still in the open.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ziggs:Jhin:3",
+          "text": "Jhin's Captive Audience traps are invisible. Watch where you step, and save Satchel Charge to knock yourself clear if you are caught.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-E", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 76, "end": 90 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Ziggs:Jhin:4",
+          "text": "Use Mega Inferno Bomb on a weakened Jhin, or when he is stuck in place. It lands slowly, so aim where he will be.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "dd4b544663b115d96662d3942e29812b052e423f1a46aafc4c3bb30e827d7c0d",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Jinx:0",
+          "text": "Poke Jinx with Bouncing Bomb while she last-hits; it can be thrown over minions and bounces forward, so aim past the wave.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ziggs:Jinx:1",
+          "text": "Lay Hexplosive Minefield in front of Jinx when she steps up to attack. She gets slowed and cannot easily answer your next spell.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Jinx", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ziggs:Jinx:2",
+          "text": "Stay out of Jinx's rocket range, and keep out of the path of her Zap!",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jinx-W", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Ziggs:Jinx:3",
+          "text": "Use Satchel Charge to knock Jinx back when she jumps on you, or to get away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Ziggs:Jinx:4",
+          "text": "Attack Jinx right after she wastes Flame Chompers!. Without them she has little to stop you from walking up.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Jinx-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Ziggs:Jinx:5",
+          "text": "Fire Mega Inferno Bomb at Jinx when she is low or rooted. It lands slowly, so use it when she cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Jinx", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d0292d0d2d4d963778f45d61bf32adcc817a4d8c5bc9f80571569293766de0fd",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Kaisa:0",
+          "text": "Poke Kai'Sa with Bouncing Bomb from long range; she has to walk into your range to trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ziggs:Kaisa:1",
+          "text": "Drop Hexplosive Minefield where Kai'Sa wants to stand or walk. Mines slow her and make her easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Kaisa", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ziggs:Kaisa:2",
+          "text": "Use Satchel Charge to knock her back when she jumps in on you, and the blast can throw you clear too.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ziggs:Kaisa:3",
+          "text": "Hold Mega Inferno Bomb for when Kai'Sa is low. Her Killer Instinct shield and dash let her escape, so catch her before she uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Kaisa", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14bca23cec5d4c3395def238d1207fbcd95bc2b4d29e33f7b908a04c41d8d664",
+      "tips": [
+        {
+          "id": "adc:Ziggs:MissFortune:0",
+          "text": "Scatter Hexplosive Minefield where Miss Fortune stands to last-hit, then follow with Bouncing Bomb while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 8, "end": 28 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 35,
+              "end": 47
+            },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 85, "end": 98 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ziggs:MissFortune:1",
+          "text": "Poke Miss Fortune with Bouncing Bomb. Any damage stops her Strut speed bonus.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MissFortune", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 23, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 59,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Ziggs:MissFortune:2",
+          "text": "Stay away from Miss Fortune when Double Up is ready, because her shot bounces to hit a second target behind the first.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 15,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 33,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Ziggs:MissFortune:3",
+          "text": "Use Satchel Charge to knock yourself away from Miss Fortune when she closes in, or to escape after she uses Bullet Time.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 47,
+              "end": 59
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 108,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Ziggs:MissFortune:4",
+          "text": "Aim Mega Inferno Bomb at the center of where Miss Fortune and her team stand, since it hits hardest there. She is easy to kill when caught.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "MissFortune", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Satchel escape knocks back and launches Ziggs away if Miss Fortune dives him.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "MissFortune", "start": 54, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8c33bb1592e237cecc0feb2cd4a203bcc923040af42f5774b4c841ad4e8529c2",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Sivir:0",
+          "text": "Throw Bouncing Bomb or Satchel Charge only when Sivir's Spell Shield is down; if she blocks it, she heals and speeds up.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 23, "end": 37 },
+            { "kind": "champion", "key": "Sivir", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Sivir-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Ziggs:Sivir:1",
+          "text": "Lay Hexplosive Minefield in her path so she is slowed, then follow with Bouncing Bomb.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 4, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ziggs:Sivir:2",
+          "text": "Do not let Sivir push the lane freely; clear waves with Bouncing Bomb so your turret stays safe.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ziggs:Sivir:3",
+          "text": "Step out of the path of Boomerang Blade and avoid it on the way back; a dodged cast costs her a lot of mana.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Ziggs:Sivir:4",
+          "text": "Use Satchel Charge to knock yourself away when she dashes at you, or to escape her chase.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bc7d4442616339e9901917c43267066fb78b078ec8781305204e88e18de2af0a",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Smolder:0",
+          "text": "Smolder is weak early, so poke him with Bouncing Bomb whenever he steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Ziggs:Smolder:1",
+          "text": "Drop Hexplosive Minefield on the path Smolder walks to farm. He gets slowed and takes damage, which makes your other spells easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Smolder", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ziggs:Smolder:2",
+          "text": "Smolder's Flap, Flap, Flap ends if he is stunned or otherwise immobilized, so don't waste your spells while he is flying.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-E", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Ziggs:Smolder:3",
+          "text": "Use Satchel Charge to knock yourself away from Smolder when he dives on you. Try to blast him back too.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ziggs:Smolder:4",
+          "text": "Mega Inferno Bomb reaches him from far away, so use it to finish a Smolder who is low on health or has retreated.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Smolder", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Satchel escape knocks Smolder back and launches Ziggs away if he dives.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 },
+            { "kind": "champion", "key": "Ziggs", "start": 48, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "32467b1dc139019d9faff4ee09b3f33d36982fd8e5393d8c75e71753adaf9117",
+      "tips": [
+        {
+          "id": "adc:Ziggs:Yunara:0",
+          "text": "Put Hexplosive Minefield on the ground where Yunara stands to last-hit, so she is slowed if she steps in it.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Yunara", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ziggs:Yunara:1",
+          "text": "Poke with Bouncing Bomb from long range while Yunara is busy with minions. It can be thrown over units, so minions will not block it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Yunara", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ziggs:Yunara:2",
+          "text": "Trade right after Yunara throws her prayer bead, because her long-range slow is on cooldown and she has fewer ways to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Ziggs:Yunara:3",
+          "text": "Use Satchel Charge to knock yourself away from Yunara or over a wall when she turns on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ziggs:Yunara:4",
+          "text": "Stay out of her range once Yunara uses her ultimate. She attacks faster and her dash lets her escape your mines.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ziggs:combo:1",
+          "note": "Knockback and launch help break away when Yunara dives in, though her move speed buff closes gaps fast.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 42, "end": 48 }
+          ]
+        }
+      ]
+    }
+  ]
+}

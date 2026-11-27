@@ -1,0 +1,4344 @@
+{
+  "schemaVersion": 1,
+  "champion": "Yasuo",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "7dac5b1677e5b4912d9aa49b470a692ba5cd4a1b14c5a8c15bf127d96302428f",
+      "tips": [
+        {
+          "id": "top:Yasuo:general:0",
+          "text": "Land Steel Tempest on enemy champions or minions to build two stacks, then your next one fires a whirlwind that knocks up from range.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "knocked-up", "start": 112, "end": 121 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Yasuo:general:1",
+          "text": "Dash through a minion with Sweeping Blade to close in or escape, but keep one nearby so you still have a way out.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Yasuo:general:2",
+          "text": "Cast Steel Tempest while dashing with Sweeping Blade to hit everyone around you, which is an easy way to build your stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yasuo:general:3",
+          "text": "Put up Wind Wall when the enemy fires a projectile at you, like an arrow or a spell. It blocks enemy projectiles but not melee attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Yasuo:general:4",
+          "text": "Keep moving in lane to charge your shield from Way of the Wanderer. Trade when it is full, since it absorbs the first hit you take.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 47,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Yasuo:general:5",
+          "text": "Save Last Breath for when an enemy is knocked up, even by an ally. It teleports you to them and holds nearby knocked up enemies in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "knocked-up", "start": 38, "end": 48 },
+            { "kind": "keyword", "key": "knocked-up", "start": 109, "end": 119 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Yasuo:general:6",
+          "text": "Sweeping Blade can't hit the same target again for a while, so pick dash targets with that in mind. Hitting different targets in a row makes it hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Yasuo:combo:0",
+          "name": "Last Breath through Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Yasuo-E" },
+            { "kind": "ability", "key": "Yasuo-Q" },
+            { "kind": "ability", "key": "Yasuo-R" }
+          ],
+          "when": "When an ally or your own whirlwind has knocked an enemy up and you want a quick, safe engage.",
+          "whenRefs": [],
+          "text": "Hold Q during the dash and cast R while the dash is still going. The ultimate lands, and the circle Q hits around where you blink to.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3ec53638504ce4eebbfafec3a7af6ce7ebaf5a504d2e813c3107d65ccac3e6a0",
+      "tips": [
+        {
+          "id": "middle:Yasuo:general:0",
+          "text": "Land Steel Tempest on enemy champions or minions to build two stacks, then your next one fires a whirlwind that knocks enemies up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Yasuo:general:1",
+          "text": "Use Wind Wall when a dangerous projectile is coming, such as a mage's main spell or an arrow volley. It blocks enemy projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Yasuo:general:2",
+          "text": "Dash through minions with Sweeping Blade to close in or escape. Keep one nearby for an exit before you dash at the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Yasuo:general:3",
+          "text": "Cast Steel Tempest while dashing with Sweeping Blade to hit everything around you. With two stacks, that circle knocks enemies up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:general:4",
+          "text": "Save Last Breath for when an enemy is airborne, from your whirlwind or an ally's spell. You can't cast it on anyone on the ground.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Yasuo:general:5",
+          "text": "Keep moving in lane so Way of the Wanderer fills up. Its shield then absorbs the first hit you take from a champion.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 23,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Yasuo:general:6",
+          "text": "Sweeping Blade can't hit the same target again for a while. Dash through other minions to keep moving, and don't plan on re-dashing the same target.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Yasuo:combo:0",
+          "name": "Dash-buffered Q knock-up",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Yasuo-E" },
+            { "kind": "ability", "key": "Yasuo-Q" }
+          ],
+          "when": "When Yasuo has two stacks and an enemy is close to a minion or to Yasuo's dash path.",
+          "whenRefs": [
+            { "kind": "champion", "key": "Yasuo", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Yasuo", "start": 66, "end": 71 }
+          ],
+          "text": "Press Q while dashing so it fires at the end of the dash as a circle. With two stacks the knock-up lands instantly, with no wind-up that the enemy can see.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Yasuo:combo:1",
+          "name": "Knock-up into Last Breath",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Yasuo-E" },
+            { "kind": "ability", "key": "Yasuo-Q" },
+            { "kind": "ability", "key": "Yasuo-R" }
+          ],
+          "when": "When you want to follow a knock-up with the ultimate, either your own or one from an ally.",
+          "whenRefs": [],
+          "text": "Buffer R during the Q cast so it fires the instant the cast ends. This leaves the enemy almost no time to react.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Yasuo:combo:2",
+          "name": "Flash buffered Q at the end of a dash",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Yasuo-E" },
+            { "kind": "ability", "key": "Yasuo-Q" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When an enemy is just out of dash range and you hold two stacks.",
+          "whenRefs": [],
+          "text": "Dash, buffer Q, then Flash toward the target. The circle hits at the Flash landing spot, so the knock-up reaches farther than the dash alone.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 21, "end": 26 },
+            { "kind": "summoner-spell", "key": "4", "start": 69, "end": 74 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8b1148a8aa5945c12f116c9f16018bbd1d9c7e6af0089221d15d30b033dce02c",
+      "tips": [
+        {
+          "id": "adc:Yasuo:general:0",
+          "text": "Dash through minions with Sweeping Blade to close distance or escape. The same target can't be dashed again for a while, so keep other minions nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Yasuo:general:1",
+          "text": "Land Steel Tempest on enemies or minions twice to charge a whirlwind. It knocks enemies up and travels past the first thing it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Yasuo:general:2",
+          "text": "Put Wind Wall in front of you or your support when enemy arrows or spells are coming. It blocks enemy projectiles, so use it in the middle of a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Yasuo:general:3",
+          "text": "Last Breath works on any enemy knocked up, even by your support. Ask your support to start fights with a knock up, then follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "knocked-up", "start": 31, "end": 41 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 105,
+              "end": 113
+            },
+            { "kind": "ability", "key": "Yasuo-R", "start": 132, "end": 143 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Yasuo:general:4",
+          "text": "Keep moving to fill your Way of the Wanderer shield. It triggers when a champion hits you, so walk around before you trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 25,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Yasuo:combo:0",
+          "name": "Steel Tempest through dash (E-Q)",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Yasuo-E" },
+            { "kind": "ability", "key": "Yasuo-Q" }
+          ],
+          "when": "When dashing onto a minion or enemy and you want a circular Q on the people around you, especially with a stored tornado.",
+          "whenRefs": [],
+          "text": "Press Q while the dash is still going. It hits in a circle around you when the dash ends, and with two stacks it knocks everyone nearby up.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "bc2d7436cebfb7b5c536d4ba8ec29262f722cde34a42499e8db2e29b2f189b11",
+      "tips": [
+        {
+          "id": "top:Yasuo:Aatrox:0",
+          "text": "Put Wind Wall in front of Infernal Chains; it destroys the chain, so you aren't slowed or pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Yasuo:Aatrox:1",
+          "text": "The Darkin Blade is slow and shows where it will land. Step sideways out of the hit zone, or dash out with Sweeping Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 0, "end": 16 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 107, "end": 121 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Yasuo:Aatrox:2",
+          "text": "Aatrox's Umbral Dash can't be blocked, so don't count on Wind Wall to stop it. Wind Wall only stops projectiles like Infernal Chains.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 57, "end": 66 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 79, "end": 88 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 117, "end": 132 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Yasuo:Aatrox:3",
+          "text": "Hold Steel Tempest stacks for when The Darkin Blade is on cooldown. Then the whirlwind knocks him up and you can trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Yasuo:Aatrox:4",
+          "text": "Aatrox heals when he hits you, so don't trade into his empowered Deathbringer Stance attack. Wait until it's used, then fight.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 65,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Aatrox's Darkin Blade can knock Yasuo up, which lets Last Breath through Q follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 53, "end": 64 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f4f315e744bee83053ce2800a86d30f8d46d3b12d8c818ceff22025708af8546",
+      "tips": [
+        {
+          "id": "top:Yasuo:Briar:0",
+          "text": "Put Wind Wall in front of Briar's Chilling Scream when she charges it. It is a projectile, so the wall blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Yasuo:Briar:1",
+          "text": "Briar's Head Rush stuns you, so keep Sweeping Blade ready to dash away once she lands on you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Briar-Q", "start": 8, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Yasuo:Briar:2",
+          "text": "Keep minions or targets near you as dash targets. Sweeping Blade lets you leave when Briar goes into Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 50, "end": 64 },
+            { "kind": "champion", "key": "Briar", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Yasuo:Briar:3",
+          "text": "Fight Briar when she is low on health. Her Crimson Curse heals her as she hits you, so long trades favor her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Briar-passive",
+              "start": 43,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Yasuo:Briar:4",
+          "text": "Stay away from walls when Briar charges Chilling Scream. A full charge knocks you back, and hitting a wall stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "acb18bd113633eed608ddc2631fb75841d89008bf5c4144e294227fef576a87e",
+      "tips": [
+        {
+          "id": "top:Yasuo:Darius:0",
+          "text": "Keep Steel Tempest narrow thrusts on Darius, but stay away from his range; his Decimate hurts most when you are inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Darius-Q", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Yasuo:Darius:1",
+          "text": "Put Wind Wall up when Darius is about to pull you; it won't block Apprehend, so instead walk out of the cone's direction.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Darius-E", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Yasuo:Darius:2",
+          "text": "Poke Darius while Apprehend is on cooldown, then back off when it returns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Yasuo:Darius:3",
+          "text": "Don't trade with Darius while you carry many Hemorrhage stacks; Noxian Guillotine can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 17, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 45,
+              "end": 55
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 64, "end": 81 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2bfb48ff1890644d560d7c8415a081655a1abb90237e6b587cbd7bf039b98ef6",
+      "tips": [
+        {
+          "id": "top:Yasuo:Fiora:0",
+          "text": "Don't knock Fiora up when Riposte is ready; she can parry it and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Fiora-W", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Yasuo:Fiora:1",
+          "text": "Bait Riposte with a weak Steel Tempest, then go in once she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Yasuo:Fiora:2",
+          "text": "Put Wind Wall in front of you when she has to use a projectile; it blocks Riposte's stab.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Fiora-W", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Yasuo:Fiora:3",
+          "text": "Watch the Vital on you; she will try to Lunge from that direction, so step away when it lines up.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Yasuo:Fiora:4",
+          "text": "Use Sweeping Blade through minions to dodge her Lunge and keep space.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "15479954d66d1d87508494ec9c7616ccd40282f097281395aedc13eacc5ac5df",
+      "tips": [
+        {
+          "id": "top:Yasuo:Gangplank:0",
+          "text": "Wind Wall blocks Parrrley and keg shots. Cast it when Gangplank lines up a shot at you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 17, "end": 25 },
+            { "kind": "champion", "key": "Gangplank", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Yasuo:Gangplank:1",
+          "text": "Dash away with Sweeping Blade when kegs are near you; a keg explosion slows you and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Yasuo:Gangplank:2",
+          "text": "Attack a keg yourself to defuse it, so it can't be used against you.",
+          "refs": [],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Yasuo:Gangplank:3",
+          "text": "Gangplank cleanses crowd control with Remove Scurvy, so wait for it before committing your knock up combo.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e1eac2374e21155ed444e6a782c24668528e5b9cd1bb710f20dbcbde546911e2",
+      "tips": [
+        {
+          "id": "top:Yasuo:Garen:0",
+          "text": "Dodge sideways when Garen swings Decisive Strike at you; his silence stops your dash and your Wind Wall.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Garen-Q", "start": 33, "end": 48 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 94, "end": 103 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Yasuo:Garen:1",
+          "text": "Do not stand in Garen's Judgment; leave its range or put minions around you so it deals less to you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Garen-E", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Yasuo:Garen:2",
+          "text": "Run from Garen once your health is low, because Demacian Justice finishes you quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Garen-R", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Yasuo:Garen:3",
+          "text": "Poke Garen with Steel Tempest from range and keep him from getting a few quiet seconds, so Perseverance does not heal him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 16, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 91,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "def3a486c45741d61faad2e3d3b4c9cfc5d6066eb50b7c141174342639c22381",
+      "tips": [
+        {
+          "id": "top:Yasuo:Jayce:0",
+          "text": "Put Wind Wall in front of you when Jayce lines up Shock Blast; it destroys the bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Yasuo:Jayce:1",
+          "text": "Jayce is strong early. Play safe if he gets ahead, and farm until you can trade.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Yasuo:Jayce:2",
+          "text": "Watch for his Acceleration Gate; a gate on the ground usually means a stronger Shock Blast is coming.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Yasuo:Jayce:3",
+          "text": "Jayce's Thundering Blow knocks you back, so don't dash in close when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Yasuo:Jayce:4",
+          "text": "Land two Steel Tempest hits to fire a tornado. If it knocks Jayce up, you can follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Jayce", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Jayce's Thundering Blow knocks back, but Last Breath needs an Airborne enemy, so it needs another source.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 41, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "46037e35f64179c2cd4eb319c19954315b9ebfbd78030bde749cde376d6a5409",
+      "tips": [
+        {
+          "id": "top:Yasuo:KSante:0",
+          "text": "Keep Wind Wall ready for the empowered Ntofo Strikes shockwave; it is a projectile and the wall destroys it before you are pulled in and stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "KSante-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 137, "end": 144 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Yasuo:KSante:1",
+          "text": "Do not walk into K'Sante while he charges Path Maker; he takes less damage and the charge cannot be interrupted. Step aside and let the dash miss.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "KSante-W", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Yasuo:KSante:2",
+          "text": "Last Breath needs an airborne enemy. The pull and knock back from K'Sante are not knock ups, so look for your own Steel Tempest whirlwind to set it up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "KSante", "start": 66, "end": 73 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 114, "end": 127 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Yasuo:KSante:3",
+          "text": "When K'Sante goes All Out, he is much squishier and has less health, so trade hard with Steel Tempest and Sweeping Blade. Do not let him catch you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 88, "end": 101 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 106, "end": 120 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Yasuo:KSante:4",
+          "text": "Stay away from walls when K'Sante is close. All Out sends you through terrain and he strikes you again.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "KSante-R", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yasuo:KSante:5",
+          "text": "Do not dash with Sweeping Blade toward K'Sante when his Footwork shield is up; wait for it to fade, then trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 17, "end": 31 },
+            { "kind": "champion", "key": "KSante", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "KSante-E", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a5f3f4ceddd115beb4bce7bfa68b609f8389e9941d8c5f250ae8a5923f3387f",
+      "tips": [
+        {
+          "id": "top:Yasuo:Malphite:0",
+          "text": "Dodge Seismic Shard's slow by keeping your distance when Malphite has it ready; being slowed lets him catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Malphite", "start": 57, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Yasuo:Malphite:1",
+          "text": "Use Wind Wall to block Seismic Shard before it lands. It is a projectile, so the wall stops it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Yasuo:Malphite:2",
+          "text": "Avoid fighting Malphite while his Granite Shield is up; wait until it breaks.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 15, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 34,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yasuo:Malphite:3",
+          "text": "Ground Slam cuts your Attack Speed, so step out of its range before you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5a73d31f3f7a3c82df5b28d924c045248a07fb6e2a18d8d386120e16bb8736e",
+      "tips": [
+        {
+          "id": "top:Yasuo:Mordekaiser:0",
+          "text": "Stand behind minions when Mordekaiser is near, and dash away sideways when his Death's Grasp is cast; it lands after a short delay.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 26,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 79,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Yasuo:Mordekaiser:1",
+          "text": "Put Wind Wall in front of Death's Grasp; it blocks the claw's projectile.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 26,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "top:Yasuo:Mordekaiser:2",
+          "text": "Do not stand in melee for long once Mordekaiser has Darkness Rise; poke with Steel Tempest and step out before the aura wears you down.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 36,
+              "end": 47
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 52,
+              "end": 65
+            },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 77, "end": 90 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Yasuo:Mordekaiser:3",
+          "text": "Hold your damage when his Indestructible shield is up; hit him after it fades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 26,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Yasuo:Mordekaiser:4",
+          "text": "Keep your distance from Mordekaiser at level 6; Realm of Death cuts you off from allies and from Wind Wall.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 48,
+              "end": 62
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 97, "end": 106 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbb35deb731b114100f684e7ffff75ac253d7cea40062d5178ebeb41d2274c76",
+      "tips": [
+        {
+          "id": "top:Yasuo:Rumble:0",
+          "text": "Put Wind Wall up when Rumble casts Electro Harpoon at you; it blocks the harpoon and stops his slow.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Rumble-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Yasuo:Rumble:1",
+          "text": "Rumble cannot cast spells while Overheated, so go in on him then.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Yasuo:Rumble:2",
+          "text": "Do not stand in The Equalizer's fire; walk out with Sweeping Blade through a minion rather than staying slowed in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 52, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Yasuo:Rumble:3",
+          "text": "Do not stay in front of Flamespitter; dash out of its cone instead of standing in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Yasuo:Rumble:4",
+          "text": "Hold your shield from Way of the Wanderer for when Rumble starts his trade; it absorbs damage from his champion hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 22,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Rumble", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "55303f121249703fd77336f0b10b710fdc1d97969898f5f67d496e11cf4d66db",
+      "tips": [
+        {
+          "id": "top:Yasuo:Sion:0",
+          "text": "Sidestep Decimating Smash when you see Sion charging. The stun is long once he has held it, so keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Sion", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Yasuo:Sion:1",
+          "text": "Put up Wind Wall to block Roar of the Slayer when Sion fires it. It does not stop Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Sion-E", "start": 26, "end": 44 },
+            { "kind": "champion", "key": "Sion", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Sion-Q", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Yasuo:Sion:2",
+          "text": "Dash away with Sweeping Blade when Sion starts charging Decimating Smash. Keep a minion close so you can leave.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Sion-Q", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Yasuo:Sion:3",
+          "text": "Attack Sion when his Soul Furnace shield is gone, since the shield absorbs your damage. Step out before it blows up.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Sion-W", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Yasuo:Sion:4",
+          "text": "Do not chase Sion into a kill. Glory in Death brings him back with fast hits, so walk away from him when he revives.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Yasuo:Sion:5",
+          "text": "Stay out of a straight line with Sion at level 6, since Unstoppable Onslaught cannot be turned much.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Sion-R", "start": 56, "end": 77 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21090af294e04103b1a6437b194943e3e35fe2103ea5e5dd927bd1955fdd70ec",
+      "tips": [
+        {
+          "id": "top:Yasuo:Teemo:0",
+          "text": "Put Wind Wall in front of you when Teemo throws Blinding Dart; it blocks the dart and the blind.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Teemo", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yasuo:Teemo:1",
+          "text": "Don't walk through bushes or onto likely spots without care. Noxious Trap is stealthed, and it slows and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 61, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Yasuo:Teemo:2",
+          "text": "Don't hit and back out, since Toxic Shot's poison keeps hurting you. Stay at a safe range until you are ready to commit.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yasuo:Teemo:3",
+          "text": "Use Sweeping Blade through minions to close the gap on Teemo quickly, then hit him with Steel Tempest.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0728d568ae7b09e4c3ab671d756b1879d96c92c06f14aaea3b9cba6be13a1ab2",
+      "tips": [
+        {
+          "id": "top:Yasuo:Vayne:0",
+          "text": "Don't walk up to Vayne near walls; Condemn knocks you back and stuns you if you hit terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vayne-E", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Yasuo:Vayne:1",
+          "text": "Put Wind Wall in front of you when Vayne fires Condemn; it blocks projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Vayne", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Vayne-E", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Yasuo:Vayne:2",
+          "text": "Vayne is fragile, so dash in with Sweeping Blade on a minion and pressure her. She has to play carefully.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Yasuo:Vayne:3",
+          "text": "Break up her third attack: Silver Bolts resets when she switches targets, so back off for a moment when she has two hits on you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6403ba2cf5deae802a790c58c7afda6ad35b152afef08ee789eda4a71055bb80",
+      "tips": [
+        {
+          "id": "top:Yasuo:Yone:0",
+          "text": "Put Wind Wall in front of you when Yone's Mortal Steel whirlwind comes; it is a missile and the wall destroys it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-Q", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Yasuo:Yone:1",
+          "text": "Don't wall Spirit Cleave; it is not blocked by projectile walls. Step out of its cone instead, since it cannot hit anyone behind Yone.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-W", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 129, "end": 133 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Yasuo:Yone:2",
+          "text": "Land two Steel Tempest hits to knock Yone up, then use Last Breath for a big burst.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Yasuo:Yone:3",
+          "text": "Dodge Yone's Mortal Steel sideways; the thrust is narrow. Trade back while his cooldown is down.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Yone-Q", "start": 13, "end": 25 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Yasuo:Yone:4",
+          "text": "Back off when Yone enters spirit form with Soul Unbound; he stores damage and hits again when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Yone-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Yasuo:combo:0",
+          "note": "Needs an airborne enemy to land R; Yone's listed abilities include no knock-up, so it hinges on allies.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a2b2d2cc2fa142210ed47d51b8ff06e27ca9f1cc2af5a82486fc92313e8ff1a",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Ahri:0",
+          "text": "Dodge Charm sideways or keep a minion between you and Ahri; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Ahri", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Yasuo:Ahri:1",
+          "text": "Put Wind Wall in front of you when Ahri aims Charm or Orb of Deception; it destroys her projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ahri", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ahri-E", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Yasuo:Ahri:2",
+          "text": "Once Ahri has used Charm, step in with Sweeping Blade and trade, since she has no easy way to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-E", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Ahri:3",
+          "text": "Fight Ahri while Spirit Rush is on cooldown; she has a hard time getting away.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Ahri:4",
+          "text": "If Ahri charms you or an ally and you are knocked up, Last Breath can follow up on an airborne enemy champion.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The instant dash-Q knock-up can punish Ahri when she is near a minion, since it gives little warning.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 39, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "74781c9acee717799ce0c4e567f953734bc594126547fb76a57da49bac6c5769",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Akali:0",
+          "text": "Use Wind Wall to block Akali's Five Point Strike and Shuriken Flip when she commits to a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Akali-Q", "start": 31, "end": 48 },
+            { "kind": "ability", "key": "Akali-E", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Yasuo:Akali:1",
+          "text": "Fight Akali when her energy is low. Her Five Point Strike is much weaker then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 40, "end": 57 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Yasuo:Akali:2",
+          "text": "Her Twilight Shroud hides her, but area damage still hits her and briefly shows where she is. Use Steel Tempest into the smoke.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 98, "end": 111 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Yasuo:Akali:3",
+          "text": "Play safe when Akali has Perfect Execution ready, especially if you are low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Akali-R", "start": 25, "end": 42 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Yasuo:Akali:4",
+          "text": "Dash away with Sweeping Blade after her Perfect Execution lands. Her second dash needs time to come back.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Akali-R", "start": 40, "end": 57 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "Dashing with Sweeping Blade into a buffered Q gives Akali no wind-up to react to.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Akali", "start": 52, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2b4419fd369b6599606159dfe086d3afbeb244f6d43ee495a706ec75e740370b",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Akshan:0",
+          "text": "Put Wind Wall up when Akshan throws Avengerang; it blocks the boomerang, so he loses his poke and his speed boost.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Akshan", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 36, "end": 46 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Yasuo:Akshan:1",
+          "text": "Use Wind Wall against Comeuppance bullets and the shots from Heroic Swing; they are projectiles and the wall stops them.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Akshan-R", "start": 22, "end": 33 },
+            { "kind": "ability", "key": "Akshan-E", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Yasuo:Akshan:2",
+          "text": "Akshan has no hard crowd control, so pick the fights you want and dash in with Sweeping Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Yasuo:Akshan:3",
+          "text": "Step sideways out of Avengerang. It is narrow, but it comes back, so watch the return path too.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Yasuo:Akshan:4",
+          "text": "Look for Akshan after he uses Heroic Swing; a stun or knock up while he swings can cancel it, and Steel Tempest's whirlwind knocks up.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Akshan-E", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "knocked-up", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 98, "end": 111 },
+            { "kind": "keyword", "key": "knocked-up", "start": 124, "end": 133 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1be28c44d58e83991a2510ce3d8efde149166e54c19d8add2509591c57ac54f2",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Anivia:0",
+          "text": "Use Wind Wall on Flash Frost and Frostbite; blocking them removes most of her damage. Cast it when she looks ready to throw.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Anivia-E", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Anivia:1",
+          "text": "Never dash with Sweeping Blade toward Crystallize; the wall can shove you aside and cost your trade. Use another target or wait for the wall to melt.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Anivia-W", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Yasuo:Anivia:2",
+          "text": "Dodge Flash Frost sideways; if it stuns you, you are open to Frostbite. Do not walk straight at her.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Anivia-E", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Yasuo:Anivia:3",
+          "text": "Attack her egg once Rebirth triggers and she cannot act; with help, kill it. Do not dive into her when she is healthy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 20,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Anivia:4",
+          "text": "Step out of Glacial Storm quickly; it grows over time and slows you the longer you stay inside.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20803408a088f7ea8cb915821ff78bf7463d7f91ec2f94a239156b984f9545e0",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Annie:0",
+          "text": "Watch Annie's Pyromania counter. When it is full, stay out of her range or keep a minion handy to dash away, because her stun will leave you helpless.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 14,
+              "end": 23
+            },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Yasuo:Annie:1",
+          "text": "Put Wind Wall in front of you when Annie casts Disintegrate. It blocks her fireball.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Annie", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Annie-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Annie:2",
+          "text": "Engage right after she spends her stun or her spells. Sweeping Blade lets you close the gap quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Yasuo:Annie:3",
+          "text": "Stay away from Tibbers once he appears. He burns everything near him.",
+          "refs": [],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "60144d89b3dc6e51824677c6339b92b363415406fea699ecbbd54baf6a59cd0d",
+      "tips": [
+        {
+          "id": "middle:Yasuo:AurelionSol:0",
+          "text": "Put Wind Wall in front of Aurelion Sol's Breath of Light and Falling Star when he starts casting.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 26,
+              "end": 38
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 41,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Yasuo:AurelionSol:1",
+          "text": "Don't dash into the middle of Singularity; it drags you in and can finish you off at low health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 30,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Yasuo:AurelionSol:2",
+          "text": "Dash through minions with Sweeping Blade to close on Aurelion Sol, then thrust Steel Tempest to build toward your whirlwind.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 53,
+              "end": 65
+            },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Yasuo:AurelionSol:3",
+          "text": "When The Skies Descend knocks you up, Last Breath is not available to you from it; avoid the big impact, and save Last Breath for enemies you knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 38, "end": 49 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 114, "end": 125 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4d0f8eb0052de92a349368c498267be690b1df88aae8562dc2f87fa6e41fec2c",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Aurora:0",
+          "text": "Put Wind Wall in front of Twofold Hex; it blocks the bolt. Aurora's Twofold Hex recast also fires back as a projectile, so it can be blocked too.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 26, "end": 37 },
+            { "kind": "champion", "key": "Aurora", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Yasuo:Aurora:1",
+          "text": "Aurora's The Weirding blast is not blocked by Wind Wall, so sidestep it instead.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-E", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Yasuo:Aurora:2",
+          "text": "Dash in with Sweeping Blade on a minion to close the gap, then trade when The Weirding is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Aurora-E", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Yasuo:Aurora:3",
+          "text": "Aurora turns invisible after Across the Veil. Don't chase blindly; walk back and farm until she shows up again.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Yasuo:Aurora:4",
+          "text": "Her Between Worlds rift slows you when you cross its edge. Stay out of it, or wait for it to close before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "10093f8f2015cdd56c7c992cd358695c4c1dad516bb7bf75b67576d400134ca5",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Azir:0",
+          "text": "Cast Wind Wall when Azir's Sand Soldiers dash at you with Conquering Sands; the notes say soldiers stop when they hit it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Azir", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Azir-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Azir:1",
+          "text": "Fight when Azir's Sand Soldiers are stationary or gone. He deals most of his damage through them, so trade right after they expire.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Yasuo:Azir:2",
+          "text": "Dash onto Azir with Sweeping Blade to close the gap fast. He lacks upfront burst, so a quick all-in can beat him.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Yasuo:Azir:3",
+          "text": "Stay away from Emperor's Divide when you are close to Azir; it knocks you back and leaves a wall you cannot walk through.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Azir", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Yasuo:Azir:4",
+          "text": "Land two Steel Tempest hits on a minion or champion, then use the whirlwind to knock Azir up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Azir", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a13f061fec03d35f5b132e36016606a1c2a4cf0b5a6429ad4b03a716fcf73252",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Brand:0",
+          "text": "Dodge Sear sideways; it is narrow and stops at the first unit it hits. Standing behind a minion also blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Yasuo:Brand:1",
+          "text": "Put Wind Wall between you and Brand when he starts Pyroclasm or Sear. It destroys the projectile, so save it for his key spells.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Brand", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Brand-R", "start": 51, "end": 60 },
+            { "kind": "ability", "key": "Brand-Q", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Yasuo:Brand:2",
+          "text": "Wind Wall will not stop Conflagration, so stay out of its range or move away from allies and minions.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Brand-E", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Yasuo:Brand:3",
+          "text": "Walk out of Pillar of Flame as soon as it appears. It lands after a short delay, so step away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Yasuo:Brand:4",
+          "text": "Close in with Sweeping Blade through minions once Brand's Sear is on cooldown. He has little defense up close.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Brand", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Brand-Q", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Yasuo:Brand:5",
+          "text": "Step away from your team when Pyroclasm is cast. It bounces between enemies, and its first missile is slow enough to react.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-buffered Q extends the knock-up reach to close on Brand, who has no listed escape.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 56, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2ae3b95906729bbe3837cef87befe49a105c6e1d97bf447289ba25f510ab6732",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Briar:0",
+          "text": "Put Wind Wall in front of Briar's Chilling Scream; it is a projectile, so the wall stops it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Yasuo:Briar:1",
+          "text": "Briar's Certain Death starts with a kicked projectile. Wind Wall blocks it, so hold it for her level 6 and she can't reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Briar-R", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Yasuo:Briar:2",
+          "text": "Stay away from walls when Briar charges Chilling Scream fully; hitting a wall makes it hurt a lot and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Yasuo:Briar:3",
+          "text": "Dash away with Sweeping Blade using a minion when Briar leaps in with Head Rush; she is vulnerable once her stun ends.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Briar", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Briar-Q", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Yasuo:Briar:4",
+          "text": "Hit Steel Tempest twice and send the whirlwind when Briar commits; it knocks her up, which sets up Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The instant circle knock-up gives Briar little warning to react once she is near a minion or your dash path.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "42758fbab94db97085bf7e7ccfa1f0e0b7a3cb7dc43a091215e6ec831fbb3c9d",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Cassiopeia:0",
+          "text": "Cast Wind Wall at Cassiopeia's Noxious Blast and Twin Fang; it blocks projectiles and costs her a lot of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 31,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Cassiopeia:1",
+          "text": "Don't dash into Miasma; you get grounded and slowed, so Sweeping Blade can't get you out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 16,
+              "end": 22
+            },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze so you get slowed, not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Yasuo:Cassiopeia:3",
+          "text": "Weave Sweeping Blade through minions to close the gap, then hit her with Steel Tempest.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 6, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "39a126695d3b0aebf4bad46722373e663ede1685072e70f31b113008623fef17",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Diana:0",
+          "text": "Put Wind Wall in front of you when Diana aims Crescent Strike; it destroys the bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Diana", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Diana-Q", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Yasuo:Diana:1",
+          "text": "Step sideways out of Crescent Strike; if you are marked with Moonlight, Diana can dash to you with Lunar Rush, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Diana", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Diana-E", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Yasuo:Diana:2",
+          "text": "Wait out the Pale Cascade orbs and shield before you fight; the orbs only last a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 13, "end": 25 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Yasuo:Diana:3",
+          "text": "Hold Sweeping Blade on a minion near Diana, not on her, so you have a dash ready to leave after Moonfall.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Diana-R", "start": 96, "end": 104 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Yasuo:Diana:4",
+          "text": "Keep your distance from Diana at level 6, since Moonfall pulls you in and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Diana-R", "start": 48, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "23874289b151baf183e16b6623557c4832c3d4067239817777d1162a8228e8b1",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Ekko:0",
+          "text": "Put Wind Wall in front of you when Ekko throws Timewinder; it destroys the projectile and keeps you from being slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ekko", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 47, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Yasuo:Ekko:1",
+          "text": "Wind Wall does not stop the Parallel Convergence sphere. Walk out of the area instead, or dash away with Sweeping Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Ekko-W", "start": 28, "end": 48 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 105, "end": 119 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Yasuo:Ekko:2",
+          "text": "Watch for the Parallel Convergence image on the ground. Leave the area before Ekko steps in, or you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 14, "end": 34 },
+            { "kind": "champion", "key": "Ekko", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Yasuo:Ekko:3",
+          "text": "Trade right after Ekko spends Timewinder, and save Sweeping Blade for dodging his next dash-in.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Yasuo:Ekko:4",
+          "text": "Steel Tempest's whirlwind knocks Ekko up, so use Last Breath on him if you can. Do not chase once he has Chronobreak ready.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Ekko", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 49, "end": 60 },
+            { "kind": "ability", "key": "Ekko-R", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ad520541f632e8dc054890744a0aa4ee378bbb1490a1cf88eb53fb37edbfff23",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Ezreal:0",
+          "text": "Put Wind Wall between you and Ezreal when he lines up Mystic Shot or Essence Flux; it destroys his projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ezreal", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 54, "end": 65 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Yasuo:Ezreal:1",
+          "text": "Dash through minions with Sweeping Blade to close in on Ezreal, since he is fragile and you should take the fight to him.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "Ezreal", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Yasuo:Ezreal:2",
+          "text": "Hold Wind Wall for Trueshot Barrage; it blocks the arc, which is his big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Yasuo:Ezreal:3",
+          "text": "Expect Ezreal to blink away with Arcane Shift when you commit, so dash again or fire your whirlwind to catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f17ec45c7fc472110f656302ee1fa3d4004600ac8a9e6c2df724a8c804fe1385",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Fizz:0",
+          "text": "Aim Wind Wall at Fizz's Chum the Waters lure; it stops the lure early.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Fizz", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Fizz-R", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Fizz:1",
+          "text": "Do not chase Fizz into Playful. He is untargetable, then slows you, so wait for it to land.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Yasuo:Fizz:2",
+          "text": "Urchin Strike does no damage if you are untargetable or dash away, so use Sweeping Blade on a minion to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-Q", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Yasuo:Fizz:3",
+          "text": "Fizz's Seastone Trident glows before his empowered hit. Back away from the trade until it is used.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-W", "start": 7, "end": 23 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Yasuo:Fizz:4",
+          "text": "Keep a minion near for Sweeping Blade so you can escape after Fizz's Chum the Waters lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 23, "end": 37 },
+            { "kind": "champion", "key": "Fizz", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Fizz-R", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e8e827f48bb75ffef764ff8fdbdd5a84e71741280b73031507e58231679587d7",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Galio:0",
+          "text": "Put Wind Wall in front of Winds of War; it blocks both windblasts.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Galio-Q", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Yasuo:Galio:1",
+          "text": "Do not walk into Galio while he charges Shield of Durand; it can taunt you into Justice Punch.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Galio-W", "start": 40, "end": 56 },
+            { "kind": "ability", "key": "Galio-E", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Yasuo:Galio:2",
+          "text": "Galio is slow while charging Shield of Durand, so poke him with Steel Tempest from range.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-W", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Galio:3",
+          "text": "Last Breath works on Galio's knock up, even his own Justice Punch, so use it on a Galio ally or on Galio's target.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Galio", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Galio-E", "start": 52, "end": 65 },
+            { "kind": "champion", "key": "Galio", "start": 82, "end": 87 },
+            { "kind": "champion", "key": "Galio", "start": 99, "end": 104 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Yasuo:Galio:4",
+          "text": "Watch for Hero's Entrance; it can be interrupted before Galio jumps, so hit him then.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Galio", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1dd9e5d6066b741953b21835a117430058ec7398e80bd073326364a26a79af23",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Hwei:0",
+          "text": "Cast Wind Wall at Hwei's fireball or Gaze of the Abyss eye missile; it destroys them. It won't stop his lightning bolt or jaws.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Hwei", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Yasuo:Hwei:1",
+          "text": "Rush Hwei right after he casts a Torment spell; his spells take time to cast, and he is easy to close in on afterward.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Yasuo:Hwei:2",
+          "text": "Keep moving and sidestep his fireball, since Hwei must predict your path.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Yasuo:Hwei:3",
+          "text": "Keep moving so the Severing Bolt lightning lands behind you. It hits harder when you are alone or can't move, so stay near minions.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Yasuo:Hwei:4",
+          "text": "Use Sweeping Blade through minions to close the gap fast, and skip the dash when Hwei is close to rooting or dragging you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Hwei", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3604c48a4f05d4ed72c81382c61dcc9d6dfcf3c153616ca406d8f2d0f435f50a",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Irelia:0",
+          "text": "Put Wind Wall in front of you when Irelia casts Flawless Duet or Vanguard's Edge; it destroys the blades and the stun never lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Irelia", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Irelia-E", "start": 48, "end": 61 },
+            { "kind": "ability", "key": "Irelia-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Yasuo:Irelia:1",
+          "text": "Fight Irelia when her Ionian Fervor stacks have dropped; she is much weaker without the attack speed.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 22,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Irelia:2",
+          "text": "Watch for the bladed lines of Flawless Duet; stepping out of the line avoids the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 30, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Yasuo:Irelia:3",
+          "text": "Don't spend your big abilities into Defiant Dance; she takes much less damage while charging. Wait for her to release.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Yasuo:Irelia:4",
+          "text": "Avoid fighting beside a full minion wave; Irelia uses Bladesurge on minions to reach you. Dash through minions yourself to keep your own escape.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7052d6a6650cbeab237a13c2d325bd2555b4bf4faddb7dafd19ae1a657e7d4ed",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Kassadin:0",
+          "text": "Kassadin's Void Stone cuts magic damage, and Sweeping Blade deals magic damage. Poke him with Steel Tempest instead.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Yasuo-E", "start": 45, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 94, "end": 107 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Yasuo:Kassadin:1",
+          "text": "Put Wind Wall in front of you when Kassadin casts Null Sphere; it blocks the orb and his shield.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kassadin", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Kassadin:2",
+          "text": "Don't stand in Force Pulse range for long; it slows you and ruins your dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Yasuo:Kassadin:3",
+          "text": "Wind Wall cannot stop Force Pulse, so dodge it by staying out of its short range.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dbbe8d724976266f7b2111cf76679fc8e7df0420cec298a04641f74e49958269",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Katarina:0",
+          "text": "Put Wind Wall in front of you when Katarina throws Bouncing Blade. It blocks the dagger.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Katarina", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Katarina-Q", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Yasuo:Katarina:1",
+          "text": "Keep Wind Wall ready for Death Lotus. It blocks her projectiles, and her daggers are projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Katarina-R", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Yasuo:Katarina:2",
+          "text": "Fight Katarina right after she uses Shunpo; her short mobility cooldown is gone and she can't escape easily.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Katarina-E", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Yasuo:Katarina:3",
+          "text": "Stay away from the Daggers on the ground; she uses them for damage and to reset Shunpo.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d18363a28a3fe6327eb037f7062815bb8b5129ea86c78e692cd522d6ccca609c",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Leblanc:0",
+          "text": "Put Wind Wall in front of you when LeBlanc throws Ethereal Chains or Sigil of Malice. It destroys her projectiles and protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Leblanc", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 50, "end": 65 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 69, "end": 84 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Yasuo:Leblanc:1",
+          "text": "Move sideways to dodge Ethereal Chains. If it lands, break away before the tether ends so you don't get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Yasuo:Leblanc:2",
+          "text": "Attack LeBlanc right after she dashes with Distortion. Her return is her escape, so a stun or silence can stop it.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 43, "end": 53 },
+            { "kind": "keyword", "key": "silenced", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Leblanc:3",
+          "text": "Don't chase the clone made by Mirror Image. The real LeBlanc is invisible only briefly, so look for her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Leblanc-passive",
+              "start": 30,
+              "end": 42
+            },
+            { "kind": "champion", "key": "Leblanc", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Yasuo:Leblanc:4",
+          "text": "Use Sweeping Blade on minions to close the gap on LeBlanc and dodge her follow-up. Keep a minion nearby as your escape.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Leblanc", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9db1f31a208c761f979db6e54d3f83a501ca42afafeec0b3d939a2bd1169476f",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Lissandra:0",
+          "text": "Don't dash into Lissandra with Sweeping Blade while Ring of Frost is ready; you will be rooted and punished.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 31, "end": 45 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Lissandra:1",
+          "text": "Put Wind Wall in front of you to block Ice Shard and Glacial Path when she throws them.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Lissandra-Q", "start": 39, "end": 48 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Yasuo:Lissandra:2",
+          "text": "Engage when Ring of Frost is on cooldown; it has a long cooldown early.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Yasuo:Lissandra:3",
+          "text": "Approach from behind your minions so Ice Shard hits them first and you avoid being slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 37, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Yasuo:Lissandra:4",
+          "text": "Use Steel Tempest's whirlwind to knock her up when she is in range, then follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Yasuo:Lissandra:5",
+          "text": "Stun her out of Glacial Path before she recasts it, or she will blink away.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "addfa74273819d3c5f29140edfca65e122a145929131247a7c78d158e9a62faf",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Lux:0",
+          "text": "Walk to the side and use Wind Wall against Light Binding. Keep it ready for when Lux is about to throw it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Lux-Q", "start": 43, "end": 56 },
+            { "kind": "champion", "key": "Lux", "start": 81, "end": 84 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Yasuo:Lux:1",
+          "text": "Wind Wall does not stop Final Spark. Move out of the line when you see the red targeting beam.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Lux-R", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Yasuo:Lux:2",
+          "text": "Dash in with Sweeping Blade through minions to close the gap, then trade quickly. Lux is weak up close.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Lux", "start": 82, "end": 85 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Yasuo:Lux:3",
+          "text": "Do not stand in Lucent Singularity. Dash out or around it so you are not slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Yasuo:Lux:4",
+          "text": "Hit Lux with Steel Tempest twice, then fire the whirlwind to knock her up if she is rooted or close.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7cfcb1578f911eede94911622c75649e870afd6a2c22806a825eda59d52e7c53",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Malzahar:0",
+          "text": "Hold Wind Wall back; it is your only way to stop Call of the Void.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Malzahar:1",
+          "text": "Sidestep Call of the Void. Walk out of the area between the portals before it fires.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Malzahar:2",
+          "text": "Stay away from minions carrying Malefic Visions. When they die, the visions spread to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Yasuo:Malzahar:3",
+          "text": "Hit Malzahar when his Void Shift is down; while it is active he takes very little damage and ignores crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Yasuo:Malzahar:4",
+          "text": "Dash to Malzahar with Sweeping Blade when his Nether Grasp is down, since he is helpless to its suppression.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 22, "end": 36 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "76bcbc6d7007a8bac3ed1d54a141d40959134f1857d90a927f0bd71d3e01ce3a",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Mel:0",
+          "text": "Do not rely on Wind Wall to stop Mel's Rebuttal or Solar Snare cleanly; keep it for her Radiant Barrage, which is made of missiles the wall can block.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Mel", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Mel-W", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Mel-E", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Mel-Q", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Mel:1",
+          "text": "Put Wind Wall between you and Solar Snare when she aims at you; the orb is a projectile and the wall blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Mel-E", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Yasuo:Mel:2",
+          "text": "Sidestep Solar Snare, since it is a narrow line, and do not dash into the field it leaves behind, which slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Yasuo:Mel:3",
+          "text": "Trade right after Mel spends Rebuttal, when her shield and projectile block are down.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Mel-W", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Yasuo:Mel:4",
+          "text": "Step away for a moment when Mel has hit you many times; her stored Overwhelm damage can execute you when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Yasuo:Mel:5",
+          "text": "Dash through minions with Sweeping Blade to close on Mel, and finish with Steel Tempest when she is in reach.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "Mel", "start": 53, "end": 56 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Yasuo:Mel:6",
+          "text": "Wait for Mel to be knocked up by Steel Tempest's whirlwind, then use Last Breath for a big hit on her.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "keyword", "key": "knocked-up", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a7c1f3054f528ea024ae88ca636e8a3f822c3b95f713f4f0c611972d0122f68b",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Naafiri:0",
+          "text": "Put Wind Wall in the way of Darkin Daggers; it blocks all enemy projectiles, so her poke and heal setup never lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Yasuo:Naafiri:1",
+          "text": "Dodge Darkin Daggers sideways and don't stand in a line with her; it is a thrown blade that bleeds you if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Yasuo:Naafiri:2",
+          "text": "Hit her with Steel Tempest twice to knock her up, then use Last Breath when she is in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Yasuo:Naafiri:3",
+          "text": "Don't chase her while she is untargetable after The Call of the Pack or in Hounds' Pursuit. Wait for it to end, then trade.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 48, "end": 68 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 75, "end": 90 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Yasuo:Naafiri:4",
+          "text": "Use Sweeping Blade on minions to dodge Eviscerate or to close the gap after she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-extended Q can knock up Naafiri when she stays just out of dash range after poking.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f327cf0a5509063c1a212426a449146ed7fb413be39825cecd4193c5decb3034",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Orianna:0",
+          "text": "Cast Wind Wall to block Command: Attack when the Ball is thrown at you; it also stops her Command: Protect on allies.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 24, "end": 39 },
+            { "kind": "ability", "key": "Orianna-E", "start": 90, "end": 106 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Orianna:1",
+          "text": "Orianna only affects the area around the Ball, so check where it sits before you dash in with Sweeping Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 94, "end": 108 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Yasuo:Orianna:2",
+          "text": "Do not dash into her Ball's area at level 6; Command: Shockwave pulls you in and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 45, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Yasuo:Orianna:3",
+          "text": "Dodge Command: Attack sideways; it is thin, and she must wait for the Ball to return before using it again.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Yasuo:Orianna:4",
+          "text": "Her Ball knocking you into a bad spot can set up a Last Breath for your allies' knock ups, so save it for them.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9fcc75bdd5ef32b71c751536a472d716392ca074b3fecc630db2c061e4cd96fc",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Qiyana:0",
+          "text": "Put Wind Wall up against Elemental Wrath when she throws it at you; the Rock, River and Brush blades are all projectiles and get blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Qiyana:1",
+          "text": "Wind Wall can't stop Audacity, because it is a dash and not a projectile. Keep Sweeping Blade ready to dash away when she jumps on you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Yasuo:Qiyana:2",
+          "text": "Do not walk into her stun wall. Supreme Display of Talent is blocked by Wind Wall, but the shockwave along the terrain is not.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 32, "end": 57 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 72, "end": 81 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Qiyana:3",
+          "text": "Qiyana gets stronger when she is next to walls, river or brush. Fight her in the open lane, away from terrain she can use.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Yasuo:Qiyana:4",
+          "text": "Stay out of river and brush edges near her; Supreme Display of Talent can leave you stunned there.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 44, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Qiyana:5",
+          "text": "After she uses Terrashape, her Elemental Wrath comes back quickly. Trade after she has spent her abilities, not before.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-W", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bcb462fa9f6763e2f09482ab67506e01192c69023ab81bc2adfe380c3806763e",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Ryze:0",
+          "text": "Dash onto a minion with Sweeping Blade to close on Ryze, then slash with Steel Tempest.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 24, "end": 38 },
+            { "kind": "champion", "key": "Ryze", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Yasuo:Ryze:1",
+          "text": "Put Wind Wall in front of you when Ryze casts Spell Flux or Overload. It destroys projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ryze", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ryze-E", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Yasuo:Ryze:2",
+          "text": "Do not walk into Ryze while he has Flux on you. His Rune Prison would root you.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Ryze-W", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Ryze:3",
+          "text": "Attack Ryze while his portal is charging. Crowd control on him cancels Realm Warp.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Ryze-R", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ba07854a861db21bf79f87916e40c7558d75f994a6b844568a6e8c2767dcacd1",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Sylas:0",
+          "text": "Stand behind minions when Sylas is ready to throw Chain Lash; Wind Wall is your answer to Abduct, so keep it up before he tries to pull you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 50, "end": 60 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Yasuo:Sylas:1",
+          "text": "Cast Wind Wall when Sylas throws his chains with Abscond / Abduct; the chains are blocked, so he cannot pull himself to you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Sylas-E", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Sylas:2",
+          "text": "Trade when Sylas has just spent his abilities; his Petricite Burst hits hard right after he casts, so avoid fighting him while he holds charges.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Sylas-passive",
+              "start": 51,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Yasuo:Sylas:3",
+          "text": "Do not fight when Sylas is low and Kingslayer is ready; it heals him back up. Burst him down instead of trading slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Yasuo:Sylas:4",
+          "text": "Sylas's Abduct knocks you up, which lets Last Breath work on enemies he pulled. Save your ultimate for fights where he or an ally knocks someone up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Sylas's Abduct recast knocks up, but Last Breath needs an airborne target, so Yasuo's own knock-up is the setup.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 37, "end": 48 },
+            { "kind": "champion", "key": "Yasuo", "start": 78, "end": 83 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9f981ed2f5c22a7ea02af3f1851b3e0edd800c70d77d674b2c8a1a21c452ee80",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Syndra:0",
+          "text": "Dash through minions with Sweeping Blade to close in, but keep one nearby. Syndra's Scatter the Weak can punish you if you have no dash left.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 26, "end": 40 },
+            { "kind": "champion", "key": "Syndra", "start": 75, "end": 81 },
+            { "kind": "ability", "key": "Syndra-E", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Yasuo:Syndra:1",
+          "text": "Put up Wind Wall when Syndra is about to throw Force of Will or push spheres with Scatter the Weak. It blocks them.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 },
+            { "kind": "champion", "key": "Syndra", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Syndra-W", "start": 47, "end": 60 },
+            { "kind": "ability", "key": "Syndra-E", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Yasuo:Syndra:2",
+          "text": "Walk around spheres on the ground, and attack just after Syndra uses Scatter the Weak. Its long cooldown leaves her open.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Syndra-E", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Yasuo:Syndra:3",
+          "text": "Steel Tempest is narrow, so use it to hit Syndra when she is close. Two hits give you a whirlwind that knocks her up from range.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Syndra", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Yasuo:Syndra:4",
+          "text": "Do not stand in the zone of the spheres when she has her ultimate. Unleashed Power hits harder with more spheres out and executes low health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "The knock-up into Last Breath leaves Syndra almost no time to react, and Last Breath needs an Airborne target.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Syndra", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 73, "end": 84 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286f1cd649d72d428a3bd84cfb8f2afd5ed1c6a47a9c1434c63fc0d3f6de8af8",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Taliyah:0",
+          "text": "Put Wind Wall in front of Threaded Volley; it blocks the rocks and the boulder, so you can walk up and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Yasuo:Taliyah:1",
+          "text": "Do not dash over her stones with Sweeping Blade; they detonate and leave you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 33, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Yasuo:Taliyah:2",
+          "text": "Step sideways when she throws Threaded Volley, because the rocks fly in a fixed direction.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Yasuo:Taliyah:3",
+          "text": "Once you land two Steel Tempests, her Seismic Shove knocks you out of position, so stay away from her stones after she casts it.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Yasuo:Taliyah:4",
+          "text": "Fight right after she wastes Unraveled Earth or Seismic Shove; her lane control is weakest while they are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bebb4178d73fcefb2616cc5ffa78f13f9326ed2f2979db67b8688e5e31bcec51",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Talon:0",
+          "text": "Put Wind Wall in front of you when Talon throws Rake; it destroys the blades and denies his Wound stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Talon", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Talon-W", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Yasuo:Talon:1",
+          "text": "Avoid taking a Rake plus Noxian Diplomacy combo. Three Wound stacks and an attack make Blade's End bleed you hard.",
+          "refs": [
+            { "kind": "ability", "key": "Talon-W", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Talon-Q", "start": 25, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 87,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Yasuo:Talon:2",
+          "text": "Talon can vault walls and vanish with Shadow Assault. Watch the map and don't overextend when he disappears.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Yasuo:Talon:3",
+          "text": "Chain Steel Tempest on minions to build the whirlwind, then use it to hit Talon and knock him up when he dives.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Yasuo:Talon:4",
+          "text": "Dash with Sweeping Blade through a minion to dodge Talon's burst, and save your shield by moving until you need it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "082793f5b3fa688bc5bcca3acfeba2e73176ea3db7f36497e65086816b2e21a3",
+      "tips": [
+        {
+          "id": "middle:Yasuo:TwistedFate:0",
+          "text": "Put Wind Wall in front of you when Twisted Fate throws Wild Cards; it blocks the cards.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 35,
+              "end": 47
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 55,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Yasuo:TwistedFate:1",
+          "text": "Dodge to the side of Wild Cards; the cards fan out, so move out of the cone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 21,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Yasuo:TwistedFate:2",
+          "text": "Back off when the Gold Card is locked in; a stun lets him hit you for free. Wait out his shuffle and then step in.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Yasuo:TwistedFate:3",
+          "text": "When Destiny goes off, expect him to jump on you or a lane. Move toward safety and keep Wind Wall ready.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "The dash-buffered Q knock-up has no visible wind-up, so Twisted Fate gets little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 56, "end": 68 }
+          ]
+        },
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash-buffered Q extends knock-up reach to catch Twisted Fate who stays just outside dash range.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 49, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1a3b5ba157e211f404b3b7c0cbf866095a41142f86be77f0540b7928c74230f",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Veigar:0",
+          "text": "Cast Wind Wall when Veigar aims Baleful Strike at you; it blocks the bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Veigar", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Yasuo:Veigar:1",
+          "text": "Dark Matter lands after a delay with a visible marker, so walk out of the circle instead of fighting in it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Yasuo:Veigar:2",
+          "text": "Don't dash through the edge of Event Horizon; stay inside it or wait for it to fade, since only the edge stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Yasuo:Veigar:3",
+          "text": "Veigar is fragile, so go in with Sweeping Blade through minions once Event Horizon is used.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 33, "end": 47 },
+            { "kind": "ability", "key": "Veigar-E", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Yasuo:Veigar:4",
+          "text": "Stay healthy before level 6; Primordial Burst hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 29, "end": 45 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9642496a285f01defff236d36ca8e09bf65ea98fdd3e7dd03e5f1b72affd90a2",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Vex:0",
+          "text": "Put Wind Wall in front of Mistral Bolt and Looming Darkness. Both are projectiles, so the wall stops them before they reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Vex-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Vex-E", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "middle:Yasuo:Vex:1",
+          "text": "Vex fears and interrupts dashes when her passive is ready, so hold Sweeping Blade until she has spent her empowered ability.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Yasuo:Vex:2",
+          "text": "Each dash you make marks you when you are near Vex, so her next hit deals bonus damage. Dash only when it wins you something.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 47, "end": 50 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Yasuo:Vex:3",
+          "text": "Dodge Mistral Bolt sideways, since the wave is narrow when it speeds up. Then walk in and trade while it recharges.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Yasuo:Vex:4",
+          "text": "Wind Wall can't stop Personal Space, which hits everyone around Vex. Stay out of its range or accept the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Vex-W", "start": 21, "end": 35 },
+            { "kind": "champion", "key": "Vex", "start": 64, "end": 67 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Vex:5",
+          "text": "Keep your distance from Vex and block her Shadow Surge with Wind Wall. She can't be knocked up easily, so use Steel Tempest on her lane partners instead.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Vex-R", "start": 42, "end": 54 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 60, "end": 69 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 110, "end": 123 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7afe98e6dfe58c1c395b66602f6dcebe9bec3439f64a2b71f8223db098e6b920",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Viktor:0",
+          "text": "Use Wind Wall against Hextech Ray when Viktor fires it, so you can walk up to him.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Viktor-E", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Viktor", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Yasuo:Viktor:1",
+          "text": "Don't dash into Gravity Field. Go around it or wait for it to expire, because staying inside gets you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Yasuo:Viktor:2",
+          "text": "Dodge Siphon Power's shield by trading right after it is used. Use Steel Tempest and Sweeping Blade on minions to get close to Viktor.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 67, "end": 80 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 85, "end": 99 },
+            { "kind": "champion", "key": "Viktor", "start": 127, "end": 133 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Yasuo:Viktor:3",
+          "text": "Step out of Arcane Storm's area when you can; it follows you, so move away from it as it comes.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f58778b223ef5d99be3660ad9321ad9cc727565b1dd8b2a0a017d20561834d46",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Vladimir:0",
+          "text": "Dodge Transfusion's damage by dashing out of range with Sweeping Blade. Don't stay in range for long trades, since he heals through them.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Yasuo:Vladimir:1",
+          "text": "Don't use Steel Tempest into Sanguine Pool. Vladimir can't be targeted, so wait until the pool ends.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 10, "end": 23 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 29, "end": 42 },
+            { "kind": "champion", "key": "Vladimir", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Yasuo:Vladimir:2",
+          "text": "Put Wind Wall in front of you when Vladimir charges Tides of Blood. It destroys the bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Vladimir", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Vladimir:3",
+          "text": "Step out of Vladimir's Hemoplague circle. Hit him before it bursts, or he heals.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6a5ece260c80dadbacbfc7dfb17b35459b7ca2c45d4e232d9b826950e904d010",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Xerath:0",
+          "text": "Close the distance on Xerath with Sweeping Blade through minions. He is weak up close and has few ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Yasuo:Xerath:1",
+          "text": "Put up Wind Wall when Xerath aims Shocking Orb at you. It blocks the orb and saves you from the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Xerath-E", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Yasuo:Xerath:2",
+          "text": "Step sideways to dodge Arcanopulse; it is narrow and hard to hit when you move side to side.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Yasuo:Xerath:3",
+          "text": "Dodge Eye of Destruction by walking out of the marked circle before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Yasuo:Xerath:4",
+          "text": "Move away from Xerath's Rite of the Arcane circles when you see him start channeling; each shot lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Xerath-R", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Yasuo:Xerath:5",
+          "text": "Hold Steel Tempest stacks for a whirlwind to poke Xerath from range, but don't fire it into a Shocking Orb you can't dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Xerath", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Xerath-E", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:0",
+          "note": "Dash-buffered Q gives a knock-up with no visible wind-up, so Xerath gets little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 61, "end": 67 }
+          ]
+        },
+        {
+          "comboId": "middle:Yasuo:combo:2",
+          "note": "Flash extends the Q circle's reach, helping close on Xerath when he stands just beyond dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Xerath", "start": 53, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a069c1efaff57955492ac19dc3d3818c2ba20bc6e3e64492140148d31e40d655",
+      "tips": [
+        {
+          "id": "middle:Yasuo:XinZhao:0",
+          "text": "Dodge Xin Zhao's Wind Becomes Lightning sideways, or put Wind Wall in front of it; the thrust slows you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 17, "end": 39 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 57, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Yasuo:XinZhao:1",
+          "text": "Back away when Xin Zhao has his third Three Talon Strike ready; it knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Yasuo:XinZhao:2",
+          "text": "Wait until Xin Zhao has spent Audacious Charge before you trade, because it is how he closes on you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Yasuo:XinZhao:3",
+          "text": "Keep Sweeping Blade targets nearby so you can dash away from Xin Zhao's all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Yasuo:XinZhao:4",
+          "text": "Stay clear of Xin Zhao at level 6; Crescent Guard knocks you back and stuns you if you are not Challenged.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 35, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Xin Zhao's listed abilities show no way to avoid the knock-up, so buffering Last Breath leaves him little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 76, "end": 87 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "afc490d78db3161a3b7293f2f2898c757d64b772f3abf441f7033476c31cbad5",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Yone:0",
+          "text": "Put Wind Wall in front of you when Yone throws the whirlwind from Mortal Steel; the wall stops it, so you aren't knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-Q", "start": 66, "end": 78 },
+            { "kind": "keyword", "key": "knocked-up", "start": 113, "end": 123 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Yone:1",
+          "text": "Don't spend Wind Wall on Spirit Cleave. It isn't blocked by projectile walls, so dodge it or move out of the cone instead.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Yone-W", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Yasuo:Yone:2",
+          "text": "Watch Yone's stacks. When he has two, his next Mortal Steel dashes and knocks you up, so step back out of range or sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Yone-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Yasuo:Yone:3",
+          "text": "Wait for Yone to use Spirit Cleave, then trade. He can't shield again for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Yone-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Yasuo:Yone:4",
+          "text": "Back off while Yone is in spirit form from Soul Unbound. Hits on you are stored and come back as extra damage when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Yasuo:Yone:5",
+          "text": "Respect Yone at level 6. Fate Sealed hits a long way, so keep Wind Wall in mind and don't stand in a line with him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Yone-R", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Yasuo:Yone:6",
+          "text": "Use Last Breath when Yone's own knock up or an ally's lands on an enemy. Any airborne enemy champion works.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f8401e402c1e7ab4300de39b42cbc3093e3fd11ccabd4ae834a4165dea72d75d",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Zed:0",
+          "text": "Put Wind Wall in front of Zed's Razor Shuriken; it blocks projectiles, so his main poke and his shadow's throw do nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 },
+            { "kind": "ability", "key": "Zed-Q", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Yasuo:Zed:1",
+          "text": "Zed becomes untargetable when he starts Death Mark, so wait for the mark to land before you fight. Then stay on your feet and avoid trading until it pops.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Zed:2",
+          "text": "Trade right after Zed uses Living Shadow. His damage and mobility depend on it, so he is weakest then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Zed-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Yasuo:Zed:3",
+          "text": "Hit Steel Tempest on Zed twice to get the whirlwind. Use it when you want to knock him up, then follow with Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 108, "end": 119 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Yasuo:Zed:4",
+          "text": "Dash away with Sweeping Blade when Zed's shadow and Zed are about to slash together, because overlapping slashes slow you more.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Zed", "start": 35, "end": 38 },
+            { "kind": "champion", "key": "Zed", "start": 52, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fd424df5362563c5d325d67d81b6f94bf44c392bd776e47260f2bc50f457eecf",
+      "tips": [
+        {
+          "id": "middle:Yasuo:Zoe:0",
+          "text": "Dodge sideways when Zoe throws Sleepy Trouble Bubble. Wind Wall can also block it, so save it for that.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 20, "end": 23 },
+            { "kind": "ability", "key": "Zoe-E", "start": 31, "end": 52 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Yasuo:Zoe:1",
+          "text": "Put up Wind Wall against Paddle Star! so it never reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 },
+            { "kind": "ability", "key": "Zoe-Q", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Yasuo:Zoe:2",
+          "text": "Close the distance on Zoe quickly with Sweeping Blade through minions. Her star hurts most at long range.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Yasuo:Zoe:3",
+          "text": "Punish Zoe when she uses Portal Jump. She has to come back to her start point, so go at her then.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": [
+        {
+          "comboId": "middle:Yasuo:combo:1",
+          "note": "Last Breath follows the Q knock-up, which punishes Zoe if she is caught in the circle.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zoe", "start": 51, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9a277cf373bab5774d79ba7c40b8a4a7cd248ef5ea64586e713bd8db0f9a6e1e",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Ashe:0",
+          "text": "Put Wind Wall in front of you when Ashe fires Volley or Enchanted Crystal Arrow. It blocks them and can save your life.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ashe", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Ashe-W", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Ashe-R", "start": 56, "end": 79 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Yasuo:Ashe:1",
+          "text": "Ashe has few ways to escape. Dash in with Sweeping Blade through a minion and trade hard, since she can only slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 42, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Yasuo:Ashe:2",
+          "text": "Do not walk up in a straight line in her Volley range. Stay behind minions so they absorb the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Yasuo:Ashe:3",
+          "text": "Hit minions with Steel Tempest to build the whirlwind, then use it to knock Ashe up from range when she steps forward.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 17, "end": 30 },
+            { "kind": "champion", "key": "Ashe", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Yasuo:Ashe:4",
+          "text": "Stay with your team when Ashe's Enchanted Crystal Arrow is ready, since a long-range hit stuns you for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ashe-R", "start": 32, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9a4bd023cf9bd736206b21b36ef220b0966312ffcc0e1c699e2d348a55947e3a",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Caitlyn:0",
+          "text": "Hold Wind Wall for Piltover Peacemaker and Ace in the Hole. It destroys projectiles that hit it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 19, "end": 38 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Yasuo:Caitlyn:1",
+          "text": "Do not walk over bushes or open ground where Caitlyn may have placed Yordle Snap Trap. Dash with Sweeping Blade at a minion instead.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 45, "end": 52 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 69, "end": 85 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Yasuo:Caitlyn:2",
+          "text": "Build up Steel Tempest stacks on minions. Her long range means you must close the gap to threaten her with the whirlwind.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Yasuo:Caitlyn:3",
+          "text": "Dodge her net sideways, or dash with Sweeping Blade. It slows you and sets up a Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 37, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 80,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": [
+        {
+          "comboId": "adc:Yasuo:combo:0",
+          "note": "Dash-Q gives a circular hit that can knock up, but Caitlyn's Net and Snap Trap can punish the close approach.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 51, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "01ed4ac72e057ecacb127a40cc9590e072e33f1b516a8914c3c43addfe1ca047",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Ezreal:0",
+          "text": "Cast Wind Wall when Ezreal shoots at you; it blocks Mystic Shot, Essence Flux and Trueshot Barrage.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 52, "end": 63 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 65, "end": 77 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Yasuo:Ezreal:1",
+          "text": "Ezreal is fragile, so take the fight to him. Dash in with Sweeping Blade through a minion once his Arcane Shift is used.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 58, "end": 72 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 99, "end": 111 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Yasuo:Ezreal:2",
+          "text": "Walk around while Ezreal is out of range to build your shield from Way of the Wanderer, then it absorbs his poke.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 18, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Yasuo-passive",
+              "start": 67,
+              "end": 86
+            },
+            { "kind": "keyword", "key": "poke", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Yasuo:Ezreal:3",
+          "text": "Stay behind minions so Ezreal's Mystic Shot stops on them, and step sideways to dodge his shots.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0f6f3038040ed3ccab740d8e5e855fa3b1356cb69b752fcea2e494a3087573a0",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Jhin:0",
+          "text": "Cast Wind Wall across the lane when Jhin fires Deadly Flourish; it blocks enemy projectiles, so his long shot never lands.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Jhin-W", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "adc:Yasuo:Jhin:1",
+          "text": "Hold Wind Wall for Jhin's Dancing Grenade and his final shot of Curtain Call too, since both are blockable projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Jhin", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Jhin-Q", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Jhin-R", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Yasuo:Jhin:2",
+          "text": "Walk in with Sweeping Blade right after Jhin fires his fourth shot; he must reload and cannot attack for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Jhin", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Yasuo:Jhin:3",
+          "text": "Step around Lotus Traps you suspect Jhin placed; they slow you and then explode. Dash through minions rather than into unseen ground.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Yasuo:Jhin:4",
+          "text": "Do not stay close to Jhin's allies' damage; once he has hit you, Deadly Flourish can leave you rooted, so keep Wind Wall ready.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Jhin-W", "start": 65, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 101 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 111, "end": 120 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "45bf775f1497ac2b6c36ad615f87e86443977877cbfb88c2dd6686b767669d8e",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Jinx:0",
+          "text": "Put Wind Wall in front of you when Jinx fires Zap! or her Super Mega Death Rocket!; it blocks both before they land.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Jinx", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Jinx-W", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Jinx-R", "start": 58, "end": 82 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Yasuo:Jinx:1",
+          "text": "Dash onto Jinx with Sweeping Blade when she is poking with rockets; her minigun needs time to ramp up, so close in fast.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Yasuo:Jinx:2",
+          "text": "Walk around the side of Flame Chompers! instead of through them; one that goes off roots you in place.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 24, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Yasuo:Jinx:3",
+          "text": "Stay out of a straight line with Jinx so Zap! misses; being hit leaves you slowed and easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jinx-W", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Yasuo:Jinx:4",
+          "text": "Engage right after Jinx wastes Flame Chompers!; with it on cooldown she has little to stop you reaching her.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Jinx-E", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "927ebac441556a6c2ed416413df0cde0cb17e04d3f8cb15cae8f40ba18054db6",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Kaisa:0",
+          "text": "Hit minions with Steel Tempest to build your stacks, then throw the whirlwind through the enemy and knock them up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Yasuo:Kaisa:1",
+          "text": "Put Wind Wall in front of you when Kai'Sa uses Void Seeker or her Icathian Rain; it destroys projectiles.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kaisa", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 47, "end": 58 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:Yasuo:Kaisa:2",
+          "text": "Do not dash in blindly with Sweeping Blade. Kai'Sa can hit you with Void Seeker, and a slow or stun while dashing knocks you down.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 28, "end": 42 },
+            { "kind": "champion", "key": "Kaisa", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Yasuo:Kaisa:3",
+          "text": "Look for her when she is alone. Kai'Sa is weaker without her team to stack Plasma, so go in on her then.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Kaisa", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:Yasuo:Kaisa:4",
+          "text": "Keep your Last Breath for when your teammate knocks Kai'Sa up, then dive her.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Kaisa", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "39b7d47670ba4b3c0b5065bb32f9600a35b8188d08b88ec261be56feb2199fb0",
+      "tips": [
+        {
+          "id": "adc:Yasuo:MissFortune:0",
+          "text": "Use Wind Wall to block Double Up and Make It Rain, especially when Miss Fortune is lining up a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 23,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 37,
+              "end": 49
+            },
+            { "kind": "champion", "key": "MissFortune", "start": 67, "end": 79 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "adc:Yasuo:MissFortune:1",
+          "text": "Dash onto her with Sweeping Blade through a minion, then use Steel Tempest. She is easy to kill once you reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Yasuo:MissFortune:2",
+          "text": "Hit her to cancel her Strut speed boost. Once it is gone she cannot easily run from you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 22,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "adc:Yasuo:MissFortune:3",
+          "text": "Hit minions with Steel Tempest to build stacks, then send the whirlwind at her. It knocks her up and can set up Last Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 112, "end": 123 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Yasuo:MissFortune:4",
+          "text": "Do not stand still in Make It Rain. Walk out of it quickly, since it slows you and hurts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 22,
+              "end": 34
+            },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Yasuo:MissFortune:5",
+          "text": "Leave the fight or use Wind Wall when Bullet Time starts. She cannot move while she channels it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 23, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 38,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "26824faf925ceff7948d6351a1ef9b32facc2171f27e21a9187df7801cc2821b",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Sivir:0",
+          "text": "Wait until Sivir's Spell Shield is used before you commit with Steel Tempest or Sweeping Blade. Blocked abilities heal her.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sivir-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 63, "end": 76 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Yasuo:Sivir:1",
+          "text": "Put up Wind Wall when Sivir throws Boomerang Blade at you. It stops the blade, and she loses a lot of mana.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 7, "end": 16 },
+            { "kind": "champion", "key": "Sivir", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Yasuo:Sivir:2",
+          "text": "Step sideways out of Boomerang Blade. If it hits you going out, stay out of its path as it comes back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Yasuo:Sivir:3",
+          "text": "Do not chase Sivir after she attacks you. Her Fleet of Foot speed burst makes her hard to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Sivir-passive",
+              "start": 46,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Yasuo:Sivir:4",
+          "text": "Look for a knock up from your support to use Last Breath. Sivir's Spell Shield will not stop it.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 45, "end": 56 },
+            { "kind": "champion", "key": "Sivir", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Sivir-E", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ffc63a72ebe09f81f1edab03e651b611c2104a3d9b32aa895dd8d67be31e759b",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Smolder:0",
+          "text": "Put Wind Wall in front of you when Smolder sneezes with Achooo!; it destroys the glob before it can slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Smolder", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Smolder-W", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Yasuo:Smolder:1",
+          "text": "Hold Wind Wall for Super Scorcher Breath too; the fireball is a projectile the wall can block.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 19, "end": 40 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Yasuo:Smolder:2",
+          "text": "Smolder is weak early, so trade hard while his Dragon Practice stacks are low. Fighting later lets him grow into a big threat.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 47,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Yasuo:Smolder:3",
+          "text": "Dash onto Smolder with Sweeping Blade, then use Steel Tempest mid-dash to hit in a circle around you.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 23, "end": 37 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Yasuo:Smolder:4",
+          "text": "Hit Smolder with the Steel Tempest whirlwind to knock him up so you can follow with Last Breath at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 84, "end": 95 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Yasuo:Smolder:5",
+          "text": "Do not stand in a straight line from Smolder; sidestep Steel Tempest-style, narrow shots by moving sideways, not backward.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "63762efef85282812a5819fc3be7f05cbcb561828e50093e775f4dea41d85a03",
+      "tips": [
+        {
+          "id": "adc:Yasuo:Yunara:0",
+          "text": "Put Wind Wall in front of you when Yunara throws her bead. It blocks projectiles, so you take no damage or slow from it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yunara", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "adc:Yasuo:Yunara:1",
+          "text": "Use Wind Wall against her basic attacks in a fight. They are projectiles, so the wall stops them.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Yasuo:Yunara:2",
+          "text": "Dash onto her with Sweeping Blade right after she has thrown her bead, then trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Yasuo:Yunara:3",
+          "text": "Stay out of a straight line with her bead, because it slows heavily on hit. Being slowed lets her attack freely.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Yasuo:Yunara:4",
+          "text": "Her Transcend One's Self lasts a short time. Back off and keep Wind Wall ready for the laser, then fight when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Yunara-R", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": [
+        {
+          "comboId": "adc:Yasuo:combo:0",
+          "note": "E-Q dash gives a circular Q that can knock up, but Yunara's slow-and-speed kit eases escaping it.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 51, "end": 57 }
+          ]
+        }
+      ]
+    }
+  ]
+}

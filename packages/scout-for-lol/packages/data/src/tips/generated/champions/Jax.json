@@ -1,0 +1,1935 @@
+{
+  "schemaVersion": 1,
+  "champion": "Jax",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "ffc05643a290edb5569995b6c5eda993943854676dae66c8d7837698395039d7",
+      "tips": [
+        {
+          "id": "top:Jax:general:0",
+          "text": "Use Leap Strike on a friendly minion or ward to close distance or escape when no enemy is near.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Jax:general:1",
+          "text": "Cast Empower just before Leap Strike so the jump lands with bonus magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Jax-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Jax:general:2",
+          "text": "Start Counter Strike when enemies are about to hit you in melee range. Recast it after they attack, and they get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 120 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Jax:general:3",
+          "text": "Keep attacking in longer trades; Relentless Assault speeds up Jax's attacks the longer he keeps hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 33, "end": 51 },
+            { "kind": "champion", "key": "Jax", "start": 62, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jax:general:4",
+          "text": "Use Grandmaster-at-Arms in a fight to gain Armor and Magic Resist, but only if it hits an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jax:general:5",
+          "text": "Counter Strike dodges basic attacks, so use it against enemies who rely on them. The more attacks you dodge, the harder the stun hits.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Jax:combo:0",
+          "name": "Ward jump escape",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Jax-Q" }],
+          "when": "When you need to escape a gank or disengage from a losing fight.",
+          "whenRefs": [],
+          "text": "Place a ward, or use an ally minion or ward, then Leap Strike to it. Jax can leap to friendly units and wards.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 50, "end": 61 },
+            { "kind": "champion", "key": "Jax", "start": 69, "end": 72 }
+          ]
+        },
+        {
+          "id": "top:Jax:combo:1",
+          "name": "Leap Strike with Empower",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Jax-W" },
+            { "kind": "ability", "key": "Jax-Q" },
+            "attack"
+          ],
+          "when": "When you engage an enemy champion in a trade.",
+          "whenRefs": [],
+          "text": "Cast Empower first, then Leap Strike so the Empower magic damage lands on the leap, then attack. Empower also resets your attack timer.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jax-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Jax-Q", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Jax-W", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Jax-W", "start": 97, "end": 104 }
+          ]
+        },
+        {
+          "id": "top:Jax:combo:2",
+          "name": "Counter Strike on engage",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Jax-E" },
+            { "kind": "ability", "key": "Jax-Q" }
+          ],
+          "when": "When an enemy is about to attack you, or you want to dodge their autos before leaping in.",
+          "whenRefs": [],
+          "text": "Start Counter Strike before they hit you to dodge their attacks, then leap in as the stun is about to go off. Each dodged attack boosts the damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jax-E", "start": 6, "end": 20 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "54f889f12b443ec1a6b4d18b7d73022920d75dcef269cf2aec7fc6f977df2c1f",
+      "tips": [
+        {
+          "id": "jungle:Jax:general:0",
+          "text": "Use Leap Strike on a friendly ward or minion to close distance or escape, and keep it ready for a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Jax:general:1",
+          "text": "Cast Empower just before Leap Strike so the jump lands with bonus magic damage, then keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Jax-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Jax:general:2",
+          "text": "Keep attacking without pausing so Relentless Assault builds his Attack Speed; stopping to walk around lets the stacks fade.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 34, "end": 52 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Jax:general:3",
+          "text": "Activate Counter Strike when enemy champions are about to hit you, then recast or wait for the stun. More dodged attacks means more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Jax:general:4",
+          "text": "Use Grandmaster-at-Arms in fights with several enemies. Hitting more champions gives Jax more resistances, and his attacks then trigger bonus damage faster.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 85, "end": 88 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Jax:general:5",
+          "text": "Start fights by jumping in with Leap Strike, then use Counter Strike once you are in melee range so the stun catches them.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 32, "end": 43 },
+            { "kind": "ability", "key": "Jax-E", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Jax:combo:0",
+          "name": "Ward jump escape",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Jax-Q" }],
+          "when": "When you need to escape or reposition and a friendly ward, minion or champion is nearby.",
+          "whenRefs": [],
+          "text": "Leap Strike can target friendly units and wards, so you can jump to one to get away or cross terrain. Place a ward first to plan an escape.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 }
+          ]
+        },
+        {
+          "id": "jungle:Jax:combo:1",
+          "name": "Dodge then stun",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Jax-E" }, "attack"],
+          "when": "When enemy melee champions or jungle monsters are about to attack you.",
+          "whenRefs": [],
+          "text": "Counter Strike dodges basic attacks. Keep it up for a while to build bonus damage, then recast to stun nearby enemies.",
+          "textRefs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "a2d9f92fa3ab2055287b4c94524019051d70622b8f6273c895e5cb92b14e9764",
+      "tips": [
+        {
+          "id": "top:Jax:Aatrox:0",
+          "text": "Use Counter Strike when Aatrox starts a basic attack; you dodge it, and the stun hits if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Jax:Aatrox:1",
+          "text": "Step out of the edges of The Darkin Blade; the tip of each swing knocks you up and hurts most.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Jax:Aatrox:2",
+          "text": "Leap Strike onto a minion or ward to get out of Infernal Chains before the pull lands.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Jax:Aatrox:3",
+          "text": "Trade with Empower and steady basic attacks so Relentless Assault builds; Jax wins long fights.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Jax-passive", "start": 47, "end": 65 },
+            { "kind": "champion", "key": "Jax", "start": 74, "end": 77 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ffec25f187f72dc0bc71c185a9912942108eab8e56a651e7de9916fb5d7934b1",
+      "tips": [
+        {
+          "id": "top:Jax:Briar:0",
+          "text": "Use Counter Strike when Briar jumps in with Blood Frenzy; she is forced to attack you, so you dodge her attacks and stun her when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Jax:Briar:1",
+          "text": "Hold Counter Strike for Head Rush or her attacks. Dodged attacks make the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Briar-Q", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Jax:Briar:2",
+          "text": "Trade in short bursts and step away. Jax's damage comes from consecutive attacks with Relentless Assault, so keep hitting her once she commits.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 37, "end": 40 },
+            { "kind": "ability", "key": "Jax-passive", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Jax:Briar:3",
+          "text": "Save Leap Strike for after she dashes in, or to reach a ward and get away from Certain Death.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Briar-R", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jax:Briar:4",
+          "text": "Once Briar is marked on you by Certain Death, use Grandmaster-at-Arms for the extra resistances and fight back instead of running.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Briar-R", "start": 31, "end": 44 },
+            { "kind": "ability", "key": "Jax-R", "start": 50, "end": 69 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:1",
+          "note": "Empower into Leap Strike gives Jax a strong trade when he engages Briar.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jax-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Jax", "start": 31, "end": 34 },
+            { "kind": "champion", "key": "Briar", "start": 66, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c7cc46b5dca6e7afb03917677b66584623ec9ac5149f12809619e929a7acafa1",
+      "tips": [
+        {
+          "id": "top:Jax:Darius:0",
+          "text": "Use Counter Strike when Darius commits to Crippling Strike or basic attacks; you dodge the attacks and stun him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Darius-W", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Jax:Darius:1",
+          "text": "Trade in short bursts and step away. Darius gets stronger the longer he keeps hitting you, so don't stand and brawl early.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Jax:Darius:2",
+          "text": "Stay out of Apprehend range when it is ready; being pulled in lets him hit you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Jax:Darius:3",
+          "text": "Once Apprehend is on cooldown, step in with Leap Strike and Empower for a quick trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Jax-Q", "start": 44, "end": 55 },
+            { "kind": "ability", "key": "Jax-W", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Jax:Darius:4",
+          "text": "Don't fight Darius at low health once he has many bleeds on you; Noxian Guillotine can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Darius-R", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jax:Darius:5",
+          "text": "Use Grandmaster-at-Arms in a fight for extra resistances. It also makes your extra damage hit more often.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "55dd4be0b4f99656a0d715eccacb9de5ed0267b45c6f769a04108b615d89c18d",
+      "tips": [
+        {
+          "id": "top:Jax:Fiora:0",
+          "text": "Cast Counter Strike when Fiora commits to a fight with attacks; she can't hurt you with basic attacks while you dodge, and she gets stunned when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 132, "end": 139 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Jax:Fiora:1",
+          "text": "Don't bother using Counter Strike against Riposte; Fiora's parry ignores it and her stab can turn the stun back on you.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Fiora-W", "start": 42, "end": 49 },
+            { "kind": "champion", "key": "Fiora", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Jax:Fiora:2",
+          "text": "Wait for Fiora to spend Riposte before you try to stun her. If it's ready, she blocks the stun and you get stunned instead.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Jax:Fiora:3",
+          "text": "Trade in short bursts and step back. Jax gets strong the longer he keeps attacking, so look for fights where Fiora can't easily break your Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 37, "end": 40 },
+            { "kind": "champion", "key": "Fiora", "start": 109, "end": 114 },
+            {
+              "kind": "ability",
+              "key": "Jax-passive",
+              "start": 139,
+              "end": 157
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jax:Fiora:4",
+          "text": "Hold Leap Strike as a way to close the gap or to escape. Fiora's Lunge is a blink-like dash, so don't spend your leap carelessly.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Fiora", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Jax:Fiora:5",
+          "text": "Use Grandmaster-at-Arms in a fight for the extra resistances and faster bonus damage, especially when Fiora is trying to burst you.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Fiora", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ac856f8ff3581cc4b732b9317a5363aa6626970eb59d22d5ff9e3b17b5dd222c",
+      "tips": [
+        {
+          "id": "top:Jax:Gangplank:0",
+          "text": "Cast Counter Strike when Gangplank shoots Parrrley or hits you; dodged attacks make the stun hit harder, so time it for when he is trading.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Jax:Gangplank:1",
+          "text": "Gangplank can cleanse your stun with Remove Scurvy, so wait for it to be used before you commit to an all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Jax:Gangplank:2",
+          "text": "Jump on Gangplank with Leap Strike and keep hitting him; Relentless Assault builds attack speed the longer you attack, so don't trade in short pokes.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Jax-Q", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Jax-passive", "start": 57, "end": 75 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Jax:Gangplank:3",
+          "text": "Fight away from his Powder Keg. An explosion slows you and hurts, and he can chain several kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 20, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jax:Gangplank:4",
+          "text": "Gangplank's ultimate can reach anywhere once he hits level 6, so finish fights fast and avoid staying low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5aeea7a4768237bcbd6f4b5866c38320a4188252c2628b2e001914c7f399fde7",
+      "tips": [
+        {
+          "id": "top:Jax:Garen:0",
+          "text": "Use Counter Strike when Garen commits to a trade; it dodges his basic attacks, and the stun lands when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Jax:Garen:1",
+          "text": "Garen's Decisive Strike empowers his next attack, so back off or dodge it with Counter Strike rather than taking it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Jax-E", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Jax:Garen:2",
+          "text": "Garen's Judgment is a spin, not a basic attack, so Counter Strike does not dodge it. Step out of range instead.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-E", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "Jax-E", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Jax:Garen:3",
+          "text": "Trade in short bursts with Empower and Leap Strike, then step away. Garen heals when he goes unhit.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Jax-Q", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "Garen", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jax:Garen:4",
+          "text": "Stay healthy once you hit level 6. Demacian Justice finishes low-health targets quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b3b23568973a327e2e2a2a0e1b21968ce690ebb006c190addd24556a43987a7f",
+      "tips": [
+        {
+          "id": "top:Jax:Jayce:0",
+          "text": "Use Leap Strike on Jayce the moment he swaps to Cannon stance; his ranged form is weak when you are on top of him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Jax:Jayce:1",
+          "text": "Cast Counter Strike when Jayce goes for basic attacks in Hammer form. It dodges them, then stuns him for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Jax:Jayce:2",
+          "text": "Keep hitting him without pause so Relentless Assault builds. Trade in one long fight instead of short pokes, where he is stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 34, "end": 52 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Jax:Jayce:3",
+          "text": "Play safe in the early levels and avoid his long-range pokes. Wait until you have Grandmaster-at-Arms to fight him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 82, "end": 101 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Jax:Jayce:4",
+          "text": "Do not stand in a line from Jayce. Shock Blast stops at the first enemy it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges Jayce's basic attacks, so the stun and leap can punish him as he pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "bd8516a22e36830850afdbd8933d76e312e89435732eb3dfa69f28935b104810",
+      "tips": [
+        {
+          "id": "top:Jax:KSante:0",
+          "text": "Keep Counter Strike for when K'Sante is about to hit you with basic attacks; dodging them makes the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Jax:KSante:1",
+          "text": "Trade in short bursts with Leap Strike and Empower, then step away before K'Sante's Ntofo Strikes lands a second time.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 27, "end": 38 },
+            { "kind": "ability", "key": "Jax-W", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "KSante", "start": 74, "end": 81 },
+            { "kind": "ability", "key": "KSante-Q", "start": 84, "end": 97 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Jax:KSante:2",
+          "text": "Expect K'Sante to be much squishier once he goes All Out, so fight him then, and use Counter Strike to avoid his attacks.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "KSante-R", "start": 49, "end": 56 },
+            { "kind": "ability", "key": "Jax-E", "start": 85, "end": 99 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Jax:KSante:3",
+          "text": "Do not stand in a straight line from K'Sante near a wall; All Out can throw you over it.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "KSante-R", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges K'Sante's basic attacks, which his abilities mark for extra damage, before Leap Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "KSante", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Jax-Q", "start": 97, "end": 108 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a017645c447fe50d16734a8eda9781a1b938fd1100f6a83951b026bd708844e",
+      "tips": [
+        {
+          "id": "top:Jax:Malphite:0",
+          "text": "Use Counter Strike when Malphite walks up to attack you; you dodge his basic attacks and the stun lands when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jax:Malphite:1",
+          "text": "Thunderclap's empowered attack and its cone are still dodged by Counter Strike, so time your stance for when he swings.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Jax-E", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Jax:Malphite:2",
+          "text": "Malphite has no fast way to stop your dash, so use Leap Strike to close in after his Seismic Shard is spent.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Jax-Q", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Jax:Malphite:3",
+          "text": "Stay out of range when his Unstoppable Force is ready at level 6; being knocked up leaves you open to his full combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 27, "end": 44 },
+            { "kind": "keyword", "key": "knocked-up", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Jax:Malphite:4",
+          "text": "Keep attacking in long chains with Relentless Assault; Ground Slam cuts your Attack Speed, so trade away from it or wait for it to run out.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Malphite-E", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jax:Malphite:5",
+          "text": "Use Grandmaster-at-Arms in a fight for the extra resistances; his damage is mostly magic and physical.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6ba0ae7dece974e66956cc8c36fb44356590e02a96ff5a4980c6a03cea7811f6",
+      "tips": [
+        {
+          "id": "top:Jax:Mordekaiser:0",
+          "text": "Cast Counter Strike when Mordekaiser walks up to attack you; he wastes his basic attacks and then gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 25,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Jax:Mordekaiser:1",
+          "text": "Sidestep Death's Grasp; it pulls you toward him, so stay out of his line.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-E", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Jax:Mordekaiser:2",
+          "text": "Trade in short bursts and step away once Darkness Rise turns on, because its aura keeps hurting you while you stay close.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 41,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jax:Mordekaiser:3",
+          "text": "Before you fight, expect Realm of Death at level 6. Save Leap Strike to a ward or minion for an escape once you are back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 25,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Jax-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Jax:Mordekaiser:4",
+          "text": "Hit Obliterate bait: stay near minions so it hits several targets, which makes it weaker than on you alone.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8246029d37a0de8c3848f5e86d2a4dfd387405fe19501f729cec0f66276b2f0d",
+      "tips": [
+        {
+          "id": "top:Jax:Rumble:0",
+          "text": "Jump on Rumble with Leap Strike when his Heat is high or he is Overheating, then trade freely while he cannot cast spells.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Jax-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Jax:Rumble:1",
+          "text": "Use Counter Strike when Rumble is about to attack or fire Flamespitter; every attack you dodge makes the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rumble", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Jax:Rumble:2",
+          "text": "Keep Rumble in short trades and keep attacking; Relentless Assault builds with each consecutive hit, so Jax wins the longer fight up close.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Jax-passive", "start": 48, "end": 66 },
+            { "kind": "champion", "key": "Jax", "start": 104, "end": 107 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Jax:Rumble:3",
+          "text": "Step out of the burning trail from The Equalizer instead of fighting inside it; it keeps you slowed and hurts every moment you stay.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 35, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Jax:Rumble:4",
+          "text": "Use Grandmaster-at-Arms in a fight against Rumble; the extra resistances help against his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Rumble", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:0",
+          "note": "Ward-jumping with Leap Strike gets Jax out of range when Rumble's Equalizer trail and slows pin him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Jax", "start": 35, "end": 38 },
+            { "kind": "champion", "key": "Rumble", "start": 57, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f698d3e6978a4ed5c2db948b6ce58c86c266f6d487c0f3b1668d5687c9c82e86",
+      "tips": [
+        {
+          "id": "top:Jax:Sion:0",
+          "text": "Use Counter Strike when Sion walks in to attack. It dodges his basic attacks and stuns him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Jax:Sion:1",
+          "text": "Stay out of Decimating Smash's line, since a long charge stuns for a long time. Jump away with Leap Strike to a minion or ward if you are caught.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Jax-Q", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Jax:Sion:2",
+          "text": "Watch for Roar of the Slayer; it often sets up his big Decimating Smash. Sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Sion-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jax:Sion:3",
+          "text": "Trade with Empower and your attacks while Sion's Soul Furnace shield is down; Relentless Assault builds your attack speed as you hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 11, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Sion-W", "start": 49, "end": 61 },
+            { "kind": "ability", "key": "Jax-passive", "start": 78, "end": 96 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Jax:combo:2",
+          "note": "Counter Strike dodges Sion's basic attacks, then Leap Strike closes the gap onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Jax-Q", "start": 49, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "9f0a672886916f659a7f08824e6add346141779723339f527eab685567740bc3",
+      "tips": [
+        {
+          "id": "top:Jax:Teemo:0",
+          "text": "Don't trade with Teemo while he is blinding you. Wait out Blinding Dart before you go in for the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Jax:Teemo:1",
+          "text": "Use Counter Strike when Teemo tries to attack you; you dodge his attacks and stun him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Jax:Teemo:2",
+          "text": "Leap Strike onto Teemo and follow up with Empower; once you are on him, stay on him because he is weak up close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Jax-W", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Jax:Teemo:3",
+          "text": "Watch for bushes and stealthed mushrooms before you step in or leap. Stepping on a Noxious Trap leaves you slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 83, "end": 95 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jax:Teemo:4",
+          "text": "Don't leap into a bush where Teemo might be hiding. Guerrilla Warfare makes him invisible there even while moving.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 52,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jax:Teemo:5",
+          "text": "Don't walk up and back out of range of Teemo; Toxic Shot poison keeps ticking on you. Commit to the fight or stay away.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Teemo-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c66143aa7b3d6e2929df38e62891ac62d815226601482784624592489862f45",
+      "tips": [
+        {
+          "id": "top:Jax:Vayne:0",
+          "text": "Close the gap with Leap Strike, then fight her up close; Vayne is fragile and has to play cautiously once you are on top of her.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 19, "end": 30 },
+            { "kind": "champion", "key": "Vayne", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Jax:Vayne:1",
+          "text": "Use Counter Strike when she commits to attacking you. It dodges her basic attacks and stuns her when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jax:Vayne:2",
+          "text": "Stay away from walls when Condemn is ready. Being knocked into one stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jax:Vayne:3",
+          "text": "Keep attacking her without breaks. Relentless Assault builds your Attack Speed, and Empower adds extra magic damage to your first hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Jax-W", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "82c357af556c736040903dc468d1e3fd8eec3539332d38502b9135a94c7aeaa3",
+      "tips": [
+        {
+          "id": "top:Jax:Yone:0",
+          "text": "Use Counter Strike when Yone starts auto-attacking you; you dodge those attacks and the stun hits him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Jax:Yone:1",
+          "text": "Leap Strike onto a minion to close the gap, then use Empower on your first hit. Yone has no easy way to stop you from reaching him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Jax-W", "start": 53, "end": 60 },
+            { "kind": "champion", "key": "Yone", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Jax:Yone:2",
+          "text": "Trade in short bursts and keep hitting him. Jax's damage rises with every consecutive attack through Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 44, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Jax-passive",
+              "start": 101,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Jax:Yone:3",
+          "text": "When Yone dashes in with his wind wave, you can still cast Counter Strike. Do it early, before he knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Jax-E", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Jax:Yone:4",
+          "text": "At level 6, use Grandmaster-at-Arms in a fight to gain resistances and make your hits stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "733b23c306d633f2aa5093c70a12115fe1babcb67b94fd75615e80416e419c77",
+      "tips": [
+        {
+          "id": "jungle:Jax:Graves:0",
+          "text": "Use Counter Strike when Graves tries to attack you; you dodge his basic attacks, and his shotgun shots are basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Jax:Graves:1",
+          "text": "Jump on Graves with Leap Strike as he is reloading, then keep hitting him so your Attack Speed builds.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Jax-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Jax:Graves:2",
+          "text": "Stay in melee range and keep attacking him. Fight Graves up close and avoid chasing him through his Smoke Screen.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Graves-W", "start": 100, "end": 112 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Jax:Graves:3",
+          "text": "Hit the Empower attack first, then Leap Strike in; Graves cannot reload fast enough to punish a committed Jax.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-W", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Jax-Q", "start": 35, "end": 46 },
+            { "kind": "champion", "key": "Graves", "start": 51, "end": 57 },
+            { "kind": "champion", "key": "Jax", "start": 106, "end": 109 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Jax:Graves:4",
+          "text": "Use Grandmaster-at-Arms in a fight to gain Armor, since Graves deals mostly physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Graves", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Graves' basic attacks, and his shotgun pellets are basic attacks.",
+          "refs": [{ "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 }]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ce314ed5aed8dfd6851719c329c31451ab5b253c13e119823a4429a7a7eaa9b0",
+      "tips": [
+        {
+          "id": "jungle:Jax:JarvanIV:0",
+          "text": "Use Counter Strike when Jarvan IV walks in to attack; he hits nothing and you stun him afterward. Stay in it long enough to dodge a few attacks first.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "JarvanIV", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Jax:JarvanIV:1",
+          "text": "Keep out of the line between Jarvan IV and his Demacian Standard; Dragon Strike pulls him along it and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 47, "end": 64 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Jax:JarvanIV:2",
+          "text": "Hold Leap Strike for when Jarvan IV uses Cataclysm; it can still get you out or onto an ally or ward.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "JarvanIV", "start": 26, "end": 35 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Jax:JarvanIV:3",
+          "text": "In a long fight, keep attacking without pause so Relentless Assault builds up. Jarvan IV wins by hitting you and leaving, so don't chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 49, "end": 67 },
+            { "kind": "champion", "key": "JarvanIV", "start": 79, "end": 88 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Jax:JarvanIV:4",
+          "text": "Use Grandmaster-at-Arms when you are caught inside his Cataclysm ring; the extra Armor and Magic Resist help you win the cramped fight.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2b096511963bee761d706fea9ed97c75dad645b6466a4be8a83d7d96274e7aec",
+      "tips": [
+        {
+          "id": "jungle:Jax:Kayn:0",
+          "text": "Use Counter Strike when Kayn commits to a fight; he loses his basic attacks, and the stun lands when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Jax:Kayn:1",
+          "text": "Stay out of Blade's Reach when you can; Kayn needs to damage you first before Umbral Trespass can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Kayn", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Kayn-R", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Jax:Kayn:2",
+          "text": "When Kayn flees through a wall with Shadow Step, hit him with Leap Strike or Counter Strike; damage or a stun cuts it short.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kayn-E", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Jax-Q", "start": 62, "end": 73 },
+            { "kind": "ability", "key": "Jax-E", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Jax:Kayn:3",
+          "text": "Keep attacking in a row once a fight starts, so Relentless Assault builds up your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 48, "end": 66 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Kayn's basic attacks, and its stun can interrupt a melee brawl.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Kayn", "start": 22, "end": 26 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "22a26338a936a368f3f6638646667aa6337c42e2f01443c6c393257fa966878b",
+      "tips": [
+        {
+          "id": "jungle:Jax:Khazix:0",
+          "text": "Stay near your minions or allies when Kha'Zix is around; Taste Their Fear hits far harder on anyone isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "isolated", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Jax:Khazix:1",
+          "text": "Use Counter Strike when Kha'Zix jumps on you. He dodges his basic attacks, and the stun hits him as it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Jax:Khazix:2",
+          "text": "Fight him when Leap is on cooldown. He has a hard time escaping you then, and you can chase with Leap Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Khazix-E", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Jax:Khazix:3",
+          "text": "Trade in long fights, not short ones. Relentless Assault makes Jax's attacks faster the longer he keeps hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 38, "end": 56 },
+            { "kind": "champion", "key": "Jax", "start": 63, "end": 66 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Jax:Khazix:4",
+          "text": "Use Grandmaster-at-Arms when he dives in; it adds resistances if it hits him and makes your attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks, then stuns nearby enemies, which helps when Kha'Zix closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 81, "end": 88 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ecdab5776a46a70f6655c6655c88793357e0017507aa4c24c016dbfedaa26383",
+      "tips": [
+        {
+          "id": "jungle:Jax:Kindred:0",
+          "text": "Jump on Kindred with Leap Strike when she is away from her teammates. She is fragile, so a fast jump and quick burst can force her to back off.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Jax-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Jax:Kindred:1",
+          "text": "Use Counter Strike when Kindred's shots are about to land on you. It dodges basic attacks, so her Mounting Dread pounce can be avoided if you time it well.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Kindred-E", "start": 98, "end": 112 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Jax:Kindred:2",
+          "text": "Stay out of Wolf's Frenzy when you can, or kill Kindred quickly inside it. Wolf bites you while you are in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Kindred", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Jax:Kindred:3",
+          "text": "Do not chase a low-health Kindred into Lamb's Respite. Nobody can die inside it, so back off and come back when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Kindred-R", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8274c7a5b345582a0442ad009a1130c46310f3e98141c4dff8abc93c971763a9",
+      "tips": [
+        {
+          "id": "jungle:Jax:LeeSin:0",
+          "text": "Use Counter Strike when Lee Sin dives on you; his basic attacks are dodged and the stun that follows catches him in melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Jax:LeeSin:1",
+          "text": "Lee Sin leans on his abilities to fight, so trade in short bursts and keep your basic attacks going to build Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Jax-passive",
+              "start": 109,
+              "end": 127
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Jax:LeeSin:2",
+          "text": "Lee Sin is weaker against magic damage, so open with Empower on your first attack or Leap Strike.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jax-W", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Jax-Q", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Jax:LeeSin:3",
+          "text": "Leap Strike onto a ward or minion to close distance or escape after Lee Sin slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "LeeSin", "start": 68, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Jax:LeeSin:4",
+          "text": "Cast Grandmaster-at-Arms when you fight him up close for extra defense, and so your attacks trigger its bonus damage sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 5, "end": 24 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Lee Sin's basic attacks, including his Flurry-empowered ones, then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d6b7759efec603662c744d0843d042b4f106965457f3edd028365a7c955d67ae",
+      "tips": [
+        {
+          "id": "jungle:Jax:MasterYi:0",
+          "text": "Activate Counter Strike when Master Yi jumps on you; his basic attacks are dodged, and the stun and damage hit him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "MasterYi", "start": 29, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Jax:MasterYi:1",
+          "text": "Use Grandmaster-at-Arms when Master Yi dives in; the armor and magic resist make his physical attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "MasterYi", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Jax:MasterYi:2",
+          "text": "Stun Master Yi with Counter Strike while Highlander is on; it stops stuns even though he ignores slows.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Jax-E", "start": 20, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Jax:MasterYi:3",
+          "text": "Hit Master Yi hard when Alpha Strike is on cooldown; he has no easy escape then. Leap Strike keeps you on him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Jax-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d47bbf8d8a8933c9b6ef913632080729fced906dcfa252807002f1b8bbdb4031",
+      "tips": [
+        {
+          "id": "jungle:Jax:Naafiri:0",
+          "text": "Use Counter Strike when Naafiri and her packmates all attack you; every attack you dodge makes the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Jax:Naafiri:1",
+          "text": "Save Leap Strike to chase when Naafiri backs off, or to jump onto a ward or ally to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Jax:Naafiri:2",
+          "text": "Keep hitting her. Relentless Assault builds your Attack Speed, so stay on her instead of poking in and out.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 18, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Jax:Naafiri:3",
+          "text": "Use Grandmaster-at-Arms when her packmates join the fight; it hurts everyone nearby and gives you extra resistances if it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks from Naafiri and her melee packmates, then stuns them nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 41, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "446023be61e7230461cef6872948f6d4c4a689c8f8ecaa0af2767e378c32632c",
+      "tips": [
+        {
+          "id": "jungle:Jax:Nocturne:0",
+          "text": "Hold Counter Strike for when Nocturne commits to hitting you; he cannot hit you while you dodge, and you stun him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Jax:Nocturne:1",
+          "text": "Do not walk up to Nocturne while Shroud of Darkness is ready. It blocks your next ability, such as Leap Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 33, "end": 51 },
+            { "kind": "ability", "key": "Jax-Q", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Jax:Nocturne:2",
+          "text": "Bait out Shroud of Darkness with a cheap ability first, then use Leap Strike once it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Jax-Q", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Jax:Nocturne:3",
+          "text": "When Nocturne casts Paranoia, stay near your team instead of wandering alone. He can dash onto you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Jax:Nocturne:4",
+          "text": "Use Counter Strike as Nocturne's Paranoia dash lands; his hit is a basic attack's worth of damage you can dodge only if you time it, so start it early.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a2defd641cad12f6bf118ca01a07930a907a4ff9a02ceb63759a5986a7c01709",
+      "tips": [
+        {
+          "id": "jungle:Jax:Shyvana:0",
+          "text": "Wait out Counter Strike's dodge before you hit Shyvana's Emberstrike attacks; if she keeps swinging into the stance, you take less and the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Shyvana", "start": 47, "end": 54 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 57, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 139, "end": 143 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Jax:Shyvana:1",
+          "text": "Use Counter Strike when Shyvana is about to attack you; her basic attacks are dodged and make the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Jax:Shyvana:2",
+          "text": "Fight in short bursts and keep attacking her. Relentless Assault builds up only while you keep hitting, so don't let her kite you or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Jax:Shyvana:3",
+          "text": "Pop Grandmaster-at-Arms once she dives in or you trade; its armor and magic resist help against her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Jax:Shyvana:4",
+          "text": "Leap Strike onto a ward or minion to escape when Shyvana is in Dragon Form and has you slowed by Molten Burst.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Shyvana", "start": 49, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 97, "end": 109 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "53c17c1eebd9a2466da4da5465c5c018c05907ea65116a8282deb8a887b41063",
+      "tips": [
+        {
+          "id": "jungle:Jax:Skarner:0",
+          "text": "Hold Counter Strike for when Skarner commits to hitting you; he cannot hurt you with basic attacks while you dodge, and the stun comes right after.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 124, "end": 128 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Jax:Skarner:1",
+          "text": "Skarner's Shattered Earth empowered attacks can be dodged, so Counter Strike is strong when he starts his boulder attacks on you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Jax-E", "start": 62, "end": 76 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Jax:Skarner:2",
+          "text": "Do not stand still against Ixtal's Impact; a stun can stop his charge, and Counter Strike gives you one if he runs into you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 27, "end": 41 },
+            { "kind": "ability", "key": "Jax-E", "start": 75, "end": 89 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Jax:Skarner:3",
+          "text": "Fight him in short bursts and keep attacking; Relentless Assault builds your Attack Speed, so a long chase on him is hard to win.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-passive", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Jax:Skarner:4",
+          "text": "Use Leap Strike on a ward or minion to get out of his reach before Impale lands, and stay away from walls when he charges.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Skarner-R", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Skarner's empowered basic attacks, and the recast stun hits him if he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dd20e830c94b970439f1673e877f06653ae410e42bdf629dac455dde1ea0ea8b",
+      "tips": [
+        {
+          "id": "jungle:Jax:Sylas:0",
+          "text": "Use Counter Strike when Sylas commits to a fight; he dodges his basic attacks and the stun lands when he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Jax:Sylas:1",
+          "text": "Save Leap Strike to close the gap when Sylas backs off, or to jump to a ward and escape his chains.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Jax:Sylas:2",
+          "text": "Hit Sylas with a few basic attacks in a row; Relentless Assault builds your Attack Speed, so keep chasing and don't stop attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jax-passive", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jax:Sylas:3",
+          "text": "Fight with Grandmaster-at-Arms up when you trade; it makes you much tougher and adds extra magic damage to your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 11, "end": 30 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges Sylas's basic attacks, including the Petricite Burst-empowered ones, then stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "602d9bd5a34ef8539a13ba2a260aec596b8076931a9e63e82f41889cd15b3f2e",
+      "tips": [
+        {
+          "id": "jungle:Jax:Talon:0",
+          "text": "Walk up to Talon with Counter Strike active when he commits; his basic attacks are dodged and he gets stunned when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Jax-E", "start": 22, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Jax:Talon:1",
+          "text": "Keep attacking Talon without pause; Relentless Assault makes you much stronger in a longer fight, so do not poke and back off.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Jax-passive", "start": 36, "end": 54 },
+            { "kind": "keyword", "key": "poke", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Jax:Talon:2",
+          "text": "Use Leap Strike to close the gap when Talon is slowed or after he uses his dash, then follow with Empower for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Jax-W", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Jax:Talon:3",
+          "text": "Save Grandmaster-at-Arms for when Talon dives in; the armor and magic resist help you survive his physical burst.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Jax:Talon:4",
+          "text": "Fight Talon while Shadow Assault is on cooldown; he has a hard time escaping you then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Jax:combo:1",
+          "note": "Counter Strike dodges basic attacks, including the Wound-stack attack that triggers Talon's bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 84, "end": 89 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fb1b669aa681ba6477582e39232cd41b870663b6bde51844c659dab37f4ece6",
+      "tips": [
+        {
+          "id": "jungle:Jax:Viego:0",
+          "text": "Hold Counter Strike for when Viego commits to attacking you. It dodges his basic attacks, then stuns him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jax:Viego:1",
+          "text": "Keep hitting Viego without pause so Relentless Assault builds your Attack Speed. Break off if he stuns or slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Jax-passive", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jax:Viego:2",
+          "text": "Jump in with Leap Strike, then use Empower on your first attack for extra magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-Q", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Jax-W", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Jax:Viego:3",
+          "text": "Use Grandmaster-at-Arms once you are in the fight. It gives you extra Armor and Magic Resist, and your bonus damage lands more often.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-R", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ab88c0cf69d15cf2001f26d39a54c2bd1f596b329558e0353344c590f3d7d7e4",
+      "tips": [
+        {
+          "id": "jungle:Jax:XinZhao:0",
+          "text": "Use Counter Strike when Xin Zhao starts attacking you. Each dodged attack makes the stun hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Jax:XinZhao:1",
+          "text": "Expect Audacious Charge to land even through Counter Strike. Don't rely on dodging it.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-E", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Jax-E", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Jax:XinZhao:2",
+          "text": "Don't stand in a straight line from Xin Zhao. Wind Becomes Lightning slows you and marks you, so his charge reaches farther.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 46, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Jax:XinZhao:3",
+          "text": "Break up his Three Talon Strike combo by stepping out of range or using Leap Strike away. The third hit knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Jax-Q", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

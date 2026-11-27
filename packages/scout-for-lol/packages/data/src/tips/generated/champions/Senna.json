@@ -1,0 +1,2900 @@
+{
+  "schemaVersion": 1,
+  "champion": "Senna",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "84114159f53b201de497e8910b4ac347d94d83720d3d3670484feb291350aa74",
+      "tips": [
+        {
+          "id": "adc:Senna:general:0",
+          "text": "Hit enemies with Piercing Darkness between your attacks; each attack shortens its cooldown, and it slows enemies so you can keep poking.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Senna:general:1",
+          "text": "Fire Piercing Darkness through an ally or enemy to heal your teammate. It also hits whatever is in the line behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 5, "end": 22 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Senna:general:2",
+          "text": "Aim Last Embrace at an enemy and keep it for when they close in. It hits the first enemy in its path, then roots them and anyone nearby after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Senna:general:3",
+          "text": "Collect the souls left by dying minions and champions with Absolution. Each one makes you hit harder and reach farther.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Senna-passive",
+              "start": 59,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Senna:general:4",
+          "text": "Use Curse of the Black Mist to walk up on enemies unseen, or to escape when a fight goes wrong. Allies who step into the mist get hidden too.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Senna:general:5",
+          "text": "Use Dawning Shadow from anywhere on the map to finish off a fleeing enemy or to shield allies in a fight far from you.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Senna:general:6",
+          "text": "Stay at the edge of your long attack range and chip at enemies. Their marked health drops with every second hit, so keep attacking the same target.",
+          "refs": [],
+          "pWrong": 0.42
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Senna:combo:0",
+          "name": "Q through minion",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Senna-Q" }],
+          "when": "Trading in lane when an enemy stands behind a minion or an ally.",
+          "whenRefs": [],
+          "text": "Target a minion or an ally and the shot still pierces on to the enemy behind. This lets you slow and poke them, or heal an ally, in a single cast.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "173d39606775892dfe84ff44a53aab40cc86917552177877558ebb77a110e8dd",
+      "tips": [
+        {
+          "id": "support:Senna:general:0",
+          "text": "Aim Last Embrace at the enemy you most want to catch; it roots them after a short delay, so cast it when they are walking toward you or stuck in place.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:general:1",
+          "text": "Use Piercing Darkness on an ally to heal them and on an enemy to hurt and slow them. It can hit a target behind your first one.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Senna:general:2",
+          "text": "Auto-attack between spells; each attack shortens the cooldown of Piercing Darkness, so you can use it more often.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:general:3",
+          "text": "Attack the souls that appear when units die near you. Each one frees Mist, which makes your attacks hit harder and reach farther.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Senna:general:4",
+          "text": "Hit enemy champions twice in a row with attacks or spells to trigger Absolution's bonus damage and gain Mist.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Senna-passive",
+              "start": 69,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Senna:general:5",
+          "text": "Use Curse of the Black Mist to approach or leave a fight unseen. Allies who walk into the cloud also become hidden.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Senna:general:6",
+          "text": "Fire Dawning Shadow from anywhere on the map to shield allies in a fight you are not in, or to hit enemies who are lined up.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:general:7",
+          "text": "Hit enemy champions with Dawning Shadow when they are lined up in a fight. It passes through everyone in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Senna:combo:0",
+          "name": "Q through minion",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Senna-Q" }],
+          "when": "When an enemy is behind a minion or an ally and you want to poke from past your normal range.",
+          "whenRefs": [],
+          "text": "Piercing Darkness pierces through whatever it targets. Aim it at a minion or ally so the beam also hits the enemy champion behind it.",
+          "textRefs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "9ecfc25ab5c19dd3b571894aacfd669760de01a5f759c762e90b9828975db6bb",
+      "tips": [
+        {
+          "id": "adc:Senna:Ashe:0",
+          "text": "Poke Ashe with Piercing Darkness when she goes for a last-hit; it hits through minions and slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Senna-Q", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Senna:Ashe:1",
+          "text": "Land Last Embrace on Ashe, then punish her while she is rooted; she has few ways to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ashe", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Senna:Ashe:2",
+          "text": "Stay away from the line of Volley, and keep minions between you and Ashe so they absorb the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 27, "end": 33 },
+            { "kind": "champion", "key": "Ashe", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Senna:Ashe:3",
+          "text": "Watch for Enchanted Crystal Arrow before roaming alone; when it is on cooldown, you are much safer.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 10, "end": 33 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Q through a minion pokes Ashe, who has no listed ability that blocks or stops it.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 34, "end": 38 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2e845e0b26b94d60dc49be5966b98a7a90ef1f9cc5eab21a343d003a2d3cf8ef",
+      "tips": [
+        {
+          "id": "adc:Senna:Caitlyn:0",
+          "text": "Hit Caitlyn with Piercing Darkness through a minion to slow her, then step in and attack while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Senna-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Senna:Caitlyn:1",
+          "text": "Land Last Embrace on Caitlyn when she is out of position. Her only quick escape is her net, which needs time to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Caitlyn", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Senna:Caitlyn:2",
+          "text": "Walk around Yordle Snap Trap. If you are rooted by it, Caitlyn gets a long-range Headshot on you.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 47 },
+            { "kind": "champion", "key": "Caitlyn", "start": 55, "end": 62 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 81,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Senna:Caitlyn:3",
+          "text": "Stay behind minions when Piltover Peacemaker is coming, because it does less damage to each target after the first.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 25, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Senna:Caitlyn:4",
+          "text": "Collect the Mist Wraiths after kills. Each one extends your range, so you fall behind Caitlyn less over time.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Senna:Caitlyn:5",
+          "text": "Stand in the path of Ace in the Hole to block it when Caitlyn aims at your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Caitlyn", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Q pierces through a minion to slow and poke Caitlyn, who outranges lane trades with her rifle.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 44, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "87cacb0b09154d7abda06456314a1d94ecfc44834ffd7083bef7d075c664d3a9",
+      "tips": [
+        {
+          "id": "adc:Senna:Ezreal:0",
+          "text": "Aim Last Embrace at Ezreal when he has nowhere to go. If Arcane Shift is down, the root will set up your team's follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 57, "end": 69 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Senna:Ezreal:1",
+          "text": "Stay behind minions. Mystic Shot hits the first enemy in its path, so a minion in front of you soaks it up.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Senna:Ezreal:2",
+          "text": "Use Piercing Darkness on Ezreal to slow him, then hit him with attacks. He then struggles to line up shots or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Senna:Ezreal:3",
+          "text": "Free the souls from Absolution when it is safe. The extra range lets you outpoke Ezreal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Senna-passive",
+              "start": 20,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Senna:Ezreal:4",
+          "text": "Ezreal is fragile, so take the fight to him once his Arcane Shift is used.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a098762651d2f51b0cee4296d6d91523b786a6c0652582623ff50a2e7f5972e2",
+      "tips": [
+        {
+          "id": "adc:Senna:Jhin:0",
+          "text": "Poke Jhin with Piercing Darkness; it slows him and its cooldown drops when you attack.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Senna-Q", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Senna:Jhin:1",
+          "text": "Jhin can't attack while reloading after his fourth shot. Jump on him with Last Embrace then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Senna-W", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Senna:Jhin:2",
+          "text": "Jhin's Deadly Flourish roots you only if you were recently damaged. Stay out of his line and avoid taking chip damage first.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-W", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Senna:Jhin:3",
+          "text": "Watch bushes and chokepoints for Jhin's hidden Captive Audience traps. Don't walk into them while chasing.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-E", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Senna:Jhin:4",
+          "text": "Use Curse of the Black Mist to approach unseen or to escape when Jhin lines up Curtain Call.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Jhin", "start": 65, "end": 69 },
+            { "kind": "ability", "key": "Jhin-R", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness through a minion still reaches Jhin behind it, slowing him so he's easier to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Jhin", "start": 49, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "74528b7e99f87b70632cbda5734c2afffa870ffda817dfaf0a9842a3a997ee3b",
+      "tips": [
+        {
+          "id": "adc:Senna:Jinx:0",
+          "text": "Hit Jinx with Last Embrace when she steps forward to last-hit; the root keeps her in place for your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Senna-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Senna:Jinx:1",
+          "text": "Jinx's Flame Chompers! are her main escape, so go in on her when she wastes them.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jinx-E", "start": 7, "end": 22 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Senna:Jinx:2",
+          "text": "Use Piercing Darkness to hit Jinx from range; it slows her and shoots through the minions in front.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jinx", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Senna:Jinx:3",
+          "text": "Jump on Jinx while she is poking with rockets, before her minigun ramps up.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Senna:Jinx:4",
+          "text": "Stay out of Zap! range or step behind minions; it hits the first enemy and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1926f37b1e17d17dfc77afd917d4c74d27988ed273cfbb12d6606c7037d2964f",
+      "tips": [
+        {
+          "id": "adc:Senna:Kaisa:0",
+          "text": "Use Last Embrace on Kai'Sa when she steps up to trade. The root holds her still for your Piercing Darkness and attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kaisa", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Senna-Q", "start": 89, "end": 106 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Senna:Kaisa:1",
+          "text": "Out-range Kai'Sa and poke her with attacks and Piercing Darkness. She has to walk into your range to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Senna-Q", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Senna:Kaisa:2",
+          "text": "Stay near your ADC. Killer Instinct lets Kai'Sa jump onto anyone with Plasma, so don't stand alone once she has hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 20, "end": 35 },
+            { "kind": "champion", "key": "Kaisa", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Senna:Kaisa:3",
+          "text": "Hit Kai'Sa with Dawning Shadow when she dashes in with Killer Instinct. The shield on your ally can save them from her burst.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Senna-R", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness through a minion slows and pokes Kai'Sa, making it harder for her to stack Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Kaisa", "start": 51, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6f2940384543ed3402fe4bcb3be4c6eada987241e0078ec0e308f995cf278557",
+      "tips": [
+        {
+          "id": "adc:Senna:MissFortune:0",
+          "text": "Poke Miss Fortune with Piercing Darkness; it slows her, and the hit stops her Strut speed bonus.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Senna-Q", "start": 23, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 78,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Senna:MissFortune:1",
+          "text": "Land Last Embrace on Miss Fortune, then punish her while she is rooted. She is easy to kill if you reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 21,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Senna:MissFortune:2",
+          "text": "Do not stand directly behind a minion in front of you; Double Up bounces through it onto you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 55,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Senna:MissFortune:3",
+          "text": "Leave Make It Rain's area quickly; its slow cannot be cleansed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 6,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Senna:MissFortune:4",
+          "text": "Use your longer range to hit Miss Fortune first and fall back, and build up Mist by freeing souls.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Senna:MissFortune:5",
+          "text": "Break line of sight or use Curse of the Black Mist when Miss Fortune starts Bullet Time; the channel is long and you can step away.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 27, "end": 50 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 56,
+              "end": 68
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 76,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Piercing Darkness passes through a minion to slow and poke Miss Fortune behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "MissFortune", "start": 59, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "015cc204fb9ea408d617032e85817822aece910154213e851772cc35a3097bd9",
+      "tips": [
+        {
+          "id": "adc:Senna:Smolder:0",
+          "text": "Smolder is weak early. Poke him with Piercing Darkness whenever he steps up to last-hit, and push your lead before he stacks up.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Senna-Q", "start": 37, "end": 54 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Senna:Smolder:1",
+          "text": "Land Last Embrace on Smolder when he flies in or tries to leave; he is rooted and cannot escape.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Smolder", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Senna:Smolder:2",
+          "text": "Hold your Last Embrace for when Smolder uses Flap, Flap, Flap; being rooted ends his flight early.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Smolder", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Smolder-E", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Senna:Smolder:3",
+          "text": "Stay out of a straight line with Smolder's Achooo!; it slows you, and the explosion hurts you and your support if you stand together.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Senna:Smolder:4",
+          "text": "Use your long attack range to hit Smolder from outside his reach, especially once Mist has built up.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "af91b38eadd261fc2f5186dcb2c3a6fd4ba74cb96e45612ba6168f06ad0ef6d8",
+      "tips": [
+        {
+          "id": "adc:Senna:Yunara:0",
+          "text": "Hit Yunara with Last Embrace when she steps forward to last-hit; the delayed root gives you free Piercing Darkness and basic attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Senna-W", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 },
+            { "kind": "ability", "key": "Senna-Q", "start": 97, "end": 114 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Senna:Yunara:1",
+          "text": "Fire Last Embrace in a straight line; it stops at the first enemy hit, so a minion in the way takes it instead of Yunara.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Senna:Yunara:2",
+          "text": "Your Senna has longer range than Yunara early, so poke her with basic attacks and Piercing Darkness while she walks up to farm.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Yunara", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Senna-Q", "start": 82, "end": 99 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Senna:Yunara:3",
+          "text": "Save Last Embrace for when Yunara commits forward or dashes in; she has few ways to escape once rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Senna:Yunara:4",
+          "text": "Back off when Yunara uses Transcend One's Self; she hits harder and can dash away. Wait for it to end before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Yunara-R", "start": 26, "end": 46 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": [
+        {
+          "comboId": "adc:Senna:combo:0",
+          "note": "Q pierces through a minion to slow and poke Yunara, who has no listed way to block the shot.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 44, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "f6dcc084a1b441c65da6307f93dcb33db2cffafa16200524a0756c9c80f913ab",
+      "tips": [
+        {
+          "id": "support:Senna:Alistar:0",
+          "text": "Keep your distance from Alistar and save Last Embrace to root him as he comes in, then back away.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Senna-W", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Alistar:1",
+          "text": "Slow Alistar with Piercing Darkness as he walks up; the slow helps you stay out of his Headbutt and Pulverize.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Alistar", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Senna-Q", "start": 18, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Alistar-W", "start": 87, "end": 95 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 100, "end": 109 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Senna:Alistar:2",
+          "text": "Do not stand near turrets or in front of your allies when Alistar is up; Headbutt then Pulverize can catch you.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 58, "end": 65 },
+            { "kind": "ability", "key": "Alistar-W", "start": 73, "end": 81 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 87, "end": 96 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Senna:Alistar:3",
+          "text": "Do not waste damage on Alistar while Unbreakable Will is active; back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Alistar-R", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "456b8b92b969498223f742f1e26b2514829988546313047096fab45129bdcc64",
+      "tips": [
+        {
+          "id": "support:Senna:Anivia:0",
+          "text": "Poke Anivia with Piercing Darkness through minions. Her Flash Frost is slow, so keep out of its line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Senna-Q", "start": 17, "end": 34 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Senna:Anivia:1",
+          "text": "Sidestep Flash Frost. Being stunned at its end leaves you open to Frostbite.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Anivia-E", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Senna:Anivia:2",
+          "text": "Use Last Embrace on Anivia when she commits, then kill her. Gank her too, so her egg dies.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Senna:Anivia:3",
+          "text": "Do not stand inside Glacial Storm. Hit Anivia when she is low on mana, since the storm drains it fast.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 20, "end": 33 },
+            { "kind": "champion", "key": "Anivia", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ffb014da7f42c72b9749382b4a2a3e81fe4725ece4e1dc82e28fa7509aa1acf8",
+      "tips": [
+        {
+          "id": "support:Senna:Bard:0",
+          "text": "Poke with Piercing Darkness from long range; it slows Bard, and every attack you land shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 10, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "champion", "key": "Bard", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Senna:Bard:1",
+          "text": "Land Last Embrace on Bard when he steps up; the delay is short, so aim at where he is heading. If it connects, he is rooted for a moment and you can punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Senna:Bard:2",
+          "text": "Stay out of line with your lane partner, because Cosmic Binding stuns two enemies in a row or one that is against a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Senna:Bard:3",
+          "text": "Step on Bard's healing shrines to destroy them, and do not let his partner take them.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Senna:Bard:4",
+          "text": "Use Dawning Shadow to hit Bard and his partner when they are stuck in a fight; the beam keeps going after the first hit.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Bard", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness pokes through a minion to hit Bard, who can't easily answer it from range.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 48, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "3006917073a288496d3d8e0de2316bb75e4d446978d0565f73ab8b17129ae822",
+      "tips": [
+        {
+          "id": "support:Senna:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits them first. Step out of line when Blitzcrank has it ready.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Blitzcrank", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:Blitzcrank:1",
+          "text": "Hit Blitzcrank with Last Embrace when he walks up; it roots him and anyone near him, so he cannot follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Senna-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Senna:Blitzcrank:2",
+          "text": "Do not stand near Blitzcrank at level 6 after a grab. Static Field silences you and removes your shields.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 54,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "silenced", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Senna:Blitzcrank:3",
+          "text": "Use your long range and Piercing Darkness to slow and hit Blitzcrank from afar, keeping out of his Power Fist reach.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 24, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 58, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 99,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a79666086a3a3ad22c49979a82a963ae335985c53611ce3f06959a4a286bbcff",
+      "tips": [
+        {
+          "id": "support:Senna:Brand:0",
+          "text": "Dodge Brand's first spell, Sear or Pillar of Flame. Without an ablaze target he cannot start his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Brand-W", "start": 35, "end": 50 },
+            { "kind": "keyword", "key": "ablaze", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Senna:Brand:1",
+          "text": "Use your long attack range to poke Brand and stay out of his Conflagration range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Brand", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Brand-E", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Senna:Brand:2",
+          "text": "Hit Brand with Last Embrace when he commits to a spell, so he is rooted and cannot dodge the follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Senna:Brand:3",
+          "text": "Stand apart from your ally when Brand casts Pyroclasm, since it bounces between nearby enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Brand-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Senna:Brand:4",
+          "text": "Slow Brand with Piercing Darkness when he steps forward, then walk out of his range.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Senna-Q", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "77c8b203281a6dd68af355a110e2ed8b93d973de1abf5a19d870c493ce828fd8",
+      "tips": [
+        {
+          "id": "support:Senna:Braum:0",
+          "text": "Stay out of Braum's Winter's Bite line, since minions in front of you block it. Stand behind them when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Braum-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Senna:Braum:1",
+          "text": "Don't throw Last Embrace into a raised Unbreakable; it is destroyed. Wait for the shield to drop or come from another angle.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Braum-E", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Braum:2",
+          "text": "Use Piercing Darkness on Braum from range; his shield can't stop it, and it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Braum", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Senna:Braum:3",
+          "text": "Step away once Braum or his partner has marked you; a few more hits will stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Braum:4",
+          "text": "Walk out of the path of Glacial Fissure when you see Braum begin it, and avoid walking on the ice afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 24, "end": 39 },
+            { "kind": "champion", "key": "Braum", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "20b4d32ce7bc1976bcba861479e68edb745d2cf17570b3cbd115a7d9938a582e",
+      "tips": [
+        {
+          "id": "support:Senna:Camille:0",
+          "text": "Keep Last Embrace ready for when Camille dives in. It roots her and anyone near her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Camille", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Senna:Camille:1",
+          "text": "Poke Camille with Piercing Darkness while she approaches. It slows her and your attacks shorten its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Camille", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Senna-Q", "start": 18, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Camille:2",
+          "text": "Stay away from walls, because Hookshot needs terrain to latch onto. Hold your position and do not let her reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-E", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Senna:Camille:3",
+          "text": "Use Curse of the Black Mist to hide your position from Camille and set up your own plays.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Camille", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f9b5100b75d9cdc3107bda396cdc9f9b3a2c7495a23af3545fb18361a123c5f7",
+      "tips": [
+        {
+          "id": "support:Senna:Janna:0",
+          "text": "Poke Janna with Piercing Darkness through minions; it hits everything in its line and slows her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Janna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Senna-Q", "start": 16, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Senna:Janna:1",
+          "text": "Janna's Howling Gale knocks up, so stay out of her line when she charges it. Listen for the charge sound.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-Q", "start": 8, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Janna:2",
+          "text": "Aim Last Embrace at Janna when she has used Zephyr; the root keeps her from escaping and Monsoon cannot save her once she is stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Janna", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Janna-W", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Janna-R", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Senna:Janna:3",
+          "text": "Janna's Monsoon is her big defensive tool. Hit her with Dawning Shadow or root her before it comes, since moving or casting ends it early.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-R", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Senna-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Senna:Janna:4",
+          "text": "Harass Janna's partner; she is strongest when shielding an ally, so a hurt carry weakens her.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 7, "end": 12 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Janna from past normal range and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "81642ab058171a8824f9920d02afe8711b7c9f0934263cc39dbc8a6055bf81d3",
+      "tips": [
+        {
+          "id": "support:Senna:Karma:0",
+          "text": "Stay out of Karma's Inner Flame line. Keep a minion between you; it stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Karma-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Karma:1",
+          "text": "Use your long range to stay behind minions and attack Karma. Her tether only reaches so far, so keep distance.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Senna:Karma:2",
+          "text": "Move away when Focused Resolve tethers you. Break the tether and you won't be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Senna:Karma:3",
+          "text": "Hit Karma with Last Embrace when she steps up to cast; the root keeps her in place for your team to follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Senna:Karma:4",
+          "text": "Use Piercing Darkness through a minion to hit Karma while you heal your partner and slow her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Karma", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7abcf551d4c28ea980fe1a5fc7dfbfd76677d950f4b61d9aa2ef2e677a05bca3",
+      "tips": [
+        {
+          "id": "support:Senna:Leona:0",
+          "text": "Poke Leona with Piercing Darkness from long range. Don't let her get close, because she has no way to stop her engage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Senna-Q", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "support:Senna:Leona:1",
+          "text": "Save Last Embrace for when Leona dashes in with Zenith Blade. Rooting her away from your carry stops her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Leona-E", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Senna:Leona:2",
+          "text": "Stay behind minions. Zenith Blade needs to hit a champion to dash, and minions in the way can block your view of the angle.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Senna:Leona:3",
+          "text": "Don't fight Leona while Eclipse is up; her armor and magic resist are high. Wait for it to end and then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Leona-W", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Leona:4",
+          "text": "Dodge Solar Flare by leaving its center when it appears; only the center stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1ed70199a4bd1d8b37c2de14b3948f4a5b4f79b7cfbd6978799ade5f86fda7af",
+      "tips": [
+        {
+          "id": "support:Senna:Lulu:0",
+          "text": "Aim Last Embrace at Lulu when she walks up to poke; the root gives you time to trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Senna:Lulu:1",
+          "text": "Stay behind minions when Lulu attacks; Pix's bolts are stopped by the first unit they hit.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Senna:Lulu:2",
+          "text": "Dodge Glitterlance by sidestepping its line; it is slow-moving enough to read, and getting slowed makes you easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Senna:Lulu:3",
+          "text": "Keep your distance from Lulu's ally at level 6; Wild Growth knocks you up and slows you around the enlarged champion.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Lulu-R", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Senna:Lulu:4",
+          "text": "Don't stand next to a Lulu-enhanced ally who may Whimsy you; use Piercing Darkness from a long way back instead.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Senna-Q", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cad52b9de8f056585eb76b7bfa5ab5b787a7330a8530d0f021a11086783eb704",
+      "tips": [
+        {
+          "id": "support:Senna:Lux:0",
+          "text": "Poke with Piercing Darkness from long range; each attack you make lowers its cooldown, so mix in auto attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Senna-Q", "start": 10, "end": 27 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Senna:Lux:1",
+          "text": "Sidestep Light Binding; it roots the first two enemies it hits, so do not stand lined up with your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Senna:Lux:2",
+          "text": "Land Last Embrace on Lux when she commits; the root arrives after a short delay, so cast it where she is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Senna:Lux:3",
+          "text": "Move to the side when you see Final Spark's red warning beam.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Lux:4",
+          "text": "Use Curse of the Black Mist to slip away or reposition; you become camouflaged and move faster.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Lux from beyond range before she can poke or root.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 41, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "540a779713acdabea0358ed1858b3b1a9073c9a78f27c3a968a269ef81a25f45",
+      "tips": [
+        {
+          "id": "support:Senna:Maokai:0",
+          "text": "Stay at long range and poke Maokai rather than trading in his reach. Every spell you waste on him shortens his passive cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Maokai", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Senna:Maokai:1",
+          "text": "Don't use Last Embrace or Piercing Darkness on Maokai while he is dashing with Twisted Advance; he can't be targeted.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Senna-Q", "start": 26, "end": 43 },
+            { "kind": "champion", "key": "Maokai", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Maokai-W", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Senna:Maokai:2",
+          "text": "Stay away from brush and from Saplings chasing you. They slow you and hurt more in brush.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Senna:Maokai:3",
+          "text": "Don't stand close to Maokai when Bramble Smash is ready; it knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 33, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8b69eec89089c7d452bf3f8d6777a2e5e2873c67cf5e65dc01150efae4763c5",
+      "tips": [
+        {
+          "id": "support:Senna:Mel:0",
+          "text": "Hold Last Embrace until Mel has used Rebuttal; it destroys projectiles, so your root never lands if you throw it first.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Mel", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Mel-W", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Senna:Mel:1",
+          "text": "Poke with Piercing Darkness from long range. It never misses and slows Mel, and each of your attacks shortens its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Senna-Q", "start": 10, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 },
+            { "kind": "champion", "key": "Mel", "start": 71, "end": 74 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Senna:Mel:2",
+          "text": "Stay out of Solar Snare's line, especially from far away, since a long-range hit roots you longer. Step aside or hide behind a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Senna:Mel:3",
+          "text": "Back off when Mel's Overwhelm stacks build on you. If you are low, her next hit can kill you, so let the stacks fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 14, "end": 17 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Senna:Mel:4",
+          "text": "Mel's attack right after an ability hits harder because of Searing Brilliance. Do not trade attacks with her just after she casts.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-passive", "start": 59, "end": 77 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "866e55db9caeb4ba20ef5d49bd9725a54a6a9b8dd7f334365df63c0863b40570",
+      "tips": [
+        {
+          "id": "support:Senna:Milio:0",
+          "text": "Hit Milio with Last Embrace when he stands in front of his carry; the root gives your lane time to jump on him.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Senna:Milio:1",
+          "text": "Stay out of line with Milio's Ultra Mega Fire Kick, since it stuns the first enemy it hits. Step behind a minion so it stops there.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Milio-Q", "start": 30, "end": 50 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Senna:Milio:2",
+          "text": "Use Piercing Darkness through a minion to hit Milio from long range. It slows him and gives you a free poke.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Milio", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Senna:Milio:3",
+          "text": "Catch Milio alone with Last Embrace. His allies can't save him if he is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Senna-W", "start": 23, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Senna:Milio:4",
+          "text": "Save Dawning Shadow for when Milio's team is grouped up. Breath of Life will cleanse their crowd control, so lock down enemies after he has spent it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Milio-R", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Milio, who has no listed way to block or dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "06f179e4ac70d5539f763d2cdffc67e8ae122fd19078973774e410fd22ffa315",
+      "tips": [
+        {
+          "id": "support:Senna:Morgana:0",
+          "text": "Stand behind minions so Dark Binding hits them first; it stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Morgana:1",
+          "text": "Hit Morgana with Last Embrace when she is out of position; it does damage and then roots her and anyone near her.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Senna-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Senna:Morgana:2",
+          "text": "Poke Morgana with attacks and Piercing Darkness from long range; her Black Shield cannot block physical damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Morgana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Senna-Q", "start": 30, "end": 47 },
+            { "kind": "ability", "key": "Morgana-E", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Senna:Morgana:3",
+          "text": "Do not stand near Morgana at level 6 once Soul Shackles is on you; walk out of its range before it ends or you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Morgana-R", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Senna:Morgana:4",
+          "text": "Stay away from Tormented Shadow when you are low on health; it hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8642141c01d7e6da6aa4b52a7efa902ae3e5bb6dd0a5952bfbcd89e8b9902e30",
+      "tips": [
+        {
+          "id": "support:Senna:Nami:0",
+          "text": "Stay out of line of Aqua Prison; the bubble takes a moment to land, so keep moving sideways when Nami aims at you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 20, "end": 31 },
+            { "kind": "champion", "key": "Nami", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:Nami:1",
+          "text": "Punish Nami right after she misses Aqua Prison; her cooldown is long, so that is your window to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Nami-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Nami:2",
+          "text": "Use your long attack range to poke Nami from afar and step back when an ally is empowered by Tidecaller's Blessing.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Nami-E", "start": 93, "end": 114 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Senna:Nami:3",
+          "text": "Hit Nami with Last Embrace when she steps up to cast; she is rooted and open to your damage and your carry's.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Senna-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Senna:Nami:4",
+          "text": "Use Piercing Darkness to slow Nami when she engages or retreats, and to heal your carry through a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Nami", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Senna:Nami:5",
+          "text": "Sidestep Tidal Wave when you see it coming; it travels slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d8cf586522f7235e1deeacff0047d173027fc0b0f97f3285db15ac390daa4ba2",
+      "tips": [
+        {
+          "id": "support:Senna:Nautilus:0",
+          "text": "Stay behind your minions and keep your distance from Nautilus. Dredge Line stops at the first enemy it hits, so minions can shield you.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Nautilus:1",
+          "text": "Use Piercing Darkness to slow Nautilus as he approaches and to poke him from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Senna:Nautilus:2",
+          "text": "Land Last Embrace on Nautilus when he walks up. It roots him and anyone near him, so he can't follow or engage.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 21, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Senna:Nautilus:3",
+          "text": "Use Curse of the Black Mist to hide in a bush or reposition. Nautilus then can't see where to aim Dredge Line.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Nautilus", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 98, "end": 109 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Senna:Nautilus:4",
+          "text": "When Nautilus shields himself with Titan's Wrath, avoid his auto attacks and don't stand next to your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Nautilus from range, so he struggles to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 41, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "017f67b5d6b33e6d03bbd80acda27a457b4bb93426732c0da790d73bee886361",
+      "tips": [
+        {
+          "id": "support:Senna:Neeko:0",
+          "text": "Hit Neeko with Last Embrace when she steps up; the root lands after a short delay, so follow with attacks while she is stuck.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Neeko:1",
+          "text": "Use Piercing Darkness from long range to slow and poke Neeko; she has no way to close in unless she lands Tangle-Barbs.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Neeko", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Neeko-E", "start": 106, "end": 118 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Senna:Neeko:2",
+          "text": "Stay out of a straight line with Neeko and keep minions from standing between you, since Tangle-Barbs grows stronger after hitting something.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Neeko-E", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Senna:Neeko:3",
+          "text": "Before Neeko's level 6, hold Curse of the Black Mist for an escape or a flank, and watch out for her disguise.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Senna-E", "start": 29, "end": 52 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Senna:Neeko:4",
+          "text": "Respect Pop Blossom at level 6. Stay back from Neeko when she is disguised, because her warning is hidden.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Neeko, who has no listed way to block the beam.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Neeko", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "5e7f874db647c8b0450d120a61f15491e0dd6326a977b5c65b4599896b23bbca",
+      "tips": [
+        {
+          "id": "support:Senna:Pantheon:0",
+          "text": "Keep Pantheon at range with Piercing Darkness; it slows him and every hit you land makes it ready sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Senna-Q", "start": 28, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Senna:Pantheon:1",
+          "text": "Save Last Embrace for when Pantheon jumps in; rooting him lets you and your partner punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Senna:Pantheon:2",
+          "text": "Do not attack Pantheon head-on while Aegis Assault is up; step to the side or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:Pantheon:3",
+          "text": "Do not sit low on health near Pantheon; a thrown Comet Spear hurts weak targets a lot more.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:Pantheon:4",
+          "text": "When Grand Starfall is announced, move out of the target area; it gives time to react.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Senna:Pantheon:5",
+          "text": "Stay behind minions or your partner when you are in range of Shield Vault; the stun leaves you open.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 61, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d6ad8ae813d5920950b2810a48959299329403991a833daf97faa7ac37e04545",
+      "tips": [
+        {
+          "id": "support:Senna:Poppy:0",
+          "text": "Root Poppy with Last Embrace when she charges at you, then back away.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Senna-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Senna:Poppy:1",
+          "text": "Stay away from walls when Poppy is close; Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-E", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Senna:Poppy:2",
+          "text": "Do not dash near Poppy while Steadfast Presence is up; it stops you and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Poppy-W", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Senna:Poppy:3",
+          "text": "Step on Poppy's buckler to destroy it and deny her shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Senna:Poppy:4",
+          "text": "Hit Poppy with Piercing Darkness from range to slow her and keep her from reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-Q", "start": 15, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Senna:Poppy:5",
+          "text": "Move away when you see Poppy start to spin her hammer; that is Keeper's Verdict charging.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Poppy-R", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f4be198839b7ce947edf6c5836f2a3a70ac1a4263a506ff69f482703a791bb0f",
+      "tips": [
+        {
+          "id": "support:Senna:Pyke:0",
+          "text": "Hit Last Embrace on Pyke when he comes close; it roots him in place, so you can follow up with your cannon and Piercing Darkness.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Senna-Q", "start": 111, "end": 128 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Senna:Pyke:1",
+          "text": "Stay out of Pyke's hook range; your long attack range lets you poke him while he waits to line up Bone Skewer.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 98, "end": 109 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Senna:Pyke:2",
+          "text": "Keep Last Embrace ready for when Pyke dives in with Phantom Undertow; rooting him cuts off his chase.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Pyke-E", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Senna:Pyke:3",
+          "text": "Use Curse of the Black Mist to hide your team from Pyke's view and set up a surprise engage.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Pyke", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Senna:Pyke:4",
+          "text": "Stay away from low-health allies when Pyke is near; Death From Below can execute them. Heal them with Piercing Darkness.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 52, "end": 68 },
+            { "kind": "summoner-spell", "key": "7", "start": 87, "end": 91 },
+            { "kind": "ability", "key": "Senna-Q", "start": 102, "end": 119 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b4b429cd54ea96fb7747373fbd0d4e32109e9771a3f4c1286041da6d9e1b376f",
+      "tips": [
+        {
+          "id": "support:Senna:Rakan:0",
+          "text": "Throw Last Embrace at Rakan when he is away from his ally; it hits the first enemy and roots him and anyone near him, so follow up with an attack.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Rakan", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Senna:Rakan:1",
+          "text": "Use Piercing Darkness to poke Rakan from long range. It slows him, and each attack you land shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Rakan", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Senna:Rakan:2",
+          "text": "Stay behind your minions and keep your range. Rakan wants to land Grand Entrance on you, and your long attack range lets you stay out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Rakan-W", "start": 66, "end": 80 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Senna:Rakan:3",
+          "text": "Rakan's dashes show where he will land. Aim Last Embrace at that spot when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Rakan:4",
+          "text": "When Rakan's Fey Feathers shield is up, wait to trade until it breaks.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Rakan-passive",
+              "start": 13,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion lets Senna poke Rakan from range when he stands behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Rakan", "start": 51, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8770495be4f1c1f40a284bf89a191214a50e031225cd4d19513e25eb617bb9e",
+      "tips": [
+        {
+          "id": "support:Senna:Rell:0",
+          "text": "Stay outside Rell's reach. Shattering Strike and Ferromancy: Crash Down both need her close, so use your long attack range to poke her instead.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Rell-Q", "start": 27, "end": 44 },
+            { "kind": "ability", "key": "Rell-W", "start": 49, "end": 71 },
+            { "kind": "keyword", "key": "poke", "start": 126, "end": 130 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Senna:Rell:1",
+          "text": "Hit Rell with Last Embrace when she charges in. She is rooted and can't follow up on you.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Senna-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Senna:Rell:2",
+          "text": "Use Piercing Darkness to slow Rell when she closes in, then back away so she can't land her stun.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Rell", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Senna:Rell:3",
+          "text": "Be careful when Rell's Magnet Storm is ready at level 6. It pulls you in, so keep your distance from her in fights.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Rell-R", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Senna:Rell:4",
+          "text": "Rell's Shattering Strike destroys shields, so don't count on Dawning Shadow's shield for a fight when she is close.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rell-Q", "start": 7, "end": 24 },
+            { "kind": "ability", "key": "Senna-R", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness pokes through a minion to hit Rell from beyond her reach before she can engage.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Rell", "start": 48, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "deb6c1d7629d013ac9167816c8c829145d6f77b6ab96ba65348f7847b75c4759",
+      "tips": [
+        {
+          "id": "support:Senna:Seraphine:0",
+          "text": "Poke Seraphine with your long-range attacks. Piercing Darkness also slows her and shortens its own cooldown with every attack.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Senna-Q", "start": 45, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Senna:Seraphine:1",
+          "text": "Sidestep Beat Drop; it is a narrow line. Getting slowed first makes it root you, so avoid being slowed near Seraphine.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 9, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 },
+            { "kind": "champion", "key": "Seraphine", "start": 108, "end": 117 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Senna:Seraphine:2",
+          "text": "Hit Seraphine with Last Embrace when she steps up to poke. The root after the delay lets your carry finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Senna-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Seraphine:3",
+          "text": "Stay spread out from your team near Seraphine's ultimate. Encore extends through every champion it hits, and the charm lets Beat Drop stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 58, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Seraphine-E",
+              "start": 124,
+              "end": 133
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Senna:Seraphine:4",
+          "text": "Use Curse of the Black Mist to get away from Seraphine or to approach her unseen for a surprise Last Embrace.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Seraphine", "start": 45, "end": 54 },
+            { "kind": "ability", "key": "Senna-W", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4f0dfd9388f9ca3eb777288deb20c0e61f9f1c9c312b666d467d0419ba930065",
+      "tips": [
+        {
+          "id": "support:Senna:Shen:0",
+          "text": "Keep range on Shen and poke him with your long-range basic attacks; he has to dash in to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Senna:Shen:1",
+          "text": "Hold Last Embrace for when Shen dashes in; rooted, he can't follow up on his taunt.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Senna:Shen:2",
+          "text": "Stay out of line of Shadow Dash; being taunted means you can't get away from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Senna:Shen:3",
+          "text": "Shen's Spirit's Refuge blocks basic attacks, so don't auto into it; use Piercing Darkness or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-W", "start": 7, "end": 22 },
+            { "kind": "ability", "key": "Senna-Q", "start": 72, "end": 89 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2e645edf9c405f82fcaa32034a55d6d780aaddffec10d76c95f034a51eb8b69d",
+      "tips": [
+        {
+          "id": "support:Senna:Sona:0",
+          "text": "Use Last Embrace on Sona when she walks up for a cast. It roots her so your team can punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Senna:Sona:1",
+          "text": "Attack from your long range and use Piercing Darkness to slow Sona. She is fragile and has to come close to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 36, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 },
+            { "kind": "champion", "key": "Sona", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Senna:Sona:2",
+          "text": "Stay spread out from your partner, and watch Sona at level 6. Crescendo has long range and stuns everything it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Sona-R", "start": 62, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Senna:Sona:3",
+          "text": "Go for Sona first in a fight; she heals her team with Aria of Perseverance if left alone.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Sona-W", "start": 54, "end": 74 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "653bcc16f0fbaa9260345d228a44d366880900124d1c85fa2da37cd484b432f5",
+      "tips": [
+        {
+          "id": "support:Senna:Soraka:0",
+          "text": "Hit Soraka with Last Embrace when she walks up to use Starcall; the root holds her in place for your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Senna-W", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Soraka:1",
+          "text": "Out-range Soraka with your attacks, and use Piercing Darkness to slow her and heal your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Senna-Q", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Senna:Soraka:2",
+          "text": "Stay out of Equinox. When it ends it roots you, so walk out of the field early.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Senna:Soraka:3",
+          "text": "Equinox has a long cooldown, so trade with Soraka right after she uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Soraka", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Senna:Soraka:4",
+          "text": "Hit Soraka first, not her carry; she is easier to kill than the ally she heals.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "752febb937d1e41ec7fcd2b46da9286fdb08c4430eda937002a22ce0adf34bfa",
+      "tips": [
+        {
+          "id": "support:Senna:Swain:0",
+          "text": "Hit Swain with Last Embrace when he walks up. If it lands, the root gives you time to attack and back away.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Senna:Swain:1",
+          "text": "Use your long range to attack Swain from afar. Stay out of Nevermove range, because getting rooted lets him pull you in.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Swain-E", "start": 59, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Senna:Swain:2",
+          "text": "Keep moving when Vision of Empire appears under you. Walk out of the circle before it blows up to avoid the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Senna:Swain:3",
+          "text": "Use Piercing Darkness to slow Swain and keep him from reaching you, or to heal yourself and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Swain", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Senna:Swain:4",
+          "text": "Do not stay near Swain once he starts Demonic Ascension. Back away, since he is easy to get away from.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Swain-R", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Swain from range, which helps vs his Soul Fragment healing.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Swain", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "908d12d92aabaefa8958db8a8a9c589b5f7a763217f48bd82190014d8f106530",
+      "tips": [
+        {
+          "id": "support:Senna:TahmKench:0",
+          "text": "Poke Tahm Kench from long range with your attacks and Piercing Darkness. Keep your distance so he can't reach you with Tongue Lash.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Senna-Q", "start": 54, "end": 71 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 119,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Senna:TahmKench:1",
+          "text": "Stay back from Tahm Kench, because Tongue Lash is his main way to catch you. Keep minions between you and him when you can.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Senna:TahmKench:2",
+          "text": "Hit Tahm Kench with Last Embrace when he dives in or channels Abyssal Dive. Being rooted cancels his channel.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Senna-W", "start": 20, "end": 32 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 62, "end": 74 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Senna:TahmKench:3",
+          "text": "Avoid being hit three times by Tahm Kench's attacks and Tongue Lash. At three stacks he can Devour you, so back off after the second hit.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 31, "end": 41 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 56, "end": 67 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06141dc8c1d7507c9cd158e5e8a6d554c6acce64f869adc83c09867fd0886b0a",
+      "tips": [
+        {
+          "id": "support:Senna:Taric:0",
+          "text": "Keep your range advantage and attack Taric from afar. Don't let him walk up and chain Bravado attacks on you.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 37, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 86,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Taric:1",
+          "text": "Dodge Dazzle by moving out of the beam during its delay. It bursts after a short wait, so don't stand still.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Taric:2",
+          "text": "Use Piercing Darkness on Taric when he approaches; it slows him and damages him. Your attacks shorten its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Taric", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Senna:Taric:3",
+          "text": "Hit Taric with Last Embrace when he commits to a trade; he is rooted and can't follow up or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Senna:Taric:4",
+          "text": "When Taric casts Cosmic Radiance, back off or burst someone down before it finishes. Don't waste Dawning Shadow into invulnerable targets.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Taric-R", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Senna-R", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "162fd1dc13f9e06d527cf0f516fad6b269b7fb4b21eab7691071851e5d6d829c",
+      "tips": [
+        {
+          "id": "support:Senna:Thresh:0",
+          "text": "Stay out of Death Sentence range and watch for his cast to begin. Sidestep it, because the scythe is blocked by the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Senna:Thresh:1",
+          "text": "Hit Thresh with Last Embrace when he commits to a pull or dash; the enemies near him are rooted too, so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Senna-W", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Senna:Thresh:2",
+          "text": "Poke Thresh with Piercing Darkness from long range. It slows him, so he struggles to close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Senna-Q", "start": 17, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Senna:Thresh:3",
+          "text": "Use your long attack range to hit Thresh when he steps up to collect souls. He is exposed then.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Senna:Thresh:4",
+          "text": "Save Curse of the Black Mist for scouting or sneaking close to an engage. It is not a reliable dodge against his pull.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 5, "end": 28 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "815c8e2bcf979ed9ac9c1465c3613d985daafbee54b2cea1d12a5bc772e98f68",
+      "tips": [
+        {
+          "id": "support:Senna:Velkoz:0",
+          "text": "Hit Vel'Koz with Last Embrace when he stands back to poke. He has little mobility, so the root keeps him in your reach.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Senna-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Senna:Velkoz:1",
+          "text": "Vel'Koz is easy to catch when his Tectonic Disruption is on cooldown. Walk up and fight him then.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 34, "end": 53 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Senna:Velkoz:2",
+          "text": "Use Curse of the Black Mist to disappear and move around his Void Rift pokes. Use it to flank him.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Senna:Velkoz:3",
+          "text": "Piercing Darkness slows Vel'Koz and can hit him through minions. Use it to close in while his shots miss.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Velkoz", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Senna:Velkoz:4",
+          "text": "Dodge the Plasma Fission bolt by staying off the line of minions and watch for its split. Avoid standing near its edges.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion or ally lets Senna poke Vel'Koz from beyond her normal range.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 48, "end": 53 },
+            { "kind": "champion", "key": "Velkoz", "start": 59, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "b64022f07767ae3008d96d38dd414adcf7fc3c8399f9aa17e75f41b7e6e23598",
+      "tips": [
+        {
+          "id": "support:Senna:Xerath:0",
+          "text": "Stay out of a straight line from Xerath, and sidestep Shocking Orb. A long stun leaves you open to Eye of Destruction.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 54, "end": 66 },
+            { "kind": "ability", "key": "Xerath-W", "start": 99, "end": 117 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Senna:Xerath:1",
+          "text": "Close the distance on Xerath and trade. Last Embrace roots him and leaves him stuck for your follow-up attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Senna-W", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Senna:Xerath:2",
+          "text": "Use Piercing Darkness on Xerath when he charges Arcanopulse. He is slowed while charging, so he can't easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Xerath", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 48, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Senna:Xerath:3",
+          "text": "Use Curse of the Black Mist to dodge his spells. Senna can't be selected while in the mist, so you can walk up to him.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-E", "start": 4, "end": 27 },
+            { "kind": "champion", "key": "Senna", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2385ce08eaf2a27a01e228e52375c20339eda2a42d71e8d594ded4ff59179794",
+      "tips": [
+        {
+          "id": "support:Senna:Yuumi:0",
+          "text": "Hit Yuumi with Last Embrace while she is alone; she is untargetable once attached, so catch her before she latches on.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Senna-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Senna:Yuumi:1",
+          "text": "Fire Piercing Darkness through minions at Yuumi when she is detached; it passes through units and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Yuumi", "start": 42, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Yuumi:2",
+          "text": "Use Dawning Shadow to hit Yuumi or her partner from far away; it has global range and keeps going after a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yuumi", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Senna:Yuumi:3",
+          "text": "Go for Last Embrace on the carry when Yuumi is attached; the root holds them still while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Yuumi", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Senna:Yuumi:4",
+          "text": "Keep your attack range advantage and poke when Yuumi's Prowling Projectile is on cooldown, since it is her main way to hurt you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 },
+            { "kind": "champion", "key": "Yuumi", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 55, "end": 74 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "97f1cdb09709260b027aada1ffb83e7e5871a448b4a55874d2aec74b7841508d",
+      "tips": [
+        {
+          "id": "support:Senna:Zilean:0",
+          "text": "Zilean's stun needs two Time Bombs. When one sticks to you, walk away from his second so the first doesn't blow early.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "stunned", "start": 9, "end": 13 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Senna:Zilean:1",
+          "text": "Zilean is hard to kill alone, so use Last Embrace to root him and then trade with your team. Fight him with your ally close by.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Senna-W", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Senna:Zilean:2",
+          "text": "Keep poking Zilean from long range with Piercing Darkness. It slows him and heals your ally, and attacks lower its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Zilean", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Senna-Q", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Senna:Zilean:3",
+          "text": "Chronoshift makes an ally revive. Pause before the killing blow until it fades, then finish with Dawning Shadow or an attack.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Senna-R", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9c14eaa1a0952a74dbb76f01c58351e0979ba2651187170f64c7f840b62e481b",
+      "tips": [
+        {
+          "id": "support:Senna:Zyra:0",
+          "text": "Sidestep Grasping Roots; it is slow-moving and narrow, and being rooted next to Zyra's plants hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "champion", "key": "Zyra", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Senna:Zyra:1",
+          "text": "Use your long attack range to poke Zyra, and shoot her plants from out of their reach.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Zyra", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Senna:Zyra:2",
+          "text": "Step on Zyra's seeds before she grows them, or avoid them, so she has fewer plants to use.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Senna:Zyra:3",
+          "text": "Use Last Embrace on Zyra when she steps up to cast; the root lets your team punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zyra", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Senna:Zyra:4",
+          "text": "Spread out from your partner at level 6 so one Stranglethorns does not knock up you both.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 47, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": [
+        {
+          "comboId": "support:Senna:combo:0",
+          "note": "Piercing Darkness through a minion pokes Zyra from long range, keeping Senna away from Zyra's roots.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-Q", "start": 0, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Senna", "start": 71, "end": 76 },
+            { "kind": "champion", "key": "Zyra", "start": 87, "end": 91 }
+          ]
+        }
+      ]
+    }
+  ]
+}

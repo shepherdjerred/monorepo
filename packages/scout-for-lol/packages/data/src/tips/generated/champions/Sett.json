@@ -1,0 +1,1022 @@
+{
+  "schemaVersion": 1,
+  "champion": "Sett",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "f6402a0244b7ad21e9d9f0ca1caa8e4ee288f9874c21d91ede3566978c054031",
+      "tips": [
+        {
+          "id": "top:Sett:general:0",
+          "text": "Take hits before you cast Haymaker; the damage you absorb turns into a shield and extra damage. Cast it when the Grit bar is high.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sett:general:1",
+          "text": "Aim Haymaker so the enemy is in the middle of the blast, because only the center deals true damage. The edges deal less, physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sett:general:2",
+          "text": "Use Facebreaker when enemies are on both sides of you; hitting one on each side stuns them all. With only one side it just slows.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 123, "end": 128 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sett:general:3",
+          "text": "Start a trade with Knuckle Down: walk at the enemy with the extra speed, then land both empowered punches. They hurt more against high-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sett:general:4",
+          "text": "Fight when you are hurt but not about to die; Pit Grit heals you faster the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-passive", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sett:general:5",
+          "text": "Weave your punches: the right punch is faster and hits harder, so keep attacking instead of stopping between hits.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sett:general:6",
+          "text": "Use The Show Stopper on a high-health enemy, ideally so the slam lands on their teammates too. Its damage grows with the target's bonus health.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Sett:general:7",
+          "text": "Sett can't be stopped mid-dash during The Show Stopper, but terrain cuts the leap short. Cast it with open space ahead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-R", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Sett:combo:0",
+          "name": "Facebreaker into Haymaker",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Sett-E" },
+            { "kind": "ability", "key": "Sett-W" }
+          ],
+          "when": "When Facebreaker catches enemies on both sides and stuns them in lane or a fight.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Sett-E", "start": 5, "end": 16 }
+          ],
+          "text": "The stun holds the enemy still, so Haymaker's narrow centre line is easy to land for true damage. Wait until the stun lands before you cast.",
+          "textRefs": [
+            { "kind": "ability", "key": "Sett-W", "start": 35, "end": 43 }
+          ]
+        },
+        {
+          "id": "top:Sett:combo:1",
+          "name": "Throw the grab toward your team",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Sett-R" }],
+          "when": "In a teamfight when you can choose which way to cast the ultimate.",
+          "whenRefs": [],
+          "text": "Sett leaps past the target and slams them down, so aim the cast to land them in your team's reach. Their allies get hit by the slam too.",
+          "textRefs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "8062dd7c68ea4c095204094c9441fb42821d4c41a2a200814f237a5dd316c316",
+      "tips": [
+        {
+          "id": "top:Sett:Aatrox:0",
+          "text": "Walk up with Knuckle Down for extra speed, then hit twice. The bonus damage scales with Aatrox's max health.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Aatrox", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Sett:Aatrox:1",
+          "text": "Get Aatrox between you and a minion or ally, then use Facebreaker to pull both sides in and stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Sett-E", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Sett:Aatrox:2",
+          "text": "Take a hit from Aatrox first, then use Haymaker. The Grit you stored becomes a shield and extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Sett-W", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Sett:Aatrox:3",
+          "text": "Move sideways or toward Aatrox when his Darkin Blade swings come. They are slow and telegraphed, so step out of the hit zones.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sett:Aatrox:4",
+          "text": "Move toward the sides or toward Aatrox to leave Infernal Chains and avoid the pull.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "92014698d5d4de03c51746bee16fcdb5abab3e6d2075fafb5756f8786579ca4b",
+      "tips": [
+        {
+          "id": "top:Sett:Briar:0",
+          "text": "Hit Briar with Facebreaker when she leaps in. Standing on both sides of her is hard, so aim to slow her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sett-E", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Sett:Briar:1",
+          "text": "Take a hit from Briar before you cast Haymaker; the stored damage makes your shield and punch stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Sett-W", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Sett:Briar:2",
+          "text": "Do not fight Briar into a wall when she is charging Chilling Scream; a full charge knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Briar-E", "start": 52, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Sett:Briar:3",
+          "text": "Use Knuckle Down when Briar locks onto you in Blood Frenzy; you close in fast and hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sett:Briar:4",
+          "text": "Use The Show Stopper on Briar in a fight; her Chilling Scream can only be cast after she is already free.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-E", "start": 46, "end": 61 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dec5a455a7183092fec31a93ac006e1e96ab18dc87712c8b3333e3f96afed174",
+      "tips": [
+        {
+          "id": "top:Sett:Darius:0",
+          "text": "Walk out of Darius's Apprehend range, and step wide of its cone when he faces you. Being pulled in lets him land his full combo.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Darius-E", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Sett:Darius:1",
+          "text": "Use Facebreaker when Darius is lined up with a minion on the other side, so the pull stuns both and you can punch freely.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Sett:Darius:2",
+          "text": "Take hits first, then cast Haymaker for a big shield and a hard punch. Aim it so Darius is in the center for true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Darius", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Sett:Darius:3",
+          "text": "Activate Knuckle Down to close the gap, then punch twice. It deals extra damage based on Darius's max health, since he is tanky.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Sett:Darius:4",
+          "text": "Fight Darius when his Decimate is on cooldown, and stay out of Hemorrhage stacks. Back off before he reaches full stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Darius-Q", "start": 22, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 63,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a078c0dfbb195d394606bffd490b86e181d3d6e2ea843c5262f6772b6db76894",
+      "tips": [
+        {
+          "id": "top:Sett:Fiora:0",
+          "text": "Do not cast Facebreaker into Fiora while Riposte is ready. She can parry it and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Fiora", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Fiora-W", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sett:Fiora:1",
+          "text": "Bait out Riposte with Haymaker or a minion trade, then start your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Sett-W", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Sett:Fiora:2",
+          "text": "Save The Show Stopper until Riposte is on cooldown. A parry stops the grab and wastes your ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Fiora-W", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Sett:Fiora:3",
+          "text": "Fight when you are hurt. Haymaker turns the damage you took into a shield, and Pit Grit heals more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Sett-passive", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sett:Fiora:4",
+          "text": "Watch the Vital marker on you. Step away from it so Fiora's Lunge cannot land the bonus hit.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "97c75ec8468434f318cf71fda60af5ea8f322ac1f0fea910c50bacce8e4be43b",
+      "tips": [
+        {
+          "id": "top:Sett:Gangplank:0",
+          "text": "Close in with Knuckle Down when Gangplank is without kegs nearby; it gives you speed toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Sett:Gangplank:1",
+          "text": "Land Facebreaker with Gangplank on one side and a minion on the other to stun him; it only stuns if both sides are hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 22, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Sett:Gangplank:2",
+          "text": "Step out of Powder Keg blasts; they slow you and hit hard. Stay out of their reach rather than trying to hit the kegs yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Sett:Gangplank:3",
+          "text": "Hit the kegs yourself when they are near; an enemy who destroys a keg defuses it safely.",
+          "refs": [],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sett:Gangplank:4",
+          "text": "Wait for Gangplank to use Remove Scurvy before you commit The Show Stopper; suppression gets cleansed by it.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Sett-R", "start": 58, "end": 74 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Sett:Gangplank:5",
+          "text": "Take hits first, then fire Haymaker; the Grit you stored turns into a shield and more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a7c8e39e0c7c6e44d5a348055fe2e1f8588693a5e803ae1b805dfc8f681f3a7b",
+      "tips": [
+        {
+          "id": "top:Sett:Garen:0",
+          "text": "Hold Facebreaker for when Garen walks up to you; it slows him, and with enemies on both sides it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sett:Garen:1",
+          "text": "Garen's Decisive Strike silences you, so do not rely on Haymaker right after he uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Sett-W", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sett:Garen:2",
+          "text": "Step out of Judgment's circle or stand behind minions to cut the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Sett:Garen:3",
+          "text": "Absorb some hits, then fire Haymaker for a big shield and true damage in the center.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Sett:Garen:4",
+          "text": "Back away when you are low; Demacian Justice deals more the less health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "771be6473e36c7fe7f6c91b8b34e26ad87ff6acf8d2d26004f49f8f1aacdc8ba",
+      "tips": [
+        {
+          "id": "top:Sett:Jayce:0",
+          "text": "Close the gap with Knuckle Down and punch Jayce when he is in Cannon form. He cannot trade at range once you reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 19, "end": 31 },
+            { "kind": "champion", "key": "Jayce", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Sett:Jayce:1",
+          "text": "Keep Haymaker ready for the fight. Take some damage first so it gives a big shield and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sett:Jayce:2",
+          "text": "Use Facebreaker when Jayce jumps in, because he lands next to you. It slows him, and it stuns if an enemy is hit on each side.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Sett:Jayce:3",
+          "text": "Jayce can knock you back with Thundering Blow after you close in. Walk up from an angle, and hit him straight after.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Sett:Jayce:4",
+          "text": "Jayce's Hammer form swing hits hard, so use The Show Stopper at level 6 to catch him when he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sett-R", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d68dc3f770bd71ad07979e1a32b6df775d0c864f7eebfdfe39760aec7f31c85d",
+      "tips": [
+        {
+          "id": "top:Sett:KSante:0",
+          "text": "Walk up and use Facebreaker when K'Sante is next to a minion on the far side of you. Hitting both sides stuns them.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "KSante", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Sett:KSante:1",
+          "text": "Trade with Knuckle Down when K'Sante has used Ntofo Strikes. His short cooldown is why you should wait for it to be spent.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "KSante-Q", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sett:KSante:2",
+          "text": "Use Haymaker after you have taken some hits; it turns that damage into a shield and a big punch.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Sett:KSante:3",
+          "text": "Aim Haymaker so he stands in the middle of the blast; the middle deals true damage, which his armor can't reduce.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sett:KSante:4",
+          "text": "Stay out of a straight line with K'Sante while he charges Path Maker; it stuns longer the longer he charges.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "KSante-W", "start": 58, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Sett:KSante:5",
+          "text": "Respect his two-hit Ntofo Strikes; it pulls and stuns. Stay out of its line once he has hit you or a minion once.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Sett:KSante:6",
+          "text": "Once he goes All Out, he loses health and armor. Fight him then with The Show Stopper or Facebreaker.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Sett-R", "start": 69, "end": 85 },
+            { "kind": "ability", "key": "Sett-E", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9453c81dd590bd849e09847269e5ba1e040665d7650bf8c0646f9aa3fd1886de",
+      "tips": [
+        {
+          "id": "top:Sett:Malphite:0",
+          "text": "Dodge Malphite's Seismic Shard if you can. It slows you and gives him speed, so he can chase you or leave at will.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Sett:Malphite:1",
+          "text": "Hold Haymaker until you have taken some damage, then use it. The shield and the big hit are worth more with plenty of Grit stored.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Sett:Malphite:2",
+          "text": "Malphite's Granite Shield makes him tanky, and your Knuckle Down deals extra damage based on max Health. Break the shield first, then fight.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Sett-Q", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Sett:Malphite:3",
+          "text": "Ground Slam cuts your Attack Speed. Step out of its range, or use Facebreaker to pull him in and stun him if he has an enemy on each side.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Sett-E", "start": 66, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Sett:Malphite:4",
+          "text": "Stay away from Malphite at level 6. Unstoppable Force can't be stopped once he starts, so stay out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Malphite-R", "start": 36, "end": 53 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c84d8114b5608278ffb78afc534c1702fafe0c5c8f0c5d63451433e46e84e96",
+      "tips": [
+        {
+          "id": "top:Sett:Mordekaiser:0",
+          "text": "Stay out of Mordekaiser's reach when Darkness Rise is active. Wait for it to fade before you trade.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 12,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 37,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Sett:Mordekaiser:1",
+          "text": "Use Facebreaker to slow Mordekaiser as you close in on him. If you hit enemies on both sides, they are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sett:Mordekaiser:2",
+          "text": "Do not walk in a straight line past Mordekaiser's range. Death's Grasp pulls you in, so side-step it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 36,
+              "end": 47
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 57,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sett:Mordekaiser:3",
+          "text": "Take a hit first, then cast Haymaker. The Grit you stored becomes a shield and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Sett:Mordekaiser:4",
+          "text": "Do not trade into a fresh Indestructible shield. Wait until it fades, then use Knuckle Down to go in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 26,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Sett-Q", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "11deab9675a16b5ec0ec64cb17fa7a031bf8d43c5a63a0c1e89c5013fcd9930a",
+      "tips": [
+        {
+          "id": "top:Sett:Rumble:0",
+          "text": "Close in with Knuckle Down for the speed, then punch twice; the bonus damage is based on Rumble's max health.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Rumble", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Sett:Rumble:1",
+          "text": "Take a few hits, then use Haymaker; the damage you took becomes a shield and extra damage. Aim it so Rumble stands in the center for true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 26, "end": 34 },
+            { "kind": "champion", "key": "Rumble", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Sett:Rumble:2",
+          "text": "Use Facebreaker when Rumble has a minion or ally on the other side so both sides get hit and he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rumble", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Sett:Rumble:3",
+          "text": "Step out of Electro Harpoon's line; two hits slow you a lot and lower your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Sett:Rumble:4",
+          "text": "Go in when Rumble overheats, since he can't cast spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Sett:Rumble:5",
+          "text": "Leave the burning trail of The Equalizer quickly; staying in it costs a lot of health.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f6db8029c6ab92d7b6696d7d55a61a0cc96da1ea6dc1b52bbc10d53d42a79353",
+      "tips": [
+        {
+          "id": "top:Sett:Sion:0",
+          "text": "Watch Sion's Decimating Smash charge and sidestep it. Fight him while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Sion-Q", "start": 13, "end": 29 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sett:Sion:1",
+          "text": "Use Facebreaker when Sion is slowed or stands between you and a minion; the stun makes his short fight window your own.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Sett:Sion:2",
+          "text": "Take a small hit, then cast Haymaker. The shield absorbs his poke and the punch hits back hard.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sett:Sion:3",
+          "text": "Don't stand in Sion's Soul Furnace blast after his shield has been up a while; step away or break the shield first.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sion-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Sett:Sion:4",
+          "text": "Use The Show Stopper on Sion early in a fight. Don't chase him after he dies, because Glory in Death makes him dangerous for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 86,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Sett:combo:0",
+          "note": "Facebreaker's stun holds Sion still so Haymaker's narrow line lands easily in a melee trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Sion", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Sett-W", "start": 39, "end": 47 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "e6416eccd13f7e702fdc590ec0d8a498678479d324313c66154c0a1114299d77",
+      "tips": [
+        {
+          "id": "top:Sett:Teemo:0",
+          "text": "Walk through minions before Teemo blinds you, then hit him with Knuckle Down for the burst. Blinded punches miss.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Sett-Q", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Sett:Teemo:1",
+          "text": "Pull Teemo with Facebreaker when he pokes from range. A pull on one side still slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Sett-E", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sett:Teemo:2",
+          "text": "Take his poke and cast Haymaker; the damage stored becomes a shield and a hard punch.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Sett-W", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Sett:Teemo:3",
+          "text": "Check bushes and likely paths for Noxious Trap mushrooms before you walk in. They are hidden and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Sett:Teemo:4",
+          "text": "Use The Show Stopper at level 6 to grab Teemo and kill him once he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "da6161dea824b405fe909289abb711f392daaea92841bf25880861decb63afa4",
+      "tips": [
+        {
+          "id": "top:Sett:Vayne:0",
+          "text": "Close in on Vayne with Knuckle Down, then punch her. She is fragile and has to run.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sett-Q", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Sett:Vayne:1",
+          "text": "Hit Vayne with Facebreaker with an enemy on each side of you for the stun. She can't get away, so fight her then.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sett-E", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Sett:Vayne:2",
+          "text": "Don't fight Vayne next to walls. Condemn pins you and stuns you if you stand there.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Vayne-E", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sett:Vayne:3",
+          "text": "Don't trade with Vayne for long; three hits in a row with Silver Bolts deals extra damage to your large health pool. Break the pattern by stepping out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vayne-W", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Sett:Vayne:4",
+          "text": "Take hits from Vayne's poke first, then use Haymaker. The stored damage becomes a shield and a big punch.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sett-W", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sett:Vayne:5",
+          "text": "Use The Show Stopper to grab Vayne when she tumbles away. She can't dodge it, and it takes her out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4604212059ef87e7f826c40c19e06eb6d5eac429344c8a13777fac284754dcee",
+      "tips": [
+        {
+          "id": "top:Sett:Yone:0",
+          "text": "Wait until Yone is between you and a minion, or stands on the far side of one. Facebreaker then pulls both sides in and stuns.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sett-E", "start": 79, "end": 90 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 125 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Sett:Yone:1",
+          "text": "Take a little poke, then use Haymaker. The damage you took becomes a shield and extra damage, so Yone's trades feed you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Sett-W", "start": 29, "end": 37 },
+            { "kind": "champion", "key": "Yone", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Sett:Yone:2",
+          "text": "Use Knuckle Down to close the gap when Yone steps forward. It speeds you toward him and makes your next two hits hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sett:Yone:3",
+          "text": "Do not chase Yone into his spirit form. When it ends he snaps back and repeats some of the damage he dealt to you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sett:Yone:4",
+          "text": "Yone can use his Mortal Steel dash to escape or reposition. Hold Facebreaker for when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-Q", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Sett-E", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

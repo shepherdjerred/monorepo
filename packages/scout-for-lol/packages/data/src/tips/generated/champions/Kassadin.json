@@ -1,0 +1,1094 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kassadin",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "e6ec825dde537044e7d5a5dc36575318e45e556ff128be1c9689d9a468c52e35",
+      "tips": [
+        {
+          "id": "middle:Kassadin:general:0",
+          "text": "Use Null Sphere on an enemy who is channeling to interrupt them. It also gives you a shield that soaks magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Kassadin:general:1",
+          "text": "Fire Null Sphere at the start of a trade against a mage. The shield absorbs some of what they throw back.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Kassadin:general:2",
+          "text": "Activate Nether Blade before you hit an enemy champion. The hit restores a lot of your missing Mana, so use it when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Kassadin:general:3",
+          "text": "Use Force Pulse to get slowed enemies to stay in your range. Casting abilities, yours or a nearby champion's, brings it back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Kassadin:general:4",
+          "text": "Chain Riftwalk only when it will win the fight. Each cast in a row costs more Mana, so you can run dry fast.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Kassadin:general:5",
+          "text": "Use Riftwalk to close the gap or escape, since its cooldown is short. Expect it to be blocked by spell shields.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Kassadin:general:6",
+          "text": "Trade into enemy mages with Void Stone up. You take less magic damage and walk through units, so you can chase or slip away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 28,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Kassadin:combo:0",
+          "name": "Flash Riftwalk",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Kassadin-R" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When you need extra blink distance to catch a fleeing target or to escape a gank.",
+          "whenRefs": [],
+          "text": "Press Flash during Riftwalk's cast time and Kassadin blinks further away. The wiki notes that this is possible.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Kassadin", "start": 44, "end": 52 }
+          ]
+        },
+        {
+          "id": "middle:Kassadin:combo:1",
+          "name": "Nether Blade reset",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Kassadin-W" }, "attack"],
+          "when": "When trading in melee range or poking in lane and you want to restore mana.",
+          "whenRefs": [],
+          "text": "Nether Blade resets the attack timer and gives bonus range. Use it right before an auto attack on a champion to get the mana back.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "75045e90456ffb0b3a4f47bb89e8dc14bb2c81f8300401378de4b31cfc797923",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Ahri:0",
+          "text": "Walk behind minions when Ahri is ready to throw Charm. It stops at the first enemy it hits, so minions in the way soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Kassadin:Ahri:1",
+          "text": "Use Null Sphere on Ahri to trade. Its magic shield cuts the damage you take from her magic spells.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Kassadin:Ahri:2",
+          "text": "Ahri's damage is mostly magic, so your Void Stone passive makes early trades fairly safe. Stay close enough to hit her back.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 39,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Kassadin:Ahri:3",
+          "text": "Hit Ahri with Force Pulse when she steps up to poke, so she is slowed and can't easily get away.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Kassadin:Ahri:4",
+          "text": "Play safe while Ahri's Spirit Rush is ready. Once she spends it, jump in with Riftwalk and fight.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ahri-R", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Kassadin:Ahri:5",
+          "text": "Use Riftwalk to step out of a Charm line, or to close in on Ahri after she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ahri-E", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Ahri", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "771e96d44a1d489cc93888fa3807ec75fddab121c2da2c95029c2be3fd808a9d",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Akali:0",
+          "text": "Use Null Sphere on Akali when she starts to dash in; it hurts her and the shield soaks up her magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Kassadin:Akali:1",
+          "text": "Hold Force Pulse for when Akali jumps on you. It slows her and helps you escape or fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Kassadin:Akali:2",
+          "text": "Both of you deal mostly magic damage, so Void Stone helps you trade into her; fight her when she is low on energy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 41,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Kassadin:Akali:3",
+          "text": "Spend Riftwalk to get out of range after she uses Perfect Execution, rather than fighting on.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Akali-R", "start": 50, "end": 67 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Kassadin:Akali:4",
+          "text": "When Akali vanishes in Twilight Shroud, step away from the smoke instead of walking into it blind.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "15231430592bb176ef8542553d746cb50516ad0d30878197647f6a689304e263",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of a straight line from Anivia. Its stun at the end is what lets her kill you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Kassadin:Anivia:1",
+          "text": "Void Stone lets you walk through minions, so use it to close in on Anivia. Her Crystallize walls don't open that path.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Anivia", "start": 67, "end": 73 },
+            { "kind": "ability", "key": "Anivia-W", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Kassadin:Anivia:2",
+          "text": "Hit Anivia with Null Sphere to stop a Glacial Storm channel, then follow with Force Pulse to slow her.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Anivia-R", "start": 38, "end": 51 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 78, "end": 89 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Kassadin:Anivia:3",
+          "text": "Use Riftwalk to hop out of her slows and to reach her. She can't easily escape you once you get on top of her.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Kassadin:Anivia:4",
+          "text": "Her egg comes back with full health after she dies once. Don't waste your abilities on it; wait out the egg, then fight her again.",
+          "refs": [],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "420ac2dc6180851e04f5033d1553e3651cbd4d2f1962b097ab69e7e51820c280",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Aurora:0",
+          "text": "Use Null Sphere to interrupt channels, and when Aurora throws The Weirding at you, it gives a shield against magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Aurora-E", "start": 62, "end": 74 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Kassadin:Aurora:1",
+          "text": "Aurora does only magic damage, so Void Stone helps you trade; walk up and fight her instead of giving ground.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 34,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Kassadin:Aurora:2",
+          "text": "Use Riftwalk to close the gap when she hops away with Across the Veil, then slow her with Force Pulse.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Aurora-W", "start": 54, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Kassadin:Aurora:3",
+          "text": "Keep Null Sphere ready for when she commits with Twofold Hex or Between Worlds; the shield softens her magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 49, "end": 60 },
+            { "kind": "ability", "key": "Aurora-R", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ae4b70d2f096cf1eb1510c37b6e0cf4b06392140700549f18ae25acd6358c457",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Cassiopeia:0",
+          "text": "Use Null Sphere on Cassiopeia when she starts a spell; it interrupts channels and gives you a shield that absorbs magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Kassadin:Cassiopeia:1",
+          "text": "Riftwalk is blocked by nothing on the ground, but Miasma stops you using movement abilities. Stay out of her clouds when you want to blink away.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Kassadin:Cassiopeia:2",
+          "text": "Walk out of Noxious Blast early. Her fangs hit much harder on poisoned targets, so avoid staying in the poison.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Kassadin:Cassiopeia:3",
+          "text": "Your Void Stone reduces her magic damage, so trade when you can and close the gap once her Noxious Blast is spent.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 5,
+              "end": 15
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 91,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Kassadin:Cassiopeia:4",
+          "text": "Hit her with Force Pulse when you jump in so she is slowed and cannot easily kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 13, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Kassadin:Cassiopeia:5",
+          "text": "Beware Petrifying Gaze at level 6. If you blink in facing her, you get stunned, so keep a Null Sphere shield ready.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:0",
+          "note": "Flash during Riftwalk gives extra blink distance to escape or reach Cassiopeia after her stun.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 68, "end": 78 }
+          ]
+        },
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade reset restores mana when trading in melee, which helps against Cassiopeia's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 76, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "43a9758fd0745d0a058128036907728d0deece179347f15a27b735d3c0d734a8",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Fizz:0",
+          "text": "Keep Null Sphere for Fizz's Seastone Trident or when he dives in; it deals damage and gives you a shield that absorbs his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Fizz-W", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Kassadin:Fizz:1",
+          "text": "Use Force Pulse to slow Fizz when he jumps on you, then back away so he can't chain his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Kassadin:Fizz:2",
+          "text": "Do not chase Fizz while he is untargetable on Playful. Wait for him to land, then hit him with your own spells.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Kassadin:Fizz:3",
+          "text": "Void Stone lowers the magic damage Fizz deals, so trade when you want to, and fight him more freely once you reach level 6.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Fizz", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Kassadin:Fizz:4",
+          "text": "Use Riftwalk to step out of the area when Chum the Waters is about to erupt on you.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Fizz-R", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6dff9aefc1c3deaf3c4994f3dd0e4c2307703066db89c3b08acb4952020e4945",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Malzahar:0",
+          "text": "Use Null Sphere on Malzahar when he starts channeling Nether Grasp or another channel; it interrupts channels and gives you a shield against his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Kassadin:Malzahar:1",
+          "text": "Void Shift blocks most damage while Malzahar is untouched. Poke him with something small first to pop it, then commit your trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Kassadin:Malzahar:2",
+          "text": "Stay out of the line between the two portals of Call of the Void. You can't be silenced if you step out before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "silenced", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Kassadin:Malzahar:3",
+          "text": "Walk out of the portal area to dodge Call of the Void. Riftwalk is a good way out once he casts it, so save it for that.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 37, "end": 53 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Kassadin:Malzahar:4",
+          "text": "Don't stand near minions carrying Malefic Visions. If they die, it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Kassadin:Malzahar:5",
+          "text": "Force Pulse slows Malzahar when he walks up to cast, so use it to close in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Malzahar", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1c4452266512f884546eda7f4e9108bc625d81bc157428ca65ab9f37bc18d6b",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Orianna:0",
+          "text": "Use Null Sphere on Orianna when she channels or when you want a magic shield before she trades back. Her damage is mostly magic, so the shield helps.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Kassadin:Orianna:1",
+          "text": "Stay out of her Command: Attack range, because she pokes you for free. Walk up only when her Ball is far from her.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Kassadin:Orianna:2",
+          "text": "Use Riftwalk to close the gap, then hit her with Force Pulse so she is slowed and can't kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Kassadin:Orianna:3",
+          "text": "Swing with Nether Blade when you trade. It restores much more mana against champions, which helps you keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Kassadin:Orianna:4",
+          "text": "From level 6, Riftwalk into her to dodge her ultimate setup. Her Command: Shockwave only hits close to the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Orianna-R", "start": 65, "end": 83 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade reset restores mana when trading in melee range against Orianna's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Orianna", "start": 69, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f7aa3947dae0248923ecf219c4314122bc9d8171ba29619f1540f2ac4bb25354",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Ryze:0",
+          "text": "Use Riftwalk to close the gap, then hit him with Nether Blade. Dive when his Rune Prison is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Kassadin-W", "start": 49, "end": 61 },
+            { "kind": "ability", "key": "Ryze-W", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Kassadin:Ryze:1",
+          "text": "Ryze deals magic damage, so Void Stone reduces all of it. You can trade into him more than most mages.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 28,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Kassadin:Ryze:2",
+          "text": "Cast Null Sphere on Ryze when he channels Realm Warp. It interrupts the channel and cancels the portal.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ryze-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Kassadin:Ryze:3",
+          "text": "Cast Null Sphere as Ryze starts his combo. Its shield absorbs some of the magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Kassadin:Ryze:4",
+          "text": "Stay away from Ryze when he has Flux on you, because his Overload then hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Kassadin:Ryze:5",
+          "text": "Force Pulse slows Ryze when he steps up for a trade. Use it to catch him and finish him off.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade then auto restores mana when trading, helping against Ryze's mana-based spell pressure.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ryze", "start": 67, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "da10396f1e363a4d1b272467552a5711190d85bd401b42512a1cff91db07274e",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Sylas:0",
+          "text": "Use Null Sphere on Sylas when he starts Hijack or a channel; it interrupts channels and gives you a shield against his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Sylas-R", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "middle:Kassadin:Sylas:1",
+          "text": "Sylas deals mostly magic damage, so Kassadin's Void Stone makes him tougher than most; trade when Sylas has to commit.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Kassadin", "start": 36, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Kassadin-passive",
+              "start": 47,
+              "end": 57
+            },
+            { "kind": "champion", "key": "Sylas", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Kassadin:Sylas:2",
+          "text": "Hit Sylas with Force Pulse when he dashes in so he is slowed and cannot easily chase you or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Kassadin:Sylas:3",
+          "text": "Use Riftwalk to step away from Abduct chains once Sylas has used Abscond. Dodging it leaves him exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Kassadin:Sylas:4",
+          "text": "Null Sphere blocks and punishes a Kingslayer dash only if you time the shield; otherwise back off when his health is low and he wants to heal.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "47730106ed1370157ce96eb400d7310684b05214cbe9fe88714a50c8ad009700",
+      "tips": [
+        {
+          "id": "middle:Kassadin:TwistedFate:0",
+          "text": "Stay out of Wild Cards early, since you are fragile before you level up. Step out of the line of the cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 12,
+              "end": 22
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Kassadin:TwistedFate:1",
+          "text": "When Twisted Fate starts shuffling Pick a Card, back away or blink out with Riftwalk so the Gold Card stun does not land.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Kassadin-R", "start": 76, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Kassadin:TwistedFate:2",
+          "text": "Use Null Sphere to hit him as you trade; it also gives you a shield against his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Kassadin:TwistedFate:3",
+          "text": "When Destiny goes off, expect him to teleport in to gank. Retreat or keep Riftwalk ready.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "ability", "key": "Kassadin-R", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "90751edfc9bdfce09f6ac53e6171930eba8d00d7239f92370d4e880595820403",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Viktor:0",
+          "text": "Use Null Sphere on Viktor when he starts a Gravity Field or Arcane Storm cast; it interrupts channels, and its shield soaks his magic poke.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Viktor-W", "start": 43, "end": 56 },
+            { "kind": "ability", "key": "Viktor-R", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Kassadin:Viktor:1",
+          "text": "Walk through minions freely and close the gap; Viktor's Hextech Ray is a straight line, so step out of its path.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Viktor-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Kassadin:Viktor:2",
+          "text": "Do not stand in Gravity Field; staying inside gets you slowed and then stunned. Riftwalk out of it early.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Kassadin:Viktor:3",
+          "text": "Use Nether Blade on Viktor to restore a lot of your missing Mana, especially after spending it on Riftwalk.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viktor", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Kassadin:Viktor:4",
+          "text": "Play safe early while Viktor pushes with poke, then look to trade once you reach level 6 and can jump on him with Riftwalk.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 114, "end": 122 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Kassadin:Viktor:5",
+          "text": "Hit Viktor with Force Pulse to slow him when you engage so he struggles to keep his distance.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7052d6a6650cbeab237a13c2d325bd2555b4bf4faddb7dafd19ae1a657e7d4ed",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Yasuo:0",
+          "text": "Hit Yasuo with Null Sphere when he starts a Steel Tempest whirlwind; it interrupts channels, and its shield absorbs magic damage from his Sweeping Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 44, "end": 57 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 138, "end": 152 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Kassadin:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks Null Sphere, so wait until it fades before you cast.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Kassadin:Yasuo:2",
+          "text": "Force Pulse slows Yasuo and is not blocked by Wind Wall, so use it when he dashes in to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Kassadin:Yasuo:3",
+          "text": "Use Riftwalk to step away from a whirlwind or to get out of reach after he knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Kassadin:Yasuo:4",
+          "text": "Use Nether Blade's extra range to hit Yasuo first when he walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:0",
+          "note": "Flash during Riftwalk adds blink distance to escape a Yasuo gank or catch him when he dashes away.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 54, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fd51ee8ca4b6716b6043c9a6cbcafdea44e71e987152015cb8b8d5f5f5bc0aa2",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Yone:0",
+          "text": "Use Null Sphere on Yone when he starts Spirit Cleave or Soul Unbound; it deals good damage, and the magic shield it gives you cuts his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Yone-W", "start": 39, "end": 52 },
+            { "kind": "ability", "key": "Yone-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Kassadin:Yone:1",
+          "text": "Fire Force Pulse when Yone dashes in with Mortal Steel. The slow lets you walk away from his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Yone-Q", "start": 42, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Kassadin:Yone:2",
+          "text": "Use Riftwalk to leave when Yone has two Mortal Steel stacks. His knock up dash is the move that starts his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Yone-Q", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Kassadin:Yone:3",
+          "text": "Stay behind your minions early. Yone beats you in a straight fight, so farm safely until level 6 and your Riftwalk.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 106, "end": 114 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Kassadin:Yone:4",
+          "text": "Hit Yone with an empowered Nether Blade attack to get mana back. Do it when you can land the hit safely.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kassadin-W", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Kassadin:combo:1",
+          "note": "Nether Blade's bonus range and reset help Kassadin regain mana while trading against Yone's melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Kassadin", "start": 42, "end": 50 },
+            { "kind": "champion", "key": "Yone", "start": 85, "end": 89 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "451f294debc0f4c0b7a3de0f74d13029db3ce1a1d0c22af937d96b527b5df906",
+      "tips": [
+        {
+          "id": "middle:Kassadin:Zed:0",
+          "text": "Use Null Sphere on Zed when he walks up to trade; the shield absorbs magic damage, and Zed's Death Mark mostly hits with physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 19, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 87, "end": 90 },
+            { "kind": "ability", "key": "Zed-R", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Kassadin:Zed:1",
+          "text": "Point Force Pulse at Zed when he and his shadows close in; it slows him and gives you room to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Kassadin:Zed:2",
+          "text": "Zed is weakest right after he uses Living Shadow, so trade on him then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Kassadin:Zed:3",
+          "text": "Once Zed puts Death Mark on you, use Riftwalk to get away from his shadow. He is only dangerous for a short time, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zed-R", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Kassadin:Zed:4",
+          "text": "Nether Blade restores your mana when it hits a champion, so use it on Zed to keep trading.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Zed", "start": 70, "end": 73 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

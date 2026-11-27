@@ -1,0 +1,2339 @@
+{
+  "schemaVersion": 1,
+  "champion": "Pyke",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "2d467f1e23d8bb46e555542db496ec5d7784de9bd37461c657d560f9c0383345",
+      "tips": [
+        {
+          "id": "support:Pyke:general:0",
+          "text": "Hold Bone Skewer to throw the harpoon and pull an enemy to you. Tap it for a fast, short stab when they are already close.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pyke:general:1",
+          "text": "Use Bone Skewer in melee range to fling the target behind you, toward your team.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:general:2",
+          "text": "Line up a clear path before you throw Bone Skewer, because the harpoon stops at the first unit it hits and a minion will take the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Pyke:general:3",
+          "text": "Follow a Bone Skewer pull with Phantom Undertow while the enemy is slowed, so the stun lands and your team gets a free kill.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Pyke-E", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Pyke:general:4",
+          "text": "Dash with Phantom Undertow, because the stun comes from the phantom he leaves behind and returns. Aim so the phantom's path crosses the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pyke:general:5",
+          "text": "Hurt enemies and break line of sight, then use Ghostwater Dive to hide. Gift of the Drowned Ones heals you only while enemies cannot see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 47, "end": 62 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 72, "end": 96 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Pyke:general:6",
+          "text": "Ghostwater Dive ends the moment you attack or cast. Use it to approach or flee, and enemies nearby are alerted to you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pyke:general:7",
+          "text": "Always have an escape plan. Pyke is fragile, and many of his attacking spells are also his ways out.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pyke:general:8",
+          "text": "Use Death From Below on low-health enemies at level 6. It executes them, and you can recast it for free if a champion dies inside the X.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Pyke:combo:0",
+          "name": "Tap Bone Skewer",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Pyke-Q" }],
+          "when": "Use it when an enemy is in melee range and you want fast damage and a slow, not a pull.",
+          "whenRefs": [],
+          "text": "Release Bone Skewer almost at once and Pyke stabs the closest enemy champion instead of throwing the harpoon. It is quicker, and you don't get locked in place.",
+          "textRefs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 39, "end": 43 }
+          ]
+        },
+        {
+          "id": "support:Pyke:combo:1",
+          "name": "Flash during hook charge",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Pyke-Q" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "Use it when an enemy is just outside your hook range and expects you to be unable to reach them.",
+          "whenRefs": [],
+          "text": "Flash is allowed while Bone Skewer is charging, but not once the harpoon is in flight. Flash in the direction of the hook while charging to surprise them.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 23, "end": 34 },
+            { "kind": "summoner-spell", "key": "4", "start": 87, "end": 92 }
+          ]
+        },
+        {
+          "id": "support:Pyke:combo:2",
+          "name": "Execute reset chain",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Pyke-R" },
+            { "kind": "ability", "key": "Pyke-R" }
+          ],
+          "when": "Use it in a teamfight when your first ultimate kills an enemy champion.",
+          "whenRefs": [],
+          "text": "Every kill inside the X lets you recast Death From Below for free within a short time. Look for a second low-health enemy to chain the execute.",
+          "textRefs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 40, "end": 56 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "46b64dd668ead08c4f172ea7b5aa85ecae43c3ccdc6328c4a71b77f729b70bae",
+      "tips": [
+        {
+          "id": "support:Pyke:Alistar:0",
+          "text": "Hold Bone Skewer to pull Alistar out of position, then follow up with Phantom Undertow to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Alistar", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Pyke-E", "start": 70, "end": 86 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pyke:Alistar:1",
+          "text": "Stay out of Headbutt range; Alistar can dash to you and stun you. Keep minions in front of you.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 12, "end": 20 },
+            { "kind": "champion", "key": "Alistar", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Pyke:Alistar:2",
+          "text": "Do not hook Alistar once he uses Unbreakable Will; back off and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Alistar-R", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pyke:Alistar:3",
+          "text": "Target the enemy damage dealer instead of tough Alistar. Use Ghostwater Dive to slip away and regain health if you get hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Pyke-W", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer gives quick damage and a slow without a locked-in charge when Alistar is in melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Alistar", "start": 78, "end": 85 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "52c71adfd0f0a25b5c8b06dc1b63d78f58bcab1751d1b9b570e8e73fae5848bb",
+      "tips": [
+        {
+          "id": "support:Pyke:Anivia:0",
+          "text": "Don't charge Bone Skewer in a straight line down the lane at Anivia. Flash Frost will hit you while you stand still.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Anivia", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Pyke:Anivia:1",
+          "text": "Look for Phantom Undertow when Anivia has used Crystallize. Without her wall she can't block your dash.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Anivia", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Anivia-W", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Pyke:Anivia:2",
+          "text": "Step out of Flash Frost's path. Its detonation stuns, and it is the way she sets up a kill on you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pyke:Anivia:3",
+          "text": "Go for a Death From Below pick when Anivia is low. Her egg can come back, so kill her again or hit someone else.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Anivia", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "42d6e652f046d9f3e27f01e3a57930ec773ade548915525f911b41aecd75b0f0",
+      "tips": [
+        {
+          "id": "support:Pyke:Bard:0",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Bard:1",
+          "text": "Stay behind your minions or out of line with your ADC so Cosmic Binding cannot hit two targets or a wall and stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Pyke:Bard:2",
+          "text": "Hold Bone Skewer and pull Bard out of position. Do it away from his allies, since his Cosmic Binding stuns if you are in a bad spot.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Bard", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Bard-Q", "start": 86, "end": 100 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Pyke:Bard:3",
+          "text": "Hold back Phantom Undertow until Bard has used Cosmic Binding. A stun on a fragile Bard usually wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 47, "end": 61 },
+            { "kind": "champion", "key": "Bard", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Pyke:Bard:4",
+          "text": "You can follow Bard through a Magical Journey portal if it looks safe, or flank him as he roams.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Bard-E", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pyke:Bard:5",
+          "text": "Do not commit to an execute while Bard has Tempered Fate up. It can freeze your target or you in stasis, so wait for it to be used.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Bard-R", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flash during the hook charge can surprise Bard, who has a slow bolt but no listed way to avoid the hook.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Bard", "start": 42, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "ace965496b406d98a198c9e8dba9763ab82c64726658a3b28863e660f8b643cf",
+      "tips": [
+        {
+          "id": "support:Pyke:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits one of them instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pyke:Blitzcrank:1",
+          "text": "Use Ghostwater Dive to break away after a trade; you heal damage you took while enemies can't see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Blitzcrank:2",
+          "text": "Stay out of Blitzcrank's reach when Rocket Grab is ready. A pull into his Power Fist is a lot of damage on a fragile champion.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 12, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 36,
+              "end": 47
+            },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pyke:Blitzcrank:3",
+          "text": "Use Phantom Undertow to stun Blitzcrank when he comes in close, then follow with Bone Skewer.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 29, "end": 39 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 81, "end": 92 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Pyke:Blitzcrank:4",
+          "text": "Hold Bone Skewer to pull Blitzcrank when he is out of position, then keep your distance. His shield only appears when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tapping Bone Skewer stabs and slows at melee range without a long channel, handy when Blitzcrank is close.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 86, "end": 96 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during the hook charge can surprise Blitzcrank, who is just outside range and expects no hook.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 45, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "934ad1775339d9226d3f68c8ca79fcfdef6c55c66a75722c690b999d71474e1d",
+      "tips": [
+        {
+          "id": "support:Pyke:Brand:0",
+          "text": "Hit Bone Skewer on Brand when he steps up to poke. He has no escape, so the pull leaves him easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Brand", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Pyke:Brand:1",
+          "text": "Brand needs to land one spell before Sear can stun, so dodge his first spell and his combo falls apart.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Brand-Q", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Pyke:Brand:2",
+          "text": "Use Ghostwater Dive to heal back the poke you took, then come back from a side angle.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Brand:3",
+          "text": "Use Phantom Undertow when Brand is close; the stun gives your team time to kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Brand", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pyke:Brand:4",
+          "text": "Do not stand next to your ADC or minions when Brand casts Pyroclasm. It is slow at first, so step away.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Brand-R", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing mid-charge lets Pyke's Bone Skewer reach Brand when he stands just outside hook range.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Brand", "start": 50, "end": 55 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer gives fast damage and a slow on Brand if he steps into melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Brand", "start": 48, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "635d9a6cece5b1dccdcd5ec496b526c22566d027e97eff1cad6e2329290d7496",
+      "tips": [
+        {
+          "id": "support:Pyke:Braum:0",
+          "text": "Don't throw Bone Skewer into a raised Unbreakable, since it is destroyed on the shield. Wait for the shield to drop, or come at Braum from another side.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Braum-E", "start": 38, "end": 49 },
+            { "kind": "champion", "key": "Braum", "start": 128, "end": 133 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Braum:1",
+          "text": "Once Braum has marked you with Concussive Blows, back out before you get hit again. The fourth stack stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 31,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pyke:Braum:2",
+          "text": "Stay out of sight with Ghostwater Dive after a trade. Gift of the Drowned Ones heals back damage that champions dealt to you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 54, "end": 78 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pyke:Braum:3",
+          "text": "Don't stand in the slow zone Glacial Fissure leaves behind. Dodge the slam during its long cast time.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Braum-R", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "021ce2cfa23f6156558de221a781d8e2bdb6befdc0202afe3e70ce4c6fb8b784",
+      "tips": [
+        {
+          "id": "support:Pyke:Camille:0",
+          "text": "Hold Bone Skewer to pull Camille toward you. Her Hookshot can dash her away from the fight, so hit her when she cannot reach a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Camille", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Camille-E", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Pyke:Camille:1",
+          "text": "Camille's Tactical Sweep slows and heals her, so avoid standing in its outer half.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-W", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pyke:Camille:2",
+          "text": "Stun Camille with Phantom Undertow when she commits with Hookshot, then follow up with your damage.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Camille", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Pyke-E", "start": 18, "end": 34 },
+            { "kind": "ability", "key": "Camille-E", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Camille:3",
+          "text": "Hide with Ghostwater Dive after a trade so you regenerate the damage she dealt.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer gives quick damage and a slow when Camille is in melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Camille", "start": 51, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "59ceb446ecf86f265ef9f904fff3138456f3fe0a2b2b540e28d1e27fdbb30d12",
+      "tips": [
+        {
+          "id": "support:Pyke:Janna:0",
+          "text": "Hook Janna with Bone Skewer when she steps up to poke; she is fragile and has few ways to escape once pulled.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Pyke:Janna:1",
+          "text": "Janna's Monsoon knocks you away and ends your all-in, so wait for it to be used before committing.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-R", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pyke:Janna:2",
+          "text": "Land Phantom Undertow to stun Janna, then finish her before her Howling Gale can come out.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Janna", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Janna-Q", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Pyke:Janna:3",
+          "text": "Hide with Ghostwater Dive after a trade so Gift of the Drowned Ones can heal the damage you took.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 43, "end": 67 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ba2c450344fd9236386b5735f662a5172e6c7f26cad90f1c814b87ca2834f5da",
+      "tips": [
+        {
+          "id": "support:Pyke:Karma:0",
+          "text": "Hook with Bone Skewer only when you have a clear line to Karma. Her Inner Flame is a slowing poke that you must avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Karma", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Karma-Q", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Pyke:Karma:1",
+          "text": "Stay out of sight after a trade with Karma. Gift of the Drowned Ones then heals the damage she dealt.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 44, "end": 68 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Pyke:Karma:2",
+          "text": "Break the tether of Focused Resolve by moving out of range, or it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Pyke:Karma:3",
+          "text": "Use Phantom Undertow to stun Karma when she is without Mantra, because it makes her next ability stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Karma", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Karma-R", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tapping Q stabs a close Karma fast and slows her, so she can't easily kite you.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 24, "end": 29 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during hook charge can catch Karma outside your expected range before she reacts.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 38, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "eb1dcd87a94890159048da7fb81f03a7020a5a9ad4409079d3a32d220b996454",
+      "tips": [
+        {
+          "id": "support:Pyke:Leona:0",
+          "text": "Pull Leona toward you with a held Bone Skewer only when you can follow with Phantom Undertow; otherwise she gets a free fight.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 34, "end": 45 },
+            { "kind": "ability", "key": "Pyke-E", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pyke:Leona:1",
+          "text": "Stay out of Zenith Blade range; if it hits you, she dashes in and Shield of Daybreak stuns you right after.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Leona-Q", "start": 66, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Pyke:Leona:2",
+          "text": "When Leona raises Eclipse, walk away for its duration before it blasts you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Pyke:Leona:3",
+          "text": "Dodge out of the center of Solar Flare; only the center stuns, the edge only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Leona:4",
+          "text": "Break sight with Ghostwater Dive after a trade so Gift of the Drowned Ones heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 50, "end": 74 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tapping Q stabs at once with a slow and no root-in-place, useful when Leona closes in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 70, "end": 75 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing mid-charge can surprise Leona, who has no listed way to stop a hook from outside range.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 33, "end": 38 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "b1882b6aef62582cb6a515674d39c1f2d26c726fed1ab997d71c631ed9cae690",
+      "tips": [
+        {
+          "id": "support:Pyke:Lulu:0",
+          "text": "Hold Bone Skewer to pull Lulu to you, then stun her with Phantom Undertow; she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Pyke-E", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Pyke:Lulu:1",
+          "text": "Watch for Lulu's Whimsy before you dive; being polymorphed ends your engage. Wait until it is used.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Lulu-W", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Pyke:Lulu:2",
+          "text": "Duck out of sight with Ghostwater Dive after trading so you regenerate, but expect Lulu's Help, Pix! to reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 },
+            { "kind": "champion", "key": "Lulu", "start": 83, "end": 87 },
+            { "kind": "ability", "key": "Lulu-E", "start": 90, "end": 100 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Pyke:Lulu:3",
+          "text": "Stand behind minions when Lulu attacks, so Pix's bolts hit them instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during hook charge can reach a Lulu who stands just outside Bone Skewer's normal range.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 69, "end": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "1d512206916a11fdbcba81d0404bd68c9637fbff7e32f95b724ac61108b41661",
+      "tips": [
+        {
+          "id": "support:Pyke:Lux:0",
+          "text": "Hold Bone Skewer to pull Lux in when she steps forward; she is fragile and you can finish her fast.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pyke:Lux:1",
+          "text": "Sidestep Light Binding; it stops at two enemies, so keep your minions or ally away from its line to avoid being rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pyke:Lux:2",
+          "text": "Stun Lux with Phantom Undertow once her Light Binding is used; she has few ways to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Pyke-E", "start": 14, "end": 30 },
+            { "kind": "ability", "key": "Lux-Q", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Pyke:Lux:3",
+          "text": "Retreat with Ghostwater Dive when hurt to heal your recent damage, but stay out of Lucent Singularity, which reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Lux-E", "start": 83, "end": 101 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Pyke:Lux:4",
+          "text": "Walk out of the red line before Final Spark fires; move to the side when low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1650a84b77d4f4501f5a9de58523e2b4108267ec64abdfcf60d5a09c6fc3c6f6",
+      "tips": [
+        {
+          "id": "support:Pyke:Maokai:0",
+          "text": "Hold Bone Skewer to pull Maokai out of position, then follow with Phantom Undertow to stun him. Do not stand in his Sapling Toss slow.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Maokai", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Pyke-E", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 },
+            { "kind": "ability", "key": "Maokai-E", "start": 116, "end": 128 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Maokai:1",
+          "text": "Check brush for saplings before you walk in or dive; they chase you and slow you down.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pyke:Maokai:2",
+          "text": "Maokai is untargetable during Twisted Advance, so do not waste Bone Skewer on him while he dashes. Keep Phantom Undertow ready to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Maokai-W", "start": 30, "end": 45 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 63, "end": 74 },
+            { "kind": "ability", "key": "Pyke-E", "start": 104, "end": 120 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Pyke:Maokai:3",
+          "text": "Use Ghostwater Dive to heal back damage after a trade. Hits on Maokai also speed up his Sap Magic heal, so poke sparingly.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Maokai", "start": 63, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 88,
+              "end": 97
+            },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tapping Q gives quick damage and a slow without locking Pyke in place when Maokai closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 56, "end": 60 },
+            { "kind": "champion", "key": "Maokai", "start": 75, "end": 81 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "2dae2fd8084976ced859b21e4598f295129f192efbfb08bd2bb3d31e357059ec",
+      "tips": [
+        {
+          "id": "support:Pyke:Mel:0",
+          "text": "Wait until Mel has used Rebuttal before you throw Bone Skewer or Phantom Undertow; her nova destroys enemy projectiles.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Mel-W", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 50, "end": 61 },
+            { "kind": "ability", "key": "Pyke-E", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Pyke:Mel:1",
+          "text": "Hold Bone Skewer to pull Mel into your team when she steps up. Her Solar Snare is slow and easy to see coming, so stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Mel", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Mel-E", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Pyke:Mel:2",
+          "text": "Mel is fragile, so a landed Phantom Undertow stun gives you time to follow up and burst her.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Pyke-E", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pyke:Mel:3",
+          "text": "Back off for a couple of seconds when Mel's hits pile up on you. Enough Overwhelm damage kills you outright.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 38, "end": 41 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pyke:Mel:4",
+          "text": "When you are hurt, use Ghostwater Dive to hide and heal back damage Mel did to you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 },
+            { "kind": "champion", "key": "Mel", "start": 68, "end": 71 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c6ce50d4141d0d930999f699649656e596a6f5cf0faac61590949d6ce44afa8e",
+      "tips": [
+        {
+          "id": "support:Pyke:Milio:0",
+          "text": "Hold Bone Skewer to pull Milio away from his ally; alone he has few ways to get out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Pyke:Milio:1",
+          "text": "Look for Phantom Undertow when Milio stands still; the stun gives you time to follow up before he can use Warm Hugs.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Milio", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Milio-E", "start": 106, "end": 115 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Pyke:Milio:2",
+          "text": "Use Ghostwater Dive to heal back damage once Milio and his partner lose sight of you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Pyke:Milio:3",
+          "text": "Use Death From Below on a low-health enemy. Milio's Breath of Life heals, so finish before he can cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Milio", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Milio-R", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Pyke:Milio:4",
+          "text": "Stay out of the line of Ultra Mega Fire Kick, because its knockback and slow wreck your engage.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 24, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during the hook charge can catch Milio, who may think he is outside your hook range.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 42, "end": 47 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "d2fdd3d17625cb328fb566cd5ec993963ea194b60490c841703699142ed62d9f",
+      "tips": [
+        {
+          "id": "support:Pyke:Morgana:0",
+          "text": "Hold Bone Skewer to pull Morgana in, but only when no minion stands in the line; it stops at the first enemy and the pull is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Morgana", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Pyke:Morgana:1",
+          "text": "Stay out of Dark Binding's line behind minions; if you are rooted, Morgana's team can punish you hard.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 },
+            { "kind": "champion", "key": "Morgana", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pyke:Morgana:2",
+          "text": "Wait for Morgana to use Black Shield before you dash in with Phantom Undertow; the stun will not work on a shielded target.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-E", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Pyke-E", "start": 61, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Pyke:Morgana:3",
+          "text": "Use Ghostwater Dive to leave Tormented Shadow, then heal with Gift of the Drowned Ones once Morgana can't see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Morgana-W", "start": 29, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 62,
+              "end": 86
+            },
+            { "kind": "champion", "key": "Morgana", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Pyke:Morgana:4",
+          "text": "Don't stand in Tormented Shadow when low on health; it deals more damage to hurt targets.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pyke:Morgana:5",
+          "text": "Once Morgana has Soul Shackles, move away from her during the chains so you are not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Morgana-R", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1da2d9820184ea8cc51379d67065808f44f4383eaae2f4fc17d9ab45a5b6918f",
+      "tips": [
+        {
+          "id": "support:Pyke:Nami:0",
+          "text": "Wait until Nami has used Aqua Prison before you go in. It has a long cooldown, and you are much safer without it.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Nami-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pyke:Nami:1",
+          "text": "Hold Bone Skewer to pull Nami to you when she steps forward to poke. Follow up with Phantom Undertow while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Pyke-E", "start": 84, "end": 100 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Nami:2",
+          "text": "Step out of the way of Tidal Wave. It travels slowly, so you can see it coming and sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Nami:3",
+          "text": "Back off when the enemy ally has Tidecaller's Blessing. It is short-lived, so waiting it out costs you little.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 33, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Pyke:Nami:4",
+          "text": "If you take a hit, use Ghostwater Dive to hide. Gift of the Drowned Ones heals you back while enemies cannot see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 48, "end": 72 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5734379841f5bfcd73bf593cd88e16006cf7f0fbd2f9b08e5243087a72016c2a",
+      "tips": [
+        {
+          "id": "support:Pyke:Nautilus:0",
+          "text": "Stay out of Dredge Line's path. Its anchor stops on the first enemy it hits, so keep a minion between you and Nautilus.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 110, "end": 118 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Nautilus:1",
+          "text": "Pull Nautilus with Bone Skewer when he is exposed. He is tanky, so use it to set up your ally, not to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Pyke:Nautilus:2",
+          "text": "Do not run out of Riptide early. Wait until the waves finish or you take extra damage and get slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Pyke:Nautilus:3",
+          "text": "Use Ghostwater Dive to escape and heal after a trade. Nautilus cannot easily find you once you are hidden.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nautilus", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Pyke:Nautilus:4",
+          "text": "Stun Nautilus with Phantom Undertow when he commits to an engage so you can get free damage on him.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pyke-E", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tapping Bone Skewer gives quick damage and a slow without locking Pyke in place against Nautilus.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 66, "end": 70 },
+            { "kind": "champion", "key": "Nautilus", "start": 88, "end": 96 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "9039cb0803d9022a76be7fe5f0bad2cce1115ef9a7f6554c9f3ab4c053d50ee6",
+      "tips": [
+        {
+          "id": "support:Pyke:Neeko:0",
+          "text": "Hold Bone Skewer to pull Neeko out of her group, then stun her with Phantom Undertow, since she has little to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Neeko", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Pyke-E", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Pyke:Neeko:1",
+          "text": "Stay out of Tangle-Barbs range and avoid standing behind minions, as the empowered tangle roots you much longer after hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Pyke:Neeko:2",
+          "text": "Watch for a disguised ally or minion that is Neeko; she can set up Pop Blossom unseen, so don't stack up on low-health allies.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Neeko-R", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Pyke:Neeko:3",
+          "text": "Use Ghostwater Dive to get out of sight and recover health after a trade with Neeko.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8746959fcdedae445c47adfbdc171f0c359f581a3c2518d65db4b098952eecde",
+      "tips": [
+        {
+          "id": "support:Pyke:Pantheon:0",
+          "text": "Hold Bone Skewer to pull Pantheon in, and follow with Phantom Undertow to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Pyke-E", "start": 54, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Pantheon:1",
+          "text": "Do not trade while Pantheon is bracing with Aegis Assault from the front. Step to the side or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Pantheon:2",
+          "text": "Stay away from Pantheon's range when you are low. Shield Vault stuns, and a thrown Comet Spear hits hard against low health.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 50, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Pyke:Pantheon:3",
+          "text": "Use Ghostwater Dive to disappear after a trade so you heal back damage. Pantheon cannot see you to follow.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer stabs and slows Pantheon in melee range without locking Pyke in place.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 32, "end": 40 },
+            { "kind": "champion", "key": "Pyke", "start": 72, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "25af82bc5befa736a8392ef442850d12be24fa65d2cce3ec020076f661c1ed40",
+      "tips": [
+        {
+          "id": "support:Pyke:Poppy:0",
+          "text": "Hold Bone Skewer only when Poppy is not already near. A hit lets you pull her in, but a miss leaves you stuck and open.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Poppy", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Pyke:Poppy:1",
+          "text": "Do not dash with Phantom Undertow while Steadfast Presence is active; Poppy stops the dash. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 17, "end": 33 },
+            { "kind": "ability", "key": "Poppy-W", "start": 40, "end": 58 },
+            { "kind": "champion", "key": "Poppy", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Pyke:Poppy:2",
+          "text": "Stay away from walls behind you when Poppy is near. Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Poppy-E", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Poppy:3",
+          "text": "Step on her buckler to deny her shield.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Poppy:4",
+          "text": "When Poppy starts spinning her hammer for Keeper's Verdict, move out of its line or get away. Don't stand still.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0bb7414cb953bebab717d1b625ffd4a7b6f56857cdfc59a65aa9764b0e7a087d",
+      "tips": [
+        {
+          "id": "support:Pyke:Rakan:0",
+          "text": "Hold Bone Skewer to pull Rakan away from his carry. He is easy to kill when alone.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Pyke:Rakan:1",
+          "text": "Save Phantom Undertow to stun Rakan when he starts Grand Entrance. The stun knocks him down mid-dash.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Rakan", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Rakan-W", "start": 51, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Pyke:Rakan:2",
+          "text": "Step out of line with minions when Rakan throws Gleaming Quill. It hits the first enemy in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Pyke:Rakan:3",
+          "text": "After a trade, hide with Ghostwater Dive to heal back the damage Rakan dealt.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 25, "end": 40 },
+            { "kind": "champion", "key": "Rakan", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:2",
+          "note": "Death From Below can execute a low-health Rakan, and a kill lets Pyke chain it onto another target.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 42, "end": 47 },
+            { "kind": "champion", "key": "Pyke", "start": 65, "end": 69 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "0ba01b2eb2251f442965d6cef8c5043ac017d634322e3d304e455286152b6eae",
+      "tips": [
+        {
+          "id": "support:Pyke:Rell:0",
+          "text": "Hold Bone Skewer to pull Rell into your team. Land it before she gets close, because the tap version has very short range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rell", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Pyke:Rell:1",
+          "text": "Her Shattering Strike stuns and destroys shields. Stay out of its range, and sidestep it when she winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 4, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Pyke:Rell:2",
+          "text": "Use Ghostwater Dive to break sight and regain health, then come back with Phantom Undertow when Rell is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Pyke-E", "start": 74, "end": 90 },
+            { "kind": "champion", "key": "Rell", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Pyke:Rell:3",
+          "text": "Do not stand clumped in Magnet Storm; she pulls everyone nearby to her. Dash out with Phantom Undertow if you are caught.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-R", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Pyke-E", "start": 86, "end": 102 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f4be198839b7ce947edf6c5836f2a3a70ac1a4263a506ff69f482703a791bb0f",
+      "tips": [
+        {
+          "id": "support:Pyke:Senna:0",
+          "text": "Hold Bone Skewer to pull Senna in when she stands within reach. Otherwise tap it to stab her at close range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pyke:Senna:1",
+          "text": "Stay out of Senna's Last Embrace line. It roots you after a short delay, so sidestep it or don't walk in a straight line toward her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pyke:Senna:2",
+          "text": "Use Ghostwater Dive to hide and regain health from Gift of the Drowned Ones after Senna pokes you down.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 51,
+              "end": 75
+            },
+            { "kind": "champion", "key": "Senna", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pyke:Senna:3",
+          "text": "Land Phantom Undertow to stun Senna, then finish her with Death From Below; she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Senna", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Pyke-R", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer stabs for quick damage and a slow without locking Pyke in place against Senna.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pyke", "start": 66, "end": 70 },
+            { "kind": "champion", "key": "Senna", "start": 88, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "ce342ffa60c27e9367a68912797a7afae22e8aa5677f30bb33b73edcc54837cd",
+      "tips": [
+        {
+          "id": "support:Pyke:Seraphine:0",
+          "text": "Hold Bone Skewer to hook Seraphine when she steps forward. The pull drags her into your team and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Seraphine", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Seraphine:1",
+          "text": "Dodge High Note when you are hurt. It hits harder the less health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 6, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pyke:Seraphine:2",
+          "text": "Step out of the line of Beat Drop. If you are already slowed it roots you, and if you are stopped it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Pyke:Seraphine:3",
+          "text": "Hide with Ghostwater Dive after a trade to heal back damage from Gift of the Drowned Ones. Seraphine's wide-area spells are poor at finding you there.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 10, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 65,
+              "end": 89
+            },
+            { "kind": "champion", "key": "Seraphine", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Pyke:Seraphine:4",
+          "text": "Hit Phantom Undertow on Seraphine to stun her. Do it before she can use Encore, since the charm and long range make it hard to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Seraphine", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Bone Skewer gives quick damage and a slow if Seraphine is in melee range, with no windup.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Seraphine", "start": 49, "end": 58 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing while charging Bone Skewer can catch Seraphine who thinks she is outside your hook range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Seraphine", "start": 46, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "e7450b5b6e882bc13ebcfcd8888ebc948645db484ab191b08317af4a36c9ab22",
+      "tips": [
+        {
+          "id": "support:Pyke:Shen:0",
+          "text": "Hit Shen with Bone Skewer's hold version when he walks up, to pull him out of position away from your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Pyke:Shen:1",
+          "text": "Stay out of sight with Ghostwater Dive after a trade; you heal back damage taken from champions while hidden.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Pyke:Shen:2",
+          "text": "Don't swing at the target Shen is shielding with Spirit's Refuge; your basic attacks are blocked while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Shen-W", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Shen:3",
+          "text": "Watch for Shen's Shadow Dash taunt before you engage; it forces you to attack him instead of your target.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-E", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Pyke:Shen:4",
+          "text": "Shen's Stand United can arrive from anywhere at level 6, so don't chase a low-health kill for long when Shen is gone from lane.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-R", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Shen", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0dc797f0e0f603c3abd1c0be653df393a91541ebf7658c9a4531cd6760301613",
+      "tips": [
+        {
+          "id": "support:Pyke:Sona:0",
+          "text": "Hit Sona with Bone Skewer when she steps up to poke. Pulling her away from her minions and your enemies leaves her in trouble.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Pyke:Sona:1",
+          "text": "Stun Sona with Phantom Undertow, then follow up with Bone Skewer. She is fragile and cannot easily survive being caught.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sona", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pyke-E", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pyke:Sona:2",
+          "text": "Duck out of sight with Ghostwater Dive after taking poke. You heal back the damage while she can't see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Sona:3",
+          "text": "Stay out of Crescendo's range when it is ready. Being stunned in the middle of her team usually means you die.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Pyke:Sona:4",
+          "text": "Sona's Song of Celerity speeds her away from you. Use Phantom Undertow to catch her, not Bone Skewer.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-E", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Pyke-E", "start": 54, "end": 70 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Sona is a ranged support, so a quick Bone Skewer stab gives fast damage and slow when she is in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 37, "end": 48 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during Bone Skewer charge can reach Sona when she stands just outside your hook range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Sona", "start": 45, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "6d05d24418c0f04e35546c03c7ccbf53bdfc5375314c4282f205288bb812980e",
+      "tips": [
+        {
+          "id": "support:Pyke:Soraka:0",
+          "text": "Hit Soraka with Bone Skewer when she steps up to cast. A pull into your team makes her an easy kill.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Pyke:Soraka:1",
+          "text": "Stay out of Equinox. If you are caught in it you can't use abilities, then you are rooted when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Pyke:Soraka:2",
+          "text": "Soraka's Equinox has a long cooldown. Go in with Phantom Undertow right after she uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Soraka-E", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Pyke-E", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Pyke:Soraka:3",
+          "text": "Step into the water with Ghostwater Dive after a trade so Soraka can't see you, and your Gift of the Drowned Ones will heal the damage back.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 25, "end": 40 },
+            { "kind": "champion", "key": "Soraka", "start": 58, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 89,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Pyke:Soraka:4",
+          "text": "Go for Soraka with Death From Below if she is low. Her Astral Infusion costs her health, so she is easy to bring down.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Pyke-R", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Soraka-W", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flash during hook charge can reach Soraka when she stands just outside normal hook range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Soraka", "start": 35, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "997cbf8833a37febd85ead6a59b855baa0be73c9ded4437dfd0fe51b1315db37",
+      "tips": [
+        {
+          "id": "support:Pyke:Swain:0",
+          "text": "Stay out of Nevermove's range, especially near minions. Rooted, you can be pulled in and killed.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Pyke:Swain:1",
+          "text": "Walk in close before Swain uses Death's Hand, because it hurts less from far away. Dodge sideways when he casts it.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Swain-Q", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Pyke:Swain:2",
+          "text": "Ghostwater Dive hides you and lets you heal back damage. Use it to get out of sight after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Pyke:Swain:3",
+          "text": "Move after casting Vision of Empire so you are not standing in it. Its long delay makes it easy to walk out of.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Pyke:Swain:4",
+          "text": "Do not hold Bone Skewer and charge it while Swain is close. A Nevermove root punishes you for standing still.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Swain", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Swain-E", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "886312543c2aed22d4d9cd4beea047569a0b5adae1383b523931163245942f67",
+      "tips": [
+        {
+          "id": "support:Pyke:TahmKench:0",
+          "text": "Aim Bone Skewer at Tahm Kench only when his Tongue Lash is down; otherwise stay out of its long reach.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "TahmKench", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Pyke:TahmKench:1",
+          "text": "Tahm Kench's Thick Skin shield soaks up your burst. Wait for him to use it before you commit your full combo.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 13, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pyke:TahmKench:2",
+          "text": "When your health is low, go hidden with Ghostwater Dive and heal back damage with Gift of the Drowned Ones.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 40, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 82,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:TahmKench:3",
+          "text": "Avoid taking hits from Tahm Kench's basic attacks. Three stacks of An Acquired Taste let his Tongue Lash stun you.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 23, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 67,
+              "end": 84
+            },
+            {
+              "kind": "ability",
+              "key": "TahmKench-Q",
+              "start": 93,
+              "end": 104
+            },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a49e5f73be265a005382812aa6faf5379966133325abfbd162da1c8d165d082b",
+      "tips": [
+        {
+          "id": "support:Pyke:Taric:0",
+          "text": "Hold Bone Skewer to pull Taric or his carry out of position. Tap it if he is close, since the tap is faster.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Taric", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Pyke:Taric:1",
+          "text": "Walk out of Dazzle or dash away with Phantom Undertow. It bursts after a delay, so move once you see it.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Pyke-E", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Pyke:Taric:2",
+          "text": "Do not go for an execute when Cosmic Radiance is coming down. Wait until it ends, then hit with Death From Below.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-R", "start": 30, "end": 45 },
+            { "kind": "ability", "key": "Pyke-R", "start": 96, "end": 112 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Pyke:Taric:3",
+          "text": "Punish Taric when he walks up to the minions to hit with Bravado. He is open to a pull then.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 7, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 57,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Pyke:Taric:4",
+          "text": "Use Ghostwater Dive to hide and regain health after a trade. His allies will see sharks if you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "34682246bdaf9622158fe6729d353c2c9f3478ae05b45dff0e2d4436ccbf2e49",
+      "tips": [
+        {
+          "id": "support:Pyke:Thresh:0",
+          "text": "Dodge Death Sentence by watching Thresh's cast begin, since it has a long cast time.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Thresh", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Pyke:Thresh:1",
+          "text": "Hold Phantom Undertow until Thresh has used Flay or Death Sentence, then stun him and go in.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Thresh", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Thresh-E", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Pyke:Thresh:2",
+          "text": "Break out of sight with Ghostwater Dive after a trade; Gift of the Drowned Ones heals you back when Thresh can't see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 24, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 55,
+              "end": 79
+            },
+            { "kind": "champion", "key": "Thresh", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Thresh:3",
+          "text": "Hit Thresh with Bone Skewer at close range to throw him behind you, away from your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:0",
+          "note": "Tap Q stabs instantly in melee, so Thresh's Flay-poking range can be answered without a slow charge.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 35, "end": 41 }
+          ]
+        },
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flash during Q charge can surprise Thresh, who may feel safe outside hook range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Thresh", "start": 35, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "36a2a643ba77cdd8d2e699aee26effa38aad7321464a263326640714dcd42c61",
+      "tips": [
+        {
+          "id": "support:Pyke:Velkoz:0",
+          "text": "Stay out of Vel'Koz's Plasma Fission range. If it hits you, you are slowed and easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 22, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Pyke:Velkoz:1",
+          "text": "Hit Vel'Koz with Bone Skewer when he steps forward. He has little mobility, so one pull can get you a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Pyke:Velkoz:2",
+          "text": "Use Phantom Undertow to stun Vel'Koz as he starts Life Form Disintegration Ray; the stun interrupts it.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-E", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Velkoz", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 50, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Pyke:Velkoz:3",
+          "text": "Use Ghostwater Dive to hide and heal back the damage Vel'Koz poked off you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Velkoz", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": [
+        {
+          "comboId": "support:Pyke:combo:1",
+          "note": "Flashing during the hook charge can close the gap on Vel'Koz, who tends to poke from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 53, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "ea346b554666359703be098183b07b12cebd015fd5b4d2b94ca9b300fe2e7210",
+      "tips": [
+        {
+          "id": "support:Pyke:Xerath:0",
+          "text": "Hold Bone Skewer to hook Xerath when he is out of position. Pulling him toward you is the best way to get past his range.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Pyke:Xerath:1",
+          "text": "Use Ghostwater Dive to close in and avoid his spells, then hook or stun him. He is weak up close.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Pyke:Xerath:2",
+          "text": "Dodge Shocking Orb by stepping sideways. It is a thin line and a long stun is dangerous.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Pyke:Xerath:3",
+          "text": "Attack Xerath while he charges Arcanopulse. He is slowed during the charge and cannot attack back.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Pyke:Xerath:4",
+          "text": "When Xerath starts Rite of the Arcane, watch for his cast animation and dodge. Each shot lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Pyke:Xerath:5",
+          "text": "Pull back and hide after a trade. Gift of the Drowned Ones heals damage you took from champions while they cannot see you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-passive", "start": 34, "end": 58 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd255a503daaa9ac69099491050d3c37a77db02413a8653196f0413ac9409baa",
+      "tips": [
+        {
+          "id": "support:Pyke:Yuumi:0",
+          "text": "Don't waste Bone Skewer on Yuumi while she is attached; she can't be targeted. Aim at her ally instead.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Yuumi", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Yuumi:1",
+          "text": "Catch Yuumi when she is detached or dashing. Stun her with Phantom Undertow and she can't re-attach for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Pyke-E", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Pyke:Yuumi:2",
+          "text": "Stay out of her Prowling Projectile. It slows and reveals you, so you can't heal with Gift of the Drowned Ones.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 16, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Pyke-passive",
+              "start": 86,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Pyke:Yuumi:3",
+          "text": "Aim your pull and stun at her ally. Once the ally is out of position, Yuumi's shield and heals matter less.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2cda09bdb5987d62938f25baf1a6aaef234651c10b9c1314780f0d05a2023db5",
+      "tips": [
+        {
+          "id": "support:Pyke:Zilean:0",
+          "text": "Stay out of Zilean's Time Bomb range. A second bomb on you sets off the first and stuns you right where Pyke wants you.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 },
+            { "kind": "champion", "key": "Pyke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Pyke:Zilean:1",
+          "text": "Hold Bone Skewer to pull Zilean in; he is fragile, so follow with Phantom Undertow to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zilean", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Pyke-E", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Zilean:2",
+          "text": "Zilean can stop you getting away with Time Warp, so pick a fight with it on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zilean-E", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Zilean:3",
+          "text": "Do not use Death From Below on a target who has Chronoshift, because they will come back and you will be left exposed. Wait for the rune to fade or be used.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 11, "end": 27 },
+            { "kind": "ability", "key": "Zilean-R", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Pyke:Zilean:4",
+          "text": "Break line of sight with Ghostwater Dive after a trade so Gift of the Drowned Ones heals you back up.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 25, "end": 40 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 58, "end": 82 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "049827b574eb1b2c62c2911a95f3afcd9296d1ef76d6a5fb8405a10656bda846",
+      "tips": [
+        {
+          "id": "support:Pyke:Zyra:0",
+          "text": "Pull Zyra with the hold version of Bone Skewer when she steps up to cast. It is your best way to get to her.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Pyke:Zyra:1",
+          "text": "Step on Zyra's seeds before she grows them. Plants only appear when her spells hit a seed.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Pyke:Zyra:2",
+          "text": "Her Grasping Roots is a long line. Walk out of its path or put minions in front of you, since it is blocked by them.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "support:Pyke:Zyra:3",
+          "text": "Use Ghostwater Dive to heal back the damage you took from her plants once you are out of sight.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Pyke:Zyra:4",
+          "text": "Zyra is fragile. Stun her with Phantom Undertow and finish her off, and use Death From Below if she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Pyke-E", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Pyke-R", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Pyke:Zyra:5",
+          "text": "Move away from her plants. They die quickly, so back off for a moment instead of trading with them.",
+          "refs": [],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

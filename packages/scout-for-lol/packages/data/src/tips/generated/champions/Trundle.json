@@ -1,0 +1,903 @@
+{
+  "schemaVersion": 1,
+  "champion": "Trundle",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "2064956ae6a8f7138d51dbe6f320dd1ac56fbaeb74fa2dab20ce319126bb4810",
+      "tips": [
+        {
+          "id": "jungle:Trundle:general:0",
+          "text": "Fight inside Frozen Domain whenever you can. Place it where the fight will happen, then pull enemies onto it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Trundle:general:1",
+          "text": "Use Chomp on the enemy's main physical damage dealer. It cuts their Attack Damage and raises yours.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Trundle:general:2",
+          "text": "Put Pillar of Ice in a chasing enemy's path to block them; it knocks back and slows them. Use it to cut off an escape.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Trundle:general:3",
+          "text": "Use Subjugate on a tanky enemy in a long fight. You heal and take their defenses, or you can make them the target your team focuses.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Trundle:general:4",
+          "text": "Stay close when enemies die in a fight. King's Tribute heals you from their maximum Health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Trundle-passive",
+              "start": 40,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Trundle:combo:0",
+          "name": "Pillar to cut off escape",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Trundle-E" }],
+          "when": "A fleeing enemy is running down a narrow jungle path or toward a wall.",
+          "whenRefs": [],
+          "text": "Place the pillar just behind the target so it blocks the path and slows them. It acts as terrain, so they have to walk around it.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "af33cee34b0020f898c0fac7131dfd0865620424a8f9b8e0058e3685573f6e72",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Graves:0",
+          "text": "Fight inside Frozen Domain; you move and attack faster there. Drag Graves onto the ice before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Graves", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Trundle:Graves:1",
+          "text": "Hit Graves with Chomp; it cuts his Attack Damage, and he relies on his attacks for most of his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Trundle:Graves:2",
+          "text": "Use Subjugate on Graves in a fight. It drains his Armor and Magic Resist and heals you, so you win the extended trade.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Graves", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Trundle:Graves:3",
+          "text": "Put Pillar of Ice between you and Graves when he dashes or shoots at you. It blocks the path and leaves him slowed if he is near it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Trundle:Graves:4",
+          "text": "Stay out of Smoke Screen. Leaving the cloud ends its slow and sight loss, so walk out of it rather than fight blind.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e52bc32f484ccbb28e6e6d494c394b816f5e88942f56991f099014fc24761b64",
+      "tips": [
+        {
+          "id": "jungle:Trundle:JarvanIV:0",
+          "text": "Fight inside your Frozen Domain; you move and attack faster there, so pull Jarvan into it before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Trundle:JarvanIV:1",
+          "text": "Hit Jarvan with Chomp in a fight; it cuts his Attack Damage and slows him, so his lance and attacks hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 16, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Trundle:JarvanIV:2",
+          "text": "Drop Pillar of Ice between you and Jarvan when he lines up Dragon Strike or Cataclysm; it blocks the way like a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 59, "end": 72 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 76, "end": 85 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Trundle:JarvanIV:3",
+          "text": "Use Subjugate on Jarvan once he commits; you drain his health and take some of his Armor and Magic Resist for the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Trundle:JarvanIV:4",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69232696939ee878bbb971c783afe1aeb03c55acb8577857ec43669e131d36f1",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Kayn:0",
+          "text": "Fight Kayn inside Frozen Domain; you move and attack faster there and heal more, so pull him onto it before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Trundle-W", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Trundle:Kayn:1",
+          "text": "Use Chomp on Kayn before a fight. It slows him and cuts his attack damage, which weakens his physical damage.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Kayn", "start": 13, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Trundle:Kayn:2",
+          "text": "Drop Pillar of Ice in front of Kayn when he chases or runs. It blocks the path and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Trundle:Kayn:3",
+          "text": "Use Subjugate on Kayn in a long fight. It drains his health and Armor and Magic Resist for you, so you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kayn", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0bfa47f3a4ae8688ffb81e1bc7ed80fdc4f93d0cdf14f065eae5c2e68494c228",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Khazix:0",
+          "text": "Stay close to your allies and minions when Kha'Zix is near; Taste Their Fear hits much harder on you when you are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 60, "end": 76 },
+            { "kind": "keyword", "key": "isolated", "start": 114, "end": 122 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Trundle:Khazix:1",
+          "text": "Drop Frozen Domain where you plan to fight and pull Kha'Zix into it; you move and attack faster inside.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Trundle:Khazix:2",
+          "text": "Hit Kha'Zix with Chomp to slow him and cut his attack damage, which blunts his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Trundle:Khazix:3",
+          "text": "Use Subjugate on Kha'Zix in a long fight; it drains his health and steals his armor and magic resist for you.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Khazix", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Trundle:Khazix:4",
+          "text": "Place Pillar of Ice between you and Kha'Zix when he leaps in; it knocks back and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Trundle:Khazix:5",
+          "text": "Look for fights once Kha'Zix has spent Leap and Void Assault; he has little escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Khazix-E", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Khazix-R", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "915af0daa832e0d533de30689957cdf38cdbcd8c71f51a13c40dc0319fc6ed7e",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Kindred:0",
+          "text": "Fight Kindred inside Frozen Domain; you hit faster and move faster there, and she is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Trundle:Kindred:1",
+          "text": "Use Chomp on Kindred in a fight; it slows her, cuts her Attack Damage and raises yours.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Kindred", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Trundle:Kindred:2",
+          "text": "Place Pillar of Ice behind her when she dashes away, so she is blocked and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Trundle:Kindred:3",
+          "text": "Cast Subjugate on Kindred early in a fight to drain her health and steal her defenses.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Kindred", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Trundle:Kindred:4",
+          "text": "Hold your attack when Lamb's Respite goes down; nobody inside can die. Fight again when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a8933b3f1197bc0b495f8a5dddd08e5d3955b94ed730b9f83c36c5897a5e7fb7",
+      "tips": [
+        {
+          "id": "jungle:Trundle:LeeSin:0",
+          "text": "Fight Lee Sin inside Frozen Domain, where you move and attack faster and heal more. Pull him onto the ice before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Trundle:LeeSin:1",
+          "text": "Hit Lee Sin with Chomp in a fight. It slows him and cuts his attack damage, which blunts his burst and his Dragon's Rage damage.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 107, "end": 120 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Trundle:LeeSin:2",
+          "text": "Cast Subjugate on Lee Sin when you trade. It drains his health and steals his Armor and Magic Resist, so he cannot out-trade you.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Trundle:LeeSin:3",
+          "text": "Drop Pillar of Ice between you and Lee Sin when he dashes in. It knocks him back and slows him, which breaks his chain of abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Trundle:LeeSin:4",
+          "text": "Do not fight Lee Sin early on open ground. He is strongest in a short, fast fight, so wait until you can fight on your ice.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4dfb962eda832e66fd00c33c29bf9108e6d05c4f6d4edec380fd9c2bd1258402",
+      "tips": [
+        {
+          "id": "jungle:Trundle:MasterYi:0",
+          "text": "Put Frozen Domain down where the fight will be and make Master Yi come to you. You hit faster and move faster inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "MasterYi", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Trundle:MasterYi:1",
+          "text": "Hit Master Yi with Chomp early in a fight. It slows him and cuts his Attack Damage, which weakens his hits.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Trundle:MasterYi:2",
+          "text": "Hold Pillar of Ice until Master Yi has used Highlander. Once it is active he ignores slows, but the pillar still knocks him back and blocks his path.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Trundle:MasterYi:3",
+          "text": "Cast Subjugate on Master Yi in a long fight. It damages him, heals you and takes his armor and magic resist for yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "MasterYi", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Trundle:MasterYi:4",
+          "text": "Hit him a few times when he farms so he has to spend mana on Meditate. He can't channel Meditate while mid Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 88, "end": 96 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 107, "end": 119 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9b76e8666a166281175f6b09a7a0fca05799829d0248d66978cc30073eff77e4",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Naafiri:0",
+          "text": "Fight inside Frozen Domain; you hit faster and move faster there, so pull Naafiri onto it before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Naafiri", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Trundle:Naafiri:1",
+          "text": "Hit Naafiri with Chomp first; her attack damage drops while yours rises, which weakens her burst.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Trundle:Naafiri:2",
+          "text": "Use Subjugate on Naafiri in a long fight; it heals you and cuts her armor and magic resist.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Trundle:Naafiri:3",
+          "text": "Drop Pillar of Ice in her path when she dashes at you or runs away; she is knocked back and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Trundle:Naafiri:4",
+          "text": "Her packmates are small; focus Naafiri herself, since they only attack what she targets.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Trundle:combo:0",
+          "note": "Pillar blocks the path and slows a fleeing Naafiri, who must walk around it after her dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 43, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "99fa4c6c5b75cdb534ac8faa1ade1c37efec7cd32fbe75390c1ac8b3055200e6",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Nocturne:0",
+          "text": "Fight Nocturne inside your Frozen Domain; you move and attack faster there and heal more, which wins most duels.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Trundle-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Trundle:Nocturne:1",
+          "text": "Hit Nocturne with Chomp in a fight; it slows him and cuts his Attack Damage, which weakens his physical damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Trundle:Nocturne:2",
+          "text": "Cast Subjugate on Nocturne in a long fight; you heal and steal his Armor and Magic Resist, which he cannot block with his shield.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nocturne", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Trundle:Nocturne:3",
+          "text": "Place Pillar of Ice in his path when he dashes or runs; it blocks him and slows him nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Trundle:Nocturne:4",
+          "text": "Wait for Shroud of Darkness to be used before casting Subjugate, since it blocks the next enemy ability.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Trundle-R", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "21283a1b155199dd5a8751135c8180d4ea4f30511cd967bbe3f132a4117505c6",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Shyvana:0",
+          "text": "Fight Shyvana inside your Frozen Domain; the extra Attack Speed and Move Speed win you the close trade.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-W", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Trundle:Shyvana:1",
+          "text": "Use Chomp on Shyvana at the start of a fight; it slows her and cuts her Attack Damage, which her whole kit depends on.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Shyvana", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Trundle:Shyvana:2",
+          "text": "Cast Subjugate on Shyvana in a long fight; you steal her Armor and Magic Resist and heal off her.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Shyvana", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Trundle:Shyvana:3",
+          "text": "Put Pillar of Ice behind her as she chases, or in front to block her path; it slows her and she cannot walk through it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Trundle:Shyvana:4",
+          "text": "Do not hold Subjugate for her shield. Inferno Aegis blocks spells while the shield holds, so wait until it is broken or gone.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Trundle:combo:0",
+          "note": "Pillar blocks a path and slows, and Shyvana's listed abilities include no dash to escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 36, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ef288500d06b61be57e7f8d551da12dcccd57e51d544e35d22e8b5aa5b02c3b",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Skarner:0",
+          "text": "Place Pillar of Ice between you and Skarner when he charges with Ixtal's Impact; it is terrain, and a wall there can stop his drag and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Skarner-E", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Trundle:Skarner:1",
+          "text": "Fight inside Frozen Domain and pull Skarner onto it before you trade; you hit faster and move faster there.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-W", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Trundle:Skarner:2",
+          "text": "Use Chomp on Skarner in a duel; it slows him and cuts his Attack Damage, which weakens his empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Trundle:Skarner:3",
+          "text": "Save Subjugate for a longer fight with Skarner; it steals his Armor and Magic Resist and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Skarner", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a4195fc816f257631e6fa76a03b6d9281deeacc652d5af31b6a6aaa9f5c92b61",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Sylas:0",
+          "text": "Fight Sylas inside your Frozen Domain; you move and hit faster there, so pull him onto it before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Trundle-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Trundle:Sylas:1",
+          "text": "Put Chomp on Sylas before a trade. He loses Attack Damage and is slowed, and his chain-whirl hits weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Trundle:Sylas:2",
+          "text": "Drop Pillar of Ice behind Sylas when he dashes in or tries to run. It blocks his path and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Trundle:Sylas:3",
+          "text": "Use Subjugate on Sylas when he is committed. It saps his Armor and Magic Resist and heals you, so you win a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Trundle:Sylas:4",
+          "text": "Do not chase Sylas when he is low. Kingslayer heals him, so finish him with burst or let him go.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Sylas-W", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b902c152bda595bd794003d9cebca93f6a590091b75af17589fba708285cd76",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Talon:0",
+          "text": "Fight Talon inside Frozen Domain; the extra Attack Speed and Move Speed let you outlast his burst and chase him down.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Trundle-W", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Trundle:Talon:1",
+          "text": "Use Chomp on Talon in a fight; it cuts his Attack Damage and slows him, which blunts his physical burst.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Talon", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Trundle:Talon:2",
+          "text": "Place Pillar of Ice where Talon will flee or vault. It acts as terrain, slows him and knocks him back.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Trundle:Talon:3",
+          "text": "Cast Subjugate on Talon once he commits. It steals his Armor and Magic Resist and heals you, so you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Trundle:Talon:4",
+          "text": "When Talon turns invisible with Shadow Assault, stay put near your Frozen Domain and wait for him to strike instead of chasing.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 32, "end": 46 },
+            { "kind": "ability", "key": "Trundle-W", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3494dc531cd1d20f4d4e459718a9c98da9703c8778f0c629b44ab38421bf66b9",
+      "tips": [
+        {
+          "id": "jungle:Trundle:Viego:0",
+          "text": "Fight Viego inside Frozen Domain; you get faster and hit harder there, so pull him onto the ice before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Trundle-W", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Trundle:Viego:1",
+          "text": "Hit Viego with Chomp first in a duel; it slows him and lowers his Attack Damage, which weakens his blade trades.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Trundle:Viego:2",
+          "text": "Put Pillar of Ice between you and Viego when he dashes in, or on him to knock him back and slow him as he tries to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Viego", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Trundle:Viego:3",
+          "text": "Use Subjugate on Viego in a long fight; it heals you and takes some of his Armor and Magic Resist, which he cannot easily make up.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Trundle:Viego:4",
+          "text": "Be ready to fight where an enemy champion dies near Viego; he can take over the body, so deny the Mist Wraith by killing him or moving in first.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f4c628e0c74817484dc28adb87faf0bc3f15ecfcf737eb5209f6fb62f5ae4f17",
+      "tips": [
+        {
+          "id": "jungle:Trundle:XinZhao:0",
+          "text": "Pull Xin Zhao into your Frozen Domain before you fight; the extra speed and healing let you win the trade.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Trundle-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Trundle:XinZhao:1",
+          "text": "Use Chomp on Xin Zhao to cut his attack damage. It weakens his Three Talon Strike hits.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "XinZhao", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 63, "end": 81 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Trundle:XinZhao:2",
+          "text": "Put Pillar of Ice between you and Xin Zhao when he charges. It knocks him back and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Trundle:XinZhao:3",
+          "text": "Stay close to Xin Zhao when he uses Crescent Guard, since it only protects him from enemies standing outside its sweep.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Trundle:XinZhao:4",
+          "text": "Use Subjugate on Xin Zhao in a long fight. It heals you and steals his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-R", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

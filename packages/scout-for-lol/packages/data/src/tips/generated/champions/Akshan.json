@@ -1,0 +1,995 @@
+{
+  "schemaVersion": 1,
+  "champion": "Akshan",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "6feaf9eee4ec37e17fd471951e3ca4f2eb7b5abc3df5d036f02189ddfdc79fb0",
+      "tips": [
+        {
+          "id": "middle:Akshan:general:0",
+          "text": "Throw Avengerang through the minion wave so it also hits the enemy champion; its range grows with each hit.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Akshan:general:1",
+          "text": "Hit a champion with Avengerang and keep chasing or run away; the Move Speed boost fades quickly, so use it right away.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Akshan:general:2",
+          "text": "Swing with Heroic Swing to dodge enemy skillshots or close in on the enemy. You must hook onto terrain first, so stay near walls.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Akshan:general:3",
+          "text": "Don't cast Heroic Swing while the enemy can stun or pin you; being stopped in the middle of the swing cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akshan:general:4",
+          "text": "Take a champion down and Heroic Swing is ready again almost at once. Use it to chain into the next fight or to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Akshan:general:5",
+          "text": "Use Going Rogue to hide in a brush or beside a wall and flank. Attacking or casting a spell ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Akshan:general:6",
+          "text": "If an enemy kills your ally, they become a Scoundrel. Kill them with Going Rogue's help to bring back everyone they killed.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Akshan:general:7",
+          "text": "Mix attacks and spells on one champion. Every third hit with Dirty Fighting adds bonus damage and gives you a shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Akshan-passive",
+              "start": 61,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Akshan:general:8",
+          "text": "Cancel the extra shot from Dirty Fighting by moving right after an attack. You get a burst of Move Speed for stutter-stepping.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Akshan-passive",
+              "start": 27,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akshan:general:9",
+          "text": "Use Comeuppance on a weakened enemy; it hurts more the lower their health is. You can still move and swing while it charges.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Akshan:combo:0",
+          "name": "Second shot cancel",
+          "category": "trick",
+          "sequence": ["attack"],
+          "when": "When kiting or chasing in a trade and you want extra movement speed.",
+          "whenRefs": [],
+          "text": "Right after the first shot, issue a move command to cancel the second shot. You gain a burst of move speed, which lets you weave attacks and movement.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Akshan:combo:1",
+          "name": "Swing and dive",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Akshan-E" },
+            { "kind": "ability", "key": "Akshan-E" },
+            { "kind": "ability", "key": "Akshan-E" }
+          ],
+          "when": "When you need to reposition or close the gap using walls, terrain, or enemies in lane.",
+          "whenRefs": [],
+          "text": "Cast the hook onto terrain, swing around it, then recast to dive off toward your target. Raising your cursor to the left or right picks the swing direction.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Akshan:combo:2",
+          "name": "Boomerang during dive",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Akshan-E" },
+            { "kind": "ability", "key": "Akshan-E" },
+            { "kind": "ability", "key": "Akshan-E" },
+            { "kind": "ability", "key": "Akshan-Q" }
+          ],
+          "when": "When you dive off a swing and want to add burst damage on the landing.",
+          "whenRefs": [],
+          "text": "Avengerang can be cast during the third-cast dash, but not while the hook or swing is active. Throw it mid-dive to add damage as you land.",
+          "textRefs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 0, "end": 10 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "4e500d7b48d665d83f48fb00e7b8776b189d4ea4117fa087ff523e2421383891",
+      "tips": [
+        {
+          "id": "middle:Akshan:Ahri:0",
+          "text": "Hit Ahri with Avengerang for damage and a burst of speed; the boomerang also hits her on its way back.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akshan:Ahri:1",
+          "text": "Stay behind minions so Charm is hard to land, and trade when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Akshan:Ahri:2",
+          "text": "Hold Heroic Swing as an escape or an answer to Ahri; killing a champion resets its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Akshan:Ahri:3",
+          "text": "Be careful when Spirit Rush is ready; Ahri can dash in and chase you down. She is much easier to punish when it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Ahri", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akshan:Ahri:4",
+          "text": "Use Going Rogue to hide in brush or near walls and reposition away from Ahri's range.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "00f0677e147f51bc073aedf8cb59c61ae83a1c8d7532e8c354011405dfad0fa4",
+      "tips": [
+        {
+          "id": "middle:Akshan:Akali:0",
+          "text": "Dodge Akali's Five Point Strike when she is at long range. If she is out of Energy, step up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 14, "end": 31 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akshan:Akali:1",
+          "text": "Throw Avengerang through her and the minions to poke. It extends its range when it hits, and you gain Move Speed if it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Akshan:Akali:2",
+          "text": "Back away from Akali at low health when her ultimate is ready. Perfect Execution can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Akali-R", "start": 63, "end": 80 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Akshan:Akali:3",
+          "text": "Aim your area spells at her smoke. Hitting Akali inside Twilight Shroud briefly reveals her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Akali-W", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Heroic Swing lets Akshan reposition or dive off terrain to close on or escape Akali.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Akshan", "start": 18, "end": 24 },
+            { "kind": "champion", "key": "Akali", "start": 78, "end": 83 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3ec7eda7137d589c775614721e7ed1bec3a14fd51bc83fd0f679fac759d5c4c6",
+      "tips": [
+        {
+          "id": "middle:Akshan:Anivia:0",
+          "text": "Sidestep Flash Frost; if it lands you are stunned at the end and Frostbite hits very hard. Stay out of its long straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Anivia-E", "start": 65, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Akshan:Anivia:1",
+          "text": "Trade with Avengerang when Anivia has used Flash Frost, since she has no quick way to punish you then.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Akshan:Anivia:2",
+          "text": "Don't stand inside Glacial Storm; the slow makes you easy to hit. Walk around it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Akshan:Anivia:3",
+          "text": "Anivia's egg can come back, so finish it off before she is reborn if you can.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Swinging in with Heroic Swing closes the gap on Anivia, who has no listed dash or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Anivia", "start": 48, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e9a8710aba039f32da4667cc1758ed5d412953ed3b9ea183c94b7491ba85a4da",
+      "tips": [
+        {
+          "id": "middle:Akshan:Aurora:0",
+          "text": "Keep your distance from The Weirding; getting slowed by it makes you easy to catch, so stay out of its line when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Akshan:Aurora:1",
+          "text": "Use Heroic Swing to reposition after Aurora spends her spells, and fire at her while you swing.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aurora", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akshan:Aurora:2",
+          "text": "When Aurora vanishes with Across the Veil, step back and wait. Don't chase an enemy you can't see.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akshan:Aurora:3",
+          "text": "Throw Avengerang through her and the minions so it reveals her and goes farther. It does more damage to champions than to minions.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Akshan:Aurora:4",
+          "text": "Use Comeuppance on Aurora once she is low on Health. Missing Health adds damage, and her escapes won't save her from the locked-on shots.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:2",
+          "note": "Avengerang mid-dive adds burst as you land, useful to punish Aurora when she is slowed or hopping.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Aurora", "start": 61, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c69c8029fd8b926ccead1e6bfd68fd297e5f787833fb38d47ff7548598f7303e",
+      "tips": [
+        {
+          "id": "middle:Akshan:Cassiopeia:0",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off, so you are only slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Akshan:Cassiopeia:1",
+          "text": "Stay out of Miasma; being grounded stops your movement abilities and the slow makes you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Akshan:Cassiopeia:2",
+          "text": "Dodge Noxious Blast by moving as it lands; it has a short delay. Use Avengerang to poke her when she steps forward.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 69, "end": 79 },
+            { "kind": "keyword", "key": "poke", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akshan:Cassiopeia:3",
+          "text": "Respect Twin Fang while you are poisoned; she hits much harder and heals off you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 8, "end": 17 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "57173d12088ce3335bd5379641b16a176edb5caaefed9e6eeed5af2a2307c835",
+      "tips": [
+        {
+          "id": "middle:Akshan:Fizz:0",
+          "text": "Wait for Fizz to spend Playful before you step forward; he can't be hit while he balances on the trident.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 9, "end": 13 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akshan:Fizz:1",
+          "text": "Throw Avengerang through Fizz and his minions to poke him; it hits again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Akshan:Fizz:2",
+          "text": "Keep Heroic Swing ready to escape Chum the Waters, and watch where the fish lands so you can swing out before the shark erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Fizz-R", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Akshan:Fizz:3",
+          "text": "Stay away from Fizz while his trident glows; his hits get stronger for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:2",
+          "note": "Avengerang mid-dive adds burst, but Fizz's untargetable Playful can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Fizz", "start": 36, "end": 40 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9165056a99ed714e81275bb5587733f037c8bb9dfdba5702356f984d5de3d47",
+      "tips": [
+        {
+          "id": "middle:Akshan:Malzahar:0",
+          "text": "Look for Malzahar's Call of the Void and sidestep it. Once it is down, you can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Akshan:Malzahar:1",
+          "text": "Heroic Swing lets you pop in and out of range. Swing in when Malzahar has used his spells and shoot him, then dive away.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Malzahar", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akshan:Malzahar:2",
+          "text": "Hit Malzahar with Avengerang whenever you can. It does extra damage to champions, and you get a burst of move speed.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Akshan:Malzahar:3",
+          "text": "Void Shift protects Malzahar from your damage while it is up. Wait until he has been hit to commit, or he will take very little.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Akshan:Malzahar:4",
+          "text": "Kill the Voidlings from Void Swarm before you trade, or they will chip at you. Don't stand near Malefic Visions minions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 96, "end": 111 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "52897f1e99759c53c9c9a0ba42c7a7180b24e410620d84e5017e700af1746458",
+      "tips": [
+        {
+          "id": "middle:Akshan:Orianna:0",
+          "text": "Hit Orianna with Avengerang when she steps up to poke. It comes back, so a second pass can hit her again.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Akshan:Orianna:1",
+          "text": "Stay out of Command: Shockwave range, especially at level 6. Her Ball can pull you in and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Akshan:Orianna:2",
+          "text": "Watch where her Ball sits. Her Command: Attack and Command: Dissonance only hit around it, so stand outside that area.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 31, "end": 46 },
+            { "kind": "ability", "key": "Orianna-W", "start": 51, "end": 70 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Akshan:Orianna:3",
+          "text": "Use Heroic Swing on a wall to get close or get away. It refreshes if you take down a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "75113fb6dda39609613a213ca697c98ff32eb4a843a1384d5b289602ae1bc721",
+      "tips": [
+        {
+          "id": "middle:Akshan:Ryze:0",
+          "text": "Dodge Overload and keep away from Rune Prison range once Ryze has Flux on you, because it will root you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Ryze-W", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Ryze", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Akshan:Ryze:1",
+          "text": "Poke Ryze with Avengerang, then walk away from Spell Flux; the returning boomerang hits him again.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "Ryze-E", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Akshan:Ryze:2",
+          "text": "Use Heroic Swing to dodge Ryze's combo or to dive when his spells are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Akshan:Ryze:3",
+          "text": "Hit Ryze when he opens Realm Warp; crowd control cancels the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ryze-R", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Akshan:Ryze:4",
+          "text": "Hide with Going Rogue in brush to scout for a roam and keep Ryze guessing.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Ryze", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "16ceb41fb2c8c74a9c53f5db1edf077499d84c24142f95401deb4c6c64c59888",
+      "tips": [
+        {
+          "id": "middle:Akshan:Sylas:0",
+          "text": "Hit Sylas with Avengerang when he walks up to trade; the boomerang hits on the way out and again on the way back.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Akshan:Sylas:1",
+          "text": "Stay out of Abduct's line. If Sylas hits you with it he pulls himself onto you and you are stunned and knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 },
+            { "kind": "keyword", "key": "knocked-up", "start": 103, "end": 113 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Akshan:Sylas:2",
+          "text": "Use Heroic Swing to get away from Sylas when his Abscond / Abduct is on cooldown. Do not start a swing next to him if he can still pull you.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Sylas-E", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Akshan:Sylas:3",
+          "text": "Do not trade with Sylas when he is low on health. Kingslayer heals him back up, so finish him quickly or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Akshan:Sylas:4",
+          "text": "Use Going Rogue in the brush or beside walls to hide from Sylas and set up a flank. Attacking or casting a spell ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Akshan:Sylas:5",
+          "text": "Hold Comeuppance at level 6 for when Sylas is hurt. It hits harder the lower his health is.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "94d8e78565373091d81e3074a37d0b33f1b9e214000850a3ea424eaf8ade4f29",
+      "tips": [
+        {
+          "id": "middle:Akshan:TwistedFate:0",
+          "text": "Dodge Wild Cards early. Your Avengerang poke is strong at range, but a clean hit from him can force you back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Akshan-Q", "start": 29, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Akshan:TwistedFate:1",
+          "text": "Stay away from Twisted Fate while he shuffles Pick a Card. A stun can get you killed, and you can use Heroic Swing to escape.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 46,
+              "end": 57
+            },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 },
+            { "kind": "ability", "key": "Akshan-E", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Akshan:TwistedFate:2",
+          "text": "When Twisted Fate uses Destiny, treat it as a warning that a gank or teleport is coming. Go back to safety.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Akshan:TwistedFate:3",
+          "text": "Hide with Going Rogue near terrain to break his sight and approach from a different angle. Attacking or casting abilities ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dea5bd4f3d84f526b8bea2ea7a8d31eac469259a2720dc62997fda3096405020",
+      "tips": [
+        {
+          "id": "middle:Akshan:Viktor:0",
+          "text": "Stay out of Gravity Field. If you are caught, leave before it stuns you, since Viktor can follow with his other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Viktor", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Akshan:Viktor:1",
+          "text": "Use Avengerang to hit Viktor and the minions near him, since it extends its range each time it hits. The speed boost helps you step out of his Hextech Ray.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Viktor", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Viktor-E", "start": 143, "end": 154 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Akshan:Viktor:2",
+          "text": "Keep your distance from Viktor, because he controls the lane better the closer you get. Fight on your terms.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akshan:Viktor:3",
+          "text": "Use Heroic Swing to dodge Viktor's Gravity Field or to land on him. Killing a champion resets its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viktor", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Viktor-W", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2b4419fd369b6599606159dfe086d3afbeb244f6d43ee495a706ec75e740370b",
+      "tips": [
+        {
+          "id": "middle:Akshan:Yasuo:0",
+          "text": "Hold Avengerang until Wind Wall is on cooldown, or throw it from an angle so the wall does not block it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Akshan:Yasuo:1",
+          "text": "Do not fire Comeuppance into a Wind Wall; wait until the wall is gone or Yasuo is out of its cover.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-R", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 31, "end": 40 },
+            { "kind": "champion", "key": "Yasuo", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Akshan:Yasuo:2",
+          "text": "Stay away from Yasuo's whirlwind; it knocks you up and sets up his Last Breath. Dodge sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Akshan:Yasuo:3",
+          "text": "Use Heroic Swing to escape when Yasuo dives; its final jump can be used even if you are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Akshan:Yasuo:4",
+          "text": "Hit minions and Yasuo with your attacks to build Dirty Fighting; every third hit adds damage and a shield when it lands on him.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 16, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Akshan-passive",
+              "start": 49,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4b8f828fed5c4f13dfe2f174bd599477ef846427ea5e4d3f8f1ccf90493a643e",
+      "tips": [
+        {
+          "id": "middle:Akshan:Yone:0",
+          "text": "Throw Avengerang at Yone from long range while he walks up to last-hit. It is a cheap way to poke him, and it also reveals him.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Akshan:Yone:1",
+          "text": "Respect Yone when he has two stacks. His next Mortal Steel dashes forward and knocks you up, so stay out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Yone-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Akshan:Yone:2",
+          "text": "Use Heroic Swing to get away from Yone's all-in. Once you are swinging, his Mortal Steel can't hit you if you are out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Yone-Q", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Akshan:Yone:3",
+          "text": "Yone's Fate Sealed stuns you and pulls you to him. Keep Heroic Swing ready around level 6 so you can escape afterwards.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Akshan-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Akshan:Yone:4",
+          "text": "When Yone's Soul Unbound is up and he is in spirit form, back off. He will return to his body and deal extra damage for the hits he landed.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-E", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Akshan:combo:1",
+          "note": "Swing and dive lets Akshan close the gap or reposition around terrain against Yone's dashing, mobile kit.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 78, "end": 82 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d19628222142795a4ae40c79a811916d47df737273e381c2ffeab354f9b8b85c",
+      "tips": [
+        {
+          "id": "middle:Akshan:Zed:0",
+          "text": "Keep Avengerang for when Zed steps up to trade; it hits twice on the way out and back, and you gain Move Speed when it hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Akshan:Zed:1",
+          "text": "Once Zed uses Death Mark on you, fight back with Dirty Fighting hits instead of running. He is untargetable only while he dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zed-R", "start": 14, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Akshan-passive",
+              "start": 49,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Akshan:Zed:2",
+          "text": "Save Heroic Swing as an escape for when Zed's Death Mark is about to go off. It can also be cast while Zed's shurikens are flying.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 40, "end": 43 },
+            { "kind": "ability", "key": "Zed-R", "start": 46, "end": 56 },
+            { "kind": "champion", "key": "Zed", "start": 103, "end": 106 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Akshan:Zed:3",
+          "text": "Use Going Rogue in brush or near walls to hide from Zed, then step out for the first hit. Attacking or casting ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 52, "end": 55 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Akshan:Zed:4",
+          "text": "Hit Zed with Avengerang when his Living Shadow is out and he has less Energy; he cannot answer without it.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Zed-W", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

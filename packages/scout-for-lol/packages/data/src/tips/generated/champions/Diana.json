@@ -1,0 +1,1868 @@
+{
+  "schemaVersion": 1,
+  "champion": "Diana",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "a2b95592d3546bd2e4ac3d8176414df0e27f90ec7c77697365b0d0bb38db1535",
+      "tips": [
+        {
+          "id": "jungle:Diana:general:0",
+          "text": "Cast Crescent Strike first, then dash with Lunar Rush onto the marked target. The dash cooldown resets, so you can chain onto another target.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Diana:general:1",
+          "text": "Don't worry about missing Crescent Strike. Its cooldown is short and it costs little mana, so throw it out often.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Diana:general:2",
+          "text": "Use Pale Cascade when you start a fight or a camp. The shield absorbs damage, and the orbiting spheres hit enemies who touch them.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Diana:general:3",
+          "text": "Use Moonfall in a team fight when several enemies are close. It pulls them in and leaves them slowed, and it hits harder for each extra champion pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Diana:general:4",
+          "text": "Cast abilities between basic attacks. Each cast speeds up your attacks, and Moonsilver Blade's third attack cleaves everything near the target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Diana-passive",
+              "start": 76,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Diana:general:5",
+          "text": "Think before using Lunar Rush on a target with no Moonlight. It goes on a long cooldown and can leave you stuck in the middle of the enemy team.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Diana:combo:0",
+          "name": "Engage with Moonfall after E",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Diana-Q" },
+            { "kind": "ability", "key": "Diana-E" },
+            { "kind": "ability", "key": "Diana-R" },
+            { "kind": "ability", "key": "Diana-W" }
+          ],
+          "when": "When you are diving into a group of enemies and want to pull them in.",
+          "whenRefs": [],
+          "text": "Q and E close the gap and reset the dash. Moonfall then pulls the team in, and Pale Cascade adds its shield and burst.",
+          "textRefs": [
+            { "kind": "ability", "key": "Diana-R", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Diana-W", "start": 79, "end": 91 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "25e26c6a17e14063ad5509134d6729b60986476b783f4633c01898c01088a71f",
+      "tips": [
+        {
+          "id": "middle:Diana:general:0",
+          "text": "Aim Crescent Strike at where the enemy is walking, not where they stand. It is a curved arc, and the cooldown is short, so a miss costs little.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Diana:general:1",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush. The dash comes back off cooldown at once, so you can dash again to a minion or the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Diana:general:2",
+          "text": "Don't use Lunar Rush on an enemy who isn't marked unless you have to. Without the reset you are stuck up close with a long wait before you can dash out.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Diana:general:3",
+          "text": "Cast Pale Cascade just before you trade. The orbiting spheres hit anyone who gets close, and the shield soaks up damage while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Diana:general:4",
+          "text": "Cast an ability before you start attacking. Moonsilver Blade gives bonus Attack Speed after a spell, and every third hit cleaves for extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Diana-passive",
+              "start": 44,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Diana:general:5",
+          "text": "At level 6, use Moonfall when the enemy team is grouped. It pulls them in and leaves them slowed, and it hits harder for each extra champion pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 16, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Diana:general:6",
+          "text": "Use Moonfall and Lunar Rush to stay on a target who is running away, so your attacks keep triggering Moonsilver Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Diana-E", "start": 17, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Diana-passive",
+              "start": 101,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Diana:combo:0",
+          "name": "Moonfall into Q and E",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Diana-R" },
+            { "kind": "ability", "key": "Diana-Q" },
+            { "kind": "ability", "key": "Diana-E" }
+          ],
+          "when": "When you want to catch targets who are out of range, or pull several enemies together in a fight.",
+          "whenRefs": [],
+          "text": "Moonfall pulls enemies in and slows them. Follow with Q to mark them, then E to dash on and reset it for chasing.",
+          "textRefs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "feeaf069329ebdece39f80cb2481c44743985f37d2644f07af4533d03e81cef2",
+      "tips": [
+        {
+          "id": "jungle:Diana:Graves:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush and use it again to chain onto Graves.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 },
+            { "kind": "champion", "key": "Graves", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Diana:Graves:1",
+          "text": "Do not dash into Smoke Screen; you will be slowed and can't see out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Diana:Graves:2",
+          "text": "Open the fight with Pale Cascade so the shield covers you while Graves shoots.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Graves", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Diana:Graves:3",
+          "text": "Fight Graves up close. Use Moonfall at level 6 to pull him in, so he can't get away.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Diana-R", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Diana:Graves:4",
+          "text": "Graves loses his armor bonus once Quickdraw stacks run out, so burst him after he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Graves-E", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbcd50548f50c1a81fd5287a77890250f93d06990c432984b6a53efdde0704c8",
+      "tips": [
+        {
+          "id": "jungle:Diana:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike along that line knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Diana:JarvanIV:1",
+          "text": "Land Crescent Strike first, then Lunar Rush onto the marked target. The cooldown refreshes, so you can dash again to escape or follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Diana:JarvanIV:2",
+          "text": "Use Moonfall when Jarvan commits, to pull him in and slow him. A slowed Jarvan has a harder time making the most of Cataclysm.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 116, "end": 125 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Diana:JarvanIV:3",
+          "text": "Cast Pale Cascade before you go in on Jarvan. The shield absorbs his damage, and the orbs hit him as you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ef44d0bb501afc58821e04a3b67f3ed1b30a3dd5e73363ef676a060478bebef3",
+      "tips": [
+        {
+          "id": "jungle:Diana:Kayn:0",
+          "text": "Aim Crescent Strike at Kayn first, then dash in with Lunar Rush; hitting him with Moonlight lets you use Lunar Rush again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Diana-E", "start": 53, "end": 63 },
+            { "kind": "ability", "key": "Diana-E", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Diana:Kayn:1",
+          "text": "Save Moonfall for when Kayn jumps on you or when you want to fight him; it pulls him in and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Diana:Kayn:2",
+          "text": "Cast Pale Cascade when Kayn closes in; the shield soaks his burst and the orbs hit him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Diana:Kayn:3",
+          "text": "Moonlight reveals Kayn, so use Crescent Strike to find him when he hides in a wall during Shadow Step.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Diana-Q", "start": 31, "end": 46 },
+            { "kind": "ability", "key": "Kayn-E", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d55c89cd57bdf02780e5bbc93a955cf75e6a5892be8093764d6d88a83f2621f",
+      "tips": [
+        {
+          "id": "jungle:Diana:Khazix:0",
+          "text": "Stay close to your minions and allies. Kha'Zix does much less damage with Taste Their Fear when you are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 74, "end": 90 },
+            { "kind": "keyword", "key": "isolated", "start": 108, "end": 116 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Diana:Khazix:1",
+          "text": "Hit Kha'Zix with Crescent Strike to reveal him. Then use Lunar Rush to jump onto him and reset its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Diana-Q", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Diana-E", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Diana:Khazix:2",
+          "text": "Fight Kha'Zix right after he uses Leap. He is easier to punish while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Diana:Khazix:3",
+          "text": "Use Pale Cascade when Kha'Zix jumps in. The shield absorbs his burst and the orbs hit him as he closes.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1bf2dd5108a3edfb485951b5324242b8916ebb9314bee36ba0393f6687811af3",
+      "tips": [
+        {
+          "id": "jungle:Diana:Kindred:0",
+          "text": "Land Crescent Strike on Kindred first, then dash in with Lunar Rush; the Moonlight mark refreshes the dash so you can stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Diana-E", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Diana:Kindred:1",
+          "text": "Kindred is fragile. Go after her with Moonfall when she is away from her team, so she is pulled in and slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Diana-R", "start": 38, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Diana:Kindred:2",
+          "text": "Wait out Lamb's Respite before you finish a fight. Nobody inside it can die, and everyone is healed when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Diana:Kindred:3",
+          "text": "Open a fight with Pale Cascade so its shield soaks her damage while the orbs hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Diana:Kindred:4",
+          "text": "Kindred slows you with Mounting Dread and then pounces on her third attack. Do not stay in a long trade with her.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Kindred-E", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "acdc6c6bcd8075c59034deb9a298be249fd88d2e0516fec7303fac3271bbfda7",
+      "tips": [
+        {
+          "id": "jungle:Diana:LeeSin:0",
+          "text": "Hit Crescent Strike first, then use Lunar Rush on a marked Lee Sin. The dash comes back almost at once, so you can stick to him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Diana-E", "start": 36, "end": 46 },
+            { "kind": "champion", "key": "LeeSin", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Diana:LeeSin:1",
+          "text": "Use Pale Cascade when Lee Sin jumps in. The shield absorbs his burst and the orbs hit him as he stays on you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Diana:LeeSin:2",
+          "text": "Lee Sin needs his Sonic Wave to connect to chase you. Sidestep it, and he loses his best way to close in.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Diana:LeeSin:3",
+          "text": "Moonfall pulls Lee Sin back in and slows him. Use it when he tries to escape, or to finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "LeeSin", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Diana:combo:0",
+          "note": "Lunar Rush closes the gap on Lee Sin, then Moonfall pulls and slows him, setting up burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Diana-R", "start": 43, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2427aa93cbc0c05f5eb6698621ff44287875356eb268acfb142c9965ce938338",
+      "tips": [
+        {
+          "id": "jungle:Diana:MasterYi:0",
+          "text": "Pull Master Yi in with Moonfall when he is slowed or about to run. Highlander stops the slow but not the pull.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Diana-R", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 67, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Diana:MasterYi:1",
+          "text": "Hold Lunar Rush until Master Yi has used Alpha Strike. While he's untargetable you can't catch him, and you'd be exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Diana:MasterYi:2",
+          "text": "Hit Master Yi with Crescent Strike first, then Lunar Rush onto him to get the cooldown back and keep chasing.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Diana-Q", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Diana-E", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Diana:MasterYi:3",
+          "text": "Burst Master Yi while Meditate is down. While he channels it, he takes much less damage and heals.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Diana:MasterYi:4",
+          "text": "Open fights with Pale Cascade. Its shield soaks his attacks and its orbs hit him when he jumps onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b146b9b736cd4d42ab3c4d094b28de77c556398c7600589b7af12d94894b898e",
+      "tips": [
+        {
+          "id": "jungle:Diana:Naafiri:0",
+          "text": "Land Crescent Strike on Naafiri, then follow with Lunar Rush; the Moonlight mark refreshes Lunar Rush so you can chain onto her again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Diana-E", "start": 50, "end": 60 },
+            { "kind": "ability", "key": "Diana-E", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Diana:Naafiri:1",
+          "text": "Cast Moonfall when Naafiri and her packmates jump on you; it pulls them in and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Diana:Naafiri:2",
+          "text": "Open Pale Cascade before she dives in; the orbs hit her and her packmates, and the shield soaks her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Diana:Naafiri:3",
+          "text": "Wait for Naafiri to use up The Call of the Pack before you commit; while she is untargetable, your spells can't hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 27, "end": 47 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Diana:combo:0",
+          "note": "Moonfall pulls in Naafiri and her packmates, and Pale Cascade's shield helps against their burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Diana-W", "start": 49, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "de9bbf0d73c7da60520db416041d8531935463fa82c9073165d8d1cf9d51b154",
+      "tips": [
+        {
+          "id": "jungle:Diana:Nocturne:0",
+          "text": "Do not rely on Lunar Rush to escape Nocturne's Paranoia; his dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Nocturne", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Diana:Nocturne:1",
+          "text": "Bait Shroud of Darkness with Crescent Strike before committing Lunar Rush or Moonfall.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Diana-Q", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Diana-E", "start": 63, "end": 73 },
+            { "kind": "ability", "key": "Diana-R", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Diana:Nocturne:2",
+          "text": "Use Lunar Rush to get out of Unspeakable Horror's range so the tether breaks before the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Diana:Nocturne:3",
+          "text": "Open Pale Cascade when Nocturne dives in; the shield soaks his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nocturne", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d71cdc7884ce66aca748ae7e9de23ea06adc20eddf451cd4c8ea19860469ecdc",
+      "tips": [
+        {
+          "id": "jungle:Diana:Shyvana:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush; the mark makes Lunar Rush ready again so you can dash back out.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Diana-E", "start": 73, "end": 83 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Diana:Shyvana:1",
+          "text": "Don't use Moonfall to start a fight if Shyvana has her ultimate ready; she flies out of it and punishes you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Diana:Shyvana:2",
+          "text": "Pale Cascade first when Shyvana is close; the shield absorbs her trade and the orbs hurt her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Diana:Shyvana:3",
+          "text": "Keep your distance from Shyvana and poke with Crescent Strike while her Dragon Fury is low.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Diana-Q", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c851723ab38cf925d1c944219c97f5f3b258a115f62411e571764300c14b74a",
+      "tips": [
+        {
+          "id": "jungle:Diana:Skarner:0",
+          "text": "Do not run at Skarner without a plan. Ixtal's Impact can carry you into a wall and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Skarner-E", "start": 38, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Diana:Skarner:1",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush. The dash refreshes when the target has Moonlight, so you can retreat or keep going.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Diana:Skarner:2",
+          "text": "Stay out of Impale's reach when Skarner is close. Use Lunar Rush to get away before he lashes forward.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Diana-E", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Diana:Skarner:3",
+          "text": "Moonfall pulls in and slows Skarner and his allies. Use it to hold a fight together once you are on top of them.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Skarner", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f97549e8fea1f908c62899e66030d0ceec35925ebcdbf344c4e0a64ff2b5d090",
+      "tips": [
+        {
+          "id": "jungle:Diana:Sylas:0",
+          "text": "Land Crescent Strike on Sylas, then use Lunar Rush on him. The dash refreshes, so you can stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Diana-E", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Diana:Sylas:1",
+          "text": "Hold Moonfall until Sylas has used Abduct or Kingslayer. Pulling him in when he has no escape sets up your kill.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Sylas-W", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Diana:Sylas:2",
+          "text": "Trade with Pale Cascade up. The shield soaks his burst, and the orbs hit him if he steps in to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 11, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Diana:Sylas:3",
+          "text": "Finish Sylas before he gets low and heals. Kingslayer heals him more the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Sylas-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Diana:Sylas:4",
+          "text": "Hold Moonfall when Sylas is near enough to steal it. Fight him when his Hijack is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Sylas-R", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6c669ad1ff72567ef20e8f69c11e7a138aa74d457a71edbf4e411e912a12691a",
+      "tips": [
+        {
+          "id": "jungle:Diana:Talon:0",
+          "text": "Cast Crescent Strike first, then Lunar Rush onto the marked Talon; the dash comes back at once so you can stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Talon", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Diana:Talon:1",
+          "text": "Open with Pale Cascade before Talon dives; the shield and orbs blunt his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Diana:Talon:2",
+          "text": "Use Moonfall when Talon jumps in to pull him back and slow him. It stops him leaving and gives you time to finish.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Talon", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Diana:Talon:3",
+          "text": "Watch for Talon going invisible with Shadow Assault; Moonlight from Crescent Strike reveals only enemies that are not stealthed.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-R", "start": 37, "end": 51 },
+            { "kind": "ability", "key": "Diana-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e82860f2d5729a6921b1822a73ae117296b0de7ef9709393aaaee7388690609",
+      "tips": [
+        {
+          "id": "jungle:Diana:Viego:0",
+          "text": "Cast Crescent Strike first, then dash with Lunar Rush on the marked target. The cooldown refreshes and you can chain straight into a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Diana:Viego:1",
+          "text": "Use Moonfall when Viego dives in. It pulls him to you and leaves him slowed, so he can't easily slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Viego", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Diana:Viego:2",
+          "text": "Open Pale Cascade before trading. The shield soaks his hits while the orbs hit him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Diana:Viego:3",
+          "text": "Moonlight reveals Viego when he hides in the mist of Harrowed Path. Land Crescent Strike on him to see him again.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Viego-E", "start": 53, "end": 66 },
+            { "kind": "ability", "key": "Diana-Q", "start": 73, "end": 88 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Diana:Viego:4",
+          "text": "Don't fight near a fresh kill. If someone dies, Viego can take their body and use their abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8cb2249f036b5abb208abf58b9b7a23f673f4fd189a683eeec55a3d8c9b39e37",
+      "tips": [
+        {
+          "id": "jungle:Diana:XinZhao:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush; the Moonlight mark refreshes its cooldown so you can chain onto Xin Zhao.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 },
+            { "kind": "champion", "key": "XinZhao", "start": 122, "end": 130 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Diana:XinZhao:1",
+          "text": "Cast Pale Cascade as Xin Zhao charges in; the shield and orbs soften his Three Talon Strike combo.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Diana:XinZhao:2",
+          "text": "Do not stand in a line from Xin Zhao: Wind Becomes Lightning slows you and marks you for his Audacious Charge. Sidestep the thrust.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 38, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4c4769ec6d0e1c37b46c62cc3ac05328b1def975ff906a4bf3884ee7f7d7d447",
+      "tips": [
+        {
+          "id": "middle:Diana:Ahri:0",
+          "text": "Dodge Charm by walking behind minions; if it lands you're stunned, so keep your dash for after it, not before.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Diana:Ahri:1",
+          "text": "Land Crescent Strike first, then Lunar Rush onto the marked Ahri; the dash cooldown resets so you can chase again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Ahri", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Diana:Ahri:2",
+          "text": "Open a trade with Pale Cascade active so its shield absorbs Orb of Deception and Fox-Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 60, "end": 76 },
+            { "kind": "ability", "key": "Ahri-W", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Diana:Ahri:3",
+          "text": "Go for Ahri when Spirit Rush is on cooldown; she has far fewer ways to escape you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Diana:Ahri:4",
+          "text": "Use Moonfall to pull Ahri in and slow her when she tries to dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ahri", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5a5121fedf7eb6ac727ebe5d881945a899320fc17ab4e8441fdaeacfff4208a",
+      "tips": [
+        {
+          "id": "middle:Diana:Akali:0",
+          "text": "Open with Crescent Strike, then follow with Lunar Rush on the marked Akali; the cooldown refreshes so you can chase again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Diana-E", "start": 44, "end": 54 },
+            { "kind": "champion", "key": "Akali", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Diana:Akali:1",
+          "text": "Crescent Strike also reveals Akali, so use it to find her when she hides in Twilight Shroud.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Akali", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Akali-W", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Diana:Akali:2",
+          "text": "Do not use Lunar Rush with no Moonlight on Akali; her Five Point Strike will slow you and punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Akali", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Akali-Q", "start": 54, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Diana:Akali:3",
+          "text": "Use Moonfall when Akali jumps in, to pull her back and slow her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Akali", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Diana:Akali:4",
+          "text": "Fight Akali when her energy is low, and cast Pale Cascade before she engages so the shield is up.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Diana-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls in and slows Akali, so Diana can catch her after Akali dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Diana", "start": 38, "end": 43 },
+            { "kind": "champion", "key": "Akali", "start": 64, "end": 69 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3bf940be8e107532f8f54f731d71f2f3ed375cbbf6d7b14bdd1b27ca2a35e826",
+      "tips": [
+        {
+          "id": "middle:Diana:Anivia:0",
+          "text": "Dodge Flash Frost by moving sideways; it is wide but slow to arrive, and the stun comes at the end.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Diana:Anivia:1",
+          "text": "Hit Crescent Strike on Anivia, then use Lunar Rush to jump in and reset it.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Diana-E", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Diana:Anivia:2",
+          "text": "Wait for Anivia to use Crystallize, then dash in around the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Anivia-W", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Diana:Anivia:3",
+          "text": "Use Moonfall to pull Anivia out of position and burst her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Diana:Anivia:4",
+          "text": "Do not stand in Glacial Storm; it slows you more as it grows.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Diana:Anivia:5",
+          "text": "After Anivia returns as an egg, kill it before she is reborn.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fdb3aef22452b76693aa9e90e5495e5eafbca7ff440336bd7b28581ea5cc57a6",
+      "tips": [
+        {
+          "id": "middle:Diana:Aurora:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush. Hitting a marked enemy refreshes its cooldown, so you can dash again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Diana:Aurora:1",
+          "text": "Aurora's Across the Veil makes her invisible, but Crescent Strike's Moonlight reveals enemies. Hit her with it to keep her in sight.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 9, "end": 24 },
+            { "kind": "ability", "key": "Diana-Q", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Diana:Aurora:2",
+          "text": "Use Pale Cascade when you walk into her range; the shield soaks her The Weirding and Twofold Hex while the orbs hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Aurora-E", "start": 68, "end": 80 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Diana:Aurora:3",
+          "text": "Moonfall pulls Aurora in even as she tries to hop away. Save it for after she uses Across the Veil or The Weirding.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Aurora", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aurora-W", "start": 83, "end": 98 },
+            { "kind": "ability", "key": "Aurora-E", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Diana:Aurora:4",
+          "text": "Stay out of the rift from Between Worlds when you can. Walking through its edge slows you, and she can hop across it freely.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 26, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f3eb6bdaa722cd38e4183eb99599fbdba9a07d8e45ac2f4e0bd4fe3077f32835",
+      "tips": [
+        {
+          "id": "middle:Diana:Cassiopeia:0",
+          "text": "Land Crescent Strike, then dash in with Lunar Rush. It refreshes when the target has Moonlight, so you can keep chasing Cassiopeia.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 40, "end": 50 },
+            {
+              "kind": "champion",
+              "key": "Cassiopeia",
+              "start": 120,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Diana:Cassiopeia:1",
+          "text": "Don't dash in with Lunar Rush if Miasma is ready. You will be grounded and slowed with nowhere to go.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 19, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 33,
+              "end": 39
+            },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Diana:Cassiopeia:2",
+          "text": "Don't walk straight at Cassiopeia at level 6. Petrifying Gaze stuns you if you face her, but only slows you if you turn away.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 23, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 46,
+              "end": 61
+            },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Diana:Cassiopeia:3",
+          "text": "Use Moonfall to pull Cassiopeia in close, where her range advantage is gone and she can't easily kite.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Diana:Cassiopeia:4",
+          "text": "Cast Pale Cascade before you walk into Noxious Blast range. The shield and orbs soften her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 39,
+              "end": 52
+            },
+            { "kind": "keyword", "key": "poke", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "05f2605750879529d86bbd59e8827833d42b4fb76b2f7a798b26f9257df88613",
+      "tips": [
+        {
+          "id": "middle:Diana:Fizz:0",
+          "text": "Land Crescent Strike first, then Lunar Rush onto Fizz; the Moonlight mark resets Lunar Rush so you can chase again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Fizz", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Diana-E", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Diana:Fizz:1",
+          "text": "Don't Lunar Rush at Fizz while he can hop; Playful makes him untargetable and your dash is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Diana:Fizz:2",
+          "text": "Wait until Fizz uses Playful, then use Moonfall as he lands; it pulls him in, slows him and leaves him nowhere to go.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Diana-R", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Diana:Fizz:3",
+          "text": "Cast Pale Cascade when Fizz dives in; the orbs hit him as he closes and the shield softens his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Diana:Fizz:4",
+          "text": "Stay away from the lure of Chum the Waters when you see it flying; step out before the shark lands.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls Fizz in and slows him, but his Playful untargetable hop can dodge the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5fc302e7a679e6df405bc379d574a83e5c6404a01ff9d0fa992f09e352ea4f38",
+      "tips": [
+        {
+          "id": "middle:Diana:Malzahar:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush; the marked target lets you use Lunar Rush again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Diana-E", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Diana:Malzahar:1",
+          "text": "Malzahar is hard to hurt while Void Shift is up. Hit him with Pale Cascade or Crescent Strike from range to break it before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 31,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Diana-W", "start": 62, "end": 74 },
+            { "kind": "ability", "key": "Diana-Q", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Diana:Malzahar:2",
+          "text": "Do not walk into Call of the Void; being silenced leaves you unable to cast your spells. Sidestep it before diving.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Diana:Malzahar:3",
+          "text": "Avoid minions with Malefic Visions on them; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Diana:Malzahar:4",
+          "text": "Do not dive when Nether Grasp is ready; you cannot act while suppressed. Fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7b042c5b8fe34622b45802ca3a31027eef27ee079fd6442d2d28faa0d2990299",
+      "tips": [
+        {
+          "id": "middle:Diana:Orianna:0",
+          "text": "Dodge Orianna's Command: Attack, and walk in when it is on cooldown. Her Ball only affects the area it is in.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Diana:Orianna:1",
+          "text": "Land Crescent Strike first, then dash with Lunar Rush. Hitting Moonlight makes Lunar Rush ready again, so you can stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 43, "end": 53 },
+            { "kind": "ability", "key": "Diana-E", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Diana:Orianna:2",
+          "text": "Open the fight with Pale Cascade as you reach Orianna. The shield protects you and the orbs hit her when you get close.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Orianna", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Diana:Orianna:3",
+          "text": "Watch where the Ball is. Orianna's Command: Shockwave only reaches what is near it, so stay out of that area until she wastes the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Orianna-R", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Diana:Orianna:4",
+          "text": "Do not walk through Command: Dissonance's field. It slows you, which makes it easy for Orianna to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 20, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 },
+            { "kind": "champion", "key": "Orianna", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Diana:Orianna:5",
+          "text": "Use Moonfall to pull Orianna in and slow her when you are close. Bring teammates if you can, since extra champions pulled add damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Orianna", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9ef3ae835cc735ecc356753061b4e534cfdcd7b32bb4ab2159bb5341c10dcfa6",
+      "tips": [
+        {
+          "id": "middle:Diana:Ryze:0",
+          "text": "Land Crescent Strike on Ryze, then dash in with Lunar Rush; the reset lets you stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Diana-E", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Diana:Ryze:1",
+          "text": "Avoid walking up when Ryze has Spell Flux on you; Rune Prison will root you instead of slowing.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Ryze-E", "start": 31, "end": 41 },
+            { "kind": "ability", "key": "Ryze-W", "start": 50, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Diana:Ryze:2",
+          "text": "Use Pale Cascade when Ryze starts poking you; the shield soaks his damage and the orbs hit him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Diana:Ryze:3",
+          "text": "Use Moonfall to pull Ryze in when he is out of position; he has no easy way to escape the follow-up damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ryze", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Diana:Ryze:4",
+          "text": "Stay out of the line of Overload when it is ready, and fight when his spells are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f0c20221190a8133741e73d55ed24734c634e3408233f170a11b69da78fbf801",
+      "tips": [
+        {
+          "id": "middle:Diana:Sylas:0",
+          "text": "Land Crescent Strike first, then dash in with Lunar Rush; hitting a marked target refreshes Lunar Rush so you can chain onto him again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 46, "end": 56 },
+            { "kind": "ability", "key": "Diana-E", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Diana:Sylas:1",
+          "text": "Fight Sylas when he is low on health only if you can finish him fast; Kingslayer heals him more the lower he is.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Diana:Sylas:2",
+          "text": "Cast Pale Cascade before he reaches you to absorb his burst; its shield soaks his Abduct and Chain Lash damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Diana:Sylas:3",
+          "text": "Use Moonfall when Sylas dashes onto you; it pulls him in and leaves him slowed so you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Diana:Sylas:4",
+          "text": "Step out of the line of Abduct; if its chains hit you, you are stunned and knocked up.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "knocked-up", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Diana:combo:0",
+          "note": "Moonfall pulls Sylas in and slows him, countering his Abscond dash to escape or close in.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7ebea9c85cca613571cb7f83aa5552a5906b04c3ffe295c67c7e64413bb7ff74",
+      "tips": [
+        {
+          "id": "middle:Diana:TwistedFate:0",
+          "text": "Hit Crescent Strike on Twisted Fate, then dash in with Lunar Rush. If the dash resets, you can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 23,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Diana-E", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Diana:TwistedFate:1",
+          "text": "Do not dash in with Lunar Rush when Twisted Fate has his Gold Card ready. You will be stunned with no way out.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 20, "end": 30 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 36,
+              "end": 48
+            },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Diana:TwistedFate:2",
+          "text": "Use Pale Cascade before you walk into Wild Cards range so the shield absorbs his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Diana:TwistedFate:3",
+          "text": "Use Moonfall to pull Twisted Fate in so he cannot get away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "TwistedFate", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Diana:TwistedFate:4",
+          "text": "Move out of the way when you see Twisted Fate use Destiny. He may be about to teleport in on you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 33,
+              "end": 45
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 50,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "980f3830bbd9f931aa0d917ce1226e9d1f1296d18f62a89c661c6e2adfade671",
+      "tips": [
+        {
+          "id": "middle:Diana:Viktor:0",
+          "text": "Land Crescent Strike on Viktor, then use Lunar Rush to jump on him. Lunar Rush comes back for another dash if he was hit.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Diana-E", "start": 41, "end": 51 },
+            { "kind": "ability", "key": "Diana-E", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Diana:Viktor:1",
+          "text": "Do not dash into Viktor's Gravity Field. Wait for it to end or leave it quickly, or you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Viktor-W", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Diana:Viktor:2",
+          "text": "Use Moonfall to pull Viktor to you when he tries to keep his distance; it also slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Viktor", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Diana:Viktor:3",
+          "text": "Sidestep Hextech Ray rather than walking in a straight line; it hits everything along its path.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Diana:Viktor:4",
+          "text": "Cast Pale Cascade before you go in so its shield absorbs his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "39a126695d3b0aebf4bad46722373e663ede1685072e70f31b113008623fef17",
+      "tips": [
+        {
+          "id": "middle:Diana:Yasuo:0",
+          "text": "Hold Crescent Strike until Yasuo walks up to last-hit; it is a bolt, so he can dodge it by stepping aside, but his Wind Wall will block it.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 115, "end": 124 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Diana:Yasuo:1",
+          "text": "Bait Wind Wall first, then throw Crescent Strike once it is down and the wall's long cooldown is running.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Diana-Q", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Diana:Yasuo:2",
+          "text": "Hit Crescent Strike, then dash in with Lunar Rush to reset it and keep the fight going.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Diana-E", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Diana:Yasuo:3",
+          "text": "Use Pale Cascade when Yasuo wants to trade; the shield and orbs punish him for walking into you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Diana:Yasuo:4",
+          "text": "Yasuo's whirlwind knocks you up, so stay out of its path when he has two stacks of Steel Tempest.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Diana:Yasuo:5",
+          "text": "Moonfall pulls in and slows Yasuo; use it to start a kill at level 6, when his dashes are tougher to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a078917d5d5be3636268f9711af5b5da35d12c7f9949049ce9cb55cbe696efbe",
+      "tips": [
+        {
+          "id": "middle:Diana:Yone:0",
+          "text": "Land Crescent Strike first, then use Lunar Rush on the marked Yone; the dash refreshes and you can jump out again.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Diana-E", "start": 37, "end": 47 },
+            { "kind": "champion", "key": "Yone", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Diana:Yone:1",
+          "text": "Cast Pale Cascade when Yone walks up to trade; the orbs hit him as he closes in and the shield soaks his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Diana:Yone:2",
+          "text": "Pull Yone in with Moonfall at level 6 when he is out of position; he is slowed and can't walk away from the follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Diana-R", "start": 18, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Diana:Yone:3",
+          "text": "Keep your distance when Yone has two stacks of Mortal Steel; the wind dash knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Yone-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Diana:Yone:4",
+          "text": "Don't spend Lunar Rush on an unmarked Yone; he can punish you stuck next to him when you have no way back out.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-E", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "afed302e419411169451d9e0ac54fa8c37ff1d2bc62235e3c65d3e187c349593",
+      "tips": [
+        {
+          "id": "middle:Diana:Zed:0",
+          "text": "Land Crescent Strike on Zed, then dash in with Lunar Rush. It refreshes when he has Moonlight, so you can chain it for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Diana-E", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Diana:Zed:1",
+          "text": "Cast Pale Cascade when Zed dives at you. The shield and the orbs punish his short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Diana:Zed:2",
+          "text": "Use Moonfall when Zed commits to you. He ends up slowed and pulled in beside you, so he can't escape easily.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zed", "start": 18, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Diana:Zed:3",
+          "text": "Keep Crescent Strike ready when Zed uses Death Mark on you. Its short cooldown and long range make it easy to poke him from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Zed-R", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 110, "end": 114 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

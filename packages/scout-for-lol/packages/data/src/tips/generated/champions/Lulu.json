@@ -1,0 +1,2111 @@
+{
+  "schemaVersion": 1,
+  "champion": "Lulu",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "abefffa2fa202927cb0e86dedc5b3206c0fd5acaa114ca1d1034d2234589e328",
+      "tips": [
+        {
+          "id": "support:Lulu:general:0",
+          "text": "Aim Glitterlance so both bolts cross the enemy. Pix fires a second bolt, so it slows and hurts most when both land.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Lulu:general:1",
+          "text": "Hold Whimsy for the enemy who dives or charges at you or your partner. It turns them into a critter and disarms them.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Lulu:general:2",
+          "text": "Before a trade, shield your ranged carry and give them Pix's bolts with Help, Pix!",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lulu:general:3",
+          "text": "Hurt and reveal a hiding enemy champion with Help, Pix!",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lulu:general:4",
+          "text": "Save Wild Growth for a tank or fighter who is diving in. Enemies around them are knocked up, then slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "knocked-up", "start": 81, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lulu:general:5",
+          "text": "Use Whimsy on your carry when they need to chase or run away. It gives them Move Speed and Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:general:6",
+          "text": "Stay behind your minions when you auto-attack. Pix's bolts can be intercepted by units in the way.",
+          "refs": [],
+          "pWrong": 0.2
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "36545c7597799b2c668369449b0ba986d502a472fce3286f579e614e566a8670",
+      "tips": [
+        {
+          "id": "support:Lulu:Alistar:0",
+          "text": "Keep Whimsy ready for Alistar's approach; polymorphing him stops Headbutt and Pulverize.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Alistar", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Alistar-W", "start": 65, "end": 73 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 78, "end": 87 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Alistar:1",
+          "text": "Hit Alistar with Glitterlance as he walks up; slowing him makes it harder to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lulu:Alistar:2",
+          "text": "Stay behind your minions, since Headbutt aims at a unit and he can still reach you; step back after he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-W", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lulu:Alistar:3",
+          "text": "Put the Help, Pix! shield on your carry when Alistar looks ready to engage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Alistar", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Lulu:Alistar:4",
+          "text": "Do not use Wild Growth on someone while Alistar's Unbreakable Will is up; he takes much less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Alistar", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Alistar-R", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ab1630e41f0cc6f94be96645cfc774520a701e3d97711101fb236b38c2b6bf4e",
+      "tips": [
+        {
+          "id": "support:Lulu:Anivia:0",
+          "text": "Hold Whimsy for when Anivia casts or walks close; it stops her attacking and casting for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Lulu:Anivia:1",
+          "text": "Keep Glitterlance for when Anivia is stuck in place casting. It slows her and pierces through minions.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lulu:Anivia:2",
+          "text": "Don't stand in a straight line with Flash Frost. If it hits you, Frostbite follows for big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Anivia-E", "start": 65, "end": 74 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lulu:Anivia:3",
+          "text": "Put the Help, Pix! shield on your carry before Anivia pokes them, so they trade through her damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lulu:Anivia:4",
+          "text": "Kill her egg after Rebirth triggers, since she cannot act while it lasts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 19,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d9996d54bfdcb2f3a3f91917fffb53e5fecf0ca8df7bbafe1523600c058aabad",
+      "tips": [
+        {
+          "id": "support:Lulu:Bard:0",
+          "text": "Use Whimsy on Bard when he walks up to hit with Cosmic Binding; he can't attack while polymorphed, and he moves slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Bard", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Bard-Q", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Lulu:Bard:1",
+          "text": "Stay out of line with your own minions and your carry so Cosmic Binding can't hit two targets; the stun needs a second enemy or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Lulu:Bard:2",
+          "text": "Fight away from walls. Cosmic Binding stuns whoever it slows if it hits terrain behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Lulu:Bard:3",
+          "text": "Poke Bard with Glitterlance when he steps up to collect chimes or place shrines; the slow makes it hard for him to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lulu:Bard:4",
+          "text": "Watch for Magical Journey portals; Bard's team can use them to flank, and you can use them too.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-E", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Bard", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lulu:Bard:5",
+          "text": "Save Wild Growth on your tank for when Tempered Fate ends; the stasis blocks it, and you can't cast it while your target is frozen.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Bard-R", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "df65e50f0599f5886b10ec64fb16afeafebbbd0f057685a1034c4bd2a1bd3f4d",
+      "tips": [
+        {
+          "id": "support:Lulu:Blitzcrank:0",
+          "text": "Stand behind minions so Rocket Grab hits them instead of you. It only pulls the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:Blitzcrank:1",
+          "text": "Use Whimsy on Blitzcrank as he runs at you. It stops his Power Fist attack, because he cannot attack while polymorphed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Blitzcrank:2",
+          "text": "Poke Blitzcrank with Glitterlance to keep him back. Hitting him slows him, so he struggles to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:Blitzcrank:3",
+          "text": "Cast Help, Pix! on your partner early in a fight, because Blitzcrank's Static Field destroys shields.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 58, "end": 68 },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "87dfea05fd579448c1dfdb59f7982c13cbc2346ca04702a976c5542b8ff58715",
+      "tips": [
+        {
+          "id": "support:Lulu:Brand:0",
+          "text": "Stay behind your minions so Brand's Sear hits them instead of you. Without Sear landing, his combo can't start.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Brand-Q", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lulu:Brand:1",
+          "text": "Polymorph Brand with Whimsy when he commits to a combo; he can't cast spells while it lasts if you hit him first.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Lulu-W", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Lulu:Brand:2",
+          "text": "Spread out from your ally so Conflagration and Pyroclasm hit fewer of you. Brand does well when you cluster.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Brand-R", "start": 47, "end": 56 },
+            { "kind": "champion", "key": "Brand", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lulu:Brand:3",
+          "text": "Hit Brand with Glitterlance to slow him and poke him down; he has trouble ending a fight once he's slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Lulu:Brand:4",
+          "text": "Shield your carry with Help, Pix! before Brand's burst lands.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Brand", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9485e1284ff716d1ff115c6e9f148136ab41eb3b1ca7f25658caed35a70a58c4",
+      "tips": [
+        {
+          "id": "support:Lulu:Braum:0",
+          "text": "Aim Glitterlance when Braum's shield is down or from an angle; Unbreakable catches missiles from the direction he faces.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Braum", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Braum-E", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Lulu:Braum:1",
+          "text": "Use Whimsy on Braum when he leaps in with Stand Behind Me, so he can't follow up with his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Braum", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Braum-W", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Lulu:Braum:2",
+          "text": "Slow Braum with Glitterlance when he walks up to hit you, then back off before his hits stack up to a stun.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Braum", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Lulu:Braum:3",
+          "text": "Shield your carry with Help, Pix! when Braum's Winter's Bite is coming; it absorbs the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Braum", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Braum-Q", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lulu:Braum:4",
+          "text": "Stay out of Braum's melee range so Concussive Blows never builds up.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 35,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6ab06953ffd3b8b28b7135aed33ba3fce073239c02c6b417b33b35852e8ca463",
+      "tips": [
+        {
+          "id": "support:Lulu:Camille:0",
+          "text": "Use Whimsy on Camille when she dashes in with Hookshot, so she can't attack or finish her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Camille", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Camille-E", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Lulu:Camille:1",
+          "text": "Land Glitterlance on Camille when she walks up; she is slowed and easier to hit and poke.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Camille", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Lulu:Camille:2",
+          "text": "Put Wild Growth on your tank or fighter when Camille dives so enemies near them are knocked up and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Camille", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "knocked-up", "start": 84, "end": 94 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lulu:Camille:3",
+          "text": "Shield your carry with Help, Pix! when Camille is about to dive; it also gives them Pix's bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Camille", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lulu:Camille:4",
+          "text": "Keep your minions between you and Camille's Hookshot reach; she needs walls to start her dive, so stay away from them.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Camille-E", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3aabbaeacbcffdfd3b95102decc261f632d2bb4806b42733b8f7fbefe861647a",
+      "tips": [
+        {
+          "id": "support:Lulu:Janna:0",
+          "text": "Hit Janna with Glitterlance when she walks up to cast; Pix's extra bolt adds damage and the slow keeps her from escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lulu:Janna:1",
+          "text": "Save Whimsy for when Janna commits to a Howling Gale or a dive; polymorphing her stops her from helping her team.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Janna", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Janna-Q", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Lulu:Janna:2",
+          "text": "Listen for the charge-up of Howling Gale, and step out of its line; it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:Janna:3",
+          "text": "Put Help, Pix! on your ranged ally so Pix adds bolts with their attacks; shield them when Janna's Zephyr is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Janna", "start": 90, "end": 95 },
+            { "kind": "ability", "key": "Janna-W", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Lulu:Janna:4",
+          "text": "Hold back when Janna has Monsoon ready; it pushes your team away from a fight, so wait for it to be used before diving.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Janna-R", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ac5405fc2fc3b6fdd93c1fc29a6122cd051e297b1b235c5ac8e31f7522b63a36",
+      "tips": [
+        {
+          "id": "support:Lulu:Karma:0",
+          "text": "Keep minions between you and Karma so Inner Flame hits them first. Step out of line when she aims at you.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Karma-Q", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lulu:Karma:1",
+          "text": "Move out of the circle left by a Mantra-empowered Inner Flame at once. It slows you and then bursts for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Karma-Q", "start": 50, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lulu:Karma:2",
+          "text": "Use Whimsy on Karma when she tries to tether you or start a fight. She can't fight back while she is polymorphed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Karma", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Lulu:Karma:3",
+          "text": "Walk out of range of Focused Resolve to break the tether before it roots you. Karma has to stay close to keep it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 72 },
+            { "kind": "champion", "key": "Karma", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Lulu:Karma:4",
+          "text": "Hit Karma with Glitterlance when she walks up to land her abilities. Each hit on you lowers her Mantra cooldown, so make her pay for it.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Karma-R", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d77c6d58279487a39ecad92948ae41a424deecf21893781e1138f4c2b4cce0b2",
+      "tips": [
+        {
+          "id": "support:Lulu:Leona:0",
+          "text": "Keep Whimsy for Leona as she starts her engage. Polymorphing her stops her attacking and cancels her Shield of Daybreak stun.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Leona", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Leona-Q", "start": 101, "end": 119 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Leona:1",
+          "text": "Use Glitterlance to slow Leona as she walks up. She has to close the distance, so poke her before she gets there.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lulu:Leona:2",
+          "text": "Stay out of Zenith Blade range, and keep a minion or ally out of its line. If Leona dashes onto you she roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 78, "end": 83 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Lulu:Leona:3",
+          "text": "Put the Help, Pix! shield on your partner when Leona goes in, since she mostly hits whoever she reaches first.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Leona", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Lulu:Leona:4",
+          "text": "Step out of the center of Solar Flare once you see it land. Only the center stuns, so you can often avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0db31bb697d4eaba79de422abc9a4ba50439250b6cfeafc332eadcf8f10a448f",
+      "tips": [
+        {
+          "id": "support:Lulu:Lux:0",
+          "text": "Hit Lux with Glitterlance as she throws Lucent Singularity; the slow makes it hard for her to escape your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Lux-E", "start": 40, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lulu:Lux:1",
+          "text": "Save Whimsy for when Lux commits to a skillshot; polymorphed, she cannot attack or cast, and she is easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Lulu:Lux:2",
+          "text": "Stay behind minions so Light Binding hits them first; it only roots the first two enemies it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 23, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lulu:Lux:3",
+          "text": "Put Help, Pix! on your carry for a shield against Lux's poke, and step sideways when a red line shows for Final Spark.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Lux", "start": 50, "end": 53 },
+            { "kind": "ability", "key": "Lux-R", "start": 106, "end": 117 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6921151cc572b722bdda3fb601a83a1e7570b4f28195181bba3344288f555531",
+      "tips": [
+        {
+          "id": "support:Lulu:Maokai:0",
+          "text": "Keep Whimsy ready for when Maokai commits. Polymorphing him stops his attack and gives your team time to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Maokai", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Maokai:1",
+          "text": "Don't waste spells on Maokai while he is using Twisted Advance. He can't be targeted, so poke him before or after it.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Maokai-W", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Lulu:Maokai:2",
+          "text": "Stay out of the brush when saplings are around. Slow them down with Glitterlance and walk away from the explosion.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Lulu:Maokai:3",
+          "text": "Wild Growth on your partner after Maokai commits makes them tougher and slows him, which helps you turn his engage around.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Maokai", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "27d4070c628853188bc597152310bd5581d3bfc4c0c647d10514dbc7c8cb681b",
+      "tips": [
+        {
+          "id": "support:Lulu:Mel:0",
+          "text": "Save Whimsy for when Mel commits to a fight. Polymorphing her stops her casting, and it is a good answer to her Solar Snare setup.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Mel", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Mel-E", "start": 112, "end": 123 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Mel:1",
+          "text": "Hold your Glitterlance until Mel has used Rebuttal. Her nova destroys projectiles that touch it.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Mel", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Mel-W", "start": 42, "end": 50 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Lulu:Mel:2",
+          "text": "Stay out of the line of Solar Snare. If you are rooted, you can be hit by everything she has.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Lulu:Mel:3",
+          "text": "Back off when Mel has hit you a lot. Her Overwhelm stacks can execute you when your health is low.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 14, "end": 17 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lulu:Mel:4",
+          "text": "Wild Growth on your tank or fighter turns a Mel engage around, because it knocks up the enemies near them.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Mel", "start": 44, "end": 47 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 83 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a06b24ec9a528c94cd0d0332aa2a3f423ad4f1c3360407dcb28be7d9ef11487a",
+      "tips": [
+        {
+          "id": "support:Lulu:Milio:0",
+          "text": "Aim Glitterlance down the lane so both bolts hit Milio and his partner; the enemy is slowed and easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Lulu:Milio:1",
+          "text": "Polymorph Milio with Whimsy when he commits to a Ultra Mega Fire Kick or walks up to help his partner; he can't fight back while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Lulu-W", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Milio-Q", "start": 49, "end": 69 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Lulu:Milio:2",
+          "text": "Hide behind minions when Milio's team attacks, because Pix's bolts can be intercepted by units in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lulu:Milio:3",
+          "text": "Stand behind minions so Ultra Mega Fire Kick hits a minion first and loses its knockback on you.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 24, "end": 44 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Lulu:Milio:4",
+          "text": "Put Help, Pix! on your ranged carry for the shield, and to give them Pix's extra damage while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1a6197b2d01a5b0c8e8248b46300b37cd9c5b3ca3bae46a0e40a4a9222d5337c",
+      "tips": [
+        {
+          "id": "support:Lulu:Morgana:0",
+          "text": "Stay out of a straight line with Morgana and keep minions between you; Dark Binding stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Lulu:Morgana:1",
+          "text": "Polymorph Morgana with Whimsy when she walks up, unless Black Shield is up; it blocks the effect.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Lulu-W", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Morgana-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Lulu:Morgana:2",
+          "text": "Poke Morgana with Glitterlance when she steps up to last-hit; it is quick to recast and slows her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Morgana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lulu:Morgana:3",
+          "text": "Get out of Tormented Shadow when you are low on health; it hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 11, "end": 27 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:Morgana:4",
+          "text": "Put Help, Pix! on your carry, since it shields them from Morgana's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Morgana", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "075f303329314afdd4f75da545fcf5334a704a45e43bf78ed8741272a7c62899",
+      "tips": [
+        {
+          "id": "support:Lulu:Nami:0",
+          "text": "Hide behind minions when Nami targets you; Aqua Prison lands after a short delay, so keep moving sideways and make her miss.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Nami-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Lulu:Nami:1",
+          "text": "Once Nami misses Aqua Prison, step up and trade with Glitterlance, since her long cooldown leaves her open.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Nami-Q", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Lulu:Nami:2",
+          "text": "Polymorph Nami with Whimsy when she goes for a cast or runs in to bubble you; she cannot attack while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Lulu-W", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lulu:Nami:3",
+          "text": "Use Glitterlance to keep Nami slowed when she walks up to bubble; it works at long range.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Lulu:Nami:4",
+          "text": "Wait out Tidecaller's Blessing on her carry before trading; it only lasts a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 9, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Lulu:Nami:5",
+          "text": "Sidestep Tidal Wave; it travels slowly. If it hits your team, use Wild Growth on a tank to knock up enemies back.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 },
+            { "kind": "ability", "key": "Lulu-R", "start": 66, "end": 77 },
+            { "kind": "keyword", "key": "knocked-up", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3512dcf04e8a8b08b41b3c80042d25fa30a5a07c31f02b6a52b6e21e7d791041",
+      "tips": [
+        {
+          "id": "support:Lulu:Nautilus:0",
+          "text": "Keep Whimsy ready for when Nautilus dives in. Polymorphing him stops his attacks, so Staggering Blow and Titan's Wrath don't land.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Nautilus", "start": 27, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 85,
+              "end": 100
+            },
+            { "kind": "ability", "key": "Nautilus-W", "start": 105, "end": 118 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Nautilus:1",
+          "text": "Stand behind minions. Dredge Line stops at the first enemy it hits, so a minion in the way takes the anchor instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Lulu:Nautilus:2",
+          "text": "Poke Nautilus with Glitterlance when he walks up for last hits. His slow reach is short, so make him pay for approaching.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Lulu:Nautilus:3",
+          "text": "When Nautilus casts Riptide next to you, wait for the waves to finish before you run. Running early takes more hits and a slow.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nautilus-E", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lulu:Nautilus:4",
+          "text": "Help, Pix! on your partner gives a shield that helps them survive Depth Charge, so cast it when Nautilus is about to engage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Nautilus-R", "start": 66, "end": 78 },
+            { "kind": "champion", "key": "Nautilus", "start": 96, "end": 104 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "86dcc5326f6cc0ed327f5ad8072cbb514ee34100e8260a1b1fd1f9f51a6f6a6f",
+      "tips": [
+        {
+          "id": "support:Lulu:Neeko:0",
+          "text": "Hit Neeko with Whimsy the moment she shows herself or starts a combo; she is stuck as a harmless critter and cannot attack or cast.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-W", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lulu:Neeko:1",
+          "text": "Aim Glitterlance at Neeko when she walks up for a trade; it slows her and both bolts can hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Neeko", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Lulu:Neeko:2",
+          "text": "Put Help, Pix! shield on your carry when Neeko is about to throw Tangle-Barbs at them.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Neeko", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Neeko-E", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lulu:Neeko:3",
+          "text": "Stay out from behind your minions; Tangle-Barbs grows stronger when it hits something first, so stand where it cannot pass through them.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Lulu:Neeko:4",
+          "text": "Poke her with Pix bolts from behind your minions, which intercept them less often than you think; keep trading before she can commit.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "38d6b41b3810c730bea3212e2077c53f471ee9903a7d1477e041ade05179d9df",
+      "tips": [
+        {
+          "id": "support:Lulu:Pantheon:0",
+          "text": "Use Whimsy on Pantheon as he leaps in. He cannot attack or cast while polymorphed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Lulu:Pantheon:1",
+          "text": "Hit Pantheon with Glitterlance as he approaches. The slow keeps him from catching you.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lulu:Pantheon:2",
+          "text": "Do not fight him head-on while Aegis Assault is up. Wait it out or step behind him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lulu:Pantheon:3",
+          "text": "Stay in the minion wave, as Pantheon's spear hits the first enemy in its path. Keep your health high, because a thrown Comet Spear hurts low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 119, "end": 130 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Lulu:Pantheon:4",
+          "text": "Soften Pantheon's burst on your carry by shielding them with Help, Pix!",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Lulu-E", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06e95b68d8d7009364282b7f0d3b8e7885a6225f8133973fcb35b7e1de46ec99",
+      "tips": [
+        {
+          "id": "support:Lulu:Poppy:0",
+          "text": "Save Whimsy for when Poppy charges in with Heroic Charge or starts charging Keeper's Verdict; it polymorphs her and stops her plan.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Poppy", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Poppy-E", "start": 43, "end": 56 },
+            { "kind": "ability", "key": "Poppy-R", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Poppy:1",
+          "text": "Stay away from walls; Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lulu:Poppy:2",
+          "text": "Don't dash or jump near Poppy while Steadfast Presence is active; it stops the dash.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Poppy-W", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lulu:Poppy:3",
+          "text": "Poke Poppy with Glitterlance from long range to slow her and keep her off you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lulu:Poppy:4",
+          "text": "Walk over Poppy's dropped buckler to destroy it and deny her shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b1882b6aef62582cb6a515674d39c1f2d26c726fed1ab997d71c631ed9cae690",
+      "tips": [
+        {
+          "id": "support:Lulu:Pyke:0",
+          "text": "Hit Pyke with Whimsy when he dives in to grab someone; it stops him attacking and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lulu-W", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lulu:Pyke:1",
+          "text": "Fire Glitterlance at Pyke when he backs off to heal; he ends up slowed and loses ground.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Lulu:Pyke:2",
+          "text": "Put Help, Pix! on Pyke to see him while he is hidden, so he cannot heal back damage out of sight.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Pyke", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Lulu:Pyke:3",
+          "text": "Shield your ally with Help, Pix! when Pyke pulls or stuns them, so they survive his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 22, "end": 32 },
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lulu:Pyke:4",
+          "text": "Stay behind minions so Pyke's harpoon is blocked; Bone Skewer stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "60eb9c03ba3c866fde1baef64f610316cb26b48f3fb477c76da90d7ec8a01700",
+      "tips": [
+        {
+          "id": "support:Lulu:Rakan:0",
+          "text": "Hit Rakan with Whimsy when he dashes in with Grand Entrance or The Quickness; he is polymorphed before he can finish the engage.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-W", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Rakan-W", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "Rakan-R", "start": 63, "end": 76 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Lulu:Rakan:1",
+          "text": "Use Glitterlance on Rakan whenever he steps forward; the slow makes it hard for him to reach you or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Lulu:Rakan:2",
+          "text": "Stay behind your minions so Pix's bolts and Rakan's Gleaming Quill hit them first, and poke with Glitterlance from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 52, "end": 66 },
+            { "kind": "keyword", "key": "poke", "start": 87, "end": 91 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 97, "end": 109 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Lulu:Rakan:3",
+          "text": "Put Help, Pix! on your carry to shield them against Rakan's engage, and save Wild Growth for when he lands among your team.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Rakan", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Lulu-R", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Lulu:Rakan:4",
+          "text": "Hit Rakan when his partner is far away; he is easier to catch and has fewer ways to move.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e70bd6d7fb05e543de6229da01ab30d9bb1a155a978963f1986b7a970b3d799a",
+      "tips": [
+        {
+          "id": "support:Lulu:Rell:0",
+          "text": "Poke Rell with Glitterlance from long range while she walks up; the slow makes it hard for her to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rell", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lulu:Rell:1",
+          "text": "Polymorph Rell with Whimsy when she mounts up and charges at you or your partner; she can't attack or move normally while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Lulu-W", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Lulu:Rell:2",
+          "text": "Stay behind your minions so Pix's bolts and Rell's approach are blocked, and keep your distance from her lance.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 44, "end": 48 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Rell:3",
+          "text": "Don't rely on Help, Pix! shields against Shattering Strike; it destroys shields before it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Rell-Q", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Lulu:Rell:4",
+          "text": "Wild Growth on your tank is a strong answer when Rell pulls everyone in with Magnet Storm; the knock up and slow punish her team.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Rell", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Rell-R", "start": 77, "end": 89 },
+            { "kind": "keyword", "key": "knocked-up", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1ed70199a4bd1d8b37c2de14b3948f4a5b4f79b7cfbd6978799ade5f86fda7af",
+      "tips": [
+        {
+          "id": "support:Lulu:Senna:0",
+          "text": "Hit Senna with Whimsy when she commits to an attack or a root; she is a ranged champion who relies on her cannon, so polymorph leaves her unable to fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-W", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Lulu:Senna:1",
+          "text": "Poke Senna with Glitterlance when she steps up to hit minions; it slows her and the second bolt adds extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Lulu:Senna:2",
+          "text": "Send Pix at Senna with Help, Pix! to deal damage and reveal her if she hides in Curse of the Black Mist.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Senna-E", "start": 80, "end": 103 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Lulu:Senna:3",
+          "text": "Shield your marksman with Help, Pix! before Senna's Last Embrace lands; it also gives Pix to your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 26, "end": 36 },
+            { "kind": "champion", "key": "Senna", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Senna-W", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lulu:Senna:4",
+          "text": "Stay out of a straight line with Senna, so Last Embrace can't land on you and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Senna-W", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd7945ee42e4857607624bdbf28f5032d0d960456b95a4a2d0f54e930aff2bc6",
+      "tips": [
+        {
+          "id": "support:Lulu:Seraphine:0",
+          "text": "Poke with Glitterlance when Seraphine walks up to last-hit; it slows her and hits at long range.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Seraphine", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Lulu:Seraphine:1",
+          "text": "Polymorph Seraphine with Whimsy when she steps forward to cast her spells; she can't fight back while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Lulu-W", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lulu:Seraphine:2",
+          "text": "Stay behind minions when you auto-attack; Pix's bolts get blocked by the first unit they hit.",
+          "refs": [],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Lulu:Seraphine:3",
+          "text": "Save Help, Pix! for your own ranged carry and shield them when Seraphine's Beat Drop is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Seraphine", "start": 63, "end": 72 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Lulu:Seraphine:4",
+          "text": "At level 6, use Wild Growth on your tank or fighter to knock up and slow Seraphine's side when they commit.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "knocked-up", "start": 55, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 },
+            { "kind": "champion", "key": "Seraphine", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d4a496eb2cec58dac5a8f5299365a24f325c914ce2dbc4e3be7abf969a8b3ac5",
+      "tips": [
+        {
+          "id": "support:Lulu:Shen:0",
+          "text": "Hold Whimsy for when Shen dashes at you or your carry; the polymorph ruins his taunt play.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Shen", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lulu:Shen:1",
+          "text": "Poke Shen with Glitterlance when he is out of position; its slow makes it hard for him to close the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lulu:Shen:2",
+          "text": "Shen's Spirit's Refuge blocks your Pix bolts and attacks; wait for it to end before you commit to a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-W", "start": 7, "end": 22 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Shen:3",
+          "text": "Shen has no cheap way into your lane after Shadow Dash; punish him when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-E", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Lulu:Shen:4",
+          "text": "Once Shen is level 6, expect Stand United to bring him to a fight; keep Whimsy ready for his arrival.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Shen-R", "start": 29, "end": 41 },
+            { "kind": "ability", "key": "Lulu-W", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "daffad07ea1fabb02a24aacb0226d22d67a4f5d8ac3c0dbdc279b71c08cb8857",
+      "tips": [
+        {
+          "id": "support:Lulu:Sona:0",
+          "text": "Hit Sona with Glitterlance when she steps up to use Hymn of Valor; she is fragile and the slow makes her hard to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Sona-Q", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Lulu:Sona:1",
+          "text": "Save Whimsy for Sona when she walks in close. She has little way to protect herself, and her carry can then trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Sona", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Lulu:Sona:2",
+          "text": "Cast Help, Pix! on Sona for a damage burst when she gets close; it also reveals her.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Sona", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Lulu:Sona:3",
+          "text": "Watch for Crescendo; shield your carry with Help, Pix! after the stun lands, and stay spread out so it doesn't catch everyone.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Lulu-E", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "504b6e6531bae9f40e8b6f19b809777934afd81fe1a1faf6148a86d7c4050fa4",
+      "tips": [
+        {
+          "id": "support:Lulu:Soraka:0",
+          "text": "Stay out of Equinox. Walk out of the field before it ends, or you will be rooted and hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Lulu:Soraka:1",
+          "text": "Polymorph Soraka with Whimsy when she walks up to heal or cast. Then your team can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Lulu-W", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lulu:Soraka:2",
+          "text": "Fire Glitterlance at Soraka when she heals her partner. The slow makes her Starcall harder to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Soraka", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Lulu:Soraka:3",
+          "text": "Dodge Starcall by moving sideways, because it lands after a short delay. Missing it denies her healing and speed.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Lulu:Soraka:4",
+          "text": "Put Help, Pix! on your ranged carry so the shield and extra bolts help them win trades.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6e7b9c0001e7ffd008930029e20daaf77998548e2526eb83901cb1102561e382",
+      "tips": [
+        {
+          "id": "support:Lulu:Swain:0",
+          "text": "Keep your distance from Swain when Nevermove is ready. If you are rooted, his recast pulls you into his range.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Swain-E", "start": 35, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lulu:Swain:1",
+          "text": "Use Whimsy on Swain when he starts to cast Nevermove or walks up to fight. He can't fight back while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Swain", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Swain-E", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Lulu:Swain:2",
+          "text": "Hit Swain with Glitterlance as he moves in. The slow makes it harder for him to land his abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lulu:Swain:3",
+          "text": "Move out of the way of Vision of Empire when you see it appear. It takes a while to land and is easy to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lulu:Swain:4",
+          "text": "Use Help, Pix! on Swain to deal damage and reveal him, so he can't retreat unseen after he pokes you.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Swain", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e861ba0d62ffe632288be2faeee02cec67157e6f1a900b96dc8b909990f7e45a",
+      "tips": [
+        {
+          "id": "support:Lulu:TahmKench:0",
+          "text": "Hit Tahm Kench with Whimsy when he starts channeling Abyssal Dive. It polymorphs him and should stop the dive, since immobilizing effects cancel it.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Lulu-W", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:TahmKench:1",
+          "text": "Poke him with Glitterlance from long range. It slows him, and the second bolt adds extra damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Lulu:TahmKench:2",
+          "text": "Stay behind your minions when you walk up to attack. Pix's bolts get blocked by units, and Tongue Lash stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Lulu:TahmKench:3",
+          "text": "Shield your carry with Help, Pix! when Tahm Kench has stacks on them, to help them survive a Devour.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "TahmKench", "start": 39, "end": 49 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Lulu:TahmKench:4",
+          "text": "Wild Growth on your ally when Tahm Kench dives in. It knocks up enemies around them and slows them.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "TahmKench", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 54, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f15fe7cf1a2793423865ec93081933c6f1d7a2678d88f111e715649d2b4fefa4",
+      "tips": [
+        {
+          "id": "support:Lulu:Taric:0",
+          "text": "Use Whimsy on Taric when he walks in to engage; he can't attack while polymorphed.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Taric", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Lulu:Taric:1",
+          "text": "Hit Taric with Glitterlance when he approaches the minions; he is slowed and his Bravado attacks get harder to land.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 81,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Lulu:Taric:2",
+          "text": "Step sideways when Taric starts Dazzle; the beam waits a moment before it bursts, so you can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Taric-E", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Lulu:Taric:3",
+          "text": "Shield your carry with Help, Pix! before Taric's stun lands or when he trades, so Pix also adds damage to their attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 23, "end": 33 },
+            { "kind": "champion", "key": "Taric", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Lulu:Taric:4",
+          "text": "When Taric casts Cosmic Radiance, back off or burst his allies down before it ends; the delay gives you time.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Taric-R", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66d3b92b549730675a1104fe78320083aed9906d866a4c8371c017ba727cda0a",
+      "tips": [
+        {
+          "id": "support:Lulu:Thresh:0",
+          "text": "Watch for Thresh starting Death Sentence; it has a long cast time, so sidestep it or stand behind a minion.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lulu:Thresh:1",
+          "text": "Use Whimsy on Thresh when he walks up to hook or Flay; it disarms him and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Thresh", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Thresh-E", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lulu:Thresh:2",
+          "text": "Poke Thresh with Glitterlance from long range; it slows him and the second bolt adds damage.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Lulu:Thresh:3",
+          "text": "Keep your minions between you and Thresh so Pix's bolts and his hook do not reach you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Lulu:Thresh:4",
+          "text": "Put Help, Pix! on your carry before a hook comes; the shield can soak the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lulu:Thresh:5",
+          "text": "Do not fight inside The Box; use Wild Growth on your tank to knock enemies up when they commit.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Lulu-R", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0ced84ca5ab2e7e8aefea6c04d4d4e3e97cf10acec3b03bf3f2382529186181d",
+      "tips": [
+        {
+          "id": "support:Lulu:Velkoz:0",
+          "text": "Use Whimsy on Vel'Koz when he commits to a spell; it also disarms him, and he is easy to catch because he has little mobility.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Velkoz", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Lulu:Velkoz:1",
+          "text": "Land Glitterlance on Vel'Koz to slow him, then follow with Help, Pix! to hit him for damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Velkoz", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Lulu-E", "start": 59, "end": 69 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Lulu:Velkoz:2",
+          "text": "Stay behind minions when you attack so Pix's bolts are not wasted, and so Vel'Koz's spells hit minions first.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Lulu:Velkoz:3",
+          "text": "Put Help, Pix! on your own shooter before a trade; the shield absorbs part of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lulu:Velkoz:4",
+          "text": "Hold Wild Growth to knock up Vel'Koz if he gets in close; it also interrupts his Life Form Disintegration Ray.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "knocked-up", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Velkoz", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 81, "end": 109 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "45fd5044a3042aba768afa5d2e389c775e1d1c6145b158c8f649eb4cbc87c98a",
+      "tips": [
+        {
+          "id": "support:Lulu:Xerath:0",
+          "text": "Hit Xerath with Glitterlance when he charges Arcanopulse; he is slowed while charging and is easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lulu:Xerath:1",
+          "text": "Polymorph Xerath with Whimsy when he is close to you. It stops him from attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Lulu-W", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Lulu:Xerath:2",
+          "text": "Stay close to Xerath, because Shocking Orb stuns longer the farther it travels. Close up, the stun is short.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Xerath-E", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lulu:Xerath:3",
+          "text": "Use Help, Pix! on Xerath to reveal him and hurt him when he pokes from range.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Xerath", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1e1a2c2313922aa6fe608f6cea8c34edd895354bdba364d1fe75de229abd3ce1",
+      "tips": [
+        {
+          "id": "support:Lulu:Yuumi:0",
+          "text": "Yuumi is untargetable while attached to her partner, so hold Whimsy until she is off them. Then polymorph her and dive her partner.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Lulu-W", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Lulu:Yuumi:1",
+          "text": "Hit Yuumi with Glitterlance while she dashes between allies. She is slowed and easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Lulu:Yuumi:2",
+          "text": "Fire Glitterlance at the carry, not at Yuumi, who can't be hit while attached. Both bolts pierce, so they can also catch minions' side of the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yuumi", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Lulu:Yuumi:3",
+          "text": "Use Help, Pix! on your own carry to shield them in trades; Pix then adds bolts to their attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Lulu:Yuumi:4",
+          "text": "Save Wild Growth for when the enemy commits on your carry, or to knock up the pair for a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9e852f2946420984d4d97dcdd99ee0db0dc040bf3eddac18197ed27b0b642a85",
+      "tips": [
+        {
+          "id": "support:Lulu:Zilean:0",
+          "text": "Hit Zilean with Glitterlance when he walks up to throw a bomb. He is fragile, so the slow and damage punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lulu:Zilean:1",
+          "text": "Zilean wants two Time Bombs on one target for a stun, so move around and keep your distance from him.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Lulu:Zilean:2",
+          "text": "Use Whimsy on Zilean when he commits to a Time Bomb combo, so he can't follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Zilean", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lulu:Zilean:3",
+          "text": "If Zilean uses Chronoshift on an ally, wait until it fades before finishing them off.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Zilean-R", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "29e3733745fd3762a0a1c1890468a4467b68a6c482756ef682a398654fed96f7",
+      "tips": [
+        {
+          "id": "support:Lulu:Zyra:0",
+          "text": "Hit Zyra with Glitterlance when she steps up to place seeds or plants; the slow makes it hard for her to keep her range.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Lulu:Zyra:1",
+          "text": "Polymorph Zyra with Whimsy when she commits to a fight, since she is fragile and has no escape.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Lulu-W", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Lulu:Zyra:2",
+          "text": "Stand behind minions so Zyra's plants and spells are blocked and cannot reach you easily.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 24, "end": 28 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Lulu:Zyra:3",
+          "text": "Put Help, Pix! on your ally carry before a trade; the shield absorbs Zyra's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Zyra", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lulu:Zyra:4",
+          "text": "Use Wild Growth on your frontline when Zyra's Stranglethorns lands, or to knock up her team when they dive in.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zyra", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Zyra-R", "start": 46, "end": 60 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

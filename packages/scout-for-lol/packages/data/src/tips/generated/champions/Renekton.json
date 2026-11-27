@@ -1,0 +1,922 @@
+{
+  "schemaVersion": 1,
+  "champion": "Renekton",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "36bb1da31d84d71671da5e07ac3f371223a363067772df3fe09e15f514d99665",
+      "tips": [
+        {
+          "id": "top:Renekton:general:0",
+          "text": "Wait until your Fury is at least half full, then use Ruthless Predator on an enemy champion. The longer stun is enough time to land a full combo.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Renekton:general:1",
+          "text": "Hit enemy champions with Cull the Meek, not just minions. Each champion hit heals you much more and builds Fury faster.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Renekton:general:2",
+          "text": "Dash in with Slice and Dice, hit an enemy, then recast it to get out. You can trade and leave before they answer.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Renekton:general:3",
+          "text": "Save your recast of Slice and Dice for when your Fury is high. The empowered recast hurts more and cuts the enemy's Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Renekton:general:4",
+          "text": "Keep hitting minions and enemies to hold your Fury. It only fades after a long time without fighting.",
+          "refs": [],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Renekton:general:5",
+          "text": "Fight when you are below half health with Fury available. Reign of Anger then builds Fury faster and your empowered abilities come sooner.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Renekton-passive",
+              "start": 58,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Renekton:general:6",
+          "text": "Use Dominus at the start of a long fight. It gives you extra health, damages nearby enemies and fills your Fury.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Renekton:general:7",
+          "text": "Walk up and use Ruthless Predator before the enemy shields you. The empowered version destroys shields before it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "a595092a9e1ccae242c7633475cd257d946e18680ae8720458fcb5f0c9849bbe",
+      "tips": [
+        {
+          "id": "top:Renekton:Aatrox:0",
+          "text": "Stun Aatrox with Ruthless Predator when he walks up to trade, then follow with Cull the Meek while he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Renekton-W", "start": 17, "end": 34 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 79, "end": 92 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Renekton:Aatrox:1",
+          "text": "Aatrox's Darkin Blade is slow and clearly telegraphed. Step out of the hit zones, then trade back while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Renekton:Aatrox:2",
+          "text": "Use Slice and Dice to dodge Infernal Chains or to get out after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:Aatrox:3",
+          "text": "Do not fight Aatrox when he has a full Fury-less stance up. Wait for Renekton's Fury to build, then fight so your empowered abilities hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 13, "end": 19 },
+            { "kind": "champion", "key": "Renekton", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Renekton:Aatrox:4",
+          "text": "Hit Aatrox with Cull the Meek in a fight to heal back the damage he deals.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "126787489ecd1942f65b95806b12d4aa23a9588987d31dbbec57af88bfc529c3",
+      "tips": [
+        {
+          "id": "top:Renekton:Briar:0",
+          "text": "Stun Briar with Ruthless Predator when she leaps in; she can't be left alone to trade freely once she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Renekton-W", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Renekton:Briar:1",
+          "text": "Use Cull the Meek when Briar is next to you; it heals you more against a champion, so trade with it while she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Renekton:Briar:2",
+          "text": "Slice and Dice in to hit her, then Dice back out before she can chain her abilities onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Renekton:Briar:3",
+          "text": "Hold your Fury for Ruthless Predator when she wins a lane scrap; the longer stun lets you finish the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 19, "end": 36 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "79bd9a92a06a191be97cf797f54ab84fed6d7a319e5d574adbd43b6c6a8b5f16",
+      "tips": [
+        {
+          "id": "top:Renekton:Darius:0",
+          "text": "Stay out of Decimate range; Darius hefts his axe first, so step away when you see the wind-up and then trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Renekton:Darius:1",
+          "text": "Use Ruthless Predator when Darius walks up to hit a minion; the stun lets you trade before he stacks bleeds.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Renekton:Darius:2",
+          "text": "Trade while Apprehend is on cooldown; without his pull Darius has a hard time catching you or stopping your Slice and Dice escape.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Renekton-E", "start": 108, "end": 122 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Renekton:Darius:3",
+          "text": "Do not stay in a long fight with Darius. Hit him, then leave before his bleeds stack up and he gets stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Renekton:Darius:4",
+          "text": "Use Cull the Meek on Darius and his minions together to heal back the damage you took.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Renekton:Darius:5",
+          "text": "Be careful at low health. Noxian Guillotine does more damage the more bleeds he has stacked, so keep his stacks low.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 26, "end": 43 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b82a1107dc804c5ed171ac9f2714df4851c8944255ecefb33579a819bb7abc3a",
+      "tips": [
+        {
+          "id": "top:Renekton:Fiora:0",
+          "text": "Don't use Ruthless Predator or Slice and Dice into Fiora while Riposte is ready; she can parry the stun and stun you instead. Bait Riposte out first.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 10, "end": 27 },
+            { "kind": "ability", "key": "Renekton-E", "start": 31, "end": 45 },
+            { "kind": "champion", "key": "Fiora", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Fiora-W", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 112 },
+            { "kind": "ability", "key": "Fiora-W", "start": 131, "end": 138 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Renekton:Fiora:1",
+          "text": "Once Fiora has used Riposte, go in with Ruthless Predator for the stun and trade hard while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Fiora-W", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Renekton-W", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Renekton:Fiora:2",
+          "text": "Use Cull the Meek on Fiora and nearby minions to heal back what she takes from you, especially once your Fury is high.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Renekton:Fiora:3",
+          "text": "Use Slice and Dice to hit and then dash back out after Fiora has lunged in, so she can't chase down your low health.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ff423f40ec0f3b0b564e315a0495c7a25d3f9dd04efb89e6a458366b7c323a19",
+      "tips": [
+        {
+          "id": "top:Renekton:Gangplank:0",
+          "text": "Dash onto Gangplank with Slice and Dice and use Dice to leave once you have traded.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Renekton-E", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Renekton:Gangplank:1",
+          "text": "Attack Powder Kegs yourself to defuse them before Gangplank can set them off.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Renekton:Gangplank:2",
+          "text": "Stun Gangplank with Ruthless Predator when he steps up to hit a minion. Hold it when he has Remove Scurvy ready, since it cleanses the stun.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Renekton-W", "start": 20, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Gangplank-W",
+              "start": 92,
+              "end": 105
+            },
+            { "kind": "keyword", "key": "stunned", "start": 135, "end": 139 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Renekton:Gangplank:3",
+          "text": "Hit Gangplank with Cull the Meek in a trade to build Fury and heal. It heals more against champions.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Renekton:Gangplank:4",
+          "text": "Stay out of long poke trades from Parrrley; they keep your Fury low.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "eeadb3dbf454d12467122267008ad7aaede1ee37f8936403b43ade86c31b447f",
+      "tips": [
+        {
+          "id": "top:Renekton:Garen:0",
+          "text": "Stun Garen with Ruthless Predator when he walks up to hit a minion, then trade and leave. Ruthless Predator holds him still so you get free hits.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Renekton-W", "start": 16, "end": 33 },
+            { "kind": "ability", "key": "Renekton-W", "start": 90, "end": 107 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Renekton:Garen:1",
+          "text": "Slice in with Slice and Dice, hit him, then recast out so you are away before Judgment finishes spinning.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Garen-E", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Renekton:Garen:2",
+          "text": "Keep hitting Garen early; his Perseverance only heals him when he has not been hurt for a while, so trades shut it off.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 30,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Renekton:Garen:3",
+          "text": "Use Cull the Meek on him and the minion wave together to heal back damage after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Renekton:Garen:4",
+          "text": "Do not walk into Garen at low health after he has Demacian Justice; it hits harder the more health you are missing.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Garen-R", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "24d95c9ec3b82f8b67c942a7514f7b9422416838b11ff517dfde5bffbcb62bfb",
+      "tips": [
+        {
+          "id": "top:Renekton:Jayce:0",
+          "text": "Stun Jayce with Ruthless Predator when he leaps in or walks up to trade, then hit him while he can't act.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Renekton-W", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Renekton:Jayce:1",
+          "text": "Build Fury on minions with Cull the Meek, then use the stronger version on Jayce for extra damage and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 27, "end": 40 },
+            { "kind": "champion", "key": "Jayce", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Renekton:Jayce:2",
+          "text": "Slice in on Jayce, follow up with an attack, then use Slice and Dice again to leave before he can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Renekton-E", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Renekton:Jayce:3",
+          "text": "Trade when Jayce is in Cannon Stance and has missed his Shock Blast; his ranged poke is weak up close.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 11, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20aa7a9a6a7e94a700ef54b47ea203900a83b5551d46107bb41913139014a225",
+      "tips": [
+        {
+          "id": "top:Renekton:KSante:0",
+          "text": "Stun K'Sante with Ruthless Predator when he walks up to trade, then back off. Hit him fast, before he can start charging Path Maker.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Renekton-W", "start": 18, "end": 35 },
+            { "kind": "ability", "key": "KSante-W", "start": 121, "end": 131 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Renekton:KSante:1",
+          "text": "Fight when Ntofo Strikes is on cooldown. Two hits in a row make it pull and stun you, so avoid trading into his second cast.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 11, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Renekton:KSante:2",
+          "text": "Hit him with Cull the Meek while you have Fury; it hits harder and heals you more against champions.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:KSante:3",
+          "text": "Use Slice and Dice to step out of his range after a trade. Recast it to leave safely.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Renekton:KSante:4",
+          "text": "Save Dominus for when he goes All Out. He becomes much squishier then, so you can win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-R", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "76d77ff2dd2f8eea8ed97263c8eaa89e7aad740a31752bbb07fb45a9d86e4e05",
+      "tips": [
+        {
+          "id": "top:Renekton:Malphite:0",
+          "text": "Watch Malphite's Granite Shield; it recharges after a few seconds without damage, so trade again before it returns.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 6, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 17,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:Malphite:1",
+          "text": "Hold Ruthless Predator until Fury is half full; the empowered version destroys his shield and stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 5, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Renekton:Malphite:2",
+          "text": "Don't stand next to Malphite at level 6 with Slice and Dice on cooldown; Unstoppable Force knocks you up and can't be dodged by crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Renekton-E", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "Malphite-R", "start": 73, "end": 90 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Renekton:Malphite:3",
+          "text": "Use Cull the Meek on Malphite and minions together to heal and build Fury for your empowered abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Malphite", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Renekton:Malphite:4",
+          "text": "Keep Slice and Dice ready to escape after Malphite lands Seismic Shard; the slow makes it hard to walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 57, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c1f54d140da195f72993e53ece53a6ae44d32e4f92d34d22d63efd046ad14bf",
+      "tips": [
+        {
+          "id": "top:Renekton:Mordekaiser:0",
+          "text": "Hit Mordekaiser with Ruthless Predator when he steps up to trade; the stun gives you a free window to hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Renekton-W", "start": 21, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Renekton:Mordekaiser:1",
+          "text": "Trade early with Slice and Dice and Cull the Meek before Mordekaiser has his shield and levels, then back out.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 36, "end": 49 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Renekton:Mordekaiser:2",
+          "text": "Back off when Mordekaiser's Darkness Rise aura is up; hitting him three times switches it on, so don't stay close.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 14,
+              "end": 25
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 28,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Renekton:Mordekaiser:3",
+          "text": "Trade into his Indestructible shield sparingly; the more damage you deal, the bigger his shield grows.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 15,
+              "end": 29
+            }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Renekton:Mordekaiser:4",
+          "text": "Keep Slice and Dice ready to dash out when Mordekaiser's Death's Grasp or Realm of Death comes.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 5, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 43,
+              "end": 54
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 57,
+              "end": 70
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 74,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a1a2af05f04d3acb4628b8ef9fac6a94874b2fd95bb6d109a5c7888f84fce9c0",
+      "tips": [
+        {
+          "id": "top:Renekton:Rumble:0",
+          "text": "Stun Rumble with Ruthless Predator when he walks up to hit minions, then trade fast before he can answer.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Renekton-W", "start": 17, "end": 34 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Renekton:Rumble:1",
+          "text": "Dash in with Slice and Dice, hit him, then dash back out with the recast so his harpoons and flames miss you.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Renekton:Rumble:2",
+          "text": "When Rumble overheats he cannot cast spells, so go in and trade hard.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:Rumble:3",
+          "text": "Use Cull the Meek on Rumble and the minions around him to heal back the damage from his flames.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:Rumble:4",
+          "text": "Step out of The Equalizer's fire quickly. Dominus makes you tankier if you must fight in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Renekton-R", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0d5f7fcac747ca00af0f0326cb17b6528b9b667422690ff56b6a43f0b00a3352",
+      "tips": [
+        {
+          "id": "top:Renekton:Sion:0",
+          "text": "Stun Sion with Ruthless Predator when he starts charging Decimating Smash; the charge gets interrupted.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Renekton-W", "start": 15, "end": 32 },
+            { "kind": "ability", "key": "Sion-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Renekton:Sion:1",
+          "text": "Stay out of Sion's line when he charges Decimating Smash. Slice and Dice sideways to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 40, "end": 56 },
+            { "kind": "ability", "key": "Renekton-E", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Renekton:Sion:2",
+          "text": "Hit Sion with Cull the Meek to build Fury and heal, then trade with an empowered Ruthless Predator, which breaks his Soul Furnace shield.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Renekton-W", "start": 81, "end": 98 },
+            { "kind": "ability", "key": "Sion-W", "start": 117, "end": 129 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Renekton:Sion:3",
+          "text": "Keep your distance when Sion's Roar of the Slayer is ready; it slows you and cuts your Armor, which sets up his Decimating Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sion-E", "start": 31, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Sion-Q", "start": 112, "end": 128 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Renekton:Sion:4",
+          "text": "Back off from a dying Sion. His Glory in Death makes him dangerous for a short time, so do not chase.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Sion-passive", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e587174522648846f35d0f84b2588608c7cfdbd120ce351b6fca123bccbee9f",
+      "tips": [
+        {
+          "id": "top:Renekton:Teemo:0",
+          "text": "Trade by dashing in with Slice and Dice, hitting Teemo, then dashing back out before his poison builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 25, "end": 39 },
+            { "kind": "champion", "key": "Teemo", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Renekton:Teemo:1",
+          "text": "Walk around in bushes carefully. Teemo can hide in them and mushrooms are hard to see, so don't chase through brush without looking.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Renekton:Teemo:2",
+          "text": "Attack mushrooms from range with basic attacks to destroy them before you walk through.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Renekton:Teemo:3",
+          "text": "Build Fury, then stun Teemo with Ruthless Predator once you reach him. Cull the Meek heals you back after poison trades.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Renekton-W", "start": 33, "end": 50 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5ed789249d51300b1ecfcfea643a65c296826885c0eb9dcf06153766fdda461b",
+      "tips": [
+        {
+          "id": "top:Renekton:Vayne:0",
+          "text": "Dash in with Slice and Dice, stun her with Ruthless Predator, then Dice back out. Vayne is fragile, so short all-in trades favor you.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 13, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Renekton-W", "start": 43, "end": 60 },
+            { "kind": "champion", "key": "Vayne", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Renekton:Vayne:1",
+          "text": "Stay out of Condemn range near walls. If you get knocked into terrain you are stunned, so fight where no wall is behind you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Renekton:Vayne:2",
+          "text": "Hit her with Cull the Meek when you trade; it heals you more against a champion and builds Fury fast.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Renekton:Vayne:3",
+          "text": "Keep harassing her to build Fury, then save the empowered Ruthless Predator for a long stun when you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Renekton:Vayne:4",
+          "text": "Don't chase her after Tumble; she can keep roaming away. Use the Slice and Dice recast to close in instead.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-Q", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Renekton-E", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "869f2daa431043248aa62f88a33b19fca0ef95b14d44dad904dc1620c00e7e9d",
+      "tips": [
+        {
+          "id": "top:Renekton:Yone:0",
+          "text": "Stun Yone with Ruthless Predator when he walks up to trade, then follow with Cull the Meek while he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Renekton-W", "start": 15, "end": 32 },
+            { "kind": "ability", "key": "Renekton-Q", "start": 77, "end": 90 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Renekton:Yone:1",
+          "text": "Hold Slice and Dice until Yone has used his dash, since Slice and Dice is how you get in and back out.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Renekton-E", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Renekton:Yone:2",
+          "text": "Fight when your Fury is high. Empowered Ruthless Predator stuns for longer and breaks any shield Yone gets from Spirit Cleave.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 40, "end": 57 },
+            { "kind": "champion", "key": "Yone", "start": 97, "end": 101 },
+            { "kind": "ability", "key": "Yone-W", "start": 112, "end": 125 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Renekton:Yone:3",
+          "text": "Use Cull the Meek on minions and Yone together to build Fury and heal back what his poke takes.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Renekton:Yone:4",
+          "text": "Step out of the line of Mortal Steel once he has two stacks, because the third cast dashes and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

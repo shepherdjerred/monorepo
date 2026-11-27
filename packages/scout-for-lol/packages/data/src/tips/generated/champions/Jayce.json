@@ -1,0 +1,3660 @@
+{
+  "schemaVersion": 1,
+  "champion": "Jayce",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "15e1a7ae0a682bae676677cb64be946f210375f37e20a197d9f503a2ec3e261d",
+      "tips": [
+        {
+          "id": "top:Jayce:general:0",
+          "text": "Jump in with To the Skies! to get the enemy slowed, then swing Thundering Blow while they can't get away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Jayce:general:1",
+          "text": "Fire Shock Blast from long range to poke, and stop when minions are in the way, since the bolt blows up on the first enemy it touches.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Jayce:general:2",
+          "text": "Drop Acceleration Gate first, then shoot Shock Blast through it for a faster, longer and stronger bolt.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:general:3",
+          "text": "Use Lightning Field when you land next to the enemy; it keeps hurting them for a few seconds.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:general:4",
+          "text": "Swap stances often with Mercury Cannon / Mercury Hammer; each swap gives a burst of speed and lets you walk through units.",
+          "refs": [
+            { "kind": "ability", "key": "Jayce-R", "start": 24, "end": 55 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Jayce:general:5",
+          "text": "Hit with your first Cannon attack to shred the enemy's Armor and Magic Resist, then follow with your damage.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:general:6",
+          "text": "Press your advantage in the early levels; Jayce is strong there, so trade often while ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Jayce:general:7",
+          "text": "When you take a lot of damage, switch to hammer form; it gives extra defenses.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Jayce:general:8",
+          "text": "Hit enemies with hammer attacks to get Mana back through Lightning Field, so you can keep trading.",
+          "refs": [],
+          "pWrong": 0.85
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Jayce:combo:0",
+          "name": "Gate Shock Blast",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Jayce-E" },
+            { "kind": "ability", "key": "Jayce-Q" }
+          ],
+          "when": "In Cannon Stance when you want a long-range poke or a fast, harder-hitting bolt at a distant target.",
+          "whenRefs": [],
+          "text": "Place the Acceleration Gate close to you, then fire Shock Blast through it. The bolt gets faster, goes farther and deals more damage.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Jayce:combo:1",
+          "name": "Lightning Field mid-leap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Jayce-Q" },
+            { "kind": "ability", "key": "Jayce-W" }
+          ],
+          "when": "When you leap onto an enemy and want the field's damage running as you land.",
+          "whenRefs": [],
+          "text": "Lightning Field can be cast while Jayce is still in the air from To the Skies!. Use it during the dash so no time is lost.",
+          "textRefs": [
+            { "kind": "champion", "key": "Jayce", "start": 34, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0eddb99f48fe0be163f32a9bc37fa28315e76e0084a4637cff26b592494cd3a2",
+      "tips": [
+        {
+          "id": "jungle:Jayce:general:0",
+          "text": "Open a fight with To the Skies! on a target to close the gap and leave them slowed, then follow up with Thundering Blow.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Jayce:general:1",
+          "text": "Drop Acceleration Gate in front of you, then fire Shock Blast through it for a faster, longer, harder-hitting shot.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jayce:general:2",
+          "text": "Shock Blast stops at the first enemy it hits, so aim it so a minion or monster does not soak it before your target.",
+          "refs": [],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Jayce:general:3",
+          "text": "Use Hyper Charge before a string of basic attacks on a big target. Your next few hits get much faster.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Jayce:general:4",
+          "text": "In hammer form, Lightning Field hits everything around you, and your hammer attacks give back mana. Use it when you are surrounded.",
+          "refs": [],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Jayce:general:5",
+          "text": "Use Thundering Blow on tanky targets, since it deals damage based on their max health. It knocks them back, so use it to push them away or into your team.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Jayce:general:6",
+          "text": "Swap stances with Mercury Cannon / Mercury Hammer to chase or escape. The swap gives a short burst of speed and lets you walk through units.",
+          "refs": [
+            { "kind": "ability", "key": "Jayce-R", "start": 18, "end": 49 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Jayce:general:7",
+          "text": "Swap stance right before a basic attack. The first hit after a swap does extra damage or lowers the target's defenses.",
+          "refs": [],
+          "pWrong": 0.14
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "ceda7bee02c97dbb6f6973494505cd0e1d15603def5de5d084e199e0dcdc2c97",
+      "tips": [
+        {
+          "id": "top:Jayce:Aatrox:0",
+          "text": "Stay at range in Cannon form and poke with Shock Blast. Aatrox wants to be close, so keep him away from you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Aatrox", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Jayce:Aatrox:1",
+          "text": "Use Thundering Blow to knock Aatrox back when he dashes in. Then swap to Cannon form and keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Jayce:Aatrox:2",
+          "text": "Step out of The Darkin Blade's edge, because the edge is the part that hits hardest and knocks you up. Move sideways, not straight back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Jayce:Aatrox:3",
+          "text": "When Infernal Chains lands on you, walk out of the area before it ends, toward the sides or toward Aatrox, so you are not pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Aatrox:4",
+          "text": "Use To the Skies! to close on Aatrox or to leave after a trade, since it slows nearby enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from range, which suits dodging Aatrox's Darkin Blade and chains while he heals.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 55, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad4db51b2dd42b62d4f76d458e558794d5a3d45de0c81a86be66b9bb0297a1c3",
+      "tips": [
+        {
+          "id": "top:Jayce:Akali:0",
+          "text": "Hit Akali with Thundering Blow when she dives in; it roots her briefly and knocks her back, which breaks her combo.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Jayce:Akali:1",
+          "text": "Stay in Cannon Stance at range and use Shock Blast early; Akali has to get close to you to do damage.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Jayce:Akali:2",
+          "text": "When Akali hides in Twilight Shroud, use Lightning Field on the smoke; area damage still hits her and shows where she is.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Jayce:Akali:3",
+          "text": "Switch to Hammer Stance when Akali has her ultimate up; the extra defenses help you survive her burst.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jayce:Akali:4",
+          "text": "Press your early lead when Akali is low on energy, since she cannot cast Five Point Strike freely.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Akali-Q", "start": 73, "end": 90 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "46766c361f844d946fcdc55ecce864d68da9e3b68c76185a6a34c347fb5db668",
+      "tips": [
+        {
+          "id": "top:Jayce:Ambessa:0",
+          "text": "Knock Ambessa back with Thundering Blow when she dashes in; it roots her briefly and hits harder against her health.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 6, "end": 13 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Jayce:Ambessa:1",
+          "text": "Poke with Shock Blast from long range, since she has to close the gap to fight you.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Jayce:Ambessa:2",
+          "text": "Switch to Hammer Stance when she goes in on you; the extra defenses help you survive her trade.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Ambessa:3",
+          "text": "Use Lightning Field when she steps up to you; it hurts her over time as she fights.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Ambessa:4",
+          "text": "Leap away from her with To the Skies! after she spends her abilities, because the slow keeps her from chasing.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d3a92e6553f7fd988cb0090d35da114cc26807a07fe8e49fdb07571de56b99fa",
+      "tips": [
+        {
+          "id": "top:Jayce:Anivia:0",
+          "text": "Stay out of a straight line with Anivia. Flash Frost slows you and stuns you when it detonates.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Jayce:Anivia:1",
+          "text": "Use To the Skies! to close the gap on Anivia, then hit her with Thundering Blow.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Jayce:Anivia:2",
+          "text": "Poke Anivia with Shock Blast from range. Send it through Acceleration Gate for more range and damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Jayce:Anivia:3",
+          "text": "Do not walk through Glacial Storm while it is fully formed. It slows you more and hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Anivia:4",
+          "text": "Do not waste your burst on her egg. Wait until it hatches and fight her again.",
+          "refs": [],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8e12a3bbb9d1d5d721aa3a51dfac3390f97a9ecd2121c6e5ccd369e0d2ee02c7",
+      "tips": [
+        {
+          "id": "top:Jayce:Aurora:0",
+          "text": "Use Shock Blast from long range in Cannon Stance to chip Aurora, and step out of reach of her The Weirding before she can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Aurora-E", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Jayce:Aurora:1",
+          "text": "Aurora's Across the Veil makes her invisible for a moment. Don't chase blindly; wait for her to reappear before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jayce:Aurora:2",
+          "text": "Use Thundering Blow to knock Aurora back and away from your lane, or into a bad spot, once she is in hammer range.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Jayce:Aurora:3",
+          "text": "Swap stances to get a burst of speed when you want to close the gap or break away from her slows.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Jayce:Aurora:4",
+          "text": "Hold your Lightning Field for when she is on top of you; it deals damage over time to anyone nearby.",
+          "refs": [],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a8ad0ef3e46a45c714fa3fbd95e223f83fa3480b5f68ac9b18e67106039f23f",
+      "tips": [
+        {
+          "id": "top:Jayce:Briar:0",
+          "text": "Use Thundering Blow to knock Briar back when she leaps in; it briefly roots her first, and the knockback ends her Blood Frenzy chase for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Jayce:Briar:1",
+          "text": "Fight Briar in Cannon Stance and keep your distance. She has to leap to reach you, so poke her while she walks up.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Jayce:Briar:2",
+          "text": "Shock Blast stops at the first enemy it hits, so aim it where minions will not block it before you fire at Briar.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Jayce:Briar:3",
+          "text": "Swap to Hammer Stance when Briar goes on you; it gives you extra Armor and Magic Resist for the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Jayce:Briar:4",
+          "text": "Switch stances to speed up and slip past minions when you need to run away; Hextech Capacitor lets you walk through units.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 76,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Briar:5",
+          "text": "Do not spend all your cooldowns before Briar jumps on you, because her Head Rush stuns and she heals from her bleed. Keep Thundering Blow for her dive.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Briar-Q", "start": 71, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:1",
+          "note": "Leaping in with Lightning Field running punishes Briar when she stays close in her Blood Frenzy.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 49, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "67aaf174a33d9c2f993ae47005b6f60c69f48f5e8ac49fe0e03a07fdd97171b2",
+      "tips": [
+        {
+          "id": "top:Jayce:Camille:0",
+          "text": "Fight Camille in Cannon Stance and poke her with Shock Blast from range; she has to close the gap before she can trade.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Jayce:Camille:1",
+          "text": "Use Thundering Blow when Camille dives in. It knocks her back, so her follow-up attack falls short.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Jayce:Camille:2",
+          "text": "Hit Camille's outer-edge Tactical Sweep range with Shock Blast before she gets close; the sweep takes a while to land, so you can step out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Camille-W", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Jayce:Camille:3",
+          "text": "Change stance as Camille's Hookshot comes at you. You gain Move Speed and can walk through units, which helps you get away.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Camille-E", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Jayce:Camille:4",
+          "text": "Camille's shield only blocks one damage type. Use the other type when her Adaptive Defenses shield is up.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Camille-passive",
+              "start": 74,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07efd6aa66711b11c31ef102fe0c5f2d3c817b1f32742f9a9e50b25d511918ad",
+      "tips": [
+        {
+          "id": "top:Jayce:Chogath:0",
+          "text": "Keep out of Rupture's smoke circle and sidestep it. Once you are knocked up, Cho'Gath can follow with Feral Scream.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 75 },
+            { "kind": "champion", "key": "Chogath", "start": 77, "end": 85 },
+            { "kind": "ability", "key": "Chogath-W", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Jayce:Chogath:1",
+          "text": "Poke with Shock Blast from long range in cannon stance. Cho'Gath has to walk up to you, and you can hit him before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Jayce:Chogath:2",
+          "text": "Use Thundering Blow to knock Cho'Gath away when he gets close. In hammer stance you also take less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Jayce:Chogath:3",
+          "text": "Stop Cho'Gath from growing by denying his minion kills. Press him early before Feast stacks make him a tank.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Chogath-R", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Jayce:Chogath:4",
+          "text": "Do not leap in with To the Skies! when Feral Scream is ready, or you will be silenced and unable to cast anything.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 39, "end": 51 },
+            { "kind": "keyword", "key": "silenced", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cf7473415b4f7f739f2a9cb084566e0635b63514a7869acb3fe3da7fac7bb305",
+      "tips": [
+        {
+          "id": "top:Jayce:Darius:0",
+          "text": "Poke Darius with Shock Blast from long range and keep your distance in cannon form. He is weak when far from you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Jayce:Darius:1",
+          "text": "When Darius runs at you, knock him away with Thundering Blow. Use it before he gets to stack Hemorrhage on you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 93,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Jayce:Darius:2",
+          "text": "Trade right after Darius uses Apprehend, since it has a long cooldown and he is easier to poke afterward.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Darius-E", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Darius:3",
+          "text": "Don't stand still at the front of the lane. Darius's Apprehend pulls you in, and Crippling Strike will slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Darius-E", "start": 53, "end": 62 },
+            { "kind": "ability", "key": "Darius-W", "start": 81, "end": 97 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a75e8995a4c59886b0532edf0658d9602af0fb397827e9b950550d60e853a87",
+      "tips": [
+        {
+          "id": "top:Jayce:DrMundo:0",
+          "text": "Poke Mundo from range with Shock Blast, and try to stay at range. Fire it through Acceleration Gate for more damage and range.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Jayce:DrMundo:1",
+          "text": "Don't waste Thundering Blow on Mundo's first root. Goes Where He Pleases blocks it and he heals from the canister.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 51,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Jayce:DrMundo:2",
+          "text": "Step on the canister to destroy it before Mundo can pick it up.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:DrMundo:3",
+          "text": "Dodge Infected Bonesaw. It deals damage based on his target's current health and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Jayce:DrMundo:4",
+          "text": "Stay out of melee when Mundo has Heart Zapper up. He heals back what he stores, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b16f33f57e7b7a13feea8ed21d366fd36a4acd3305950e45a43a25e9786eb735",
+      "tips": [
+        {
+          "id": "top:Jayce:Fiora:0",
+          "text": "Don't cast Thundering Blow when Fiora's Riposte is ready. She can turn the root into a stun on you.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Fiora-W", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Jayce:Fiora:1",
+          "text": "Poke with Shock Blast from range and keep Fiora out of melee. Her Lunge closes the gap, so stay back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fiora", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Jayce:Fiora:2",
+          "text": "Bait Riposte with a weak ability first, then use To the Skies! and Thundering Blow once she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Jayce:Fiora:3",
+          "text": "Knock Fiora away with Thundering Blow after she Lunges at you. It breaks up her trade, but only once Riposte is down.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Fiora-W", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Jayce:Fiora:4",
+          "text": "Fiora is strongest once she gets items, so push your early lead and don't let her scale up.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "000dd6ef3d141988547273a440f3520e706c2134f3be64c7174f2e2e62f1c223",
+      "tips": [
+        {
+          "id": "top:Jayce:Gangplank:0",
+          "text": "Stay out of Gangplank's keg range when you are in cannon form; poke him with Shock Blast instead of trading up close.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Jayce:Gangplank:1",
+          "text": "Do not leap in with To the Skies! near his kegs; an exploding keg will slow you and hurt.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Jayce:Gangplank:2",
+          "text": "Save Thundering Blow for when Remove Scurvy is on cooldown; he can cleanse the root otherwise.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 30, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Long-range Shock Blast through the Gate pokes Gangplank from afar, out of keg range.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 46, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "164422b67936573e36af29bec515a4022c977ff66a195c4066d388b89ab3cbe0",
+      "tips": [
+        {
+          "id": "top:Jayce:Garen:0",
+          "text": "Poke with Shock Blast from range and stay away from Garen. Fire it through Acceleration Gate for more range and damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jayce:Garen:1",
+          "text": "Hit Garen with an attack while the Cannon is out to cut his armor and magic resist before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Garen:2",
+          "text": "Save Thundering Blow to knock Garen back when he runs at you. Casting it also roots him for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Garen:3",
+          "text": "Don't count on slowing Garen. Decisive Strike removes the slow and speeds him up.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Garen-Q", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Garen:4",
+          "text": "Back away when you are low. Demacian Justice finishes you quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Garen:5",
+          "text": "Keep damaging Garen so Perseverance can't heal him; he regenerates fast if left alone.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 14, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 23,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2cf4e87fe1c4b8cc5df40ab4d132dadbbb06fc457f6c3a51898533ef854f8d85",
+      "tips": [
+        {
+          "id": "top:Jayce:Gnar:0",
+          "text": "Poke Gnar with Shock Blast from range while he is small; his Boomerang Throw reaches far, so sidestep it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jayce:Gnar:1",
+          "text": "Place Acceleration Gate and fire Shock Blast through it for longer range and more damage than Gnar expects.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Jayce:Gnar:2",
+          "text": "Knock Gnar back with Thundering Blow when he turns Mega and runs at you, then walk away from his reach.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Jayce:Gnar:3",
+          "text": "Stay away from walls when Gnar is Mega; GNAR! stuns you if it throws you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gnar-R", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:Gnar:4",
+          "text": "Trade in melee with To the Skies! and Lightning Field right after Gnar uses his Hop, while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Gnar from long range, and Gnar's Boomerang Throw is the main poke he can answer with.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Gnar", "start": 49, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "de65d1bacb443e45cce90e1037a630f3769202c19c3b3c5ed607dd5aec13cbd0",
+      "tips": [
+        {
+          "id": "top:Jayce:Gragas:0",
+          "text": "Stay out of reach of Body Slam; it stuns you and sets up the rest of Gragas's combo.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 40 },
+            { "kind": "champion", "key": "Gragas", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Jayce:Gragas:1",
+          "text": "Step out of Barrel Roll's area before it explodes; staying in it leaves you slowed and hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Gragas:2",
+          "text": "Poke with Shock Blast from range and keep Gragas from reaching you; he has to close the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gragas", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Jayce:Gragas:3",
+          "text": "Use Thundering Blow to knock Gragas back after he slams in, then swap stances to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Jayce:Gragas:4",
+          "text": "Do not stand beside your own tower while Gragas's ultimate is ready; Explosive Cask can knock you into danger.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Gragas-R", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:Gragas:5",
+          "text": "Press your early advantage with Jayce, and back off if Gragas starts winning trades.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 },
+            { "kind": "champion", "key": "Gragas", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7129224733372490c4920dfc950b91699bcc086fc2d1b0c7b640d1312fbca1be",
+      "tips": [
+        {
+          "id": "top:Jayce:Gwen:0",
+          "text": "Poke Gwen with Shock Blast from long range in cannon form; she has to close the gap to hit you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gwen", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Jayce:Gwen:1",
+          "text": "Hold Thundering Blow for when Gwen walks up to trade; it knocks her back and breaks her attack rhythm.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Jayce:Gwen:2",
+          "text": "Don't waste burst while Gwen stands in Hallowed Mist; enemies outside it can't target her. Wait until she leaves or the mist ends.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Gwen-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Jayce:Gwen:3",
+          "text": "Gwen gets stronger the more she attacks, so use Mercury Cannon range to keep her from landing hits.",
+          "refs": [{ "kind": "champion", "key": "Gwen", "start": 0, "end": 4 }],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Jayce:Gwen:4",
+          "text": "Dodge between Needlework casts; her follow-ups need her to hit something first. Sidestep the first needle.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e2e9ae9239e3cd397d2101868f6a55f2b9a633b0d8008e732ad37b38f6fb191",
+      "tips": [
+        {
+          "id": "top:Jayce:Heimerdinger:0",
+          "text": "Stay out of turret range and hit Heimerdinger with Shock Blast from far away. Fight him away from his turrets.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 33,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Jayce:Heimerdinger:1",
+          "text": "Don't leap in while his stun grenade is ready, since being stunned leaves you open.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Heimerdinger:2",
+          "text": "Go in on Heimerdinger once his ultimate is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Heimerdinger", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Heimerdinger:3",
+          "text": "Be strong early and push the advantage. If you get ahead, Heimerdinger has to play defensively and can't set up turrets.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 58,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Jayce:Heimerdinger:4",
+          "text": "Stay away from his Hextech Micro-Rockets in a straight line. Sidestep them when you walk toward him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 19,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Heimerdinger from long range, so he has to fight away from his turrets.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 23,
+              "end": 35
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbf2fd5ff48f80fe6306c2198b2e6ac050fe4a91dd72db51a51b4ba29f8bbf63",
+      "tips": [
+        {
+          "id": "top:Jayce:Illaoi:0",
+          "text": "Poke Illaoi with Shock Blast from long range while you are in Cannon form; stay out of her Tentacle Smash line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Illaoi", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Illaoi:1",
+          "text": "Fight away from Illaoi's Tentacles; they hit hard and heal her when they hit you. Pull the fight to open ground.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Illaoi:2",
+          "text": "Hit Illaoi with Thundering Blow to knock her back when she leaps at you with Harsh Lesson, then walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Jayce:Illaoi:3",
+          "text": "If Illaoi pulls your spirit with Test of Spirit, fight her. Hitting her cuts the spirit's time, so use your burst on her.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Jayce:Illaoi:4",
+          "text": "Use To the Skies! to close in or escape; the slow helps you leave.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Jayce:Illaoi:5",
+          "text": "Jayce is strongest early, so push your lead before she gets Leap of Faith at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Illaoi-R", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "361e51e8bb5d1d3dda7f58e0c1721992faeedb6a0fd8d975c9ef8dec2faf5e51",
+      "tips": [
+        {
+          "id": "top:Jayce:Irelia:0",
+          "text": "Stay out of Irelia's range in cannon form and poke her; she wants to be close.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Jayce:Irelia:1",
+          "text": "Do not throw Shock Blast while Irelia charges Defiant Dance; it cuts the damage she takes and she cannot be interrupted.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Irelia-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:Irelia:2",
+          "text": "Watch for Flawless Duet blades on the ground and step out of the line between them, or you will be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Jayce:Irelia:3",
+          "text": "Use Thundering Blow to knock Irelia back when she dashes in, then swap forms and shoot her.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Jayce:Irelia:4",
+          "text": "Fight away from minion waves; Irelia uses Bladesurge on minions to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b3b23568973a327e2e2a2a0e1b21968ce690ebb006c190addd24556a43987a7f",
+      "tips": [
+        {
+          "id": "top:Jayce:Jax:0",
+          "text": "Stay at range in Cannon form and use Shock Blast on Jax. Do not let him leap onto you for free.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 52, "end": 55 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Jayce:Jax:1",
+          "text": "Do not auto-attack Jax while Counter Strike is up; he dodges it and then stuns you. Wait until his stance ends before you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Jax-E", "start": 29, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jayce:Jax:2",
+          "text": "Hit Jax in short bursts. Cutting his attacks short keeps Relentless Assault from building his attack speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Jax-passive", "start": 57, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Jayce:Jax:3",
+          "text": "Use Thundering Blow to knock Jax back when he leaps in. It roots him briefly first and gives you room to switch stances.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Jayce:Jax:4",
+          "text": "Press your early lead before Jax reaches level 6. His Grandmaster-at-Arms makes him tanky and hurts your trades.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Jax-R", "start": 54, "end": 73 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1b8677c3592219a93ac1dde1c98afc5081126de6ad939c59302eb86558e9ecc0",
+      "tips": [
+        {
+          "id": "top:Jayce:KSante:0",
+          "text": "Poke with Shock Blast from long range in Cannon form, and stay out of reach of K'Sante's Ntofo Strikes.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KSante", "start": 79, "end": 86 },
+            { "kind": "ability", "key": "KSante-Q", "start": 89, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Jayce:KSante:1",
+          "text": "Shock Blast stops at the first enemy it hits, so minions in the way soak it. Line up your shots to hit K'Sante.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Jayce:KSante:2",
+          "text": "Hit the Ntofo Strikes shockwave only when you must. When K'Sante has two stacks, stay away from his Ntofo Strikes, because it pulls and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 8, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 57, "end": 64 },
+            { "kind": "ability", "key": "KSante-Q", "start": 100, "end": 113 },
+            { "kind": "keyword", "key": "stunned", "start": 136, "end": 141 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Jayce:KSante:3",
+          "text": "Use Thundering Blow to knock K'Sante away when he charges Path Maker at you, then step out of the dash's line.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "KSante-W", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Jayce:KSante:4",
+          "text": "Walk away from the stun when K'Sante charges Path Maker, since it can't be interrupted. Dodge sideways rather than using To the Skies!.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "KSante-W", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "top:Jayce:KSante:5",
+          "text": "Be careful near walls when K'Sante has his ultimate. All Out can pull you across terrain and hit you twice.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "KSante-R", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "995abf5654a329da36b7377d3ba1a2be5b3730941fd1e2efbbc1b8520697909a",
+      "tips": [
+        {
+          "id": "top:Jayce:Kayle:0",
+          "text": "Pressure Kayle hard before level 6; she is a weak melee champion until she ascends.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 9, "end": 14 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Jayce:Kayle:1",
+          "text": "Poke with Shock Blast while she is still melee, and send it through Acceleration Gate for more range and damage.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Jayce:Kayle:2",
+          "text": "Once Kayle has range, Thundering Blow knocks her back and her damage is tied to her health, so land it in a fight when she is close.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Jayce:Kayle:3",
+          "text": "Do not burst into Kayle while her Divine Judgment is ready; she can become Invulnerable and you waste your abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Kayle-R", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8b4231f2cb438c4d574f2e515ada4240f2e172629568048af602a65ec3f8e3f5",
+      "tips": [
+        {
+          "id": "top:Jayce:Kennen:0",
+          "text": "Do not let Kennen mark you three times. Stay away from his abilities while you carry marks, or you will be stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 11, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Jayce:Kennen:1",
+          "text": "Kennen is fragile, so jump on him with To the Skies! when he spends Lightning Rush carelessly.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kennen-E", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Jayce:Kennen:2",
+          "text": "Sidestep Thundering Shuriken or hide behind a minion. It stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 9, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Kennen:3",
+          "text": "Push Kennen away with Thundering Blow when he rushes in. It also breaks his attempt to stack marks on you.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6b9cd147d49f87849fd884bc6255e9ea16d787d706398f94a4d4dea5b0b2c12d",
+      "tips": [
+        {
+          "id": "top:Jayce:Kled:0",
+          "text": "Poke Kled with Shock Blast from long range while he is mounted; stay out of his reach and make him walk into your shots.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Jayce:Kled:1",
+          "text": "When Kled closes in, use Thundering Blow to knock him back, then swap to the Cannon and shoot him again.",
+          "refs": [{ "kind": "champion", "key": "Kled", "start": 5, "end": 9 }],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Jayce:Kled:2",
+          "text": "Hit Kled with Shock Blast to break his Bear Trap on a Rope tether; if you are hooked, move away from him quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kled-Q", "start": 39, "end": 58 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Jayce:Kled:3",
+          "text": "Use the speed from Hextech Capacitor when you swap stances to slip away from Kled's Jousting dash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 19,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Kled", "start": 77, "end": 81 },
+            { "kind": "ability", "key": "Kled-E", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Jayce:Kled:4",
+          "text": "Back off when Kled's Violent Tendencies is ready; his fourth hit hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Kled-W", "start": 21, "end": 39 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "214ace77f07f6f8595cd1844e2b7b6106131708123949dd75c3a8d6c9fe0e365",
+      "tips": [
+        {
+          "id": "top:Jayce:Malphite:0",
+          "text": "Poke Malphite from range with Shock Blast. Shoot it through an Acceleration Gate to make it faster and stronger.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Jayce:Malphite:1",
+          "text": "Break his Granite Shield with a ranged poke before you trade. Without it his Armor is much lower.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 10,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Jayce:Malphite:2",
+          "text": "Stay out of Seismic Shard range when you can; the slow ruins your leaps and lets him chase.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Jayce:Malphite:3",
+          "text": "Stay wary of his level 6 Unstoppable Force, because you can't escape it once it starts. Keep some distance from him.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 25, "end": 42 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Jayce:Malphite:4",
+          "text": "Don't commit to Hyper Charge when Ground Slam is ready; it cuts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0644d59955edcdd4c4e62ea586517dd0f61ab1440679353550bfe4765b7eddb2",
+      "tips": [
+        {
+          "id": "top:Jayce:Mordekaiser:0",
+          "text": "Poke with Shock Blast from range and stay out of Mordekaiser's reach. Fire it through Acceleration Gate for extra range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Jayce:Mordekaiser:1",
+          "text": "Stay out of a straight line from Mordekaiser and sidestep Death's Grasp. It pulls you into his Obliterate and aura.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 58,
+              "end": 71
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 95,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Jayce:Mordekaiser:2",
+          "text": "Do not fight him long in melee. Once his Darkness Rise aura is on, back away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 41,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Jayce:Mordekaiser:3",
+          "text": "Wait for his Indestructible shield to run out before committing. Do not waste damage on it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 13,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Jayce:Mordekaiser:4",
+          "text": "Keep Thundering Blow ready as an escape to knock him back when he runs in. Your stance swap also gives you speed to get away.",
+          "refs": [],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f3a148bab0144c490df67b51a67b59911129b31479ae77d5432d7635ce286183",
+      "tips": [
+        {
+          "id": "top:Jayce:Naafiri:0",
+          "text": "Poke with Shock Blast from long range in Cannon form; Naafiri has to cross a long gap to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Naafiri", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Jayce:Naafiri:1",
+          "text": "When Naafiri dives onto you, switch to Hammer form and use Thundering Blow to knock her back.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Jayce:Naafiri:2",
+          "text": "Use Lightning Field when her Packmates are around you; it damages every enemy nearby.",
+          "refs": [],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Jayce:Naafiri:3",
+          "text": "Hold your Hammer swap for her Hounds' Pursuit; you can step away with the Hextech Capacitor speed boost when she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 30, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 74,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Jayce:Naafiri:4",
+          "text": "Naafiri is untargetable during The Call of the Pack, so do not waste To the Skies! or Thundering Blow on her then.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 31, "end": 51 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:1",
+          "note": "Lightning Field mid-leap starts damaging at landing, hitting Naafiri and the packmates around her.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 61, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "315f0f5a4e6336426d9b778fff09c00e3de142b83d4f55e30cb62322586bc30b",
+      "tips": [
+        {
+          "id": "top:Jayce:Nasus:0",
+          "text": "Stay in Cannon Stance early and use Shock Blast to hit Nasus while he walks up for last hits.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Nasus:1",
+          "text": "Use Thundering Blow to knock Nasus away when he commits to you; it also roots him briefly first.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Nasus:2",
+          "text": "Don't let Nasus catch you with Wither; it slows you more each second and cuts your Attack Speed. Kite him and stay out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Nasus-W", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Jayce:Nasus:3",
+          "text": "Don't stand in melee with Nasus once Fury of the Sands is active. Back off and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Nasus-R", "start": 37, "end": 54 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d95695450e3ad91be907ac9b584e34ec1b5bec1e9bce723029d2e95587f548c9",
+      "tips": [
+        {
+          "id": "top:Jayce:Olaf:0",
+          "text": "Poke with Shock Blast from range and do not let Olaf close in. He is much stronger in a long, close fight.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Olaf", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Jayce:Olaf:1",
+          "text": "Stay out of Undertow's line, and walk away from the axe on the ground. If Olaf cannot get it back, his cooldown stays long.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 12, "end": 20 },
+            { "kind": "champion", "key": "Olaf", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Jayce:Olaf:2",
+          "text": "Do not rely on Thundering Blow or To the Skies! once Ragnarok is active, because Olaf is immune to those effects.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 53, "end": 61 },
+            { "kind": "champion", "key": "Olaf", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Jayce:Olaf:3",
+          "text": "Do not leave Olaf at low Health with a fight still going. Berserker Rage makes him hit faster and heal more.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Olaf-passive", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d0a72927194c5260249e582b6d61222da80be0ab375521c0ac960d17e236c32",
+      "tips": [
+        {
+          "id": "top:Jayce:Ornn:0",
+          "text": "Stay away from walls when Ornn is close, because Searing Charge into terrain knocks you up and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ornn-E", "start": 49, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Ornn:1",
+          "text": "Trade from range in Cannon Stance with Shock Blast, then step back before Ornn can close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Jayce:Ornn:2",
+          "text": "Sidestep Volcanic Rupture. It stops at the first champion it hits and leaves a pillar behind, so don't fight next to that spot.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Jayce:Ornn:3",
+          "text": "Keep Thundering Blow for when Ornn walks in on you, to knock him back and hold him still for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Jayce:Ornn:4",
+          "text": "Fight early. Ornn gets much stronger once he forges items and upgrades them, so push your lead while he is weak.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Jayce:Ornn:5",
+          "text": "Use the speed from switching stances to dodge Bellows Breath. If the flames land, Ornn's attacks knock you back, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 46, "end": 60 },
+            { "kind": "champion", "key": "Ornn", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13a4bdb471231afd920bb6db18af8f74c61bc91e72c46040b91eabf738e34fb9",
+      "tips": [
+        {
+          "id": "top:Jayce:Pantheon:0",
+          "text": "Keep Jayce in Cannon stance and poke Pantheon with Shock Blast before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Jayce:Pantheon:1",
+          "text": "Do not hit Pantheon while Aegis Assault faces you; step around to his side or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Jayce:Pantheon:2",
+          "text": "Knock Pantheon away with Thundering Blow as he jumps in, so his empowered hits come apart.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Jayce:Pantheon:3",
+          "text": "Stay healthy; a thrown Comet Spear hurts you far more when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Pantheon:4",
+          "text": "When Pantheon starts Grand Starfall, move out of the target area; it gives you a long warning.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7338725a8951632135b600beb0ae59497ed2fc452a8393d509e4c74f9476f87a",
+      "tips": [
+        {
+          "id": "top:Jayce:Quinn:0",
+          "text": "Start fights in Cannon Stance and hit Quinn with Shock Blast from long range; she has no way to trade back until she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Jayce:Quinn:1",
+          "text": "When Quinn uses Vault on you, hit her with Thundering Blow to knock her back out of her bonus attack.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Quinn-E", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Jayce:Quinn:2",
+          "text": "Use To the Skies! to close the gap on Quinn, then Lightning Field on top of her while she is slowed and trying to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Jayce:Quinn:3",
+          "text": "Play in Hammer Stance when Quinn is marked by Harrier and about to trade, since it gives you extra defenses.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 27, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Quinn-passive",
+              "start": 46,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Quinn:4",
+          "text": "If Quinn goes into Behind Enemy Lines, hit her; damage removes her speed boost, and being rooted or stunned ends it.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Quinn-R", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "24d95c9ec3b82f8b67c942a7514f7b9422416838b11ff517dfde5bffbcb62bfb",
+      "tips": [
+        {
+          "id": "top:Jayce:Renekton:0",
+          "text": "Poke Renekton from range with Shock Blast in Cannon Stance, and stay away so he can't build Fury.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Renekton", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Jayce:Renekton:1",
+          "text": "Back off when Renekton's Fury is high; Ruthless Predator then stuns for much longer.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Renekton-W", "start": 39, "end": 56 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Jayce:Renekton:2",
+          "text": "Use Thundering Blow to knock Renekton away when he dashes in; it also roots him briefly before the hit.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Jayce:Renekton:3",
+          "text": "Hold To the Skies! as an escape or to close in after Renekton has spent Slice and Dice.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Renekton-E", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "086ba04b91d2c7649355db273a7fbddfd2d723db172eba9b647e8803bb4274e7",
+      "tips": [
+        {
+          "id": "top:Jayce:Riven:0",
+          "text": "Keep Jayce at range in cannon form and poke with Shock Blast. Riven has no ranged attack to answer.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Riven", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Jayce:Riven:1",
+          "text": "Riven wants to stun you with Ki Burst, so step back when she gets close. Do not stand next to her.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "stunned", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Riven-W", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:Riven:2",
+          "text": "Use Thundering Blow to knock Riven back when she dives in, then fire Shock Blast as she tries to come back.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Jayce:Riven:3",
+          "text": "Her Valor shield absorbs your poke, so hold your damage until the shield is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Jayce:Riven:4",
+          "text": "Her damage is all physical, so swap to hammer form when she goes all in; it gives you extra defense.",
+          "refs": [],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes Riven from long range, so she must close the gap through the bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 23, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "31c88bc9b77f56685a82fa9fcb26d101e8f58ae45bbc942fbb688d3cae1b4470",
+      "tips": [
+        {
+          "id": "top:Jayce:Rumble:0",
+          "text": "Stay out of melee range of Rumble's Flamespitter. Hit him with Shock Blast from range, since the bolt stops at the first enemy it meets.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "top:Jayce:Rumble:1",
+          "text": "When Rumble overheats, he can't cast spells for a few seconds. Jump in with Thundering Blow and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Jayce:Rumble:2",
+          "text": "Early on, press Rumble hard with both stances. Jayce is strong early, and Rumble gets stronger as he levels and builds Heat.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 16, "end": 22 },
+            { "kind": "champion", "key": "Jayce", "start": 47, "end": 52 },
+            { "kind": "champion", "key": "Rumble", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Jayce:Rumble:3",
+          "text": "Lightning Field in hammer form hurts him while he stands on you. Use it to punish Rumble when he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jayce:Rumble:4",
+          "text": "Step out of The Equalizer's fire quickly. Standing in it costs you a lot of health and leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "771be6473e36c7fe7f6c91b8b34e26ad87ff6acf8d2d26004f49f8f1aacdc8ba",
+      "tips": [
+        {
+          "id": "top:Jayce:Sett:0",
+          "text": "Poke Sett with Shock Blast from long range in Cannon form, and stay out of his reach so he can't trade punches.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sett", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Jayce:Sett:1",
+          "text": "Use Thundering Blow to knock Sett back when he closes in, then follow with To the Skies! to get away or keep fighting.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Jayce:Sett:2",
+          "text": "Do not stand next to Sett when his Facebreaker is ready. If an enemy is on each side of you, you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Sett-E", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Jayce:Sett:3",
+          "text": "Sett's Haymaker hits hardest after he has taken a lot of damage. Trading with him gives him a big shield, so poke from range and don't fight into it.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-W", "start": 7, "end": 15 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Jayce:Sett:4",
+          "text": "Swap forms and use Hextech Capacitor's speed to step out of Haymaker's blast after you see him wind it up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 19,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Sett-W", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Jayce:Sett:5",
+          "text": "Fight Sett early, before he has built up health and damage. Win lane early, because he gets stronger the longer the fight goes.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, keeping Jayce away from Sett's short-range punches.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 48, "end": 53 },
+            { "kind": "champion", "key": "Sett", "start": 64, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "613117461da695ef8b9a06667d7214fab560b1d94dea90f3ae03ba76569e4c63",
+      "tips": [
+        {
+          "id": "top:Jayce:Shen:0",
+          "text": "Do not stand in a straight line when Shen has Shadow Dash ready. If he taunts you, you must attack him and he can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Shen-E", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Jayce:Shen:1",
+          "text": "Stay in cannon stance and poke Shen with Shock Blast. He has no ranged way to answer it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Shen", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Jayce:Shen:2",
+          "text": "Do not fight into Spirit's Refuge. It blocks your basic attacks, so wait for it to end before you attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jayce:Shen:3",
+          "text": "Shen's Spirit Blade slows you when it flies back. Move toward him rather than away to avoid the slow, or fight from range.",
+          "refs": [{ "kind": "champion", "key": "Shen", "start": 0, "end": 4 }],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Jayce:Shen:4",
+          "text": "Once Shen is level 6, watch for his ultimate pulling him to an ally. Be careful about pushing too far when he is away.",
+          "refs": [{ "kind": "champion", "key": "Shen", "start": 5, "end": 9 }],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ff8901f1e3f7a4f57e9e2cf69498702a232be52fe3bcd564ff5e08fdacea3f2",
+      "tips": [
+        {
+          "id": "top:Jayce:Singed:0",
+          "text": "Stay out of Poison Trail by poking from range in Cannon stance. Don't walk through the cloud to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:Singed:1",
+          "text": "Keep away from Fling range. Thundering Blow can knock Singed back if he gets too close.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-E", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Singed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:Singed:2",
+          "text": "Don't leap in with To the Skies! when Mega Adhesive is down, or you will be slowed and flung into a root.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Jayce:Singed:3",
+          "text": "Shock Blast flies at fixed speed and stops at the first enemy it hits. Fire it at Singed before he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "50f4f2f9e9cdf794909909f2fb7a38112a0647addbf36bf76a709a19b697ddfd",
+      "tips": [
+        {
+          "id": "top:Jayce:Sion:0",
+          "text": "Keep Sion at range with Shock Blast in Cannon form. Don't stand where his Roar of the Slayer can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 74, "end": 92 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Jayce:Sion:1",
+          "text": "Sion's Decimating Smash is slow to charge and its aim is easy to read. Step out of the way, or knock him back with Thundering Blow to break the charge.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Jayce:Sion:2",
+          "text": "Hold your damage while Sion's Soul Furnace shield is up. Poke after it breaks or fades.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sion-W", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Jayce:Sion:3",
+          "text": "Fight early, before Sion gets large on Health. Press your lead and don't let him farm for free.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Jayce:Sion:4",
+          "text": "Watch for Sion at level 6. Stay out of a straight line with him, because Unstoppable Onslaught is hard to dodge once he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Sion-R", "start": 73, "end": 94 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, safely outside Sion's short-range Roar and Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 55, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b9a068e27d3620bbd7cb6626101282ada027f7ebaa29ac0832a0a79730d9660",
+      "tips": [
+        {
+          "id": "top:Jayce:TahmKench:0",
+          "text": "Poke with Shock Blast from long range while you are in Cannon form, and stay out of Tongue Lash range so he can't hit you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 84, "end": 95 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Jayce:TahmKench:1",
+          "text": "Don't let him hit you three times. Full stacks let his next Tongue Lash stun you, and then he can swallow you with Devour.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 60, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 115,
+              "end": 121
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Jayce:TahmKench:2",
+          "text": "Hit him with Thundering Blow to knock him back when he walks up to fight. Do it before he has stacks.",
+          "refs": [],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Jayce:TahmKench:3",
+          "text": "When Tahm Kench starts Abyssal Dive, step out of the area it will land on. Once he lands he can't act for a moment, so punish him.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Jayce:TahmKench:4",
+          "text": "Hit him with Shock Blast when his grey health shows. Keep poking so he can't heal it back, because it only returns after a few seconds without damage.",
+          "refs": [],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a8ca19a7a6eee9ffa22e9d6633bf9869a721a74b40852b761238eaea59b6317",
+      "tips": [
+        {
+          "id": "top:Jayce:Teemo:0",
+          "text": "Dodge Teemo's Blinding Dart by staying behind minions. A blind makes your basic attacks miss in Hammer Stance.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Jayce:Teemo:1",
+          "text": "Look for the mushrooms from Noxious Trap in brush and on your path before you leap. They slow you and reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:Teemo:2",
+          "text": "Use To the Skies! to close the gap on Teemo, then use Thundering Blow to knock him back from his poison.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Jayce:Teemo:3",
+          "text": "Poke Teemo from range with Shock Blast. Avoid walking up for long trades, because Toxic Shot keeps hurting you after you back off.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Teemo-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Jayce:Teemo:4",
+          "text": "If Teemo vanishes with Guerrilla Warfare, don't walk up to the spot blindly. He gets bonus attack speed when he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 3, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 23,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3f41225c21e4258b21138b4f2a27638b0c3dd4d2b01f0ba0890b4b415e053063",
+      "tips": [
+        {
+          "id": "top:Jayce:Tryndamere:0",
+          "text": "Stay at range in Cannon Stance and poke with Shock Blast. Tryndamere has trouble reaching you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Tryndamere", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Jayce:Tryndamere:1",
+          "text": "Harass early so Tryndamere can't build Fury and heal with Bloodlust.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 16, "end": 26 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Jayce:Tryndamere:2",
+          "text": "Use Thundering Blow to knock Tryndamere back when he dives you, then swap stances and run with Hextech Capacitor.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 29, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 95,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Jayce:Tryndamere:3",
+          "text": "Don't spend everything on Tryndamere while Undying Rage is ready. Wait it out, then finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": [
+        {
+          "comboId": "top:Jayce:combo:0",
+          "note": "Gate Shock Blast pokes from long range, so Tryndamere has to close the gap through the bolt's range.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 43, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "e7be38c153e0e1126a4b8f654d144ec51ab57bb9464ffe05bf1911a438d4a301",
+      "tips": [
+        {
+          "id": "top:Jayce:Urgot:0",
+          "text": "Stay out of Urgot's Disdain range. If it connects, you are stunned and thrown behind him while his legs and Purge hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Urgot-E", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Urgot-W", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Jayce:Urgot:1",
+          "text": "Poke Urgot from range with Shock Blast in cannon form. Fire it through Acceleration Gate for more range and damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Jayce:Urgot:2",
+          "text": "Use Thundering Blow to knock Urgot back when he runs at you. Hammer form also gives you extra defenses.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Jayce:Urgot:3",
+          "text": "Avoid taking several of Urgot's leg blasts in one trade. Back off after a hit while those legs are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Jayce:Urgot:4",
+          "text": "Stay healthy when Fear Beyond Death hits you. Don't drop low until it ends, or Urgot can drag you in and execute you.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-R", "start": 18, "end": 35 },
+            { "kind": "champion", "key": "Urgot", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "caaff7831145f435e8cdc9b3624025bfd59ada2679c737c960eac7b25c29676d",
+      "tips": [
+        {
+          "id": "top:Jayce:Varus:0",
+          "text": "Jump on Varus with To the Skies! when his Piercing Arrow is on cooldown, since he is weak up close.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Varus-Q", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Jayce:Varus:1",
+          "text": "Stay out of Varus's long range while he charges Piercing Arrow. Step out of its line to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Varus-Q", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:Varus:2",
+          "text": "Hit Varus with Thundering Blow while he is close. It knocks him back and deals damage based on his max health.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Jayce:Varus:3",
+          "text": "Play carefully once Varus reaches level 6, because Chain of Corruption roots you. Stay out of his line.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Varus-R", "start": 51, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Jayce:Varus:4",
+          "text": "Don't let Varus stack Blight on you. His abilities then hit much harder, so trade in short bursts.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d81b3fbb7aed87c386eb8434b2fe3e3decd52bb09a79d1151a24b27b03682e6",
+      "tips": [
+        {
+          "id": "top:Jayce:Vayne:0",
+          "text": "Stay off walls when Vayne is near. Condemn into terrain stuns you and adds big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Vayne-E", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Vayne:1",
+          "text": "Poke Vayne with Shock Blast from range. She is fragile, so make her play cautiously.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Jayce:Vayne:2",
+          "text": "Leap onto Vayne with To the Skies! to slow her, then use Thundering Blow to knock her away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 10, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Jayce:Vayne:3",
+          "text": "Don't trade for long with Vayne. Every third hit from Silver Bolts deals extra damage, so break off and swap stances.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-W", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5b81113a49b0c2790c4a9df9a1f1da301fc51325ea319525ce07dce6391a9f00",
+      "tips": [
+        {
+          "id": "top:Jayce:Vladimir:0",
+          "text": "Poke Vladimir with Shock Blast from range and avoid trading up close, where Transfusion heals him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:Vladimir:1",
+          "text": "Place the Acceleration Gate and fire Shock Blast through it for longer range and more damage. Vladimir has trouble answering that from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Jayce:Vladimir:2",
+          "text": "Don't use To the Skies! to jump in while Sanguine Pool is ready; he can drop into the pool and leave you slowed in his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 111 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Jayce:Vladimir:3",
+          "text": "Shock Blast stops at the first enemy it hits, so Vladimir can block it with minions in the way. Aim for clear lines.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Jayce:Vladimir:4",
+          "text": "Be strong early, and hit Vladimir before he gets his core items; he gets stronger and tankier later.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dcab83b7b961e87dbd4b478beb42e44c7e75dd73e3be5def313caa43cb4d6b06",
+      "tips": [
+        {
+          "id": "top:Jayce:Volibear:0",
+          "text": "Poke Volibear with Shock Blast from range and keep your distance. He wants to reach you with Thundering Smash.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Jayce:Volibear:1",
+          "text": "Hit Volibear with Thundering Blow as he runs in with Thundering Smash. The root ends his charge and refreshes its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Jayce:Volibear:2",
+          "text": "Slow Volibear with To the Skies! and then back off; his Frenzied Maul heals him if he hits you twice.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Volibear-W", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Jayce:Volibear:3",
+          "text": "Stay out of his Sky Splitter circle. Step out before it lands, because it hits hard and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "00c973c5bcc9d1b09682d673c963b234b392d5ca9362b07a448cfe79d6c03aa1",
+      "tips": [
+        {
+          "id": "top:Jayce:XinZhao:0",
+          "text": "Poke Xin Zhao with Shock Blast from far away, and keep him out of melee range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Jayce:XinZhao:1",
+          "text": "Use Thundering Blow to knock Xin Zhao back when he charges in; it breaks up his fight.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Jayce:XinZhao:2",
+          "text": "Hit Xin Zhao's third Three Talon Strike attack? Avoid it by backing off before the knock up lands.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 21, "end": 39 },
+            { "kind": "keyword", "key": "knocked-up", "start": 83, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:XinZhao:3",
+          "text": "Stay away from Xin Zhao when his Wind Becomes Lightning is ready; the slow makes you easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 33, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "def3a486c45741d61faad2e3d3b4c9cfc5d6066eb50b7c141174342639c22381",
+      "tips": [
+        {
+          "id": "top:Jayce:Yasuo:0",
+          "text": "Fight early; Jayce is strong in the early levels, so trade with Shock Blast and back off before Yasuo's shield and damage come online.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Jayce:Yasuo:1",
+          "text": "Aim Shock Blast so it lands on Yasuo directly; a minion in the way makes it explode there instead.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Jayce:Yasuo:2",
+          "text": "Yasuo can block your Shock Blast with Wind Wall, so wait for the wall to end before firing.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Jayce:Yasuo:3",
+          "text": "Use Thundering Blow to knock Yasuo back when he dashes in. It briefly roots him first.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Jayce:Yasuo:4",
+          "text": "Stay in Cannon form at range and poke him. His tornado is the main thing to dodge.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e5330d0ab7219e133adc962c696b40728fbd1995407425358d72baae3a8e57a0",
+      "tips": [
+        {
+          "id": "top:Jayce:Yone:0",
+          "text": "Poke Yone with Shock Blast from long range in Cannon Stance; he has no ranged answer, so keep your distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Jayce:Yone:1",
+          "text": "When Yone walks up, use Thundering Blow to knock him back, then follow with To the Skies! to stay on him.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 5, "end": 9 }],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Jayce:Yone:2",
+          "text": "Swap to Hammer Stance when Yone starts trading; it gives you extra armor and magic resist.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Jayce:Yone:3",
+          "text": "Shock Blast stops at the first enemy it hits, so aim it at Yone when no minion is in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Jayce:Yone:4",
+          "text": "Hammer Stance can be knocked up by Yone's Mortal Steel after two hits, so do not let him land two thrusts on you.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 21, "end": 31 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-Q", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e4eea930ded9461121285faa7b74f3d21bf6c7f7317a6a3ad547671ffc8d0a37",
+      "tips": [
+        {
+          "id": "top:Jayce:Yorick:0",
+          "text": "Stay at range in cannon form and poke Yorick; he has little way to reach you without Mourning Mist.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Yorick", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Yorick-E", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Jayce:Yorick:1",
+          "text": "Dodge the Mourning Mist, because it slows you and lowers your Armor, which sets up Yorick's trade.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 10, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 },
+            { "kind": "champion", "key": "Yorick", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Jayce:Yorick:2",
+          "text": "Kill Mist Walkers early with basic attacks or Lightning Field; each one dies to a single attack or spell.",
+          "refs": [],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Jayce:Yorick:3",
+          "text": "Attack Dark Procession to break it down, or walk away; do not stand inside the ring and fight Yorick.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 7, "end": 22 },
+            { "kind": "champion", "key": "Yorick", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Jayce:Yorick:4",
+          "text": "Use Thundering Blow to knock Yorick away when he tries to fight you, then switch to cannon and poke him.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e49a2238a472645756392ccb5b5311672a234afbdce8cc4fc373298ca813e34",
+      "tips": [
+        {
+          "id": "top:Jayce:Zaahen:0",
+          "text": "Poke with Shock Blast from long range while Zaahen has to walk up to you; it stops at the first enemy it hits, so keep minions out of its path.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zaahen", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "top:Jayce:Zaahen:1",
+          "text": "When Zaahen dashes in, use Thundering Blow to knock him back out of his fight; it also roots him briefly before the hit.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Jayce:Zaahen:2",
+          "text": "Don't hold your ground in the hammer stance when Zaahen has many stacks; his damage grows the longer a fight goes on, so trade and step away.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Jayce:Zaahen:3",
+          "text": "Aim Shock Blast so it doesn't line up with minions when Zaahen is about to throw Dreaded Return; step sideways out of its narrow line instead.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 81, "end": 95 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Jayce:Zaahen:4",
+          "text": "Don't count on a kill when Zaahen is full of stacks from Cultivation of War; he can revive and become untargetable instead of dying.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 27, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 57,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e1b98d34603497cd556a214c249c370f84009da127274150ec76699c6f4e44c6",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Graves:0",
+          "text": "Walk out of Smoke Screen quickly; the slow and the sight block end when you leave the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Jayce:Graves:1",
+          "text": "Land Thundering Blow / Acceleration Gate on Graves when he is close; it roots him briefly, then knocks him back, and it hurts more against high-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Jayce-E", "start": 5, "end": 40 },
+            { "kind": "champion", "key": "Graves", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 77 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Jayce:Graves:2",
+          "text": "Poke Graves with Shock Blast from afar; send it through Acceleration Gate for more range and damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Graves", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Jayce:Graves:3",
+          "text": "Do not walk through the powder trail of End of the Line; it blows up behind its path after a short delay and hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Jayce:Graves:4",
+          "text": "Fight Graves early, before he has built up his items; Jayce is strong in the early game.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0e34396004f5529227d983c285e35ea8fe3d779def680e6608e2fdc0c8bb645",
+      "tips": [
+        {
+          "id": "jungle:Jayce:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks up anyone in that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Jayce:JarvanIV:1",
+          "text": "Poke Jarvan from range with Shock Blast. Cast it through Acceleration Gate for more range and damage.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Jayce:JarvanIV:2",
+          "text": "Hit Jarvan with Thundering Blow in hammer form when he commits. It knocks him back and breaks his engage.",
+          "refs": [],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Jayce:JarvanIV:3",
+          "text": "Swap stances to get a burst of move speed. Use it to leave a Cataclysm fight early.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "70d9e4d275d78c3354b084beb03365264d914ef1b06b248b7de5a0418c04554d",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Kayn:0",
+          "text": "Kayn needs to damage you before Umbral Trespass works, so keep him at range with Shock Blast and don't let him land Blade's Reach on you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-R", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Kayn-W", "start": 116, "end": 129 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Jayce:Kayn:1",
+          "text": "Use Thundering Blow to knock Kayn back when he dives on you, then swap to the cannon and poke him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Jayce:Kayn:2",
+          "text": "Hit Kayn with the empowered cannon attack before a trade; it strips his Armor and Magic Resist.",
+          "refs": [{ "kind": "champion", "key": "Kayn", "start": 4, "end": 8 }],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Jayce:Kayn:3",
+          "text": "Look for fights early, since Jayce is strong early. Kayn gets much stronger once he transforms, so don't let him fight freely on his terms.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 29, "end": 34 },
+            { "kind": "champion", "key": "Kayn", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Jayce:Kayn:4",
+          "text": "If Kayn leaves in terrain with Shadow Step, don't chase. Lightning Field and the speed from swapping stances help you disengage.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Kayn-E", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0f48a3e5139479b6efb26733a63a44615ff934efabfd49acefa07859f89ea559",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Khazix:0",
+          "text": "Stay near minions or allies so Kha'Zix can't treat you as isolated, which makes Taste Their Fear hit far weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "isolated", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Jayce:Khazix:1",
+          "text": "Hit him with Thundering Blow when he lands on you; it knocks him back and gives you space.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Jayce:Khazix:2",
+          "text": "Hold To the Skies! to escape or to hit back after he jumps in, since it leaves nearby enemies slowed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Jayce:Khazix:3",
+          "text": "Kha'Zix is weak while Leap and Void Assault are on cooldown. Take that window to poke and push him off the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Khazix-E", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Khazix-R", "start": 31, "end": 43 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e692b97bd5a6c36d0a178776535c9fdcec227c430d8e48f9720463dd53a51665",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Kindred:0",
+          "text": "Hit Kindred with Thundering Blow when she is alone; it roots her briefly and knocks her back, and the damage is based on her health.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Jayce:Kindred:1",
+          "text": "Kindred is fragile, so chase her with To the Skies! and slow her down, then punish her right after she uses Dance of Arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 108, "end": 123 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Jayce:Kindred:2",
+          "text": "Open from long range with Shock Blast in Cannon form. Kindred has to come to you, and you can switch stances to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Jayce:Kindred:3",
+          "text": "Do not fight inside Wolf's Frenzy, because Wolf keeps biting you. Wait for it to end or pull her out of the area.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Jayce:Kindred:4",
+          "text": "Back off when Lamb's Respite goes down, because no one inside it can die. Wait for it to end before you finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "488eab68274942a49518c4f4bf23418f1c4c19771d62c17ddea4aa3107c30ce6",
+      "tips": [
+        {
+          "id": "jungle:Jayce:LeeSin:0",
+          "text": "Keep Lee Sin away with Thundering Blow in hammer form. It knocks him back and breaks his chase after Resonating Strike.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Jayce:LeeSin:1",
+          "text": "Stay behind minions or sidestep so Sonic Wave hits something else first. It stops at the first enemy it hits.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Jayce:LeeSin:2",
+          "text": "Poke him from range with Shock Blast. Lee Sin has little ranged damage, so fight early when you are strong.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "LeeSin", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Jayce:LeeSin:3",
+          "text": "Stay spread from your team so Dragon's Rage can't knock one of you into the others.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Jayce:LeeSin:4",
+          "text": "Lee Sin is weak to magic damage, so use Lightning Field when he is on top of you. It also hurts him if he dives you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "61e421621c20174b1c6ec0c385c5d9b5d7ab0ff4a6781e5505d412dd035c14f9",
+      "tips": [
+        {
+          "id": "jungle:Jayce:MasterYi:0",
+          "text": "Knock Master Yi back with Thundering Blow when he closes in, then switch to Cannon and shoot him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 6, "end": 15 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Jayce:MasterYi:1",
+          "text": "Keep Shock Blast for after Master Yi uses Highlander; slows will not work, so rely on Thundering Blow to stop him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Jayce:MasterYi:2",
+          "text": "Hit Master Yi hard while he is vulnerable; once he uses Alpha Strike you cannot target him, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Jayce:MasterYi:3",
+          "text": "Poke him when he is low; Meditate heals him over time, so hit him again when it ends.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "87e46c0077153948542ea77bfa6d1c0ab8d96482d2bfccf20f8d1f206b4121de",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Naafiri:0",
+          "text": "Use Thundering Blow on Naafiri when she dives in; it roots her briefly, then knocks her back out of your face.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Jayce:Naafiri:1",
+          "text": "Swap to hammer form when she closes in; you get extra defenses and move speed from Hextech Capacitor.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 83,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Jayce:Naafiri:2",
+          "text": "Open from range with Shock Blast and keep your distance; she wants to jump on you and burst you.",
+          "refs": [],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Jayce:Naafiri:3",
+          "text": "Slow her with To the Skies! after she commits to a fight so she cannot run you down.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbe5f488a77a5b4cc641e3ceaf28506176eb7058ff6afc0067699001d514afcd",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Nocturne:0",
+          "text": "Save Thundering Blow for when Nocturne tries to commit; the knockback breaks his tether and keeps him away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Jayce:Nocturne:1",
+          "text": "Break Unspeakable Horror's tether by getting out of its range, and use To the Skies! to jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Jayce:Nocturne:2",
+          "text": "Stay near your allies when Paranoia is cast, since Nocturne can dash in from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Nocturne", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jayce:Nocturne:3",
+          "text": "Don't waste Shock Blast while Shroud of Darkness is up; it blocks one Ability, so bait it first.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 30, "end": 48 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "47f7bcf2c5a2d4d06d5e2433cd9302ca1a586a04e6c93083235a5491fc217080",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Shyvana:0",
+          "text": "Stay at range with Shock Blast and wear Shyvana down early. She is weak against anyone who keeps their distance.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Jayce:Shyvana:1",
+          "text": "Use Thundering Blow to knock Shyvana back when she runs at you, then swap forms and step away.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Jayce:Shyvana:2",
+          "text": "Poke Shyvana while her Dragon Fury is low. She can't turn into a dragon without it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jayce:Shyvana:3",
+          "text": "Use To the Skies! to get away if Shyvana catches you, since it leaves her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f5427383d4b12fddca3bd36ec49244bb96e111847069a5d9e8f45e74a2455c3",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Skarner:0",
+          "text": "Keep your distance from Skarner in Cannon Stance. Poke with Shock Blast so he can't reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Jayce:Skarner:1",
+          "text": "Hit Skarner with Thundering Blow to knock him back out of his charge range or away from you. Do it when he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Jayce:Skarner:2",
+          "text": "Skarner's Ixtal's Impact can be stopped by a stun, root or knock-up. Keep a control ability ready when he comes for you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Jayce:Skarner:3",
+          "text": "Sidestep Impale or use the speed from swapping stances to get out of its reach.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 9, "end": 15 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9405058e8eac3664760f8860e850c54e9db8a6341241c2cb9e3a7739c28637f2",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Sylas:0",
+          "text": "Keep Jayce in Cannon Stance and fire Shock Blast from long range; Sylas has to close the gap and you can punish him as he walks in.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Jayce:Sylas:1",
+          "text": "Place Acceleration Gate and fire Shock Blast through it for longer range and more damage.",
+          "refs": [],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Jayce:Sylas:2",
+          "text": "When Sylas dashes onto you, switch to Hammer Stance and use Thundering Blow to knock him back and break his trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Jayce:Sylas:3",
+          "text": "Swap stances to get a burst of speed and walk through units when you need to escape his chains.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Jayce:Sylas:4",
+          "text": "Hit Sylas with a basic attack right after switching to Cannon Stance; it lowers his Armor and Magic Resist for your burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Jayce:Sylas:5",
+          "text": "Avoid fighting Sylas when he is low on Health; Kingslayer heals him more the lower he is.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Sylas-W", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a56c916ad916406accc4cecfb1a907f0a410da56dd82109f3860be0f33043e58",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Talon:0",
+          "text": "Place Acceleration Gate and fire Shock Blast through it at Talon when he comes in. It reaches farther and hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Jayce:Talon:1",
+          "text": "Switch to hammer form when Talon is close. It gives you extra defenses, and Thundering Blow knocks him back.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Jayce:Talon:2",
+          "text": "Watch for Talon vaulting walls. He can show up behind you, so stay away from the walls near your camps.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Jayce:Talon:3",
+          "text": "Once Talon uses Shadow Assault, he has no escape. Fight him then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Talon-R", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c34f788f8b94577592c0141b542c47ff78afca0594202f6ea1cdd3669979bdd1",
+      "tips": [
+        {
+          "id": "jungle:Jayce:Viego:0",
+          "text": "Stay in Hammer Stance and use Thundering Blow to knock Viego away from you or into a wall when he commits. It briefly roots him first.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 55, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Jayce:Viego:1",
+          "text": "Open from range with Shock Blast. Viego has to walk up to you, so keep him out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Jayce:Viego:2",
+          "text": "Jump on Viego with To the Skies! to get close and leave him slowed, which makes it harder for him to escape or chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 8, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Jayce:Viego:3",
+          "text": "Don't let Viego win a fight near a kill. He will turn the dead champion into a wraith and take over their body, so back off when your ally is about to die.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Jayce:Viego:4",
+          "text": "Hit Viego with Lightning Field when he is close to you. It damages him over time, so use it when he stays in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ea458a90007896a0c4bffed5c525cec55613f09a831b36306b712a79aa694884",
+      "tips": [
+        {
+          "id": "jungle:Jayce:XinZhao:0",
+          "text": "Keep Xin Zhao off you with Thundering Blow in Hammer form; it knocks him back after a short root.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Jayce:XinZhao:1",
+          "text": "Use Shock Blast from range while Xin Zhao closes in; don't let him finish his third attack with Three Talon Strike or you get knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 96, "end": 114 },
+            { "kind": "keyword", "key": "knocked-up", "start": 126, "end": 136 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Jayce:XinZhao:2",
+          "text": "Stay spread from your team until Xin Zhao has used Crescent Guard, then fight back; the enemy can't hit you with it from far away.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Jayce:XinZhao:3",
+          "text": "Swap stance with Hextech Capacitor to get a burst of speed and run through units when Xin Zhao charges in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Jayce-passive",
+              "start": 17,
+              "end": 34
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

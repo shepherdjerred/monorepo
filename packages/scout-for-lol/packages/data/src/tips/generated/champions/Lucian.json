@@ -1,0 +1,608 @@
+{
+  "schemaVersion": 1,
+  "champion": "Lucian",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "2be684c383056397b7c40d8482b05d215d8aad57bf15b97824bbf376b9e96012",
+      "tips": [
+        {
+          "id": "adc:Lucian:general:0",
+          "text": "Cast an ability before each attack so Lightslinger fires its double-shot. Weave attacks between abilities instead of only auto-attacking.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Lucian-passive",
+              "start": 38,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Lucian:general:1",
+          "text": "Dash with Relentless Pursuit into Piercing Light for your burst. Use it to reposition, not just to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Lucian:general:2",
+          "text": "Hit enemy champions with Lightslinger shots to cut the cooldown of Relentless Pursuit. Champions cut it more than minions do.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Lucian-passive",
+              "start": 25,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Lucian-E", "start": 67, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Lucian:general:3",
+          "text": "Piercing Light goes through units. Aim it at a minion so the line also reaches the enemy standing behind it.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-Q", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Lucian:general:4",
+          "text": "Aim Ardent Blaze so the spokes of its star hit an enemy champion. Hitting one marks them and gives you bonus Move Speed when they take damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Lucian:general:5",
+          "text": "Start The Culling once the enemy has nowhere to dodge, such as after they are rooted or stunned. You can't change its angle once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-R", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Lucian:general:6",
+          "text": "Use Relentless Pursuit while The Culling is firing to dodge or reposition. Piercing Light and Ardent Blaze are disabled during it.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Lucian-R", "start": 29, "end": 40 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 75, "end": 89 },
+            { "kind": "ability", "key": "Lucian-W", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Lucian:general:7",
+          "text": "Trade in short, fast bursts and then back off. Lucian has strong burst but little sustained damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "b9ba575d067291a3c9e16a7c11df17fa3855549a37e49262be3382be2c5a314d",
+      "tips": [
+        {
+          "id": "adc:Lucian:Ashe:0",
+          "text": "Dash in with Relentless Pursuit, then hit with Piercing Light and your double shot for a quick burst on Ashe, who has few escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 47, "end": 61 },
+            { "kind": "champion", "key": "Ashe", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Lucian:Ashe:1",
+          "text": "Do not stand in a line of minions in front of Ashe. Step to the side to dodge Volley arrows, then trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Ashe-W", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Lucian:Ashe:2",
+          "text": "Ashe's Frost Shot slows you in a long fight, so burst her and leave rather than trading for long.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ashe-passive", "start": 7, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Lucian:Ashe:3",
+          "text": "Stay near your team when Ashe's Enchanted Crystal Arrow is ready; being caught alone by it is deadly.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ashe-R", "start": 32, "end": 55 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Lucian:Ashe:4",
+          "text": "Aim Ardent Blaze so the side spokes hit Ashe; the mark gives you move speed when you damage her.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "78b18f29e611f6d19f032aff03d7d7c14a7ccf6969a6deb7e276b8e74d218873",
+      "tips": [
+        {
+          "id": "adc:Lucian:Caitlyn:0",
+          "text": "Look for Caitlyn's Yordle Snap Trap before you dash forward; stepping on one roots you and sets up a big Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 82 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 105,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Lucian:Caitlyn:1",
+          "text": "Dash with Relentless Pursuit to sidestep Piltover Peacemaker; it is a straight line, so a sideways move dodges it.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 41, "end": 60 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Lucian:Caitlyn:2",
+          "text": "Trade when Caitlyn's net is on cooldown: she has no easy way to slow you and escape your burst.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Lucian:Caitlyn:3",
+          "text": "Stand behind minions when Caitlyn pokes with Piltover Peacemaker; it deals less damage to each later target.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 45, "end": 64 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Lucian:Caitlyn:4",
+          "text": "Walk into the path of Ace in the Hole to block it when it is aimed at your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0bd4d72a2093dac325071eaa39d621ab74a59c5b3b0fd9e4bfb970064ad0084a",
+      "tips": [
+        {
+          "id": "adc:Lucian:Ezreal:0",
+          "text": "Walk up and dash in with Relentless Pursuit to trade; Ezreal is fragile and cannot take your burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 25, "end": 43 },
+            { "kind": "champion", "key": "Ezreal", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Lucian:Ezreal:1",
+          "text": "Step sideways when Ezreal aims Mystic Shot; it is a straight bolt and hits only the first enemy, so stand behind minions.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Lucian:Ezreal:2",
+          "text": "Combine Relentless Pursuit into Piercing Light for burst when Ezreal's Arcane Shift is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 8, "end": 26 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 32, "end": 46 },
+            { "kind": "champion", "key": "Ezreal", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Lucian:Ezreal:3",
+          "text": "Use Ardent Blaze to mark Ezreal, then attack him for a speed boost that helps you close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Lucian:Ezreal:4",
+          "text": "Fire The Culling at Ezreal when he is cornered, since he can only dodge with Arcane Shift.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 77, "end": 89 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c6147ef1d90ecdd1f89f3648877dc3a2ad8992bc7de09f19e3619121f0e2abc0",
+      "tips": [
+        {
+          "id": "adc:Lucian:Jhin:0",
+          "text": "Jhin's Deadly Flourish roots you if you were just hit by his team. Stay out of his line when you trade with his support.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-W", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Lucian:Jhin:1",
+          "text": "Jhin traps are invisible, so watch where you step and dash with Relentless Pursuit around likely trap spots.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lucian-E", "start": 64, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Lucian:Jhin:2",
+          "text": "Jump on Jhin while he reloads after his fourth shot; he can't attack then, so your burst goes unanswered.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Lucian:Jhin:3",
+          "text": "Open with Relentless Pursuit into Piercing Light for burst, then leave before he can root you.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "efe30f8c4f38ee7ff71f401ca9388006de2527c612cf7872efbce3cd559f1136",
+      "tips": [
+        {
+          "id": "adc:Lucian:Jinx:0",
+          "text": "Trade with Piercing Light and a double-shot when Jinx has used Flame Chompers!; she has much less protection afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-Q", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Jinx", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Jinx-E", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Lucian:Jinx:1",
+          "text": "Dash with Relentless Pursuit only after Flame Chompers! is used, or aim it away from where she can place them; being rooted gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Jinx-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Lucian:Jinx:2",
+          "text": "Step out of the line of Zap! and don't walk in straight lines; it is slowing and she has long range.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Lucian:Jinx:3",
+          "text": "Go in on Jinx while she is poking with rockets; her minigun takes time to ramp up, so burst her fast.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 9, "end": 13 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Lucian:Jinx:4",
+          "text": "Stay clear of her Super Mega Death Rocket! when you are low on health; it hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 18, "end": 42 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "baa95e17f6360b35fc3e10d1355bcce4a9b42cefe13b3f8d3b0ea600ec86610f",
+      "tips": [
+        {
+          "id": "adc:Lucian:Kaisa:0",
+          "text": "Trade by dashing in with Relentless Pursuit and following with Piercing Light. Kai'Sa has little burst early, so punish her when she walks up.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 25, "end": 43 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 63, "end": 77 },
+            { "kind": "champion", "key": "Kaisa", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Lucian:Kaisa:1",
+          "text": "Aim Ardent Blaze so the spokes of the star hit Kai'Sa. It reveals her and marks her, and hitting her speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kaisa", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Lucian:Kaisa:2",
+          "text": "Respect her when she has Plasma on you. Killer Instinct lets her jump onto you and shield herself, so don't linger after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Lucian:Kaisa:3",
+          "text": "Use The Culling in a lane she can't escape, such as when she is caught or being chased. You can walk while firing, and you can still use Relentless Pursuit.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Lucian-E", "start": 137, "end": 155 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f2b14b01aa7d063ad50e7f26657b9efb1c70a20098e3a3fb1d275e4ed6ab92be",
+      "tips": [
+        {
+          "id": "adc:Lucian:MissFortune:0",
+          "text": "Walk up and use Relentless Pursuit into Piercing Light for burst. Trade fast and leave before Miss Fortune answers.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 40, "end": 54 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 94,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Lucian:MissFortune:1",
+          "text": "Stay out of Make It Rain, because being slowed leaves you easy to hit. Dash out of the area if you get caught.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Lucian:MissFortune:2",
+          "text": "Keep minions out of the line between you and Miss Fortune. A minion in front of you lets Double Up bounce onto you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 45,
+              "end": 57
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 89,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Lucian:MissFortune:3",
+          "text": "Hit Miss Fortune with Ardent Blaze. Once she takes damage she loses Strut's passive move speed, and you can chase.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Lucian-W", "start": 22, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 68,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Lucian:MissFortune:4",
+          "text": "At level 6, never stand still in front of Miss Fortune. Dash sideways with Relentless Pursuit to get out of Bullet Time.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 42,
+              "end": 54
+            },
+            { "kind": "ability", "key": "Lucian-E", "start": 75, "end": 93 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 108,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a061d576a220e413e3119eb67a40fba90944b20bfca3a7967725a2b6925cc18f",
+      "tips": [
+        {
+          "id": "adc:Lucian:Smolder:0",
+          "text": "Trade early while Smolder is weak: weave an attack between abilities and use Relentless Pursuit to dash in and out before he can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Lucian-E", "start": 77, "end": 95 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Lucian:Smolder:1",
+          "text": "Aim Piercing Light through the minion onto Smolder; it passes through enemies and hits him from a distance.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Smolder", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Lucian:Smolder:2",
+          "text": "Dodge sideways when Smolder sneezes with Achooo!; if it lands you are slowed and the explosion hurts too.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Smolder-W", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Lucian:Smolder:3",
+          "text": "Use Ardent Blaze to mark him, then chase with the bonus Move Speed while attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Lucian:Smolder:4",
+          "text": "Press your lead early. Smolder gets scarier with more Dragon Practice stacks, so deny his stacks by punishing him when he walks up to farm.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 54,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5cb669c3c88a1cad4a0b98d3cf278a37d8bedf4c6ffb4724e9aa1c89ceebc251",
+      "tips": [
+        {
+          "id": "adc:Lucian:Yunara:0",
+          "text": "Trade in short bursts: dash in with Relentless Pursuit, hit with Piercing Light, then attack. Leave before Yunara can fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-E", "start": 36, "end": 54 },
+            { "kind": "ability", "key": "Lucian-Q", "start": 65, "end": 79 },
+            { "kind": "champion", "key": "Yunara", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Lucian:Yunara:1",
+          "text": "Fire Ardent Blaze so the star spokes catch Yunara. Then chase her, since you gain Move Speed whenever you hit her marked body.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Lucian:Yunara:2",
+          "text": "Stay out of her prayer bead. If you are slowed by it, you cannot escape her follow-up, so walk around it.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Lucian:Yunara:3",
+          "text": "Play safer while Yunara's ultimate is active. She hits much faster and her beam slows and hurts a lot, so back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Lucian:Yunara:4",
+          "text": "Trade when her Unleash is not ready. Hitting her builds it fast, so poke only when you can step away.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

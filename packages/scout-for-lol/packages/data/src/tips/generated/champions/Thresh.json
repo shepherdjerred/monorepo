@@ -1,0 +1,2139 @@
+{
+  "schemaVersion": 1,
+  "champion": "Thresh",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "4e1331a371e44f2990cf3dbf14f0a146e66d1149c366b006a3850738c2695e62",
+      "tips": [
+        {
+          "id": "support:Thresh:general:0",
+          "text": "Aim Death Sentence at enemies who walk up to last-hit; it stops at the first unit it hits, so keep minions out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Thresh:general:1",
+          "text": "After Death Sentence lands, recast it to dash to the enemy only when your team can follow up. Otherwise stay back and let the pull do the work.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:general:2",
+          "text": "Throw Dark Passage to an ally who is under pressure or going in. They click the lantern to dash to you, and you both get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Thresh:general:3",
+          "text": "Tell your teammates how you plan to use the lantern, so they know when to click it.",
+          "refs": [],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Thresh:general:4",
+          "text": "Pair Flay with Death Sentence in either order for a combo; Flay also leaves the enemy slowed afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Thresh-E", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:general:5",
+          "text": "Hold off on attacking for a moment before you trade. Flay's bonus damage on your next attack grows the longer you wait.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Thresh:general:6",
+          "text": "At level 6, use The Box when several enemies are bunched up near you. Fight inside it, because the walls slow anyone who breaks them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Thresh:general:7",
+          "text": "Stay close to fights and dying minions so Damnation collects souls. You don't need the kill yourself.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Thresh-passive",
+              "start": 42,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "3e6dedd6ba959f008b80934b59369e03e1589ea040a9614e8dd0400d1a3cf7e1",
+      "tips": [
+        {
+          "id": "support:Thresh:Alistar:0",
+          "text": "Aim Death Sentence when Alistar has used Headbutt. He is easy to hit while he is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Alistar-W", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Thresh:Alistar:1",
+          "text": "Do not stand within reach of Alistar's Headbutt and Pulverize combo, especially near turrets. Keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Alistar-W", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 52, "end": 61 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Thresh:Alistar:2",
+          "text": "Use Flay to push Alistar away when he gets close, so he cannot hit you with Pulverize.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Alistar", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 76, "end": 85 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Thresh:Alistar:3",
+          "text": "Back off when Alistar uses Unbreakable Will and wait for it to end before you fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Alistar-R", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Alistar:4",
+          "text": "Throw Dark Passage to your ally so they can dash to you and get away from Alistar.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Alistar", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0af1b6602389b6cf67ba983659f9c366a0f80ec1365d2d791af770fea998f511",
+      "tips": [
+        {
+          "id": "support:Thresh:Anivia:0",
+          "text": "Hit Anivia with Death Sentence when she casts Crystallize or stands still; she has little to escape a pull.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Anivia-W", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Thresh:Anivia:1",
+          "text": "Dodge Flash Frost by staying out of its line, since its stun comes at the end of its range or on recast.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:Anivia:2",
+          "text": "Use Flay to push Anivia away or pull her into your carry when she is chilled and committed.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Anivia", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Thresh:Anivia:3",
+          "text": "Be aggressive early; if Anivia returns from her egg, kill it fast or punish her low state.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Thresh:Anivia:4",
+          "text": "Throw Dark Passage to give your ally a shield and a way out of Glacial Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Anivia-R", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cbc684e0e011e9376eeea8602d26645572a3f5dc59389f2a843bf8699b0ac2cb",
+      "tips": [
+        {
+          "id": "support:Thresh:Bard:0",
+          "text": "Aim Death Sentence at Bard when he walks up for chimes or to use his meeps; the stun and pull leave him with nowhere to go.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Bard", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Thresh:Bard:1",
+          "text": "Use Flay to knock Bard back when he steps in close, and your next attack hits harder if you have waited a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Bard", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Thresh:Bard:2",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Thresh:Bard:3",
+          "text": "Stay out of a straight line with your own ally when Bard casts Cosmic Binding; it hits a second enemy, and both are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Bard-Q", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Thresh:Bard:4",
+          "text": "Use Dark Passage to put a shield on your ally when Bard threatens a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Bard", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:Bard:5",
+          "text": "Fight Bard when his Tempered Fate is on cooldown; with it ready he can freeze the whole fight, so keep The Box for after it.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Bard-R", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Thresh-R", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f482e63085fd83f948a59ee71052bd9a74383730dbba73bc4887cce18da79399",
+      "tips": [
+        {
+          "id": "support:Thresh:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits one of them first, because it only pulls the first enemy it meets.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Blitzcrank:1",
+          "text": "Hit Death Sentence on Blitzcrank when he steps up; he is stunned and pulled, so you can fight him.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 22, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Blitzcrank:2",
+          "text": "Use Flay to push Blitzcrank back when he runs at you, and he is slowed after.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Thresh:Blitzcrank:3",
+          "text": "Back off at level 6 when Blitzcrank is close, since Static Field silences and destroys your Dark Passage shield.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 25, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 52,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "silenced", "start": 65, "end": 73 },
+            { "kind": "ability", "key": "Thresh-W", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Thresh:Blitzcrank:4",
+          "text": "Punish Blitzcrank after he misses Rocket Grab; the cooldown is long, so you can move up safely.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "046b9612d9a35dcca1e263a96b390711b08a245c27f209c2f1d5ac9a72bfe651",
+      "tips": [
+        {
+          "id": "support:Thresh:Brand:0",
+          "text": "Stay away from your partner when Brand is ready to cast Pyroclasm. Spreading out also blunts his passive.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-R", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Thresh:Brand:1",
+          "text": "Hit Brand with Death Sentence when he steps up to poke; he has no escape, so you can pull him into your team.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Thresh:Brand:2",
+          "text": "Dodge Sear and Pillar of Flame. Brand needs to land one spell before his combo starts.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Thresh:Brand:3",
+          "text": "Move as soon as Pillar of Flame appears under you; it erupts after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Thresh:Brand:4",
+          "text": "Throw Dark Passage to give your partner a shield when Brand's spells are coming.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Thresh:Brand:5",
+          "text": "Use The Box when you catch Brand and his partner close together, since the walls slow whoever touches them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Brand", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3e527abe0df05451daff109bac0170d16bf78b61621a91ffff871a37a27b947f",
+      "tips": [
+        {
+          "id": "support:Thresh:Braum:0",
+          "text": "Wait until Unbreakable is down before throwing Death Sentence, or throw it from an angle the shield does not cover.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-E", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Braum:1",
+          "text": "Do not walk up beside Braum's ally to trade. Winter's Bite starts Concussive Blows, and each hit from his team brings the stun closer.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Braum-Q", "start": 45, "end": 58 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 66,
+              "end": 82
+            },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Thresh:Braum:2",
+          "text": "Use Flay to push Braum out of position when he closes in, and use Dark Passage to pull your carry back out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Braum", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Thresh-W", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Thresh:Braum:3",
+          "text": "Dodge Glacial Fissure by moving out of its line while he casts. Cast The Box if you get caught in the slow zone.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Thresh-R", "start": 69, "end": 76 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "89e5d47599852e1f95240fddbd9b034f6cdd56868b18dca57d6386d74f1d5fb2",
+      "tips": [
+        {
+          "id": "support:Thresh:Camille:0",
+          "text": "Hit Camille with Death Sentence when she dashes in with Hookshot. Her dash is easy to read.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Camille-E", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Thresh:Camille:1",
+          "text": "Use Flay to push Camille away when she closes in. It also slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Camille", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Camille:2",
+          "text": "Hit Camille when her shield is the wrong type. Adaptive Defenses blocks only physical or magic damage, not both.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Camille-passive",
+              "start": 47,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Thresh:Camille:3",
+          "text": "Throw Dark Passage to your ally so they can pull away from Camille. The shield also helps them survive her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Camille", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Thresh:Camille:4",
+          "text": "Use The Box if Camille dives your carry. Break a wall yourself to let a trapped ally slip out.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Camille", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "54600772e4538dc1fb90270c4fcacd968ec319e31a9751dc3353f9e88bf38919",
+      "tips": [
+        {
+          "id": "support:Thresh:Janna:0",
+          "text": "Throw Death Sentence when Janna has used Zephyr or Howling Gale; she has little left to escape or peel with.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Janna", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Janna-W", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Janna-Q", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Thresh:Janna:1",
+          "text": "Do not stand close to Janna when she may have Howling Gale ready; it knocks you up and cancels your plans.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Janna-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Thresh:Janna:2",
+          "text": "Hold The Box until Janna has used Monsoon, or use it first so she cannot push you out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Janna", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Janna-R", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Thresh:Janna:3",
+          "text": "Harass Janna's ally; she is strongest when buffing them, so hurting them weakens her.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 7, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Thresh:Janna:4",
+          "text": "Use Flay to pull Janna toward you when she is out of position, then follow with Death Sentence.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Janna", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1f5fa870c741831f189541a6e2e24e50b827a329206295e68bbe8b0f15ce7786",
+      "tips": [
+        {
+          "id": "support:Thresh:Karma:0",
+          "text": "Hit Death Sentence on Karma when she walks up to trade. She has no dash, so a hit usually means a kill or a big trade.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Karma", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Thresh:Karma:1",
+          "text": "Avoid being hit by Inner Flame. It slows you, and every hit on a champion speeds up her Mantra.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Karma-R", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Thresh:Karma:2",
+          "text": "Step out of a Mantra-boosted Inner Flame circle quickly. It leaves a field that slows you and then bursts for heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Karma-Q", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Thresh:Karma:3",
+          "text": "Stay out of Focused Resolve range, or break the tether by moving away, so you avoid the root. Then you can start your own engage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Thresh:Karma:4",
+          "text": "Throw Dark Passage to your ally after a hook lands, so they can dash to you and get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "607ddd20a6dc42aba9ef913bc2475dca725c4146861504ee59bf44eee7a92749",
+      "tips": [
+        {
+          "id": "support:Thresh:Leona:0",
+          "text": "Hit Leona with Death Sentence when she walks up to engage, then pull her away from your carry.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Thresh:Leona:1",
+          "text": "Use Flay to knock Leona away when she dashes in with Zenith Blade; it breaks up her stun combo.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Leona", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Leona-E", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Thresh:Leona:2",
+          "text": "Move away when Leona raises Eclipse; her damage comes only when it ends, so do not stand beside her.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Leona-W", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Thresh:Leona:3",
+          "text": "Step out of the center of Solar Flare quickly; only the center stuns, so you can often avoid it.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Thresh:Leona:4",
+          "text": "Put down The Box when Leona and her team commit onto you; it slows everyone who touches the walls.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 9, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66d3b92b549730675a1104fe78320083aed9906d866a4c8371c017ba727cda0a",
+      "tips": [
+        {
+          "id": "support:Thresh:Lulu:0",
+          "text": "Hook Lulu with Death Sentence when she walks up for minions; her escape tools are limited.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Thresh:Lulu:1",
+          "text": "Stay out of Glitterlance range, and keep minions between you and Lulu so her bolts get blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Lulu", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "support:Thresh:Lulu:2",
+          "text": "Expect Whimsy when you step in; wait until it is used before you commit to an all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Thresh:Lulu:3",
+          "text": "Flay Lulu away from her carry, then hook her; the slow makes the follow-up easier.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lulu", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Thresh:Lulu:4",
+          "text": "Break one wall of The Box on purpose to let a teammate escape Wild Growth.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Lulu-R", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7626ab812e4b46f83cb0baabc9dd7c0a1fc6a64017f253feb4650b9deb6ef2f",
+      "tips": [
+        {
+          "id": "support:Thresh:Lux:0",
+          "text": "Aim Death Sentence at Lux when she steps up to throw her spells; she has no dash, so a hit usually means a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Thresh:Lux:1",
+          "text": "Stand behind minions so Light Binding hits them first; it stops after two enemies, so a minion in front protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "support:Thresh:Lux:2",
+          "text": "Step out of Lucent Singularity quickly; its slow gets worse when it bursts, and Lux often follows with Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Lux", "start": 80, "end": 83 },
+            { "kind": "ability", "key": "Lux-Q", "start": 103, "end": 116 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Thresh:Lux:3",
+          "text": "Move to the side when you see the red line from Final Spark; the beam is slow to start and you can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Thresh:Lux:4",
+          "text": "Use Flay to pull Lux toward you when she's near and in range; combine it with Death Sentence for a lockdown.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Lux", "start": 17, "end": 20 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Thresh:Lux:5",
+          "text": "Throw Dark Passage to your ally when Lux roots them, so they can escape toward you with a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 37, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6950340b527bd401d6d6acfa28c7d0d1a287ade7c30a1020aef780d3b0af89ea",
+      "tips": [
+        {
+          "id": "support:Thresh:Maokai:0",
+          "text": "Don't spend spells on Maokai without a reason. Each spell that hits him speeds up his Sap Magic healing.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 86,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Thresh:Maokai:1",
+          "text": "Don't throw Death Sentence when Maokai can dash with Twisted Advance. He can't be targeted while he dashes and the hook will miss.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Maokai", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Maokai-W", "start": 53, "end": 68 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Thresh:Maokai:2",
+          "text": "Stay away from brush with a Maokai Sapling in it. It hits harder and slows you for longer than a normal one.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Thresh:Maokai:3",
+          "text": "Use The Box on Maokai's team when he is rooted by his own Nature's Grasp setup, or break one wall on purpose to free an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Maokai", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Maokai-R", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Thresh:Maokai:4",
+          "text": "Put Dark Passage's shield on your carry when Maokai's Bramble Smash is ready; it softens the poke.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Maokai", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40660b2c2b41a2ef1de2f77b8818152b46cf586bce2bdc52ae69df3a541a4f4e",
+      "tips": [
+        {
+          "id": "support:Thresh:Mel:0",
+          "text": "Wait until Mel has used Rebuttal before you throw Death Sentence; her nova destroys enemy projectiles, and your scythe is one.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Mel-W", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Thresh:Mel:1",
+          "text": "Mel's Solar Snare roots from far away, so stay out of its line and keep minions between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-E", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Thresh:Mel:2",
+          "text": "Watch for Mel's spent abilities, then hook her. She has little to escape with once Solar Snare is down.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 10, "end": 13 },
+            { "kind": "ability", "key": "Mel-E", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Thresh:Mel:3",
+          "text": "Back off when you are low on health. Mel's Overwhelm can execute you after a few hits, so give the stacks time to fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 37, "end": 40 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Thresh:Mel:4",
+          "text": "Use The Box to trap Mel once she is low, since her Golden Eclipse needs a moment to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Mel", "start": 20, "end": 23 },
+            { "kind": "ability", "key": "Mel-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4ac7a94c397b4716583c39e7b6eac51c9bdd532706bf09d8ac8065c1bbad9f36",
+      "tips": [
+        {
+          "id": "support:Thresh:Milio:0",
+          "text": "Aim Death Sentence at Milio when he stands in front; he has no dash to escape it, and a hit lets you pull him into your team.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Thresh:Milio:1",
+          "text": "Flay can knock Milio back before his Ultra Mega Fire Kick lands. Use it when he steps up to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Milio", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Milio-Q", "start": 37, "end": 57 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Thresh:Milio:2",
+          "text": "Look for Milio when he is alone, away from his carry. Then Death Sentence and Flay are hard for him to answer.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 59, "end": 73 },
+            { "kind": "ability", "key": "Thresh-E", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Thresh:Milio:3",
+          "text": "Use The Box at level 6 when you catch both enemies close together. They get slowed hard and it deals big damage.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Thresh:Milio:4",
+          "text": "Stay out of the Ultra Mega Fire Kick line, and watch for the cast to begin, since Milio cannot cast anything else while it winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 16, "end": 36 },
+            { "kind": "champion", "key": "Milio", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4b8fb3b611a4691e4bbffbb0a4504b6fa67b59c49a19f60fc39815304ffbf436",
+      "tips": [
+        {
+          "id": "support:Thresh:Morgana:0",
+          "text": "Stay behind minions when Morgana is in range. Dark Binding stops at the first enemy it hits, so minions block it.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Thresh:Morgana:1",
+          "text": "Throw Death Sentence right after Morgana uses Black Shield, or when it is on cooldown. While it is up, she can't be stunned or pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Morgana", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Morgana-E", "start": 46, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 123 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Thresh:Morgana:2",
+          "text": "Move out of Tormented Shadow instead of standing in it, especially when you are low on health. It hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Morgana:3",
+          "text": "Use Dark Passage on your carry after Morgana wastes her Dark Binding. The shield helps them survive the poke.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Morgana", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 56, "end": 68 },
+            { "kind": "keyword", "key": "poke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Thresh:Morgana:4",
+          "text": "Flay or Death Sentence a tethered ally out of Soul Shackles' range so they dodge the stun. Break the tether before the three seconds are up.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 8, "end": 22 },
+            { "kind": "ability", "key": "Morgana-R", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3c7903c9046fbc80268c1d0d02db9707edefb4bd250e1fd959550aab462faf08",
+      "tips": [
+        {
+          "id": "support:Thresh:Nami:0",
+          "text": "Hook Nami when she steps up for minions. If she is stunned or pulled, your lane partner can hit her freely.",
+          "refs": [{ "kind": "champion", "key": "Nami", "start": 5, "end": 9 }],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:Nami:1",
+          "text": "Fight Nami right after she throws Aqua Prison. Its cooldown is long, so you can walk up without fear of the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Nami-Q", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Nami:2",
+          "text": "Use Flay to push Nami away from your ally when she tries to engage or peel. It also slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Nami", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Thresh:Nami:3",
+          "text": "Back off from an enemy carry who has Tidecaller's Blessing active. It only lasts a short time, so wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 37, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Nami:4",
+          "text": "Sidestep Tidal Wave when you see it coming, since it travels slowly. Throw Dark Passage to a teammate caught in its path so they can escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 9, "end": 19 },
+            { "kind": "ability", "key": "Thresh-W", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4bd6592a1d262820340e229552bd5de5591242dc36a6863195c2f8f2db32523d",
+      "tips": [
+        {
+          "id": "support:Thresh:Nautilus:0",
+          "text": "Aim Death Sentence at Nautilus when he walks up; the stun gives your carry time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Thresh:Nautilus:1",
+          "text": "Stay out of Dredge Line's long range line; it stops at the first enemy it hits, so keep a minion between you and him.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Thresh:Nautilus:2",
+          "text": "Use Flay to push Nautilus away when he closes in; it also slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Nautilus", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Thresh:Nautilus:3",
+          "text": "Throw Dark Passage to a teammate caught by Nautilus so they can dash out and get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Thresh:Nautilus:4",
+          "text": "When Nautilus is shielded by Titan's Wrath, avoid fights close to him; his attacks hit everyone near the target.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Nautilus:5",
+          "text": "Hold still after Riptide goes off next to you until the waves end; running early takes extra hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ef04c9a3d588bdeb5629dc90d15853e8e40d030b50c3323afcad2aa1636a8b5f",
+      "tips": [
+        {
+          "id": "support:Thresh:Neeko:0",
+          "text": "Aim Death Sentence at Neeko when she walks up to poke or to Tangle-Barbs; the stun leaves her open to Flay and a follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Neeko", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Neeko-E", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "ability", "key": "Thresh-E", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Thresh:Neeko:1",
+          "text": "Stay out of a straight line with Neeko, and don't stand behind minions; Tangle-Barbs hits the first enemy and then comes back stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Neeko-E", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Thresh:Neeko:2",
+          "text": "Throw Dark Passage so your ally can escape after Neeko roots them, but only if they are not stuck by something that blocks it.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Neeko", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Thresh:Neeko:3",
+          "text": "Be careful when Neeko looks like an ally and your team is near. Pop Blossom can come from her in secret.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Neeko-R", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Neeko:4",
+          "text": "Break a wall of The Box on purpose or throw Dark Passage when your ally is the target of Pop Blossom.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Thresh-W", "start": 44, "end": 56 },
+            { "kind": "ability", "key": "Neeko-R", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06036f1e0145ee4d124d9b2837fd50806c17a14f2bb60f588f466501fcc9c6a0",
+      "tips": [
+        {
+          "id": "support:Thresh:Pantheon:0",
+          "text": "Throw Death Sentence when Pantheon is not bracing his shield; facing you, Aegis Assault makes him immune to damage from your direction.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Thresh:Pantheon:1",
+          "text": "Use Flay to push Pantheon away when he jumps in with Shield Vault; it also leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Pantheon", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 53, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Thresh:Pantheon:2",
+          "text": "Stay healthy near Pantheon; a thrown Comet Spear hits very hard on low health targets, so back off when you or your partner are low.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Thresh:Pantheon:3",
+          "text": "When Pantheon starts Grand Starfall, you get a warning; move your team out of the area or set up The Box where he will land.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Thresh-R", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Thresh:Pantheon:4",
+          "text": "Throw Dark Passage to your partner when Pantheon dives; the shield and quick pull-out can save them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d09c81a2f16a2ef984865d4f9579868c95e05bc0d450dfef8b04db8fb471b8d3",
+      "tips": [
+        {
+          "id": "support:Thresh:Poppy:0",
+          "text": "Do not leap with Death Sentence's recast while Steadfast Presence is up; Poppy stops the dash and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Poppy-W", "start": 47, "end": 65 },
+            { "kind": "champion", "key": "Poppy", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Thresh:Poppy:1",
+          "text": "Stay away from walls when Poppy is near; Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-E", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:Poppy:2",
+          "text": "Step on Poppy's dropped buckler to destroy it and deny her the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Thresh:Poppy:3",
+          "text": "Use Flay to push Poppy away when she dashes in for Heroic Charge, or to pull her out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Poppy", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Poppy-E", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Thresh:Poppy:4",
+          "text": "Hook Poppy when she starts spinning her hammer for Keeper's Verdict; the stun cancels it.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "34682246bdaf9622158fe6729d353c2c9f3478ae05b45dff0e2d4436ccbf2e49",
+      "tips": [
+        {
+          "id": "support:Thresh:Pyke:0",
+          "text": "Aim Death Sentence at Pyke when he is not holding Bone Skewer; the scythe stuns him and drags him to you.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pyke", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Thresh:Pyke:1",
+          "text": "Use Flay on Pyke when he dashes in; it knocks him back and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Pyke", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Thresh:Pyke:2",
+          "text": "Throw Dark Passage to give your carry a shield and a way out when Pyke goes for them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Pyke", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Thresh:Pyke:3",
+          "text": "Stay away from low-health allies when Pyke is near; Death From Below can execute them. Watch for sharks under your feet.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Thresh:Pyke:4",
+          "text": "Use The Box on Pyke if he commits onto you or an ally; he is slowed heavily inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pyke", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a9b49a215bf757b1931e8c5c7893d1731ed1a6f69d1d496597ebf801b5d7694",
+      "tips": [
+        {
+          "id": "support:Thresh:Rakan:0",
+          "text": "Aim Death Sentence at Rakan when he has no ally close by; his dashes need an ally, so he struggles to escape once hooked.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rakan", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Thresh:Rakan:1",
+          "text": "Death Sentence stops at the first unit it hits, so keep minions out of the line and wait for a clear shot at Rakan.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Rakan", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Thresh:Rakan:2",
+          "text": "Rakan's Grand Entrance lands after a short delay, so Flay him away or step out of the circle before it knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Rakan-W", "start": 8, "end": 22 },
+            { "kind": "ability", "key": "Thresh-E", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Thresh:Rakan:3",
+          "text": "Drop The Box on Rakan and his partner when they dive in together; the walls slow them and block their escape.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Rakan", "start": 16, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Thresh:Rakan:4",
+          "text": "Throw Dark Passage to your ally before Rakan's Gleaming Quill lands, so the shield soaks up some of the poke.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Rakan", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 47, "end": 61 },
+            { "kind": "keyword", "key": "poke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f3b006b11c85c689a3a4626e2a013cd93a1fe2057733909b57790accd5dfae2d",
+      "tips": [
+        {
+          "id": "support:Thresh:Rell:0",
+          "text": "Throw Death Sentence when Rell is mounted and walking up. Cast it from far away, since her stun makes a close fight risky for you.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Rell", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Thresh:Rell:1",
+          "text": "Rell's Shattering Strike destroys shields, so don't count on the Dark Passage shield when she is in range to stab you.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rell-Q", "start": 7, "end": 24 },
+            { "kind": "ability", "key": "Thresh-W", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Thresh:Rell:2",
+          "text": "Use Flay to push Rell away when she leaps in or tries to charge you; it also leaves her slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Rell", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Thresh:Rell:3",
+          "text": "Watch for Rell's Ferromancy: Crash Down; it knocks up and stuns, so stay out of its range or back off after she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Rell-W", "start": 17, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Thresh:Rell:4",
+          "text": "Use The Box when enemies dive in, so they are stuck inside. Rell's Magnet Storm pulls enemies in, so keep your team out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Rell", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Rell-R", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "162fd1dc13f9e06d527cf0f516fad6b269b7fb4b21eab7691071851e5d6d829c",
+      "tips": [
+        {
+          "id": "support:Thresh:Senna:0",
+          "text": "Aim Death Sentence at Senna when she steps up to hit minions or souls. Her long range makes her stay close to the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Thresh:Senna:1",
+          "text": "Watch for her Last Embrace. It lands after a short delay, so keep moving and you may escape the root.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Thresh:Senna:2",
+          "text": "Use Flay to knock Senna back toward your team when she pokes. It also slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Senna", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Thresh:Senna:3",
+          "text": "Throw Dark Passage to your carry to shield them from Senna's poke, and pull them out if she hits them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Thresh:Senna:4",
+          "text": "Use The Box to trap her at level 6 if she is close. Her Dawning Shadow beam can still hit from far away, so do not stand in a line with her.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Senna-R", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "19b10bbe24104336b9ed4d2ae74598e77ec652e705eff783e049f5c4130c8e97",
+      "tips": [
+        {
+          "id": "support:Thresh:Seraphine:0",
+          "text": "Look for Death Sentence when Seraphine steps up to trade. Her spells are slow to cast, and a stun means she takes your whole combo.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Seraphine", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Thresh:Seraphine:1",
+          "text": "Flay slows her. Follow with Death Sentence if you have a hit, or step out of her Beat Drop line.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 28, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Thresh:Seraphine:2",
+          "text": "Stay out of Beat Drop's line. If you are already slowed it roots you, so avoid being slowed in the first place.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Thresh:Seraphine:3",
+          "text": "Use The Box when you catch her and her team close together. Charm and slow punish anyone who walks into the walls.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Thresh:Seraphine:4",
+          "text": "Throw Dark Passage to shield yourself and your ally when you expect her to poke you.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8e2bb0a4d1299c16a45dfe85f3002ab95b010f0c908fd7a760785315c90fd1be",
+      "tips": [
+        {
+          "id": "support:Thresh:Shen:0",
+          "text": "Look for Shen's Shadow Dash before you commit; if it taunts you, you cannot get away, so keep distance from him in fights.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Thresh:Shen:1",
+          "text": "Aim Death Sentence at Shen when he has used Shadow Dash; his Energy is spent and he cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shen", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Shen-E", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Thresh:Shen:2",
+          "text": "Do not walk up to Shen for an attack while Spirit's Refuge is ready; it blocks basic attacks, so wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Shen-W", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Thresh:Shen:3",
+          "text": "Flay can push Shen away from your ally when he lands on them; follow with Death Sentence to keep him from his Spirit Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shen", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Thresh:Shen:4",
+          "text": "Watch for Stand United after level 6; Shen can arrive from anywhere to save an ally, so do not chase a low enemy too far.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Shen", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0630a854982c6e1df145bdf5517becfe03e06f9744b15dec567d63d22c38a20c",
+      "tips": [
+        {
+          "id": "support:Thresh:Sona:0",
+          "text": "Aim Death Sentence at Sona when she steps up to poke; she is fragile and a pull usually means a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sona", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Thresh:Sona:1",
+          "text": "Stay behind minions so Sona's Hymn of Valor hits them rather than you, and don't walk forward for free pokes.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Sona-Q", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Thresh:Sona:2",
+          "text": "Use Flay when Sona is close to push her away from her carry, or to slow her when she runs.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Sona", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Thresh:Sona:3",
+          "text": "Spread out from your carry so Crescendo can't stun you both; step out of its line when she aims it.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Thresh:Sona:4",
+          "text": "Hit Sona with Death Sentence, then use the recast to dash to her and follow up before her allies can help.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0c374b6fb070f77ae9f2c55069b40bcc70de398dc0416fa7d6bfc6cfca7fce3e",
+      "tips": [
+        {
+          "id": "support:Thresh:Soraka:0",
+          "text": "Hit Soraka with Death Sentence when she walks up to poke; she has no dash, so a hook usually gets you a kill chance.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Thresh:Soraka:1",
+          "text": "Step out of Equinox's field right away; it silences you, then roots you when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 43, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Thresh:Soraka:2",
+          "text": "Go all in when Equinox is on cooldown; Soraka has little to stop your engage then.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 15, "end": 22 },
+            { "kind": "champion", "key": "Soraka", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Thresh:Soraka:3",
+          "text": "Dodge Starcall with sideways steps, or use Dark Passage's shield to soak it. Its slow makes your hook harder to line up.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Thresh-W", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Thresh:Soraka:4",
+          "text": "Focus Soraka rather than your target's partner; she is easier to kill than the ally she heals.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4f0cc39890ef2043c9813cffa05489249c6f699e9634ac021f465e7475078297",
+      "tips": [
+        {
+          "id": "support:Thresh:Swain:0",
+          "text": "Dodge Nevermove by staying away from your own minions and allies when Swain is in range; being rooted there sets up a pull toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-E", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Swain", "start": 70, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Thresh:Swain:1",
+          "text": "Hook Swain with Death Sentence when he casts Nevermove or Death's Hand. His spells leave him exposed, and the stun pulls him to you.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Swain-E", "start": 45, "end": 54 },
+            { "kind": "ability", "key": "Swain-Q", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 114 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Thresh:Swain:2",
+          "text": "Keep moving when you see Vision of Empire's eye appear. It lands after a delay, so step out before it explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Thresh:Swain:3",
+          "text": "Use The Box when Swain commits with Demonic Ascension, and break a wall yourself to let an ally escape.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Swain", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Swain-R", "start": 36, "end": 53 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f7f99a94b3aa4b42f68059b76fb3506407951da3b70a1968504ea8f383232d0b",
+      "tips": [
+        {
+          "id": "support:Thresh:TahmKench:0",
+          "text": "Throw Death Sentence when Tahm Kench has just used Abyssal Dive. He cannot act for a moment after landing.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "TahmKench", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Thresh:TahmKench:1",
+          "text": "Do not trade into Tahm Kench for long; Thick Skin turns his damage taken into healing. Hit and back off.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Thresh:TahmKench:2",
+          "text": "Avoid taking Tongue Lash hits; at full stacks it stuns, and he can then swallow you with Devour.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 13, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Thresh:TahmKench:3",
+          "text": "Use Flay to push Tahm Kench away when he closes in, and The Box to trap him once he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "TahmKench", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Thresh-R", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5b971080020101c2a75ceacd3de3b703e8ae84747b1b558f12d34665a5d4b9e9",
+      "tips": [
+        {
+          "id": "support:Thresh:Taric:0",
+          "text": "Hit Death Sentence on Taric when he walks up to attack; it stuns him and pulls him in, which cancels his Bravado trades.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 22, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 105,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "support:Thresh:Taric:1",
+          "text": "Do not stand in a straight line with Taric when his Dazzle is ready; it winds up for a moment, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Taric-E", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Thresh:Taric:2",
+          "text": "Save Flay to push Taric away after he starts Dazzle, or to pull him toward your team.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Taric", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Taric-E", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Thresh:Taric:3",
+          "text": "When Taric starts Cosmic Radiance, kill a target or back off before it ends; do not waste The Box on invulnerable enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Taric-R", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Thresh-R", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c77f058b3f4c7b51d1a6d82e45389f68b0adfe99ee0f2d37065458cf0163bef7",
+      "tips": [
+        {
+          "id": "support:Thresh:Velkoz:0",
+          "text": "Hit Vel'Koz with Death Sentence when he steps forward to poke. He has little mobility and cannot easily escape the pull.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Thresh:Velkoz:1",
+          "text": "Interrupt Life Form Disintegration Ray with Death Sentence or Flay. It stops his channel.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 10, "end": 38 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 44, "end": 58 },
+            { "kind": "ability", "key": "Thresh-E", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Thresh:Velkoz:2",
+          "text": "Use Dark Passage to give your carry a shield before Vel'Koz pokes, or to pull an ally out of his Void Rift.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Velkoz", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 97, "end": 106 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Thresh:Velkoz:3",
+          "text": "Stay behind minions to block Plasma Fission. Its bolt hits the first enemy it meets.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "974f0a020db039b557391d375cd4b7780094415c5a65dffe5875615f1a7eeecd",
+      "tips": [
+        {
+          "id": "support:Thresh:Xerath:0",
+          "text": "Close the distance on Xerath. Once you're next to him, he has few ways to keep you off.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Thresh:Xerath:1",
+          "text": "Throw Death Sentence when Xerath is charging Arcanopulse. He moves slowly then and is easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Thresh:Xerath:2",
+          "text": "After a Death Sentence hit, recast it to dash onto Xerath. Then Flay him away from your ally or back toward them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Xerath", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Thresh-E", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Thresh:Xerath:3",
+          "text": "Stay out of a straight line with Xerath. Shocking Orb stuns the first enemy it hits, so keep a minion between you and him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 41, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Thresh:Xerath:4",
+          "text": "Use Dark Passage to pull a stunned or slowed ally out of danger, or to give yourself a shield before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Thresh:Xerath:5",
+          "text": "Use The Box on Xerath once you are on him. He can't move away, and the slow cuts off his dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Xerath", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3befdf5f0df64e6fdcf89223c72fe2df873aac8329d5fbff691cc12c83c0da96",
+      "tips": [
+        {
+          "id": "support:Thresh:Yuumi:0",
+          "text": "Yuumi can't be targeted while attached, so aim Death Sentence at her ally. Hook her when she is detached and wandering.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Thresh:Yuumi:1",
+          "text": "Hook Yuumi as she dashes with You and Me!. A stun while she dashes knocks her down and puts it on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Yuumi-W", "start": 30, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Thresh:Yuumi:2",
+          "text": "Use Flay on Yuumi when she is detached. Being knocked back leaves her stuck without an ally to attach to.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Yuumi", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Thresh:Yuumi:3",
+          "text": "Step out of the way of Prowling Projectile; it is a slow missile that hits the first enemy it meets. Keep minions between you and it.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 23, "end": 42 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Thresh:Yuumi:4",
+          "text": "Use The Box on the enemy pair when they are close. Yuumi's partner takes the full slow while she can't be hit.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Yuumi", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "de603d30f3b895b9cb1c3b13be945682385e89b77c61744ce80d5149fa0c6876",
+      "tips": [
+        {
+          "id": "support:Thresh:Zilean:0",
+          "text": "Aim Death Sentence at Zilean when he has no minion in front of him. He is fragile, and a pull into your team usually kills him.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zilean", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Thresh:Zilean:1",
+          "text": "Do not stand still with a Time Bomb on you. Walk away from your allies and minions so the blast hits only you.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Thresh:Zilean:2",
+          "text": "Zilean can double-bomb you for a stun. Stay out of the range of his Time Bomb, or Flay him away after the first one lands.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 68, "end": 77 },
+            { "kind": "ability", "key": "Thresh-E", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Thresh:Zilean:3",
+          "text": "If Zilean has Chronoshift ready, kill the other targets first. Hold your damage on the protected ally until the rune fades.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Zilean-R", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "40db7853752a6e9a15ad06a0c242f9e747e6d57e922bda08fadec41214d0adf1",
+      "tips": [
+        {
+          "id": "support:Thresh:Zyra:0",
+          "text": "Zyra is fragile. Hit her with Death Sentence when she steps up to plant seeds or cast.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Thresh:Zyra:1",
+          "text": "Stepping on a seed destroys it. Walk over seeds before Zyra can grow them into plants.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Thresh:Zyra:2",
+          "text": "Use Flay to push enemies away from you when Zyra's plants and allies collapse on you. It also slows them.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Zyra", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Thresh:Zyra:3",
+          "text": "Zyra's Grasping Roots has a long range and roots you. Keep Dark Passage ready so a teammate can dash out of trouble.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zyra-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Thresh-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Thresh:Zyra:4",
+          "text": "Fight away from Zyra's seeds. Moving the fight to a new area leaves her with fewer seeds.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

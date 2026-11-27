@@ -1,0 +1,4308 @@
+{
+  "schemaVersion": 1,
+  "champion": "Lux",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "3aeb95b722e58d15492130ba149c7e1293dbf0608c59770dd89a7cb82c29118b",
+      "tips": [
+        {
+          "id": "middle:Lux:general:0",
+          "text": "Aim Light Binding down the lane through the minion wave; it roots the first two enemies it hits, so line up a champion behind a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Lux:general:1",
+          "text": "Throw Lucent Singularity into a brush before you walk in; it shows the area and can reveal an ambush.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Lux:general:2",
+          "text": "Place Lucent Singularity where the enemy wants to step or flee, then recast it to detonate once they are inside.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Lux:general:3",
+          "text": "Follow a spell with a basic attack so Illumination goes off for extra damage before the mark fades.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-passive", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Lux:general:4",
+          "text": "Use Final Spark to finish a weakened enemy from far away; it also reveals everyone it hits and sets off Illumination.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Lux-passive",
+              "start": 104,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Lux:general:5",
+          "text": "Combine Lucent Singularity and Light Binding. Once the enemy is slowed by the zone, Light Binding is much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 8, "end": 26 },
+            { "kind": "ability", "key": "Lux-Q", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            { "kind": "ability", "key": "Lux-Q", "start": 84, "end": 97 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Lux:general:6",
+          "text": "Throw Prismatic Barrier so the wand passes through allies on its way out and back; each pass shields them, and you are shielded too.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Lux:general:7",
+          "text": "Stay behind your minions and away from enemy skillshots; Lux has long range but little protection once caught.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 57, "end": 60 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Lux:combo:0",
+          "name": "Singularity into Binding",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Lux-E" },
+            { "kind": "ability", "key": "Lux-Q" }
+          ],
+          "when": "Poking or setting up a kill on an enemy who is walking toward you in lane.",
+          "whenRefs": [],
+          "text": "Throw the singularity first so its slow makes the Binding easier to land. Then pop the singularity once the enemy is rooted for extra damage.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a8a0410ac3f3330adc6ba02db99c26b3dc0a215a6bea100b4b8570460eb55e13",
+      "tips": [
+        {
+          "id": "adc:Lux:general:0",
+          "text": "Aim Light Binding through minions at the enemy; it roots the first two enemies it hits, so line up a second target when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Lux:general:1",
+          "text": "Throw Prismatic Barrier so the wand passes through your support and ADC, then again on its return, to stack the shield on them.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Lux:general:2",
+          "text": "Place Lucent Singularity on the path an enemy must take to engage or escape; it slows them while they stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Lux:general:3",
+          "text": "Throw Lucent Singularity into a brush before you walk in; it shows the area and exposes ambushes.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Lux:general:4",
+          "text": "After a spell hits, follow with a basic attack to pop Illumination for bonus damage before the mark fades.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-passive", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Lux:general:5",
+          "text": "Final Spark reaches very far, so use it to finish fleeing enemies or hit a whole group lined up in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Lux:general:6",
+          "text": "Hold Light Binding for when the enemy commits to a move. Once they are rooted, follow up with Lucent Singularity so they cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Lux-E", "start": 94, "end": 112 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Lux:combo:0",
+          "name": "Singularity into Light Binding",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Lux-E" },
+            { "kind": "ability", "key": "Lux-Q" },
+            { "kind": "ability", "key": "Lux-E" }
+          ],
+          "when": "Poking or catching an enemy in lane when you want the Q to land more reliably.",
+          "whenRefs": [],
+          "text": "Throw the singularity first so its slow makes the root easier to hit. Then fire the binding and recast to pop the singularity while they are rooted.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "0f36ea3068da0ef036b044b99b10db5f508f3b799a583604a469ff40b10153c9",
+      "tips": [
+        {
+          "id": "support:Lux:general:0",
+          "text": "Aim Light Binding down the lane so it can root two enemies in a line. Minions don't stop it, so fire through the wave at the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:general:1",
+          "text": "Throw Prismatic Barrier so it passes through your carry on the way out and again on the way back. Hitting them twice stacks a bigger shield.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lux:general:2",
+          "text": "Throw Lucent Singularity into a brush before you walk in to scout for ambushes.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lux:general:3",
+          "text": "Place Lucent Singularity on the enemy's path to slow them as they advance or run. Recast it to detonate when they are standing inside.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:general:4",
+          "text": "After you hit an enemy with a spell, follow with a basic attack. Illumination adds extra magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-passive", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:general:5",
+          "text": "Use Final Spark from long range to finish low-health enemies or to join a fight from far away. Its beam also reveals the enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:general:6",
+          "text": "Follow a rooting Light Binding with Lucent Singularity and Final Spark. The enemy can't walk out of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Lux-E", "start": 36, "end": 54 },
+            { "kind": "ability", "key": "Lux-R", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Lux:combo:0",
+          "name": "Slow, root, then detonate",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Lux-E" },
+            { "kind": "ability", "key": "Lux-Q" },
+            { "kind": "ability", "key": "Lux-E" },
+            "attack"
+          ],
+          "when": "Trading or catching an enemy in lane when you want the root to land.",
+          "whenRefs": [],
+          "text": "Throw the singularity first so the slow makes the root easier to land. Recast it once the root hits, then use an attack to pop the passive.",
+          "textRefs": []
+        },
+        {
+          "id": "support:Lux:combo:1",
+          "name": "Wand return shield",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Lux-W" }],
+          "when": "When an ally is close to you and you want to shield them, or you keep missing the outgoing throw.",
+          "whenRefs": [],
+          "text": "Throw the wand past your ally, or away from them, so the return trip passes through them. Passing through twice stacks the shield, up to two times.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "2642d180a634d49792773ea47717cea1236fe685c6c2c4c0322d12b17657fb57",
+      "tips": [
+        {
+          "id": "middle:Lux:Ahri:0",
+          "text": "Stand behind minions when Ahri is in range. Charm stops at the first enemy it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ahri-E", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Lux:Ahri:1",
+          "text": "Throw Light Binding when Ahri walks up to farm. It roots her and sets up Lucent Singularity and your next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Lux-E", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Lux:Ahri:2",
+          "text": "Put Lucent Singularity where Ahri wants to stand. She stays slowed, so she can't poke freely or dash in easily.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Lux:Ahri:3",
+          "text": "When Ahri has used Spirit Rush, trade and push hard. She is much easier to catch with it down.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Lux:Ahri:4",
+          "text": "Final Spark can finish a low Ahri from very far away. Use it when she retreats with low health.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e3fe86055eaf3860574eb67bcf8b8a3bb69da076a80eab35cd4f9a8fc27c69e6",
+      "tips": [
+        {
+          "id": "middle:Lux:Akali:0",
+          "text": "Aim Light Binding at Akali when she steps up to trade. A root there lets you punish her before she can escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Lux:Akali:1",
+          "text": "Throw Lucent Singularity onto Akali's Twilight Shroud when she hides. The area spell hits her and shows where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Akali-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Lux:Akali:2",
+          "text": "Keep Prismatic Barrier ready for when Akali dives in. The shield cuts her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Akali", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Lux:Akali:3",
+          "text": "Stay at long range from Akali. Her Five Point Strike slows you only at its tip, so keep her at that edge.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Akali-Q", "start": 35, "end": 52 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Lux:Akali:4",
+          "text": "Trade when Akali is low on energy. She can't chain her abilities then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 11, "end": 16 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Lux:Akali:5",
+          "text": "At level 6, back off or keep your shield up when Akali has Perfect Execution. Low health is easy for her to finish.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Akali-R", "start": 59, "end": 76 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "37068198487aefb8b1d9e3b0dc301ed046ccb8cbbb4ff43bad09d7b40ceca577",
+      "tips": [
+        {
+          "id": "middle:Lux:Anivia:0",
+          "text": "Aim Light Binding at Anivia when she walks up to last-hit or cast; it roots her so you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Lux:Anivia:1",
+          "text": "Do not stand in a line with Flash Frost; sidestep it, because the detonation at the end stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 28, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Lux:Anivia:2",
+          "text": "Trade when Rebirth is down; Anivia is much easier to punish then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 11,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Anivia", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Lux:Anivia:3",
+          "text": "Keep Anivia's mana low by poking her with Lucent Singularity; her Glacial Storm is costly to keep up.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Lux-E", "start": 42, "end": 60 },
+            { "kind": "ability", "key": "Anivia-R", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps land Binding on Anivia, who has no listed way to avoid being rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 41, "end": 47 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d139e13f21ad085039a9e2f5448a12c2f172b9e2fcaa3bab3c3c531394000d45",
+      "tips": [
+        {
+          "id": "middle:Lux:Aurora:0",
+          "text": "Keep Light Binding for when Aurora hops in or out; it roots her in place so your Lucent Singularity and Final Spark can land.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Lux-E", "start": 81, "end": 99 },
+            { "kind": "ability", "key": "Lux-R", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Lux:Aurora:1",
+          "text": "Aurora can't be hit while she is invisible after Across the Veil, but she must still come out. Stay back and aim Lucent Singularity where she will appear.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 49, "end": 64 },
+            { "kind": "ability", "key": "Lux-E", "start": 113, "end": 131 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Lux:Aurora:2",
+          "text": "Light Binding is blocked by the first two enemies it hits, so keep minions out of the line or Aurora will dodge behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Aurora", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "middle:Lux:Aurora:3",
+          "text": "Stay out of The Weirding's line and range. Use Prismatic Barrier to soak her trades when she walks up.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Lux-W", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Lux:Aurora:4",
+          "text": "Don't fight inside the Between Worlds ring; she can hop across its edge, and you get slowed when you touch it. Wait for it to close.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Lux:Aurora:5",
+          "text": "Finish a low-health Aurora with Final Spark from far away. It has very long range and she may not see it coming.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Lux-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Light Binding hit Aurora, who has hops and slows to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Aurora", "start": 43, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3368092e39eaf4032ae45450119e693f289ebace5196a38308384ca44c5499a3",
+      "tips": [
+        {
+          "id": "middle:Lux:Cassiopeia:0",
+          "text": "Aim Light Binding at Cassiopeia when she walks up for a last hit. If she is rooted, follow with Lucent Singularity.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 21, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 82 },
+            { "kind": "ability", "key": "Lux-E", "start": 96, "end": 114 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Lux:Cassiopeia:1",
+          "text": "Keep minions out of the line of Light Binding, or it will hit them and not Cassiopeia.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Lux:Cassiopeia:2",
+          "text": "Stay out of Cassiopeia's range when she has you poisoned; Twin Fang hurts a lot against a poisoned target.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Lux:Cassiopeia:3",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze, so you are slowed and not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Lux:Cassiopeia:4",
+          "text": "Throw Lucent Singularity on Cassiopeia's Miasma clouds; she is slowed in them and can't dash out.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 28, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 41,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Lux:Cassiopeia:5",
+          "text": "Use Final Spark from far away to hit Cassiopeia while she is slowed or stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 37, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Cassiopeia, who is approaching to land her poison.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 41, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9135e4fbf70525171dd445cb6e0a714a2328746b72f78ce3cc5dd90f962387c",
+      "tips": [
+        {
+          "id": "middle:Lux:Fizz:0",
+          "text": "Hold Light Binding until Fizz commits to a dash; it roots him in place and gives you time to follow up with your other spells and attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Lux:Fizz:1",
+          "text": "Fizz becomes untargetable during Playful / Trickster, so wait for him to land before you throw Light Binding or Lucent Singularity.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Fizz-E", "start": 33, "end": 52 },
+            { "kind": "ability", "key": "Lux-Q", "start": 95, "end": 108 },
+            { "kind": "ability", "key": "Lux-E", "start": 112, "end": 130 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Lux:Fizz:2",
+          "text": "Put Lucent Singularity where Fizz would land, to slow him and cut down his chance of getting away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Lux:Fizz:3",
+          "text": "Keep Prismatic Barrier ready for when Fizz jumps on you; the shield absorbs part of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Fizz", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Lux:Fizz:4",
+          "text": "Final Spark has very long range, so use it to finish a Fizz who is low on health and trying to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Fizz", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Lux:Fizz:5",
+          "text": "Stay away from Fizz when Chum the Waters is ready. If the fish sticks to you, move away from your allies before the shark erupts.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Fizz-R", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Fizz's Playful makes him untargetable, so Light Binding can miss, but the slow helps when he dashes in.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lux-Q", "start": 42, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "19b35a1205fbea5a5f2f3e8ba0104c494dc522da1fbe37b95a5fe169f3e3ceed",
+      "tips": [
+        {
+          "id": "middle:Lux:Malzahar:0",
+          "text": "Wait until Void Shift is gone, then hit Malzahar with Light Binding. It cannot root him while the shift is up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Lux-Q", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Lux:Malzahar:1",
+          "text": "Stay out of Call of the Void's range. Being silenced leaves you unable to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Lux:Malzahar:2",
+          "text": "Stay away from minions carrying Malefic Visions; when they die it jumps to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Lux:Malzahar:3",
+          "text": "Use Final Spark from long range to hit Malzahar while his Void Shift is down. Its range is much longer than his.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 39, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 58,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Lux:Malzahar:4",
+          "text": "Do not let Malzahar get close at level 6. Nether Grasp holds you in place, so keep distance from him.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Lux:Malzahar:5",
+          "text": "Throw Lucent Singularity at the spot where Malzahar will stand to cast his spells. It slows him and zones him off.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Malzahar", "start": 43, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d51e9d9ea03635191a1c3f85cb861adf856ba3c91db413daf61f7ce6bb962e5",
+      "tips": [
+        {
+          "id": "middle:Lux:Orianna:0",
+          "text": "Hit Orianna with Light Binding when she steps up to farm. It roots her so your next ability lands.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lux-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Lux:Orianna:1",
+          "text": "Orianna's Ball only affects the area around it. Find where it sits and stay away from it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Lux:Orianna:2",
+          "text": "Place Lucent Singularity where Orianna wants to go. Detonate it when she is inside, so she is slowed and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Orianna", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Lux:Orianna:3",
+          "text": "Stay away from Orianna's Ball when her ultimate is ready. Command: Shockwave pulls you in and stuns you, so keep distance from it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Orianna-R", "start": 58, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Lux:Orianna:4",
+          "text": "Orianna's Command: Attack passes through minions and still hits you. Stand out of its line while you farm.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Lux:Orianna:5",
+          "text": "Use Final Spark from long range to punish Orianna when she is hurt or caught out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow makes Light Binding easier to land on Orianna, who has no listed way to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Orianna", "start": 57, "end": 64 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9fe1f9552b7f3cf24aefeb671c3888ad696af0c6c1b282092c7918db657d62d0",
+      "tips": [
+        {
+          "id": "middle:Lux:Ryze:0",
+          "text": "Keep your distance from Ryze. He needs to be close to cast Rune Prison and Spell Flux, so poke him as he walks up.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 59, "end": 70 },
+            { "kind": "ability", "key": "Ryze-E", "start": 75, "end": 85 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Lux:Ryze:1",
+          "text": "Hit Ryze with Light Binding when he walks in to trade. It has long range and keeps him in your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lux-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Lux:Ryze:2",
+          "text": "Place Lucent Singularity on the spot Ryze steps toward, so he is slowed and cannot close in easily.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Ryze", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Lux:Ryze:3",
+          "text": "Ryze hits harder when you are marked with Flux, so fight back before he builds it up with Spell Flux.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-E", "start": 90, "end": 100 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Lux:Ryze:4",
+          "text": "If Ryze starts Realm Warp, stun or root him with Light Binding to cancel the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ryze-R", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "Lux-Q", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "311146af77240b53e8e81938b55bd46418a5dca1ed0e57d4d545949dc76675c7",
+      "tips": [
+        {
+          "id": "middle:Lux:Sylas:0",
+          "text": "Aim Light Binding at Sylas when he is about to dash in; the root holds him in place so you can follow with Lucent Singularity.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Lux-E", "start": 107, "end": 125 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Lux:Sylas:1",
+          "text": "Sylas has to get close to hurt you, so poke him from long range with Lucent Singularity and keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Lux-E", "start": 69, "end": 87 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Lux:Sylas:2",
+          "text": "Keep minions between you and Sylas. Light Binding roots only the first two enemies it hits, so line up shots with a clear path.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Lux-Q", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Lux:Sylas:3",
+          "text": "Sylas can steal Final Spark with Hijack. Stay out of his line when he has it, and don't expect a free ultimate.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Lux-R", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Sylas-R", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Lux:Sylas:4",
+          "text": "Use Prismatic Barrier on yourself before Sylas trades. It gives a shield when thrown and again when it returns.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Lux:Sylas:5",
+          "text": "Finish a low-health Sylas with Final Spark, since Kingslayer heals him more the lower he gets.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Lux-R", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Sylas-W", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Sylas, whose Abscond dash and Abduct can dodge or close in.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7bbcdc391e0ae2c1d61df7e76147ce74707b59bbe55c13a77d0ea31dc43b1dc4",
+      "tips": [
+        {
+          "id": "middle:Lux:TwistedFate:0",
+          "text": "Open with Light Binding when Twisted Fate walks up to last-hit. Once he is rooted, your follow-up spells land easily.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 10, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 29,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Lux:TwistedFate:1",
+          "text": "Stay away from Twisted Fate while his Gold Card is up. It stuns you, and then Wild Cards hits you for free.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 78,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Lux:TwistedFate:2",
+          "text": "Place Lucent Singularity where Twisted Fate wants to stand. He gets slowed and cannot easily walk up to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 31,
+              "end": 43
+            },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Lux:TwistedFate:3",
+          "text": "When Destiny is used, expect a gank or roam and ping your team. Back off if you are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Lux:TwistedFate:4",
+          "text": "Use Final Spark on Twisted Fate when he is slowed or rooted. It is a long, narrow beam and he can dodge it if he is free to move.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 19,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Slowing with the singularity first helps land Binding on Twisted Fate as he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 57, "end": 69 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7c2057fa485c1fd87f1a857e5517cb8a49d1a21f8964a5c012d4a236411046f9",
+      "tips": [
+        {
+          "id": "middle:Lux:Viktor:0",
+          "text": "Hold Light Binding for when Viktor steps up to use Siphon Power or Hextech Ray; a rooted Viktor eats your whole combo.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 51, "end": 63 },
+            { "kind": "ability", "key": "Viktor-E", "start": 67, "end": 78 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 },
+            { "kind": "champion", "key": "Viktor", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Lux:Viktor:1",
+          "text": "Stay out of Gravity Field. Walk out of it quickly or you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Lux:Viktor:2",
+          "text": "Cast Lucent Singularity on Viktor's position to slow him and punish his steps forward. Recast it once he is inside.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Lux:Viktor:3",
+          "text": "Throw Prismatic Barrier before Viktor trades; the shield absorbs part of his Hextech Ray and Siphon Power damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Viktor-E", "start": 77, "end": 88 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Lux:Viktor:4",
+          "text": "Use Final Spark to finish him from far away when he is low; its range is long.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Lux:Viktor:5",
+          "text": "Do not fight inside Arcane Storm; it follows you and keeps hurting you. Walk out and make him recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "addfa74273819d3c5f29140edfca65e122a145929131247a7c78d158e9a62faf",
+      "tips": [
+        {
+          "id": "middle:Lux:Yasuo:0",
+          "text": "Aim Light Binding at Yasuo from a distance. Wind Wall will block it if he raises it in time, so throw it when the wall is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Lux:Yasuo:1",
+          "text": "Final Spark is not blocked by Wind Wall, so use it to finish Yasuo when he thinks he is safe behind his wall.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 30, "end": 39 },
+            { "kind": "champion", "key": "Yasuo", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Lux:Yasuo:2",
+          "text": "Put Lucent Singularity where Yasuo wants to dash or stand. He is slowed and takes damage when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Lux:Yasuo:3",
+          "text": "Stay back and poke him with your abilities. Yasuo has to dash across the lane to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Lux:Yasuo:4",
+          "text": "Do not throw Prismatic Barrier at Yasuo; it is a shield for allies. Use it on yourself when he walks up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 13, "end": 30 },
+            { "kind": "champion", "key": "Yasuo", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Lux:Yasuo:5",
+          "text": "Stay away from your own allies being knocked up near Yasuo; Last Breath lets him teleport onto them.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3349ca4be6f41209e0930060b5f6e40a39d4fac0edd235904cbff0fb7244e511",
+      "tips": [
+        {
+          "id": "middle:Lux:Yone:0",
+          "text": "Land Light Binding on Yone from long range, then follow with Lucent Singularity while he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Lux-E", "start": 61, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Lux:Yone:1",
+          "text": "Aim Light Binding at the minions in front of Yone as well. It stops at the first two enemies, so a minion can soak it up before it reaches him.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Lux:Yone:2",
+          "text": "Throw Lucent Singularity at his feet when he walks up to trade. The slow makes it hard for him to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Lux:Yone:3",
+          "text": "Keep Prismatic Barrier ready for when he walks up with Mortal Steel and Spirit Cleave. Cast it so the shield lands on you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Yone-Q", "start": 55, "end": 67 },
+            { "kind": "ability", "key": "Yone-W", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Lux:Yone:4",
+          "text": "Hold Light Binding for when Yone dashes with Soul Unbound or Fate Sealed. Rooting him after he commits makes him easy to punish.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Yone-E", "start": 45, "end": 57 },
+            { "kind": "ability", "key": "Yone-R", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Lux:Yone:5",
+          "text": "Use Final Spark to finish Yone from far away. Its range is huge, so he can't easily dodge it when he is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1abadf60afcc4621c5f5d7531e6d9fe7620f1ab07b87d8a1102652e0c6d1df55",
+      "tips": [
+        {
+          "id": "middle:Lux:Zed:0",
+          "text": "Keep Lucent Singularity ready for when Zed dashes in; it slows him and its detonation hurts, so he cannot easily chase or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zed", "start": 39, "end": 42 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Lux:Zed:1",
+          "text": "Throw Light Binding when Zed places a Living Shadow or lines up on you. Rooted, he cannot move.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Zed-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Lux:Zed:2",
+          "text": "Cast Prismatic Barrier on yourself before Zed's Death Mark lands. The shield soaks damage from his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 42, "end": 45 },
+            { "kind": "ability", "key": "Zed-R", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Lux:Zed:3",
+          "text": "Zed becomes untargetable during Death Mark's dash, so do not waste Light Binding on that moment. Wait until he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 32, "end": 42 },
+            { "kind": "ability", "key": "Lux-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Lux:Zed:4",
+          "text": "Zed's shadows slash from a distance, so stay out of the area around his shadows, not just around Zed.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "champion", "key": "Zed", "start": 97, "end": 100 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Lux:Zed:5",
+          "text": "Poke Zed from long range with Lucent Singularity and Light Binding when he has no energy or his shadow is on cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-E", "start": 30, "end": 48 },
+            { "kind": "ability", "key": "Lux-Q", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": [
+        {
+          "comboId": "middle:Lux:combo:0",
+          "note": "Singularity's slow helps Binding land on Zed, whose shadow dashes can otherwise dodge it.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 41, "end": 44 }]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "97f0472632bb16f0e093bd9b424681a57e03cc46b0edced2c45a52b42aab2308",
+      "tips": [
+        {
+          "id": "adc:Lux:Ashe:0",
+          "text": "Aim Light Binding at Ashe whenever she walks up to attack; being rooted leaves her an easy target for your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ashe", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Lux:Ashe:1",
+          "text": "Ashe has few defensive options, so stay near your jungler and look for ganks on her.",
+          "refs": [{ "kind": "champion", "key": "Ashe", "start": 0, "end": 4 }],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Lux:Ashe:2",
+          "text": "Keep minions between you and Ashe so her Volley arrows are absorbed before they reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ashe-W", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Lux:Ashe:3",
+          "text": "Stay out of sight of anything alone on the map when her Enchanted Crystal Arrow is ready; it can stun you from across the map.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 56, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Lux:Ashe:4",
+          "text": "Place Lucent Singularity where Ashe will stand to slow her, then detonate it for poke.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Ashe", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "Slow from Lucent Singularity helps Light Binding hit Ashe, who has no listed dash or escape to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 10, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 35, "end": 48 },
+            { "kind": "champion", "key": "Ashe", "start": 53, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fc6ee84cb2e1c03188bbb1d6e45e89a97400a5c33c840a91a81427dde7f0e7a7",
+      "tips": [
+        {
+          "id": "adc:Lux:Caitlyn:0",
+          "text": "Aim Light Binding so it catches Caitlyn when she lines up behind minions. It roots the first two enemies, so a minion in front can use up a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Caitlyn", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Lux:Caitlyn:1",
+          "text": "Caitlyn outranges you, so keep minions between you. Piltover Peacemaker deals less damage to every enemy after the first.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 52, "end": 71 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Lux:Caitlyn:2",
+          "text": "Watch the ground for Yordle Snap Trap before you walk forward. Throw Lucent Singularity ahead of you to see what is there.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 21, "end": 37 },
+            { "kind": "ability", "key": "Lux-E", "start": 69, "end": 87 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Lux:Caitlyn:3",
+          "text": "Use Lucent Singularity to slow Caitlyn when she walks up for a last hit, then follow with Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Caitlyn", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Lux-Q", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Lux:Caitlyn:4",
+          "text": "Put Prismatic Barrier on yourself and your support before a trade, as it shields on the way out and back.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Lux:Caitlyn:5",
+          "text": "Use Final Spark to finish a hurt Caitlyn from far away, because her net pushes her only a short way.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Caitlyn", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "70dcddd0d3cef5c7649157011caa7297d2d3e62388733c3870a555935e830bd9",
+      "tips": [
+        {
+          "id": "adc:Lux:Ezreal:0",
+          "text": "Aim Light Binding through minions at Ezreal. It roots the first two enemies hit, so line up a clear shot.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ezreal", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Lux:Ezreal:1",
+          "text": "Ezreal is fragile, so punish him when Arcane Shift is on cooldown. He has no easy escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Lux:Ezreal:2",
+          "text": "Throw Lucent Singularity where Ezreal will walk to last-hit. It slows him and makes his Mystic Shot pokes harder to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Ezreal", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Lux:Ezreal:3",
+          "text": "Use Prismatic Barrier to shield yourself against Ezreal's pokes before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Lux:Ezreal:4",
+          "text": "Keep minions between you and Ezreal, since Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Lux:Ezreal:5",
+          "text": "Use Final Spark at long range to finish a hurt Ezreal, since it reaches far across the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "Singularity's slow makes Light Binding easier to land on Ezreal, who relies on skillshots.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 25, "end": 38 },
+            { "kind": "champion", "key": "Ezreal", "start": 57, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "760d6d77e14bf139272a948ad67ea1f720e3f0c99901b93343a14ac1b7ccce15",
+      "tips": [
+        {
+          "id": "adc:Lux:Jhin:0",
+          "text": "Land Light Binding on Jhin when he walks up to last-hit; it can hit him and a minion behind him, and it leaves him rooted for a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Lux:Jhin:1",
+          "text": "Throw Lucent Singularity at Jhin's feet to slow him. It also lets you see the area, so use it to check bushes before you walk in.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Jhin", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Lux:Jhin:2",
+          "text": "Jhin's reload leaves him unable to attack. Step up and poke him with your spells during it.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "poke", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Lux:Jhin:3",
+          "text": "Move sideways when Jhin aims Deadly Flourish. He has a long range, and it roots you only if you were recently hurt by him or his ally.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Jhin-W", "start": 29, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Lux:Jhin:4",
+          "text": "Use Prismatic Barrier to shield yourself and your support before a trade. Jhin's Deadly Flourish can't safely finish you off in that window.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Jhin", "start": 74, "end": 78 },
+            { "kind": "ability", "key": "Jhin-W", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Lux:Jhin:5",
+          "text": "Watch for Jhin's invisible Captive Audience traps. Do not chase him through bushes where he may have placed one.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-E", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Lux:Jhin:6",
+          "text": "Final Spark has huge range, so use it to finish a weakened Jhin who retreats. Jhin has no spell shield to stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Jhin", "start": 59, "end": 63 },
+            { "kind": "champion", "key": "Jhin", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "The slow from Lucent Singularity helps Light Binding land on Jhin, who has no listed escape or dash.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 14, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 39, "end": 52 },
+            { "kind": "champion", "key": "Jhin", "start": 61, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "961148b37953795848fab8b299f94284d7e5417baccaf564be133868392ba98e",
+      "tips": [
+        {
+          "id": "adc:Lux:Jinx:0",
+          "text": "Land Light Binding on Jinx, then follow with a Lucent Singularity and a basic attack to trade hard while she is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Lux-E", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Lux:Jinx:1",
+          "text": "Jinx has few ways to escape once she is caught. Aim Light Binding at her when her Flame Chompers are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lux-Q", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Lux:Jinx:2",
+          "text": "Throw Lucent Singularity at her feet when she walks up to last-hit; the slow makes it hard for her to step back out.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Lux:Jinx:3",
+          "text": "Stay out of the line of Zap! and keep minions between you and her, since Light Binding stops after the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Lux:Jinx:4",
+          "text": "Use Prismatic Barrier on yourself and your support before she pokes with rockets.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Lux:Jinx:5",
+          "text": "Final Spark can finish a Jinx who has lost health in a trade, from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4991149dcd63c63f29c9bc95e6980bf97834cdf4986549cf5e597a19a03ab3ca",
+      "tips": [
+        {
+          "id": "adc:Lux:Kaisa:0",
+          "text": "Hit Kai'Sa with Light Binding when she steps up to trade; she is rooted and can't dodge your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lux-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Lux:Kaisa:1",
+          "text": "Use Lucent Singularity to slow Kai'Sa when she walks in, then recast it to detonate once she is inside.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Kaisa", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Lux:Kaisa:2",
+          "text": "Poke Kai'Sa from long range. She is weak when outranged, so don't walk into her range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Lux:Kaisa:3",
+          "text": "Watch for Kai'Sa's Killer Instinct after she gets Plasma on you; it shields her as she jumps in. Keep Light Binding ready to answer it.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Lux-Q", "start": 102, "end": 115 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Lux:Kaisa:4",
+          "text": "Stay near your support and don't wander alone. Kai'Sa is good at picking off isolated targets.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Kaisa", "start": 47, "end": 53 },
+            { "kind": "keyword", "key": "isolated", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f34e0595dd1c1a46f29e18afad867c64e6da6b1f4c4218ae8b5bec5108850d89",
+      "tips": [
+        {
+          "id": "adc:Lux:MissFortune:0",
+          "text": "Aim Light Binding at Miss Fortune when she walks up to last-hit. It roots her so you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 21,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Lux:MissFortune:1",
+          "text": "Put Lucent Singularity where Miss Fortune stands to farm. It slows her and cuts off her approach.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 29,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Lux:MissFortune:2",
+          "text": "Hit Miss Fortune to cancel her Strut speed boost. She loses it whenever she takes damage.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 31,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Lux:MissFortune:3",
+          "text": "Stay out of Double Up range, and do not stand behind your minions. The shot bounces to you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 12,
+              "end": 21
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Lux:MissFortune:4",
+          "text": "Do not stand still in front of Bullet Time when Miss Fortune has it. Keep your distance, because it hurts a lot if you stay in the cone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 31,
+              "end": 42
+            },
+            { "kind": "champion", "key": "MissFortune", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Lux:MissFortune:5",
+          "text": "Throw Prismatic Barrier to shield yourself before a trade, and shield your support too when they are in line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e1e37e67cdbbca07f84ecf07c5fcbc2445f318872492803ba792d95d0aab6dee",
+      "tips": [
+        {
+          "id": "adc:Lux:Sivir:0",
+          "text": "Hold Light Binding until Spell Shield is used or on cooldown. Then Sivir is easy to root and her trade falls apart.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Sivir-E", "start": 25, "end": 37 },
+            { "kind": "champion", "key": "Sivir", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Lux:Sivir:1",
+          "text": "Fake an advance, then back off. Sivir often wastes Spell Shield when you do.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Sivir-E", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Lux:Sivir:2",
+          "text": "Throw Lucent Singularity at her when she steps up to hit the wave. It slows her so she cannot dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Lux:Sivir:3",
+          "text": "Step out of the way of Boomerang Blade. If it hits you on the way out, stay clear of it on its way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Lux:Sivir:4",
+          "text": "Sivir pushes the wave quickly with Ricochet. Clear it with your own spells so your tower is not under pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sivir-W", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Lux:Sivir:5",
+          "text": "Use Final Spark to finish Sivir after a root. It cannot be blocked by Spell Shield if she is already rooted and using it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sivir", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sivir-E", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09c2e682a18316b9083f5be491a76351a30044c86c19ebd1c0e34110c14475bd",
+      "tips": [
+        {
+          "id": "adc:Lux:Smolder:0",
+          "text": "Hit Smolder with Light Binding early, then follow with your attack. He is weak in the early game and cannot easily get away while rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Lux-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 130, "end": 136 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Lux:Smolder:1",
+          "text": "Put Lucent Singularity where Smolder wants to stand to last-hit. It slows him and lets you poke him safely.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Smolder", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "poke", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Lux:Smolder:2",
+          "text": "Punish Smolder while his stacks are low and he is weak. Get kills or force him back before he turns into a late-game dragon.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 7, "end": 14 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Lux:Smolder:3",
+          "text": "Use Final Spark to finish Smolder when he is low and tries to flee. Its range is very long.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": [
+        {
+          "comboId": "adc:Lux:combo:0",
+          "note": "The singularity's slow helps land the root on Smolder, who has no listed escape besides a short flight.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 46, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8605326cf63130b412d665b827281f8a1e124431923d3ff24279b0cbbd23359c",
+      "tips": [
+        {
+          "id": "adc:Lux:Yunara:0",
+          "text": "Hit Yunara with Light Binding when she steps up to attack; she is rooted and cannot dodge your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Lux-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Lux:Yunara:1",
+          "text": "Aim Light Binding at the minion line in front of her too; it hits the first two enemies, so a minion in the way can soak it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Lux:Yunara:2",
+          "text": "Drop Lucent Singularity where Yunara wants to stand to farm; it slows her and blocks her approach.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Yunara", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "adc:Lux:Yunara:3",
+          "text": "Do not rely on a slow to catch Yunara once she powers up with her ultimate; she can dash away. Save Final Spark for after the dash.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Lux-R", "start": 100, "end": 111 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Lux:Yunara:4",
+          "text": "Use Prismatic Barrier on yourself before she throws her prayer bead, so its damage over time hurts less.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "abe698a749dce2e4fd320c902d0c0e99369769a453b85b0a9a1a133c97d278b1",
+      "tips": [
+        {
+          "id": "support:Lux:Alistar:0",
+          "text": "Keep Light Binding for when Alistar walks up to Headbutt. Rooting him there stops him from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Alistar", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Alistar-W", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Lux:Alistar:1",
+          "text": "Stay far from Alistar, because Headbutt has a long range and he follows it with Pulverize. Lucent Singularity keeps him slowed while you step back.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Alistar-W", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 80, "end": 89 },
+            { "kind": "ability", "key": "Lux-E", "start": 91, "end": 109 },
+            { "kind": "keyword", "key": "slowed", "start": 120, "end": 126 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Lux:Alistar:2",
+          "text": "Do not fight Alistar while Unbreakable Will is active. Wait for it to wear off, then use Final Spark.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Alistar-R", "start": 27, "end": 43 },
+            { "kind": "ability", "key": "Lux-R", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Lux:Alistar:3",
+          "text": "Move away from Alistar when Trample is running, because a full set of stacks makes his next attack stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Alistar-E", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lucent Singularity's slow helps Light Binding root Alistar, who is slow to close the gap himself.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Alistar", "start": 51, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "e243195da9afe483559eb36251038a4691383231a64e662961effe40141425f1",
+      "tips": [
+        {
+          "id": "support:Lux:Anivia:0",
+          "text": "Land Light Binding on Anivia, then follow with Lucent Singularity and an attack. She is easy to kill when she is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Lux-E", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Lux:Anivia:1",
+          "text": "Dodge Flash Frost by moving sideways, and stay out of its range when you can. Its blast stuns if you stay in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Lux:Anivia:2",
+          "text": "Do not stay in Glacial Storm. It slows you and hurts more once it has fully formed, so step out.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Anivia:3",
+          "text": "Keep Prismatic Barrier ready for when Frostbite follows a Flash Frost hit. The shield soaks up that burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "ability", "key": "Anivia-E", "start": 38, "end": 47 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:Anivia:4",
+          "text": "Once her egg appears, try to finish it. A Final Spark can help kill it before she is reborn.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lucent Singularity's slow helps Light Binding root Anivia, who is slowed and stays in place.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Anivia", "start": 51, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "27f7c4c263e2101cf97147c043a7b81666df2e6c612e80c015b7d56fdef9a780",
+      "tips": [
+        {
+          "id": "support:Lux:Bard:0",
+          "text": "Aim Light Binding down the line of the lane so it roots both Bard and his carry; one root is enough to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 },
+            { "kind": "champion", "key": "Bard", "start": 61, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Bard:1",
+          "text": "Stay out of a straight line with Bard. Cosmic Binding stuns if it hits a second enemy or a wall, so stand away from walls and minions' lines.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Bard-Q", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Lux:Bard:2",
+          "text": "Drop Lucent Singularity on his shrines or portal exit to slow him and keep him from chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Lux:Bard:3",
+          "text": "Throw Prismatic Barrier through your ally before Bard's stun comes, so the shield absorbs part of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Bard", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Lux:Bard:4",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it, so his ally can't take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Lux:Bard:5",
+          "text": "Final Spark reaches very far, so use it to finish a Bard who is low and retreating.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Bard", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "97ffd577bb29f2bad24ee54bd4964d70318ff5917108c8efa6329d8cbb9fa9c1",
+      "tips": [
+        {
+          "id": "support:Lux:Blitzcrank:0",
+          "text": "Keep minions between you and Blitzcrank. Rocket Grab only pulls the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 29, "end": 39 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Lux:Blitzcrank:1",
+          "text": "Use Light Binding on Blitzcrank as he walks up, since he has to come close. It roots him and stops his grab.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 21, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Lux:Blitzcrank:2",
+          "text": "Place Lucent Singularity in front of him to slow his approach, and detonate it when he runs into it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lux:Blitzcrank:3",
+          "text": "Stay at long range and poke with Lucent Singularity. Blitzcrank's grab has a shorter reach than your range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Lux-E", "start": 33, "end": 51 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Lux:Blitzcrank:4",
+          "text": "Watch for Blitzcrank to wind up Static Field in a fight; it destroys your Prismatic Barrier shield, so don't count on it.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 10, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 32,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Lux-W", "start": 74, "end": 91 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "df2b969dfe0c6d5ab6ef8dd98e333ba40ea0e30212168d75a34bb0c3ae26d383",
+      "tips": [
+        {
+          "id": "support:Lux:Brand:0",
+          "text": "Dodge Brand's first spell, Sear or Pillar of Flame. Without it his combo cannot begin and he cannot stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Brand-W", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Lux:Brand:1",
+          "text": "Light Binding roots Brand and any minion in its path. Fire it when he steps up to cast, and follow with Lucent Singularity.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "rooted", "start": 14, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Lux-E", "start": 104, "end": 122 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Lux:Brand:2",
+          "text": "Do not stand near minions or your ally. Conflagration spreads from them to you and sets you ablaze.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "ablaze", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Lux:Brand:3",
+          "text": "Step away from your ally when Pyroclasm is cast. Its first missile is slow, so you can react.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Brand:4",
+          "text": "Final Spark has very long range. Use it to finish Brand from far away once your attacks and spells have marked him.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Brand", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3bf18a65104fbb25c28b440c325d06531ed7130c96312685621753dd56eef45e",
+      "tips": [
+        {
+          "id": "support:Lux:Braum:0",
+          "text": "Aim Light Binding past Braum's raised shield, or wait until Unbreakable is down; the shield destroys the ball when it faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Braum-E", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Lux:Braum:1",
+          "text": "Light Binding hits the first two enemies, so line it up through Braum and his carry. Braum soaking one still lets it reach the second.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Braum", "start": 64, "end": 69 },
+            { "kind": "champion", "key": "Braum", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lux:Braum:2",
+          "text": "Stay out of Winter's Bite range, because it slows you and starts the stack on you for Braum's stun.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "champion", "key": "Braum", "start": 86, "end": 91 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Lux:Braum:3",
+          "text": "Use Lucent Singularity to slow Braum and his carry when they step up, then hit the detonation for damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Braum", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Braum:4",
+          "text": "Take a step to the side when Braum starts Glacial Fissure. The long cast time gives you room to dodge, and the frozen ground slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Braum-R", "start": 42, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 125, "end": 130 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "111da336b09273275380a9d25e82846b4a35b34041553f4cda2f2a436abeae79",
+      "tips": [
+        {
+          "id": "support:Lux:Camille:0",
+          "text": "Aim Light Binding at Camille when she dives in with Hookshot; a rooted Camille is easy to burst and cannot jump again.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Camille", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Camille-E", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 },
+            { "kind": "champion", "key": "Camille", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Lux:Camille:1",
+          "text": "Place Lucent Singularity where Camille wants to stand or trade; the slow makes it hard for her to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Camille", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lux:Camille:2",
+          "text": "Stay away from walls. Camille needs terrain to hook onto, so stand where she has none close by.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Lux:Camille:3",
+          "text": "Move to the side when you see Camille's Tactical Sweep start; it takes a moment to land and the outer edge slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Camille-W", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Lux:Camille:4",
+          "text": "Keep Prismatic Barrier ready for when Camille jumps on your carry; it shields you both against her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Camille", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Lux:Camille:5",
+          "text": "Use Final Spark to finish Camille after she is stuck in place, or to hit her from far away while she retreats.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Camille", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "60c66fbce878bfcb5eff787ed50c01b1bec4a9908f6844569d5c81dabc051f23",
+      "tips": [
+        {
+          "id": "support:Lux:Janna:0",
+          "text": "Aim Light Binding at Janna when she walks up for a Zephyr; she has no dash to dodge it, so it often roots her.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Janna", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Janna-W", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Lux:Janna:1",
+          "text": "Do not stand close to Janna when her Monsoon is ready; it knocks you back and ruins your combo.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Janna-R", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lux:Janna:2",
+          "text": "Stay away from where Janna can charge Howling Gale, and move sideways to dodge its knock up.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Janna-Q", "start": 38, "end": 50 },
+            { "kind": "keyword", "key": "knocked-up", "start": 83, "end": 91 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Janna:3",
+          "text": "Harass Janna's ADC to weaken her; her Eye of the Storm shield soaks Lucent Singularity, so hit them before it is up.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Janna-E", "start": 38, "end": 54 },
+            { "kind": "ability", "key": "Lux-E", "start": 68, "end": 86 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b398a7d8a61b1a32c1873d965e25f753d49c53e4b4d036c625a25e311dedd6c4",
+      "tips": [
+        {
+          "id": "support:Lux:Karma:0",
+          "text": "Aim Light Binding when Karma walks up to poke. If a minion stands in front, it takes the hit first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lux:Karma:1",
+          "text": "Stay out of Focused Resolve range, or break the tether by moving far away. If it holds, you get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lux:Karma:2",
+          "text": "Move away from the burning circle Karma leaves when Mantra boosts Inner Flame. It slows you and then deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Karma-R", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Karma-Q", "start": 66, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Lux:Karma:3",
+          "text": "Karma's hits shorten Mantra's wait, so avoid easy trades. Use Lucent Singularity to push her back from your side of the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-R", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Lux-E", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "887e9debb05c15ac184905d86852aa814541b5127bb0b7cd22663f8abd14869d",
+      "tips": [
+        {
+          "id": "support:Lux:Leona:0",
+          "text": "Light Binding Leona as she walks up; the root gives you time to back away. Aim it so a minion does not absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Leona", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Lux:Leona:1",
+          "text": "Keep Light Binding ready for her engage. If you land it, you can usually trade before she stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Lux:Leona:2",
+          "text": "Put Lucent Singularity where Leona will come from; the slow makes her dash in less safely.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Leona", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Leona:3",
+          "text": "Stay far back from Leona; Zenith Blade has long range. Stand behind minions so it is harder for her to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Leona-E", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Lux:Leona:4",
+          "text": "When Leona raises Eclipse, back away and do not trade into her; her resistances are high while it lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Leona:5",
+          "text": "Step out of the center of Solar Flare to avoid the stun; it is only a slow at the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0db31bb697d4eaba79de422abc9a4ba50439250b6cfeafc332eadcf8f10a448f",
+      "tips": [
+        {
+          "id": "support:Lux:Lulu:0",
+          "text": "Stay out of Glitterlance range and poke with Lucent Singularity first; it is long range and slows Lulu if she steps in.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Lux-E", "start": 45, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 },
+            { "kind": "champion", "key": "Lulu", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Lux:Lulu:1",
+          "text": "Aim Light Binding at Lulu when she walks up to cast; it roots the first two enemies it hits, so a squishy partner behind her gets caught too.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Lux:Lulu:2",
+          "text": "Do not let Whimsy catch you; Lulu can turn you into a critter and you cannot fight back. Keep minions or distance between you.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Lux:Lulu:3",
+          "text": "Use Prismatic Barrier on your carry before Lulu's poke lands; the shield also covers you on the way out and back.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Lulu", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lux:Lulu:4",
+          "text": "Fire Final Spark when Lulu's team commits with Wild Growth; the beam is long range and hits everyone in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Lulu-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f92b4a0d9777d2bcd2f17ab672ca4a663a63f1edf28b5316c3f179d5684b080c",
+      "tips": [
+        {
+          "id": "support:Lux:Maokai:0",
+          "text": "Keep Light Binding for when Maokai commits with Twisted Advance, or when he walks up to an ally. He is a big, easy target.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Maokai", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Maokai-W", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Maokai:1",
+          "text": "Don't spend spells on Maokai without a reason. Each spell that hits him shortens the cooldown on Sap Magic, his self-heal.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 97,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Lux:Maokai:2",
+          "text": "Don't cast at Maokai during Twisted Advance. He can't be targeted while he dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Maokai-W", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:Maokai:3",
+          "text": "Stay out of brush Maokai could be watching, and don't walk near a Sapling. It chases you and slows you, and in brush it hurts more.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:Maokai:4",
+          "text": "Keep your distance from Maokai. If he gets close, Bramble Smash knocks you back and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Maokai-Q", "start": 50, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Lux:Maokai:5",
+          "text": "Use Final Spark to hit Maokai and his ally together from far away. It passes through everyone in its line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Maokai", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "69e7b91f8909384c25e4d1c0fb7f02f7bb4a3096c01793de02bf6009feb0afd7",
+      "tips": [
+        {
+          "id": "support:Lux:Mel:0",
+          "text": "Hold Light Binding until Mel has used Rebuttal; her nova destroys the ball, so throw it right after it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Mel", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Mel-W", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Lux:Mel:1",
+          "text": "Lucent Singularity is also blocked by Rebuttal, so bait the nova first. Then slow her where she wants to step.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Mel-W", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Lux:Mel:2",
+          "text": "Final Spark is not blocked by projectile-destroying effects, so Mel's Rebuttal cannot stop it. Use it to finish a low-health enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Mel", "start": 64, "end": 67 },
+            { "kind": "ability", "key": "Mel-W", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lux:Mel:3",
+          "text": "Stay out of Solar Snare's long range. Its root lasts longer the farther it flies, so keep minions or the wall between you and Mel.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Mel", "start": 126, "end": 129 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Lux:Mel:4",
+          "text": "Do not trade when Mel's basic attack is loaded with bolts from her spells. Wait for her to spend them, then poke back.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 18, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Lux:Mel:5",
+          "text": "Shield yourself with Prismatic Barrier before you walk into her range, to blunt her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 21, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:1",
+          "note": "Lux's wand return shield can help absorb Mel's poke when an ally is close.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "champion", "key": "Mel", "start": 41, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "8891c17d765ddfdaca8668f65353b9247de089fc62d84a5079ab9fc586fb1114",
+      "tips": [
+        {
+          "id": "support:Lux:Milio:0",
+          "text": "Aim Light Binding at Milio when he steps up to cast; it roots the first two enemies, so he and his carry can both get caught.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lux:Milio:1",
+          "text": "Hold Final Spark until he has used Breath of Life or you can kill him. Its long range lets you finish from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Milio-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Lux:Milio:2",
+          "text": "Throw Lucent Singularity where Milio and his carry will stand. It slows them and cuts off their approach.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Milio", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Milio:3",
+          "text": "Stay out of a straight line with Milio. Ultra Mega Fire Kick is a line shot, and if it hits you it knocks you back and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 40, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 124 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d8b1add43d223d7e2be00d5a4a393ec954c1023f475e55369d0f4d9df7364f73",
+      "tips": [
+        {
+          "id": "support:Lux:Morgana:0",
+          "text": "Keep a minion between you and Morgana so Dark Binding hits it first; it stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Morgana:1",
+          "text": "Use Light Binding on Morgana when her Black Shield is down; the shield would otherwise block the root.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Morgana", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Morgana-E", "start": 38, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:Morgana:2",
+          "text": "Break Black Shield with Lucent Singularity's burst damage before you try to lock Morgana down, since it absorbs magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Lux-E", "start": 24, "end": 42 },
+            { "kind": "champion", "key": "Morgana", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Lux:Morgana:3",
+          "text": "Leave the Tormented Shadow area quickly when you are low on health; it hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Morgana:4",
+          "text": "Stay out of reach when Morgana starts Soul Shackles; get away from the chains before they finish and you avoid the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Morgana-R", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "16ead29341f101f767f5a0ce3ca49486c1d73a952ec3e4334b81ba622df9d092",
+      "tips": [
+        {
+          "id": "support:Lux:Nami:0",
+          "text": "Aim Light Binding at the enemy lane when they step up to hit minions. It roots up to two enemies, so it can catch Nami and her partner together.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Nami", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Nami:1",
+          "text": "Stay out of Aqua Prison range and keep minions or your partner between you and Nami. If she misses it, step in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Lux:Nami:2",
+          "text": "Drop Lucent Singularity where Nami will stand to cast, then recast it to detonate. The slow makes her bubble and escapes harder.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Lux:Nami:3",
+          "text": "Throw Prismatic Barrier through your partner on the way out and let it return to you. Shield yourself before Nami's bubble lands to soften the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Lux:Nami:4",
+          "text": "Walk away from a fight when the enemy carry has Tidecaller's Blessing. It runs out quickly, so wait before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 48, "end": 69 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Lux:Nami:5",
+          "text": "Final Spark has very long range and her Tidal Wave is slow. Use it to finish a hurt Nami or enemy who is running away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Nami-R", "start": 40, "end": 50 },
+            { "kind": "champion", "key": "Nami", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd135ba6429eb9e440bca277d73e080a984eee57d7a3f8397a522f297f35ad69",
+      "tips": [
+        {
+          "id": "support:Lux:Nautilus:0",
+          "text": "Stay behind your minions and your ADC. Nautilus needs a clear line for Dredge Line, and his anchor stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Lux:Nautilus:1",
+          "text": "Hit Nautilus with Light Binding when he walks up to the wave. He cannot move or attack while his anchor is in flight, so punish him if he misses.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lux:Nautilus:2",
+          "text": "Use Lucent Singularity to slow Nautilus when he closes in, and set it in the brush first to check for him.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Nautilus", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Nautilus:3",
+          "text": "Throw Prismatic Barrier through your ADC when you expect a Nautilus engage. The shield also protects you on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Nautilus:4",
+          "text": "Do not stand next to him for a basic attack. Staggering Blow roots you, and then his allies can follow up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 45,
+              "end": 60
+            },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Lux:Nautilus:5",
+          "text": "Use Final Spark to finish Nautilus when he is low after a failed engage. It reaches very far, so you can fire from safety.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nautilus", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow-then-root setup helps Light Binding land and catch Nautilus, who wants to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Nautilus", "start": 60, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "7d3af36db0535f561dc9ea2f46ff7546633aa218e3e6b00f58e6fd91a8194a18",
+      "tips": [
+        {
+          "id": "support:Lux:Neeko:0",
+          "text": "Aim Light Binding at Neeko when she walks up to a minion; it roots the first two enemies hit, so keep it clear of other targets.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Neeko", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Neeko:1",
+          "text": "Keep Lucent Singularity ready to slow Neeko when she dives in, and throw it into brush to check for ambushes.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Neeko", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Lux:Neeko:2",
+          "text": "Stay out of Tangle-Barbs range and don't stand behind minions, because the tangle grows stronger after it hits one enemy and roots you for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 125, "end": 130 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Neeko:3",
+          "text": "Cast Prismatic Barrier on yourself and your ally before Neeko's level 6 stun-and-knock-up combo, since the shield absorbs part of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Neeko", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Lux:Neeko:4",
+          "text": "Be wary of allies that look odd or stand still, since Neeko can hide with Inherent Glamour. Throw Lucent Singularity to reveal the area first.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 54, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 74,
+              "end": 90
+            },
+            { "kind": "ability", "key": "Lux-E", "start": 98, "end": 116 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b862a53c4ceb3f6c34392c37da5a645e9dfaad5421543f84211474bd3c8d3eb5",
+      "tips": [
+        {
+          "id": "support:Lux:Pantheon:0",
+          "text": "Aim Light Binding at Pantheon before he gets close. Rooting him stops his jump-in, and it is your best answer to his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Lux:Pantheon:1",
+          "text": "Do not fire at Pantheon while he is bracing with Aegis Assault, since he blocks damage from the front. Wait for it to end or hit him from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Pantheon:2",
+          "text": "Keep your health up, because Pantheon's hurled Comet Spear hits much harder against low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Pantheon:3",
+          "text": "Put Lucent Singularity where Pantheon will jump or walk in. The slow makes him easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lux:Pantheon:4",
+          "text": "Watch for Pantheon's Mortal Will counter, because his next spell is stronger once it is full. Stay back until it is spent.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 10, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Pantheon-passive",
+              "start": 21,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Lux:Pantheon:5",
+          "text": "Pantheon's Grand Starfall gives a warning before he lands. Use it to move away, then punish him with Final Spark.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 11, "end": 25 },
+            { "kind": "ability", "key": "Lux-R", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f468d769688cc52b605e2be108b9dd69f7c9f0c8cb48409910d48bfbafed5014",
+      "tips": [
+        {
+          "id": "support:Lux:Poppy:0",
+          "text": "Aim Light Binding at Poppy as she walks up; being rooted keeps her from reaching you. Then follow up with Lucent Singularity.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Poppy", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Lux-E", "start": 106, "end": 124 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Lux:Poppy:1",
+          "text": "Stay away from walls behind you, because Heroic Charge into terrain stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Poppy:2",
+          "text": "Don't dash near Poppy while Steadfast Presence is up; it stops the dash and hurts you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Poppy-W", "start": 28, "end": 46 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lux:Poppy:3",
+          "text": "Step onto Poppy's dropped buckler to destroy it and deny her the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Poppy:4",
+          "text": "When Poppy starts spinning her hammer for Keeper's Verdict, move sideways out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Lux:Poppy:5",
+          "text": "Use Prismatic Barrier on your lane partner before trades to blunt Poppy's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Poppy", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Slowing with Lucent Singularity first makes Light Binding easier to land on Poppy before the detonation.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Lux-Q", "start": 44, "end": 57 },
+            { "kind": "champion", "key": "Poppy", "start": 76, "end": 81 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "1d512206916a11fdbcba81d0404bd68c9637fbff7e32f95b724ac61108b41661",
+      "tips": [
+        {
+          "id": "support:Lux:Pyke:0",
+          "text": "Hit Pyke with Light Binding when he charges Bone Skewer; he stands still-ish and is rooted long enough for your team to punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Lux-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Lux:Pyke:1",
+          "text": "Place Lucent Singularity in bushes and on your lane before you step up; it reveals the area and slows Pyke if he tries to hide or dive in.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 },
+            { "kind": "champion", "key": "Pyke", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:Pyke:2",
+          "text": "Keep your distance from Pyke. Stay behind your minions so Phantom Undertow and Bone Skewer have trouble reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Pyke-E", "start": 58, "end": 74 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Lux:Pyke:3",
+          "text": "Hold Prismatic Barrier for when Pyke starts to engage; the shield blunts his burst and you can pass it over your carry too.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Pyke", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Pyke:4",
+          "text": "Use Final Spark to finish a Pyke who is low and escaping; it has very long range and he cannot regain health while you see him.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pyke", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Lux:Pyke:5",
+          "text": "Pyke regains health when hidden, so Final Spark reveals him and Lucent Singularity keeps vision, so use them to stop his Ghostwater Dive heal.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lux-R", "start": 36, "end": 47 },
+            { "kind": "ability", "key": "Lux-E", "start": 64, "end": 82 },
+            { "kind": "ability", "key": "Pyke-W", "start": 121, "end": 136 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Slowing with Lucent Singularity before Light Binding helps root Pyke before he can hook or dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 13, "end": 31 },
+            { "kind": "ability", "key": "Lux-Q", "start": 39, "end": 52 },
+            { "kind": "champion", "key": "Pyke", "start": 64, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "a47251031409fe57338b5da3e4d73261519fd17e35a95b094d24f01c1eaaa2e7",
+      "tips": [
+        {
+          "id": "support:Lux:Rakan:0",
+          "text": "Throw Light Binding at Rakan when he lands from Grand Entrance; he is easy to hit while he waits for the knock up. Rooted, he cannot dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Rakan", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Rakan-W", "start": 48, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Lux:Rakan:1",
+          "text": "Aim Light Binding at Rakan when he is alone, since his dashes need an ally to reach. It can hit two enemies, so line up both lane opponents.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rakan", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Lux:Rakan:2",
+          "text": "Put Lucent Singularity on the spot where Rakan wants to land. It slows him and lets you detonate when he is stuck in it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Rakan", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Lux:Rakan:3",
+          "text": "Use Prismatic Barrier on your ally before Rakan's Gleaming Quill trades. Shield your carry as the wand passes through and returns.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Rakan", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Rakan:4",
+          "text": "Respect The Quickness at level 6; it charms anyone he touches. Stay back from him, and keep Light Binding ready to stop his run.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Lux-Q", "start": 92, "end": 105 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "be18977a067af566d5cdbc262e1fcec3cb393ddcdda9032ebbc4f1359010283d",
+      "tips": [
+        {
+          "id": "support:Lux:Rell:0",
+          "text": "Keep your distance from Rell. Light Binding has long range, so root her from afar before she can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 30, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lux:Rell:1",
+          "text": "Shattering Strike destroys shields, so Prismatic Barrier will not save you from her stun. Stay out of her lance range instead.",
+          "refs": [
+            { "kind": "ability", "key": "Rell-Q", "start": 0, "end": 17 },
+            { "kind": "ability", "key": "Lux-W", "start": 39, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Lux:Rell:2",
+          "text": "Put Lucent Singularity on the spot where Rell wants to land. Slowed, she has a harder time closing the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Rell", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Lux:Rell:3",
+          "text": "Do not stand clumped with your carry when Rell is near. Ferromancy: Crash Down knocks up everyone it lands on.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Rell-W", "start": 56, "end": 78 },
+            { "kind": "keyword", "key": "knocked-up", "start": 79, "end": 88 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Rell:4",
+          "text": "Hold Light Binding for when Rell leaps in or mounts up to charge. Rooting her mid-engage stops her from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Rell", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cad52b9de8f056585eb76b7bfa5ab5b787a7330a8530d0f021a11086783eb704",
+      "tips": [
+        {
+          "id": "support:Lux:Senna:0",
+          "text": "Throw Lucent Singularity onto Senna when she walks up to attack; she gets slowed, so she cannot easily step out of your Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Senna", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 },
+            { "kind": "ability", "key": "Lux-Q", "start": 120, "end": 133 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Lux:Senna:1",
+          "text": "Stay out of Senna's long attack range. She outranges you more as she collects souls, so do not stand in front of her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Lux:Senna:2",
+          "text": "Aim Light Binding along the lane so it roots both Senna and her carry; it passes through the first enemy to hit a second.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Senna", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Lux:Senna:3",
+          "text": "Use Final Spark to finish Senna when she is low; its range is long and it hits everything in a line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:Senna:4",
+          "text": "Use Prismatic Barrier on yourself and your carry before Senna's Last Embrace lands, since her root sets up follow-up damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Senna", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Senna-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "17912a30908afa83a85ff765780125cb3187e514a83357a96017d2f8c25f8b39",
+      "tips": [
+        {
+          "id": "support:Lux:Seraphine:0",
+          "text": "Throw Lucent Singularity at Seraphine when she steps up to poke; she is slowed and has to back off or take the burst when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Lux:Seraphine:1",
+          "text": "Hit Seraphine with Light Binding when she uses an ability and is caught still. Rooted, she cannot walk out of your follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Lux-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Lux:Seraphine:2",
+          "text": "Stay out of a straight line with Seraphine, because Beat Drop is a straight line. Standing behind a minion does not stop it.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 52, "end": 61 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Lux:Seraphine:3",
+          "text": "Do not walk into Lucent Singularity's slow before her Beat Drop is ready. A slowed Lux gets rooted by it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 17, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 54, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "champion", "key": "Lux", "start": 83, "end": 86 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Lux:Seraphine:4",
+          "text": "Use Prismatic Barrier on yourself and your ally before a trade. It blunts Seraphine's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Seraphine", "start": 74, "end": 83 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lux:Seraphine:5",
+          "text": "Once Seraphine is low, finish her with Final Spark from far away. It has very long range.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Lux-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Seraphine has no listed escape or dodge, so the slow-then-root setup is hard for her to avoid.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "75e7fbc81cc5c548c02401b73602b71815493bac491d29724c7ffc4a7ee00b2d",
+      "tips": [
+        {
+          "id": "support:Lux:Shen:0",
+          "text": "Aim Light Binding at Shen when he dashes at you; he is easy to hit in a straight line and rooted he cannot keep chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shen", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Lux:Shen:1",
+          "text": "Stay back from Shen's dash range. If he misses Shadow Dash, punish him with Lucent Singularity and your poke.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Shen-E", "start": 47, "end": 58 },
+            { "kind": "ability", "key": "Lux-E", "start": 76, "end": 94 },
+            { "kind": "keyword", "key": "poke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Lux:Shen:2",
+          "text": "Do not rely on basic attacks to finish a trade when Spirit's Refuge is down; it blocks them. Wait for it to end first.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Lux:Shen:3",
+          "text": "Watch for Shen's ultimate after level 6; shield your low-health ally with Prismatic Barrier before he lands beside them.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Lux-W", "start": 74, "end": 91 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7a743ae9d9929bba7d22caab19abcfff6cfbcb9e452684d6a1a6ce67f02347b2",
+      "tips": [
+        {
+          "id": "support:Lux:Sona:0",
+          "text": "Aim Light Binding at Sona when she walks up to use her abilities. If she is rooted, your team can burst her down.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lux:Sona:1",
+          "text": "Kill Sona first when you can. She heals and shields her team and has little to protect herself with.",
+          "refs": [{ "kind": "champion", "key": "Sona", "start": 5, "end": 9 }],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Lux:Sona:2",
+          "text": "Place Lucent Singularity where Sona stands to poke, and detonate it when she walks into it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Sona", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Lux:Sona:3",
+          "text": "Move out of range before Sona's empowered attack lands. It can slow you or reduce your damage, depending on her last ability.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Lux:Sona:4",
+          "text": "Stay out of Crescendo's line, and do not group up with your ADC. One stun can lose you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Lux:Sona:5",
+          "text": "Throw Prismatic Barrier to shield yourself and your ally just before Sona's poke lands, and again on its return.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 6, "end": 23 },
+            { "kind": "champion", "key": "Sona", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "061b48a5f04208c703931135b29448d184a7c1ba5cad3a9858f283793e4ce394",
+      "tips": [
+        {
+          "id": "support:Lux:Soraka:0",
+          "text": "Dodge Soraka's Starcall; hits heal her and slow you. Stand a little back so it is harder to land.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Lux:Soraka:1",
+          "text": "Aim Light Binding at Soraka when she walks up to heal; she has no dash, so being rooted leaves her open.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Soraka", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Lux:Soraka:2",
+          "text": "Stay out of Equinox. Its silence stops your spells, and the root comes when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Lux:Soraka:3",
+          "text": "Trade right after Soraka uses Equinox; it has a long cooldown, so you can poke her more safely.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Soraka-E", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow-then-root setup helps catch Soraka in lane, so she can't easily dodge or escape the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 37, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "dad588f70dbcbde3bcbc14e8b9f0484884326868c0658abe06ce81f84838ce77",
+      "tips": [
+        {
+          "id": "support:Lux:Swain:0",
+          "text": "Hit Swain with Light Binding when he walks up to poke or last-hit. Then follow with your basic attack for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Lux-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Lux:Swain:1",
+          "text": "Stay away from the range of Nevermove. It roots you and lets Swain pull you in, so keep minions between you.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-E", "start": 28, "end": 37 },
+            { "kind": "champion", "key": "Swain", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Lux:Swain:2",
+          "text": "Move around when you see Vision of Empire appear. It explodes after a short delay, so step out of the circle.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Swain:3",
+          "text": "Throw Lucent Singularity at Swain's path to slow him and keep him away from your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Swain", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:Swain:4",
+          "text": "Do not stand near Swain once he uses Demonic Ascension. Back away; he is easy to escape, and you can slow him down.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Swain-R", "start": 37, "end": 54 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Lux:Swain:5",
+          "text": "Use Prismatic Barrier on yourself and your ally before a trade with Swain's Death's Hand.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Swain", "start": 68, "end": 73 },
+            { "kind": "ability", "key": "Swain-Q", "start": 76, "end": 88 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "Lux's slow-then-root lands the root to catch Swain, who has no listed dash to escape the lane trade.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "champion", "key": "Swain", "start": 45, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "f221713a74ec579f3d0570d5a795671518aac439cd3f0779d309b26f4b24a665",
+      "tips": [
+        {
+          "id": "support:Lux:TahmKench:0",
+          "text": "Aim Light Binding at Tahm Kench when he walks up for Tongue Lash; if it lands, he is rooted and you can back off or trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "TahmKench", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Lux:TahmKench:1",
+          "text": "Stay out of Tongue Lash range, and watch his stacks. At three stacks his next Tongue Lash stuns, so give up the trade before then.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 78, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Lux:TahmKench:2",
+          "text": "Use Prismatic Barrier on your carry and yourself before he can hit you, since his damage comes in short bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Lux:TahmKench:3",
+          "text": "Hit Tahm Kench with spells to chip his health. Lucent Singularity slows him, which makes it hard for him to reach you or to run away.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Lux-E", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Lux:TahmKench:4",
+          "text": "When Tahm Kench starts channeling Abyssal Dive, step away from the landing spot, because it knocks up everyone nearby.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 101 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Lux:TahmKench:5",
+          "text": "Keep damaging him with Final Spark if he stays on the same line. It also reveals him, so use it after he has used his shield or Thick Skin.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 23, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-E",
+              "start": 128,
+              "end": 138
+            }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3567fc0cf6eaed477782b9e10fb2b5b58aba5b37c1616aeca6ec6ce64c3517c6",
+      "tips": [
+        {
+          "id": "support:Lux:Taric:0",
+          "text": "Poke Taric with Lucent Singularity when he walks up to the wave. Making him approach gives him no free Bravado attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Lux-E", "start": 16, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 103,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Lux:Taric:1",
+          "text": "Stay out of Dazzle's line and keep moving once you see Taric wind up. It bursts late, so you can step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Lux:Taric:2",
+          "text": "Land Light Binding on Taric when he walks up. He is rooted and you can safely follow with your attack to set off Illumination.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 58 },
+            {
+              "kind": "ability",
+              "key": "Lux-passive",
+              "start": 113,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Taric:3",
+          "text": "Hold Final Spark if Taric is about to use Cosmic Radiance. Enemies cannot be hurt during the invulnerable window, so wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Taric", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Taric-R", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7626ab812e4b46f83cb0baabc9dd7c0a1fc6a64017f253feb4650b9deb6ef2f",
+      "tips": [
+        {
+          "id": "support:Lux:Thresh:0",
+          "text": "Stay behind your minions and keep your distance; if Thresh lands Death Sentence you are stunned and dragged to him.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Lux:Thresh:1",
+          "text": "Watch for Thresh starting to throw his scythe; the cast takes a moment, so step sideways as soon as you see it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 10, "end": 16 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Lux:Thresh:2",
+          "text": "Use Light Binding on Thresh or his partner when they step forward. It has long range and roots them.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Thresh:3",
+          "text": "Throw Lucent Singularity where Thresh will walk, to slow him and make his hook harder to line up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Thresh", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Lux:Thresh:4",
+          "text": "Use Prismatic Barrier on your carry and yourself before Thresh trades, so his poke and Flay hit shields first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Thresh", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Thresh-E", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Lux:Thresh:5",
+          "text": "Do not stand next to Thresh when he has Flay ready; it can pull or push you into his team's range.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Thresh-E", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Lux:Thresh:6",
+          "text": "Aim Final Spark at anyone trapped inside The Box; they cannot easily leave. Its long range lets you fire from safety.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Thresh-R", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cb5df8ba6fce9e25364d61d27c5eb4d11a0a41c1fe5fd20bc9826709b865744c",
+      "tips": [
+        {
+          "id": "support:Lux:Velkoz:0",
+          "text": "Aim Light Binding at Vel'Koz when he steps up to poke; he has little mobility, so a rooted Vel'Koz is easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Velkoz", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 },
+            { "kind": "champion", "key": "Velkoz", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Lux:Velkoz:1",
+          "text": "Hold Final Spark for when Vel'Koz channels his ray; the beam is long enough to hit him from far away while he stands still.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Velkoz", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Lux:Velkoz:2",
+          "text": "Throw Lucent Singularity where Vel'Koz stands to poke him and slow him. Setting it down also gives sight of the area, so you can check the brush.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Velkoz", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Lux:Velkoz:3",
+          "text": "Step out of the line of Plasma Fission. It splits after it hits something, so stay clear of the sides too, and don't stand behind your minions.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Lux:Velkoz:4",
+          "text": "Use Prismatic Barrier on yourself and your ally before trades to soak his Void Rift and Plasma Fission damage.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 74, "end": 83 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 88, "end": 102 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The singularity slow helps land Light Binding on Vel'Koz, who is slow to dodge and has no escape listed.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 32, "end": 45 },
+            { "kind": "champion", "key": "Velkoz", "start": 49, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "0936e6cfa2e69e067d8fc72d0a99249da52b460723d9be95a0a3bfa8d67c87ce",
+      "tips": [
+        {
+          "id": "support:Lux:Xerath:0",
+          "text": "Stay out of Shocking Orb's line. Keep a minion between you and Xerath, because the orb stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Xerath", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "support:Lux:Xerath:1",
+          "text": "Throw Light Binding when Xerath stands still charging Arcanopulse; he is slowed and easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Xerath", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Lux:Xerath:2",
+          "text": "Once Light Binding roots Xerath, follow with Lucent Singularity and an attack to pop Illumination.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "rooted", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Xerath", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Lux-E", "start": 45, "end": 63 },
+            { "kind": "ability", "key": "Lux-passive", "start": 85, "end": 97 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Lux:Xerath:3",
+          "text": "Walk out of the circle when Eye of Destruction lands; the center slows far more than the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 28, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Xerath:4",
+          "text": "Use Final Spark to finish Xerath from long range when he is low, or to punish him mid Rite of the Arcane.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Xerath-R", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2119224c821b26e8a660faeda618e7c9db887c739423ba9804fd54653b8e4364",
+      "tips": [
+        {
+          "id": "support:Lux:Yuumi:0",
+          "text": "Yuumi is untargetable while attached, so aim Light Binding and Lucent Singularity at her ally; she can only be hit while she is detached.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Lux-Q", "start": 45, "end": 58 },
+            { "kind": "ability", "key": "Lux-E", "start": 63, "end": 81 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Lux:Yuumi:1",
+          "text": "Light Binding stops at the first two enemies, so line it up to root both the enemy carry and Yuumi when she has detached.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 },
+            { "kind": "champion", "key": "Yuumi", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Lux:Yuumi:2",
+          "text": "Go after Yuumi right after she detaches or gets stunned or rooted, because she cannot re-attach while immobilized.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Lux:Yuumi:3",
+          "text": "Use Final Spark on the pair in a fight; it goes a long way and hits everyone in the line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Lux:Yuumi:4",
+          "text": "Dodge Prowling Projectile by stepping sideways; it is thin and slow at first, and it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Yuumi-Q", "start": 6, "end": 25 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0916e7e8437af0bc7f1ba2dc4d75482941372979afb53bf8aec5e72ae46a4a71",
+      "tips": [
+        {
+          "id": "support:Lux:Zilean:0",
+          "text": "Zilean is hard to kill but fragile if you focus him. Root him with Light Binding when he walks up for a bomb, then burst him with your ally.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Lux-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Zilean:1",
+          "text": "Move after you cast when Time Bomb sticks to you. If a second bomb lands, the first one goes off and you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 25, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lux:Zilean:2",
+          "text": "Put Lucent Singularity where Zilean wants to stand or flee. He is slowed inside it, so it is hard for him to get away from your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Zilean", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Lux:Zilean:3",
+          "text": "Wait for Chronoshift to run out before you finish off a target. Final Spark kills nothing while they are in Stasis.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-R", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Lux-R", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Lux:Zilean:4",
+          "text": "Use Prismatic Barrier on yourself and your ally when Zilean starts trading, so his bombs hurt less.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Zilean", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b546cc0ad475e8a621115f0f6b033327f85da0ce2ea3a26bed74b4f9004c508a",
+      "tips": [
+        {
+          "id": "support:Lux:Zyra:0",
+          "text": "Stay out of Grasping Roots range. Zyra's vines are a straight line, so keep your distance and step sideways when she aims at you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Zyra", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Lux:Zyra:1",
+          "text": "Aim Light Binding at Zyra when she steps up to plant seeds. It roots the first two enemies hit, so it can catch both Zyra and her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Zyra", "start": 117, "end": 121 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Lux:Zyra:2",
+          "text": "Throw Lucent Singularity onto her seeds and plants. It slows anyone near them and gives you sight of the area.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Lux:Zyra:3",
+          "text": "Zyra's plants have a short range. Poke her from outside it, then use Prismatic Barrier on you and your partner to absorb her return poke.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Lux-W", "start": 69, "end": 86 },
+            { "kind": "keyword", "key": "poke", "start": 132, "end": 136 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Lux:Zyra:4",
+          "text": "Final Spark reaches very far. Use it to finish Zyra after she is rooted or slowed, or when she is caught on low health.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Zyra", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": [
+        {
+          "comboId": "support:Lux:combo:0",
+          "note": "The slow and root let Lux catch Zyra, who has no listed dash, and her plants can't dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "champion", "key": "Zyra", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    }
+  ]
+}

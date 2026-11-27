@@ -1,0 +1,4218 @@
+{
+  "schemaVersion": 1,
+  "champion": "Aatrox",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "5081491a73cf0b360b7cfc7ef040115087079c0fac366a45188c3a91fee32539",
+      "tips": [
+        {
+          "id": "top:Aatrox:general:0",
+          "text": "Aim the far edge of The Darkin Blade at the enemy. Edge hits knock them up and deal extra damage, so place it where they are walking.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Aatrox:general:1",
+          "text": "Press Umbral Dash in the middle of The Darkin Blade to shift your aim. You can use it while the swing is winding up, so it won't cancel the swing.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:general:2",
+          "text": "Throw Infernal Chains at an enemy who is about to step into your swing. They are slowed, which makes The Darkin Blade easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 101, "end": 117 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:general:3",
+          "text": "Infernal Chains pulls enemies back if they stay in the zone. Hit one and cast The Darkin Blade where the pull will drop them.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 78, "end": 94 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Aatrox:general:4",
+          "text": "Use all three casts of The Darkin Blade in a trade. Each cast hits harder than the one before.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Aatrox:general:5",
+          "text": "Land your attacks and abilities on enemy champions to bring Deathbringer Stance back sooner. Its empowered attack heals you and deals extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 60,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aatrox:general:6",
+          "text": "Use Umbral Dash to step out of enemy skillshots. Its healing also works whenever you deal damage to champions.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Aatrox:general:7",
+          "text": "Save World Ender for a fight you can win. A takedown extends it, so chase the next kill.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Aatrox:combo:0",
+          "name": "E into Q cancel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Aatrox-Q" },
+            { "kind": "ability", "key": "Aatrox-E" }
+          ],
+          "when": "When you want the Darkin Blade to land on an enemy who might step out of the line.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 14, "end": 30 }
+          ],
+          "text": "Umbral Dash can be cast while Darkin Blade winds up without cancelling it. Dash to shift where the blade lands and make it harder to dodge.",
+          "textRefs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 0, "end": 11 }
+          ]
+        },
+        {
+          "id": "top:Aatrox:combo:1",
+          "name": "Chain into Blade",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Aatrox-W" },
+            { "kind": "ability", "key": "Aatrox-Q" },
+            { "kind": "ability", "key": "Aatrox-E" }
+          ],
+          "when": "When the enemy is in lane and you want to land the knock-up.",
+          "whenRefs": [],
+          "text": "Hit Infernal Chains first, because the slow makes the Darkin Blade easier to hit. Then dash during the wind-up to line up the sweetspot.",
+          "textRefs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 50, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d15e86d5f6c9b9a6b4f629637d42d2d87137056c95e252e806fbf53d34a9e4a2",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:general:0",
+          "text": "Aim The Darkin Blade so the enemy is hit on the edge of the blade; that knocks them up and deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Aatrox:general:1",
+          "text": "Press Umbral Dash while winding up The Darkin Blade to shift your aim and land the edge hit.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Aatrox:general:2",
+          "text": "Use Infernal Chains on an enemy champion to leave them slowed, then follow with The Darkin Blade while they try to walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Aatrox:general:3",
+          "text": "Land your abilities and attacks on champions or large monsters to bring Deathbringer Stance back sooner. Then use its empowered attack to heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 72,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Aatrox:general:4",
+          "text": "Cast World Ender only when you are sure you can win the fight. Each champion takedown extends it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Aatrox:general:5",
+          "text": "Use Umbral Dash to heal when you hit champions, and to cross thin walls.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Aatrox:combo:0",
+          "name": "E-cancel Q aiming",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Aatrox-Q" },
+            { "kind": "ability", "key": "Aatrox-E" }
+          ],
+          "when": "When you want to land the Darkin Blade sweetspot on an enemy who is moving or standing just out of range.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 22, "end": 38 }
+          ],
+          "text": "Dash during the Q wind-up. The dash doesn't cancel the cast, and the blade comes out from where you end up, which helps the sweetspot connect.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Aatrox:combo:1",
+          "name": "Chains into Q",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Aatrox-W" },
+            { "kind": "ability", "key": "Aatrox-Q" }
+          ],
+          "when": "When you want to set up a sweetspot on a champion or large jungle monster.",
+          "whenRefs": [],
+          "text": "Hit the chain first, then cast Q onto the spot where the target will be pulled. The slow and the pull make the blade easier to land.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:Aatrox:combo:2",
+          "name": "Dash through Q recasts",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Aatrox-Q" },
+            { "kind": "ability", "key": "Aatrox-E" },
+            { "kind": "ability", "key": "Aatrox-Q" },
+            { "kind": "ability", "key": "Aatrox-E" },
+            { "kind": "ability", "key": "Aatrox-Q" }
+          ],
+          "when": "When fighting a champion and you need to reposition between Q recasts.",
+          "whenRefs": [],
+          "text": "Aatrox can dash while winding up his other abilities, so use E between each Q recast to line up the next shape on the enemy.",
+          "textRefs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "1698934a039eb871216dec8b152a20ea10ac7bd30a934c06b496189ee495da2d",
+      "tips": [
+        {
+          "id": "top:Aatrox:Akali:0",
+          "text": "Aim The Darkin Blade at where Akali will be, and use Umbral Dash while casting to line up the edge hit that knocks her up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:Akali:1",
+          "text": "Fire Infernal Chains at Akali when she stands still. It slows her, and she gets pulled back if she stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:Akali:2",
+          "text": "Fight Akali when her energy is low, because her Five Point Strike is weakest then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Aatrox:Akali:3",
+          "text": "Back off and play safe when Akali has Perfect Execution ready and your health is low.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Akali-R", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aatrox:Akali:4",
+          "text": "Hit the smoke from Twilight Shroud with an area ability. It briefly reveals Akali inside.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Akali", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a0e2d19ca26c1cf0edd19ea01e36ab3620802e6588148ae451364b911005ac21",
+      "tips": [
+        {
+          "id": "top:Aatrox:Ambessa:0",
+          "text": "Aim Infernal Chains at Ambessa when she steps in; she is slowed, and walking out of the circle quickly avoids the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aatrox:Ambessa:1",
+          "text": "Use Umbral Dash to line up the edge of The Darkin Blade, so the enemy is knocked up and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 39, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 83 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Aatrox:Ambessa:2",
+          "text": "Do not stand in a fight when Ambessa has her Public Execution ready; she can jump to you and stun you. Keep your distance after level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Aatrox:Ambessa:3",
+          "text": "Trade with Aatrox's empowered basic attack from Deathbringer Stance; it heals him and hits hard when Ambessa is low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 48,
+              "end": 67
+            },
+            { "kind": "champion", "key": "Ambessa", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Aatrox:Ambessa:4",
+          "text": "When Ambessa braces with Repudiation, wait it out before hitting her; her shield and slam punish attacks into it.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Ambessa's dashes can sidestep the blade, so dashing Umbral Dash mid-wind-up helps shift where it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 52, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "38e4ef629e1ee3d1617931c50a425906987442646c3194713711fdfedce810fd",
+      "tips": [
+        {
+          "id": "top:Aatrox:Anivia:0",
+          "text": "Walk at Anivia or to the side when Infernal Chains lands. Her Flash Frost is slow, so dodge it sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 35, "end": 50 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Aatrox:Anivia:1",
+          "text": "Wait until Anivia spends Flash Frost, then dash in and trade. She has little to stop you with while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "top:Aatrox:Anivia:2",
+          "text": "Use Umbral Dash while casting The Darkin Blade to land the sweetspot. Close the gap before she can poke you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 },
+            { "kind": "keyword", "key": "poke", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aatrox:Anivia:3",
+          "text": "Do not chase through Crystallize. It blocks your path, so go around it or wait for it to melt.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Aatrox:Anivia:4",
+          "text": "Kill her egg after Rebirth or you will have to fight her again. Fight her while the egg is down, and use World Ender to chase.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 19,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Aatrox-R", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Anivia, which helps Darkin Blade land and lets Umbral Dash line up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 69, "end": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "ae01f22659d10cbaefe43fff5cf81547acf2f4782dde4f04a04d3b5cec2b9a38",
+      "tips": [
+        {
+          "id": "top:Aatrox:Aurora:0",
+          "text": "Aim The Darkin Blade where Aurora will step, and use Umbral Dash mid-cast to line up the edge hit. A plain straight shot is easy for her to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Aatrox:Aurora:1",
+          "text": "Hit Aurora with Infernal Chains, then walk to the side or toward her to break the pull. Use the slow to line up The Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 112, "end": 128 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Aurora:2",
+          "text": "Trade when Aurora has just used The Weirding or Twofold Hex. Hit her hard while they recharge, and heal with Deathbringer Stance.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Aurora-E", "start": 32, "end": 44 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 48, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 109,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Aatrox:Aurora:3",
+          "text": "Do not chase Aurora when she disappears with Across the Veil. Back off and wait, because she can reset it if she kills you.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aurora-W", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Aatrox:Aurora:4",
+          "text": "Stay out of the Between Worlds circle. Walking in or out slows you, and she can hop across it freely.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Aatrox:Aurora:5",
+          "text": "Use World Ender once you can force a fight with Aurora. Each kill extends it, and she is easy to catch while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "51e59fead84bc60600b9d8270b9fb42b71b68a18e71e839b974267f584287c4f",
+      "tips": [
+        {
+          "id": "top:Aatrox:Briar:0",
+          "text": "Dodge Briar's Head Rush by keeping a Darkin Blade ready, and hit her when she lands; she's easy to hit in Blood Frenzy because she must run at you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Briar-Q", "start": 14, "end": 23 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Aatrox:Briar:1",
+          "text": "Stay away from walls when Briar charges Chilling Scream; a full charge knocks you into them for a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Aatrox:Briar:2",
+          "text": "Use Umbral Dash to slip out of Briar's reach when she jumps at you, or to line up The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:Briar:3",
+          "text": "Hit Briar with Infernal Chains when she dashes in so she is slowed and can't easily get away.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Briar, making Darkin Blade easier to land, though Blood Frenzy gives her speed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "7414b952d755ded5aeb44c874617498fedf1eac87f6a079f49cd57d056c0ad72",
+      "tips": [
+        {
+          "id": "top:Aatrox:Camille:0",
+          "text": "Land the far edge of The Darkin Blade for extra damage and a knock up. Cast Umbral Dash during it to aim better.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "knocked-up", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Aatrox:Camille:1",
+          "text": "Fire Infernal Chains when Camille dashes in or perches on a wall. Her Hookshot is slow to dodge, so hit her where she will land.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Camille", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Camille-E", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Aatrox:Camille:2",
+          "text": "Stay out of the outer half of Tactical Sweep, which slows you and heals her. Back off or Umbral Dash out when she winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-W", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aatrox:Camille:3",
+          "text": "Camille's shield blocks only one damage type. Trade with your other damage type when it is up; Deathbringer Stance is magic damage.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 95,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1af574c81dee6e5279a7dca934aaf9fefe3b8a5ea2facd6020850f988821b8a3",
+      "tips": [
+        {
+          "id": "top:Aatrox:Chogath:0",
+          "text": "Dodge Rupture by moving out of the smoke circle on the ground. Don't stand still in it, or you will be knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "knocked-up", "start": 103, "end": 113 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Aatrox:Chogath:1",
+          "text": "Use Umbral Dash while swinging The Darkin Blade so you reach Cho'Gath and land the edge hit.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 31, "end": 47 },
+            { "kind": "champion", "key": "Chogath", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Aatrox:Chogath:2",
+          "text": "Stay out of close range when Feral Scream is ready. If you are silenced, you can't dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 29, "end": 41 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Aatrox:Chogath:3",
+          "text": "Trade early, before Cho'Gath has eaten much with Feast and grown tanky. Punish him in the first levels.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Chogath-R", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1777c5bb91e4d00a1915c9638d74bf55bfd0f3f7d1f1e7c30369fda69cf89a10",
+      "tips": [
+        {
+          "id": "top:Aatrox:Darius:0",
+          "text": "Keep Aatrox at the edge of Darius's reach and poke with The Darkin Blade, then dash away with Umbral Dash.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 56, "end": 72 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Aatrox:Darius:1",
+          "text": "Do not stand still when Apprehend is ready; sidestep its cone or use Umbral Dash to leave its range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Aatrox:Darius:2",
+          "text": "Use Infernal Chains to slow Darius as he approaches, and leave the zone to avoid being pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Aatrox:Darius:3",
+          "text": "Do not trade long with Darius; his Hemorrhage stacks make him hit harder the longer a fight lasts.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 35,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e2e7dc87dbdcf055b9154dcb53b7924aa3c0f40bb2f221a46089f1b855522bd",
+      "tips": [
+        {
+          "id": "top:Aatrox:DrMundo:0",
+          "text": "Do not rely on Infernal Chains to hold Mundo; his passive ignores the first immobilizing effect. Use it for the slow and damage instead.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Aatrox:DrMundo:1",
+          "text": "Sidestep Infected Bonesaw or Umbral Dash out of its path. Taking it costs you health and slows you, and Mundo heals from hitting.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Aatrox:DrMundo:2",
+          "text": "Do not stand next to Mundo while Heart Zapper charges. Back off and he heals less.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Aatrox:DrMundo:3",
+          "text": "Hit The Darkin Blade on the edge. Mundo is big and easy to hit, and the knock up gives you free damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Aatrox:DrMundo:4",
+          "text": "Do not try to burst Mundo down once Maximum Dosage is active; walk away from the fight and come back after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the knock-up from Blade may be wasted.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "8267b91389a0ea1e312d4f715e55b46eca7e5fd710ed3323feb975ca45474c59",
+      "tips": [
+        {
+          "id": "top:Aatrox:Fiora:0",
+          "text": "Don't cast Infernal Chains at Fiora while Riposte is ready; she parries it and slows you. Bait Riposte with a weaker move first.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Fiora", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Fiora-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 },
+            { "kind": "ability", "key": "Fiora-W", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Aatrox:Fiora:1",
+          "text": "Her Lunge goes through you quickly. Wait for it to be used, then punish her with The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Aatrox:Fiora:2",
+          "text": "Use Umbral Dash during The Darkin Blade to change the angle of your hit. It is also a way to leave when Fiora's Vital is facing you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Fiora", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Aatrox:Fiora:3",
+          "text": "Her Bladework slows you and the second hit crits. Keep your distance when you see her use it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9ebdcb154b8a54806c974d2d3a7b52cad1da9df96f5424f3c2ff09b2624e103d",
+      "tips": [
+        {
+          "id": "top:Aatrox:Gangplank:0",
+          "text": "Throw Infernal Chains at Gangplank when he walks up to a Powder Keg; the slow makes him easy to hit with The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 57, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 77 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 105, "end": 121 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Aatrox:Gangplank:1",
+          "text": "Gangplank can cleanse your Infernal Chains with Remove Scurvy, so bait it out before you go for a big combo.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 27, "end": 42 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Aatrox:Gangplank:2",
+          "text": "Use Umbral Dash to step out of Powder Keg blasts and to close the gap while casting The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 31, "end": 41 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Gangplank:3",
+          "text": "Stay out of long Parrrley range and don't trade near several kegs; he gets stronger when they blow up.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-Q", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Aatrox:Gangplank:4",
+          "text": "Watch for level 6; Cannon Barrage can hit you from anywhere, so don't stay low and alone.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5ff6087bddc273f74f66469025debb78df8a581d286e16efd4c015dc9273b7ca",
+      "tips": [
+        {
+          "id": "top:Aatrox:Garen:0",
+          "text": "Aim The Darkin Blade so the far edge hits Garen. Cast Umbral Dash during it to adjust your angle.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Garen", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Aatrox:Garen:1",
+          "text": "Poke Garen with The Darkin Blade from range; he regenerates fast if you leave him alone, so keep hitting him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Aatrox:Garen:2",
+          "text": "Don't use Infernal Chains to slow Garen and chase; Decisive Strike cleanses it and gives him speed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Garen", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Garen-Q", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:Garen:3",
+          "text": "Back away from Garen when your health is low, because Demacian Justice deals more damage the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Aatrox:Garen:4",
+          "text": "Leave the range of Judgment, or fight beside minions so it shares its hits.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 19, "end": 27 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b7acbc31d9b4d0d04e71cca559658b06156f60b77da344390017b233b2a7490d",
+      "tips": [
+        {
+          "id": "top:Aatrox:Gnar:0",
+          "text": "Cast Infernal Chains on Gnar when he is near you; the slow makes him easier to hit with The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Gnar", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Gnar:1",
+          "text": "Use Umbral Dash while winding up The Darkin Blade to close the gap and land the edge hit.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Aatrox:Gnar:2",
+          "text": "Stay away from walls when Gnar is Mega; GNAR! stuns you if it hits you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gnar-R", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aatrox:Gnar:3",
+          "text": "Step out of the boomerang line, since Boomerang Throw hits again on its way back.",
+          "refs": [],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Aatrox:Gnar:4",
+          "text": "Trade when Gnar is tired after leaving Mega form; he can't build Rage for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow helps Darkin Blade land, but Gnar's Hop can leap out of the blade's edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Gnar", "start": 51, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0bfa7534c06bcedc4125b32a3cd9584929d5aaf74c44b7f0285d023a638c40e3",
+      "tips": [
+        {
+          "id": "top:Aatrox:Gragas:0",
+          "text": "Stay out of Gragas's Body Slam range, or he stuns you and trades freely.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Gragas-E", "start": 21, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Aatrox:Gragas:1",
+          "text": "Aim The Darkin Blade so the edge hits Gragas; it knocks him up and deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Gragas", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aatrox:Gragas:2",
+          "text": "Use Umbral Dash to leave Barrel Roll's blast area, because it slows you if you stay inside.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 25, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aatrox:Gragas:3",
+          "text": "Do not stand near an enemy tower or Gragas when he has Explosive Cask; it knocks you away from the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Gragas-R", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Aatrox:Gragas:4",
+          "text": "Use Infernal Chains to hold Gragas in place, then land The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gragas", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing during the Darkin Blade wind-up shifts where it lands, so Gragas has a harder time dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Gragas", "start": 66, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f77f1f41e75ac948be47f03035c95b01710878ebbaa1b7b143faecf463be7a40",
+      "tips": [
+        {
+          "id": "top:Aatrox:Gwen:0",
+          "text": "Don't throw The Darkin Blade at Gwen while she stands in Hallowed Mist; she can't be targeted from outside it. Wait for the Mist to end or for her to step out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Gwen-W", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Aatrox:Gwen:1",
+          "text": "Gwen needs a few attacks to build up her damage, so jump on her early and trade before she has stacks ready.",
+          "refs": [{ "kind": "champion", "key": "Gwen", "start": 0, "end": 4 }],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Aatrox:Gwen:2",
+          "text": "Use Infernal Chains to slow Gwen when she runs in. It also sets up The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Gwen", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:Gwen:3",
+          "text": "Dodge her Needlework between casts. She needs to hit something to recast it, so sidestep the first needle.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Aatrox:Gwen:4",
+          "text": "Hit Gwen with the edge of The Darkin Blade. It deals more damage, and Deathbringer Stance comes back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 26, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 70,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1d24873560ff6730b4f87fdd3f8afa699d121a62b2607ddd0d51fb0af7d08149",
+      "tips": [
+        {
+          "id": "top:Aatrox:Heimerdinger:0",
+          "text": "Dash onto Heimerdinger with Umbral Dash and fight him directly. He is weak when he has no turrets up and his grenade is on cooldown.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 10,
+              "end": 22
+            },
+            { "kind": "ability", "key": "Aatrox-E", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Aatrox:Heimerdinger:1",
+          "text": "Bait his grenade first. Once it is spent, he is easy to punish, so walk up.",
+          "refs": [],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Aatrox:Heimerdinger:2",
+          "text": "Use Infernal Chains on him when he steps up to place turrets. It slows him and pulls him back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Aatrox:Heimerdinger:3",
+          "text": "Clear his turrets with minions nearby, all at once. Fighting them one at a time costs you health.",
+          "refs": [],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Aatrox:Heimerdinger:4",
+          "text": "Back off while his UPGRADE!!! is ready and go in once it is on cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-R",
+              "start": 19,
+              "end": 29
+            }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow helps land Darkin Blade on Heimerdinger, who relies on turrets and grenade to keep range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 39,
+              "end": 51
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "772e635737cdf6969700c37912776e1c46e8c95639c91e197f89d90f0b651d7c",
+      "tips": [
+        {
+          "id": "top:Aatrox:Illaoi:0",
+          "text": "Stay out of Tentacle range when you trade; fight away from terrain so Illaoi has fewer Tentacles to slam you.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Aatrox:Illaoi:1",
+          "text": "Use Infernal Chains to slow her as she walks up, then move toward the sides or back to avoid her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Aatrox:Illaoi:2",
+          "text": "Sidestep Tentacle Smash when you see her wind up; it is slow to cast and easy to dodge. Umbral Dash is a good way out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 9, "end": 23 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Aatrox:Illaoi:3",
+          "text": "If Test of Spirit pulls out your spirit, fight back at Illaoi instead of running; hitting her shortens it.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 3, "end": 17 },
+            { "kind": "champion", "key": "Illaoi", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Aatrox:Illaoi:4",
+          "text": "Keep your distance when she casts Leap of Faith, since her Tentacles become much stronger for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-R", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Aatrox:Illaoi:5",
+          "text": "Land the edge of The Darkin Blade on her to knock her up and trade healing back with Deathbringer Stance.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 17, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 85,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Illaoi so the Darkin Blade is easier to land, and the dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Illaoi", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "520ec566a1bf35d70b29e9996672b4664400ce7b10781a508e767d23a606b73c",
+      "tips": [
+        {
+          "id": "top:Aatrox:Irelia:0",
+          "text": "Hit Irelia with The Darkin Blade when she dashes in. Aim at where she will land, because she must commit to a target.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Aatrox:Irelia:1",
+          "text": "Fight Irelia away from minion waves. Without minions to dash to, she has far less mobility.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Aatrox:Irelia:2",
+          "text": "Don't spend your best spells on Defiant Dance. Wait for the release, then hit her while she is stopped.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Aatrox:Irelia:3",
+          "text": "Use Umbral Dash to sidestep Flawless Duet. Watch the two blades and leave the line between them.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Irelia-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aatrox:Irelia:4",
+          "text": "Trade when Irelia's Ionian Fervor stacks have run out, because she attacks much more slowly then.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 20,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Aatrox:Irelia:5",
+          "text": "Use Infernal Chains on Irelia when she is in a wave, so you can follow with The Darkin Blade while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Irelia", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 76, "end": 92 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Irelia, making The Darkin Blade easier to land as she dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Irelia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a2d9f92fa3ab2055287b4c94524019051d70622b8f6273c895e5cb92b14e9764",
+      "tips": [
+        {
+          "id": "top:Aatrox:Jax:0",
+          "text": "Wait out Counter Strike before you hit Jax; his dodge ends in a stun, so stay out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 39, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:Jax:1",
+          "text": "Hit Jax in short bursts and walk away; long fights let Relentless Assault stack up his Attack Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Jax-passive", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:Jax:2",
+          "text": "Aim The Darkin Blade where Jax will leap or stand; the tip knocks him up and hurts most.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jax", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Aatrox:Jax:3",
+          "text": "Use Infernal Chains to slow Jax when he leaps in, and be wary of him jumping to a ward to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Jax", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ceda7bee02c97dbb6f6973494505cd0e1d15603def5de5d084e199e0dcdc2c97",
+      "tips": [
+        {
+          "id": "top:Aatrox:Jayce:0",
+          "text": "Close the gap on Jayce when he is in Hammer form. In Cannon form he outranges you, so avoid walking into his shots.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Aatrox:Jayce:1",
+          "text": "Line up The Darkin Blade so Jayce is hit on the edge. He is knocked up, and you also heal more through Deathbringer Stance.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 103,
+              "end": 122
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Aatrox:Jayce:2",
+          "text": "Use Infernal Chains on Jayce when he jumps in or tries to leave. It slows him, and he is pulled back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Aatrox:Jayce:3",
+          "text": "Use Umbral Dash to dodge Shock Blast, which is a straight shot that stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Aatrox:Jayce:4",
+          "text": "Watch for Jayce placing an Acceleration Gate. A stronger Shock Blast is probably coming through it, so step out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Jayce, making the Darkin Blade easier to land as he leaps in or swaps stances.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 36, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b48d098b839736a302f0a06f34ccb5b90ba9303516e0d3a0ddcf5e9e356a033d",
+      "tips": [
+        {
+          "id": "top:Aatrox:KSante:0",
+          "text": "Aim The Darkin Blade so its edge lands on K'Sante, and use Umbral Dash while winding up to line it up. The edge hit knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Aatrox:KSante:1",
+          "text": "Stay out of Ntofo Strikes range until you can trade. Two hits on you make the next one stun and pull you in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Aatrox:KSante:2",
+          "text": "Do not stand in a line with K'Sante while he charges Path Maker. He cannot be interrupted, and it stuns you for longer the longer he charges.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "KSante-W", "start": 53, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Aatrox:KSante:3",
+          "text": "Use Infernal Chains to slow him when he approaches. Then step out of the chain area quickly so you are not pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Aatrox:KSante:4",
+          "text": "Back off when K'Sante goes All Out. He has less health then, but hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "KSante-R", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a186037cd35049b8810f4636d1e1ae57ba683f88290b25e4bffef7552e42226",
+      "tips": [
+        {
+          "id": "top:Aatrox:Kayle:0",
+          "text": "Fight Kayle before level 6; she is a weak melee champion until she ascends and gains range.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Aatrox:Kayle:1",
+          "text": "Land The Darkin Blade on the edge of its area to knock Kayle up, then recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kayle", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Aatrox:Kayle:2",
+          "text": "Hit Kayle with Infernal Chains when she walks up to last-hit. It slows her and pulls her back if she stays in the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Aatrox:Kayle:3",
+          "text": "Use Umbral Dash to close the gap to Kayle, or to line up The Darkin Blade, as it can be used while that ability is winding up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kayle", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:Kayle:4",
+          "text": "Stop attacking when Kayle casts Divine Judgment on herself or an ally, since they take no damage. Slows and stuns can still land on them.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Kayle-R", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Aatrox:Kayle:5",
+          "text": "Kayle's Radiant Blast slows you. Dodge it sideways, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 8, "end": 21 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3c0504f742a5bd0ea977372d865562e4f040604869e25d1f3b708d2045ca8a4b",
+      "tips": [
+        {
+          "id": "top:Aatrox:Kennen:0",
+          "text": "Use Umbral Dash while casting The Darkin Blade to reach Kennen and hit the edge of the blade, which knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 },
+            { "kind": "champion", "key": "Kennen", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Aatrox:Kennen:1",
+          "text": "Kennen is fragile. Punish him when he is careless with Lightning Rush, and trade when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kennen-E", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Aatrox:Kennen:2",
+          "text": "Do not walk around with Mark of the Storm on you. A third mark stuns you, so stay back from his Thundering Shuriken and Electrical Surge.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 24,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 96, "end": 115 },
+            { "kind": "ability", "key": "Kennen-W", "start": 120, "end": 136 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:Kennen:3",
+          "text": "Use Infernal Chains to slow Kennen when he steps up to trade. It sets up your Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Kennen", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Aatrox:Kennen:4",
+          "text": "Do not stand inside Slicing Maelstrom. Back off until it ends, then fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 20, "end": 37 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kennen, which makes The Darkin Blade easier to land for the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kennen", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 42, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "80d0b3f871ebc2a1fff3bf19e620ec3f20631d5fcfe56139f0fe7c2a8699c499",
+      "tips": [
+        {
+          "id": "top:Aatrox:Kled:0",
+          "text": "Dodge Kled's Bear Trap on a Rope and keep away from the tether, because he yanks you in and slows you if you stay near.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Kled-Q", "start": 13, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Aatrox:Kled:1",
+          "text": "Land Infernal Chains on Kled as he dashes in. It slows him and sets up The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kled", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 71, "end": 87 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Aatrox:Kled:2",
+          "text": "Back off when Violent Tendencies is ready on Kled, because his fourth hit hurts. Trade after he uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-W", "start": 14, "end": 32 },
+            { "kind": "champion", "key": "Kled", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:Kled:3",
+          "text": "Use Umbral Dash to slip out of Kled's Jousting range or to line up The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kled", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Kled-E", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kled first, so The Darkin Blade is easier to land on his charging approach.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kled", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a71e590b33b91cba0547ad435d55c0e62eb6f609634097215ee0241eac098bb3",
+      "tips": [
+        {
+          "id": "top:Aatrox:Malphite:0",
+          "text": "Aim The Darkin Blade so the edge of the swing hits Malphite. That does more damage and knocks him up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Aatrox:Malphite:1",
+          "text": "Stay out of Malphite's range when Ground Slam is ready. It cuts your Attack Speed and your healing from hits.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malphite-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Aatrox:Malphite:2",
+          "text": "Use Umbral Dash to leave when Malphite casts Unstoppable Force at you, or to close the gap after you have been slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malphite", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Malphite-R", "start": 45, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Aatrox:Malphite:3",
+          "text": "Break Malphite's shield with a few quick hits before you trade. Armor makes him hard to hurt while it's up, so don't fight him while it's full.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 6, "end": 14 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow makes The Darkin Blade easier to land, and Umbral Dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 65, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c4812bc63e2a3be12fa022a81c5de931e6985af1ac7a7e2252e2d377f0d48289",
+      "tips": [
+        {
+          "id": "top:Aatrox:Mordekaiser:0",
+          "text": "Dodge Obliterate's slow wind-up by moving sideways, since it is aimed at a spot.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Aatrox:Mordekaiser:1",
+          "text": "Stay away from Mordekaiser once Darkness Rise is up; poke him with The Darkin Blade instead of standing in the aura.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 15,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 32,
+              "end": 45
+            },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Aatrox:Mordekaiser:2",
+          "text": "Keep Umbral Dash ready to leave when Death's Grasp comes; it is a thin line, so step aside or dash out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 37,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Aatrox:Mordekaiser:3",
+          "text": "Hold your hits while Indestructible is up; shields soak the damage, and he heals back with the recast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 21,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Aatrox:Mordekaiser:4",
+          "text": "Stay near your lane's escape routes at level 6; Realm of Death traps you alone with him, so keep Umbral Dash for inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 48,
+              "end": 62
+            },
+            { "kind": "ability", "key": "Aatrox-E", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e9172904e2070f2218b25ce73f0dcf23d369100e0edbdf3609dc7e8466825b53",
+      "tips": [
+        {
+          "id": "top:Aatrox:Naafiri:0",
+          "text": "Aim The Darkin Blade so the edge of each swing lands on Naafiri; that knocks her up and hurts more. Dash with Umbral Dash mid-swing to line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 56, "end": 63 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 110, "end": 121 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:Naafiri:1",
+          "text": "Hit Naafiri with Infernal Chains when she steps in to trade. It slows her, and if she stays put it pulls her back to you.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aatrox:Naafiri:2",
+          "text": "Naafiri can vanish from your Darkin Blade or chains with The Call of the Pack. Wait for her to use it before you throw your longer-cooldown abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 57, "end": 77 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Aatrox:Naafiri:3",
+          "text": "Fight Naafiri when her packmates are away or dead. Use your Deathbringer Stance attack and Umbral Dash healing to win longer trades.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 60,
+              "end": 79
+            },
+            { "kind": "ability", "key": "Aatrox-E", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Aatrox:Naafiri:4",
+          "text": "Once you hit level 6, use World Ender when you fight Naafiri. The extra healing and damage help you win the trade, and a kill extends it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 26, "end": 37 },
+            { "kind": "champion", "key": "Naafiri", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b730ffb9fbe303ef307b0ed5084dcc93f077d126fc14652b444280ab6cc32667",
+      "tips": [
+        {
+          "id": "top:Aatrox:Nasus:0",
+          "text": "Hit Nasus with The Darkin Blade while he walks up to last-hit. Aim the edge of the swing at him; Umbral Dash helps you line it up.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Aatrox:Nasus:1",
+          "text": "Do not run straight at Nasus once Wither lands. It slows you more every second and cuts your Attack Speed, so dodge it or fight early.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Nasus-W", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Aatrox:Nasus:2",
+          "text": "Use Infernal Chains to slow Nasus and set up your Q. It also pulls him back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nasus", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Aatrox:Nasus:3",
+          "text": "Do not fight Nasus when his Fury of the Sands is active unless you are far ahead. Back off and wait out the storm.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Nasus-R", "start": 28, "end": 45 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:Nasus:4",
+          "text": "Keep Nasus from farming freely with Siphoning Strike. Harass him when he goes for a last-hit, because every kill raises his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing with Umbral Dash mid-Darkin Blade helps land the blade on Nasus, who may step out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Nasus", "start": 66, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "302fe0f772a1dfad42471627dc8e1bfdd8dc1ee5901450d8391356d0466441a5",
+      "tips": [
+        {
+          "id": "top:Aatrox:Olaf:0",
+          "text": "Hit Olaf with The Darkin Blade's edge when he steps in; it knocks him up and gives you more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Aatrox:Olaf:1",
+          "text": "Do not pick fights when Olaf is low on health; Berserker Rage makes him hit fast and heal more.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Olaf-passive", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:Olaf:2",
+          "text": "Step aside from Undertow, and stay away from the axe on the ground so Olaf cannot easily pick it up and throw again.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 16, "end": 24 },
+            { "kind": "champion", "key": "Olaf", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Aatrox:Olaf:3",
+          "text": "Do not rely on Infernal Chains or The Darkin Blade's knock up while Ragnarok is active; Olaf ignores disables then.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Olaf-R", "start": 68, "end": 76 },
+            { "kind": "champion", "key": "Olaf", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3c8b887fd67d369faffb5eee00029f6430006ef0340a2e1744c4861603a2c19b",
+      "tips": [
+        {
+          "id": "top:Aatrox:Ornn:0",
+          "text": "Aim The Darkin Blade so the edge of the hit lands on Ornn; Umbral Dash lets you adjust mid-cast to catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ornn", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Aatrox:Ornn:1",
+          "text": "Fight with open space behind you and away from walls, so Ornn has nothing to ram into for his stun.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Aatrox:Ornn:2",
+          "text": "Dodge Volcanic Rupture by sidestepping. It stops on the first champion it hits and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Aatrox:Ornn:3",
+          "text": "Use Infernal Chains on Ornn when he walks up to forge or trade. It slows him and pulls him back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ornn", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aatrox:Ornn:4",
+          "text": "Attack Ornn so he can't forge items in lane. Damage from you interrupts his channel.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 7, "end": 11 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Aatrox:Ornn:5",
+          "text": "Back away when Ornn marches at you with Bellows Breath. It can't be stopped, and it makes you take extra damage from his stuns.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ornn-W", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing during the Darkin Blade wind-up helps it land when Ornn steps out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Ornn", "start": 59, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a627d2872f0820693a8d98a4770f472a76ebcbf79fab9084f52561afb45e098",
+      "tips": [
+        {
+          "id": "top:Aatrox:Pantheon:0",
+          "text": "Aim The Darkin Blade at the edge of its area so the enemy is knocked up; cast Umbral Dash during it to line the hit up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 61, "end": 71 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 78, "end": 89 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Aatrox:Pantheon:1",
+          "text": "Do not hit into Pantheon while Aegis Assault is facing you; dash around behind him or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aatrox:Pantheon:2",
+          "text": "Stay healthy: Pantheon's thrown Comet Spear hits much harder on low health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Aatrox:Pantheon:3",
+          "text": "Use Infernal Chains to slow Pantheon as he jumps in, so his Shield Vault stun is easier to punish.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Aatrox:Pantheon:4",
+          "text": "Watch for Grand Starfall's warning and walk away from the landing spot before he arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Pantheon, making The Darkin Blade easier to land for the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 39, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c6237e7e78d081c32ef7a1d738bf698621b41e5b2a829aa40fe5ae2ec1fe073",
+      "tips": [
+        {
+          "id": "top:Aatrox:Quinn:0",
+          "text": "Wait for Quinn's Blinding Assault to be used before you commit; it is a straight line and the first enemy hit stops it.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aatrox:Quinn:1",
+          "text": "Use Infernal Chains when Quinn Vaults; she is slowed, so you can catch her and land The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Quinn", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Aatrox:Quinn:2",
+          "text": "Land the edge of The Darkin Blade to hit harder and knock Quinn up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 17, "end": 33 },
+            { "kind": "champion", "key": "Quinn", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Aatrox:Quinn:3",
+          "text": "Use Umbral Dash during your swing to close the gap on Quinn and heal from the damage you deal.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Quinn", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Aatrox:Quinn:4",
+          "text": "Move away when Quinn's Harrier mark lands on you, so her next attack does not deal its bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 15, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Quinn-passive",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Aatrox:Quinn:5",
+          "text": "Watch for Quinn's Behind Enemy Lines to gank or roam; damaging her removes her extra speed for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Quinn-R", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows the target, which makes The Darkin Blade easier to land on Quinn.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 46, "end": 62 },
+            { "kind": "champion", "key": "Quinn", "start": 81, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a595092a9e1ccae242c7633475cd257d946e18680ae8720458fcb5f0c9849bbe",
+      "tips": [
+        {
+          "id": "top:Aatrox:Renekton:0",
+          "text": "Hit Renekton with Infernal Chains when he dashes in; the slow makes it hard for him to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Aatrox:Renekton:1",
+          "text": "Watch Renekton's Fury. When it is high, Ruthless Predator stuns for longer, so stay back from him.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Renekton-W", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Aatrox:Renekton:2",
+          "text": "Use Umbral Dash to get out of Renekton's reach after he uses Slice and Dice.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Renekton", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Renekton-E", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aatrox:Renekton:3",
+          "text": "Hit the edge of The Darkin Blade so Renekton is knocked up and takes more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 16, "end": 32 },
+            { "kind": "champion", "key": "Renekton", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "knocked-up", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7609d614e51fc19cc7951563f0ac009d5ab583e3c72cc5823f95cdfaa1832734",
+      "tips": [
+        {
+          "id": "top:Aatrox:Riven:0",
+          "text": "Don't walk into Riven's range carelessly; Ki Burst leaves you stunned and open to her combo.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Riven-W", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:Riven:1",
+          "text": "Aim The Darkin Blade where Riven will dash, and use Umbral Dash while casting to land the edge hit.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Riven", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Aatrox:Riven:2",
+          "text": "Hit Riven with Infernal Chains when she dashes in; she is slowed and pulled back if she stays.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Aatrox:Riven:3",
+          "text": "Her Valor shield blunts your short trades, so wait until it fades before committing to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Aatrox:Riven:4",
+          "text": "Her damage is all physical and she has no healing, so you win long fights if you survive her burst.",
+          "refs": [],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Riven, making Darkin Blade easier to land as she dashes around.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Riven", "start": 22, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b9df3faf40ade45c1ecaf43c753615eb81bd5c5a9c875ca9f0ebf8d9b291eca4",
+      "tips": [
+        {
+          "id": "top:Aatrox:Rumble:0",
+          "text": "Close the gap with Umbral Dash, then swing The Darkin Blade. Rumble's Electro Harpoon slows you, so stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 19, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 43, "end": 59 },
+            { "kind": "champion", "key": "Rumble", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Rumble-E", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Aatrox:Rumble:1",
+          "text": "Trade when Rumble has Overheated. He can't cast spells for a few seconds, so go in and hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Aatrox:Rumble:2",
+          "text": "Step out of Flamespitter's cone sideways rather than standing in it, since it hits harder the more max Health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Aatrox:Rumble:3",
+          "text": "Don't stand in the burning trail of The Equalizer. Leave it quickly, and use Umbral Dash to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8062dd7c68ea4c095204094c9441fb42821d4c41a2a200814f237a5dd316c316",
+      "tips": [
+        {
+          "id": "top:Aatrox:Sett:0",
+          "text": "Hit Sett with the far edge of The Darkin Blade so he is knocked up. Aim it so he walks into the tip, since he is tanky and the edge deals the most.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 },
+            { "kind": "keyword", "key": "knocked-up", "start": 56, "end": 66 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Aatrox:Sett:1",
+          "text": "Use Umbral Dash during your Darkin Blade swings to shift the hit zone and dodge Sett's Facebreaker.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sett", "start": 80, "end": 84 },
+            { "kind": "ability", "key": "Sett-E", "start": 87, "end": 98 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Aatrox:Sett:2",
+          "text": "Don't stand with enemies on both sides of you. Facebreaker stuns when it catches one on each side.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 47, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Aatrox:Sett:3",
+          "text": "Sett's Haymaker takes a long wind-up. Step out of the area when you see it start, and attack him once it is spent.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-W", "start": 7, "end": 15 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Aatrox:Sett:4",
+          "text": "Hit Sett with Infernal Chains and walk out of the area to avoid being pulled back. It also slows him, so use it to start your trades.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c3b5998324cef840aeefcbfc899cb73f42c569f6ba3f47a3e2c0dd6e605b3f04",
+      "tips": [
+        {
+          "id": "top:Aatrox:Shen:0",
+          "text": "Keep your distance from Shen when he has his Spirit Blade nearby; Spirit's Refuge blocks your attacks and wastes your trade.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Shen-W", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Aatrox:Shen:1",
+          "text": "Dodge Shadow Dash; if you are taunted you can't avoid his empowered attacks. Fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Aatrox:Shen:2",
+          "text": "Land Infernal Chains on Shen to slow him, then chain The Darkin Blade swings while he is pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Shen", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Aatrox:Shen:3",
+          "text": "Watch for Shen's ultimate once he hits level 6; he can teleport to an ally and shield them, so don't overchase a hurt target.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "813bec82b41d3eb2e6bfc5d7c8dc7cacda2ac3da273d374540ec46000412e702",
+      "tips": [
+        {
+          "id": "top:Aatrox:Singed:0",
+          "text": "Don't chase Singed through his Poison Trail. Use The Darkin Blade from outside it and make him come to you.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Singed-Q", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Aatrox:Singed:1",
+          "text": "Keep Umbral Dash ready to leave Mega Adhesive's field or to avoid a Fling. Don't walk into the goo.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Singed-W", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Singed-E", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Aatrox:Singed:2",
+          "text": "Hit Singed with Infernal Chains to slow him when he runs, then finish with the Deathbringer Stance hit.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 79,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Aatrox:Singed:3",
+          "text": "Singed is hard to kill when he runs, so don't spend your health chasing him. Take the lane back when he leaves.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains' slow helps land The Darkin Blade on Singed, who is slowed while he runs and poisons.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 33, "end": 49 },
+            { "kind": "champion", "key": "Singed", "start": 53, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6ab2c3b1566cb04b6e776063f9eef9f13df5d6a1ce27c0dd6fc9992100f4c550",
+      "tips": [
+        {
+          "id": "top:Aatrox:Sion:0",
+          "text": "Aim The Darkin Blade so the end of it hits Sion; the edge knocks him up. Use Umbral Dash to adjust your aim.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Aatrox:Sion:1",
+          "text": "Step out of Sion's Decimating Smash area when you see him charging. A long charge stuns for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aatrox:Sion:2",
+          "text": "Stay out of the line of Roar of the Slayer. It slows you and sets up his stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 24, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Aatrox:Sion:3",
+          "text": "Don't chase a dying Sion; Glory in Death brings him back with fast, healing attacks. Back away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Sion-passive", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow sets up the Darkin Blade knock-up against Sion, who is hard to hit while charging Q.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 20, "end": 36 },
+            { "kind": "champion", "key": "Sion", "start": 54, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c221593c7dabdd73772d64c1b270777276043e1e15c6fa70127227672cd0b9c8",
+      "tips": [
+        {
+          "id": "top:Aatrox:TahmKench:0",
+          "text": "Dodge Tongue Lash. It is a straight line that stops at the first enemy it hits, so keep a minion between you and Tahm Kench.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "TahmKench", "start": 113, "end": 123 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:TahmKench:1",
+          "text": "Back off when Tahm Kench has three stacks of An Acquired Taste. His next Tongue Lash will stun you.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 14, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 45,
+              "end": 62
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 73, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Aatrox:TahmKench:2",
+          "text": "Hit Tahm Kench with Infernal Chains when he starts Abyssal Dive; the channel is slow and you can step away from the landing.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Aatrox:TahmKench:3",
+          "text": "Once he uses the shield from Thick Skin, he has given up his healing. Trade hard then.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:TahmKench:4",
+          "text": "Use short, repeated hits on him. Umbral Dash heals you when you damage champions, and he builds grey health you should not let him use.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "34d22090d8b240b402ed3fbd210780a4c10289b6b181d5df650b00e0c5431e73",
+      "tips": [
+        {
+          "id": "top:Aatrox:Teemo:0",
+          "text": "Close in on Teemo when Blinding Dart is on cooldown. Fighting him up close is much easier than chasing him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Aatrox:Teemo:1",
+          "text": "Hit Teemo with Infernal Chains to slow him and pull him back. That sets up The Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Aatrox:Teemo:2",
+          "text": "Look for stealthed mushrooms in the brush and along the lane before you walk in. Stepping on a Noxious Trap slows you and shows where you are.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 95, "end": 107 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:Teemo:3",
+          "text": "Do not trade then back out, since Toxic Shot keeps damaging you after the hit. Commit to the fight or stay away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Aatrox:Teemo:4",
+          "text": "Use Umbral Dash to close the gap when Teemo steps forward to attack.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows, so The Darkin Blade is easier to land on Teemo, and Umbral Dash lines up the sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 26, "end": 42 },
+            { "kind": "champion", "key": "Teemo", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 75, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "78f5c71ebeb692bb66623ec7774a8352cb971b3b32930e2f6cad3b29d0a2378b",
+      "tips": [
+        {
+          "id": "top:Aatrox:Tryndamere:0",
+          "text": "Aim The Darkin Blade so the enemy is hit by the far edge; that part deals more damage and knocks up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 90, "end": 99 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Aatrox:Tryndamere:1",
+          "text": "Do not chase Tryndamere into Undying Rage; he cannot die for a few seconds, so back off and wait.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aatrox:Tryndamere:2",
+          "text": "Chase carefully when he is slowing you with Mocking Shout; it only slows you while you face away from him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 44,
+              "end": 57
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aatrox:Tryndamere:3",
+          "text": "Hit Tryndamere with Infernal Chains early to keep him from last-hitting minions and healing with Bloodlust.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 20, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-Q",
+              "start": 97,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Opening with Infernal Chains slows Tryndamere, so the Darkin Blade is easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Tryndamere", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 50, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a247e7d0260183a2bafb2fa2ad21cce6bb80ada5950fc91ebfa8aaefdce28ef",
+      "tips": [
+        {
+          "id": "top:Aatrox:Urgot:0",
+          "text": "Use Infernal Chains to slow Urgot, then line up The Darkin Blade on him while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Urgot", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Aatrox:Urgot:1",
+          "text": "Cast Umbral Dash during The Darkin Blade to change your position and hit more often.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:Urgot:2",
+          "text": "Do not stand in a straight line with Urgot when Disdain is ready. He stuns the first champion he hits and throws them behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Urgot-E", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Aatrox:Urgot:3",
+          "text": "Stay out of Urgot's reach while Purge is firing. He moves slower while firing, so you can choose when to fight.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Urgot-W", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Aatrox:Urgot:4",
+          "text": "Keep your health up against Fear Beyond Death. Below the execution threshold he can drag you in and kill you.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-R", "start": 28, "end": 45 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f8e5231f0ae380b1bd7ca4812ef95b9a3b88af2dfb4502f8e742f6883d4d7dee",
+      "tips": [
+        {
+          "id": "top:Aatrox:Varus:0",
+          "text": "Close the gap with Umbral Dash and use The Darkin Blade so Varus can't safely snipe you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 19, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 39, "end": 55 },
+            { "kind": "champion", "key": "Varus", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Aatrox:Varus:1",
+          "text": "Land Infernal Chains on Varus and make sure he stays inside it. He is fragile and a pull brings him into your Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Varus", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Aatrox:Varus:2",
+          "text": "Don't stand in Hail of Arrows. You get slowed and heal less there.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Aatrox:Varus:3",
+          "text": "Watch Varus's Piercing Arrow charge. While he is charging he moves slowly, so that is your moment to engage.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Varus-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Aatrox:Varus:4",
+          "text": "Use World Ender to dive Varus once he has used Chain of Corruption, or when you can get a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Varus", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Varus-R", "start": 47, "end": 66 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing mid-wind-up shifts the blade, helping it land on Varus, who can sidestep the Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 81, "end": 97 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e87cc6b8bc19a0b60907a95ead15a1ec3f7897136a534723adf41131a328b07",
+      "tips": [
+        {
+          "id": "top:Aatrox:Vayne:0",
+          "text": "Aim The Darkin Blade at the end of your range, where it hits hardest and knocks Vayne up. Use Umbral Dash while casting to line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 80, "end": 85 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Aatrox:Vayne:1",
+          "text": "Do not stand next to a wall when Vayne has Condemn ready. Fight in the open, or she can stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Vayne-E", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Aatrox:Vayne:2",
+          "text": "Land Infernal Chains on Vayne when she is out of position; she is slowed, and she has to leave the circle or be pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Aatrox:Vayne:3",
+          "text": "Vayne is fragile. Push her hard and she must play safe, so trade with all your abilities when she uses Tumble.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Aatrox:Vayne:4",
+          "text": "Do not stay in her attack range for three hits in a row; Silver Bolts then hurts you a lot. Step out after two attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Aatrox:Vayne:5",
+          "text": "Use World Ender when you can force a fight; the speed helps you close the gap to Vayne.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Chains slow Vayne first, making The Darkin Blade easier to land and dash-adjust for the knock-up.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "d3b462422a9913b230d9a348430c6ded8a676b6bbaf0a3c024c4e02bd0b6a790",
+      "tips": [
+        {
+          "id": "top:Aatrox:Vladimir:0",
+          "text": "Pull Vladimir with Infernal Chains when he steps up to last-hit, then follow with The Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 82, "end": 98 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Aatrox:Vladimir:1",
+          "text": "Do not chase while Sanguine Pool is up; Vladimir cannot be targeted and slows you in it. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 19, "end": 32 },
+            { "kind": "champion", "key": "Vladimir", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Aatrox:Vladimir:2",
+          "text": "Use Umbral Dash during The Darkin Blade to line up the sweet spot and get out of Vladimir's reach after.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Vladimir", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Aatrox:Vladimir:3",
+          "text": "Fight Vladimir before Hemoplague bursts, because he heals from each champion it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Vladimir:4",
+          "text": "Stay out of long Tides of Blood range once he charges it; the missiles slow you if charged for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b37d40d6c443da8610e1c7b2e280a3dd305ecd4d85dbe1e923fe53b3d61fdf26",
+      "tips": [
+        {
+          "id": "top:Aatrox:Volibear:0",
+          "text": "Don't let Volibear reach you with Thundering Smash active; he runs fast toward you and stuns on his next attack.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Aatrox:Volibear:1",
+          "text": "Use Infernal Chains on Volibear when he rushes in to slow him, then trade at the edge of your range.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Volibear", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Aatrox:Volibear:2",
+          "text": "Land The Darkin Blade at the sweet spot as he walks up. It knocks him up and cancels his rush.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Aatrox:Volibear:3",
+          "text": "Back away from Sky Splitter's circle once you see the cast; it hurts based on your max health.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Aatrox:Volibear:4",
+          "text": "Don't stay in a long fight after Volibear marks you with Frenzied Maul; the second hit heals him.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Volibear-W", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8aabbcf0defc93b0ab284c62065872341c4169e3ecba8e5f10e3254444564ffd",
+      "tips": [
+        {
+          "id": "top:Aatrox:XinZhao:0",
+          "text": "Aim The Darkin Blade so the edge of each swing lands on Xin Zhao, which knocks him up and hits hardest. Umbral Dash during the swing helps line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Aatrox:XinZhao:1",
+          "text": "Interrupt his Three Talon Strike combo. Back off when he gets his first attacks in, because the third knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 14, "end": 32 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Aatrox:XinZhao:2",
+          "text": "Land Infernal Chains when Xin Zhao charges in. He is slowed and revealed, which sets up The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Aatrox:XinZhao:3",
+          "text": "Stay out of Crescent Guard range when he has it. It deals big damage and knocks you back, and he is protected from your allies outside it.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Dashing mid-wind-up shifts the Blade, making it harder for Xin Zhao to sidestep after his charge.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 59, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc2d7436cebfb7b5c536d4ba8ec29262f722cde34a42499e8db2e29b2f189b11",
+      "tips": [
+        {
+          "id": "top:Aatrox:Yasuo:0",
+          "text": "Throw Infernal Chains when Yasuo isn't near his Wind Wall; it blocks the chain. Bait the wall out first, then use it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Aatrox:Yasuo:1",
+          "text": "Yasuo dashes out of The Darkin Blade easily. Use it after he spends Sweeping Blade, or when minions are not around for him to dash through.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 20, "end": 36 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Aatrox:Yasuo:2",
+          "text": "Step away when Yasuo has two Steel Tempest stacks; the next one is a whirlwind that knocks you up. Dodge it sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Aatrox:Yasuo:3",
+          "text": "Land the edge of The Darkin Blade to knock Yasuo up. It also hits harder and speeds up Deathbringer Stance.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 17, "end": 33 },
+            { "kind": "champion", "key": "Yasuo", "start": 43, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 87,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "84a4082fbc2278991c31323a8a55272af5c90d34ed8a844e13ea46e31681511d",
+      "tips": [
+        {
+          "id": "top:Aatrox:Yone:0",
+          "text": "Cast Infernal Chains when Yone walks up to trade; if he stays inside the area he is pulled back, and The Darkin Blade is easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 101, "end": 117 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Aatrox:Yone:1",
+          "text": "Aim The Darkin Blade at the far edge of its area, because only the edge knocks up and hits harder. Add Umbral Dash while casting to line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "knocked-up", "start": 72, "end": 81 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 103, "end": 114 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Aatrox:Yone:2",
+          "text": "Trade with Umbral Dash when you hit him, since it heals you from damage dealt to champions. Fight when you can hit him several times.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Yone:3",
+          "text": "Do not stand still to be knocked up by Fate Sealed. Keep Umbral Dash ready to leave if Yone commits.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 25, "end": 35 },
+            { "kind": "ability", "key": "Yone-R", "start": 39, "end": 50 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 57, "end": 68 },
+            { "kind": "champion", "key": "Yone", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Aatrox:Yone:4",
+          "text": "Yone's Soul Unbound body stays behind and he snaps back to it. Fight him while he is away from it, and expect extra damage when he returns.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Aatrox:combo:1",
+          "note": "Infernal Chains slows Yone so The Darkin Blade is easier to land, setting up the knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 }
+          ]
+        },
+        {
+          "comboId": "top:Aatrox:combo:0",
+          "note": "Umbral Dash during the Darkin Blade wind-up shifts the blade against Yone's dashing sidesteps.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Yone", "start": 69, "end": 73 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "47ff2970db0c18831390b6bd7100ac2223ff8b11f245a08888843b6a6719a581",
+      "tips": [
+        {
+          "id": "top:Aatrox:Yorick:0",
+          "text": "Stay out of Dark Procession when it lands, and don't dash into a wall of spirits. Hit the wall or walk around it.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Aatrox:Yorick:1",
+          "text": "Hit Yorick with Infernal Chains to slow him, then fire The Darkin Blade at the pulled spot.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Aatrox:Yorick:2",
+          "text": "Kill Mist Walkers quickly with a basic attack. Use Umbral Dash to reposition so they don't surround you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2f3c414621fc363de4d1d403e58f7c86fb98e512d6088f3f695560963694ee8a",
+      "tips": [
+        {
+          "id": "top:Aatrox:Zaahen:0",
+          "text": "Aim The Darkin Blade so the edge lands on Zaahen; you knock him up and deal extra damage. Use Umbral Dash mid-cast to line up the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Zaahen", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Aatrox:Zaahen:1",
+          "text": "Cultivation of War makes Zaahen stronger the more he hits you. Trade in short bursts and step away rather than a long brawl.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 0,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Zaahen", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Aatrox:Zaahen:2",
+          "text": "Don't commit to a kill when Cultivation of War is full of stacks unless you can chase; Zaahen can revive. Wait until it's used, or the stacks fade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 28,
+              "end": 46
+            },
+            { "kind": "champion", "key": "Zaahen", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Aatrox:Zaahen:3",
+          "text": "Hit Infernal Chains and walk out of the area to avoid being pulled back; Zaahen's Dreaded Return also pulls, so keep away from its line.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zaahen", "start": 73, "end": 79 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 82, "end": 96 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Aatrox:Zaahen:4",
+          "text": "Dodge Dreaded Return sideways; minions in its path stop it and pull him in, so stay behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6c9cb8d7cd67f352a03558a8b54b40bf429b6d3e73b00ea9274081264254a40",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Graves:0",
+          "text": "Close in on Graves with Umbral Dash while you cast Darkin Blade. Graves needs Quickdraw to get away, so wait until it has been used.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Graves", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Graves-E", "start": 78, "end": 87 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Aatrox:Graves:1",
+          "text": "Hit Graves with Infernal Chains to slow him, then follow with Darkin Blade while he is held in place.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Aatrox:Graves:2",
+          "text": "Do not walk into Smoke Screen. Step out of the cloud quickly, because its slow ends as soon as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Aatrox:Graves:3",
+          "text": "Graves does most of his damage up close, so stay out of point-blank range of his shotgun and hit him in a short burst.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Aatrox:Graves:4",
+          "text": "Save World Ender for a fight you can force. Once it is on, chase Graves down for a takedown to extend it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Graves", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Graves, making the Darkin Blade follow-up easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "755286ede5a48e843081c88153a2c89903084236a31124f8a26c86feb8b95e94",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:JarvanIV:0",
+          "text": "Step out of the line between Jarvan and his Demacian Standard, so Dragon Strike cannot knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Aatrox:JarvanIV:1",
+          "text": "Save Umbral Dash for escaping Cataclysm's terrain; movement abilities can cross it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Aatrox:JarvanIV:2",
+          "text": "Aim The Darkin Blade so the edge hits Jarvan, and use Umbral Dash during the cast to adjust your aim.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Aatrox:JarvanIV:3",
+          "text": "Use Infernal Chains on Jarvan when he lines up a combo; it slows him and pulls him back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Chains slow and pull Jarvan, so the Darkin Blade is easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 32, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0496793c55b3b972d8a3f62a74cf85e2b1481be08e9528fa431478d5e2de9b3c",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Kayn:0",
+          "text": "Aim The Darkin Blade at the edge so it knocks Kayn up. Use Umbral Dash while casting to adjust your aim.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kayn", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Aatrox:Kayn:1",
+          "text": "Hit Kayn with Infernal Chains when he is in the open. He is slowed and pulled back if he does not leave.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Aatrox:Kayn:2",
+          "text": "Dodge Blade's Reach so Kayn cannot start Umbral Trespass from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Kayn-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Aatrox:Kayn:3",
+          "text": "Hit Kayn while he is in Shadow Step to shorten it. Knocking him up with The Darkin Blade ends it immediately.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayn-E", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Aatrox:Kayn:4",
+          "text": "Watch for the warning on the terrain edge when Kayn is in a nearby wall. Hold your chains and dash until he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows the target, which makes the Darkin Blade easier to land on Kayn.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 46, "end": 62 },
+            { "kind": "champion", "key": "Kayn", "start": 81, "end": 85 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "29ae8dea8e9d420496ef180efd1c370f98a41dc8835f9abd7aa5ee57cfae8b20",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Khazix:0",
+          "text": "Stay near minions or allies so Kha'Zix can't treat you as isolated. His Taste Their Fear then does far less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "isolated", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Aatrox:Khazix:1",
+          "text": "Use Infernal Chains on Kha'Zix when he commits to a fight. It slows him and pulls him back if he stays in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Aatrox:Khazix:2",
+          "text": "Fight Kha'Zix after he has used Leap. His escape is on a long cooldown, so he is easier to hit with The Darkin Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Aatrox:Khazix:3",
+          "text": "Be wary when Kha'Zix vanishes, since his next attack slows you. Use Umbral Dash to line up The Darkin Blade or to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 68, "end": 79 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 91, "end": 107 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Kha'Zix and the pull helps set up a Darkin Blade sweetspot on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4c7d1cae4194a357271c3dfc2915c9ebbf3dfb6eb3732f36d6710539e60e10bc",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Kindred:0",
+          "text": "Kindred is fragile, so hit her with The Darkin Blade and chase her down, because she has to play carefully.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Aatrox:Kindred:1",
+          "text": "Land Infernal Chains on Kindred when she is near a wall or can't dash, because her slow and the pull-back stop her from kiting.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Aatrox:Kindred:2",
+          "text": "Use Umbral Dash to close the gap on Kindred and stay on her, so she has less room to shoot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kindred", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Aatrox:Kindred:3",
+          "text": "When Kindred casts Lamb's Respite, do not blow World Ender; nobody can die inside the zone.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows and pulls Kindred, which helps set up the Darkin Blade sweetspot.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kindred", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 60, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7f53c9fb67ee72c9dc889a539e2593b7760cb3c835959448daec5dbd69cf3aa6",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:LeeSin:0",
+          "text": "Dodge Sonic Wave, since it stops at the first enemy it hits. Lee Sin needs it to dash in with Resonating Strike.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Aatrox:LeeSin:1",
+          "text": "Use Infernal Chains on Lee Sin when he dashes toward you. He is slowed, and the pull can drag him back into your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Aatrox:LeeSin:2",
+          "text": "Use Umbral Dash to slip out of Dragon's Rage. Lee Sin kicks wherever you stand when the cast ends, so stay away from your teammates.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "LeeSin", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Aatrox:LeeSin:3",
+          "text": "Fight Lee Sin when his Energy is low. He needs Energy for every ability, so a long fight favors you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Aatrox:LeeSin:4",
+          "text": "Use World Ender when you can win a fight. It gives you more damage, and each takedown extends it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows Lee Sin, making the following Darkin Blade easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7755bcf6cda122550a964ddb14ac0b1c4f79249176af219079dad8f97e5960c",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:MasterYi:0",
+          "text": "Hit Master Yi with Infernal Chains to pull him back, but not during Highlander; he is immune to its slow then.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Aatrox:MasterYi:1",
+          "text": "Wait for Master Yi to use Alpha Strike, then aim The Darkin Blade where he lands; he can't be targeted during it.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Aatrox:MasterYi:2",
+          "text": "Hit Master Yi a few times so he spends mana on Meditate, and be ready for his burst when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Aatrox:MasterYi:3",
+          "text": "Keep Umbral Dash ready for when Master Yi jumps in; dashing away stops him from stacking hits on you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "MasterYi", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Aatrox:MasterYi:4",
+          "text": "Use World Ender when Master Yi commits; the extra damage and healing help you win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "MasterYi", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains slows and pulls Yi, making the Darkin Blade easier to land on him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 43, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c9954e243dbe3c02139f27c7fac58ddc482266e5da7a433350a96d5a5f40dcf5",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Naafiri:0",
+          "text": "Aim The Darkin Blade so the end of the swing lands on Naafiri; the edge hit knocks her up. Use Umbral Dash mid-swing to line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 54, "end": 61 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Aatrox:Naafiri:1",
+          "text": "Hit Naafiri with Infernal Chains when she tries to leave. She is slowed, then pulled back if she stays in the area.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Aatrox:Naafiri:2",
+          "text": "Fight her when her Packmates are few. Hit her with your attacks and abilities to bring Deathbringer Stance back sooner and heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 87,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Aatrox:Naafiri:3",
+          "text": "Do not chase her into her Call of the Pack; she cannot be targeted at the start. Wait it out, then fight when she lands.",
+          "refs": [],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Aatrox:Naafiri:4",
+          "text": "Use World Ender when you can win the fight. A kill extends it, so you can keep chasing her team.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:0",
+          "note": "E during the Q wind-up helps sweetspot a mobile Naafiri who keeps darting in and out.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 48, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f65910dd6d5711800dd5563751e44d848da558badea31676fed9935809eba25",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Nocturne:0",
+          "text": "Dodge Duskbringer by stepping sideways; it is a narrow line and easy to sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Aatrox:Nocturne:1",
+          "text": "Do not throw The Darkin Blade into Shroud of Darkness; wait until the shield is gone or bait it with Infernal Chains first.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Aatrox:Nocturne:2",
+          "text": "Save Umbral Dash for when Nocturne casts Unspeakable Horror, so you break the tether and avoid the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nocturne", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 41, "end": 59 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Aatrox:Nocturne:3",
+          "text": "Stay near allies when Nocturne casts Paranoia; he dashes at one champion and you can be the one he picks.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "df90a6a05bbbdb89233c4739963d78dd5c8d5615aefffcf1e0d1fe75179f4455",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Shyvana:0",
+          "text": "Keep your distance from Shyvana and poke when she has low Fury. She is weak when she cannot hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Aatrox:Shyvana:1",
+          "text": "Land Infernal Chains on Shyvana as she runs in. The slow cuts her closing speed and makes it harder for her to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Aatrox:Shyvana:2",
+          "text": "Use Umbral Dash to slip out of her reach or to line up The Darkin Blade, then hit her at the end of its swings.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Aatrox:Shyvana:3",
+          "text": "Do not trade into Shyvana right after Inferno Aegis starts, because the shield soaks your damage. Wait for it to pop first.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Aatrox:Shyvana:4",
+          "text": "Keep World Ender for a fight you can win. The bonus damage and healing help you if you win the fight against her.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Chains slow and pull help land Q on Shyvana, who is slowed by nothing of her own but can shield.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 36, "end": 43 }
+          ]
+        },
+        {
+          "comboId": "jungle:Aatrox:combo:0",
+          "note": "Dashing during the Q wind-up helps sweetspot the blade on Shyvana as she moves in and out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 58, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "af75a44b4618cb815ab1108c82d00551ed96033f72b134366ceadf0ea2baa958",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Skarner:0",
+          "text": "Stay out of the line between Skarner and any wall. If Ixtal's Impact grabs you against a wall, you take damage and are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 54, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Aatrox:Skarner:1",
+          "text": "Skarner can't be slowed during his charge, so don't spend Infernal Chains on it.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Aatrox:Skarner:2",
+          "text": "Keep Umbral Dash ready for when Skarner uses Impale. Dodge it by moving out of its reach.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Skarner-R", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Aatrox:Skarner:3",
+          "text": "Don't ignore Skarner in a long fight. His attacks stack Quaking, which keeps damaging you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "08487318cbb0814a562d3feed87e56d4da5373d3a630fb31a1bf850c602788c4",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Sylas:0",
+          "text": "Dodge Sylas's Abduct by sidestepping its thin line; if he misses, he is out of dashes and you can jump on him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Aatrox:Sylas:1",
+          "text": "Use Umbral Dash while swinging The Darkin Blade so the hit lands more often, then keep fighting him.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Aatrox:Sylas:2",
+          "text": "Fight when Sylas is hurt, but be wary: his Kingslayer heals him back up when he lunges at you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sylas-W", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Aatrox:Sylas:3",
+          "text": "Use Infernal Chains to slow Sylas when he tries to run, then follow with The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 73, "end": 89 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0caba62b08aa952f6ae048503370154ec424ccc66722679c2cac6a093111b3b3",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Talon:0",
+          "text": "Aim The Darkin Blade so Talon is hit at the tip of the swing. If he leaps in, you get a knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 88, "end": 96 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Aatrox:Talon:1",
+          "text": "Hit Talon with Infernal Chains when he jumps in. He is slowed and will be pulled back if he stays in the circle.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Aatrox:Talon:2",
+          "text": "Talon bursts you with physical damage once Blade's End is full. Fight him when his abilities are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 43,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Aatrox:Talon:3",
+          "text": "Talon is far weaker when Shadow Assault is down, so push your fight then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Aatrox:Talon:4",
+          "text": "Use Umbral Dash to close the gap or leave Rake's path. Talon's slow makes it harder to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Talon-W", "start": 42, "end": 46 },
+            { "kind": "champion", "key": "Talon", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Aatrox:combo:1",
+          "note": "Infernal Chains' slow and pull help land The Darkin Blade on Talon, who can leap in and out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Talon", "start": 61, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "21280f3bc1ef9b1fb7bc6d16b705d03b727be5a0bead8a0333bcdaf4ab063cdc",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:Viego:0",
+          "text": "Dodge Viego's Spectral Maw by sidestepping. It stops at the first unit it hits, so keep a minion between you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Viego-W", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Aatrox:Viego:1",
+          "text": "Use Umbral Dash to dodge Viego's stun or to close in on him when he charges.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Aatrox:Viego:2",
+          "text": "Land Infernal Chains on Viego to keep him slowed and in range for your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Aatrox:Viego:3",
+          "text": "Be careful at low health; Viego's Heartbreaker teleports onto the lowest-health champion.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Viego-R", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Aatrox:Viego:4",
+          "text": "Fight where Viego cannot hide; when he is camouflaged in Harrowed Path's Mist, expect an ambush.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Viego-E", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d8a5f42c8ac831fc7a08d3828be596b15609d8589109cd5c2ce047eec94a2ee2",
+      "tips": [
+        {
+          "id": "jungle:Aatrox:XinZhao:0",
+          "text": "Dash with Umbral Dash while casting The Darkin Blade so Xin Zhao has a harder time dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-E", "start": 10, "end": 21 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 36, "end": 52 },
+            { "kind": "champion", "key": "XinZhao", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Aatrox:XinZhao:1",
+          "text": "Hit Xin Zhao with Infernal Chains when he charges in, so he is slowed and pulled back if he stays put.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Aatrox:XinZhao:2",
+          "text": "Keep your distance when Xin Zhao uses Crescent Guard; while it lasts, he cannot be hurt from far away.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Aatrox:XinZhao:3",
+          "text": "Fight when Xin Zhao has spent Three Talon Strike; its knock up and cooldown cuts are his main combo.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 30, "end": 48 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

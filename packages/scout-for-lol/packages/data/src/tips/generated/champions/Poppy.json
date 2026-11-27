@@ -1,0 +1,1046 @@
+{
+  "schemaVersion": 1,
+  "champion": "Poppy",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "b51418db3436c1967a92a37a42550cd5295dbc07f51650f46c11c3087ad03518",
+      "tips": [
+        {
+          "id": "support:Poppy:general:0",
+          "text": "Look for walls when you use Heroic Charge. If you carry the enemy into terrain they are stunned and take extra damage, which sets up your carry's follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 28, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Poppy:general:1",
+          "text": "Save Steadfast Presence for an enemy who is about to dash at you or your carry. It stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Poppy:general:2",
+          "text": "Walk over your buckler after Iron Ambassador lands to get your shield back. Enemy champions can destroy it by stepping on it, so grab it first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 29,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Poppy:general:3",
+          "text": "Use Hammer Shock when enemies stand together, and again to catch them as the ground erupts. It slows them and hits twice, so it works well for poke.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 },
+            { "kind": "keyword", "key": "poke", "start": 143, "end": 147 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Poppy:general:4",
+          "text": "Release Keeper's Verdict right away to knock an enemy up in a close fight. Charge it first only when you want to throw a distant enemy back toward their base.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 8, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Poppy:general:5",
+          "text": "Don't start charging Keeper's Verdict when you could be stunned or interrupted. If the charge is interrupted, the ability goes on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Poppy:combo:0",
+          "name": "Flash charged ult",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Poppy-R" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When you want a long-range knockback without the enemy seeing you close in.",
+          "whenRefs": [],
+          "text": "Flash is still usable while you charge the hammer. Start charging, then Flash toward the target before you release to reposition.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "summoner-spell", "key": "4", "start": 72, "end": 77 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "edbe4e397350f45fc20a8a7e419b00f79eb3bff79e4a6fa32b20bc1424fb1db7",
+      "tips": [
+        {
+          "id": "support:Poppy:Bard:0",
+          "text": "Use Steadfast Presence when Bard tries to take his Magical Journey portal to escape or chase; it stops his dash and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Bard", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Bard-E", "start": 51, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Poppy:Bard:1",
+          "text": "Stand next to a wall when you use Heroic Charge on Bard; if he is carried into terrain, he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Bard", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Poppy:Bard:2",
+          "text": "Stay out of a line with your minions or your partner; Cosmic Binding stuns if it hits a second target or a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Poppy:Bard:3",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Poppy:Bard:4",
+          "text": "Step on your buckler from Iron Ambassador after it lands to get your shield, and do it before Bard steps on it to destroy it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Bard", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Poppy:Bard:5",
+          "text": "Bard's Tempered Fate freezes everyone it hits; do not use Keeper's Verdict while he can freeze the target.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-R", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Poppy-R", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0c348187d2be9057f49262c105569fcaed37ca425409f6c4a679903d5c7f7424",
+      "tips": [
+        {
+          "id": "support:Poppy:Karma:0",
+          "text": "Close in on Karma with Heroic Charge when she has used Inner Flame, and push her into a wall for the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Poppy-E", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "Karma-Q", "start": 55, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Poppy:Karma:1",
+          "text": "Hold Steadfast Presence for Karma's allies or Karma herself when they dash in. It stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Karma", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Karma", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Poppy:Karma:2",
+          "text": "Stay behind minions when Karma is poking. Inner Flame ends at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Karma-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Poppy:Karma:3",
+          "text": "Walk out of the circle of flame when Karma uses Mantra on Inner Flame. It deals heavy damage if you stay in it.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Karma-R", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Karma-Q", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Poppy:Karma:4",
+          "text": "Move out of range of Focused Resolve before the tether lands, or break it by getting far away. Otherwise you get rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Poppy:Karma:5",
+          "text": "Step on your buckler to pick it up for a shield, and avoid fighting where Karma can poke you while you grab it.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b48bb2734fa1df98c71ff6622695f90ba21ae3a4b5d51b9947bcbd0c5c6fe5a4",
+      "tips": [
+        {
+          "id": "support:Poppy:Leona:0",
+          "text": "Turn on Steadfast Presence when Leona goes for Zenith Blade. Her dash gets stopped, and she ends up slowed and grounded.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Leona", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Leona-E", "start": 47, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Poppy:Leona:1",
+          "text": "Use Heroic Charge on Leona when a wall is behind her. Slamming her into terrain stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Poppy:Leona:2",
+          "text": "Step on your buckler from Iron Ambassador to pick it up for a shield, before Leona walks over it and destroys it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Leona", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Poppy:Leona:3",
+          "text": "Stay out of Leona's Solar Flare centre. Move sideways once you see it land, so you are only slowed and not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Leona-R", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Poppy:Leona:4",
+          "text": "Hit Leona with Hammer Shock as she walks up. It deals extra damage based on her max health and slows her when it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash charged ult lets Poppy knock Leona back from range without her seeing the approach.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Leona", "start": 35, "end": 40 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "06e95b68d8d7009364282b7f0d3b8e7885a6225f8133973fcb35b7e1de46ec99",
+      "tips": [
+        {
+          "id": "support:Poppy:Lulu:0",
+          "text": "Turn on Steadfast Presence when Lulu or her partner tries to dash in or out; it stops the dash, knocks them up and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Lulu", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 127, "end": 133 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Poppy:Lulu:1",
+          "text": "Hold Heroic Charge for when Lulu is near a wall; slamming her into terrain stuns her and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Poppy:Lulu:2",
+          "text": "Stay behind your minions when Lulu uses Pix; they can block his bolts.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Poppy:Lulu:3",
+          "text": "Aim Hammer Shock so the ground erupts under Lulu; it hurts more against a high health target and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Poppy:Lulu:4",
+          "text": "Step on your buckler after Iron Ambassador lands to get your shield back, and step on Lulu's team's nothing else; just don't leave it lying.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 27,
+              "end": 42
+            },
+            { "kind": "champion", "key": "Lulu", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash during the R charge gives a surprise knockback on Lulu, who can't easily react to the close-in.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lulu", "start": 56, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "f468d769688cc52b605e2be108b9dd69f7c9f0c8cb48409910d48bfbafed5014",
+      "tips": [
+        {
+          "id": "support:Poppy:Lux:0",
+          "text": "Use Heroic Charge on Lux when a wall is behind her; the stun leaves her helpless and she can't escape your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 21, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Poppy:Lux:1",
+          "text": "Hold Steadfast Presence for when Lux or her allies dash in. It stops the dash and slows them.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Poppy:Lux:2",
+          "text": "Stay out of a straight line with your lane partner's path and walk around minions, because Light Binding roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 91, "end": 104 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Poppy:Lux:3",
+          "text": "Step on the buckler from Iron Ambassador quickly to take the shield, and use it to trade when Lux pokes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 25,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Lux", "start": 94, "end": 97 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Poppy:Lux:4",
+          "text": "Charge Keeper's Verdict when Lux is rooted or slowed; a charged hit sends her far back toward her base.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Poppy:Lux:5",
+          "text": "Walk out of Lucent Singularity's area instead of fighting inside it, since it slows and then blows up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flashing mid-charge lets Keeper's Verdict knock Lux back from range without her seeing you close in.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 25, "end": 41 },
+            { "kind": "champion", "key": "Lux", "start": 48, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "a417b00b5adf9b6a573072bbc3f67a049bd56f1e1c440bdaeefdede8a588e80b",
+      "tips": [
+        {
+          "id": "support:Poppy:Milio:0",
+          "text": "Wait for Milio to use Ultra Mega Fire Kick, then charge in with Heroic Charge. Pin him against a wall to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Milio-Q", "start": 22, "end": 42 },
+            { "kind": "ability", "key": "Poppy-E", "start": 64, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Poppy:Milio:1",
+          "text": "Turn on Steadfast Presence when Milio or his partner tries to dash in or out. It stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Milio", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Poppy:Milio:2",
+          "text": "Look for Milio when he is alone. Then Hammer Shock and Heroic Charge are hard for him to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "isolated", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 38, "end": 50 },
+            { "kind": "ability", "key": "Poppy-E", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Poppy:Milio:3",
+          "text": "Step on your buckler from Iron Ambassador to get your shield back. Do it before the enemy can walk over it and destroy it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Poppy:Milio:4",
+          "text": "Milio's Breath of Life cleanses stuns and slows but not knock-ups. Save Keeper's Verdict for when he has already used it.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Milio-R", "start": 8, "end": 22 },
+            { "kind": "ability", "key": "Poppy-R", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "29b3fd175c12c2220f51aa4bc2c9c9e00e2d866e81e071ad3549069aac098db2",
+      "tips": [
+        {
+          "id": "support:Poppy:Nami:0",
+          "text": "Hold Steadfast Presence for when Nami or her partner tries to dash in or out; it stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Poppy:Nami:1",
+          "text": "Look for Heroic Charge when Nami stands near a wall; slamming her into terrain stuns her and she has little way to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Nami", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Poppy:Nami:2",
+          "text": "Go in right after Nami wastes Aqua Prison; it has a long cooldown, so she is easy to catch then.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Nami-Q", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Poppy:Nami:3",
+          "text": "Aqua Prison is slow to land, so keep moving sideways while you walk up and the bubble will usually miss.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Poppy:Nami:4",
+          "text": "Step on your buckler from Iron Ambassador to pick it up for a shield. Throw it at Nami so it lands near her and the walls.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Nami", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Poppy:Nami:5",
+          "text": "Avoid trading while the enemy has Tidecaller's Blessing; wait out its short duration first.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 34, "end": 55 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Poppy:Nami:6",
+          "text": "Step out of the path of Tidal Wave; it travels slowly, so you can see it coming and dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Poppy:Nami:7",
+          "text": "Use Hammer Shock on Nami to poke her; it does extra damage based on her health, and the lingering ground slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "976a395380c5eb26577539ebb86289c6896cc085980032fe5a2e2cbb23f8dee7",
+      "tips": [
+        {
+          "id": "support:Poppy:Nautilus:0",
+          "text": "Turn on Steadfast Presence when Nautilus hooks toward you; it can stop his Dredge Line dash and leave him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Nautilus", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 75, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "support:Poppy:Nautilus:1",
+          "text": "Charge Heroic Charge into a wall behind Nautilus to stun him. Use it when he is close to terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 7, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Poppy:Nautilus:2",
+          "text": "Step on the buckler from Iron Ambassador to get your shield back. Do it before Nautilus can step on it first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 25,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Nautilus", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Poppy:Nautilus:3",
+          "text": "Stand still until Riptide's waves finish before you run, or you will walk into the later blasts.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Poppy:Nautilus:4",
+          "text": "Aim Hammer Shock at Nautilus when he is shielded and trying to trade. It slows him and then hits a second time.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nautilus", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Poppy:Nautilus:5",
+          "text": "Use Keeper's Verdict at level 6 to knock Nautilus away from your carry once he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6c057324006f57af9c05e0589cac0448bd79d7a3dada665b03d4f25ccb5d9e5a",
+      "tips": [
+        {
+          "id": "support:Poppy:Pantheon:0",
+          "text": "Turn on Steadfast Presence when Pantheon leaps at you with Shield Vault; the field can stop his dash.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Pantheon", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Poppy:Pantheon:1",
+          "text": "Pantheon is much weaker once he has spent Grand Starfall. Look for fights while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Poppy:Pantheon:2",
+          "text": "Use Heroic Charge to carry Pantheon into a wall and stun him. Do it when he steps up to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Poppy:Pantheon:3",
+          "text": "Do not attack Pantheon head-on while Aegis Assault is up. Wait it out or fight from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Poppy:Pantheon:4",
+          "text": "Keep your health up. Comet Spear hurts much more against low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "25af82bc5befa736a8392ef442850d12be24fa65d2cce3ec020076f661c1ed40",
+      "tips": [
+        {
+          "id": "support:Poppy:Pyke:0",
+          "text": "Turn on Steadfast Presence when Pyke is about to use Phantom Undertow; it stops his dash and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Pyke", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Pyke-E", "start": 53, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "support:Poppy:Pyke:1",
+          "text": "Use Heroic Charge on Pyke when a wall is behind him; hitting terrain stuns him and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Poppy:Pyke:2",
+          "text": "Step on your buckler quickly to get the shield back, and stand on his to destroy it.",
+          "refs": [],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Poppy:Pyke:3",
+          "text": "Chase hard when Pyke is low and visible, because he heals back damage only while hidden. Do not let him slip away in Ghostwater Dive.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Pyke-W", "start": 117, "end": 132 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Poppy:Pyke:4",
+          "text": "Stay at a distance from your low-health allies. Pyke can execute them with Death From Below, and he teleports to them.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Pyke-R", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d6ad8ae813d5920950b2810a48959299329403991a833daf97faa7ac37e04545",
+      "tips": [
+        {
+          "id": "support:Poppy:Senna:0",
+          "text": "Dash into Senna with Heroic Charge when a wall is behind her; the stun and extra damage can win the whole trade.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Poppy-E", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Poppy:Senna:1",
+          "text": "Hold Steadfast Presence for when Senna or her ally dashes at you; it stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Senna", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Poppy:Senna:2",
+          "text": "Step on your buckler after Iron Ambassador lands to get the shield back before Senna can destroy it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 27,
+              "end": 42
+            },
+            { "kind": "champion", "key": "Senna", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Poppy:Senna:3",
+          "text": "Stay out of Senna's long range, because she pokes you from afar. Close in with Hammer Shock when her Last Embrace is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 79, "end": 91 },
+            { "kind": "ability", "key": "Senna-W", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Poppy:Senna:4",
+          "text": "Use Keeper's Verdict on Senna when she is caught away from her team; the knockback sends her toward her Nexus.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flashing mid-charge hides Poppy's approach, so Senna gets little warning before the knockback lands.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Senna", "start": 47, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "68f1af07ebb6f17dbad558def5456cacb755fc90580608407a15a0ae47efed78",
+      "tips": [
+        {
+          "id": "support:Poppy:Seraphine:0",
+          "text": "Turn on Steadfast Presence when Seraphine or her partner tries to dash in or out; it stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Seraphine", "start": 32, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Poppy:Seraphine:1",
+          "text": "Charge at Seraphine with Heroic Charge when a wall is behind her; hitting terrain stuns her.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Poppy-E", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Poppy:Seraphine:2",
+          "text": "Stay out of line of Beat Drop. If you are slowed first, it roots you instead, so avoid slows before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Poppy:Seraphine:3",
+          "text": "Seraphine is fragile and has no dash. Land Hammer Shock where she stands, then follow with Heroic Charge.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Poppy-Q", "start": 43, "end": 55 },
+            { "kind": "ability", "key": "Poppy-E", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Poppy:Seraphine:4",
+          "text": "Step on your buckler from Iron Ambassador after throwing it to get the shield back, and trade while the shield is up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Poppy:Seraphine:5",
+          "text": "Do not start charging Keeper's Verdict near Seraphine's range; Encore can charm you mid-charge. Use it when she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-R", "start": 22, "end": 38 },
+            { "kind": "champion", "key": "Seraphine", "start": 44, "end": 53 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0b703794e6b39cb28cfc9d594f5220c73570cc44496b5f84f9afd49ea08b760e",
+      "tips": [
+        {
+          "id": "support:Poppy:Sona:0",
+          "text": "Look for a wall behind Sona, then use Heroic Charge to carry her into it and stun her. She has little way to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Poppy-E", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Poppy:Sona:1",
+          "text": "Hold Steadfast Presence for when Sona or her ally dashes in. It stops the dash and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Sona", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Poppy:Sona:2",
+          "text": "Pick up your buckler from Iron Ambassador quickly after poke trades. It gives you a shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Poppy:Sona:3",
+          "text": "Sona is fragile, so reach her fast. Keeper's Verdict can be released right away to launch her straight up.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Poppy-R", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d09c81a2f16a2ef984865d4f9579868c95e05bc0d450dfef8b04db8fb471b8d3",
+      "tips": [
+        {
+          "id": "support:Poppy:Thresh:0",
+          "text": "Turn on Steadfast Presence when Thresh leaps in with Death Sentence's recast; it stops the dash and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Thresh", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "support:Poppy:Thresh:1",
+          "text": "Slam Thresh into a wall with Heroic Charge so he is stunned and cannot hook you.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Poppy-E", "start": 29, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Poppy:Thresh:2",
+          "text": "Watch Thresh's cast start for Death Sentence and sidestep; the hook is a thin line that stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Poppy:Thresh:3",
+          "text": "Step on your buckler from Iron Ambassador quickly for the shield, since it can be destroyed by Thresh stepping on it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 26,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Thresh", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Poppy:Thresh:4",
+          "text": "Do not stand close to Thresh while charging Keeper's Verdict; Flay or a hook interrupts you.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Poppy-R", "start": 44, "end": 60 },
+            { "kind": "ability", "key": "Thresh-E", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": [
+        {
+          "comboId": "support:Poppy:combo:0",
+          "note": "Flash during the charged ult repositions unseen, so Thresh can't easily dodge or hook around it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Thresh", "start": 52, "end": 58 }
+          ]
+        }
+      ]
+    }
+  ]
+}

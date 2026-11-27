@@ -1,0 +1,3057 @@
+{
+  "schemaVersion": 1,
+  "champion": "Khazix",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "9092f18cd36fe8f54313b0abfc70c8c8504e7a0e0dad72e28969e64c98c23e86",
+      "tips": [
+        {
+          "id": "jungle:Khazix:general:0",
+          "text": "Hit lone targets with Taste Their Fear; it deals far more damage to enemies away from their allies. Wait for a straggler before you jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 22, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:general:1",
+          "text": "Fight away from enemy minions, champions and turrets so your target stays isolated and your damage stays high.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Khazix:general:2",
+          "text": "Start fights from a brush or after Void Assault, then attack first; Unseen Threat adds damage and slows the target.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 35, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 68,
+              "end": 81
+            },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:general:3",
+          "text": "Use Leap to close the gap, and cast Taste Their Fear while you are still in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Khazix:general:4",
+          "text": "Fire Void Spike with yourself inside the blast to heal. Use it when you are hurt, such as after a camp or a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Khazix:general:5",
+          "text": "Don't dive when Leap and Void Assault are on cooldown; you have no way out and you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Khazix-R", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Khazix:general:6",
+          "text": "Pick off the enemy's lone target, then reset Leap by scoring a takedown once it is evolved. Chain kills when the enemy team splits up.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Khazix:combo:0",
+          "name": "Leap into buffered Q",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Khazix-E" },
+            { "kind": "ability", "key": "Khazix-Q" }
+          ],
+          "when": "Gap-closing onto an isolated target that is out of Taste Their Fear range.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 51, "end": 67 }
+          ],
+          "text": "Cast Taste Their Fear while still mid-leap and it buffers to fire as soon as you land. The wiki notes it can be cast during the dash.",
+          "textRefs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Khazix-E", "start": 38, "end": 42 }
+          ]
+        },
+        {
+          "id": "jungle:Khazix:combo:1",
+          "name": "Flash during Leap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Khazix-E" },
+            { "kind": "summoner-spell", "key": "2202" },
+            { "kind": "ability", "key": "Khazix-Q" }
+          ],
+          "when": "The target is just beyond your Leap range and you want to close the gap.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 31, "end": 35 }
+          ],
+          "text": "The wiki notes that summoner spells can be used while leaping. Flash mid-leap to extend your reach, then slash with Taste Their Fear.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Khazix-E", "start": 73, "end": 77 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 116, "end": 132 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "29ae8dea8e9d420496ef180efd1c370f98a41dc8835f9abd7aa5ee57cfae8b20",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Aatrox:0",
+          "text": "Look for Aatrox when he is away from minions and allies, then hit him with Taste Their Fear for its big bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Khazix:Aatrox:1",
+          "text": "Step out of Infernal Chains sideways or toward Aatrox, or Leap out of them. If you stay inside, you get pulled back and hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Aatrox", "start": 47, "end": 53 },
+            { "kind": "ability", "key": "Khazix-E", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Khazix:Aatrox:2",
+          "text": "Start the fight from stealth. Your first attack from Unseen Threat slows him, which makes The Darkin Blade harder for him to land.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 53,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 90, "end": 106 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Khazix:Aatrox:3",
+          "text": "Aatrox's sword swings are telegraphed, so wait for him to use The Darkin Blade, dodge it, then jump in while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Khazix:Aatrox:4",
+          "text": "Don't stay in a long fight with Aatrox. He heals from damage he deals, so burst him and leave, or finish him with Void Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Khazix-R", "start": 114, "end": 126 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c525365b03b161d6f0f7e40980487e59608e3e33fd4a963c4ba87a3b4190db20",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Ambessa:0",
+          "text": "Hunt Ambessa when she is alone: Taste Their Fear hits an isolated target much harder, so look for her away from minions and allies.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 5, "end": 12 },
+            { "kind": "keyword", "key": "isolated", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Khazix:Ambessa:1",
+          "text": "Start fights from stealth. Use Void Assault so your next attack slows her, which makes it hard for her to catch you or close in.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 31, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Ambessa:2",
+          "text": "Don't stand in front of her when Public Execution is ready. She can blink to the farthest enemy champion and then stun them, so stay near allies.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 33, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Khazix:Ambessa:3",
+          "text": "Leap in after she has spent Lacerate or Cunning Sweep. Her abilities have cooldowns, and a Leap landing on her then is hard to punish.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Khazix-E", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Khazix:Ambessa:4",
+          "text": "Fire Void Spike at her from a distance to poke and heal, and don't walk into her when she is bracing with Repudiation.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 106, "end": 117 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b00af7f603d80a4dc27e7bc38ded34e836681f15db44edd841c3302278bc0cf9",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Amumu:0",
+          "text": "Do not walk alone through the jungle. Amumu can hit you with Bandage Toss from far away and his team will follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Khazix:Amumu:1",
+          "text": "Keep Leap ready when Amumu has his ultimate. Jump away from his team before Curse of the Sad Mummy can catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Amumu", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Amumu-R", "start": 76, "end": 98 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Khazix:Amumu:2",
+          "text": "Aim Taste Their Fear at Amumu's teammates when they are isolated. Amumu is a poor target because he is tanky.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Amumu", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "isolated", "start": 56, "end": 64 },
+            { "kind": "champion", "key": "Amumu", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Khazix:Amumu:3",
+          "text": "Use Void Assault to hide and escape when Amumu's Bandage Toss is down. You can then attack when he is not looking.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Amumu", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "671c587a39a6b049f6a7c45770835005df23f409b2194804cb90ad6842b5b28c",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Belveth:0",
+          "text": "Look for Bel'Veth when she is Isolated from her allies and hit her with Taste Their Fear for its much bigger damage.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 9, "end": 17 },
+            { "kind": "keyword", "key": "isolated", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:Belveth:1",
+          "text": "Use Leap to jump in after she has spent Above and Below, then finish with Taste Their Fear.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Belveth-W", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 74, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Belveth:2",
+          "text": "Fight early. Bel'Veth gets stronger with every takedown, so cut her scaling short by ganking and invading before she snowballs.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 13, "end": 21 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Khazix:Belveth:3",
+          "text": "Stay out of her view, then start the fight with an attack that has Unseen Threat to slow her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 67,
+              "end": 80
+            },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:Belveth:4",
+          "text": "Don't stay next to her while Royal Maelstrom is up. She takes less damage and heals while it lasts, so back off or wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "27e199d0ee9e54cf7d353d8df3fb4aeaceb42a2d0aa909856c7bb48a1f463225",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Brand:0",
+          "text": "Look for Brand when he is far from his allies. Taste Their Fear hits an isolated target much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 47, "end": 63 },
+            { "kind": "keyword", "key": "isolated", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Khazix:Brand:1",
+          "text": "Dodge Sear and Pillar of Flame. Brand needs to land a spell to start his combo, and the stun only comes with fire already on you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Khazix:Brand:2",
+          "text": "Use Leap to get out of Pillar of Flame, which lands after a short delay. Move before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Brand:3",
+          "text": "Move away from your allies when Brand casts Pyroclasm. The missile starts slowly, so you have time to spread out.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Brand-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes the gap onto Brand, who has no listed escape from it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Brand", "start": 56, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0925b289e76d556392aecdfb5308684b22d239f0c1ffe9f5fce646d649a38761",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Briar:0",
+          "text": "Hit Briar with Taste Their Fear when she is away from minions and allies; it does far more damage to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "isolated", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Khazix:Briar:1",
+          "text": "Open from the brush or with Void Assault so Unseen Threat is ready, then attack her for bonus damage and a slow.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 28, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 44,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Khazix:Briar:2",
+          "text": "Briar heals from her bleed, so burst her quickly with Leap and Taste Their Fear instead of trading slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Khazix:Briar:3",
+          "text": "Keep Leap ready when Briar is near. After she uses Blood Frenzy you can jump away, since Void Assault is long to come back.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Khazix-R", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Khazix:Briar:4",
+          "text": "Use Void Spike on her when she charges in; it heals you if you stand in the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Briar's Blood Frenzy self-taunts her, so a buffered Leap into Taste Their Fear can close on her fast.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 62, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f7fa919aefe3d7824c797806189e273e38b048c4ad157a81de24b62d327ab32",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Darius:0",
+          "text": "Look for Darius when he is far from his minions and allies; Taste Their Fear hits an isolated target much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 60, "end": 76 },
+            { "kind": "keyword", "key": "isolated", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Khazix:Darius:1",
+          "text": "Wait until Apprehend is on cooldown before you jump in. Without the pull he has a hard time catching you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 11, "end": 20 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:Darius:2",
+          "text": "Hit Darius from range with Void Spike, then back off. Do not stand and trade, since his stacking bleed makes long fights go his way.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Khazix-W", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Khazix:Darius:3",
+          "text": "Use Leap to get away once Darius has landed Decimate or Apprehend. Void Assault gives you a second escape.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Darius-Q", "start": 44, "end": 52 },
+            { "kind": "ability", "key": "Darius-E", "start": 56, "end": 65 },
+            { "kind": "ability", "key": "Khazix-R", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Khazix:Darius:4",
+          "text": "Come out of stealth with your Unseen Threat attack on Darius. It slows him, so he has a harder time hitting you with Decimate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 30,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Darius", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 },
+            { "kind": "ability", "key": "Darius-Q", "start": 117, "end": 125 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d55c89cd57bdf02780e5bbc93a955cf75e6a5892be8093764d6d88a83f2621f",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Diana:0",
+          "text": "Fight Diana when she is alone; Taste Their Fear hits far harder on an isolated target, so wait until her allies step away.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "isolated", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Diana:1",
+          "text": "Slip into brush or use Void Assault before you start the fight, then hit her with an attack so Unseen Threat slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 23, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 95,
+              "end": 108
+            },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Khazix:Diana:2",
+          "text": "Save Leap for after Diana has used Lunar Rush. Without it she has a harder time getting away from you or following you.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Diana", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Diana-E", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Khazix:Diana:3",
+          "text": "Stay out of the way of Moonfall in a team fight. It pulls you in, and the beam lands after a short delay, so spread out from your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-R", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2870014cbd1261650ca9a60c9664042b39a97182710ca1937814c3f8acfacec6",
+      "tips": [
+        {
+          "id": "jungle:Khazix:DrMundo:0",
+          "text": "Look for Mundo when he is alone, then open with Taste Their Fear for the big isolated damage.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "isolated", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Khazix:DrMundo:1",
+          "text": "Don't try to burst Mundo through Maximum Dosage; he heals through slow damage, so kill him before he uses it or leave.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Khazix:DrMundo:2",
+          "text": "Dodge Infected Bonesaw by sidestepping; it is a narrow line that stops at the first enemy.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Khazix:DrMundo:3",
+          "text": "Skip fighting inside Heart Zapper's range; he stores your damage and heals it back on recast.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Khazix:DrMundo:4",
+          "text": "Use Void Assault to approach unseen, then hit with Unseen Threat to slow Mundo.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 51,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3c67e11e7986dbfd4200b8d0d06e5f7d5608c9187321302d33cd7d543c43786",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Ekko:0",
+          "text": "Hunt Ekko when he is alone; Taste Their Fear hits far harder on an isolated target, so wait until his allies are away.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "isolated", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "isolated", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Khazix:Ekko:1",
+          "text": "Watch for Ekko's trail; when Chronobreak is down, he is much weaker, so that is the time to commit to a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Ekko-R", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Khazix:Ekko:2",
+          "text": "Don't chase Ekko into a fight he can rewind out of; after he uses Chronobreak, he is easier to finish.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ekko-R", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Khazix:Ekko:3",
+          "text": "Stay out of the Parallel Convergence circle. If you are caught in it you are stunned, so use Leap to get out early.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 },
+            { "kind": "ability", "key": "Khazix-E", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Khazix:Ekko:4",
+          "text": "Step out of the Timewinder field fast; the return hit does more damage than the first.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Khazix:Ekko:5",
+          "text": "Start fights from stealth with Void Assault, then hit Ekko with a basic attack to slow him with Unseen Threat.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 31, "end": 43 },
+            { "kind": "champion", "key": "Ekko", "start": 54, "end": 58 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 96,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "907704f99a67ec1f774b9f7d29fd43da20ee1f5ca4b28458153fb61d5908ac54",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Evelynn:0",
+          "text": "Catch Evelynn away from her minions and allies, then use Taste Their Fear; it hurts far more against isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "isolated", "start": 101, "end": 109 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:Evelynn:1",
+          "text": "If Evelynn marks you with Allure, move toward allies or away from her; the mark takes time to ripen before it charms.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 3, "end": 10 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Evelynn:2",
+          "text": "Keep Leap ready as an escape when Evelynn comes for you; you are weak while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Evelynn", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Khazix:Evelynn:3",
+          "text": "Don't fight Evelynn when you are low; Last Caress deals much more damage to low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes the gap fast on an isolated Evelynn, which empowers the slash.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Evelynn", "start": 71, "end": 78 }
+          ]
+        },
+        {
+          "comboId": "jungle:Khazix:combo:1",
+          "note": "Flash mid-Leap extends reach to catch Evelynn just out of range with Taste Their Fear.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Evelynn", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 69, "end": 85 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "810c8ac53d4e66df265ad2d9f99a805a78231e12f6cc1b79528c23eb5ce5aa73",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Fiddlesticks:0",
+          "text": "Look for Fiddlesticks when he is alone, then hit him with Taste Their Fear for big damage.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 9,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Khazix-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Khazix:Fiddlesticks:1",
+          "text": "Do not walk into dark brush or fog next to a still scarecrow; Fiddlesticks can pretend to be an effigy and fear you with Terrify.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 62,
+              "end": 74
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 121,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Khazix:Fiddlesticks:2",
+          "text": "Leave Bountiful Harvest early: do not stand in its range for long, since it drains and heals him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 6,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Fiddlesticks:3",
+          "text": "Save Leap to get out of Reap's slow, or to close in when he is isolated.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 24,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Khazix:Fiddlesticks:4",
+          "text": "Void Assault gives you Unseen Threat and hides you; use it to approach, then attack first.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 0, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f569c3d7814b63ebf89218b09ddd6c9e3393fcd268fb7e770e124a8eee6143d2",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Graves:0",
+          "text": "Hunt Graves when he is isolated. Taste Their Fear deals far more damage to him when he has no allies close.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Graves:1",
+          "text": "Step out of Smoke Screen quickly. Leaving the cloud removes its harmful effect straight away.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Graves:2",
+          "text": "Don't Leap in while Quickdraw is ready. Graves can dash away and shoot back with a point-blank blast.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Graves-E", "start": 20, "end": 29 },
+            { "kind": "champion", "key": "Graves", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Khazix:Graves:3",
+          "text": "Use Void Assault to vanish and reset Unseen Threat, then hit Graves with an empowered attack to slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 37,
+              "end": 50
+            },
+            { "kind": "champion", "key": "Graves", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Graves:4",
+          "text": "Don't stand in a straight line from Graves at level 6. Collateral Damage hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Graves-R", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac99053aec32be1a2e6695c9f6937858e3d75ac4ab5d561d3e5bdca212385f8c",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Gwen:0",
+          "text": "Look for Gwen when she is away from her minions and allies, then use Taste Their Fear for its big bonus damage against Isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 69, "end": 85 },
+            { "kind": "keyword", "key": "isolated", "start": 119, "end": 127 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Khazix:Gwen:1",
+          "text": "Don't waste Void Spike or Taste Their Fear while Gwen's Hallowed Mist is up and you stand outside it; she can't be targeted, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 26, "end": 42 },
+            { "kind": "champion", "key": "Gwen", "start": 49, "end": 53 },
+            { "kind": "ability", "key": "Gwen-W", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Khazix:Gwen:2",
+          "text": "Hit Gwen's first attack from stealth with Unseen Threat to slow her, then burst her before she sets up her stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 42,
+              "end": 55
+            },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Khazix:Gwen:3",
+          "text": "Keep Leap ready as your way out. Gwen's Needlework slows you and hurts a lot if she gets all her casts.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Gwen", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Gwen-R", "start": 40, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6ecdb07b4057360a76d3a7888b43d8a5248b30efe8930ace9b75f59549d049d1",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Hecarim:0",
+          "text": "Look for Hecarim when he is alone; Taste Their Fear then hits much harder and you can finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 9, "end": 16 },
+            { "kind": "keyword", "key": "isolated", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Khazix:Hecarim:1",
+          "text": "Don't stay in range of Spirit of Dread; it heals him as he damages you.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:Hecarim:2",
+          "text": "Spread away from your allies when Hecarim has Onslaught of Shadows ready, so one fear doesn't catch everyone.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 46, "end": 66 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Khazix:Hecarim:3",
+          "text": "Keep Leap ready to escape when Hecarim charges in with Devastating Charge.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Hecarim", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75c6bfc1c6831a4a721b56659304bc52bbe5a98c1e58a90ef4516159405a91cd",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Ivern:0",
+          "text": "Hunt Ivern when he is away from Daisy and his allies; Taste Their Fear hits an isolated Ivern much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 54, "end": 70 },
+            { "kind": "keyword", "key": "isolated", "start": 79, "end": 87 },
+            { "kind": "champion", "key": "Ivern", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Khazix:Ivern:1",
+          "text": "Wait until Rootcaller is on cooldown before you jump in. Getting rooted next to Ivern's team is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 11, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 71 },
+            { "kind": "champion", "key": "Ivern", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Ivern:2",
+          "text": "Be careful fighting Ivern when Daisy is up. Her third hit on you knocks you up, so kill Ivern fast or fight away from her.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 20, "end": 25 },
+            { "kind": "champion", "key": "Ivern", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Khazix:Ivern:3",
+          "text": "Ivern's brush lasts a long time, so check it before you walk in. Use Void Assault to get Unseen Threat back after you leave sight.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-R", "start": 69, "end": 81 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 89,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "554d1b2c207272982d7de892eb4be98285fe3b18c4028afd1cb0ebbc2a369958",
+      "tips": [
+        {
+          "id": "jungle:Khazix:JarvanIV:0",
+          "text": "Look for Jarvan when he is alone. Taste Their Fear does huge damage to an Isolated target.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "isolated", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:JarvanIV:1",
+          "text": "Do not Leap in when Jarvan's Cataclysm is ready. He can trap you in terrain with him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Khazix:JarvanIV:2",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Khazix:JarvanIV:3",
+          "text": "Use Void Assault to vanish and reset Unseen Threat before you start a fight. The first attack slows Jarvan.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 37,
+              "end": 50
+            },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "22a26338a936a368f3f6638646667aa6337c42e2f01443c6c393257fa966878b",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Jax:0",
+          "text": "Hit Jax with Taste Their Fear only when he is isolated from his allies and minions, since it does the most damage then.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "isolated", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Khazix:Jax:1",
+          "text": "Wait out Counter Strike before you attack Jax. He dodges attacks while it lasts, then stuns anyone close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 42, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:Jax:2",
+          "text": "Don't trade long attack-for-attack with Jax. Open with Void Spike from range, then step back before his attack speed builds.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 40, "end": 43 },
+            { "kind": "ability", "key": "Khazix-W", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Khazix:Jax:3",
+          "text": "Keep Leap or Void Assault ready to get away from Jax; he can chase you down with Leap Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Khazix-R", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Jax", "start": 49, "end": 52 },
+            { "kind": "ability", "key": "Khazix-E", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0f48a3e5139479b6efb26733a63a44615ff934efabfd49acefa07859f89ea559",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Jayce:0",
+          "text": "Hunt Jayce when he is alone: Taste Their Fear hits much harder on an isolated target, so wait until he is away from minions and allies.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "isolated", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Khazix:Jayce:1",
+          "text": "Wait in the brush or use Void Assault before you jump him, so your next attack slows him with Unseen Threat and he can't kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 25, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 94,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:Jayce:2",
+          "text": "Use Leap to close the gap when Jayce is in Cannon Stance, because his range is long. Once you are on him, keep attacking and don't back off.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Jayce", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Khazix:Jayce:3",
+          "text": "Void Spike is a good poke from range, and it heals you if you stand in the blast. Use it to get Jayce's health down before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Jayce", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leaping in and buffering Q closes the gap fast, but Thundering Blow can knock Kha'Zix back after.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 78, "end": 85 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a73de3879dadb978bcd9935bf02b74cd0c794d28d29a7b63a83e8d7630d649a5",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Karthus:0",
+          "text": "Hit Karthus with Taste Their Fear when he is alone. It deals far more damage to isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "isolated", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "isolated", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Karthus:1",
+          "text": "Don't walk through Wall of Pain. It slows you and lowers your Magic Resist, so go around it or wait for it to expire.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Khazix:Karthus:2",
+          "text": "Karthus is weak up close, so use Leap to jump in on him. Then run out before Defile and Lay Waste wear you down.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Khazix-E", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Karthus-E", "start": 77, "end": 83 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Khazix:Karthus:3",
+          "text": "Kill Karthus, then move away from his corpse. Death Defied lets him keep casting for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 46,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Khazix:Karthus:4",
+          "text": "Stay healthy after level 6. Requiem hits you from anywhere, and its light shows you when he starts channeling.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Closing with Leap into buffered Taste Their Fear lets Kha'Zix reach Karthus, who has no listed dash.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 32, "end": 48 },
+            { "kind": "champion", "key": "Khazix", "start": 54, "end": 61 },
+            { "kind": "champion", "key": "Karthus", "start": 68, "end": 75 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ee82ef0c68e8b19602e9a3888e8f21d5b784bb20654e95f59e665257e4e5a74",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Kayn:0",
+          "text": "Fight Kayn when he is alone. Taste Their Fear hits much harder on an isolated target, so pick fights away from his camps' allies and minions.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "keyword", "key": "isolated", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Khazix:Kayn:1",
+          "text": "Start fights from stealth. Void Assault gives Unseen Threat, so your first attack slows Kayn and he cannot easily run.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 27, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 46,
+              "end": 59
+            },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 },
+            { "kind": "champion", "key": "Kayn", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Khazix:Kayn:2",
+          "text": "Hit Kayn with Void Spike when he is in the wall. Damage shortens Shadow Step, and the spike also heals you if you stand in the blast.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Khazix-W", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Kayn-E", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Khazix:Kayn:3",
+          "text": "Keep Leap ready for when Kayn tries to escape or start a fight. Use it to close the gap and finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2ab085d195a4fe4ca416964b46d078bb4c18022b86956372cbe469232d269fe3",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Kindred:0",
+          "text": "Catch Kindred alone and hit her with Taste Their Fear; it deals far more damage to an isolated target, and she is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "isolated", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 37, "end": 53 },
+            { "kind": "keyword", "key": "isolated", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Kindred:1",
+          "text": "Do not trap Kindred inside Lamb's Respite. Nobody can die in it, so wait for it to end before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Kindred-R", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Khazix:Kindred:2",
+          "text": "Start fights from the brush or after Void Assault so your next attack slows her and she cannot kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Khazix:Kindred:3",
+          "text": "Jump on Kindred when Dance of Arrows is on cooldown, because she then has little to escape with.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Khazix:Kindred:4",
+          "text": "Kill Kindred's Wolf's Frenzy camp targets before she does; this slows her growth. Fight her outside the Wolf's zone.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kindred-W", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4eba0c409fabecef1a1e82ab8801e5dad805ce9256cd896b16881dbdb4071ae4",
+      "tips": [
+        {
+          "id": "jungle:Khazix:LeeSin:0",
+          "text": "Look for Lee Sin when he is away from his minions or allies. Taste Their Fear hits an Isolated target much harder.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Khazix:LeeSin:1",
+          "text": "Save Leap to dodge or escape after Lee Sin uses Sonic Wave. Without it you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Khazix:LeeSin:2",
+          "text": "Lee Sin shrugs off physical damage with Iron Will, but Unseen Threat deals magic damage, so use it to open the fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 55,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Khazix:LeeSin:3",
+          "text": "Use Void Assault to disappear before Lee Sin's Dragon's Rage. He needs a target to kick.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Taste Their Fear on landing helps Kha'Zix hit Lee Sin as soon as the Leap finishes.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "LeeSin", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "Khazix-E", "start": 78, "end": 82 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a9268442cea4aea2279557a268e228a0d5527f31c17ef9648dcbe2b92cb16ff2",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Lillia:0",
+          "text": "Use Taste Their Fear when Lillia is isolated from her allies and minions; it hits far harder then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Lillia", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "isolated", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Khazix:Lillia:1",
+          "text": "Dodge Swirlseed, then jump in with Leap, because it slows and reveals you if it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Khazix-E", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Lillia:2",
+          "text": "Do not fight in a Lillia fight when she has Lilting Lullaby ready at level 6 and your Dream Dust is on you; sleep means a free kill for her.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Lillia-R", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Khazix:Lillia:3",
+          "text": "Hit Lillia from the brush to get Unseen Threat's bonus damage and slow, which also stops her from running away.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 33,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Khazix:Lillia:4",
+          "text": "Step out of the centre of her big ground smash when you see her wind up; the middle hits much harder than the edge.",
+          "refs": [],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1cc056f0c260591dd5b144ea432c48b3b2dc17dd499a8defa23b551725fbd585",
+      "tips": [
+        {
+          "id": "jungle:Khazix:MasterYi:0",
+          "text": "Look for Master Yi when he is alone and use Taste Their Fear on him for its big bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 9, "end": 18 },
+            { "kind": "keyword", "key": "isolated", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Khazix:MasterYi:1",
+          "text": "Do not rely on slows once Master Yi has Highlander running. Fight him before he uses it, or save your burst.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 26, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Khazix:MasterYi:2",
+          "text": "Do not walk away while Master Yi has Alpha Strike ready; he cannot be targeted during it, so save Leap to escape after he lands.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Khazix-E", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Khazix:MasterYi:3",
+          "text": "Strike hard before Meditate starts. Hit him a few times so he has to spend mana healing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac16e9afaf6c2f570087762a7fcd85035aeec6e13537f4183272a2a20d670b3b",
+      "tips": [
+        {
+          "id": "jungle:Khazix:MonkeyKing:0",
+          "text": "Find Wukong alone and hit him with Taste Their Fear; it does far more damage to isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 35, "end": 51 },
+            { "kind": "keyword", "key": "isolated", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:MonkeyKing:1",
+          "text": "After Wukong uses Nimbus Strike, wait a moment before attacking, since the clone from Warrior Trickster may be what you see.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 18,
+              "end": 31
+            },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 86,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Khazix:MonkeyKing:2",
+          "text": "Don't stand in Cyclone; it knocks you up and hurts. Keep Leap ready to jump out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 15,
+              "end": 22
+            },
+            { "kind": "ability", "key": "Khazix-E", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Khazix:MonkeyKing:3",
+          "text": "End long fights early; Wukong gets tougher the longer he keeps hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7102397abad06120d2a5d65dc8505f5af59757f45804058cc6929faeef8586a0",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Naafiri:0",
+          "text": "Hunt Naafiri when she is isolated from her allies; Taste Their Fear hits far harder on a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "keyword", "key": "isolated", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Naafiri:1",
+          "text": "Wait until The Call of the Pack has ended before you commit, because she cannot be targeted while it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 11, "end": 31 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Khazix:Naafiri:2",
+          "text": "Void Spike works well from range; it keeps going after hitting, so use it to start a fight or finish a runner.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:Naafiri:3",
+          "text": "Use Void Assault before you engage so your first attack applies Unseen Threat and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 64,
+              "end": 77
+            },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Closing in with Leap into Q punishes Naafiri when she is isolated, but her packmates attack with her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 37, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3ba1069c1613186616a796fe457a1861102c3ee0da7bd74946b063e51e22b25",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Nidalee:0",
+          "text": "Hunt for Nidalee when she is away from her minions or allies; Taste Their Fear then deals much more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Khazix:Nidalee:1",
+          "text": "Dodge her Javelin Toss, especially from far away. A hit marks you as Hunted and sets up her cougar attacks.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:Nidalee:2",
+          "text": "Her Bushwhack traps are invisible, so be careful walking through brush and choke points she may have trapped.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Khazix:Nidalee:3",
+          "text": "Keep Leap ready for when she jumps on you in cougar form; it lets you get away or reposition.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Khazix:Nidalee:4",
+          "text": "Use Void Spike on her to get a slow and some healing once evolved; it helps you catch her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear closes on an isolated Nidalee, who is often alone in the jungle.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Nidalee", "start": 58, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a6cc935cce09384ed05fcbb968b58fc50eecdc4b699c0519d2f9891d7eda2e3b",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Nocturne:0",
+          "text": "Look for Nocturne when you are alone and low on health. Unspeakable Horror plus Paranoia can catch you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 56, "end": 74 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Khazix:Nocturne:1",
+          "text": "Leap away to break the tether of Unspeakable Horror before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 33, "end": 51 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Khazix:Nocturne:2",
+          "text": "Bait Shroud of Darkness with a cheap Void Spike first, then go in with Taste Their Fear once the barrier is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Khazix-W", "start": 37, "end": 47 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 71, "end": 87 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Khazix:Nocturne:3",
+          "text": "Do not fight Nocturne while his Umbra Blades is ready; the attack hits for a lot and heals him. Trade when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 13, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 32,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb50d255c57a9da378b8e5a1150f446199615211dc71b35b3087a51bd97e9fe9",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Nunu:0",
+          "text": "Look for Nunu & Willump when they are alone. Taste Their Fear does far more damage to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Nunu", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "isolated", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "isolated", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Khazix:Nunu:1",
+          "text": "Don't fight inside Absolute Zero. Use Leap or Void Assault to get out before the slow builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Khazix-E", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Khazix-R", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Khazix:Nunu:2",
+          "text": "Sidestep Biggest Snowball Ever! with a sharp turn instead of running in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 9, "end": 31 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Khazix:Nunu:3",
+          "text": "Don't stay near Nunu & Willump after Snowball Barrage hits you. Move away before the root lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nunu", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Nunu-E", "start": 37, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Khazix:Nunu:4",
+          "text": "Open from out of sight so Unseen Threat's attack slows them. Then jump in with Leap and finish with Taste Their Fear.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 26,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Khazix-E", "start": 79, "end": 83 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Taste Their Fear after Leap closes on an isolated Nunu, who has no listed dash to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Khazix-E", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a02a475be90c7d7ae91d448f5a59d0ccb3d02e63d4ecfd11da02a704aaddb129",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Pantheon:0",
+          "text": "Hit isolated targets with Taste Their Fear for big damage. Catch Pantheon away from his allies.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 26, "end": 42 },
+            { "kind": "champion", "key": "Pantheon", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Pantheon:1",
+          "text": "Do not jump in with Leap while Shield Vault is ready; Pantheon will stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 31, "end": 43 },
+            { "kind": "champion", "key": "Pantheon", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Pantheon:2",
+          "text": "Do not attack Pantheon head-on while he braces with Aegis Assault. Wait it out or hit him from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Khazix:Pantheon:3",
+          "text": "Stay healthy near Pantheon; a thrown Comet Spear kills low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Khazix:Pantheon:4",
+          "text": "Move away when Grand Starfall is announced; it gives warning before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "323e17f09b7d82b3626e5ace981f54fe39584786aaf7876cb84e5ddde767dedf",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Qiyana:0",
+          "text": "Hunt Qiyana when she is alone; Taste Their Fear hits much harder on an isolated target, so look for her away from minions and allies.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "isolated", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "isolated", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Khazix:Qiyana:1",
+          "text": "Hold Leap for when Qiyana uses her dash. Without it you can't easily catch her or get away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Qiyana", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Qiyana:2",
+          "text": "Stay out of sight before you jump her, then hit her with an attack first so Unseen Threat slows her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 76,
+              "end": 89
+            },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Qiyana:3",
+          "text": "Void Assault gives you a cloaked approach to start a fight and also a way to get out after trading.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3cdb2e7b2cd7c20e76d71bd24493656e9f8fb8426581bff55f06f2fb162a20f9",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Rammus:0",
+          "text": "Look for Rammus when he is alone; Taste Their Fear on an isolated target hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 9, "end": 15 },
+            { "kind": "keyword", "key": "isolated", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "isolated", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Khazix:Rammus:1",
+          "text": "Avoid basic attacks into Rammus while Defensive Ball Curl is up; it hurts you and he is very tanky then. Wait for it to end, or fight with abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Rammus-W", "start": 38, "end": 57 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Khazix:Rammus:2",
+          "text": "Do not walk up to Rammus when Frenzying Taunt is ready; you cannot act while taunted. Keep your distance and keep Leap for escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Rammus-E", "start": 30, "end": 45 },
+            { "kind": "ability", "key": "Khazix-E", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Khazix:Rammus:3",
+          "text": "Fire Void Spike from range while Rammus is out of Defensive Ball Curl, since he is much weaker then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Rammus", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Rammus-W", "start": 50, "end": 69 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Khazix:Rammus:4",
+          "text": "Step aside from a rolling Powerball, or Leap away early; being hit leaves you knocked back and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 26, "end": 35 },
+            { "kind": "ability", "key": "Khazix-E", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f40db5c39e140c5e6e0c2c21e3982214854f3fb680aed2b1a6842b483ebb8a9d",
+      "tips": [
+        {
+          "id": "jungle:Khazix:RekSai:0",
+          "text": "Stay out of Rek'Sai's reach when you walk around unseen; her Burrow reveals moving enemies nearby, so stand still or go around instead of walking up to her.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Khazix:RekSai:1",
+          "text": "Hit Rek'Sai with Taste Their Fear when she is away from her minions and allies; she takes much more damage while isolated.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "isolated", "start": 113, "end": 121 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Khazix:RekSai:2",
+          "text": "Don't trade when her Fury is full, because Furious Bite then turns into true damage. Pick your fight after she has spent it.",
+          "refs": [],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Khazix:RekSai:3",
+          "text": "Keep Leap ready to get away when she is near. Rek'Sai's Void Rush can't be dodged by stunning her, so don't count on stopping it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "RekSai", "start": 46, "end": 53 },
+            { "kind": "ability", "key": "RekSai-R", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Khazix:RekSai:4",
+          "text": "Void Assault gives you Unseen Threat even if she sees you. Use it to slow her with your next attack and to leave when a fight turns.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 0, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e66064dcdd8a5f25c8e29d6b95691608e3c8cc00171e594c94666519a123a508",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Rengar:0",
+          "text": "Don't fight Rengar near brush; his passive lets him leap onto you from it.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Rengar:1",
+          "text": "Engage when Rengar's Ferocity is low; his empowered abilities are what beat you in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Khazix:Rengar:2",
+          "text": "Dodge Bola Strike; it slows you, or roots you when empowered, and that lets him catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-E", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Khazix:Rengar:3",
+          "text": "Take your Taste Their Fear fights when Rengar is isolated from his minions and allies; the damage is much higher then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Rengar", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Khazix:Rengar:4",
+          "text": "When you see the mark over you from Thrill of the Hunt, Rengar is close and about to jump you. Move toward allies.",
+          "refs": [
+            { "kind": "ability", "key": "Rengar-R", "start": 36, "end": 54 },
+            { "kind": "champion", "key": "Rengar", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Khazix:Rengar:5",
+          "text": "Void Spike heals you only if you stand in its blast, so hit Rengar up close for the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Rengar", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e5acf9af316d85d7fa9360340c373071990ba7dc2700ed83b4e1d15455469fc7",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Sejuani:0",
+          "text": "Look for Sejuani when she is far from her team. Taste Their Fear deals big damage to isolated targets, but she is tanky and hard to burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "isolated", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Khazix:Sejuani:1",
+          "text": "Do not walk into Glacial Prison. Jump around the bola's line, because a stun in a fight with her team is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Sejuani:2",
+          "text": "Hold Leap until Sejuani has used Arctic Assault. Without it she can't easily chase you down.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Sejuani", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Khazix:Sejuani:3",
+          "text": "Do not fight Sejuani beside her melee allies. They stack Permafrost for her, and it ends in a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 57, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5c4fd1f06b0f3abe6fb0b298d37c3522226cc05c8a1f610eebc5fd25a62cb9e5",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Shaco:0",
+          "text": "Walk carefully through brush and choke points; Shaco's Jack In The Box is hidden and will fear and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Shaco-W", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Khazix:Shaco:1",
+          "text": "Void Spike can break the box's hiding place only if it is revealed; use Void Assault's invisibility to scout less and keep your distance from his traps.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Khazix-R", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Khazix:Shaco:2",
+          "text": "Once Shaco uses Deceive to jump in, he cannot quickly vanish again; fight him then with Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Khazix:Shaco:3",
+          "text": "Keep Leap ready as an escape when Shaco turns invisible; he is very hard to fight from behind.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Shaco", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Leap into buffered Taste Their Fear quickly closes the gap onto a Shaco who is isolated.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Shaco", "start": 66, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2da9e2c46cfe742ffd88ec50be78ed4b3cb803261aabd20712bd4c7207c25535",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Shyvana:0",
+          "text": "Hit Shyvana with Taste Their Fear only when she is away from her allies, so you get the big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Shyvana:1",
+          "text": "Do not fight Shyvana toe-to-toe; her Inferno Aegis shield and Emberstrike make a long brawl bad for you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Khazix:Shyvana:2",
+          "text": "Poke her with Void Spike while her Dragon Fury is low; she is weak when kept at a distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-W", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Khazix:Shyvana:3",
+          "text": "Do not hit her while Inferno Aegis is on; wait for the shield to break or pop, then burst her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "70e85f403f1437a6b5a208142afa0029eac2c5910ba1ee458ac02d870675bf46",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Skarner:0",
+          "text": "Look for enemies who are alone and open with Taste Their Fear; it hits much harder on an isolated target.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "isolated", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Khazix:Skarner:1",
+          "text": "Do not fight Skarner when Ixtal's Impact is ready. If he grabs you, you are carried until you hit a wall and get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Skarner-E", "start": 26, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 120 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Khazix:Skarner:2",
+          "text": "Keep Leap for escaping after a trade; Skarner is much harder to fight with it on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Skarner", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Skarner:3",
+          "text": "Don't ignore Skarner's sustained damage. Hit and back off rather than standing and trading, because his Quaking builds up.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Khazix:Skarner:4",
+          "text": "Step out of the way of Impale, and use Void Assault to turn invisible if he is about to cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Khazix-R", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4b5ae336b8ed73f7d40b309fbbc42c9321aeb5e338ea855d5bf8a15d9f487d76",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Sylas:0",
+          "text": "Jump on Sylas when he is away from his minions and allies; Taste Their Fear hits much harder on an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "isolated", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Sylas:1",
+          "text": "Wait until Sylas has spent Abscond / Abduct before you leap in, because he can use it to dash away or pull himself onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sylas-E", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Khazix:Sylas:2",
+          "text": "Hit Sylas with Void Spike when you are close, so you heal while you damage him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Khazix-W", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Khazix:Sylas:3",
+          "text": "Do not trade into a Sylas who is low on health; Kingslayer heals him back up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Sylas-W", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Khazix:Sylas:4",
+          "text": "Stay hidden before you engage so Unseen Threat makes your first attack hurt and slow him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 33,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6539dd61d4ea631ec55acdad2d3709ca6d469ee854b357613a410d10dcaf3094",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Talon:0",
+          "text": "Look for Talon when he is alone. Taste Their Fear deals far more damage to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "isolated", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 33, "end": 49 },
+            { "kind": "keyword", "key": "isolated", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Talon:1",
+          "text": "Don't stand in a line with Talon's Rake. Step aside, because the blades also come back and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Talon-W", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Khazix:Talon:2",
+          "text": "Fight Talon while Shadow Assault is on cooldown. Without it he can't escape or finish a fight as easily.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Khazix:Talon:3",
+          "text": "Break the fight early when Talon has hit you with several abilities. One more attack makes Blade's End bleed you for heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Talon-passive",
+              "start": 91,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Khazix:Talon:4",
+          "text": "Use Void Assault to go invisible and set up Unseen Threat before you fight Talon. It adds damage and a slow to your first attack.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 44,
+              "end": 57
+            },
+            { "kind": "champion", "key": "Talon", "start": 75, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0bfa47f3a4ae8688ffb81e1bc7ed80fdc4f93d0cdf14f065eae5c2e68494c228",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Trundle:0",
+          "text": "Catch Trundle away from his team and his Frozen Domain; Taste Their Fear deals much more to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-W", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 56, "end": 72 },
+            { "kind": "keyword", "key": "isolated", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Khazix:Trundle:1",
+          "text": "Don't fight Trundle inside his Frozen Domain; he is faster and hits harder there.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Trundle-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Khazix:Trundle:2",
+          "text": "Get out of Pillar of Ice quickly, since it slows you; don't leap toward it blindly.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 11, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Khazix-E", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Khazix:Trundle:3",
+          "text": "Kill Trundle's allies or minions first when you can; his King's Tribute heals him when enemies die near him.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 5, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Trundle-passive",
+              "start": 57,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Khazix:Trundle:4",
+          "text": "Void Assault lets you reset Unseen Threat and escape; use it to disengage once Trundle uses Subjugate on you.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 0, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 28,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Trundle", "start": 79, "end": 86 },
+            { "kind": "ability", "key": "Trundle-R", "start": 92, "end": 101 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d18e1eadac0d155b93afcc83742e748b8909149103d8acaacd120c1dceba0d7a",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Udyr:0",
+          "text": "Hunt Udyr when he is alone; Taste Their Fear deals far more damage to isolated targets.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "isolated", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "isolated", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Udyr:1",
+          "text": "Do not jump in while Udyr has Blazing Stampede ready; his next attack dashes onto you and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Udyr-E", "start": 30, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Khazix:Udyr:2",
+          "text": "Keep Leap ready as your escape if Udyr turns on you, since he is a sturdy fighter who wins long brawls.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Udyr", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Khazix:Udyr:3",
+          "text": "Fire Void Spike at Udyr from range to heal yourself; Udyr has few ranged options.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Udyr", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Udyr", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Khazix:combo:0",
+          "note": "Buffered Q after Leap closes on Udyr fast, but his Stampede stun on attack can punish a bad dive.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Udyr", "start": 32, "end": 36 }
+          ]
+        },
+        {
+          "comboId": "jungle:Khazix:combo:1",
+          "note": "Flash mid-Leap extends reach to catch Udyr, who can gain Move Speed from Stampede to run.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Khazix-E", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Udyr", "start": 38, "end": 42 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a78f47614a551acc1a72e742d46b172e4144f1f4f22a6ff8bd0231caa31237",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Vi:0",
+          "text": "Pick fights when Vi is isolated from her allies; Taste Their Fear hits far harder on a lone target.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Vi:1",
+          "text": "Don't stand and trade basic attacks with Vi. Her third hit on you shreds your Armor and speeds her up.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Khazix:Vi:2",
+          "text": "Stay out of sight, then open with your empowered basic attack from Unseen Threat to slow Vi so she can't easily catch you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 67,
+              "end": 80
+            },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Vi:3",
+          "text": "Vi's Cease and Desist can't be stopped once it starts. Don't waste Leap on dodging it; save it to get away after she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Vi", "start": 0, "end": 2 },
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Khazix-E", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Khazix:Vi:4",
+          "text": "Leap away or sidestep when you see Vi charging Vault Breaker; a full charge hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vi-Q", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0337ffa614651452dd7217e65f27f72728d4ebb2fe541c0149d99a9ea994557c",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Viego:0",
+          "text": "Fight Viego when he is away from his minions and allies; Taste Their Fear hits much harder on an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "isolated", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Khazix:Viego:1",
+          "text": "Use Void Assault before you attack him; it hides you and gives Unseen Threat, so your first hit slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 63,
+              "end": 76
+            },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Khazix:Viego:2",
+          "text": "Do not finish a kill that Viego can reach. He can eat the wraith and take the dead champion's form, so avoid fighting near a fresh kill.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Khazix:Viego:3",
+          "text": "Aim Void Spike so you stay out of the way of Spectral Maw; a fully charged one stuns for a long time. Leap away if you see him charging.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Viego-W", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 },
+            { "kind": "ability", "key": "Khazix-E", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "29a157592135c1f489c3f58a446f0b04b5a48e6c291b5f56e22a680e14f45609",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Volibear:0",
+          "text": "Look for targets who wander away from allies and open with Taste Their Fear. It does much more damage to isolated enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-Q", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "isolated", "start": 105, "end": 113 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Volibear:1",
+          "text": "Do not attack Volibear while Thundering Smash is ready. His next attack stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Khazix:Volibear:2",
+          "text": "Keep Leap ready as your escape. Volibear's Frenzied Maul heals him in a long trade, so do not stay and fight him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Volibear", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Volibear-W", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Khazix:Volibear:3",
+          "text": "Hit Volibear with Void Spike from range when he is not near you, and step out of the Sky Splitter area when you see him cast it.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Khazix-W", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Volibear-E", "start": 85, "end": 97 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e0ffff18906d32e97bb12140c3cfa98b3939f4481d779bcc6eda0f694b13972",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Warwick:0",
+          "text": "Hit Warwick when he is away from his allies and minions. Taste Their Fear deals far more damage to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "isolated", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Khazix:Warwick:1",
+          "text": "Leap away from Warwick only when you must. He can hold Jaws of the Beast to follow you through it, so do not rely on one jump to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Warwick", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Khazix:Warwick:2",
+          "text": "Do not fight Warwick when you are low. Blood Hunt lets him track you and chase faster, and his attacks heal him when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Warwick-W", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Khazix:Warwick:3",
+          "text": "Stay out of his Infinite Duress range when you are low. He leaps very far, and the suppression stops you from using any escape.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Khazix:Warwick:4",
+          "text": "Fight Warwick when Primal Howl is on cooldown. Without it he takes more damage and cannot fear you away.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Warwick-E", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aab776b62579928fb11cdc8092bf412e47fbe5474543925827d3469765b3e5d7",
+      "tips": [
+        {
+          "id": "jungle:Khazix:XinZhao:0",
+          "text": "Look for Xin Zhao when he is away from his minions and allies, then hit him with Taste Their Fear for its big isolated damage.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 81, "end": 97 },
+            { "kind": "keyword", "key": "isolated", "start": 110, "end": 118 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Khazix:XinZhao:1",
+          "text": "Do not fight Xin Zhao head-on once he has Audacious Charge and Crescent Guard ready. Wait until they are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 42, "end": 58 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 63, "end": 77 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Khazix:XinZhao:2",
+          "text": "Use Leap to get away from Xin Zhao, since he can slow you with Wind Becomes Lightning and chase you down with Audacious Charge.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 63, "end": 85 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 110, "end": 126 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Khazix:XinZhao:3",
+          "text": "Keep Void Spike for when Xin Zhao is close so it heals you too. Fighting inside its area gives you a sustain edge.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a3ab052cbe960c0d611ccb1f927c25e5221b8a730cf971f2f0ff235a83e3c4",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Zac:0",
+          "text": "Stay away from Zac's goo chunks; if you hit him, don't stand on them. Enemy champions crush them, so fight where he cannot reach them.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 15, "end": 18 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Khazix:Zac:1",
+          "text": "Hold Leap when Zac is close to charging Elastic Slingshot; use it to get out once he is committed, or to chase him when he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Zac", "start": 15, "end": 18 },
+            { "kind": "ability", "key": "Zac-E", "start": 40, "end": 57 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Khazix:Zac:2",
+          "text": "Attack Zac when his allies are far away; Taste Their Fear hits much harder on an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "isolated", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Khazix:Zac:3",
+          "text": "Finish off every bloblet when Zac splits, or he comes back. Void Spike can hit several of them at once.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Khazix-W", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Khazix:Zac:4",
+          "text": "Keep your distance when Stretching Strikes is ready; it can pull you in and leave you stunned next to him.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 24, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "203ea2f14251552c3d6de7c214a91eab4596aa76fa0d40f302b3e26c6bc5e9b5",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Zed:0",
+          "text": "Look for Zed when he is away from his minions and allies, then hit him with Taste Their Fear; it deals far more damage to an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 76, "end": 92 },
+            { "kind": "keyword", "key": "isolated", "start": 125, "end": 133 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Khazix:Zed:1",
+          "text": "Wait until Zed has used Living Shadow before you jump in. His slow and damage depend on it, and it is on a long cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Zed-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Khazix:Zed:2",
+          "text": "Use Void Assault to vanish and then attack Zed. Unseen Threat makes your next basic attack hit harder and slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 43, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 48,
+              "end": 61
+            },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Khazix:Zed:3",
+          "text": "Keep Leap ready to get away after Zed uses Death Mark on you. Do not waste it when you do not need it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Zed", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Zed-R", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Khazix:Zed:4",
+          "text": "Void Spike can heal you if you stand inside its blast. Use it in a trade to keep your health up against Zed's Razor Shuriken.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Zed", "start": 104, "end": 107 },
+            { "kind": "ability", "key": "Zed-Q", "start": 110, "end": 124 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49f58df676593c5edc7e61029a04d5433df46744c81abd192ac70d2ed4dcd4e8",
+      "tips": [
+        {
+          "id": "jungle:Khazix:Zyra:0",
+          "text": "Look for Zyra when she is away from her plants and allies, then use Taste Their Fear for its big bonus damage on an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 68, "end": 84 },
+            { "kind": "keyword", "key": "isolated", "start": 116, "end": 124 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Khazix:Zyra:1",
+          "text": "Leap in from the brush or after Void Assault, and attack right away so Unseen Threat slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Khazix-R", "start": 32, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 71,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Khazix:Zyra:2",
+          "text": "Zyra's seeds reveal you if you step on them. Walk around visible seeds before you go in, so you keep your ambush.",
+          "refs": [{ "kind": "champion", "key": "Zyra", "start": 0, "end": 4 }],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Khazix:Zyra:3",
+          "text": "Fight when Grasping Roots is on cooldown. Being rooted in the open is how she kills you.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 11, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Khazix:Zyra:4",
+          "text": "Her plants are weak without seeds. Pull the fight to a spot with no seeds or leave early, so she gets no Thorn Spitters or Vine Lashers.",
+          "refs": [],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Khazix:Zyra:5",
+          "text": "Don't stay inside Stranglethorns when she casts it. Leap out before it snaps up and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Khazix-E", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

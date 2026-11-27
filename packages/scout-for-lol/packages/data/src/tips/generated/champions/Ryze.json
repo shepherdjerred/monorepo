@@ -1,0 +1,2654 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ryze",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "322f5745b8f9f43ae996c4d3fda3d5fc755211d50c773a4d418a3246e09dbf34",
+      "tips": [
+        {
+          "id": "middle:Ryze:general:0",
+          "text": "Open a trade with Spell Flux, then follow with Rune Prison so the enemy is rooted instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 47, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ryze:general:1",
+          "text": "Cast Spell Flux or Rune Prison before Overload; each cast resets Overload's cooldown and charges a rune.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 19, "end": 30 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ryze:general:2",
+          "text": "Use Spell Flux on a minion near the enemy so it spreads Flux to them, then hit Overload to bounce to every Flux target.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Ryze:general:3",
+          "text": "Charge two runes before Overload when you want to chase or escape, since it then gives you bonus Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ryze:general:4",
+          "text": "Aim Overload carefully; the first enemy it hits takes the blast, so a minion in the way can absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Ryze:general:5",
+          "text": "Spam Spell Flux when you can; its short cooldown keeps Flux up for your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ryze:general:6",
+          "text": "Start Realm Warp before a roam and keep casting while it charges; stun or silence on you will cancel it, so open it somewhere safe.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Ryze:general:7",
+          "text": "Watch your mana early; Ryze's spells cost a lot, so don't spam them without a trade or kill in mind.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "57c260e6e5ab9431e0759f53988742aeb226e67e7a119b808d4d0f5ab6a33fbe",
+      "tips": [
+        {
+          "id": "middle:Ryze:Ahri:0",
+          "text": "Stay behind minions when Ahri is in range. Charm stops at the first unit it hits, so a minion in front of you soaks it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ryze:Ahri:1",
+          "text": "Open with Spell Flux, then use Rune Prison so she is rooted instead of slowed. Follow with Overload for the bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Ahri:2",
+          "text": "Trade hard while Spirit Rush is on cooldown. Ahri is much easier to kill and harder to escape with then.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ryze:Ahri:3",
+          "text": "Use Rune Prison's slow or root to stop her walking onto you after a missed Charm. Then step out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Ahri-E", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7c7d8e5989049f3c988683bb35d29efd579cb31de43aa93dc52e6cf542dbfa6f",
+      "tips": [
+        {
+          "id": "middle:Ryze:Akali:0",
+          "text": "Keep Rune Prison for when Akali dashes in; with Flux on her it roots her instead of slowing, so she can't get away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Akali:1",
+          "text": "Put Flux on Akali with Spell Flux early and often; it has a short cooldown, and Overload then hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Ryze-E", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Ryze:Akali:2",
+          "text": "Fight her when she is low on Energy; Five Point Strike costs a lot, so she has little to trade back with.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 37, "end": 54 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ryze:Akali:3",
+          "text": "When Akali vanishes in Twilight Shroud, stop chasing. Step away from the smoke and wait for her to come out.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Ryze:Akali:4",
+          "text": "Return to base when your Health gets low and Akali has Perfect Execution ready.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Akali-R", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "75113fb6dda39609613a213ca697c98ff32eb4a843a1384d5b289602ae1bc721",
+      "tips": [
+        {
+          "id": "middle:Ryze:Akshan:0",
+          "text": "Start trades with Spell Flux, then use Rune Prison on the marked Akshan so he is rooted instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "Akshan", "start": 65, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Ryze:Akshan:1",
+          "text": "Finish your combo with Overload on a Fluxed Akshan; it hits harder and bounces to nearby Fluxed enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 23, "end": 31 },
+            { "kind": "champion", "key": "Akshan", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ryze:Akshan:2",
+          "text": "Cast Rune Prison and Spell Flux first so Overload comes back fast. Overload keeps going past the first enemy hit, so line it up with minions in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Ryze-E", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Ryze:Akshan:3",
+          "text": "Hold Rune Prison for when Akshan swings with Heroic Swing; a root punishes his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akshan", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Akshan-E", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Ryze:Akshan:4",
+          "text": "Stay out of Avengerang's line when you can; it returns and can hit you twice.",
+          "refs": [
+            { "kind": "ability", "key": "Akshan-Q", "start": 12, "end": 22 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "18db1a9fbf6d2ec4296ec04e7854d840dbfc97ff3e67357d6f9c8e7a2944bcde",
+      "tips": [
+        {
+          "id": "middle:Ryze:Anivia:0",
+          "text": "Stay out of a straight line with Anivia and sidestep Flash Frost; the stun only lands if you are caught near where the ice ends.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ryze:Anivia:1",
+          "text": "Start trades with Spell Flux, then use Rune Prison so she is rooted instead of slowed and cannot slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ryze:Anivia:2",
+          "text": "Follow Rune Prison and Spell Flux with Overload to hit her hard. Each cast also lets you fire Overload again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 7, "end": 18 },
+            { "kind": "ability", "key": "Ryze-E", "start": 23, "end": 33 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ryze:Anivia:3",
+          "text": "Fight her while she is still low level and short on mana. Glacial Storm drains her mana quickly and needs her to stay inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ryze:Anivia:4",
+          "text": "When her egg appears, do not stop to chase it unless it is safe. Rebirth leaves her helpless for a few seconds, so use that time to push or take a camp.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 65,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ryze:Anivia:5",
+          "text": "Do not walk into her Glacial Storm once it is fully formed. It slows you and hurts a lot, so stay out of the area.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6f5c7a3a405cdbdc185a10d928ac0b9a2eb1e9f1f8d387de44d5b9630c72c9d4",
+      "tips": [
+        {
+          "id": "middle:Ryze:Annie:0",
+          "text": "Watch for Annie's Pyromania counter under her health bar. When it is full, stay out of her Disintegrate and Incinerate range.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 18,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 91, "end": 103 },
+            { "kind": "ability", "key": "Annie-W", "start": 108, "end": 118 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Ryze:Annie:1",
+          "text": "Open with Spell Flux, then use Rune Prison to root her. Follow with Overload for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Ryze:Annie:2",
+          "text": "Her Disintegrate has a long range and refunds mana on a kill, so do not let your minions drop low in front of her.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ryze:Annie:3",
+          "text": "Do not cast Realm Warp where Annie can stun you. Being stunned while it charges cancels the portal.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Annie", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f562bf5fc5c9aa01813b6e526cda9eb3a865df436679bb6e7d62365de5f0d475",
+      "tips": [
+        {
+          "id": "middle:Ryze:AurelionSol:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so the enemy is rooted instead of slowed and can't fly away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Ryze:AurelionSol:1",
+          "text": "Fire Overload at a Flux-marked Aurelion Sol for its big bonus damage, then use the Move Speed it gives to step out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "AurelionSol", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ryze:AurelionSol:2",
+          "text": "Stun him or root him while he channels Breath of Light; a long beam gets stronger the longer he stays on you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 39,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Ryze:AurelionSol:3",
+          "text": "Walk out of Singularity's edge early. Standing in the center for long can get you executed at low health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 12,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ryze:AurelionSol:4",
+          "text": "Watch for Falling Star's delay and walk sideways out of it. It stuns, so don't stay clumped with allies.",
+          "refs": [],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "59e3a0b042a1f0d31b4f3c841b8ada9ac7d60ad77eeeeefc1656a94d22764142",
+      "tips": [
+        {
+          "id": "middle:Ryze:Aurora:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Aurora is rooted instead of slowed and can't hop away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Aurora", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Ryze:Aurora:1",
+          "text": "Rune Prison needs a target, so aim it at Aurora just as she lands from Across the Veil.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Aurora", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Aurora-W", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ryze:Aurora:2",
+          "text": "Aurora's Twofold Hex is a straight line, so sidestep it. Don't stand still trading with her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Ryze:Aurora:3",
+          "text": "Use Spell Flux on her often to keep Flux up, since it has a short cooldown. Then Overload hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Ryze:Aurora:4",
+          "text": "Stay out of her Between Worlds ring unless you must fight there. Leaving it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "51b982835d71b990c27fb43ac5a07c3c3fdd738a31423b9c8427b6f15aaef100",
+      "tips": [
+        {
+          "id": "middle:Ryze:Azir:0",
+          "text": "Start trades with Spell Flux, then follow with Rune Prison so Azir is rooted instead of slowed and can't step away from your next blast.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 47, "end": 58 },
+            { "kind": "champion", "key": "Azir", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ryze:Azir:1",
+          "text": "Fire Overload after Spell Flux or Rune Prison; it hits harder on Flux targets and spreads to nearby enemies that have Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Ryze-E", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Ryze-W", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Ryze:Azir:2",
+          "text": "Hit Azir when his soldiers are far from him or have expired. Without them he has little damage to hit back with.",
+          "refs": [{ "kind": "champion", "key": "Azir", "start": 4, "end": 8 }],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Ryze:Azir:3",
+          "text": "Rune Prison and Spell Flux are targeted, so Azir can't dodge them. Use them freely to poke him, and keep Overload for when it can hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ryze-E", "start": 16, "end": 26 },
+            { "kind": "champion", "key": "Azir", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 86, "end": 90 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 105, "end": 113 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Ryze:Azir:4",
+          "text": "Stay out of the line between Azir's soldiers and you. Stand away from them, because their stabs reach you from range.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ryze:Azir:5",
+          "text": "If Azir's Shifting Sands dash lands on you, don't chase him. Fight back after the shield ends.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Azir-E", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "002084ab2b0259fb19857cc08a2cfa5f24ec6818f36e09ebf18109f237368310",
+      "tips": [
+        {
+          "id": "middle:Ryze:Brand:0",
+          "text": "Stay out of Sear's line, especially behind minions; it ends at the first unit hit, so keep a minion between you and Brand.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Brand", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ryze:Brand:1",
+          "text": "Sidestep Pillar of Flame as soon as you see the ground mark; it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ryze:Brand:2",
+          "text": "Open with Spell Flux, then use Rune Prison so the enemy is rooted and cannot dodge your Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 88, "end": 96 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Ryze:Brand:3",
+          "text": "Trade right after Brand misses Sear. His cooldown is long, so you can walk up and fight.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Brand-Q", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Ryze:Brand:4",
+          "text": "When Brand ults, step away from your minions and allies so the fireball has fewer targets to bounce between.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "958d562f2209635b07710650a6a04e988def2cc2d222ff5d9a460ef77c9a5067",
+      "tips": [
+        {
+          "id": "middle:Ryze:Briar:0",
+          "text": "Hit Briar with Rune Prison after Spell Flux so she is rooted, not just slowed. Then she can't run you down.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ryze-W", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Ryze-E", "start": 33, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ryze:Briar:1",
+          "text": "Keep Rune Prison ready for when Briar leaps in with Head Rush or Blood Frenzy. Root her to cut the fight short.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Briar-Q", "start": 52, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Ryze:Briar:2",
+          "text": "Trade with Overload while she is far away, and use Spell Flux first to make it hit harder. Briar has to dive to answer you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Ryze-E", "start": 51, "end": 61 },
+            { "kind": "champion", "key": "Briar", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Ryze:Briar:3",
+          "text": "Stay away from walls when Briar charges Chilling Scream. A full charge knocks you back, and a wall hit stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ryze:Briar:4",
+          "text": "When Briar lands Certain Death, fight back with all your spells. Her prey mark follows her target, so know whether it is you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Briar-R", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d676538f2f74d29b948f223fe24de9c41a97ee140358f502273fda67cb6303a7",
+      "tips": [
+        {
+          "id": "middle:Ryze:Cassiopeia:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Cassiopeia is rooted instead of slowed. Finish with Overload for the extra damage on a marked target.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 44, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 96, "end": 104 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ryze:Cassiopeia:1",
+          "text": "Walk out of Noxious Blast's circle before it lands; it explodes after a short delay and you can sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Ryze:Cassiopeia:2",
+          "text": "Stay out of Miasma. It slows you and stops your dashes, so you can't escape her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ryze:Cassiopeia:3",
+          "text": "Face away from Cassiopeia when she casts Petrifying Gaze, or move out of the cone. You get slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 41,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ryze:Cassiopeia:4",
+          "text": "Use Realm Warp to join fights elsewhere or to escape. You can keep casting while it charges, but crowd control cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9ef3ae835cc735ecc356753061b4e534cfdcd7b32bb4ab2159bb5341c10dcfa6",
+      "tips": [
+        {
+          "id": "middle:Ryze:Diana:0",
+          "text": "Put Rune Prison on Diana after Spell Flux so she is rooted instead of slowed; she can't dash in with Lunar Rush while held.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Diana", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Ryze-E", "start": 31, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 },
+            { "kind": "ability", "key": "Diana-E", "start": 101, "end": 111 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Ryze:Diana:1",
+          "text": "Sidestep Crescent Strike; once Diana is marked by Moonlight her Lunar Rush comes back quickly, so back away from the marked target.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Diana", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Diana-E", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Ryze:Diana:2",
+          "text": "Keep Spell Flux going on Diana and the minions near her; Overload then hits harder and bounces to everything marked.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Diana", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ryze:Diana:3",
+          "text": "Hold your spells when Pale Cascade is up and trade after the orbs and shield are gone.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ryze:Diana:4",
+          "text": "Stay at long range and poke with Overload; Diana must close the gap to fight you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 33, "end": 41 },
+            { "kind": "champion", "key": "Diana", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ryze:Diana:5",
+          "text": "Stun or root Diana as she starts Moonfall at level 6; it pulls you in, so keep your distance and save your root for after she lands.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Diana-R", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "252b6dddf6f165ceadb477b9182d3116347410edc71fc3986222c319f776a687",
+      "tips": [
+        {
+          "id": "middle:Ryze:Ekko:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Ekko is rooted instead of slowed and can't slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Ekko", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 52, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Ryze:Ekko:1",
+          "text": "Fire Overload at Ekko once Spell Flux is on him; it hits harder and bounces to other Flux targets, such as his minions.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Ekko", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Ryze-E", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ryze:Ekko:2",
+          "text": "Use Rune Prison on Ekko when he dashes in with Phase Dive, so he can't easily run off after his hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ekko", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Ekko-E", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Ekko:3",
+          "text": "Step out of Parallel Convergence's zone. Ekko has to enter it to stun, so stay clear of it and don't walk into him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 12, "end": 32 },
+            { "kind": "champion", "key": "Ekko", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ryze:Ekko:4",
+          "text": "Trade hard while Chronobreak is on cooldown; Ekko can't rewind to undo the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Ekko", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a1e47538b77bbb2612160712f5b7327b79d6d8162d30741f10d8883f35d12dc8",
+      "tips": [
+        {
+          "id": "middle:Ryze:Ezreal:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Ezreal is rooted instead of slowed and can't kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Ezreal", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ryze:Ezreal:1",
+          "text": "Use Overload on Ezreal while he has Flux on him; it hits much harder and also spreads to other Flux targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Ezreal:2",
+          "text": "Stand behind minions when you trade, so Ezreal's Mystic Shot is stopped before it reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Ryze:Ezreal:3",
+          "text": "Spell Flux has a short cooldown, so use it often to keep Flux on Ezreal and to poke him.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Ezreal", "start": 65, "end": 71 },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ryze:Ezreal:4",
+          "text": "Hold Rune Prison until Ezreal uses Arcane Shift, then root him and punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7ebe57c8f1e9f824ec868078fffeb2ae261439447471c1d4b8b3d53cd1d28852",
+      "tips": [
+        {
+          "id": "middle:Ryze:Fizz:0",
+          "text": "Use Spell Flux first, then Rune Prison, so Fizz is rooted instead of slowed and can't easily slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ryze-W", "start": 27, "end": 38 },
+            { "kind": "champion", "key": "Fizz", "start": 43, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ryze:Fizz:1",
+          "text": "Hold Rune Prison for when Fizz is out of his dashes. While Playful is on cooldown he has little way to escape the root.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Fizz:2",
+          "text": "Fizz can't be targeted while he is on his trident, so don't waste Rune Prison or Spell Flux on him then. Wait until he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-W", "start": 66, "end": 77 },
+            { "kind": "ability", "key": "Ryze-E", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Ryze:Fizz:3",
+          "text": "Poke with Overload from long range while Fizz walks through minions. Keep the distance so Urchin Strike has to cost him a dash.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Ryze:Fizz:4",
+          "text": "Stay away from minions when Fizz's trident glows. His empowered attack and bonus damage hurt a lot, so don't trade in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ryze:Fizz:5",
+          "text": "Watch for Chum the Waters. If the fish sticks to you, move away from where it hits; stay out of the shark's area.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "67f732ca8e87af309c8388fe9406401de5912e45d0f06a85b7f604344abf1ba1",
+      "tips": [
+        {
+          "id": "middle:Ryze:Galio:0",
+          "text": "Start with Spell Flux, then Rune Prison, so Galio is rooted rather than just slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Galio", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ryze:Galio:1",
+          "text": "Do not cast into a charging Galio; Shield of Durand shrinks your damage, so wait for the shield to end.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Galio-W", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Ryze:Galio:2",
+          "text": "Stay out of Justice Punch range and move sideways; it stops at the first champion and cannot cross walls.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ryze:Galio:3",
+          "text": "Aim Overload at Fluxed enemies for bonus damage; keep your distance so Galio cannot easily reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Galio", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7610c41b728c262c831ff7c050d3a185c04ec9c6b24f7f4fe043d9a35bfa6bff",
+      "tips": [
+        {
+          "id": "middle:Ryze:Hwei:0",
+          "text": "Walk up and hit Hwei with Spell Flux, then follow with Rune Prison to root him instead of slowing him. That sets up your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Ryze-E", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Ryze-W", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ryze:Hwei:1",
+          "text": "Cast Overload on a Flux target for extra damage; casting Spell Flux or Rune Prison first makes your next Overload faster and more powerful.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Ryze-E", "start": 57, "end": 67 },
+            { "kind": "ability", "key": "Ryze-W", "start": 71, "end": 82 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 105, "end": 113 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Hwei:2",
+          "text": "Rush Hwei right after he casts a Torment spell like Crushing Maw. He is vulnerable then, and your short cooldowns let you trade hard.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Ryze:Hwei:3",
+          "text": "Keep moving sideways in lane. Severing Bolt is slow, and it hurts most when you are alone or rooted, so don't stand still.",
+          "refs": [],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "081f582ec933e5ef5e6b7f66c38c8de196c1a7536cb85ec266e9a2fc4bd5ff05",
+      "tips": [
+        {
+          "id": "middle:Ryze:Irelia:0",
+          "text": "Poke Irelia with Spell Flux from range, then follow with Overload so it hits harder and bounces to any other marked enemies.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Irelia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ryze-E", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Irelia:1",
+          "text": "Mark Irelia with Spell Flux before Rune Prison so she is rooted, not just slowed. A root stops her from diving onto you.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Irelia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ryze-E", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Ryze-W", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ryze:Irelia:2",
+          "text": "Do not spend Rune Prison while Irelia is charging Defiant Dance. She takes less damage and the charge cannot be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Irelia", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Irelia-W", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Ryze:Irelia:3",
+          "text": "Stay away from minion waves when Irelia is near. She uses them to dash to you with Bladesurge, so keep your distance and keep poking.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 83, "end": 93 },
+            { "kind": "keyword", "key": "poke", "start": 126, "end": 132 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ryze:Irelia:4",
+          "text": "Keep Rune Prison ready for when Irelia dashes in with Bladesurge. Rooting her right away cuts her trade short.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Irelia", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ryze:Irelia:5",
+          "text": "Step out of the line of Flawless Duet's blades. Being stunned in melee range is how Irelia kills you.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 61 },
+            { "kind": "champion", "key": "Irelia", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f7aa3947dae0248923ecf219c4314122bc9d8171ba29619f1540f2ac4bb25354",
+      "tips": [
+        {
+          "id": "middle:Ryze:Kassadin:0",
+          "text": "Spell Flux first, then Rune Prison, so Kassadin is rooted instead of slowed. Use the root to land Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Ryze-W", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Kassadin", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 89 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Ryze:Kassadin:1",
+          "text": "Kassadin takes less magic damage, and all of your damage is magic. Win lane through repeated trades with short-cooldown spells, not one big burst.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ryze:Kassadin:2",
+          "text": "Hold Rune Prison for when Kassadin uses Riftwalk to dive on you. Rooting him in place leaves him exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kassadin", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ryze:Kassadin:3",
+          "text": "Kassadin's Null Sphere cancels channels. Open Realm Warp only when he can't reach you, since interrupting it cancels the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Ryze-R", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ryze:Kassadin:4",
+          "text": "Stay out of Force Pulse range when it is ready. It slows you and sets up his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Ryze:Kassadin:5",
+          "text": "Push and harass early, before Kassadin reaches level 6 and Riftwalk lets him jump on you freely.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5e986b32bc245bb187fadfc7ae108af62f64cecdd626d254698a26f1fab6a4a7",
+      "tips": [
+        {
+          "id": "middle:Ryze:Katarina:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Katarina is rooted instead of slowed and cannot dash away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Katarina", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ryze:Katarina:1",
+          "text": "Hold Rune Prison for when Katarina commits with Shunpo. If you root her, she is stuck in your range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Katarina", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Katarina-E", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Katarina:2",
+          "text": "Stun-free Katarina is hard to stop, so keep Overload ready. Fire it down the lane when she lands on you, since it hits the first enemy in line.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Ryze:Katarina:3",
+          "text": "Move away from Katarina's Daggers on the ground, since she gets a slash and faster Shunpo when she picks one up.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Katarina-E", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ryze:Katarina:4",
+          "text": "Do not stand near Katarina when Death Lotus is up. Move away from her once it starts, because she must stay near you to keep hitting.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Katarina-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "255b070b55f1ba17694cbc67af236ba19aed2582509b9f552d8dc6d907728aae",
+      "tips": [
+        {
+          "id": "middle:Ryze:Leblanc:0",
+          "text": "Cast Spell Flux on LeBlanc first, then Rune Prison to root her and finish with Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Leblanc", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 58 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ryze:Leblanc:1",
+          "text": "Rune Prison roots a Fluxed LeBlanc, so she cannot dash back with Distortion's return as easily. Use it when she dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Leblanc", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Ryze:Leblanc:2",
+          "text": "Sidestep Ethereal Chains; it is a straight line that the first enemy hit blocks. Move away before it breaks, or you will be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 9, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 124, "end": 130 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ryze:Leblanc:3",
+          "text": "Keep Spell Flux on LeBlanc's mirror image targets in mind: the clone is harmless, so hit the real one after she turns invisible.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Leblanc", "start": 19, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Leblanc-passive",
+              "start": 29,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bc1523835e8d6ff6c99734898c61e392726c4d75e8a5777e8ef923ee104608c5",
+      "tips": [
+        {
+          "id": "middle:Ryze:Lissandra:0",
+          "text": "Start trades with Spell Flux, then use Rune Prison so it roots Lissandra instead of only slowing her.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "Lissandra", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ryze:Lissandra:1",
+          "text": "Hit Overload last, after Flux is on the target. It deals extra damage to Flux targets and refreshes off your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ryze:Lissandra:2",
+          "text": "Stay out of Ring of Frost range while it is on cooldown. Walk up and trade when it is down, since her root is how she catches you.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ryze:Lissandra:3",
+          "text": "Stand behind your minions so Ice Shard hits them first and you avoid the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ryze:Lissandra:4",
+          "text": "If Lissandra casts Glacial Path to dash in, use Rune Prison on her before she recasts. She cannot recast while rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 3, "end": 12 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Ryze-W", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ryze:Lissandra:5",
+          "text": "Back off when Lissandra reaches level 6. Frozen Tomb on you means being stunned and in range of her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 14, "end": 23 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9fe1f9552b7f3cf24aefeb671c3888ad696af0c6c1b282092c7918db657d62d0",
+      "tips": [
+        {
+          "id": "middle:Ryze:Lux:0",
+          "text": "Walk up and cast Spell Flux first, then Rune Prison, so Lux is rooted instead of slowed and cannot step away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Ryze-W", "start": 40, "end": 51 },
+            { "kind": "champion", "key": "Lux", "start": 56, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ryze:Lux:1",
+          "text": "Sidestep Light Binding; it stops at the first two enemies, so keep minions out of its path or stay out of line with them.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Ryze:Lux:2",
+          "text": "Spam Spell Flux when you are safe; its short cooldown keeps Lux marked and sets up a strong Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Lux", "start": 60, "end": 63 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Ryze:Lux:3",
+          "text": "Do not stand still in Lucent Singularity. Leave its area before it detonates so you are not slowed and hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 22, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Ryze:Lux:4",
+          "text": "Stay out of Lux's line when Final Spark is ready. Move sideways as soon as the red warning beam shows.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Lux-R", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f369b558cbfa0a53e6807bf24ca7c81c73611ba762e115101bfe796f2d09e602",
+      "tips": [
+        {
+          "id": "middle:Ryze:Malzahar:0",
+          "text": "Walk up and hit Malzahar with Spell Flux first, then Rune Prison; he is rooted instead of slowed and cannot walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Ryze-E", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Ryze-W", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ryze:Malzahar:1",
+          "text": "Trade when Malzahar has just taken damage. His Void Shift cuts most of the damage he takes while it is up, so wait for it to drop before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Malzahar:2",
+          "text": "Stay out of the line between the two portals of Call of the Void. Being silenced stops you casting your whole combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "silenced", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Malzahar:3",
+          "text": "Overload hits Malzahar harder when he has Flux on him, so land Spell Flux first and then fire Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Malzahar", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Ryze-E", "start": 63, "end": 73 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ryze:Malzahar:4",
+          "text": "Do not stand near minions carrying Malefic Visions. They can die and pass it to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9cf948b8dc99e0a4ba2b7a50a07e039657e4635390dc897d6b6effd180007ed",
+      "tips": [
+        {
+          "id": "middle:Ryze:Mel:0",
+          "text": "Hold Rune Prison and Overload until Mel has used Rebuttal; it destroys projectiles, so Overload is wasted if you fire it into the nova.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 21, "end": 29 },
+            { "kind": "champion", "key": "Mel", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Mel-W", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 87, "end": 95 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Ryze:Mel:1",
+          "text": "Rune Prison targets the enemy directly, so use it to get Flux onto Mel and root her before she lines up Solar Snare.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Mel", "start": 67, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 79 },
+            { "kind": "ability", "key": "Mel-E", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ryze:Mel:2",
+          "text": "Sidestep Solar Snare; it is a straight-line orb, and being rooted in Mel's field leaves you taking steady damage.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 },
+            { "kind": "champion", "key": "Mel", "start": 69, "end": 72 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Ryze:Mel:3",
+          "text": "Back off when you are low once Mel has hit you a lot; her stored Overwhelm damage can execute you on the next hit.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 31, "end": 34 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Ryze:Mel:4",
+          "text": "Spread Flux with Spell Flux on Mel and her minions, then follow with Overload to hit everything marked.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Mel", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Ryze:Mel:5",
+          "text": "Use Spell Flux freely for its short cooldown, then Rune Prison when Rebuttal is down to trade safely.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ryze-W", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Mel-W", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b7b1b44b7da708bbe76ff4fc338df51ed1a9831945c9fae06913eb674b16f81a",
+      "tips": [
+        {
+          "id": "middle:Ryze:Naafiri:0",
+          "text": "Put Spell Flux on Naafiri first, then Rune Prison, so she is rooted instead of slowed and cannot dash out of your range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Ryze-W", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ryze:Naafiri:1",
+          "text": "Fire Overload at Naafiri once she has Flux on her. It hits much harder and also bounces to her nearby packmates that have Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Ryze:Naafiri:2",
+          "text": "Keep your distance and use Spell Flux often to poke her. A short cooldown lets you keep Flux on her every time she steps up.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 27, "end": 37 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ryze:Naafiri:3",
+          "text": "Do not rely on Rune Prison as she dives. Hounds' Pursuit and The Call of the Pack make her untargetable, so hold your spells until she is targetable again.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 41, "end": 56 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 61, "end": 81 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc567b6c767e70262a470ab3e7987c3b536a1ffae8d66a1e90d98c7383405b1a",
+      "tips": [
+        {
+          "id": "middle:Ryze:Orianna:0",
+          "text": "Open with Spell Flux, then use Rune Prison so she is rooted instead of slowed. Follow with Overload for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Ryze:Orianna:1",
+          "text": "Look at where her Ball sits. Her damage only lands around it, so trade when it is far from you.",
+          "refs": [],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ryze:Orianna:2",
+          "text": "Stay out of her Command: Shockwave range around the Ball when you trade. Back off when she is level 6 and the Ball is near you.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 16, "end": 34 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ryze:Orianna:3",
+          "text": "Spend Overload's two runes by casting Spell Flux and Rune Prison first. You get the speed boost to walk out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Ryze-E", "start": 38, "end": 48 },
+            { "kind": "ability", "key": "Ryze-W", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "094287c9098482453da09bdb221a2056abe03dec43a4077f3641c0000d09d0bf",
+      "tips": [
+        {
+          "id": "middle:Ryze:Qiyana:0",
+          "text": "Open with Spell Flux, then follow with Rune Prison so Qiyana is rooted instead of slowed. A rooted Qiyana can't dash away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "champion", "key": "Qiyana", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 },
+            { "kind": "champion", "key": "Qiyana", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Ryze:Qiyana:1",
+          "text": "Fire Overload at Qiyana while she has Flux on her. It hits much harder and bounces to other Fluxed enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Qiyana", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Ryze:Qiyana:2",
+          "text": "Keep Spell Flux going on Qiyana from long range. Its short cooldown lets you poke her whenever she steps up for minions.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Qiyana", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Ryze:Qiyana:3",
+          "text": "Stay out of Audacity range when it is ready. She dashes through you, so don't stand alone near walls or brush while she can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-E", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Ryze:Qiyana:4",
+          "text": "Hold Rune Prison for when Qiyana dashes in with Audacity. Rooting her mid-fight cuts off her escape and her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Ryze:Qiyana:5",
+          "text": "Don't fight near river or walls once she has level 6. Supreme Display of Talent stuns you against terrain, so keep your fights in open lane.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 54, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5efc8a910a0efedf6e82e8fbeeeb5169008be8ea10feb4de257f7a375b55fe59",
+      "tips": [
+        {
+          "id": "middle:Ryze:Sylas:0",
+          "text": "Cast Spell Flux on Sylas first, then Rune Prison, so he is rooted instead of just slowed and can't lunge or run away.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Ryze-W", "start": 37, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Ryze:Sylas:1",
+          "text": "Fire Overload at Sylas once Flux is on him; it hits much harder and spreads to other Flux targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sylas", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Ryze:Sylas:2",
+          "text": "Sylas heals when Kingslayer hits you, so trade hard while he is low and keep your distance when he is not.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Ryze:Sylas:3",
+          "text": "Stay out of the line of Abscond / Abduct; if the chains hit, you are stunned and knocked up while he gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-E", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            { "kind": "keyword", "key": "knocked-up", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ryze:Sylas:4",
+          "text": "Keep your Spell Flux and Rune Prison ready when Sylas dashes in. Rooting him as he arrives blunts his all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 25, "end": 36 },
+            { "kind": "champion", "key": "Sylas", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "de2ef4e373662c2972acbb87f007b34de6a552a0cb052821c1ab8e2c9791eec2",
+      "tips": [
+        {
+          "id": "middle:Ryze:Syndra:0",
+          "text": "Fight Syndra inside the range of Rune Prison and Spell Flux. Flux first, then Rune Prison roots her, so she can't dodge or run.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Ryze-W", "start": 33, "end": 44 },
+            { "kind": "ability", "key": "Ryze-E", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Ryze-W", "start": 78, "end": 89 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Ryze:Syndra:1",
+          "text": "Keep the Flux on Syndra before you throw Overload. It hits much harder and bounces to other Flux targets.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ryze:Syndra:2",
+          "text": "Stay out of line with Scatter the Weak and don't stand next to her Dark Sphere. A pushed sphere stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 22, "end": 38 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 67, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ryze:Syndra:3",
+          "text": "Trade right after Syndra uses Scatter the Weak. Its cooldown is long, so she has little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Syndra-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ryze:Syndra:4",
+          "text": "Overload has long range and a short cooldown. Use it to poke Syndra when you can't safely reach her with Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 },
+            { "kind": "champion", "key": "Syndra", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9d519e4269b0d30b708b509d4d43c918a170ca6c5e660abfdfecf2a7d0ae7c62",
+      "tips": [
+        {
+          "id": "middle:Ryze:Taliyah:0",
+          "text": "Put Spell Flux on Taliyah before Rune Prison, so she is rooted instead of just slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Taliyah", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Ryze-W", "start": 33, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ryze:Taliyah:1",
+          "text": "Cast Spell Flux on Taliyah first, then Overload; it hits harder and bounces to other Flux targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Taliyah", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ryze:Taliyah:2",
+          "text": "Stay out of Unraveled Earth stones when her Seismic Shove is ready; being shoved into them stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 44, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ryze:Taliyah:3",
+          "text": "Sidestep Threaded Volley; it flies in a fixed direction, so move across its line.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ryze:Taliyah:4",
+          "text": "Use Rune Prison to root her when she casts Seismic Shove, so she can't follow up cleanly.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "506cc578c7d27a75e965575caf8d87df2870417e754479112fd8697552a347d9",
+      "tips": [
+        {
+          "id": "middle:Ryze:Talon:0",
+          "text": "Open with Spell Flux, then use Rune Prison so Talon is rooted instead of slowed. That keeps him in range for your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 31, "end": 42 },
+            { "kind": "champion", "key": "Talon", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Ryze:Talon:1",
+          "text": "Aim Overload at Talon while he has Flux on him. It hits much harder, and it still reaches him from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Talon", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Ryze:Talon:2",
+          "text": "Keep Spell Flux on the minion wave and on Talon so you can poke him. It has a short cooldown, so you can cast it often.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 42, "end": 47 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Ryze:Talon:3",
+          "text": "Hold Rune Prison for when Talon jumps in with Noxian Diplomacy. Rooting him there lets you hit him with your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Talon-Q", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Ryze:Talon:4",
+          "text": "Stay back once Talon has used Shadow Assault to disappear. Poke him again when he comes back into view.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Talon-R", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ryze:Talon:5",
+          "text": "Watch the lane before you use Realm Warp to join a fight. Talon roams a lot, so check where he is before you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 30, "end": 40 },
+            { "kind": "champion", "key": "Talon", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "df7bb1282ebb13ced3e87d3620d410994fea8d7676dfb51564f4b6278abfb717",
+      "tips": [
+        {
+          "id": "middle:Ryze:TwistedFate:0",
+          "text": "Start trades with Spell Flux, then follow with Rune Prison so the enemy is rooted instead of slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 18, "end": 28 },
+            { "kind": "ability", "key": "Ryze-W", "start": 47, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Ryze:TwistedFate:1",
+          "text": "Step away when Twisted Fate has the Gold Card ready; it stuns on his next attack.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ryze:TwistedFate:2",
+          "text": "Cast Overload on a Fluxed target for much more damage, and it bounces to other Fluxed enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ryze:TwistedFate:3",
+          "text": "Stay out of a straight line with Twisted Fate; Wild Cards hits in a wide fan and hurts when you trade.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 33,
+              "end": 45
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Ryze:TwistedFate:4",
+          "text": "Watch for Destiny; it means Twisted Fate may teleport to you. Stay near your team or move away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e4b981eec78bdd8b34f8a31128beff686ba36a96fdd2c25541dd10e20754201c",
+      "tips": [
+        {
+          "id": "middle:Ryze:Veigar:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Veigar is rooted instead of slowed and cannot walk out of your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Veigar", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ryze:Veigar:1",
+          "text": "Use Overload on Veigar when he has Flux on him; it hits much harder and also bounces to nearby enemies with Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Veigar", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ryze:Veigar:2",
+          "text": "Keep moving sideways while Dark Matter falls, and walk out of its circle. Step in to trade only after he has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ryze:Veigar:3",
+          "text": "Stay out of the edge of Event Horizon. Walking into the middle of the cage is safe, but touching its edge stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ryze:Veigar:4",
+          "text": "Veigar's Baleful Strike hits the first two enemies, so do not stand behind a minion in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ryze:Veigar:5",
+          "text": "Avoid low health when Veigar reaches level 6, because Primordial Burst hurts more the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Veigar-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc4a9f54cb5bd93424131ce3c96507f7d0750590397f065a7934bcd48aa967d1",
+      "tips": [
+        {
+          "id": "middle:Ryze:Vex:0",
+          "text": "Open with Spell Flux, then follow with Rune Prison so she is rooted instead of slowed and can't walk out of your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Ryze:Vex:1",
+          "text": "Fire Overload at Vex after Flux is on her; it hits much harder and bounces to other Flux targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Vex", "start": 17, "end": 20 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ryze:Vex:2",
+          "text": "Don't dash or blink next to Vex without need. It marks you with Gloom, and her next hit does bonus damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ryze:Vex:3",
+          "text": "Stay out of Personal Space range when her fear is ready. Her scream hits close around her, and the fear makes you flee.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-W", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Ryze:Vex:4",
+          "text": "Keep poking her with Spell Flux at long range; its short cooldown lets you trade often.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ryze-E", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ryze:Vex:5",
+          "text": "Sidestep Mistral Bolt early; it slows down its spread then speeds up, so wait until it narrows before moving.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ryze:Vex:6",
+          "text": "Watch your health around level 6; Shadow Surge lets Vex dash onto you from afar, so don't stand low and alone.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-R", "start": 34, "end": 46 },
+            { "kind": "champion", "key": "Vex", "start": 52, "end": 55 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a03f7d2db974ccce798fa131951ff3deba823bba7e9770f8589c124bc5b02e3",
+      "tips": [
+        {
+          "id": "middle:Ryze:Viktor:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Viktor is rooted instead of slowed and cannot walk out of your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Viktor", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ryze:Viktor:1",
+          "text": "Overload hits much harder on a target with Flux, so mark Viktor with Spell Flux before you fire it.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Viktor", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Ryze-E", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ryze:Viktor:2",
+          "text": "Stay out of Gravity Field. If you are caught inside it, walk out before it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Ryze:Viktor:3",
+          "text": "Hextech Ray is slow and easy to sidestep, so move sideways when you see Viktor aim it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Viktor", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Ryze:Viktor:4",
+          "text": "Trade while Viktor's Siphon Power is on cooldown. Without its shield, he is easier to burst.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 21, "end": 33 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ryze:Viktor:5",
+          "text": "When Arcane Storm lands on you, keep moving, because it follows you. Fight out of it or run away rather than stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2ced2ae8309c8bd16148830c0d639d9e580227ea1a5233062dfa486db7b06e06",
+      "tips": [
+        {
+          "id": "middle:Ryze:Vladimir:0",
+          "text": "Spread Flux with Spell Flux first, then land Rune Prison to root Vladimir instead of just slowing him.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Ryze-W", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 },
+            { "kind": "champion", "key": "Vladimir", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ryze:Vladimir:1",
+          "text": "Do not cast Rune Prison into Vladimir's Sanguine Pool; he is untargetable in it and wastes your cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Vladimir", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ryze:Vladimir:2",
+          "text": "Stay out of Sanguine Pool's range when he sinks in, since enemies inside get slowed and damaged.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ryze:Vladimir:3",
+          "text": "Hit Vladimir from long range with Overload; he has to walk up to use Transfusion on you.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ryze:Vladimir:4",
+          "text": "Do not channel Realm Warp near Vladimir; a slow will not stop it, but a stun would cancel it.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Vladimir", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "424440e1c2186c4aa148f2fcbcbb7e5811177ffa7728ae33ef2cbc7a1d6111bc",
+      "tips": [
+        {
+          "id": "middle:Ryze:Xerath:0",
+          "text": "Walk up and trade when Xerath is out of Shocking Orb; his range is long, but he is easy to reach and can't hit you while you stay close.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Xerath-E", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Ryze:Xerath:1",
+          "text": "Use Spell Flux first, then Rune Prison, so Xerath is rooted instead of slowed and cannot walk away from your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ryze-W", "start": 27, "end": 38 },
+            { "kind": "champion", "key": "Xerath", "start": 43, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Ryze:Xerath:2",
+          "text": "Cast Overload on Xerath after Spell Flux lands; it hits much harder and spreads to any Flux-marked minions or enemies nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Ryze-E", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Ryze:Xerath:3",
+          "text": "Sidestep while Xerath charges Arcanopulse; he is slowed and stuck casting, so a quick sideways move makes his beam miss.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 30, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Ryze:Xerath:4",
+          "text": "Stay out of Shocking Orb's line, and keep a minion between you and Xerath when you can; the orb stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Xerath", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Ryze:Xerath:5",
+          "text": "When Xerath starts Rite of the Arcane, dive onto him or stun him if you can; his blasts are slow and he cannot easily dodge in close.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-R", "start": 19, "end": 37 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ad4d142248d96a491013f38b3e9199c72383007d9472fb37dd8c166863ad726f",
+      "tips": [
+        {
+          "id": "middle:Ryze:XinZhao:0",
+          "text": "Keep Xin Zhao at range with Spell Flux and Overload. He wants to charge in and hit you three times, so make each approach costly.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Ryze-E", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ryze:XinZhao:1",
+          "text": "Put Rune Prison on Xin Zhao as he charges in. If he is Fluxed it roots him; otherwise it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ryze:XinZhao:2",
+          "text": "Move away when Xin Zhao's Three Talon Strike is running; his third attack knocks you up. Staying out of his reach stops the combo.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Ryze:XinZhao:3",
+          "text": "Respect Xin Zhao at level 6; Crescent Guard knocks you back and stuns you if you are not Challenged. Keep your distance when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 8, "end": 16 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 29, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Ryze:XinZhao:4",
+          "text": "Flux the enemy first, then fire Overload for bonus damage while Xin Zhao is still approaching.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 32, "end": 40 },
+            { "kind": "champion", "key": "XinZhao", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bcb462fa9f6763e2f09482ab67506e01192c69023ab81bc2adfe380c3806763e",
+      "tips": [
+        {
+          "id": "middle:Ryze:Yasuo:0",
+          "text": "Use Rune Prison on Yasuo when he dashes in; once Spell Flux is on him, it roots him instead of slowing.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Ryze-E", "start": 49, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Ryze:Yasuo:1",
+          "text": "Poke with Spell Flux often; its cooldown is short, and Flux on a target makes Overload hit harder.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ryze:Yasuo:2",
+          "text": "Stay away from Yasuo's minion line. He can dash through minions with Sweeping Blade to reach you, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ryze:Yasuo:3",
+          "text": "Hold Overload if Yasuo has just raised Wind Wall; it is a projectile and will be blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 39, "end": 48 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Ryze:Yasuo:4",
+          "text": "Move sideways when Yasuo has two stacks of Steel Tempest. His next one is a whirlwind that knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "29ccb9137382f0418f584b42b140235938ad4c7d7a8386d905f04821405daf57",
+      "tips": [
+        {
+          "id": "middle:Ryze:Yone:0",
+          "text": "Put Spell Flux on Yone first, then use Rune Prison so he is rooted instead of slowed. Then follow with Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 103, "end": 111 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ryze:Yone:1",
+          "text": "Yone has no ranged answer in lane, so use Overload from long range and keep him from reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 42, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ryze:Yone:2",
+          "text": "Aim Overload down a line with minions in it. It stops at the first enemy it hits, so it is easily wasted on a minion in front of Yone.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 129, "end": 133 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Ryze:Yone:3",
+          "text": "Rune Prison him when he starts Fate Sealed's windup? Better to stay spread from your team, because it pulls everyone it hits toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Yone-R", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Ryze:Yone:4",
+          "text": "Yone's Soul Unbound leaves his body behind, so when he is in spirit form, fight him then. He wants to hit you and snap back.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0570239459763e22832c5b9a9cd241ed8a5a82c657511223429d0ed00ec14e67",
+      "tips": [
+        {
+          "id": "middle:Ryze:Zed:0",
+          "text": "Cast Spell Flux first, then Rune Prison, so Zed is rooted instead of slowed. A rooted Zed can't dash out of your follow-up Overload.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ryze-W", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Zed", "start": 44, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 },
+            { "kind": "champion", "key": "Zed", "start": 86, "end": 89 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 123, "end": 131 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ryze:Zed:1",
+          "text": "Poke Zed with Spell Flux while he stands near his Shadow. It has a short cooldown and spreads Flux to everyone nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Ryze-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Ryze:Zed:2",
+          "text": "Zed becomes untargetable while he dashes in with Death Mark. Save Rune Prison to root him once he lands, then back away.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Ryze-W", "start": 66, "end": 77 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Ryze:Zed:3",
+          "text": "Hit the enemy with Overload when it is marked with Flux. It deals much more damage and bounces to other Flux targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ryze:Zed:4",
+          "text": "Use Overload's two charged runes for a burst of Move Speed when you need to escape after Zed's all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zed", "start": 89, "end": 92 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e835e4edd9441ed1c07ad7dd84320b4f1a95387566d7b498fb7ec1f57cfeb0e2",
+      "tips": [
+        {
+          "id": "middle:Ryze:Zoe:0",
+          "text": "Put Spell Flux on Zoe first, then use Rune Prison so she is rooted instead of slowed. Rooted is your best moment to hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Zoe", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Ryze-W", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ryze:Zoe:1",
+          "text": "Stay out of the line of Sleepy Trouble Bubble. Sidestep it, because it stops at the first enemy it hits, so a minion in front of you can take it.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 24, "end": 45 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Ryze:Zoe:2",
+          "text": "If Sleepy Trouble Bubble puts you to sleep, her next hit wakes you and deals bonus true damage, so keep your distance from her beforehand.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 3, "end": 24 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ryze:Zoe:3",
+          "text": "Hit Zoe with Overload while she stands at the end of Portal Jump. She cannot move there, so she is easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Zoe-R", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Ryze:Zoe:4",
+          "text": "Do not stand at long range in a straight line from Zoe. Paddle Star hurts more the further it flies, so step out of its path or stay close.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 51, "end": 54 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

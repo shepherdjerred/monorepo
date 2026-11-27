@@ -1,0 +1,2878 @@
+{
+  "schemaVersion": 1,
+  "champion": "LeeSin",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "ae79afcbe5e80a1638754d10d2cfdcb7d4f3db4b4c8678681db2aa278dafa4a4",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:general:0",
+          "text": "Cast Sonic Wave first, then recast Resonating Strike to close the gap. It deals more damage the lower the target's health is.",
+          "refs": [],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:LeeSin:general:1",
+          "text": "Weave a basic attack between spells. Flurry gives you Attack Speed and returns Energy, so you can keep casting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 37,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:general:2",
+          "text": "Self-cast Safeguard, then use Iron Will on camps. The healing from Omnivamp keeps your health up while you clear.",
+          "refs": [],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:LeeSin:general:3",
+          "text": "Use Tempest on a fighter, then recast Cripple to leave them slowed so they can't escape or reach you easily.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:LeeSin:general:4",
+          "text": "Use Sonic Wave before Dragon's Rage, so you can chase the target with Resonating Strike. Aim the kick so the target hits other enemies.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:LeeSin:general:5",
+          "text": "Use Safeguard on an ally, minion or ward to dash to them. It shields you and your ally if the target is a champion, which makes it a good escape.",
+          "refs": [],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:LeeSin:general:6",
+          "text": "Sonic Wave stops at the first enemy it hits, so a minion or monster in the way takes the hit. Line it up on a clear path to your target.",
+          "refs": [],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:LeeSin:combo:0",
+          "name": "Ward hop",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "LeeSin-W" }],
+          "when": "You need to escape, chase, or cross a wall quickly.",
+          "whenRefs": [],
+          "text": "Place a ward and Safeguard to it right away. Safeguard targets a ward near the cursor, so it works on a freshly placed ward.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:LeeSin:combo:1",
+          "name": "Resonating Strike into ward hop",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "LeeSin-Q" },
+            { "kind": "ability", "key": "LeeSin-Q" },
+            { "kind": "ability", "key": "LeeSin-W" }
+          ],
+          "when": "You have landed Sonic Wave and want to dash in, then retreat or reposition.",
+          "whenRefs": [],
+          "text": "After the second Q lands, ward hop away to a ward, ally or minion. Safeguard can be cast during the dash, which makes this a quick kite-back.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:LeeSin:combo:2",
+          "name": "Q into kick",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "LeeSin-Q" },
+            { "kind": "ability", "key": "LeeSin-R" },
+            { "kind": "ability", "key": "LeeSin-Q" }
+          ],
+          "when": "The target is at range and you want a kick plus a follow-up.",
+          "whenRefs": [],
+          "text": "Use the first Q to mark them, then kick, then recast Q to follow the knocked-back target. This follows Riot's tip to use Sonic Wave before Dragon's Rage.",
+          "textRefs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 139, "end": 152 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "7f53c9fb67ee72c9dc889a539e2593b7760cb3c835959448daec5dbd69cf3aa6",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Aatrox:0",
+          "text": "Fight Aatrox early, before he has items. Use Sonic Wave, then Resonating Strike to close in, and finish with a kick from Dragon's Rage.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 121, "end": 134 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:LeeSin:Aatrox:1",
+          "text": "Use Cripple after Tempest when Aatrox tries to get away or reach you. It leaves him slowed, so you can catch him or walk out of his range.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:LeeSin:Aatrox:2",
+          "text": "Aatrox's Infernal Chains pull him back to the center of the chain's area if he stays inside it. Walk out sideways or toward him, or use Safeguard to dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:LeeSin:Aatrox:3",
+          "text": "Dodge The Darkin Blade sideways. Its hit zones show before it lands, and Aatrox's best damage comes from the tip of each swing.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Aatrox", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:LeeSin:Aatrox:4",
+          "text": "Cast Iron Will in a long fight to heal back some of Aatrox's damage. It gives you omnivamp.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:LeeSin:Aatrox:5",
+          "text": "Hold Dragon's Rage for when Aatrox has no escape. Kicking him into his teammates knocks them up, but he will heal back if he gets to use his ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b3ab9b9101fec807b2dbce86094b6798b6fdcfcfa39c546cd700da94dff23e12",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Ambessa:0",
+          "text": "Open with Sonic Wave, then Resonating Strike to close the gap if Ambessa backs away. Aim carefully, since the wave stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:LeeSin:Ambessa:1",
+          "text": "Use Cripple after Tempest hits her, so she is slowed when she tries to dash onto you or run away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:Ambessa:2",
+          "text": "Ambessa is weak to magic damage, but Lee Sin deals mostly physical damage. Weave basic attacks between abilities so Flurry keeps your energy up in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "LeeSin", "start": 37, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 116,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:LeeSin:Ambessa:3",
+          "text": "Use Safeguard on a ward or minion to jump away when Ambessa dives. It also gives you a shield.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:LeeSin:Ambessa:4",
+          "text": "Kick Ambessa with Dragon's Rage toward your team, and bring her into other enemies so they get knocked up too.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "knocked-up", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7b02db0dc47da6596a5f6b0984a4fe5704e6f6c9f28c565f33b51a0066277943",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Amumu:0",
+          "text": "Stay out of Amumu's range when his ultimate is ready. Curse of the Sad Mummy stuns everyone close, and Lee Sin can't fight while stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Amumu-R", "start": 54, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 },
+            { "kind": "champion", "key": "LeeSin", "start": 103, "end": 110 },
+            { "kind": "keyword", "key": "stunned", "start": 129, "end": 136 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:LeeSin:Amumu:1",
+          "text": "Amumu is hard to hurt with physical damage. Use Tempest / Cripple for magic damage and skip long auto-attack trades.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "LeeSin-E", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:LeeSin:Amumu:2",
+          "text": "Bandage Toss is a line that ends on the first unit it hits. Keep a minion between you and Amumu, or keep moving.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Amumu", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:LeeSin:Amumu:3",
+          "text": "Don't stand in Despair for long. It deals more damage the more Health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Amumu back after Sonic Wave, and the second Q lets Lee follow him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Amumu", "start": 21, "end": 26 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6cb7540cb3903ccdfdbf55c1642d2a0d2b1266b8fce88401918186a405600a71",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Belveth:0",
+          "text": "Hit Bel'Veth with Sonic Wave, then follow with Resonating Strike to stay on her when she tries to dash away with Void Surge.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 113, "end": 123 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:LeeSin:Belveth:1",
+          "text": "Use Tempest and then Cripple when she dives in; the slow cuts her chase and her attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:LeeSin:Belveth:2",
+          "text": "Fight her early, before she has stacked Lavender from takedowns and her attack speed grows out of control.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:LeeSin:Belveth:3",
+          "text": "Kick her with Dragon's Rage away from your team, or into her allies, when she commits to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:LeeSin:Belveth:4",
+          "text": "Do not stand still next to a corpse after a kill; she can dash to the Void Coral with Endless Banquet and explode on you.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c16d707b443cdee38b96be67abf3fb9ab6c305ef72abb8f326cd4d9d9efd347",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Brand:0",
+          "text": "Dodge Brand's Sear and Pillar of Flame. His combo cannot begin until one lands, and Sear stuns only if you are already ablaze.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Brand-Q", "start": 84, "end": 88 },
+            { "kind": "keyword", "key": "ablaze", "start": 119, "end": 125 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:LeeSin:Brand:1",
+          "text": "Close the gap with Sonic Wave and then Resonating Strike. Brand is weak up close, so stay on him.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:LeeSin:Brand:2",
+          "text": "Use Cripple on Brand once you are in reach to slow him, so he cannot kite you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:LeeSin:Brand:3",
+          "text": "Use Safeguard to dodge into your allies or a ward and gain a shield before Brand's burst lands.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:LeeSin:Brand:4",
+          "text": "Walk away from your teammates when you see Pyroclasm start. Its first missile is slow, so you have time to step out of its bounces.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After Resonating Strike, Safeguard lets Lee Sin kite back out of Brand's range quickly.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 },
+            { "kind": "champion", "key": "Brand", "start": 65, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "46647e6c80d8708848be362da0ed680a9b6a704304352c5dfd409c527dacb471",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Briar:0",
+          "text": "Fight Briar when she is already hurt; Resonating Strike hits much harder on low Health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:LeeSin:Briar:1",
+          "text": "Land Tempest, then Cripple her when she charges in; a slowed Briar is easier to kite and trade with.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "champion", "key": "Briar", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:LeeSin:Briar:2",
+          "text": "Hold Dragon's Rage for when Briar is in her frenzy. She cannot control her movement, so kick her toward your team.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:LeeSin:Briar:3",
+          "text": "Use Safeguard and Iron Will in a long fight; the shield and omnivamp offset her bleed healing.",
+          "refs": [],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:LeeSin:Briar:4",
+          "text": "Keep your distance when Briar's Chilling Scream is charged near a wall. A full charge knocks you back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-E", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard right after the second Q lets Lee dash in and kite back out of Briar's leaps.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 73, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "677a3f8e8996d329829d64f03962d0fb1d35470f98b70b20b4fe9d82eab15a49",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Darius:0",
+          "text": "Hit Sonic Wave first, then Resonating Strike to close the gap, so Darius cannot just walk away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:LeeSin:Darius:1",
+          "text": "Use Tempest and its recast to leave Darius slowed when he tries to chase you, or when you want to leave a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:LeeSin:Darius:2",
+          "text": "Fight Darius in short trades and back off before he stacks Hemorrhage. His damage and healing grow the longer a fight goes on.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 59,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:LeeSin:Darius:3",
+          "text": "Kick Darius with Dragon's Rage toward your team, or into his allies, so the collision hurts them too.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:Darius:4",
+          "text": "Stay out of Apprehend's cone. When it is on cooldown, step in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:LeeSin:Darius:5",
+          "text": "Use Safeguard to dash to an ally or ward and get out of Darius's reach once he has committed to a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "acdc6c6bcd8075c59034deb9a298be249fd88d2e0516fec7303fac3271bbfda7",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Diana:0",
+          "text": "Use Sonic Wave from a distance, then Resonating Strike to close on Diana before she can use Pale Cascade orbs to trade back.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Diana-W", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:LeeSin:Diana:1",
+          "text": "Cast Cripple after Tempest when Diana dashes in, so she is slowed and can't easily stay on you or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:LeeSin:Diana:2",
+          "text": "Stay out of Crescent Strike's path. Once you are marked, Diana can use Lunar Rush on you again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Diana", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Diana-E", "start": 71, "end": 81 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:LeeSin:Diana:3",
+          "text": "Diana deals magic damage, so Iron Will's healing won't blunt her burst much. Use Safeguard to shield yourself when she dives.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:LeeSin:Diana:4",
+          "text": "Kick Diana with Dragon's Rage into her teammates, so they are knocked up and take extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 62, "end": 72 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Diana back, and the recast Q follows her, countering her dive.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Diana", "start": 21, "end": 26 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "40547a5ab68862d6e43d36f288bf1c7b4c8bb1a8a8cf0c2b2fdff06d5172eac2",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:DrMundo:0",
+          "text": "Hit Mundo with Sonic Wave only when it will land; he will not be stopped by crowd control and his Infected Bonesaw punishes a long chase.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 98, "end": 114 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:LeeSin:DrMundo:1",
+          "text": "Dragon's Rage on Mundo is often wasted, since his passive resists the root. Save the kick for his teammates.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:LeeSin:DrMundo:2",
+          "text": "Step on the dropped canister yourself to destroy it before Mundo can heal from it.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:DrMundo:3",
+          "text": "Use Cripple after Tempest to slow Mundo and stay out of his reach; he is tanky, so do not trade while Heart Zapper is charging.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:LeeSin:DrMundo:4",
+          "text": "Mundo is vulnerable to magic damage but heals through it quickly, so burst him fast after Maximum Dosage starts.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 90, "end": 104 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "06852b2730aa6ed28cbce09802812b94789f22b17f212d8dfd8faa43c62babe0",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Ekko:0",
+          "text": "Hit Sonic Wave first, then follow with Resonating Strike to close the gap before Ekko can slip away.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:LeeSin:Ekko:1",
+          "text": "Kick Ekko with Dragon's Rage while his Chronobreak is on cooldown; he has no way to rewind out of a fight then.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Ekko-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:LeeSin:Ekko:2",
+          "text": "Use Cripple after Tempest to keep Ekko slowed so he cannot easily run or reposition.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:LeeSin:Ekko:3",
+          "text": "Ekko is weak to physical burst, so Lee Sin should chain his abilities with basic attacks to kill him fast, before Ekko can use his tools.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Ekko", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:LeeSin:Ekko:4",
+          "text": "Step out of Parallel Convergence once it appears; being stunned inside it lets Ekko chain a kill onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 12, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 63 },
+            { "kind": "champion", "key": "Ekko", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "531cff694123d29fd012ebf9249eec1c0f656a72fe671f7318544573d0a2b5a9",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Evelynn:0",
+          "text": "Stay spread out from Evelynn's target. Her Allure charm is dangerous, so protect any marked ally or put allies between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:LeeSin:Evelynn:1",
+          "text": "Tempest reveals enemies for a few seconds, so use it to spot Evelynn when she is near. Cripple then leaves her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 61, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:LeeSin:Evelynn:2",
+          "text": "Evelynn is fragile and takes your physical damage well. Use Sonic Wave and then Resonating Strike to catch her when she steps out of the shadows.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:LeeSin:Evelynn:3",
+          "text": "Save Dragon's Rage for when Evelynn commits to a fight. Her Last Caress can make her untargetable, so do not waste the kick.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Evelynn", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Sonic Wave reveals Evelynn's target, and Dragon's Rage kicks her back, so Q then R then Q punishes her.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 41, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bd61810797a3323ae7c6cdc98f9d9022f99cd87202c5345a4555c234ad8c791f",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Fiddlesticks:0",
+          "text": "Hit Fiddlesticks with Sonic Wave and follow with Resonating Strike; he is fragile and you can reach him fast.",
+          "refs": [
+            { "kind": "champion", "key": "Fiddlesticks", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:LeeSin:Fiddlesticks:1",
+          "text": "Keep wards out and watch for him standing still as a scarecrow; his next ability will fear you.",
+          "refs": [],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:LeeSin:Fiddlesticks:2",
+          "text": "Don't walk into Reap; being silenced stops your dashes and abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 16,
+              "end": 20
+            },
+            { "kind": "keyword", "key": "silenced", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Fiddlesticks:3",
+          "text": "Use Dragon's Rage on Fiddlesticks before he gets his abilities off; he has no escape once kicked.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 21,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:LeeSin:Fiddlesticks:4",
+          "text": "Break away from Crowstorm's area when you see him channel; use Safeguard to leave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 16,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bff2d08e08edf4eaac2af8cd872e4e841ccbac402b2a78091139eec0c55dac30",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Graves:0",
+          "text": "Hit Sonic Wave on Graves, then follow with Resonating Strike to close the gap; he has no way to stop the dash once it starts.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Graves:1",
+          "text": "Use Tempest and then Cripple when Graves tries to back away; the slow keeps him in your reach.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:LeeSin:Graves:2",
+          "text": "Fight Graves up close. He is a marksman, so stay on him and kick him with Dragon's Rage once his dash is spent.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:LeeSin:Graves:3",
+          "text": "Do not walk into Smoke Screen to chase; you can't see out of it and you'll be slowed. Wait for him to leave it or fight at its edge.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:LeeSin:Graves:4",
+          "text": "Use Safeguard on a minion or ward to close in or dodge End of the Line, and shield yourself when you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aaa875ff57fa94694f610c79b2f7c2d2123b4b33bdd8538042c35758718cb48d",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Gwen:0",
+          "text": "Hit Sonic Wave first, then follow with Resonating Strike. Gwen's Hallowed Mist makes her untargetable, so use the dash before she can cast it.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Gwen-W", "start": 65, "end": 78 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:LeeSin:Gwen:1",
+          "text": "Use Cripple on Gwen after Tempest hits. She needs her Skip 'n Slash dash and attacks to deal damage, so a slowed Gwen has a hard time with both.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Gwen-E", "start": 54, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 },
+            { "kind": "champion", "key": "Gwen", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:LeeSin:Gwen:2",
+          "text": "Gwen deals magic damage, so Iron Will's omnivamp helps you sustain through her trades.",
+          "refs": [{ "kind": "champion", "key": "Gwen", "start": 0, "end": 4 }],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:LeeSin:Gwen:3",
+          "text": "Gank or fight her before she has attacked a few times. Her damage builds up through attacks, so jump on her early.",
+          "refs": [],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:LeeSin:Gwen:4",
+          "text": "Wait for Gwen to use Hallowed Mist before you kick her with Dragon's Rage. Cast it while she is outside the mist, and knock her into her teammates.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Gwen-W", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d1c2fbb9d6abf07b203089bc05350c711007e05d3400751a4240b5a5e17559c0",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Hecarim:0",
+          "text": "Hit Sonic Wave first, then follow with Resonating Strike to close the gap when Hecarim tries to run from you.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:LeeSin:Hecarim:1",
+          "text": "Use Cripple after Tempest to leave Hecarim slowed, so he cannot easily build up speed for his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:LeeSin:Hecarim:2",
+          "text": "Hecarim is not very durable, so look for a burst fight and kick him with Dragon's Rage once you have a lead.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:LeeSin:Hecarim:3",
+          "text": "Do not fight inside Spirit of Dread for long; he heals from damage taken. Trade in short bursts and step out.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:LeeSin:Hecarim:4",
+          "text": "Weave basic attacks between your abilities with Flurry so you hit fast and keep your Energy up in a short brawl.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 48,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Hecarim back mid-charge, and the follow-up Q keeps Lee on him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Hecarim", "start": 21, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "13f61da5337f3407042e072d01e9636283a6804b8c40200bda3972b70c1fc397",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Ivern:0",
+          "text": "Hit Sonic Wave on Ivern, then follow with Resonating Strike to close the gap before he slips into brush.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:LeeSin:Ivern:1",
+          "text": "Use Tempest to reveal Ivern when he hides in brush, then slow him with Cripple so he can't get away.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:LeeSin:Ivern:2",
+          "text": "Look for a gank when Ivern is alone. He is a weak fighter by himself, so Dragon's Rage can finish him once his friends are away.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:LeeSin:Ivern:3",
+          "text": "Be careful fighting near Daisy. Her third hit on you launches a shockwave, so kill Ivern first or fight away from her.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:LeeSin:Ivern:4",
+          "text": "Keep moving when Rootcaller is aimed at you, because it roots the first enemy it hits. Dodge it, then jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "03f2d653eb3b5928c98ef9e61556fa38185b6e4c0603b0ad2e0448e00e72f854",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan's Demacian Standard and Jarvan himself, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 38, "end": 55 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:LeeSin:JarvanIV:1",
+          "text": "Use Safeguard or Resonating Strike to dash out of Cataclysm's arena; Jarvan's terrain does not stop movement abilities.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:LeeSin:JarvanIV:2",
+          "text": "Hit Jarvan with Tempest, then follow with Cripple so he is slowed and cannot chain his combo.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Resonating Strike lets Lee dash in and quickly retreat from Jarvan.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8274c7a5b345582a0442ad009a1130c46310f3e98141c4dff8abc93c971763a9",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Jax:0",
+          "text": "Do not hit Jax with basic attacks while Counter Strike is up; wait for it to end. Cast Safeguard to dash away before the stun lands.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Jax-E", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:LeeSin:Jax:1",
+          "text": "Jax gets stronger the longer he keeps attacking, so use Tempest and its slow to break his chain of attacks.",
+          "refs": [{ "kind": "champion", "key": "Jax", "start": 0, "end": 3 }],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:LeeSin:Jax:2",
+          "text": "Jax can take a lot of physical damage, so lean on the magic damage in Tempest and avoid long fights with attacks alone.",
+          "refs": [{ "kind": "champion", "key": "Jax", "start": 0, "end": 3 }],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:LeeSin:Jax:3",
+          "text": "Sonic Wave first, then Resonating Strike to follow him when he leaps away.",
+          "refs": [],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "488eab68274942a49518c4f4bf23418f1c4c19771d62c17ddea4aa3107c30ce6",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Jayce:0",
+          "text": "Hit Sonic Wave first, then follow with Resonating Strike. Jayce's Thundering Blow can knock you off course, so close the gap before he swings.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:LeeSin:Jayce:1",
+          "text": "Jayce is strongest early, so be careful about fighting him alone in the early game. Look for ganks when he has used his cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:LeeSin:Jayce:2",
+          "text": "Use Tempest and then Cripple when Jayce jumps in with To the Skies!, so he is slowed and can't easily get away or follow you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:LeeSin:Jayce:3",
+          "text": "Jayce takes magic damage poorly in cannon form, but Tempest deals magic damage and reveals him. Use it to find him when he hides.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Jayce:4",
+          "text": "Weave basic attacks between your abilities so Flurry gives you attack speed and returns Energy during a long fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 46,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Q lets Lee kite back out of Jayce's hammer leap and knockback range.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 55, "end": 60 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Kick knocks Jayce back, and the recast Q follows him, which helps punish Jayce swapping forms.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 73, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "af5624ef0003a04acdfea998caea96c4a80e1546f15be7f88eacd4c8d3b97429",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Karthus:0",
+          "text": "Close in with Sonic Wave and Resonating Strike when Karthus is alone; his Wall of Pain slows you, so don't dash through it.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Karthus-W", "start": 74, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:LeeSin:Karthus:1",
+          "text": "Kill Karthus fast and then step away from his body; he keeps casting after he dies.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:LeeSin:Karthus:2",
+          "text": "Use Safeguard to dash out of range of his Lay Waste, and cast Iron Will to heal back what his damage took.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 42, "end": 51 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:LeeSin:Karthus:3",
+          "text": "Stay out of Defile's range, because it drains your health while you fight, and Cripple lets you leave his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-E", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:LeeSin:Karthus:4",
+          "text": "Stay healthy before level 6; Requiem hits you from anywhere on the map, and you can't dodge it once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Q into kick gaps a ranged Karthus, and the recast Q follows him to stay on him after the kick.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 26, "end": 33 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5c7af1fccd1c5300f45d8e9e0cdb7c2ac22da653ca8729791fe1b86b65441fd5",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Kayn:0",
+          "text": "Land Sonic Wave on Kayn, then follow with Resonating Strike; it hits harder the lower his health is, so use it to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:LeeSin:Kayn:1",
+          "text": "Cast Tempest and then Cripple when Kayn tries to dash in or run away, so he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:LeeSin:Kayn:2",
+          "text": "Kick Kayn with Dragon's Rage when he is committed to a fight, and knock him into his teammates for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:LeeSin:Kayn:3",
+          "text": "Use Safeguard and then Iron Will in a fight against Kayn; the shield and healing help you win the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:LeeSin:Kayn:4",
+          "text": "Kayn is weak early; look for a gank or fight on him before he reaches a stronger form.",
+          "refs": [{ "kind": "champion", "key": "Kayn", "start": 0, "end": 4 }],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4eba0c409fabecef1a1e82ab8801e5dad805ce9256cd896b16881dbdb4071ae4",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Khazix:0",
+          "text": "Stay near your minions or allies when you fight Kha'Zix, so Taste Their Fear doesn't get its extra damage on an Isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:LeeSin:Khazix:1",
+          "text": "Hit Kha'Zix with Sonic Wave, then follow with Resonating Strike to close the gap when he tries to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:LeeSin:Khazix:2",
+          "text": "Use Tempest on him, then recast Cripple so he is slowed and can't easily leap away or reset the fight.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:LeeSin:Khazix:3",
+          "text": "Look for the fight when Kha'Zix has used Leap and Void Assault. He is much easier to catch without them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Khazix-E", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Khazix-R", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:LeeSin:Khazix:4",
+          "text": "Use Safeguard on yourself or a ward to get the shield before Kha'Zix jumps on you, and recast Iron Will to heal while you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Kha'Zix back, so Q into kick can punish him when he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Khazix", "start": 21, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c1aa8a878e226cecff1813f8d2f94d3009ff618ae1a179d6cd298db2cc2bd59",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Kindred:0",
+          "text": "Kindred is fragile. Land Sonic Wave, then follow with Resonating Strike to dash onto her and burst her before she can kite.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:LeeSin:Kindred:1",
+          "text": "Kick her with Dragon's Rage when she dives in or tries to kite. It roots her while you cast, then knocks her back.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:LeeSin:Kindred:2",
+          "text": "Use Tempest, then Cripple, to keep her slowed so she can't walk away from your attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:LeeSin:Kindred:3",
+          "text": "Don't kick her while Lamb's Respite is up. Nobody inside can die, so wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:LeeSin:Kindred:4",
+          "text": "Dance of Arrows lets her dash away. Hold Resonating Strike until after she uses it so you can follow her.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a7dbe666333bd36da9f97dc928a35a98e063dda6ececc144e5ee0d3ceb74090",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Lillia:0",
+          "text": "Hit Sonic Wave on Lillia, then use Resonating Strike to close the gap before she can kite away with her Move Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:LeeSin:Lillia:1",
+          "text": "Use Cripple after Tempest so Lillia is slowed and cannot run you down or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:LeeSin:Lillia:2",
+          "text": "Kick Lillia with Dragon's Rage when she is out of position; she is a fragile fighter and the damage hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:LeeSin:Lillia:3",
+          "text": "Take the shield from Safeguard when you walk into her Swirlseed; it softens her poke and trades.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 54, "end": 63 },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9fcdde40d4253fe6f8fc6ae45e4d4ba099e22ea5bdaa3a70653935a653c05b6b",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:MasterYi:0",
+          "text": "Save Dragon's Rage for when Master Yi has used Alpha Strike or is caught after it ends; he cannot be targeted while jumping.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:LeeSin:MasterYi:1",
+          "text": "Slow Master Yi with Cripple before he activates Highlander; once it is on, he can't be slowed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 48, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:LeeSin:MasterYi:2",
+          "text": "Root Master Yi with Dragon's Rage to stop him in his tracks when he is running at you with Highlander active.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:LeeSin:MasterYi:3",
+          "text": "Hit Master Yi a few times with Sonic Wave and Tempest so he must spend mana on Meditate; keep pressure on him while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e0a126c7eefe088454755f3b831eeb30b2879e54dc4b443a63d8a834d447aa58",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:MonkeyKing:0",
+          "text": "Wukong often leaves a clone with Warrior Trickster after Nimbus Strike. Wait a moment before you commit Sonic Wave so you hit the real one.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 33,
+              "end": 50
+            },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:LeeSin:MonkeyKing:1",
+          "text": "Use Cripple after Tempest when Wukong dives in. The slow helps you get out, or lets you keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:LeeSin:MonkeyKing:2",
+          "text": "Don't fight Wukong in a long brawl. Stone Skin makes him tougher the more he hits you, so trade in short bursts and back off.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 12, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 36,
+              "end": 46
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:LeeSin:MonkeyKing:3",
+          "text": "Cast Iron Will when you start trading with Wukong. The omnivamp helps you recover during the fight.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c2c7ffdcb5497bc7d9cef9b1659dbea2c27c5285c1455c5f3a883d0b4b7ca5e5",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Naafiri:0",
+          "text": "Hit Naafiri with Sonic Wave, then follow with Resonating Strike; it hurts more the lower her Health is.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:LeeSin:Naafiri:1",
+          "text": "Use Cripple after Tempest hits so Naafiri is slowed and cannot easily dash away from you.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:LeeSin:Naafiri:2",
+          "text": "Kick Naafiri with Dragon's Rage once she has committed. It cannot be cast on her while she is untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:LeeSin:Naafiri:3",
+          "text": "Use Safeguard on a ward or minion to shield yourself when Naafiri jumps on you with her pack.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c699c5823a97e931edbe8c6119a34d4d51b6f1a4a12b9383430c7a932e8e5750",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Nidalee:0",
+          "text": "Land Sonic Wave on Nidalee, then use Resonating Strike right away to close the gap before she can run or pounce off.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:LeeSin:Nidalee:1",
+          "text": "Use Tempest then Cripple when she dives in or runs; the slowed Nidalee is easier to catch and kick.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            { "kind": "champion", "key": "Nidalee", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:LeeSin:Nidalee:2",
+          "text": "Stay out of brush when you chase her. She moves faster there and toward you, so she can slip away or jump on you.",
+          "refs": [],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:LeeSin:Nidalee:3",
+          "text": "Kick Nidalee with Dragon's Rage at low health to finish her. It cannot be cast from afar, so walk up to her first.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:LeeSin:Nidalee:4",
+          "text": "Look for the Bushwhack traps before you walk into brush or chase her. Walking over one hurts and marks you as Hunted.",
+          "refs": [],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After Sonic Wave lands, Safeguard lets Lee kite back out of Nidalee's Pounce and Takedown dive.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 60, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ab82040bef6651757ddde019e3717176c2a09d37fbe6435f08d3f4f8443ad285",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Nocturne:0",
+          "text": "Bait out Shroud of Darkness with a cheap ability before you commit Sonic Wave or Dragon's Rage.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:LeeSin:Nocturne:1",
+          "text": "Use Cripple after Tempest when Nocturne feared you or dives; the slowed enemy is easier to fight and escape.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:LeeSin:Nocturne:2",
+          "text": "Break the tether of Unspeakable Horror by moving out of range, or dash away with Safeguard before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 20, "end": 38 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:LeeSin:Nocturne:3",
+          "text": "Stay near your team when Nocturne casts Paranoia; his dash can only pick an enemy champion.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:LeeSin:Nocturne:4",
+          "text": "Follow Nocturne's Duskbringer trail by watching it; it reveals where he walked, even in fog.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bf6d43e9a4a574399a5ce2e0fe91c771e01eaf4c90207a720400f2d9043a8683",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Nunu:0",
+          "text": "Land Sonic Wave on Nunu, then follow with Resonating Strike to close the gap.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:LeeSin:Nunu:1",
+          "text": "Sidestep or Safeguard away from the Biggest Snowball Ever!. It turns slowly, so a sharp turn dodges it.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 36, "end": 58 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:LeeSin:Nunu:2",
+          "text": "Use Tempest then Cripple on Nunu to slow him. It cuts his chase and his chances to land Snowball Barrage.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:LeeSin:Nunu:3",
+          "text": "Do not walk into the Absolute Zero blizzard. Interrupt it early or leave its area to take less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:LeeSin:Nunu:4",
+          "text": "Nunu's Consume heals him, so burst him quickly rather than poking. Magic damage hurts you less than expected, so avoid long trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 7, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "13ae77b646bda60a973d3b54ec1b0b637c20ce0a4043acfb52ea1881ae275ec2",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Pantheon:0",
+          "text": "Fire Sonic Wave at Pantheon from range, then follow with Resonating Strike. Close in when he isn't charging Comet Spear.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 108, "end": 119 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:LeeSin:Pantheon:1",
+          "text": "Don't hit Pantheon from the front while Aegis Assault is up; he ignores damage from that direction. Wait it out or get behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:LeeSin:Pantheon:2",
+          "text": "Use Tempest and Cripple when Pantheon jumps in, so he is slowed and you can fight or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:LeeSin:Pantheon:3",
+          "text": "Kick Pantheon with Dragon's Rage toward your teammates when he commits, or into his allies to knock them up.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:LeeSin:Pantheon:4",
+          "text": "Use Safeguard to shield yourself or an ally when Shield Vault is coming. It doesn't stop the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:Pantheon:5",
+          "text": "Move away from the target area when Pantheon starts Grand Starfall; it gives a long warning.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "89c6f5775f7403222efcbcbb13b38dd34b1066d3d641c23c64b7c94494afa0c5",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Qiyana:0",
+          "text": "Hit Qiyana with Sonic Wave, then follow with Resonating Strike to close the gap before she can dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:LeeSin:Qiyana:1",
+          "text": "Use Tempest then Cripple when she dives in, so she is slowed and can't easily line up her next move.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:LeeSin:Qiyana:2",
+          "text": "Kick her with Dragon's Rage when she steps near you. She is rooted while the kick winds up, so she can't dash away.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:LeeSin:Qiyana:3",
+          "text": "Use Safeguard on a ally or ward to shield yourself when she stuns or bursts you.",
+          "refs": [],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:LeeSin:Qiyana:4",
+          "text": "Weave basic attacks between your spells. Flurry gives you attack speed and energy back, so you can keep trading with her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 41,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2d7bf38156c13f7631c2b55e4858a0a4870608bcacb9e2703f306921eaafffe8",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Rammus:0",
+          "text": "Hit Rammus with magic damage from Tempest / Cripple when his Defensive Ball Curl is off; he is much weaker out of that stance.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "LeeSin-E", "start": 34, "end": 51 },
+            { "kind": "ability", "key": "Rammus-W", "start": 61, "end": 80 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:LeeSin:Rammus:1",
+          "text": "Do not attack Rammus while Defensive Ball Curl is up; it hurts you for each attack and his armor is high.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Rammus-W", "start": 27, "end": 46 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:LeeSin:Rammus:2",
+          "text": "Stay out of Frenzying Taunt range before you dash in with Resonating Strike; being taunted ends your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:LeeSin:Rammus:3",
+          "text": "Use Safeguard to run from Powerball; once he is rolling he catches you quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fb31fdc68dccfe866884a166d2bb3dcfb817b1bb969a57253abd32233650856",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:RekSai:0",
+          "text": "Aim Sonic Wave carefully; it stops at the first enemy it hits, so a minion in the way blocks it. Follow with Resonating Strike once it lands.",
+          "refs": [],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:LeeSin:RekSai:1",
+          "text": "Use Cripple after Tempest when Rek'Sai tries to run or tunnel away. It leaves her slowed.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:LeeSin:RekSai:2",
+          "text": "Hit Rek'Sai with magic damage when you can. Tempest ignores the physical defenses she may build.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:LeeSin:RekSai:3",
+          "text": "Fight when Rek'Sai's Fury is low. A full Fury makes her Furious Bite hit much harder, and it becomes true damage.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:LeeSin:RekSai:4",
+          "text": "Keep Dragon's Rage for when Rek'Sai is low. Her Void Rush dive makes her untargetable, so don't kick into it.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "RekSai", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "RekSai-R", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "After the second Q, Safeguard lets Lee kite back out of Rek'Sai's Queen's Wrath and Furious Bite range.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 56, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c1cc2ca8cc5971518527c649627c1e7c2aa7c5c11c0c22b6fc4471854de14242",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Rengar:0",
+          "text": "Fight Rengar when his Ferocity bar is low; at full Ferocity his next ability is empowered, so back off then.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:LeeSin:Rengar:1",
+          "text": "Stay out of brush when Rengar is near; he leaps from it with his basic attack.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:LeeSin:Rengar:2",
+          "text": "Watch for the marker over you when Rengar uses Thrill of the Hunt, then turn and fight him instead of running.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Rengar-R", "start": 47, "end": 65 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:LeeSin:Rengar:3",
+          "text": "Use Tempest and then Cripple to leave Rengar slowed when he dives in, then trade while he closes the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:LeeSin:Rengar:4",
+          "text": "Use Dragon's Rage on Rengar once he commits; it knocks him back and he cannot leap in again right away.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rengar", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:LeeSin:Rengar:5",
+          "text": "Rengar's Battle Roar damage is magic and it heals him from damage just taken, so burst him fast instead of trickling damage.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rengar-W", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77d500eb3a128f581e865c1c20ad851894a66ede63cab45c3fa4f4fed162ee59",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Sejuani:0",
+          "text": "Use Sonic Wave before Dragon's Rage so you can chase the target with Resonating Strike.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:LeeSin:Sejuani:1",
+          "text": "Cripple will not slow Sejuani while her Frost Armor is up, so hit her when it is down or use Cripple on her allies instead.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Sejuani", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:LeeSin:Sejuani:2",
+          "text": "Hit Sejuani with magic damage when you can, since Tempest and your other abilities struggle against her armor.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:LeeSin:Sejuani:3",
+          "text": "Stay away from her melee allies when she is nearby; four hits on you let her stun you with Permafrost.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:LeeSin:Sejuani:4",
+          "text": "Save Safeguard to dash away after Arctic Assault lands, and shield yourself when you are caught.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bc09a998ef146a4a1d3a2fb9fce3de5626d14cc0af0c652de7abc9c1add2e9a3",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Shaco:0",
+          "text": "Stay spread out of the stealth: Shaco must reach your back for his big hit, so face him and use Tempest to reveal him.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 32, "end": 37 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Shaco:1",
+          "text": "Watch for boxes near the camps and paths; a box is untargetable until revealed, so Tempest reveals the area first.",
+          "refs": [],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Shaco:2",
+          "text": "Do not chase Shaco blindly into fog; run in with Resonating Strike only when no box is likely near his path.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 13, "end": 18 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:LeeSin:Shaco:3",
+          "text": "Use Dragon's Rage on Shaco right after he commits with Deceive; he cannot easily use it again to escape.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shaco", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:LeeSin:Shaco:4",
+          "text": "Kill the Hallucinate clone away from you; it explodes into boxes when it dies, so do not hit it while you stand beside it.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:LeeSin:Shaco:5",
+          "text": "Use Cripple on Shaco when he commits so he is slowed and cannot easily escape or reset.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Sonic Wave grants True Sight of Shaco, so the mark and kick can still hit him while he is invisible.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 32, "end": 37 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Landing Sonic Wave grants True Sight of Shaco, then Safeguard lets Lee retreat from his traps.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 40, "end": 45 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bdeaed8e294f972e043c582cbc01e75518a1a8ff575e794be4c339abbf91e8af",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Shyvana:0",
+          "text": "Hit Sonic Wave on Shyvana, then follow with Resonating Strike; it hurts more the lower her health is, so save it to finish a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:LeeSin:Shyvana:1",
+          "text": "Use Cripple after Tempest hits so Shyvana is slowed. It makes her harder to catch you and easier to kite in a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:LeeSin:Shyvana:2",
+          "text": "Fight her while she is still in human form. Her power builds from landing attacks, so poke and step back instead of trading evenly.",
+          "refs": [],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:LeeSin:Shyvana:3",
+          "text": "Kick her with Dragon's Rage into her teammates while she is in dragon form; she is bulky, so the crash does extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:LeeSin:Shyvana:4",
+          "text": "Safeguard to an ally or ward to shield yourself and close the gap or escape when Shyvana turns on you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6dfeea7c888e55979b47a6cd15d81dc36af113029bd34b84e4050797e39f7636",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Skarner:0",
+          "text": "Use Sonic Wave to find Skarner, then follow with Resonating Strike to close in before he can set up his boulder attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:LeeSin:Skarner:1",
+          "text": "Skarner is tanky and sticks to you, so land Tempest and then slow him with Cripple to keep him from locking onto you in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:LeeSin:Skarner:2",
+          "text": "Skarner's Ixtal's Impact is stopped by a knock up, so save Dragon's Rage for when he charges at you or an ally.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "knocked-up", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Skarner:3",
+          "text": "Skarner relies on magic damage in Seismic Bastion, so use Safeguard to shield yourself and an ally when he closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-W", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "The ward hop after the second Q lets Lee kite back out of Skarner's Shattered Earth boulder and Quaking attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 58, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "00423fa3908b0f2a8eec3fbf38be4fe5b8a08ce08733cc119e57fadfdc763504",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Sylas:0",
+          "text": "Start trades with Sonic Wave, then follow with Resonating Strike. Sylas is a mage and he can't easily punish you while you are on top of him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:LeeSin:Sylas:1",
+          "text": "Use Tempest and then its recast to leave Sylas slowed, so he can't easily dash away or reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:LeeSin:Sylas:2",
+          "text": "Weave basic attacks between your spells. Flurry gives you Attack Speed and returns Energy, so you can keep trading.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "LeeSin-passive",
+              "start": 41,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:LeeSin:Sylas:3",
+          "text": "Don't fight Sylas when he is low on health and ready to use Kingslayer; he heals more the lower he is. Finish him with burst, not a long trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sylas-W", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:LeeSin:Sylas:4",
+          "text": "Kick Sylas with Dragon's Rage when he has no ultimate to steal from you. Use it on him before he grabs yours in a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "632a2736d84f8c23086e2db0994c972cf5f6ff19847ae59ffa3e8eee79dc28b3",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Talon:0",
+          "text": "Cast Sonic Wave before Dragon's Rage so you can chase with Resonating Strike if Talon tries to slip away.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 23, "end": 36 },
+            { "kind": "champion", "key": "Talon", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:LeeSin:Talon:1",
+          "text": "Hit Tempest, then recast it to leave Talon slowed. It makes his jumps and escapes much easier to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:LeeSin:Talon:2",
+          "text": "Talon deals only physical damage, so use Safeguard on yourself or an ally before he jumps in. The shield and Iron Will's healing soften his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:LeeSin:Talon:3",
+          "text": "Kick Talon with Dragon's Rage when he is committed to a fight, not while Shadow Assault can still hide him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Talon-R", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Talon back after Sonic Wave marks him, interrupting his dive on Lee.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a8933b3f1197bc0b495f8a5dddd08e5d3955b94ed730b9f83c36c5897a5e7fb7",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Trundle:0",
+          "text": "Keep Trundle off his Frozen Domain. Fight him away from the ice, where he is slower and attacks more slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Trundle-W", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:LeeSin:Trundle:1",
+          "text": "Do not walk into a long fight with Trundle. Subjugate steals your resistances and heals him, so burst him and get out.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Trundle-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:LeeSin:Trundle:2",
+          "text": "Leave Pillar of Ice quickly. It slows you, so do not chase him through it with Resonating Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:LeeSin:Trundle:3",
+          "text": "Use Cripple after Tempest hits Trundle so he is slowed and cannot easily stay on you or run away.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:LeeSin:Trundle:4",
+          "text": "Dodge his Chomp or trade right after it is spent. It cuts your attack damage, which weakens your fight.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0e620ef5ad81a16238121b84ff40a3217af37c18b655a47a53e34312ce46787d",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Udyr:0",
+          "text": "Hit Sonic Wave from range, then use Resonating Strike to close the gap; Udyr has few ways to hit you back at range.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:LeeSin:Udyr:1",
+          "text": "Use Tempest and then its Recast to leave Udyr slowed when he runs at you, so he can't easily stay on you.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:LeeSin:Udyr:2",
+          "text": "Keep your distance while Udyr's Blazing Stampede is active. His attacks dash to you and stun, so don't let him land the first hit.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Udyr-E", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:LeeSin:Udyr:3",
+          "text": "Hold Dragon's Rage until Udyr has used up his shield, or kick him into his teammates. Collided enemies are knocked up and take extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Udyr", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:LeeSin:Udyr:4",
+          "text": "Fight Udyr in short trades and back out, since his Iron Mantle shield and healing make long fights favor him. Use Safeguard to leave or reposition.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Udyr-W", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Dash in with Q, then ward hop out to avoid Udyr's Stampede stun and Storm damage.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 43, "end": 47 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:0",
+          "note": "Ward hop helps Lee escape Udyr's Stampede Stance, which gives Udyr Move Speed and a dash-stun on attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Udyr", "start": 62, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "da80eb92b67aaf4019fa512615065e70b2e209bd3d2c10906610e278142f1aa8",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Vi:0",
+          "text": "Use Sonic Wave before Dragon's Rage so Resonating Strike can chase Vi down. Kick her toward your team, not away.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:LeeSin:Vi:1",
+          "text": "Fight Vi in short trades. Her third hit on you shreds Armor and speeds her up, so step back before it lands.",
+          "refs": [],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:LeeSin:Vi:2",
+          "text": "When Vi chases you, use Cripple after Tempest so she is slowed and cannot catch you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:LeeSin:Vi:3",
+          "text": "Do not try to dodge Cease and Desist by being pushed or pulled away. Vi cannot be stopped while she dashes, so fight her once the dash ends.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 20, "end": 36 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:LeeSin:Vi:4",
+          "text": "Take a Safeguard shield before you trade with Vi. Use Iron Will to heal back from the fight.",
+          "refs": [],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4276d7c5b813b8488e17669319de24c634901a3898242468966a7073f05c8616",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Viego:0",
+          "text": "Fight Viego early in the game, before he has items and kills to snowball from. Start trades with Sonic Wave, then follow up with Resonating Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:LeeSin:Viego:1",
+          "text": "Use Cripple after Tempest when Viego tries to run or chase, so he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:LeeSin:Viego:2",
+          "text": "Viego's Spectral Maw can stun you, so stay out of a straight line with him when he is charging it.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Viego-W", "start": 8, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:LeeSin:Viego:3",
+          "text": "Kill Viego fast when he is in a fight. If you kill him, you stop his own Mist Wraith plays.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:LeeSin:Viego:4",
+          "text": "Don't let a teammate die near Viego. He can eat the Mist Wraith to heal and take their body for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks Viego back after Sonic Wave marks him, and Q follows up on him.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 21, "end": 26 }
+          ]
+        },
+        {
+          "comboId": "jungle:LeeSin:combo:1",
+          "note": "Safeguard after the second Q lets Lee dash in, then retreat from Viego.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 65, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d33459da9bd30085794aae4e98ca08a972d1a24aa60535e63538db127330927b",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Volibear:0",
+          "text": "Fight Volibear before he has built up The Relentless Storm; once his attacks chain lightning, he wins longer trades.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 6, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Volibear-passive",
+              "start": 38,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:LeeSin:Volibear:1",
+          "text": "Kite away from the slow of Sky Splitter by walking out of the circle; the bolt lands after a delay and you can see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:LeeSin:Volibear:2",
+          "text": "Use Tempest then Cripple when Volibear runs at you; the slow stops his pounce from landing easily.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:LeeSin:Volibear:3",
+          "text": "Do not use Dragon's Rage while Volibear is in his big form with spare health; the kick does less than you want. Look for his squishy teammates instead.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Volibear", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:LeeSin:Volibear:4",
+          "text": "Hit Sonic Wave first, then dash in with Resonating Strike to stay on Volibear when he tries to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 69, "end": 77 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "41cf5268de9dfa024889a66b57cf6f4fa48457b9500adc948ebb9ec1f9d6c6cc",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Warwick:0",
+          "text": "Do not run in a straight line from Warwick when he is low on health. Hold-casting Jaws of the Beast follows dashes, so a dash is not a safe escape.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 82, "end": 99 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:LeeSin:Warwick:1",
+          "text": "Avoid fights that leave you under half health. Blood Hunt lets Warwick sense you and chase you down fast.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 47, "end": 57 },
+            { "kind": "champion", "key": "Warwick", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:LeeSin:Warwick:2",
+          "text": "Use Cripple on Warwick to leave him slowed when you disengage.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:LeeSin:Warwick:3",
+          "text": "Save Dragon's Rage for when Warwick commits, since his Infinite Duress will suppress you if it lands. Do not fight him while he is healing at low health.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Warwick", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Warwick-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:LeeSin:Warwick:4",
+          "text": "Use Iron Will after Safeguard when you trade with Warwick. The omnivamp helps you keep up against his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "44208b186f4959add7b415fc2a3a81a3d0b976b1aa76d73f2295348508e6e831",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:XinZhao:0",
+          "text": "Land Sonic Wave, then use Resonating Strike to close in on Xin Zhao. Dragon's Rage is better kept for when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 59, "end": 67 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:XinZhao:1",
+          "text": "Use Tempest and Cripple when Xin Zhao dives on you. The slow helps you escape or turn the fight around.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:XinZhao:2",
+          "text": "Break up his Three Talon Strike combo by moving away before the third hit. That hit knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 13, "end": 31 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:LeeSin:XinZhao:3",
+          "text": "Don't kick Xin Zhao's team with Dragon's Rage right after he lands Crescent Guard. He takes no damage from outside its sweep, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": [
+        {
+          "comboId": "jungle:LeeSin:combo:2",
+          "note": "Dragon's Rage knocks back Xin Zhao, and Q first lets Lee Sin follow the knocked-back target.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "champion", "key": "LeeSin", "start": 53, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f22fb3a767382088cd6d2051c954f901d2133cf339b39af228176f3c2848d61",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Zac:0",
+          "text": "Hit Zac with Sonic Wave, then follow with Resonating Strike; the dash adds more damage as his health drops.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 4, "end": 7 }],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:LeeSin:Zac:1",
+          "text": "Zac leaves goo chunks when he hits you. Step on them to destroy them so he cannot heal from them.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 0, "end": 3 }],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:LeeSin:Zac:2",
+          "text": "Use Cripple after Tempest hits so Zac is slowed and cannot easily chase or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 34, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:LeeSin:Zac:3",
+          "text": "Zac is weak to magic damage but has Cell Division. When he splits, kill every bloblet or he comes back.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zac-passive", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:LeeSin:Zac:4",
+          "text": "Hit Zac while he charges Elastic Slingshot. Stuns and knock ups cancel it, so use Dragon's Rage to kick him away.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Zac-E", "start": 25, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f321577b57a51e4eefdb08fb9ea0301e85368c3c6178447d5370f55187d39e13",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Zed:0",
+          "text": "Hit Sonic Wave on Zed, then follow with Resonating Strike to close the gap; it hurts more the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 18, "end": 21 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:LeeSin:Zed:1",
+          "text": "Use Cripple after Tempest connects so Zed is slowed and cannot easily slip away.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 38, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:LeeSin:Zed:2",
+          "text": "Save Dragon's Rage for when Zed has jumped onto you or a teammate with Death Mark, and kick him away from the fight.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Zed-R", "start": 71, "end": 81 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:LeeSin:Zed:3",
+          "text": "Zed's Contempt for the Weak hits hard when you are low on health, so back off before he gets to hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-passive", "start": 6, "end": 27 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:LeeSin:Zed:4",
+          "text": "Zed's Razor Shuriken hits you from his shadow too. Step out of line with Safeguard to a ward or ally when he throws.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0469712ea55b62a0ca4583ce07a6ca734b2fe139155588935ec85a9cea96a639",
+      "tips": [
+        {
+          "id": "jungle:LeeSin:Zyra:0",
+          "text": "Hit Zyra with Sonic Wave, then follow with Resonating Strike to land on her before she can aim Grasping Roots.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zyra-E", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:LeeSin:Zyra:1",
+          "text": "Zyra's plants are weak to quick fights. Dive her when few seeds are around and kill her before any plants grow.",
+          "refs": [{ "kind": "champion", "key": "Zyra", "start": 0, "end": 4 }],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:LeeSin:Zyra:2",
+          "text": "Step over her seeds when you can; enemy champions destroy them by walking on them, so she has fewer plants to fight with.",
+          "refs": [],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:LeeSin:Zyra:3",
+          "text": "Use Cripple after Tempest when you leave a fight. The slow helps you get away from her or chase her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:LeeSin:Zyra:4",
+          "text": "Zyra is fragile. Dragon's Rage hits hard against her, so save it to kill her once she has used Grasping Roots.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Zyra-E", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:LeeSin:Zyra:5",
+          "text": "Use Safeguard on a ward or minion to dodge Grasping Roots by dashing out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 43, "end": 57 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,876 @@
+{
+  "schemaVersion": 1,
+  "champion": "Neeko",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "24b4acf35be080bc034ef74c48fb3276615d48cc1abcde45bec8be11453219f3",
+      "tips": [
+        {
+          "id": "support:Neeko:general:0",
+          "text": "Aim Tangle-Barbs through a minion or enemy before it lands on your target; once it hits something it grows faster and roots for much longer.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 118, "end": 123 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Neeko:general:1",
+          "text": "Throw Blooming Burst at a champion or a large monster so it blooms again. Hitting a minion only blooms again if it dies.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Neeko:general:2",
+          "text": "Use Shapesplitter to run at or away from a fight; you and your clone both gain Move Speed. Every third attack also hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Neeko:general:3",
+          "text": "Disguise with Inherent Glamour only when it will pay off, because a wasted use puts enemies on alert. Casting a damaging spell or being immobilized breaks it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 14,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Neeko:general:4",
+          "text": "Start Pop Blossom while disguised; enemies get no warning visuals. Your disguise breaks shortly after you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Neeko:general:5",
+          "text": "Land Tangle-Barbs first, then follow with Pop Blossom while the enemy is rooted so they cannot walk out of it. They are knocked up, then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Neeko-R", "start": 42, "end": 53 },
+            { "kind": "keyword", "key": "knocked-up", "start": 120, "end": 130 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Neeko:general:6",
+          "text": "Stand near an allied minion or ward to collect its disguise, so you can blend in without needing an ally champion.",
+          "refs": [],
+          "pWrong": 0.54
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Neeko:combo:0",
+          "name": "Disguised Pop Blossom",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Neeko-passive" },
+            { "kind": "ability", "key": "Neeko-R" }
+          ],
+          "when": "When you want to engage a group of enemies who can't see the Pop Blossom warning.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 61, "end": 72 }
+          ],
+          "text": "Disguise as an ally or minion and walk into the enemy team, then cast Pop Blossom. The warning is hidden while you're disguised, so they get less time to react.",
+          "textRefs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 70, "end": 81 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "8248a1942c2516ff24346b78d8733add63e7ea48a5e8407379f745c0e989ed49",
+      "tips": [
+        {
+          "id": "support:Neeko:Bard:0",
+          "text": "Dodge Cosmic Binding by not lining up with a minion or a wall behind you. A second hit turns the slow into a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Neeko:Bard:1",
+          "text": "Land Tangle-Barbs on Bard or his partner, then use the longer root to follow up with Blooming Burst.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Bard", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Neeko-Q", "start": 85, "end": 99 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Neeko:Bard:2",
+          "text": "Walk over Bard's Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Neeko:Bard:3",
+          "text": "Don't cast Pop Blossom into Tempered Fate's area; it hits you with stasis and wastes your ultimate. Wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Bard-R", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Neeko:Bard:4",
+          "text": "Follow Bard through Magical Journey only if it is safe; he may be waiting on the other side.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Bard-E", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a80d24b33a1b8f4ec545c3f9772eeb9706095737fa775be24f57110cd1b95190",
+      "tips": [
+        {
+          "id": "support:Neeko:Karma:0",
+          "text": "Keep minions out of the way when you throw Tangle-Barbs; hitting an enemy makes it bigger and roots for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Neeko:Karma:1",
+          "text": "Step out of range when Karma starts Focused Resolve; the root only comes if the tether stays unbroken.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Karma-W", "start": 36, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Neeko:Karma:2",
+          "text": "Avoid free hits from Karma; each one shortens Mantra's cooldown, so her next empowered spell comes sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Karma-R", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Neeko:Karma:3",
+          "text": "Leave Karma's Soulflare circle quickly when she empowers Inner Flame; it slows and then bursts for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Karma-Q", "start": 57, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Neeko:Karma:4",
+          "text": "Use Pop Blossom while disguised; its warning is hidden, so enemies get little notice.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f393174430c56e6011fb9a07728099d89eaf3c412e54378c99d4c279412da441",
+      "tips": [
+        {
+          "id": "support:Neeko:Leona:0",
+          "text": "Use Tangle-Barbs on Leona as she walks up. Hit her first and she is rooted and can't use Zenith Blade to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            { "kind": "ability", "key": "Leona-E", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Neeko:Leona:1",
+          "text": "Stay back from Leona. Her Shield of Daybreak stuns you once she lands an attack, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Leona-Q", "start": 26, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Neeko:Leona:2",
+          "text": "Don't use Blooming Burst while Leona has Eclipse up. She takes less damage, and the detonation afterward hurts you if you stay close.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Leona-W", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Neeko:Leona:3",
+          "text": "Leave the area when Solar Flare lands, since only the centre stuns. Pop Blossom is a strong answer to an engage if Leona is close.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Neeko-R", "start": 68, "end": 79 },
+            { "kind": "champion", "key": "Leona", "start": 115, "end": 120 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "86dcc5326f6cc0ed327f5ad8072cbb514ee34100e8260a1b1fd1f9f51a6f6a6f",
+      "tips": [
+        {
+          "id": "support:Neeko:Lulu:0",
+          "text": "Throw Tangle-Barbs at Lulu when she steps up; if she is lined up behind minions, aim so it hits them first and gets stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Neeko:Lulu:1",
+          "text": "Respect Whimsy: do not dive in with Pop Blossom while Lulu has it ready, since it stops your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Neeko-R", "start": 36, "end": 47 },
+            { "kind": "champion", "key": "Lulu", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Neeko:Lulu:2",
+          "text": "Use Blooming Burst to poke Lulu from range; her Glitterlance slow is easy to avoid if you stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Lulu", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Neeko:Lulu:3",
+          "text": "Hide behind your minions so Pix bolts hit them instead of you.",
+          "refs": [],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7d3af36db0535f561dc9ea2f46ff7546633aa218e3e6b00f58e6fd91a8194a18",
+      "tips": [
+        {
+          "id": "support:Neeko:Lux:0",
+          "text": "Stay out of Light Binding's line, and never stand with a minion next to you in its path, as it roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Neeko:Lux:1",
+          "text": "Land Tangle-Barbs on Lux first; if it hits a minion first, it grows and roots for longer on the next enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 21, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Neeko:Lux:2",
+          "text": "Walk out of Lucent Singularity's area quickly, because it slows you and then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Neeko:Lux:3",
+          "text": "Sidestep Final Spark when its red warning appears; Lux's range with it is huge, so keep your health up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Lux", "start": 51, "end": 54 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Neeko:Lux:4",
+          "text": "Disguise with Inherent Glamour and prepare Pop Blossom in secret, since its warning is hidden while you're disguised.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 14,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Neeko-R", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f0e7528e085da9a425802d52f188114405a7286b4730bb8753e19ac549af6376",
+      "tips": [
+        {
+          "id": "support:Neeko:Milio:0",
+          "text": "Aim Tangle-Barbs at Milio when he steps up to kick; if it connects, he is rooted and can't easily line up Ultra Mega Fire Kick.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 },
+            { "kind": "ability", "key": "Milio-Q", "start": 106, "end": 126 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Neeko:Milio:1",
+          "text": "Stay out of a straight line with Milio and sidestep Ultra Mega Fire Kick. It stuns the first enemy it hits, so keep minions between you if you can.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 52, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Neeko:Milio:2",
+          "text": "Look for Milio when his ally is away from him; he moves slower and is easier to catch. Punish him with Tangle-Barbs.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Neeko-E", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Neeko:Milio:3",
+          "text": "Use Blooming Burst on the group when Milio shields or heals his partner; the extra blooms hit if the first one reaches a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Neeko:Milio:4",
+          "text": "Hold Pop Blossom for when Milio and his partner are both close. Disguised, you can set it up unseen.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ac8f670373877a4767d15668236f538635b12f1322bdc0edb64ec8f776a45727",
+      "tips": [
+        {
+          "id": "support:Neeko:Nami:0",
+          "text": "Land Tangle-Barbs on the enemy when you can. If it hits a champion it grows and roots for longer, which sets up your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Neeko:Nami:1",
+          "text": "Stand away from Aqua Prison. It stuns you and breaks your disguise, so wait until Nami has used it before you step forward.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Nami", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Neeko:Nami:2",
+          "text": "Look to hit Nami when Aqua Prison is down, because that is the spell most likely to stop your engage.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Nami-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Neeko:Nami:3",
+          "text": "Use Blooming Burst to poke Nami and her carry. It blooms again if it hits a champion, so aim it at them while they stand close together.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nami", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Neeko:Nami:4",
+          "text": "Disguise as an ally and walk in, then use Pop Blossom to knock up and stun Nami and her carry together.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 42, "end": 53 },
+            { "kind": "keyword", "key": "knocked-up", "start": 57, "end": 65 },
+            { "kind": "champion", "key": "Nami", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Neeko:Nami:5",
+          "text": "Step out of the path of Tidal Wave. It moves slowly, so you can dodge it when you see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Neeko:Nami:6",
+          "text": "Back off from an enemy empowered by Tidecaller's Blessing for a moment. The effect fades quickly if they do not use it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 36, "end": 57 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "63b18b85a206068d97b8f942b4edf8035ce10c9f18a2d603d588ed12953072bc",
+      "tips": [
+        {
+          "id": "support:Neeko:Nautilus:0",
+          "text": "Keep minions out of the line between you and Nautilus. Dredge Line stops on the first unit it hits, and it stuns you if it reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 55, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Neeko:Nautilus:1",
+          "text": "Hit Nautilus with Tangle-Barbs when he walks up. If it first hits a minion or another enemy, it grows and roots for longer.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Neeko-E", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Neeko:Nautilus:2",
+          "text": "Do not run through his Riptide waves early. Hold your spot until they finish, or you take more damage and get slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Neeko:Nautilus:3",
+          "text": "Do not let Nautilus attack you while his Titan's Wrath shield is up. His attacks deal heavy area damage, so stay away until it runs out.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Neeko:Nautilus:4",
+          "text": "Use Pop Blossom when Nautilus is close to you. You can cast it in secret while disguised with Inherent Glamour.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nautilus", "start": 21, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 94,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6551e7679b38de02623221dbe91871ca9748f8c66f6bef982e47d13593bc7943",
+      "tips": [
+        {
+          "id": "support:Neeko:Pantheon:0",
+          "text": "Aim Tangle-Barbs at Pantheon as he jumps in; once rooted, he cannot easily escape your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Neeko:Pantheon:1",
+          "text": "Do not fight Pantheon head-on while Aegis Assault is active; he takes no damage from the front, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Neeko:Pantheon:2",
+          "text": "Keep your health up; Pantheon's thrown Comet Spear hurts you much more when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Neeko:Pantheon:3",
+          "text": "Save Tangle-Barbs for Shield Vault; rooting him as he lands cuts his fight short.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Neeko:Pantheon:4",
+          "text": "Move away from the landing area when Pantheon uses Grand Starfall; it warns you first.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": [
+        {
+          "comboId": "support:Neeko:combo:0",
+          "note": "Disguised Pop Blossom hides the warning, so Pantheon has less time to react to her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Pantheon", "start": 44, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "9039cb0803d9022a76be7fe5f0bad2cce1115ef9a7f6554c9f3ab4c053d50ee6",
+      "tips": [
+        {
+          "id": "support:Neeko:Pyke:0",
+          "text": "Aim Tangle-Barbs at Pyke when he walks up for a hook; once it hits, the empowered tangle roots him longer, so follow up with Blooming Burst.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 94 },
+            { "kind": "ability", "key": "Neeko-Q", "start": 125, "end": 139 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Neeko:Pyke:1",
+          "text": "Keep your allies' minions out of the line when you throw Tangle-Barbs at Pyke; stand away from minions so his Bone Skewer has less to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 57, "end": 69 },
+            { "kind": "champion", "key": "Pyke", "start": 73, "end": 77 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 110, "end": 121 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Neeko:Pyke:2",
+          "text": "Stay healthy and grouped when you see sharks under your feet; Pyke is close and may be about to execute a weakened ally.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Neeko:Pyke:3",
+          "text": "Save Pop Blossom for when Pyke commits with Phantom Undertow; the stun lets your team punish him before he escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Pyke-E", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Neeko:Pyke:4",
+          "text": "Chase Pyke down when he is hurt; he heals back damage only while hidden, so keep him in sight.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "017f67b5d6b33e6d03bbd80acda27a457b4bb93426732c0da790d73bee886361",
+      "tips": [
+        {
+          "id": "support:Neeko:Senna:0",
+          "text": "Throw Tangle-Barbs through minions to empower it, then the long root lets your team follow up on Senna.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Neeko:Senna:1",
+          "text": "Stay out of Last Embrace range; it roots you after a short delay, so sidestep or move out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Neeko:Senna:2",
+          "text": "Use Blooming Burst on Senna when she walks up to hit minions; it can bloom again if it hits a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Neeko:Senna:3",
+          "text": "Hold Pop Blossom for when Senna has used Last Embrace; she has few ways out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Senna-W", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c1792ec5bf29011534045ec24fe496efff76b7934269be07db2a45db39bb476b",
+      "tips": [
+        {
+          "id": "support:Neeko:Seraphine:0",
+          "text": "Disguise as an ally and walk up, then land Tangle-Barbs first; Seraphine cannot tell it is you.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 43, "end": 55 },
+            { "kind": "champion", "key": "Seraphine", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Neeko:Seraphine:1",
+          "text": "Stay out of High Note's wide area when you are low on health, because it hits much harder then.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Neeko:Seraphine:2",
+          "text": "Dodge Beat Drop; if you are already slowed it roots you, and if you are immobilized it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 6, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Neeko:Seraphine:3",
+          "text": "Use Pop Blossom while disguised to hide its warning, but Seraphine's Encore can still reach you from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Seraphine", "start": 57, "end": 66 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9445d41886c432a328a8a6e5ccdecd636ae74e006585979cd4d83f3c70ade20e",
+      "tips": [
+        {
+          "id": "support:Neeko:Sona:0",
+          "text": "Aim Tangle-Barbs through a minion or champion to empower it; a rooted Sona is easy to burst.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 },
+            { "kind": "champion", "key": "Sona", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Neeko:Sona:1",
+          "text": "Sona has low mobility, so land Blooming Burst when she steps up to poke or stands still to cast.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Neeko-Q", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Neeko:Sona:2",
+          "text": "Disguise with Inherent Glamour and wait in a bush or beside minions, then pop out with Pop Blossom when Sona and her carry are close together.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Neeko-passive",
+              "start": 14,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Neeko-R", "start": 87, "end": 98 },
+            { "kind": "champion", "key": "Sona", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Neeko:Sona:3",
+          "text": "Go for Sona first in a fight; Crescendo stuns, so stay out of its range when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Sona-R", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Neeko:Sona:4",
+          "text": "Trade after Sona has used Hymn of Valor, or when she wastes Aria of Perseverance, since her abilities have cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sona-Q", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Sona-W", "start": 60, "end": 80 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": [
+        {
+          "comboId": "support:Neeko:combo:0",
+          "note": "Disguised Pop Blossom hides the warning, so Sona has less time to react to the engage.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-R", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Sona", "start": 44, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "ef04c9a3d588bdeb5629dc90d15853e8e40d030b50c3323afcad2aa1636a8b5f",
+      "tips": [
+        {
+          "id": "support:Neeko:Thresh:0",
+          "text": "Walk out of line with Thresh and watch his cast start; Death Sentence has a long cast time, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Neeko:Thresh:1",
+          "text": "Use Tangle-Barbs on Thresh when he starts to cast Death Sentence or Flay; the root stops him from following up.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 50, "end": 64 },
+            { "kind": "ability", "key": "Thresh-E", "start": 68, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "support:Neeko:Thresh:2",
+          "text": "Use Shapesplitter to make a clone that draws Thresh's hook, then hit him while the hook is spent.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Neeko:Thresh:3",
+          "text": "Don't stand close to Thresh when he is ready for The Box; keep Pop Blossom for when he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Thresh-R", "start": 49, "end": 56 },
+            { "kind": "ability", "key": "Neeko-R", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,1066 @@
+{
+  "schemaVersion": 1,
+  "champion": "Velkoz",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "596d8776bb7231fa89759750388a12c4d6bb0d257702ad791d48a8a946dde6b0",
+      "tips": [
+        {
+          "id": "support:Velkoz:general:0",
+          "text": "Poke with Void Rift on enemies standing near minions. It has a short cooldown and builds Organic Deconstruction stacks for a burst of true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 89,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Velkoz:general:1",
+          "text": "Aim Plasma Fission diagonally so it splits at max range. The split bolts reach enemies who are out of range of the first bolt.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Velkoz:general:2",
+          "text": "Recast Plasma Fission mid-flight to split it early. You can fire the new bolts sideways at enemies standing beside the first bolt's path.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 7, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Velkoz:general:3",
+          "text": "Land Plasma Fission to leave the enemy slowed, then follow up with Tectonic Disruption so it is harder for them to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 67, "end": 86 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Velkoz:general:4",
+          "text": "Cast Tectonic Disruption at an enemy who is close to you. It knocks them back instead of up, which makes room.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Velkoz:general:5",
+          "text": "Use Tectonic Disruption on enemies who dive you or your ally. Enemies who are knocked up can't act, so your team gets a free hit.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Velkoz:general:6",
+          "text": "Start Life Form Disintegration Ray only when enemies can't stop it. Stuns, silences and knockups cancel it, so wait for their crowd control to be used.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 6, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Velkoz:general:7",
+          "text": "Hit an enemy with three stacks of Organic Deconstruction before the ray. Then Life Form Disintegration Ray deals true damage, which finishes them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 34,
+              "end": 56
+            },
+            { "kind": "ability", "key": "Velkoz-R", "start": 78, "end": 106 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Velkoz:general:8",
+          "text": "Stay behind your front line. Vel'Koz has low mobility and is easy to catch, so keep your distance and use your long range.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Velkoz:combo:0",
+          "name": "Angled Q split",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Velkoz-Q" },
+            { "kind": "ability", "key": "Velkoz-Q" }
+          ],
+          "when": "Use it when an enemy stands beyond Plasma Fission's normal range, or off to the side of the bolt's path, such as behind minions.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 35, "end": 49 }
+          ],
+          "text": "Aim the bolt diagonally past the target, then recast it, or let it split at max range. The two side bolts hit enemies the first bolt could not reach.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "d040f81f44cc553a236159f98b651c682d6b0033bf037ec5c98ab15372fa8f09",
+      "tips": [
+        {
+          "id": "support:Velkoz:Bard:0",
+          "text": "Aim Plasma Fission so it splits on the first enemy it hits; the extra bolts can catch Bard if he steps behind a minion or his partner.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Bard", "start": 86, "end": 90 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Velkoz:Bard:1",
+          "text": "Keep Tectonic Disruption for when Bard walks up to use Magical Journey or a shrine; he is knocked up and stunned, and Bard cannot cast while stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Bard", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Bard-E", "start": 55, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 },
+            { "kind": "champion", "key": "Bard", "start": 118, "end": 122 },
+            { "kind": "keyword", "key": "stunned", "start": 141, "end": 148 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Velkoz:Bard:2",
+          "text": "Stay out of line with your own minions and your partner. When Cosmic Binding hits two targets, or one target and a wall, they are stunned and you die.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 62, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 130, "end": 137 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Velkoz:Bard:3",
+          "text": "Poke with Void Rift from long range. It lets you stack Organic Deconstruction without walking into Bard's range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 55,
+              "end": 77
+            },
+            { "kind": "champion", "key": "Bard", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Velkoz:Bard:4",
+          "text": "Do not channel Life Form Disintegration Ray when Bard can stun you with Cosmic Binding or go through a portal at you. A stun cancels the ray.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 15, "end": 43 },
+            { "kind": "champion", "key": "Bard", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Bard-Q", "start": 72, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Velkoz:Bard:5",
+          "text": "Tempered Fate puts everything it hits out of play for a moment. Hold your damage until it ends instead of wasting spells on those targets.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-R", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1330a925f375f81cee41ec79629fe74d04cc019290cebb00d97e2cda1d01355f",
+      "tips": [
+        {
+          "id": "support:Velkoz:Braum:0",
+          "text": "Don't spend Plasma Fission or Void Rift into Braum's raised Unbreakable shield; it destroys missiles. Wait until the shield drops, then poke.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 30, "end": 39 },
+            { "kind": "champion", "key": "Braum", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Braum-E", "start": 60, "end": 71 },
+            { "kind": "keyword", "key": "poke", "start": 136, "end": 140 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Velkoz:Braum:1",
+          "text": "Split Plasma Fission to the side so the bolts come from an angle Braum's shield isn't facing.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Braum", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Velkoz:Braum:2",
+          "text": "Hold Tectonic Disruption for when Braum or his partner walks forward, so they are knocked up and stunned. Keep your distance from them.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Braum", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Velkoz:Braum:3",
+          "text": "Stay out of Braum's Winter's Bite range. It slows you, and with your low mobility that gets you caught.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Braum-Q", "start": 20, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Velkoz:Braum:4",
+          "text": "Don't start Life Form Disintegration Ray close to Braum. His Glacial Fissure knocks you up and cancels the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 12, "end": 40 },
+            { "kind": "champion", "key": "Braum", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Braum-R", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ddaf0a0c6cab81c6fd37dece662b72d20d0e9b27844bc279cce3123770763355",
+      "tips": [
+        {
+          "id": "support:Velkoz:Karma:0",
+          "text": "Keep your distance from Karma and fire Void Rift at her when she walks up to poke.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 39, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Velkoz:Karma:1",
+          "text": "Step out of range of Focused Resolve, or she can tether you and root you. Don't stay near her once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Velkoz:Karma:2",
+          "text": "Use Tectonic Disruption to knock Karma up when she dives in with Mantra. It also pushes her back if she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Karma", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Karma-R", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Velkoz:Karma:3",
+          "text": "Dodge Inner Flame by standing out of line behind minions; it ends at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66ee3b5369ae09d5197f06e6a5a856a06c874145db3921c1bf6b423bd8531c01",
+      "tips": [
+        {
+          "id": "support:Velkoz:Leona:0",
+          "text": "Keep Tectonic Disruption ready for when Leona closes in. If it lands on her, it knocks her up and stuns her, and that stops her engage.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Velkoz:Leona:1",
+          "text": "Use Plasma Fission on Leona as she approaches. The slow makes it harder for her to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Leona", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Velkoz:Leona:2",
+          "text": "Stay far from Leona and out of the long range of Zenith Blade. If it hits you, she dashes in and roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Leona-E", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Velkoz:Leona:3",
+          "text": "Poke with Void Rift from far away, and don't stand in front of your minions. Leona has to commit to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Velkoz:Leona:4",
+          "text": "Don't use Life Form Disintegration Ray while Leona can reach you. Her stun or Solar Flare interrupts it.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 10, "end": 38 },
+            { "kind": "champion", "key": "Leona", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 },
+            { "kind": "ability", "key": "Leona-R", "start": 78, "end": 89 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Velkoz:Leona:5",
+          "text": "Don't trade into Eclipse while her shield is up. It makes her much sturdier, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-W", "start": 17, "end": 24 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Angled Q split can hit Leona from beyond her engage range, using the side bolts to poke her.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 23, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "0ced84ca5ab2e7e8aefea6c04d4d4e3e97cf10acec3b03bf3f2382529186181d",
+      "tips": [
+        {
+          "id": "support:Velkoz:Lulu:0",
+          "text": "Use Void Rift on minions to build stacks on Lulu from range; she must walk up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Velkoz:Lulu:1",
+          "text": "Aim Plasma Fission diagonally to split it and hit Lulu from beyond her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Lulu", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Velkoz:Lulu:2",
+          "text": "Watch for Whimsy; it disarms you and stops your spells, so keep your distance from Lulu when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 10, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "support:Velkoz:Lulu:3",
+          "text": "Do not start Life Form Disintegration Ray while Lulu has Wild Growth ready; a knock up cuts it short.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 13, "end": 41 },
+            { "kind": "champion", "key": "Lulu", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Lulu-R", "start": 57, "end": 68 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Velkoz:Lulu:4",
+          "text": "Use Tectonic Disruption on Lulu when she steps up to trade; it stuns her and gives you time to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Lulu", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Angled split bolts can reach Lulu when she stands behind minions or off the first bolt's path.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "cb5df8ba6fce9e25364d61d27c5eb4d11a0a41c1fe5fd20bc9826709b865744c",
+      "tips": [
+        {
+          "id": "support:Velkoz:Lux:0",
+          "text": "Stay out of Light Binding's line. It roots the first two enemies it hits, so keep your minions away from the line to avoid being caught behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Velkoz:Lux:1",
+          "text": "Use Tectonic Disruption on Lux when she comes close, to knock her up and stun her. She has no dash, so it sets up your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Velkoz:Lux:2",
+          "text": "Poke Lux with Void Rift from far away. It has two charges and a short cooldown, so you can keep harassing her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 14, "end": 23 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Velkoz:Lux:3",
+          "text": "Don't channel Life Form Disintegration Ray when Lux can root you. A stun or root interrupts it, and a rooted Vel'Koz can't escape Final Spark.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 14, "end": 42 },
+            { "kind": "champion", "key": "Lux", "start": 48, "end": 51 },
+            { "kind": "champion", "key": "Velkoz", "start": 109, "end": 116 },
+            { "kind": "ability", "key": "Lux-R", "start": 130, "end": 141 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Velkoz:Lux:4",
+          "text": "Step sideways when Lux's red targeting beam shows, because Final Spark is a long, narrow line.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Lux-R", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The angled split can hit Lux when minions block Plasma Fission's straight path to her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 48, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "cdf789b4dc24a1373b24f341fc3f10eaea17261159888921628de310e3664f51",
+      "tips": [
+        {
+          "id": "support:Velkoz:Milio:0",
+          "text": "Aim Plasma Fission at Milio and let it split on him; his Ultra Mega Fire Kick can be shot down the same lane, so keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Milio-Q", "start": 57, "end": 77 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Velkoz:Milio:1",
+          "text": "Use Tectonic Disruption on Milio when he steps up to kick; being stunned and knocked up stops his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Milio", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "support:Velkoz:Milio:2",
+          "text": "Poke with Void Rift from long range; it is cheap to spam and Milio has no way to block it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Milio", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Velkoz:Milio:3",
+          "text": "Hold Life Form Disintegration Ray until Milio has used Breath of Life, or his team will cleanse the stun that would interrupt you.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 5, "end": 33 },
+            { "kind": "champion", "key": "Milio", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Milio-R", "start": 55, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split bolts reach Milio when he stands behind minions or off the bolt's path, as in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "486e9392381c1e5e809f768b4e50bd606e37db54d0785ec2fe0438ef99e63c84",
+      "tips": [
+        {
+          "id": "support:Velkoz:Nami:0",
+          "text": "Poke with Void Rift from long range; it hits twice, so aim where Nami will be standing when the rift erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Nami", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Velkoz:Nami:1",
+          "text": "Stay out of Aqua Prison range and walk around it. When Nami misses it, step up and trade, because it has a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Velkoz:Nami:2",
+          "text": "Use Plasma Fission on Nami and split it to hit her or her carry from the side. It also leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nami", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Velkoz:Nami:3",
+          "text": "Hit Nami with Tectonic Disruption when she walks up to cast Aqua Prison. Then follow with your other abilities while she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 14, "end": 33 },
+            { "kind": "ability", "key": "Nami-Q", "start": 60, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 124, "end": 131 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Velkoz:Nami:4",
+          "text": "Do not start a trade against an enemy carrying Tidecaller's Blessing. Wait for it to run out first.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 47, "end": 68 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Velkoz:Nami:5",
+          "text": "Do not channel Life Form Disintegration Ray when Aqua Prison is ready. A stun or knock up will interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 15, "end": 43 },
+            { "kind": "ability", "key": "Nami-Q", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ffc1d061e6ee6077e7c3e7f09c88a7eee53ee71e8d012f0eb5c3925c8dff003b",
+      "tips": [
+        {
+          "id": "support:Velkoz:Nautilus:0",
+          "text": "Keep Tectonic Disruption ready for when Nautilus closes in; the knock up or knock back stops his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Nautilus", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "knocked-up", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Velkoz:Nautilus:1",
+          "text": "Stay behind your minions so Dredge Line hits one of them first and stops there.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Velkoz:Nautilus:2",
+          "text": "Do not start Life Form Disintegration Ray with Nautilus nearby and Depth Charge ready; his stun cuts it off.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 13, "end": 41 },
+            { "kind": "champion", "key": "Nautilus", "start": 47, "end": 55 },
+            { "kind": "ability", "key": "Nautilus-R", "start": 67, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Velkoz:Nautilus:3",
+          "text": "Use Void Rift and Plasma Fission from long range to poke him while he can only walk at you. Stay out of Dredge Line range.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Velkoz:Nautilus:4",
+          "text": "Do not trade into a shielded Nautilus; Titan's Wrath makes his attacks hurt. Wait for the shield to run out.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 39, "end": 52 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split bolts can hit Nautilus when he hides behind minions or stands off to the side of the bolt.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 24, "end": 32 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "a1cd81bc85fd2b4f644b1c78979690c45de59d155cdeb17eb4eb2d61cd38d69d",
+      "tips": [
+        {
+          "id": "support:Velkoz:Pantheon:0",
+          "text": "Keep Tectonic Disruption ready for when Pantheon jumps in; it knocks him up and stops his attack.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Pantheon", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Velkoz:Pantheon:1",
+          "text": "Use Plasma Fission to slow Pantheon as he approaches, and hit him from range with Void Rift.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 82, "end": 91 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Velkoz:Pantheon:2",
+          "text": "Don't aim at Pantheon while Aegis Assault faces you; wait for it to end or hit him from another angle.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Velkoz:Pantheon:3",
+          "text": "Hold Life Form Disintegration Ray until Pantheon has used Shield Vault; the stun will interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 5, "end": 33 },
+            { "kind": "champion", "key": "Pantheon", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Velkoz:Pantheon:4",
+          "text": "Move away from the target area as soon as you see Grand Starfall begin.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "36a2a643ba77cdd8d2e699aee26effa38aad7321464a263326640714dcd42c61",
+      "tips": [
+        {
+          "id": "support:Velkoz:Pyke:0",
+          "text": "Hit Pyke with Plasma Fission early; it slows him and makes it hard for him to reach you. Aim it so he can't close the gap easily.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Velkoz:Pyke:1",
+          "text": "Keep Tectonic Disruption ready for when Pyke dives in. It stuns him and can stop his engage.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Pyke", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Velkoz:Pyke:2",
+          "text": "Poke with Void Rift from long range while Pyke is visible. He only heals the damage he took when you can't see him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Velkoz:Pyke:3",
+          "text": "Stay behind your minions or allies. Bone Skewer stops at the first enemy it hits, so minions in the way can block his pull.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Velkoz:Pyke:4",
+          "text": "Don't start Life Form Disintegration Ray with Pyke nearby. His Phantom Undertow stun or Bone Skewer pull will interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 12, "end": 40 },
+            { "kind": "champion", "key": "Pyke", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Pyke-E", "start": 63, "end": 79 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "815c8e2bcf979ed9ac9c1465c3613d985daafbee54b2cea1d12a5bc772e98f68",
+      "tips": [
+        {
+          "id": "support:Velkoz:Senna:0",
+          "text": "Poke Senna with Void Rift from long range; she has to walk into it or lose health, and the hits build Organic Deconstruction.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 16, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 102,
+              "end": 124
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Velkoz:Senna:1",
+          "text": "Stay out of Senna's long attack range and Last Embrace range. Her long reach lets her hit you first if you step up carelessly.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Velkoz:Senna:2",
+          "text": "If Senna is rooted by nothing and walks up, stun her with Tectonic Disruption. The stun also stops her from landing the root on you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 3, "end": 8 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 58, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Velkoz:Senna:3",
+          "text": "Aim Plasma Fission through minions at Senna and split it at max range to reach her from outside her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Senna", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Velkoz:Senna:4",
+          "text": "Save Life Form Disintegration Ray for when Senna is stunned or rooted. Her Last Embrace root does not stop it, but being stunned or knocked up would.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 5, "end": 33 },
+            { "kind": "champion", "key": "Senna", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Senna-W", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "Split Q can reach Senna when she stands behind minions or off to the side, where a direct bolt can't.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 18, "end": 23 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "e0ee08d69acb5a3f9a747a6138ef2e35efe6221fd3139213019a0d2bc32ea2ab",
+      "tips": [
+        {
+          "id": "support:Velkoz:Seraphine:0",
+          "text": "Do not start Life Form Disintegration Ray while Seraphine can reach you. Her Encore charm will cut it short.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 13, "end": 41 },
+            { "kind": "champion", "key": "Seraphine", "start": 48, "end": 57 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Velkoz:Seraphine:1",
+          "text": "Slow Seraphine with Plasma Fission before she gets close. Aim it diagonally to catch her from beyond its normal range.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Seraphine", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Velkoz:Seraphine:2",
+          "text": "Use Void Rift on minions to build stacks of Organic Deconstruction on her. Her Surround Sound shield will not stop the stacks from adding up.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 44,
+              "end": 66
+            },
+            { "kind": "ability", "key": "Seraphine-W", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Velkoz:Seraphine:3",
+          "text": "Stay out of a straight line with Seraphine. Beat Drop slows you, and if you are already slowed it roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Velkoz:Seraphine:4",
+          "text": "Tectonic Disruption knocks her up if she steps in to engage.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 0, "end": 19 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": [
+        {
+          "comboId": "support:Velkoz:combo:0",
+          "note": "The split Plasma Fission bolts can reach Seraphine when she stands behind minions or off to the side.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 41, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a33311a4bdda4196351dc2a8dacffb1c11087218efdda06bd654f09dcf502c7",
+      "tips": [
+        {
+          "id": "support:Velkoz:Sona:0",
+          "text": "Try to land Tectonic Disruption on Sona. She has little mobility, and being stunned leaves her open to your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-E", "start": 12, "end": 31 },
+            { "kind": "champion", "key": "Sona", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Velkoz:Sona:1",
+          "text": "Don't channel Life Form Disintegration Ray while Crescendo is ready. It stuns and interrupts you.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 14, "end": 42 },
+            { "kind": "ability", "key": "Sona-R", "start": 49, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Velkoz:Sona:2",
+          "text": "Aim Plasma Fission so it splits at max range. It reaches Sona when she stands behind minions and pokes you.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sona", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Velkoz:Sona:3",
+          "text": "Use Void Rift on minions to stack Organic Deconstruction on Sona. Her Hymn of Valor range is shorter than yours, so poke from a distance.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Velkoz-passive",
+              "start": 34,
+              "end": 56
+            },
+            { "kind": "champion", "key": "Sona", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Sona-Q", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c77f058b3f4c7b51d1a6d82e45389f68b0adfe99ee0f2d37065458cf0163bef7",
+      "tips": [
+        {
+          "id": "support:Velkoz:Thresh:0",
+          "text": "Stay out of Thresh's hook range and keep your distance. Poke him with Void Rift, which reaches farther than his Death Sentence.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Velkoz-W", "start": 70, "end": 79 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 112, "end": 126 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Velkoz:Thresh:1",
+          "text": "Aim Plasma Fission at the lane in front of you so it hits minions or the enemy first. The slow makes it harder for Thresh to close in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 },
+            { "kind": "champion", "key": "Thresh", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Velkoz:Thresh:2",
+          "text": "When Thresh starts his Death Sentence cast, step sideways. The cast is slow, so you can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Velkoz:Thresh:3",
+          "text": "Hit Thresh with Tectonic Disruption when he walks up to hook or flay. It stuns him and knocks him up.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 16, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Velkoz:Thresh:4",
+          "text": "Don't channel Life Form Disintegration Ray while Thresh can reach you. Death Sentence or Flay will interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-R", "start": 14, "end": 42 },
+            { "kind": "champion", "key": "Thresh", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 71, "end": 85 },
+            { "kind": "ability", "key": "Thresh-E", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

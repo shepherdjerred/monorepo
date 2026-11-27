@@ -1,0 +1,2169 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nami",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "34728d0e520febfe8fa1d3b634dc83024a035d7e85e9122e9449c3b14aeffd0d",
+      "tips": [
+        {
+          "id": "support:Nami:general:0",
+          "text": "Throw Aqua Prison at where the enemy will be, not where they stand; the bubble takes a moment to land. Aim it at enemies walking up to last-hit or dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Nami:general:1",
+          "text": "Use Ebb and Flow on yourself or your ally in the middle of a trade so it heals and hurts the enemy at once.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Nami:general:2",
+          "text": "Cast Tidecaller's Blessing on your damage dealer before a trade; their next attacks slow the enemy and deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 5, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:general:3",
+          "text": "Start fights from far away with Tidal Wave; it knocks enemies up and slows them, and it speeds up allies it passes through.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Nami:general:4",
+          "text": "Aqua Prison has a long cooldown, so hold it for a real chance to kill or save someone rather than throwing it at nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:general:5",
+          "text": "Your abilities give allies a burst of Move Speed when they hit, so use them to help a teammate escape or chase.",
+          "refs": [],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "9a7b599b276e13bf6f727475db5c3182302a4c23b68c20409696dd5c8fa13428",
+      "tips": [
+        {
+          "id": "support:Nami:Alistar:0",
+          "text": "Aim Aqua Prison at Alistar when he walks up to engage. It takes a moment to land, so cast it where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Alistar", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Nami:Alistar:1",
+          "text": "Stay away from Alistar's reach. Headbutt followed by Pulverize can burst you down, especially near a turret.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Alistar-W", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 53, "end": 62 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Nami:Alistar:2",
+          "text": "Hold Ebb and Flow until a fight starts. Bounce it between your ally and Alistar to heal and hurt in one cast.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Alistar", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Alistar:3",
+          "text": "Cast Tidecaller's Blessing on your carry before a trade; it slows the enemy and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 5, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Alistar:4",
+          "text": "Wait for Unbreakable Will to end before you fight Alistar. Hit the fragile enemy instead while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Alistar-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Alistar", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "319eaa996a91501b67aa10d467d6e5f4c2ddd02d008f7ef28b8e8c008b8a19f0",
+      "tips": [
+        {
+          "id": "support:Nami:Anivia:0",
+          "text": "Aim Aqua Prison at Anivia when she is committed to casting; the stun leaves her open to your damage and your ally's.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Nami:Anivia:1",
+          "text": "Stay out of Flash Frost's line; it passes through units, so hiding behind minions won't save you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Nami:Anivia:2",
+          "text": "Step away once Flash Frost has hit you; Frostbite deals far more damage to a chilled target.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Anivia-E", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Nami:Anivia:3",
+          "text": "Give your ally Tidecaller's Blessing before they trade; it slows Anivia and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 15, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 },
+            { "kind": "champion", "key": "Anivia", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Nami:Anivia:4",
+          "text": "Look for kills while Anivia is in egg form; do not walk away, because she comes back at full health if it survives.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Nami:Anivia:5",
+          "text": "Use Ebb and Flow to heal your ally and hit Anivia in one cast when she pokes you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c5f3244c86425226627f3bdca38f305bea2c05de72da522fe678c7c2e284bcef",
+      "tips": [
+        {
+          "id": "support:Nami:Bard:0",
+          "text": "Aim Aqua Prison at the spot Bard is walking to, not where he stands; the bubble takes a moment to land. Use it when he steps up to chime or poke.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Bard", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Bard:1",
+          "text": "Walk over Bard's shrines to destroy them before his ally can use them. Do it when they are standing in the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Bard:2",
+          "text": "Bard's Cosmic Binding stuns only if it hits two enemies or a wall. Stand apart from your partner and away from walls so it cannot stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-Q", "start": 7, "end": 21 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Nami:Bard:3",
+          "text": "Use Ebb and Flow on your carry when Bard trades. It heals your ally and can bounce to Bard for damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Bard", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Bard", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Bard:4",
+          "text": "Tidal Wave is blocked by Bard's Tempered Fate stasis, so hold it until the stasis ends. Avoid ending up inside Tempered Fate with your team out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Bard", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Bard-R", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Bard-R", "start": 111, "end": 124 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f7f65c975a0ef48f9fec633ce4e527f589a1b643b9f11eb9e084d6fda4cf1161",
+      "tips": [
+        {
+          "id": "support:Nami:Blitzcrank:0",
+          "text": "Keep minions between you and Blitzcrank, because Rocket Grab hits only the first enemy in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 29, "end": 39 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:Blitzcrank:1",
+          "text": "Hold Aqua Prison for when Blitzcrank misses Rocket Grab or walks up to trade. He has no way to avoid it once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Nami:Blitzcrank:2",
+          "text": "Stay out of his range while Rocket Grab is ready. Standing at the edge of its range gives him a chance to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Nami:Blitzcrank:3",
+          "text": "Watch for Overdrive: he is fast and closes in quickly, but is slowed after it ends, so punish him then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-W",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:Blitzcrank:4",
+          "text": "Respect Static Field at level 6; it silences you and removes your shields, which cuts your protection.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 8, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dfc0c0b238e6b22c93fa966bd85bf0fe861644d843763f59d053d3d3afd83112",
+      "tips": [
+        {
+          "id": "support:Nami:Brand:0",
+          "text": "Brand needs to land a spell to start his combo, so dodge Sear and Pillar of Flame and he does little.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Brand-Q", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Brand-W", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Nami:Brand:1",
+          "text": "Aim Aqua Prison at Brand when he steps up to cast; his Sear has to be lined up and he has no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Brand", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Brand-Q", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Nami:Brand:2",
+          "text": "Stand apart from your carry, since Conflagration spreads to everyone nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-E", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Nami:Brand:3",
+          "text": "Keep moving once Brand burns you; Pillar of Flame has a delay and can be walked out of.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Brand-W", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Nami:Brand:4",
+          "text": "Step away from your allies when Pyroclasm is thrown; it starts slowly and bounces between nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0b84d6f0e4408185903d4ed0e4c83e242b03b25542c35f9b22ad50585521e1a2",
+      "tips": [
+        {
+          "id": "support:Nami:Braum:0",
+          "text": "Throw Aqua Prison when Braum's Unbreakable is down or pointed elsewhere; the shield will destroy the bubble if it faces you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Braum", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Braum-E", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Nami:Braum:1",
+          "text": "Stay out of the range where Braum can land Winter's Bite; being slowed there lets him stack Concussive Blows quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Braum-Q", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 92,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Nami:Braum:2",
+          "text": "Step out of the way of Glacial Fissure during its long cast, and don't walk across the icy ground it leaves.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Nami:Braum:3",
+          "text": "Use Tidecaller's Blessing on your carry before a trade so their hits slow Braum and his partner.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 },
+            { "kind": "champion", "key": "Braum", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "24fcc7f9e6be3fb31617dfe5c02628b8444553161ec87adf33ca50aae3ebf9ac",
+      "tips": [
+        {
+          "id": "support:Nami:Camille:0",
+          "text": "Save Aqua Prison for when Camille uses Hookshot to come at you. A stun mid-fight lets your team punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Camille", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Camille-E", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Nami:Camille:1",
+          "text": "Stay away from walls when Camille's Hookshot is ready. She needs terrain to dash from, so stay clear of it.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Camille-E", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Nami:Camille:2",
+          "text": "Give your carry Tidecaller's Blessing before a trade so Camille is slowed when she tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 16, "end": 37 },
+            { "kind": "champion", "key": "Camille", "start": 56, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Nami:Camille:3",
+          "text": "Be careful of The Hextech Ultimatum once Camille reaches level 6. It traps you with no escape, so stay near allies.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-R", "start": 14, "end": 35 },
+            { "kind": "champion", "key": "Camille", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Nami:Camille:4",
+          "text": "Hit Camille with Ebb and Flow when she steps in, and heal your ally on the bounce.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nami-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "99eb9f52e078f7ce2f7e4a07e51738e942bf73e8426ba3e2732ba575ccc2b04b",
+      "tips": [
+        {
+          "id": "support:Nami:Janna:0",
+          "text": "Aim Aqua Prison where Janna will stand, since the bubble lands after a short delay. Stunned, she is easy to punish.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Janna", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Nami:Janna:1",
+          "text": "Dodge Howling Gale by listening for its charge-up. Step sideways once it is released, because it travels in a line.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Nami:Janna:2",
+          "text": "Janna's Monsoon can interrupt your engage. Hold Tidal Wave until she has used it or cannot reach your allies.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Janna-R", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Nami-R", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Nami:Janna:3",
+          "text": "Use Ebb and Flow on Janna and your ally together in a trade, so it hurts her and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Janna", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8738c2f24b3a5841b7f944cc152a7a16674d349a25304bd62981e4d0157ea6de",
+      "tips": [
+        {
+          "id": "support:Nami:Karma:0",
+          "text": "Throw Aqua Prison when Karma walks up to trade, or when she uses Focused Resolve. Her short-range options leave her exposed.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Karma-W", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Nami:Karma:1",
+          "text": "Break Focused Resolve's tether by moving out of range, so you avoid the root. Stay back when Mantra is ready, since the root lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 76 },
+            { "kind": "ability", "key": "Karma-R", "start": 93, "end": 99 },
+            { "kind": "keyword", "key": "rooted", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Nami:Karma:2",
+          "text": "Stay out of a line with minions in front; Inner Flame bursts on the first unit it hits and splashes nearby enemies. Dodge the circle Soulflare leaves behind.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Nami:Karma:3",
+          "text": "Use Ebb and Flow to heal your carry while it hits Karma too. Bounce it through both of you in trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3445b1c7d0eb7c793365dab66d837764d0545e23a032f7bd474c36d3d381b50f",
+      "tips": [
+        {
+          "id": "support:Nami:Leona:0",
+          "text": "Keep Aqua Prison for when Leona commits with Zenith Blade, or aim it at where she will land. A hit stops her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Leona-E", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Nami:Leona:1",
+          "text": "Stay out of Zenith Blade's long range, and keep minions between you and Leona when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Leona", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Nami:Leona:2",
+          "text": "When Leona raises Eclipse, walk away from her. It goes off after a short delay and hurts only those still close.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Leona-W", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Nami:Leona:3",
+          "text": "Dodge the center of Solar Flare by moving as soon as you see it land. Tidal Wave is a good answer to her engage, because it knocks up and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 20, "end": 31 },
+            { "kind": "ability", "key": "Nami-R", "start": 70, "end": 80 },
+            { "kind": "keyword", "key": "knocked-up", "start": 124, "end": 133 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "075f303329314afdd4f75da545fcf5334a704a45e43bf78ed8741272a7c62899",
+      "tips": [
+        {
+          "id": "support:Nami:Lulu:0",
+          "text": "Aim Aqua Prison where Lulu will walk, not where she stands; it lands after a delay. Landing it gives you a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Lulu", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Nami:Lulu:1",
+          "text": "Keep minions between you and Lulu's Glitterlance, and stay out of its long range; Pix's bolts can also be blocked by minions.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Nami:Lulu:2",
+          "text": "Stay out of Whimsy range when she's ready; being polymorphed is deadly if your carry is nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Lulu:3",
+          "text": "Use Ebb and Flow to hit Lulu and heal your carry in the same cast during trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Lulu:4",
+          "text": "Fire Tidal Wave to start a fight from far away. Watch for Lulu's Wild Growth to turn the fight around.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Lulu", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Lulu-R", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "16ead29341f101f767f5a0ce3ca49486c1d73a952ec3e4334b81ba622df9d092",
+      "tips": [
+        {
+          "id": "support:Nami:Lux:0",
+          "text": "Hold Aqua Prison until Lux walks up or uses a spell. If it lands, your team gets a free trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Nami:Lux:1",
+          "text": "Stay out of the line between Lux and you. Light Binding stops at no one, so a minion in front does not fully protect you.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Nami:Lux:2",
+          "text": "Step out of Lucent Singularity right away; the slow stays on you briefly after the blast. Do not stand in it while it is about to go off.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Nami:Lux:3",
+          "text": "Put Tidecaller's Blessing on your carry before they trade. Each hit slows Lux or her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 },
+            { "kind": "champion", "key": "Lux", "start": 74, "end": 77 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Nami:Lux:4",
+          "text": "Use Ebb and Flow when Lux is near your partner. It damages her and heals your ally as it bounces.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Nami:Lux:5",
+          "text": "Move sideways when you see Final Spark's red warning beam, especially when you are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "83b1b071570ee401a510813cae15b20f576ec3ecabe976c0df9924864192e812",
+      "tips": [
+        {
+          "id": "support:Nami:Maokai:0",
+          "text": "Keep Aqua Prison for when Maokai walks in; if he is stunned, you get a free trade. Don't throw it when he can dodge with Twisted Advance.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Maokai", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Maokai-W", "start": 121, "end": 136 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Nami:Maokai:1",
+          "text": "Stay out of Twisted Advance range; Maokai roots whoever he reaches, so keep your distance when your bubble is down.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Maokai", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Nami:Maokai:2",
+          "text": "Don't spend Ebb and Flow damage on Maokai just to hit him; hitting him with spells makes his self-heal come back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Maokai", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Nami:Maokai:3",
+          "text": "Watch brush for Maokai's Sapling Toss; walk around any sapling instead of stepping into it, because it chases and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Maokai-E", "start": 25, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Maokai:4",
+          "text": "Watch for his Nature's Grasp from the flank; a bubble or Tidal Wave can punish him if he misses it.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-R", "start": 14, "end": 28 },
+            { "kind": "ability", "key": "Nami-R", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c865dfe9300128725bb272be9a0235f5d7cacf8a1639b14d85ea8c5b8c46499b",
+      "tips": [
+        {
+          "id": "support:Nami:Mel:0",
+          "text": "Wait for Mel to use Rebuttal before you throw Aqua Prison or Tidal Wave; it destroys enemy projectiles and she gets a shield from it.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Nami-Q", "start": 46, "end": 57 },
+            { "kind": "ability", "key": "Nami-R", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Nami:Mel:1",
+          "text": "Aim Aqua Prison at where Mel will be, since the bubble lands after a delay. Cast it when she is rooted or busy, not when she can walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Mel", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Nami:Mel:2",
+          "text": "Mel's Solar Snare roots at long range, so stay out of its line or keep a minion in front of you. If she misses, step in and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Mel-E", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Nami:Mel:3",
+          "text": "Back off when Mel's Overwhelm stacks build and your health gets low, since her damage can finish you. Let the stacks fall off before you go in again.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 14, "end": 17 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Mel:4",
+          "text": "Ebb and Flow can bounce off Mel to your ally and back, so use it in a trade to damage her and heal your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Mel", "start": 28, "end": 31 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Nami:Mel:5",
+          "text": "Put Tidecaller's Blessing on your carry before a trade; their hits slow Mel and make her harder to chase down.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "Mel", "start": 72, "end": 75 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a54f97d2578661d811df963d9d4c902ca31c3da4884091cd0985e428a90a3f62",
+      "tips": [
+        {
+          "id": "support:Nami:Milio:0",
+          "text": "Throw Aqua Prison at Milio when he steps up to cast; he cannot easily dodge it, and he cannot cast while the bubble holds him.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Nami:Milio:1",
+          "text": "Aim Aqua Prison where Milio will be, not where he stands. The bubble lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Nami:Milio:2",
+          "text": "Use Ebb and Flow on your carry during a trade. It hits Milio or his partner too and bounces back to heal you both.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Nami:Milio:3",
+          "text": "Put Tidecaller's Blessing on your carry before they fight. Their hits then leave the enemy slowed and are easy to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Nami:Milio:4",
+          "text": "Fire Tidal Wave from far away at a group. It travels slowly, so aim it where they will be walking.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Nami:Milio:5",
+          "text": "Hold Tidal Wave for when Milio has used Breath of Life, or time it to knock them up. Breath of Life cannot cleanse being knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Milio", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Milio-R", "start": 40, "end": 54 },
+            { "kind": "ability", "key": "Milio-R", "start": 85, "end": 99 },
+            { "kind": "keyword", "key": "knocked-up", "start": 121, "end": 131 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4ff792b505e6724a4f3bbe26e3194997a5017695a6223e42ce3c43c9bcb1ee85",
+      "tips": [
+        {
+          "id": "support:Nami:Morgana:0",
+          "text": "Stay behind minions when you stand in range of Dark Binding. It stops at the first enemy it hits, so minions soak it up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Nami:Morgana:1",
+          "text": "Wait for Morgana to spend Black Shield before you throw Aqua Prison. If she shields herself, the stun does nothing.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Morgana-E", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Nami-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Nami:Morgana:2",
+          "text": "Aqua Prison lands after a delay, so aim it where Morgana is walking. She can dodge it easily if you throw it at her feet.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Morgana", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Nami:Morgana:3",
+          "text": "Move out of Tormented Shadow quickly, especially when you are low on health. It deals more damage the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:Morgana:4",
+          "text": "Use Ebb and Flow to heal your carry and hit Morgana in the same cast. It bounces between allies and enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Morgana", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Nami:Morgana:5",
+          "text": "Stay out of range when Morgana reaches level 6. If Soul Shackles catches you, break the chains by moving away before they pull tight.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Morgana-R", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7d2bea6fbdc42d7caada43a2572130d812fbec04a1a40e8cbc9ac38d84b9cdc",
+      "tips": [
+        {
+          "id": "support:Nami:Nautilus:0",
+          "text": "Stay behind your minions so Dredge Line has a harder time reaching you. Nautilus's anchor stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Nautilus", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Nami:Nautilus:1",
+          "text": "Land Aqua Prison on Nautilus as he walks up to engage. It stuns him and the delay means you should aim where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nautilus", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Nami:Nautilus:2",
+          "text": "Hold still when Riptide goes off right next to you until the waves finish. Running early takes extra hits and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Nami:Nautilus:3",
+          "text": "Shield your carry with Tidecaller's Blessing before a fight so their attacks slow Nautilus when he dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 23, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 },
+            { "kind": "champion", "key": "Nautilus", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Nami:Nautilus:4",
+          "text": "Don't let Nautilus land his first attack on you. Staggering Blow roots you in place, which sets up his stun.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 10, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 49,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ac8f670373877a4767d15668236f538635b12f1322bdc0edb64ec8f776a45727",
+      "tips": [
+        {
+          "id": "support:Nami:Neeko:0",
+          "text": "Throw Aqua Prison at Neeko when she commits to a fight or walks up to poke; the bubble stuns her and breaks any disguise she has on.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Neeko", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Nami:Neeko:1",
+          "text": "Aim Aqua Prison at where Neeko is heading, not where she stands. The bubble takes a moment to land, so she can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Neeko", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Nami:Neeko:2",
+          "text": "Stay out of line with Tangle-Barbs, and keep minions from standing between you and Neeko. It grows stronger after it hits something.",
+          "refs": [
+            { "kind": "ability", "key": "Neeko-E", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Neeko", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "support:Nami:Neeko:3",
+          "text": "After Neeko wastes Tangle-Barbs, step up and trade with Ebb and Flow or Aqua Prison. She is much weaker while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Neeko-E", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Nami-W", "start": 56, "end": 68 },
+            { "kind": "ability", "key": "Nami-Q", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Nami:Neeko:4",
+          "text": "Be wary of allied champions or minions that act oddly. Neeko may be disguised as one, and her Pop Blossom warning is hidden while she is disguised.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Neeko-R", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Neeko:5",
+          "text": "Use Tidecaller's Blessing on your carry before they trade with Neeko, so their next hits slow her and deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Neeko", "start": 63, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9532088758ea2ab8cdb57c5f579b813284390748ed2b8ca63276560739df0df7",
+      "tips": [
+        {
+          "id": "support:Nami:Pantheon:0",
+          "text": "Save Aqua Prison for when Pantheon jumps or walks in; the stun stops his combo and his Aegis Assault.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 87, "end": 100 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "support:Nami:Pantheon:1",
+          "text": "Stay away from low health; Pantheon's thrown Comet Spear hits much harder on weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Pantheon:2",
+          "text": "Move away from the landing circle when Pantheon starts Grand Starfall; there is warning before he arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 55, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:Pantheon:3",
+          "text": "Give your carry Tidecaller's Blessing before a trade so their hits leave Pantheon slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 16, "end": 37 },
+            { "kind": "champion", "key": "Pantheon", "start": 73, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Nami:Pantheon:4",
+          "text": "Use Ebb and Flow in the middle of a trade to hurt Pantheon and heal your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "29b3fd175c12c2220f51aa4bc2c9c9e00e2d866e81e071ad3549069aac098db2",
+      "tips": [
+        {
+          "id": "support:Nami:Poppy:0",
+          "text": "Do not rely on dashing to get away from Poppy; Steadfast Presence stops dashes, so walk out of her range instead.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Poppy-W", "start": 47, "end": 65 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Nami:Poppy:1",
+          "text": "Stay away from walls when Poppy is near; Heroic Charge carries you into terrain and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-E", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Poppy:2",
+          "text": "Aim Aqua Prison at Poppy when she walks toward you. Landing it stops her engage, so save it for that.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Poppy", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Nami:Poppy:3",
+          "text": "Step on Poppy's buckler after Iron Ambassador to destroy it and deny her the shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Poppy-passive",
+              "start": 30,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Nami:Poppy:4",
+          "text": "When Poppy starts spinning her hammer, she is charging Keeper's Verdict. Move out of its line so it misses.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Nami:Poppy:5",
+          "text": "Give your partner Tidecaller's Blessing before a trade; their hits slow Poppy and add magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 18, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "Poppy", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Nami:Poppy:6",
+          "text": "Use Ebb and Flow to poke Poppy while healing your partner as it bounces between you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Poppy", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1da2d9820184ea8cc51379d67065808f44f4383eaae2f4fc17d9ab45a5b6918f",
+      "tips": [
+        {
+          "id": "support:Nami:Pyke:0",
+          "text": "Aim Aqua Prison at Pyke when he winds up Bone Skewer or dashes in. The bubble lands after a short delay, so aim where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pyke", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Nami:Pyke:1",
+          "text": "Keep your ally healthy with Ebb and Flow. Pyke wants to get an ally low, and his Death From Below can execute them.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 28, "end": 40 },
+            { "kind": "champion", "key": "Pyke", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Pyke-R", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Nami:Pyke:2",
+          "text": "Stay behind your minions and your ally. Bone Skewer stops at the first enemy it hits, so minions in front of you can block it.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-Q", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Nami:Pyke:3",
+          "text": "Use Tidal Wave when Pyke is far away or low on health. He can turn invisible and heal, so keep him slowed and in sight.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Nami:Pyke:4",
+          "text": "Give your ally Tidecaller's Blessing before they trade. The slow stops Pyke from escaping or closing in.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 15, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 },
+            { "kind": "champion", "key": "Pyke", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7ec1b51c74dd3f6cd2cfb5d136847f66963186b82928e45a16b588855578b6e6",
+      "tips": [
+        {
+          "id": "support:Nami:Rakan:0",
+          "text": "Hold Aqua Prison until Rakan commits with Grand Entrance or dashes in; stunned, he can't escape and his team can punish him.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Rakan-W", "start": 42, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Nami:Rakan:1",
+          "text": "Aqua Prison lands after a short delay, so aim where Rakan will be, not where he stands. Rakan's dashes show where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Rakan", "start": 52, "end": 57 },
+            { "kind": "champion", "key": "Rakan", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Nami:Rakan:2",
+          "text": "Use Ebb and Flow on Rakan to hit him and bounce to your ally, giving heal and speed. It also pokes him when he stands near your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rakan", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Nami:Rakan:3",
+          "text": "Look for Rakan when he is away from his partner. His mobility suffers when alone, so Aqua Prison is easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Nami-Q", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Rakan:4",
+          "text": "Tidal Wave can catch Rakan after he lands from Grand Entrance; he is knocked up and slowed, so your team can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Rakan", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Rakan-W", "start": 47, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2d22d27f95e8e5be2f31c2c8a945a84486d37d81c361c10981ce7eac0879d78c",
+      "tips": [
+        {
+          "id": "support:Nami:Rell:0",
+          "text": "Throw Aqua Prison at Rell when she leaps in with Ferromancy: Crash Down; she can't use Shattering Strike's lunge or dodge while suspended.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Rell", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Rell-W", "start": 49, "end": 71 },
+            { "kind": "ability", "key": "Rell-Q", "start": 87, "end": 104 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Nami:Rell:1",
+          "text": "Aim Aqua Prison where Rell is walking, not at her feet. It lands after a short delay, so she can step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rell", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Nami:Rell:2",
+          "text": "Stay behind your minions and away from Rell's reach; Shattering Strike stuns and also destroys your shields.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Rell-Q", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Nami:Rell:3",
+          "text": "Use Tidal Wave from far away to start a fight; Rell has to cross a long way slowed while the wave's slow lingers.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Rell", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Nami:Rell:4",
+          "text": "Ebb and Flow trades with Rell and heals your carry in the same cast, so use it when she is standing near both of you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Rell", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8642141c01d7e6da6aa4b52a7efa902ae3e5bb6dd0a5952bfbcd89e8b9902e30",
+      "tips": [
+        {
+          "id": "support:Nami:Senna:0",
+          "text": "Land Aqua Prison when Senna walks up for souls or to attack; being stunned in place makes her an easy target.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Nami:Senna:1",
+          "text": "Senna outranges you, so avoid standing in her line; Last Embrace roots you after a short delay, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-W", "start": 52, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Nami:Senna:2",
+          "text": "Give your carry Tidecaller's Blessing before a trade so their hits slow Senna.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 16, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "Senna", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Nami:Senna:3",
+          "text": "Use Ebb and Flow in a fight to heal your ally and hurt Senna as it bounces.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Nami:Senna:4",
+          "text": "Tidal Wave from far away can start a fight on Senna and knock her up so your team can reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Senna", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a3caf6fb18349f68921eda628b4c2020d0a7aabda1fba3c231f690b94e8bf388",
+      "tips": [
+        {
+          "id": "support:Nami:Seraphine:0",
+          "text": "Aim Aqua Prison at where Seraphine will be, not where she stands; the bubble lands late. Use it when she steps up for a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Seraphine", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Nami:Seraphine:1",
+          "text": "Seraphine's Beat Drop slows then roots when you are already slowed. Avoid being slowed by enemies before she casts it.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Nami:Seraphine:2",
+          "text": "Dodge High Note by moving sideways as it lands; it hurts most when you are low on health, so stay healthy with Ebb and Flow.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Nami-W", "start": 111, "end": 123 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Nami:Seraphine:3",
+          "text": "Tidal Wave travels slowly, so use it on Seraphine from long range when she can't dodge. Her Encore can charm you, so stay out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Seraphine", "start": 40, "end": 49 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b02e506ffd8299d45eecf04653c8dbe4c8a3ea129636e930c2431fdcb35a14a0",
+      "tips": [
+        {
+          "id": "support:Nami:Shen:0",
+          "text": "Save Aqua Prison for when Shen commits with Shadow Dash or walks up; it stuns him and his taunt ends if you hit it first.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Shen-E", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Nami:Shen:1",
+          "text": "Shen's Shadow Dash taunts you, so stay behind your minions or ally and keep distance so he can't reach you easily.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-E", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Nami:Shen:2",
+          "text": "Hit Shen with Ebb and Flow to bounce between him and your ally; it hurts him and heals your carry in the same cast.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Nami-W", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Nami:Shen:3",
+          "text": "Shen's empowered attacks after Twilight Assault hit hard, so don't stand next to him after he recalls his blade.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shen-Q", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Shen:4",
+          "text": "Put Tidecaller's Blessing on your carry before a trade so their attacks slow Shen.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 },
+            { "kind": "champion", "key": "Shen", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Nami:Shen:5",
+          "text": "After level 6, expect Stand United to bring Shen to a fight far away; use Tidal Wave to start fights on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Shen", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Nami-R", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a160f6278afde206376d44395f23b10646d669ee92d047b2c088cbc8b9dba675",
+      "tips": [
+        {
+          "id": "support:Nami:Sona:0",
+          "text": "Aim Aqua Prison at Sona when she walks up to cast. She has no escape except Song of Celerity's speed, and a stun makes her easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sona", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Sona-E", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Nami:Sona:1",
+          "text": "Use Tidecaller's Blessing on your carry before trading so their hits slow Sona and her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 },
+            { "kind": "champion", "key": "Sona", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Nami:Sona:2",
+          "text": "Spread out from Sona and stay apart from your partner so Crescendo cannot stun you both.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Sona-R", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Sona:3",
+          "text": "Use Ebb and Flow on Sona when it will bounce to your ally to heal them. It damages her and heals you both.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Nami:Sona:4",
+          "text": "Hymn of Valor hits the nearest two enemies, so stand a little behind your partner to take less poke.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-Q", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "31a6dc71e286926e57b87d698263add81172dc1b78e52400a240d8bdabca8ef0",
+      "tips": [
+        {
+          "id": "support:Nami:Soraka:0",
+          "text": "Aim Aqua Prison at Soraka when she walks forward to cast Starcall; a stunned Soraka cannot heal herself or her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Soraka", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 57, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            { "kind": "champion", "key": "Soraka", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "support:Nami:Soraka:1",
+          "text": "Dodge Starcall by moving out of its circle; it lands after a short delay, and a miss leaves her with no Rejuvenation.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Nami:Soraka:2",
+          "text": "Stay out of Equinox; its silence stops your spells, and the root that follows holds you in place for a follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "silenced", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Soraka:3",
+          "text": "Use Ebb and Flow on Soraka to bounce on to her partner; it hits enemies for damage, so it pokes in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Soraka", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Nami:Soraka:4",
+          "text": "Fire Tidal Wave from far away at a squishy Soraka's team to start a fight; save Aqua Prison for whoever tries to run.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Soraka", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Nami-Q", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ee38b4939d4ea20853307bd21d53942b4050b5846c491e267c52c59557ad5d21",
+      "tips": [
+        {
+          "id": "support:Nami:Swain:0",
+          "text": "Keep your distance from Swain; Nevermove roots you, and Swain can then pull you to him.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Swain-E", "start": 31, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 46 },
+            { "kind": "champion", "key": "Swain", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Swain:1",
+          "text": "Land Aqua Prison on Swain when he commits to Nevermove or Demonic Ascension, so your partner can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Swain", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Swain-E", "start": 45, "end": 54 },
+            { "kind": "ability", "key": "Swain-R", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Nami:Swain:2",
+          "text": "Move out of the way of Vision of Empire when you see the eye appear; it takes a moment to explode.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Nami:Swain:3",
+          "text": "Use Tidecaller's Blessing on your partner before trading with Swain, so they slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Swain", "start": 62, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "20e64cab7e8fdb97956c9546399461740737c9ea2bcdffd233a26231aa819dc6",
+      "tips": [
+        {
+          "id": "support:Nami:TahmKench:0",
+          "text": "Aim Aqua Prison at Tahm Kench when he walks in, especially after he has been hit. Keep it for a moment he can't dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "TahmKench", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Nami:TahmKench:1",
+          "text": "Stay out of Tongue Lash's line and away from range. After three hits, Tahm Kench can Devour you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "TahmKench", "start": 70, "end": 80 },
+            { "kind": "ability", "key": "TahmKench-R", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Nami:TahmKench:2",
+          "text": "Don't trade hits with Tahm Kench near the end of his Thick Skin; he heals back the stored damage when he is left alone.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 22, "end": 32 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Nami:TahmKench:3",
+          "text": "If Tahm Kench uses the Thick Skin shield, he gives up healing and stops storing damage. Push the fight then.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 3, "end": 13 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Nami:TahmKench:4",
+          "text": "Watch for Abyssal Dive. Stunning him while he channels cancels it, so hold Aqua Prison for that.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Nami-Q", "start": 75, "end": 86 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Nami:TahmKench:5",
+          "text": "Hit Tahm Kench with Ebb and Flow when it also heals your ally; it hurts him and bounces on.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Nami-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "2716ab131ffd914c544218680e3e42d4ecefc64aa78d17c3023b2972a4ccff44",
+      "tips": [
+        {
+          "id": "support:Nami:Taric:0",
+          "text": "Throw Aqua Prison at Taric when he walks up to the minions; it is a long cooldown, so make it count.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Taric", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Nami:Taric:1",
+          "text": "Punish Taric when he walks up to attack; each Bravado hit cuts his cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 7, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 46,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Nami:Taric:2",
+          "text": "Dodge Dazzle by moving after you see Taric start it; the beam only bursts after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Taric", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Nami:Taric:3",
+          "text": "Use Tidal Wave from far away to start a fight; it slows enemies for longer the farther it travels.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Nami:Taric:4",
+          "text": "When Taric casts Cosmic Radiance, retreat or burst down a target before it ends; there is a long delay first.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Taric-R", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3c7903c9046fbc80268c1d0d02db9707edefb4bd250e1fd959550aab462faf08",
+      "tips": [
+        {
+          "id": "support:Nami:Thresh:0",
+          "text": "Throw Aqua Prison at Thresh when he commits to a hook or walks up to trade; its long cooldown means you should not waste it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Thresh:1",
+          "text": "Watch Thresh's cast animation for Death Sentence and step sideways, since the scythe stops at the first unit it hits. Keep a minion between you and him.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Nami:Thresh:2",
+          "text": "Hit Thresh with Ebb and Flow in a trade and let it bounce on to your ally, so you deal damage and heal in the same cast.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Nami-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Nami:Thresh:3",
+          "text": "Put Tidecaller's Blessing on your ally before a trade so their hits leave Thresh slowed and he cannot walk up to you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Thresh", "start": 74, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Nami:Thresh:4",
+          "text": "Aim Tidal Wave from far away at a Thresh who has just missed Death Sentence. It is slow, so he can dodge it if he sees it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "486e9392381c1e5e809f768b4e50bd606e37db54d0785ec2fe0438ef99e63c84",
+      "tips": [
+        {
+          "id": "support:Nami:Velkoz:0",
+          "text": "Vel'Koz has low mobility. Land Aqua Prison on him, then hit him with everything you have while he is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Nami-Q", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Nami:Velkoz:1",
+          "text": "Hit Vel'Koz with Tidal Wave while he channels Life Form Disintegration Ray. The knock up interrupts it.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nami-R", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Velkoz-R", "start": 46, "end": 74 },
+            { "kind": "keyword", "key": "knocked-up", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Nami:Velkoz:2",
+          "text": "Stay out of a line with minions and step sideways to dodge Void Rift. It lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-W", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Nami:Velkoz:3",
+          "text": "Use Ebb and Flow on Vel'Koz when you can. It heals your ally and damages him, so it helps you win trades.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Velkoz", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Nami:Velkoz:4",
+          "text": "Empower your carry with Tidecaller's Blessing before they trade. Their hits will slow Vel'Koz, so he has a harder time dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 24, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 },
+            { "kind": "champion", "key": "Velkoz", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9260047af3d83f83ccce9963ff917c521e0539d90fd0c27648a047cc77a1936c",
+      "tips": [
+        {
+          "id": "support:Nami:Xerath:0",
+          "text": "Hold Aqua Prison for when Xerath steps up to cast. If it hits, you and your partner can burst him.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Nami:Xerath:1",
+          "text": "Stay behind your minions or allies and out of line. Shocking Orb stuns the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 52, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Nami:Xerath:2",
+          "text": "Close the distance on Xerath. Up close he has little defense against you, and his Arcanopulse is hard to use while you are near.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Nami:Xerath:3",
+          "text": "When Xerath charges Arcanopulse he is slowed, so walk toward him sideways to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 20, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Nami:Xerath:4",
+          "text": "Use Ebb and Flow on your partner when you trade. It hits Xerath too if he is close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Nami:Xerath:5",
+          "text": "Tidal Wave can start a fight from far away. Use it when Xerath is stuck in place channeling Rite of the Arcane.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Xerath", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "Xerath-R", "start": 92, "end": 110 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7fdfcd3addfd6f2acb3d0d510014e27cf511c729922f21d0f2c86e991cee4594",
+      "tips": [
+        {
+          "id": "support:Nami:Yuumi:0",
+          "text": "Aim Aqua Prison at Yuumi when she is not attached to an ally. While attached she cannot be targeted, so the bubble has nothing to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yuumi", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Nami:Yuumi:1",
+          "text": "Look for the moment Yuumi detaches or dashes to a new ally. Land Aqua Prison then to catch her stunned and exposed.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Nami-Q", "start": 65, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Nami:Yuumi:2",
+          "text": "Bounce Ebb and Flow off the enemy carry onto your own ally. It hurts them and heals your team, so trade with it often.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Nami:Yuumi:3",
+          "text": "Empower your carry with Tidecaller's Blessing before a trade so their hits leave the enemy slowed and are easier to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 24, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Nami:Yuumi:4",
+          "text": "Fire Tidal Wave from far away when the enemy carry is exposed. It slows more the farther it travels, but it is slow, so aim ahead.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "41afd098b96d6c4adabcf084e21ad9df2136ffe48c8af1226828f59c0b27ac03",
+      "tips": [
+        {
+          "id": "support:Nami:Zilean:0",
+          "text": "Land Aqua Prison on Zilean and he is stunned and easy to kill. He is fragile, so commit with your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zilean", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Nami:Zilean:1",
+          "text": "Don't stand still near a Time Bomb on you. Move away from allies so the second bomb doesn't stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 25, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "support:Nami:Zilean:2",
+          "text": "Zilean's Rewind lets him throw a second Time Bomb quickly. Be ready to leave the area after the first one lands on you.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zilean-W", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Nami:Zilean:3",
+          "text": "When Zilean uses Chronoshift on an ally, wait until it fades before finishing the kill.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Zilean-R", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0990c2c9b6f4836e926a1d3f092888bc5762797e5c92c6a54add4c8999b377c6",
+      "tips": [
+        {
+          "id": "support:Nami:Zyra:0",
+          "text": "Throw Aqua Prison when Zyra steps up to grow a plant; if it lands she is stunned and in trouble. Wait for it to be ready.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Nami:Zyra:1",
+          "text": "Step on Zyra's seeds to destroy them before she can grow plants from them.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Nami:Zyra:2",
+          "text": "Stay out of a line from Zyra so Grasping Roots misses; once it is spent, move in for your trade.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Zyra-E", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Nami:Zyra:3",
+          "text": "Use Ebb and Flow to heal your carry after plants hit, and to damage Zyra when she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zyra", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Nami:Zyra:4",
+          "text": "Kill plants quickly or fight away from them; they expire on their own and take fixed damage.",
+          "refs": [],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Nami:Zyra:5",
+          "text": "Put Tidecaller's Blessing on your attacker before a trade so their hits slow Zyra.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 4, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 },
+            { "kind": "champion", "key": "Zyra", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

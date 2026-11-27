@@ -1,0 +1,663 @@
+{
+  "schemaVersion": 1,
+  "champion": "Corki",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "57f4b209034421a8d6296e37f33cd96a4b1a38ca5ad0695e68183d279b0f0a8e",
+      "tips": [
+        {
+          "id": "adc:Corki:general:0",
+          "text": "Keep attacking while Gatling Gun runs; you can fire it and auto at the same time. Use it up close, since it hits a short cone in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Corki:general:1",
+          "text": "Face the enemy before you start Gatling Gun. Corki fires toward where he is facing, so the cone can miss if you turn the wrong way.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 32, "end": 43 },
+            { "kind": "champion", "key": "Corki", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Corki:general:2",
+          "text": "Throw Phosphorus Bomb into nearby brush to find hidden enemies. It also reveals any champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Corki:general:3",
+          "text": "Use Valkyrie to escape or to reposition in a fight. You can fire Gatling Gun while you fly.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Corki-E", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Corki:general:4",
+          "text": "Poke with Missile Barrage from long range. It splashes, so you can hit enemies standing behind their minions.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Corki:general:5",
+          "text": "Count your missiles. Every third Missile Barrage is a Big One with more range and damage, so save it to finish a weakened enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Corki:general:6",
+          "text": "Auto-attack enemy champions between missiles. Each hit on a champion shortens the wait for your next Missile Barrage charge.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Corki:general:7",
+          "text": "Corki is exposed after Valkyrie, so don't use it to dive in without a plan. Enemies will switch to him when he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Corki-W", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Corki:combo:0",
+          "name": "Gatling attack-turn",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Corki-E" }, "attack"],
+          "when": "Trading in lane while Gatling Gun is running and your target is not in the cone.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Corki-E", "start": 22, "end": 33 }
+          ],
+          "text": "Give an attack order on the enemy champion during Gatling Gun. Corki turns to face them instantly, and you keep the cone on them while auto attacking.",
+          "textRefs": [
+            { "kind": "ability", "key": "Corki-E", "start": 50, "end": 61 },
+            { "kind": "champion", "key": "Corki", "start": 63, "end": 68 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "c5130951f8d512e90d4bdbb66a13c1c4e6dfd880776c0ab95b5c24cafedec1eb",
+      "tips": [
+        {
+          "id": "adc:Corki:Ashe:0",
+          "text": "Throw Phosphorus Bomb at Ashe whenever she walks up for a last-hit. It also shows you where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Ashe", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Corki:Ashe:1",
+          "text": "Fire Missile Barrage at Ashe from range. The splash reaches her even if minions stand in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Corki:Ashe:2",
+          "text": "Do not stay in a straight line with Ashe at long range. Enchanted Crystal Arrow stuns whoever it hits, so stay near allies and watch the minimap for it.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Ashe-R", "start": 56, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Corki:Ashe:3",
+          "text": "Walk out of the way of Volley, or stand behind minions so they take the arrows. Being slowed by it makes you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Corki:Ashe:4",
+          "text": "Ashe has few ways to escape, so gank-style fights go well for you. Use Gatling Gun up close to shred her defenses while you keep attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Corki-E", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4c23ce8484537be799b8bdbbbbdf8ac9b6f3a10e7a09f3b303b85b64e024c619",
+      "tips": [
+        {
+          "id": "adc:Corki:Caitlyn:0",
+          "text": "Stay out of Caitlyn's Piltover Peacemaker range; she outranges you, so don't stand in a straight line with her minions between you.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Corki:Caitlyn:1",
+          "text": "Don't walk over a Yordle Snap Trap; you get rooted and she follows with a Headshot. Use Phosphorus Bomb to reveal the area near her, then step around.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 74,
+              "end": 82
+            },
+            { "kind": "ability", "key": "Corki-Q", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Corki:Caitlyn:2",
+          "text": "Trade with Gatling Gun when she steps close; it keeps firing while you attack and cuts her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Corki:Caitlyn:3",
+          "text": "Fire Missile Barrage at her from long range to poke; the splash still hurts if she hides behind minions.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Corki:Caitlyn:4",
+          "text": "Save Valkyrie to escape when she nets you, since being slowed leaves you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Gatling Gun's instant turn keeps the cone on Caitlyn while you auto her in a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Caitlyn", "start": 45, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6b842ce8018f88d967c640a72be446654c9dfaf681085fab14fae77db7e33243",
+      "tips": [
+        {
+          "id": "adc:Corki:Ezreal:0",
+          "text": "Aim Phosphorus Bomb at Ezreal when he stands in a bush; it reveals him and anyone else it hits for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Corki:Ezreal:1",
+          "text": "Stand a bit back from the minions when Ezreal has Mystic Shot ready, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Corki:Ezreal:2",
+          "text": "Use Gatling Gun when Ezreal walks up to trade; it lowers his Armor and Magic Resist, and you can keep attacking while it runs.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Corki:Ezreal:3",
+          "text": "Ezreal is fragile, so fire Missile Barrage at him whenever it is ready; the blast also hits him if he hides behind minions.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Corki-R", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Corki:Ezreal:4",
+          "text": "Fly in with Valkyrie only when you can win the fight, because you are exposed right after. Save it for escaping when his Arcane Shift is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 121, "end": 133 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5a9e3ad0227505d1721926d26516f6d8cfe24712f0f065f4626d94b23913c184",
+      "tips": [
+        {
+          "id": "adc:Corki:Jhin:0",
+          "text": "Use Phosphorus Bomb from long range to poke Jhin while he is reloading; he cannot basic attack back then.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Jhin", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Corki:Jhin:1",
+          "text": "Stay out of a straight line with Jhin when he is close to allies. Deadly Flourish roots anyone he or an ally just hit, so do not trade carelessly.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-W", "start": 66, "end": 81 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Corki:Jhin:2",
+          "text": "Do not walk into unseen ground near Jhin. A Captive Audience trap slows you and then explodes, so use Phosphorus Bomb to reveal brush before you step in.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Jhin-E", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 },
+            { "kind": "ability", "key": "Corki-Q", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Corki:Jhin:3",
+          "text": "Fire Missile Barrage at Jhin when he is behind minions. It explodes on the first enemy hit and splashes, so he still takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jhin", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Corki:Jhin:4",
+          "text": "Keep Gatling Gun for when Jhin stands close to you. It shreds his defenses, and you can keep attacking while it runs.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jhin", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Corki:Jhin:5",
+          "text": "Save Valkyrie as your escape for when Jhin's ultimate Curtain Call starts. Move out of the cone he is aiming.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Jhin", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Jhin-R", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c0b535ac2a750f6f1728d8c69dce3023be4151f86b7d582344d92217527e22e6",
+      "tips": [
+        {
+          "id": "adc:Corki:Jinx:0",
+          "text": "Use Phosphorus Bomb to poke Jinx when she steps up to last-hit; it reaches far and also shows her if she hides in brush.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Jinx", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Corki:Jinx:1",
+          "text": "Fire Missile Barrage at Jinx from long range; it hits the first enemy and splashes, so aim it through minions in your way.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jinx", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Corki:Jinx:2",
+          "text": "Stay out of Flame Chompers range when they are thrown; if you get rooted you cannot escape her follow-up.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Corki:Jinx:3",
+          "text": "Trade with Gatling Gun when Jinx is close and her minigun has not revved up; it also lowers her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Jinx", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Corki:Jinx:4",
+          "text": "Keep Valkyrie ready as your escape or to dodge past a Zap! slow; do not spend it early.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Jinx-W", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Keeps Gatling Gun's cone on Jinx while auto attacking, so she can't easily sidestep out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Jinx", "start": 28, "end": 32 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c397a4b3b26aa3506ad0990a72c363d75e6b9509638ef46d903a54e63fc20708",
+      "tips": [
+        {
+          "id": "adc:Corki:Kaisa:0",
+          "text": "Lob Phosphorus Bomb from long range to poke Kai'Sa when she steps up to last-hit; it reveals her too.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Kaisa", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Corki:Kaisa:1",
+          "text": "Use Gatling Gun when Kai'Sa walks into your range, and keep attacking while it fires; it strips her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Corki:Kaisa:2",
+          "text": "Keep your distance from Kai'Sa when you can; her Void Seeker reaches very far, so step out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Corki:Kaisa:3",
+          "text": "Save Valkyrie to escape when Kai'Sa and her ally jump on you. It also leaves fire behind that hurts anyone chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Kaisa", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Corki:Kaisa:4",
+          "text": "Fire Missile Barrage at Kai'Sa behind her minions; the splash still hurts her. Its range is long, so you can use it from safety.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "adc:Corki:Kaisa:5",
+          "text": "Watch for Killer Instinct after she has been hitting you. She needs Plasma on you to jump in, so back off from her when she is stacking it.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4e85d48fba15e95281d81443f0e71ec85de9f168aeef6ed40b1f23999025a40b",
+      "tips": [
+        {
+          "id": "adc:Corki:MissFortune:0",
+          "text": "Aim Missile Barrage so it explodes on a minion beside Miss Fortune; the splash can still hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "MissFortune", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Corki:MissFortune:1",
+          "text": "Hit Miss Fortune with Phosphorus Bomb when she walks up to attack. It stops her from taking Strut's speed.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Corki-Q", "start": 22, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 92,
+              "end": 97
+            }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "adc:Corki:MissFortune:2",
+          "text": "Do not stand in Make It Rain; it slows you and hurts. Use Valkyrie to leave the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Corki-W", "start": 58, "end": 66 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Corki:MissFortune:3",
+          "text": "Stay out of the way of Double Up when minions line up with you. It bounces to the unit behind its first target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 23,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Corki:MissFortune:4",
+          "text": "Use Gatling Gun when she is close; it hurts and lowers her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3c9ab810c1f010a9a86498a2329700f7132aa76a187dfacd812919c69a4b9246",
+      "tips": [
+        {
+          "id": "adc:Corki:Smolder:0",
+          "text": "Hit Smolder early with Phosphorus Bomb from long range; he is weak early and has to back off while he builds Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Corki-Q", "start": 23, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 109,
+              "end": 124
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Corki:Smolder:1",
+          "text": "Stand out of line with minions when you fire Missile Barrage at Smolder; the missile explodes on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 45, "end": 60 },
+            { "kind": "champion", "key": "Smolder", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Corki:Smolder:2",
+          "text": "Step out of the way of Achooo!, because it slows you and leaves you open to his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Corki:Smolder:3",
+          "text": "Use Gatling Gun when Smolder walks up close; it lowers his Armor and Magic Resist while you keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Corki:Smolder:4",
+          "text": "Save Valkyrie to dodge his burst or escape when he flies in with Flap, Flap, Flap.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Smolder-E", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c1b69132e0e73ac30dd945f6cad8a4f44b363f2cc8ae009336dc9a1ae9520d01",
+      "tips": [
+        {
+          "id": "adc:Corki:Yunara:0",
+          "text": "Throw Phosphorus Bomb at Yunara from long range while she walks up to last-hit; it reveals her too if she stands in the brush.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yunara", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Corki:Yunara:1",
+          "text": "Stay out of Yunara's prayer bead line. If it hits you, you are slowed and easy to hit, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Corki:Yunara:2",
+          "text": "Fire Missile Barrage at Yunara even when minions stand in front of her; the explosion splashes and still hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Corki:Yunara:3",
+          "text": "Use Gatling Gun when she steps close to trade; it lowers her Armor and Magic Resist, and you can keep attacking while it fires.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Corki:Yunara:4",
+          "text": "When Yunara reaches level 6 and uses her ultimate, back off. Her beam and dash make her far more dangerous for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Corki:Yunara:5",
+          "text": "Save Valkyrie as your escape if she slows you or runs at you. Fire trail behind you can also punish her for chasing.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": [
+        {
+          "comboId": "adc:Corki:combo:0",
+          "note": "Keeps Gatling Gun's cone on Yunara while trading, even as she moves with Kanmei's Steps.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Yunara", "start": 28, "end": 34 }
+          ]
+        }
+      ]
+    }
+  ]
+}

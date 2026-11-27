@@ -1,0 +1,3297 @@
+{
+  "schemaVersion": 1,
+  "champion": "TwistedFate",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "e0ffc2212a542e5a9450bf1b4b08fea0e93d00336e4b2ade05b30cd44e2a0589",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:general:0",
+          "text": "Poke with Wild Cards whenever the enemy walks up to last-hit; it fans out wide, so aim at the enemy and let the side cards catch the dodge.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 10,
+              "end": 20
+            }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:TwistedFate:general:1",
+          "text": "Wild Cards is blocked by projectiles and spell shields, so don't throw it into a minion wave expecting it to reach the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "middle:TwistedFate:general:2",
+          "text": "Pick the Blue Card with Pick a Card when your mana is low, and use it on a minion or the enemy to get mana back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:TwistedFate:general:3",
+          "text": "Lock in the Gold Card with Pick a Card, then hit the enemy to stun them so your cards and attacks land. The Red Card slows them to chase or flee.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 27,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "slowed", "start": 117, "end": 122 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:TwistedFate:general:4",
+          "text": "Pick a Card still recasts while you are stunned or silenced, so start shuffling before a fight and lock the card when you need it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 0,
+              "end": 11
+            },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:TwistedFate:general:5",
+          "text": "Count your attacks: Stacked Deck makes every fourth attack hit harder, so weave attacks into trades to get that bonus hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-E",
+              "start": 20,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:TwistedFate:general:6",
+          "text": "Use Destiny to see every enemy champion, and check where the enemy laner is before you push or roam. Recast it to teleport into a fight or gank.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:TwistedFate:general:7",
+          "text": "Use Destiny to reveal stealthed enemies and finish those who escaped with low health.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:TwistedFate:general:8",
+          "text": "The Destiny teleport takes time to channel and shows where you will land. Pick a spot away from enemies, and don't recast while rooted.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "keyword", "key": "rooted", "start": 128, "end": 134 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "c44d69d6d9500c37add000cd92195c29f170818f6e5bbcabce9574cd0c021486",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Ahri:0",
+          "text": "Stay behind minions so Charm hits them first; it stops at the first unit it touches, so Ahri has to line up a clear shot.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:TwistedFate:Ahri:1",
+          "text": "Take Gold Card with Pick a Card when Ahri steps up to last-hit, so she is stunned while you hit her and fire Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 20,
+              "end": 31
+            },
+            { "kind": "champion", "key": "Ahri", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 109,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:TwistedFate:Ahri:2",
+          "text": "Use Red Card when Ahri comes in to trade, so she is slowed and cannot dive back out easily.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:TwistedFate:Ahri:3",
+          "text": "Aim Wild Cards down the lane when Ahri's orb is on cooldown. Her Orb of Deception is her main poke, so you win trades while it is away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Ahri", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 65, "end": 81 },
+            { "kind": "keyword", "key": "poke", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:TwistedFate:Ahri:4",
+          "text": "Once Ahri uses Spirit Rush in a fight, she is much easier to kill. Use Destiny to jump in and finish her.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 15, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 71,
+              "end": 78
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:TwistedFate:Ahri:5",
+          "text": "Do not walk forward without Pick a Card ready when Charm is up; being charmed leaves you helpless to her combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 28,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Ahri-E", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "381ba7643be2a311e22664aeff3ea3067f2051cbc252bf56a68f121aae30ce9e",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Akali:0",
+          "text": "Save the Gold Card for when Akali steps in to trade; stunning her stops her from dashing away or following up.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:TwistedFate:Akali:1",
+          "text": "Throw Wild Cards at her as she walks up to last-hit; it is a long-range poke she can only dodge by sidestepping.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:TwistedFate:Akali:2",
+          "text": "When Akali vanishes in Twilight Shroud, use Destiny to see her again; she can't hide from it.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 23, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 44,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Akali:3",
+          "text": "Pick the Red Card when she dives so she is slowed and can't easily escape or chase you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:TwistedFate:Akali:4",
+          "text": "Use Destiny's recast to leave when Akali has her ultimate ready and you are low on Health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "94d8e78565373091d81e3074a37d0b33f1b9e214000850a3ea424eaf8ade4f29",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Akshan:0",
+          "text": "Hit Akshan with the Gold Card from Pick a Card when he steps up to trade, then follow with Wild Cards while he is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 91,
+              "end": 101
+            },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 121 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:TwistedFate:Akshan:1",
+          "text": "Use the Red Card from Pick a Card when Akshan runs at you or away; being slowed makes it hard for him to line up shots.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Akshan", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:TwistedFate:Akshan:2",
+          "text": "Akshan can vanish with Going Rogue near walls and brush. When he disappears, play safe and watch for a swing in from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Akshan-W", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:TwistedFate:Akshan:3",
+          "text": "Akshan's Heroic Swing can dodge your cards and reposition. Save Wild Cards for when he has used it or is stuck in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Akshan-E", "start": 9, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 64,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:TwistedFate:Akshan:4",
+          "text": "Use Destiny to reveal Akshan when he hides, and to catch him with a teleport. Do it when you know where your team can fight him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Akshan", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "44a326b6144e6ea78428a6e747f072890f204efa26a829a2d2a415c3c51c4502",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Anivia:0",
+          "text": "Stay out of Flash Frost's line and walk sideways when she casts it; it is a slow missile you can sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:TwistedFate:Anivia:1",
+          "text": "Gold Card Anivia when she walks up to cast Frostbite or her wall. A stun gives you time to throw Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Anivia-E", "start": 43, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 97,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:TwistedFate:Anivia:2",
+          "text": "Use Destiny to jump away when she is low or to finish her off after her egg is dead. Her egg is hard to kill early, so do not chase it.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:TwistedFate:Anivia:3",
+          "text": "Take Red Card to slow her and walk out of Glacial Storm. Her storm is weak at first and gets strong once fully formed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Anivia-R", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:TwistedFate:Anivia:4",
+          "text": "Trade right after she spends Flash Frost. Her damage drops a lot without it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "010fdb132320fb24f6b66f39c1d186885e94a9fd3e5dc1187d582da2cd1a69a9",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Annie:0",
+          "text": "Keep Wild Cards flying at Annie to push her back. She has no escape, so stay out of her Disintegrate range when you can.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Annie", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Annie-Q", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:TwistedFate:Annie:1",
+          "text": "Watch the counter under Annie's health bar. When her stun is ready, stay far back and do not step into her range.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:TwistedFate:Annie:2",
+          "text": "Use the Gold Card on Annie when she steps up to attack. Then you can walk away or hit her while she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Annie:3",
+          "text": "Move away from Tibbers after Annie summons him; he burns everything near him.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:TwistedFate:Annie:4",
+          "text": "Use the Blue Card to regain mana after you trade with Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 54,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8fdf973a43418d3bade4a9575740db26090c8425503e2d385d021562e89d79b6",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:AurelionSol:0",
+          "text": "Hit Aurelion Sol with the Gold Card from Pick a Card when he walks up to channel Breath of Light; the stun cuts his beam short.",
+          "refs": [
+            { "kind": "champion", "key": "AurelionSol", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 41,
+              "end": 52
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 81,
+              "end": 96
+            },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:TwistedFate:AurelionSol:1",
+          "text": "Step out of the black hole from Singularity early; it drags you toward the center, where low-health targets die.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 32,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:TwistedFate:AurelionSol:2",
+          "text": "Use Destiny to check where Aurelion Sol is before you push or roam. Use its teleport to join fights or get away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "AurelionSol", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:AurelionSol:3",
+          "text": "Use the Red Card from Pick a Card to keep him slowed while you throw Wild Cards at him, so he has trouble lining up his spells.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 69,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:TwistedFate:AurelionSol:4",
+          "text": "Move sideways when Falling Star lands. It takes a moment to arrive, and the stun that follows lets him hit you with more.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "084b9b660541d972aa7509e1cced5390027fbceca296a9a148ec887cc7b4e605",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Aurora:0",
+          "text": "Pick the Gold Card with Pick a Card and hit Aurora with it when she steps up to trade or last-hit; being stunned stops her from dodging your Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Aurora", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 141,
+              "end": 151
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:TwistedFate:Aurora:1",
+          "text": "Aurora turns invisible after Across the Veil, so use Destiny to reveal her and keep tracking her.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 53,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:TwistedFate:Aurora:2",
+          "text": "Take the Red Card when she dives on you; being slowed makes her much easier to hit with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 88,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:TwistedFate:Aurora:3",
+          "text": "Be careful when you teleport in with Gate; her Between Worlds slows you at its edge.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c896cd9216407408030808825789195d15d73778ad3c3ea80397da42cc2408fc",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Azir:0",
+          "text": "Use Wild Cards from long range when Azir steps up to hit minions. His soldiers can't dodge for him, so make him back off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Azir", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:TwistedFate:Azir:1",
+          "text": "Pick the Gold Card with Pick a Card when Azir comes close, so he is stunned and can't escape your follow-up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Azir", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Azir:2",
+          "text": "Take the Blue Card with Pick a Card to refill your mana after you spend it on Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 78,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:TwistedFate:Azir:3",
+          "text": "Azir's Emperor's Divide knocks you back and its wall blocks your path. Use Destiny to get away or to reposition after it.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Azir-R", "start": 7, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 75,
+              "end": 82
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:TwistedFate:Azir:4",
+          "text": "Look for roams when Azir shoves the wave. Destiny lets you ambush a side lane, and it shows you where he is.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 20, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 42,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "61d964456006037fda36a43391c287cbc03d33e024cbfadac207be2939513970",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Brand:0",
+          "text": "Dodge Sear when you can; if Brand lands it on you, the stun follows only when you are already ablaze. Stay out of his range between his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "ablaze", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:TwistedFate:Brand:1",
+          "text": "Walk around Pillar of Flame's delay; it lands after a short wait, so keep moving and don't stand still to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:TwistedFate:Brand:2",
+          "text": "Use Wild Cards on Brand and the minions in front of him to push the wave and punish him when his spells are on cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Brand", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:TwistedFate:Brand:3",
+          "text": "Pick the Gold Card and stun Brand when he steps up to use a spell, then trade while he can't act.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Brand:4",
+          "text": "When you see Pyroclasm start, stay away from your minions and allies, since it bounces between nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 13, "end": 22 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:TwistedFate:Brand:5",
+          "text": "Use Destiny at level 6 to reach a lane Brand has pushed, or to escape when he is ready to kill you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Brand", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "529b7ab5ef85bc24c38f10603690ac04018073763b4acbebe762a6c8beba588d",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Briar:0",
+          "text": "Save the Gold Card from Pick a Card for when Briar leaps in; the stun lets you step away or hit her with Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Briar", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 105,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:TwistedFate:Briar:1",
+          "text": "Pick the Red Card to keep Briar slowed when she is running at you, so she has a harder time reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:TwistedFate:Briar:2",
+          "text": "Stay away from walls when Briar charges Chilling Scream. A full charge knocks you back, and hitting a wall hurts a lot and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 128 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:TwistedFate:Briar:3",
+          "text": "Wild Cards hits at long range, so poke Briar before she can reach you. She has no innate health regeneration.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 },
+            { "kind": "champion", "key": "Briar", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:TwistedFate:Briar:4",
+          "text": "Use Destiny at level 6 to see Briar coming. Her Certain Death can only be used if it hits you, so watch for it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Briar", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Briar-R", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "675b07fabbdccb6a4464dd79f85432050753e52f202fd694a7beeeed11c984e6",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Cassiopeia:0",
+          "text": "Dodge Noxious Blast early; it lands after a short delay, so walk sideways instead of straight back.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:TwistedFate:Cassiopeia:1",
+          "text": "Pick the Gold Card and stun her when she steps up to cast Twin Fang, then trade with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 58,
+              "end": 67
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 85,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:TwistedFate:Cassiopeia:2",
+          "text": "Do not step into Miasma; you get slowed and cannot use dashes or teleports while inside it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 17,
+              "end": 23
+            },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Cassiopeia:3",
+          "text": "Use the Blue Card to refill mana after she has used up her spells, so you can keep trading.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:TwistedFate:Cassiopeia:4",
+          "text": "Her Petrifying Gaze stuns only if you face her. When you see her cast it, turn away so you are slowed instead.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:TwistedFate:Cassiopeia:5",
+          "text": "At level 6, use Destiny to find her and ambush her when she pushes the wave, or to leave if she has you low.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 16,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7ebea9c85cca613571cb7f83aa5552a5906b04c3ffe295c67c7e64413bb7ff74",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Diana:0",
+          "text": "Stun Diana with the Gold Card when she dashes in with Lunar Rush, then back off or hit her with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Diana-E", "start": 54, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 96,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Diana:1",
+          "text": "Dodge Crescent Strike by walking sideways. Once it hits you, Diana can dash to you with Lunar Rush, so be ready with your Gold Card.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Diana-E", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Diana:2",
+          "text": "Use the Red Card on Diana when she walks up so she is slowed and easier to hit with Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 84,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Diana:3",
+          "text": "Poke Diana with Wild Cards while her Pale Cascade orbs are gone. Do not fight her while the orbs and shield are active.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 16,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Diana-W", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:TwistedFate:Diana:4",
+          "text": "Watch for Diana at level 6. Use Destiny to see where she is and to escape if she goes for Moonfall.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 32,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Diana-R", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a657744208a101ce6aa0c0bf432e6fa09c4421a1457424aec5b84d2a318a819a",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Ekko:0",
+          "text": "Dodge Timewinder early; the field it leaves slows you, and the grenade comes back to hit again.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:TwistedFate:Ekko:1",
+          "text": "Use the Gold Card from Pick a Card when Ekko walks up to trade, so he is stunned and you can hit him with Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Ekko", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 106,
+              "end": 116
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:TwistedFate:Ekko:2",
+          "text": "Watch for Ekko's afterimage trail; when Chronobreak is down, he is much easier to commit to and kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Ekko-R", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:TwistedFate:Ekko:3",
+          "text": "Do not stand in the Parallel Convergence circle. Step out before it finishes, or you will be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 20, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Ekko:4",
+          "text": "Use Destiny to see where Ekko is, and to flee when he threatens a gank.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Ekko", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "10c60acab47ee2217051bf7a8a82a471baabfd68ba24649fed5f77cd98d3f9c9",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Ezreal:0",
+          "text": "Pick the Gold Card with Pick a Card and hit Ezreal with the empowered attack. He is stunned, so follow up with Wild Cards while he cannot move.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 111,
+              "end": 121
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Ezreal:1",
+          "text": "Ezreal is fragile, so use Wild Cards on him when he steps up to last-hit. Each hit hurts, and he has little health to spare early.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 26,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:TwistedFate:Ezreal:2",
+          "text": "Take the Red Card when Ezreal wants to walk away or poke you. The slow makes it easier to catch him or to dodge his next shot.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:TwistedFate:Ezreal:3",
+          "text": "Use the Blue Card when you are low on mana after trading. It restores mana for your next fight.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Ezreal:4",
+          "text": "Use Destiny at level 6 to see Ezreal on the map and gate in on him when he pushes the wave or has used Arcane Shift.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Ezreal", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bbaf2ca058e14425fbb7b80615cb927831810bfea274d98d54ed9bbd7c18e765",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Fizz:0",
+          "text": "Save the Gold Card from Pick a Card for when Fizz dives in; the stun gives you time to back away or hit him with Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Fizz", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 113,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Fizz:1",
+          "text": "Fizz becomes untargetable during Playful, so hold your Gold Card and Wild Cards until he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 69,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Fizz:2",
+          "text": "Use Wild Cards on Fizz and the minions to poke him from range. Fizz must close the gap to hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Fizz", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "champion", "key": "Fizz", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:TwistedFate:Fizz:3",
+          "text": "Once you reach level 6, use Destiny to see Fizz coming and teleport away from his all-in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 28,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Fizz", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:TwistedFate:Fizz:4",
+          "text": "Stay away from the ultimate: when Chum the Waters sticks to you, run out of the shark's area before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e2e1ecaf6235aac2ab6d48ff29894cbe13b307f23bd874dcdb2ad32b916589a",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Galio:0",
+          "text": "Keep Wild Cards for when Galio walks up; he takes it with no way to dodge if you aim it well, and it keeps him off you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Galio", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:TwistedFate:Galio:1",
+          "text": "Stay out of Justice Punch range, and do not stand beside a wall you cannot get away from; he cannot dash through walls.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:TwistedFate:Galio:2",
+          "text": "Do not use Pick a Card into a charged Shield of Durand; the damage cut makes your card attack weak.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 11,
+              "end": 22
+            },
+            { "kind": "ability", "key": "Galio-W", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Galio:3",
+          "text": "Galio moves slowly while charging Shield of Durand, so poke him from range with Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-W", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 55, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 80,
+              "end": 90
+            }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:TwistedFate:Galio:4",
+          "text": "Use Destiny to spot Galio's Hero's Entrance and run for safety; he can be interrupted before he jumps.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Galio", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Galio-R", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "19e6e58cec53171b21d8a60636e7c1fd58a8f5a5afb29f1398d1f61a545b5146",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Hwei:0",
+          "text": "Pick the Gold Card with Pick a Card and hit Hwei with your next attack; the stun gives you time to land Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Hwei", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 104,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:TwistedFate:Hwei:1",
+          "text": "Hwei takes a moment to cast, so jump on him right after he commits to a Torment spell.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 0, "end": 4 }],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:TwistedFate:Hwei:2",
+          "text": "Stay out of a straight line with Hwei so Devastating Fire misses, and walk sideways when Severing Bolt lands slowly on you.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:TwistedFate:Hwei:3",
+          "text": "Use Destiny to see where Hwei is, then teleport in to finish him when he is low or has spent his spells.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Hwei", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:TwistedFate:Hwei:4",
+          "text": "Take the Blue Card when your mana runs low from trading, then keep poking him with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 73 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 83,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "18b8f8d750405ede0df5689f584bd12b9ac31c985c8a71654380b2d8895139df",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Irelia:0",
+          "text": "Hit Irelia with the Gold Card from Pick a Card when she dashes in; stunned, she can't chain her dashes, so you can walk away or trade.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:TwistedFate:Irelia:1",
+          "text": "Throw Wild Cards at the minion wave when Irelia stands near it. It hurts her and stops her from using the minions to close in on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Irelia", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:TwistedFate:Irelia:2",
+          "text": "Use the Red Card from Pick a Card to keep her slowed when she is on you. It makes her dashes easier to kite.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:TwistedFate:Irelia:3",
+          "text": "Use Destiny to get away when she is hunting you or to join a fight. Her dashes are shut down while she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "47730106ed1370157ce96eb400d7310684b05214cbe9fe88714a50c8ad009700",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Kassadin:0",
+          "text": "Use Pick a Card and take the Gold Card when Kassadin walks up or blinks in; the stun gives you time to land Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Kassadin", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 108,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:TwistedFate:Kassadin:1",
+          "text": "Kassadin takes less magic damage, so lean on your basic attacks and Stacked Deck rather than only throwing cards.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-E",
+              "start": 68,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:TwistedFate:Kassadin:2",
+          "text": "Take the Red Card when Kassadin closes in so he is slowed and cannot easily chase or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:TwistedFate:Kassadin:3",
+          "text": "Push the wave and use Destiny to roam while Kassadin is weak early; he is far stronger at later levels.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 22,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Kassadin", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ea1d525bf4469dca938f01b3d5cc5f7ceef5a3b1ea9f791120349d5c3c349b14",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Katarina:0",
+          "text": "Save the Gold Card from Pick a Card for when Katarina uses Shunpo to jump on you; stunning her cuts her all-in short.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Katarina", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Katarina-E", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:TwistedFate:Katarina:1",
+          "text": "Use Wild Cards to push the wave when you want to leave lane; Katarina's Shunpo often needs a Dagger or target nearby.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Katarina", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Katarina-E", "start": 72, "end": 78 },
+            { "kind": "item", "key": "1042", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:TwistedFate:Katarina:2",
+          "text": "Use Destiny to see where Katarina is and move to safety when she disappears from the lane, since she can roam fast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Katarina", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:TwistedFate:Katarina:3",
+          "text": "Hold your Gold Card for Katarina's Death Lotus; a stun interrupts her channel.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Katarina-R", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:TwistedFate:Katarina:4",
+          "text": "Use the Red Card to leave her slowed when you want to trade or chase her off a Dagger.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 36 },
+            { "kind": "item", "key": "1042", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "201558fadc2021128a2ab3686412ef7f49e7f5aa23fbf480093748a9feabe7dd",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Leblanc:0",
+          "text": "Pick the Gold Card with Pick a Card when LeBlanc walks up to trade; stunned, she can't dash in or out with Distortion.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Leblanc", "start": 41, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:TwistedFate:Leblanc:1",
+          "text": "Hit LeBlanc first when she lands from Distortion; attacking her first avoids most of her tricks.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:TwistedFate:Leblanc:2",
+          "text": "Use the Red Card from Pick a Card to slow her when she dashes in, so she can't easily get away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:TwistedFate:Leblanc:3",
+          "text": "Wild Cards is a wide fan, so throw it when she steps in to last-hit. It can be blocked by projectiles but not by dashes.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:TwistedFate:Leblanc:4",
+          "text": "Use Destiny to see her when she goes out of sight, and teleport away if she is about to kill you.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e66ec7e7c530c1e106de9dfae8e98fa865cfa2b2aabdc95cbc14d55a7963c30",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Lissandra:0",
+          "text": "Stay out of Ring of Frost range; if she roots you, you cannot walk away from her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:TwistedFate:Lissandra:1",
+          "text": "Trade with Wild Cards when she is out of Ring of Frost range, and push in the lane while her Ring of Frost is on cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Lissandra-W", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 93, "end": 106 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:TwistedFate:Lissandra:2",
+          "text": "Hold the Gold Card for when she dashes in with Glacial Path, so she is stunned before she can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-E", "start": 47, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:TwistedFate:Lissandra:3",
+          "text": "Use the Red Card to slow her when you want to leave or line up Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 63,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:TwistedFate:Lissandra:4",
+          "text": "Use Destiny to see where she is, and to teleport out if she lines up a Frozen Tomb on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "ability", "key": "Lissandra-R", "start": 71, "end": 82 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7bbcdc391e0ae2c1d61df7e76147ce74707b59bbe55c13a77d0ea31dc43b1dc4",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Lux:0",
+          "text": "Walk out of a straight line from Lux so Light Binding has to be aimed well. Getting rooted is how she sets up the rest of her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-Q", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:TwistedFate:Lux:1",
+          "text": "Keep minions between you and Lux. Light Binding only hits the first two enemies, so a minion can soak it for you.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:TwistedFate:Lux:2",
+          "text": "Pick the Gold Card and hit Lux when she steps up to last-hit. The stun gives you time to land Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 94,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:TwistedFate:Lux:3",
+          "text": "Step out of Lucent Singularity before it detonates. Fighting inside it leaves you slowed and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:TwistedFate:Lux:4",
+          "text": "Use the Blue Card to get your mana back after trading. Lux's spells cost a lot of mana, so you can outlast her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 55, "end": 58 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:TwistedFate:Lux:5",
+          "text": "Use Destiny to see Lux, then teleport to a side lane when she pushes. She has little to stop you from getting there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Lux", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "middle:TwistedFate:Lux:6",
+          "text": "Stay out of Final Spark's long line when you are low on health. Move sideways when you see the red warning beam.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "004b2a4e30467f7c98f9846d9e4c8fd27f3d96d3d8eaf1c2e9545c21986639e4",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Malzahar:0",
+          "text": "Hit Malzahar with Wild Cards when his Void Shift is down; while it is up he takes very little damage and ignores crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 18,
+              "end": 28
+            },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:TwistedFate:Malzahar:1",
+          "text": "Keep Pick a Card ready for when Malzahar walks up. The Gold Card stun lets you back away from his silence and damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:TwistedFate:Malzahar:2",
+          "text": "Stay out of Call of the Void's portals. It silences you and cuts off your Pick a Card follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 43, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 74,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:TwistedFate:Malzahar:3",
+          "text": "Do not stand in minions carrying Malefic Visions. When they die, it jumps to the closest enemy, which can be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:TwistedFate:Malzahar:4",
+          "text": "Use Destiny to see Malzahar and shove the wave when he leaves lane, or to join a fight elsewhere.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "99fedf5f661bf9b00e5015030455aaea47f2628825ae8541c59be5cc89e60687",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Mel:0",
+          "text": "Don't throw Wild Cards into Mel while Rebuttal is ready; it destroys projectiles. Wait until she has used it, then trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 12,
+              "end": 22
+            },
+            { "kind": "champion", "key": "Mel", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Mel-W", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:TwistedFate:Mel:1",
+          "text": "Stay out of line with Solar Snare. Being rooted next to her is how she wins lane, so keep your distance and watch for her aim.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 22, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:TwistedFate:Mel:2",
+          "text": "Use the Gold Card with Pick a Card when Mel walks up to hit a minion. Then back away or trade while she is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Mel", "start": 40, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Mel:3",
+          "text": "Back off when you take a few hits from Mel. Searing Brilliance stacks can execute you at low health, so let them fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 39, "end": 42 },
+            { "kind": "ability", "key": "Mel-passive", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:TwistedFate:Mel:4",
+          "text": "Use Destiny to see Mel and gate in when she is low or out of position. Don't walk into her roots afterward.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Mel", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2aeb8522ec700a9addc0e48c5f03094c82a5a2b7fb48a5e43b65dfacd2739527",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Naafiri:0",
+          "text": "Throw Wild Cards at Naafiri when she walks up to trade; it hits in a wide cone and the bleed from her dagger doesn't matter if she can't reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:TwistedFate:Naafiri:1",
+          "text": "Pick the Gold Card and stun Naafiri when she dashes in, then back away or fight while she can't act.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:TwistedFate:Naafiri:2",
+          "text": "Take the Red Card when she is running at you so she is slowed and can't close the gap easily.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:TwistedFate:Naafiri:3",
+          "text": "Don't use Destiny to flee when she is chasing you; Hounds' Pursuit tracks you and she can reach you. Use it to see her and to get away from her pack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            },
+            { "kind": "ability", "key": "Naafiri-R", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:TwistedFate:Naafiri:4",
+          "text": "Hit her packmates less than her; aim Wild Cards so the cone catches Naafiri herself, not just the small dogs.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 37,
+              "end": 47
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1da0f12f849a25a9646fc629881bf901d6ffb6e039bc257f9f4c0c8ca685cba",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Orianna:0",
+          "text": "Pick the Gold Card with Pick a Card and hit Orianna with it, then walk away. It stuns her, so you get a free Wild Cards throw.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Orianna", "start": 44, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 109,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:TwistedFate:Orianna:1",
+          "text": "Throw Wild Cards at Orianna when she walks up to last-hit. It has long range and she can't easily dodge a fan of cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Orianna", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:TwistedFate:Orianna:2",
+          "text": "Use the Blue Card from Pick a Card on her to get mana back after you have been trading with Wild Cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 23,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 92,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:TwistedFate:Orianna:3",
+          "text": "Use Destiny to see Orianna and your whole lane, and teleport in to kill a low-health enemy once you have level 6.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:TwistedFate:Orianna:4",
+          "text": "Stay away from where her Ball sits. Her pulse and Command: Shockwave only hit enemies near the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 50, "end": 68 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "76df0a4acd3fe3df8e2940ed971ce6e10e289cdbb4201e84ca62cb20e97b744f",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Qiyana:0",
+          "text": "Save the Gold Card from Pick a Card for when Qiyana dashes in with Audacity; a stunned Qiyana can't follow up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Qiyana", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 67, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 },
+            { "kind": "champion", "key": "Qiyana", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Qiyana:1",
+          "text": "Use the Red Card from Pick a Card to keep Qiyana slowed when she is rooted or closing on you, so she can't easily get away or close in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Qiyana", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:TwistedFate:Qiyana:2",
+          "text": "Hit Qiyana with Wild Cards while she is in the river or brush grabbing an element; her dash is short and she can't dodge well.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 16,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:TwistedFate:Qiyana:3",
+          "text": "Use Destiny at level 6 to see Qiyana when she hides in brush with invisibility, and to move across the map to punish her roams.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Qiyana", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:TwistedFate:Qiyana:4",
+          "text": "Stay away from walls and terrain when you fight Qiyana; Supreme Display of Talent stuns you more when it detonates near you.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 56, "end": 81 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "df7bb1282ebb13ced3e87d3620d410994fea8d7676dfb51564f4b6278abfb717",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Ryze:0",
+          "text": "Dodge Overload when you can; it is a straight shot and Ryze hits much harder once Spell Flux has marked you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Ryze", "start": 55, "end": 59 },
+            { "kind": "ability", "key": "Ryze-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:TwistedFate:Ryze:1",
+          "text": "Use Wild Cards on Ryze when he steps up to hit minions; it has long range, so poke him from a safe distance.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Ryze", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Ryze:2",
+          "text": "Pick the Gold Card and hit Ryze when he walks close; he is stunned and you get a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:TwistedFate:Ryze:3",
+          "text": "Take the Blue Card to restore mana while you trade, since Ryze can out-spam you with cheap spells.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:TwistedFate:Ryze:4",
+          "text": "When Ryze starts Realm Warp, use Destiny to find where he is going and ambush him or his team.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ryze-R", "start": 17, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 33,
+              "end": 40
+            }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e2b81aba3ef0dae5e14d443087b3d1256005e3f516b3c9ea246e8dc33224aee",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Sylas:0",
+          "text": "Hold Wild Cards until Sylas steps up to the minion wave, then hit him with the full fan while he is busy last-hitting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:TwistedFate:Sylas:1",
+          "text": "Pick the Gold Card and stun Sylas when he walks up to trade. Back off before he can lash you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Sylas:2",
+          "text": "Use Destiny to see where Sylas is. If he is low or out of position, teleport in to finish him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:TwistedFate:Sylas:3",
+          "text": "Keep distance when Sylas is hurt and trade only from range. Kingslayer heals him, so a fight at close range goes his way.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Sylas-W", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Sylas:4",
+          "text": "Take the Red Card slow when Sylas dashes in. It helps you walk away from his chains.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:TwistedFate:Sylas:5",
+          "text": "Sylas can steal your Destiny. Stay out of his reach when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 21,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6e676bf69d47862d7e98505a9fbb62c294c228ad2ade877c02f6c416d1bbceec",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Syndra:0",
+          "text": "Stay out of line with Dark Sphere and Force of Will; walk sideways so her slow-casting spells miss.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-Q", "start": 22, "end": 33 },
+            { "kind": "ability", "key": "Syndra-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:1",
+          "text": "Punish Syndra right after she uses Scatter the Weak, because it has a long cooldown and she can't push you away.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Syndra-E", "start": 35, "end": 51 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:2",
+          "text": "Keep your distance from Dark Spheres on the ground; Scatter the Weak can fling one into you and leave you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 52, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:3",
+          "text": "Take the Gold Card on her when she steps up to trade, then follow with Wild Cards while she is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 71,
+              "end": 81
+            },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:4",
+          "text": "Use Wild Cards to clear minions and poke her; the Blue Card brings back mana after a trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:5",
+          "text": "Watch for level 6; Unleashed Power hits hard when many spheres are out. Stay healthy and don't linger near piles of spheres.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-R", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:TwistedFate:Syndra:6",
+          "text": "Use Destiny to see where she is and join other lanes when she pushes, or to escape her all-in.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dd68f170d18d830b994df7588791353602594b9b719d9c98a0b19060ccb88541",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Taliyah:0",
+          "text": "Dodge Threaded Volley by stepping sideways; it flies in a straight line and cannot follow you.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:TwistedFate:Taliyah:1",
+          "text": "Stay out of the stones from Unraveled Earth, and watch for Seismic Shove right after; being thrown through them stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-E", "start": 28, "end": 43 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 59, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:TwistedFate:Taliyah:2",
+          "text": "Use Wild Cards to push the wave, then Pick a Card to the Gold Card when Taliyah walks up so she is stunned and you can trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 38,
+              "end": 49
+            },
+            { "kind": "champion", "key": "Taliyah", "start": 72, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:TwistedFate:Taliyah:3",
+          "text": "Choose the Red Card when you need to escape or chase; it leaves her slowed.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:TwistedFate:Taliyah:4",
+          "text": "Taliyah can't cast Weaver's Wall right after taking damage from a champion, so hit her before you go for a roam.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Taliyah-R", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cc5c233c16793d38145b4ca1c702518fbe1848469293b029b83cbc2a78d1b8a4",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Talon:0",
+          "text": "Keep the Gold Card ready when Talon jumps at you; stunning him stops the follow-up and lets you walk away or fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:TwistedFate:Talon:1",
+          "text": "Throw Wild Cards at Talon when he walks up to the minion wave; it is a safe poke from long range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Talon", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:TwistedFate:Talon:2",
+          "text": "Use the Red Card to slow Talon when he tries to run away, then finish him with Wild Cards.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 79,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:TwistedFate:Talon:3",
+          "text": "Once you hit level 6, use Destiny to see when Talon leaves lane, then Gate to teleport onto his roam or to a fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 26,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Talon", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:TwistedFate:Talon:4",
+          "text": "Destiny shows Talon even while he is invisible after Shadow Assault, so use it to find him and finish him off.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Talon", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Talon-R", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b8e5fe7d37e17980f4530824dfb77b5447a834b8175de3bd2f32dcd4e045d2b8",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Veigar:0",
+          "text": "Hit Veigar with the Gold Card from Pick a Card when he steps up to last-hit, then follow with Wild Cards while he is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 35,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 94,
+              "end": 104
+            },
+            { "kind": "keyword", "key": "stunned", "start": 117, "end": 124 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Veigar:1",
+          "text": "Stay out of the Dark Matter zone. It lands after a short delay, so walk sideways as soon as you see it appear.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:TwistedFate:Veigar:2",
+          "text": "Do not walk into the edge of Event Horizon. If you are already inside the cage you can still move and attack.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:TwistedFate:Veigar:3",
+          "text": "Use Destiny to jump away from a Veigar who is trying to burst you, or to reach a lane he has left.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Veigar", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:TwistedFate:Veigar:4",
+          "text": "Take the Blue Card from Pick a Card when your mana is low, then trade with Veigar again once you recover.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Veigar", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "94c31feb67263bf8ae07f670f71eb1c80d4524fa74cd8869d8219036bade09d9",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Vex:0",
+          "text": "Save the Gold Card from Pick a Card for when Vex has used her Doom 'n Gloom empowered ability; then she can't easily fear you before you stun her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Vex", "start": 45, "end": 48 },
+            { "kind": "ability", "key": "Vex-passive", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:TwistedFate:Vex:1",
+          "text": "Don't use Destiny's teleport near Vex without a plan. Gate is a dash-like move, and it can feed her Gloom mark.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Vex", "start": 34, "end": 37 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:TwistedFate:Vex:2",
+          "text": "Aim Wild Cards early to poke Vex while she walks up to last-hit. Her minions can't block your cards.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Vex", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "middle:TwistedFate:Vex:3",
+          "text": "Step out of Vex's Mistral Bolt range, then dodge sideways when it speeds up and narrows.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Vex-Q", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:TwistedFate:Vex:4",
+          "text": "At level 6, watch Vex's Shadow Surge and stay near your team; it tracks you until she arrives.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Vex-R", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:TwistedFate:Vex:5",
+          "text": "Use the Blue Card from Pick a Card when your mana runs low, once you've traded with Vex.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Vex", "start": 84, "end": 87 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7fb647c8d22a9bcd2583b19c6b925b9fcacbd52fce11df44c1472fc25e460024",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Viktor:0",
+          "text": "Stay out of Viktor's Hextech Ray lane and keep sidestepping it; it is a long line that keeps going through everything it touches.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Viktor-E", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:TwistedFate:Viktor:1",
+          "text": "Don't stand still inside Gravity Field; staying in it long enough stuns you. Walk out as soon as it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 25, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:TwistedFate:Viktor:2",
+          "text": "Hit Viktor with the Gold Card when he steps up to use Siphon Power, then follow with Wild Cards while he is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 54, "end": 66 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 85,
+              "end": 95
+            },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 115 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:TwistedFate:Viktor:3",
+          "text": "Use the Blue Card to refill mana when you are trading badly with his poke; Viktor's spells cost a lot of mana too.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 69, "end": 73 },
+            { "kind": "champion", "key": "Viktor", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:TwistedFate:Viktor:4",
+          "text": "Once you reach level 6, use Destiny to join side lanes and punish Viktor when he pushes without watching the map.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 28,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Viktor", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:TwistedFate:Viktor:5",
+          "text": "Leave the area when Arcane Storm lands; it follows you. Use the Red Card to slow Viktor if he tries to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 },
+            { "kind": "champion", "key": "Viktor", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e221b7dd64eeccb27543389e392e0ed593efdbdad4707248e41d43adf6a12c73",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Vladimir:0",
+          "text": "Stun Vladimir with the Gold Card of Pick a Card when he walks up to trade, then back off before he can answer.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 36,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:TwistedFate:Vladimir:1",
+          "text": "Throw Wild Cards from long range while he farms; it is your safest way to poke him down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:TwistedFate:Vladimir:2",
+          "text": "Stay out of Transfusion range. His heal makes long trades in his range go his way.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:TwistedFate:Vladimir:3",
+          "text": "Do not waste Wild Cards or a card while Vladimir is in Sanguine Pool; he cannot be targeted. Wait until he comes out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 13,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Vladimir", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:TwistedFate:Vladimir:4",
+          "text": "Use Destiny to ambush a side lane and win a fight, or to escape once Hemoplague is on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "ability", "key": "Vladimir-R", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1f99defe969f99d44da69fa3aba71127a5caaedae09fff663d367fbdf2f1a4bf",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Xerath:0",
+          "text": "Close the gap on Xerath and trade with Wild Cards and your Stacked Deck attacks. He is weakest up close and has no quick way to push you off.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 39,
+              "end": 49
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-E",
+              "start": 59,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:TwistedFate:Xerath:1",
+          "text": "Stay out of a straight line with Xerath so his Shocking Orb misses. If it hits you from far away, the stun lasts much longer.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 47, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:TwistedFate:Xerath:2",
+          "text": "Use the Gold Card on Xerath when he is close to you. The stun gives you time to hit him with Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 93,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Xerath:3",
+          "text": "Use Destiny when Xerath starts Rite of the Arcane. Teleport onto him, because he can't move while he channels.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Xerath-R", "start": 31, "end": 49 },
+            { "kind": "summoner-spell", "key": "12", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:TwistedFate:Xerath:4",
+          "text": "Watch the ground for Eye of Destruction and walk out of the circle. Its center hits hardest and slows the most.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-W", "start": 21, "end": 39 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc39ffc5784723be230bf5d3f4e4c6274c37553d701210f4b9fe41bfc2fc5c1c",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:XinZhao:0",
+          "text": "Pick the Gold Card with Pick a Card and hit Xin Zhao as he runs in. Once he is stunned, he can't start his combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:TwistedFate:XinZhao:1",
+          "text": "Use the Red Card from Pick a Card when Xin Zhao closes in. Being slowed makes it harder for him to reach you and keep up the chase.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 22,
+              "end": 33
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 39, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:TwistedFate:XinZhao:2",
+          "text": "Poke with Wild Cards while Xin Zhao walks up to farm. Keep your distance, because he wins once he can trade up close.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 10,
+              "end": 20
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:TwistedFate:XinZhao:3",
+          "text": "Xin Zhao's Audacious Charge lets him jump onto you. Stay near your minions and keep Pick a Card ready before he gets to you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 11, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 84,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:TwistedFate:XinZhao:4",
+          "text": "Use Destiny to get away or to join a side lane fight. Xin Zhao's Crescent Guard makes him hard to catch in a long fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "082793f5b3fa688bc5bcca3acfeba2e73176ea3db7f36497e65086816b2e21a3",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Yasuo:0",
+          "text": "Hold Wild Cards until Yasuo walks into the lane or steps up to a minion; he can't dodge well when committed to a dash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:TwistedFate:Yasuo:1",
+          "text": "Pick the Gold Card with Pick a Card and hit Yasuo when he comes close, so he is stunned and can't dash away or fight back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:TwistedFate:Yasuo:2",
+          "text": "Use the Red Card on Yasuo when you want to leave; the slow makes his chase harder.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:TwistedFate:Yasuo:3",
+          "text": "Don't count on Wild Cards through a Wind Wall; it blocks projectiles, so wait for the wall to fade before throwing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 15,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:TwistedFate:Yasuo:4",
+          "text": "Use Destiny to see Yasuo's position and jump to a lane or fight when he is away from you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "98b24898d3be76b03ef72f1997e245bc3380656739571a41914912cba2b45284",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Yone:0",
+          "text": "Poke Yone with Wild Cards whenever he steps up to last-hit; the cards fan out, so aim at the middle of him and the minions.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 15,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:TwistedFate:Yone:1",
+          "text": "Pick the Gold Card and stun Yone when he dashes at you, then back away. A stunned Yone cannot cast his abilities or follow you.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 },
+            { "kind": "champion", "key": "Yone", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:TwistedFate:Yone:2",
+          "text": "Use the Red Card to slow Yone when you want to leave a trade or stop him from closing in.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:TwistedFate:Yone:3",
+          "text": "Stay out of Mortal Steel range. When Yone has two stacks, his dash knocks you up, so back off once he has hit you or a minion twice.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:TwistedFate:Yone:4",
+          "text": "Use Destiny to see where Yone is. When he is gone from lane, stay near your tower and watch for him coming back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "02308d654999c05892855f23acbdb3ef0f5b6c906344cacc7cc543ac74576d65",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Zed:0",
+          "text": "Pick the Gold Card and hit Zed with it when he steps up to trade, so he is stunned and you can follow with Wild Cards.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 107,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:TwistedFate:Zed:1",
+          "text": "Use Destiny as a warning. It shows you where Zed is, so back off or look for a safe spot when he is near.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Zed", "start": 45, "end": 48 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:TwistedFate:Zed:2",
+          "text": "Throw Wild Cards at Zed's Living Shadow when it is out front, and expect his Razor Shuriken to come from both places.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Zed", "start": 20, "end": 23 },
+            { "kind": "ability", "key": "Zed-W", "start": 26, "end": 39 },
+            { "kind": "ability", "key": "Zed-Q", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:TwistedFate:Zed:3",
+          "text": "Pick the Red Card when Zed dashes in, so he is slowed and cannot easily chase you or get away.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:TwistedFate:Zed:4",
+          "text": "Once Zed uses Death Mark on you, he is in your face for a moment, so stay away from his Shadow and save your Gold Card stun for when he returns.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zed-R", "start": 14, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e7e1eae24c9b9c1f92ba821fd527b439a5388159a8887e6446b33165d70c0008",
+      "tips": [
+        {
+          "id": "middle:TwistedFate:Zoe:0",
+          "text": "Use the Gold Card from Pick a Card on Zoe when she steps forward, then follow with Wild Cards while she is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 23,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Zoe", "start": 38, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 83,
+              "end": 93
+            },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:TwistedFate:Zoe:1",
+          "text": "Sidestep Paddle Star! when Zoe fires it from far away, because it hits hardest after a long flight.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-Q", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Zoe", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:TwistedFate:Zoe:2",
+          "text": "Sidestep Sleepy Trouble Bubble; if it lands, she can burst you down while you are asleep. Don't trade when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Zoe-E", "start": 9, "end": 30 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:TwistedFate:Zoe:3",
+          "text": "Punish Zoe when she uses Portal Jump. She can't move while she waits to return, so hit her with Wild Cards or the Red Card from Pick a Card.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 25, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 96,
+              "end": 106
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 128,
+              "end": 139
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:TwistedFate:Zoe:4",
+          "text": "Use Destiny to catch Zoe when she hides in fog of war to set up a long Sleepy Trouble Bubble, or to join a side lane.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "champion", "key": "Zoe", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Zoe-E", "start": 71, "end": 92 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

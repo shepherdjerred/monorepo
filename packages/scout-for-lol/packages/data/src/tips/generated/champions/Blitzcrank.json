@@ -1,0 +1,1028 @@
+{
+  "schemaVersion": 1,
+  "champion": "Blitzcrank",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "d360497dab8a017f310eae15fc1c1e262cd52388bd52e04ea855fcb785c55102",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:general:0",
+          "text": "Aim Rocket Grab down a lane with no minions in the way; it pulls the first enemy it hits, so a minion in front will take the grab instead.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "support:Blitzcrank:general:1",
+          "text": "After a Rocket Grab lands, hit them with Power Fist right away; the knock up keeps them in place for your team to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 8, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 41,
+              "end": 51
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Blitzcrank:general:2",
+          "text": "Pull enemies toward your tower, then use Power Fist so the tower gets extra hits on them.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Blitzcrank:general:3",
+          "text": "Use Overdrive to close the gap before a grab or to chase a hurt enemy. Do not use it to retreat, since you are slowed when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Blitzcrank:general:4",
+          "text": "Use Static Field when enemies are shielded or grouped up; it destroys their shields and silences them.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "silenced", "start": 88, "end": 96 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Blitzcrank:general:5",
+          "text": "Finish a grab with Power Fist and then Static Field for a strong burst on one enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 19,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Blitzcrank:general:6",
+          "text": "Do not Rocket Grab an enemy who is about to die to the damage; a target killed by it is not pulled.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Blitzcrank:general:7",
+          "text": "When you drop low on health, Mana Barrier gives you a shield, so you can stay in the fight a bit longer.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-passive",
+              "start": 29,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "ce0299c93fb8d3f746babaaf9177a2738c527aa6fe898dd7274b4e16b3e3a251",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Bard:0",
+          "text": "Aim Rocket Grab at Bard when he walks up for chimes or away from his marksman. Any minion in the line takes the hook instead, so wait for a clear path.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Bard", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Blitzcrank:Bard:1",
+          "text": "Follow a grab with Power Fist to knock Bard up, then hit him with attacks while he is stuck next to you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 19,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Bard", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Blitzcrank:Bard:2",
+          "text": "Use Static Field at level 6 once Bard is close. It silences him, which stops him escaping, and it breaks any shield he has.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Bard", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Blitzcrank:Bard:3",
+          "text": "Pull Bard toward your tower, then finish with Power Fist so the tower gets several hits on him.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Blitzcrank:Bard:4",
+          "text": "Bard's Tempered Fate can put you in stasis. Hold Rocket Grab until it ends instead of throwing it at a target who cannot be hit.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-R", "start": 7, "end": 20 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dd299a975f32c5b1778002258debc3b8a972fb13416fb07fa617cbf9be735c4d",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Karma:0",
+          "text": "Karma's Inner Flame stops at the first unit, so line up shots with minions out of the way before you poke.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 8, "end": 19 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Blitzcrank:Karma:1",
+          "text": "Don't stand near Karma once Focused Resolve lands; move out of the tether's reach quickly so you aren't rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Karma-W", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Blitzcrank:Karma:2",
+          "text": "Look for Rocket Grab when Karma has used Inner Flame or Inspire; she has little way to get away from you after.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Karma", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Karma-Q", "start": 41, "end": 52 },
+            { "kind": "ability", "key": "Karma-E", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Blitzcrank:Karma:3",
+          "text": "Follow a grab with Power Fist, then Static Field to burst Karma; the shield from Inspire is removed by Static Field.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 19,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 36,
+              "end": 48
+            },
+            { "kind": "champion", "key": "Karma", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Karma-E", "start": 81, "end": 88 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 103,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Blitzcrank:Karma:4",
+          "text": "Don't give Karma free hits; each ability that lands on you shortens her Mantra cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Karma-R", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "bbf53e24cef656e6c87986c3735804ca918db8fbb73c13be0672b91f4dda3546",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Leona:0",
+          "text": "Aim Rocket Grab down the lane and not through your own minions; it stops at the first unit it hits, so a clear line to Leona matters.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Leona", "start": 119, "end": 124 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Blitzcrank:Leona:1",
+          "text": "When Leona walks up to engage, pull her with Rocket Grab and follow with Power Fist so she is knocked up before she can hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 45,
+              "end": 56
+            },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 73,
+              "end": 83
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 94, "end": 104 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "support:Blitzcrank:Leona:2",
+          "text": "Save Static Field for when Leona commits with her allies; it silences her and removes any shield she has.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Blitzcrank:Leona:3",
+          "text": "Do not run away with Overdrive in a panic; its slow afterward makes you easy for Leona to catch.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-W",
+              "start": 21,
+              "end": 30
+            },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "champion", "key": "Leona", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Blitzcrank:Leona:4",
+          "text": "Stay out of range of Zenith Blade. If it hits you, she dashes in and roots you, so keep distance unless you can answer with a grab.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-E", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "df65e50f0599f5886b10ec64fb16afeafebbbd0f057685a1034c4bd2a1bd3f4d",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Lulu:0",
+          "text": "Aim Rocket Grab at Lulu when no minions stand in the line, because it stops at the first enemy it hits. Pulling her in lets you follow with Power Fist.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Lulu", "start": 19, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 140,
+              "end": 150
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Blitzcrank:Lulu:1",
+          "text": "Stay out of range of Glitterlance and walk up only when it is on cooldown. It slows you hard, which makes you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Blitzcrank:Lulu:2",
+          "text": "Use Overdrive to close the gap after Lulu wastes Glitterlance, but remember you are slowed once it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lulu", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Blitzcrank:Lulu:3",
+          "text": "Hold Static Field for when Lulu shields her partner or turns big. It destroys shields and silences nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Blitzcrank:Lulu:4",
+          "text": "Lulu can polymorph you with Whimsy when you walk up, so stay wide of her when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Lulu-W", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "97ffd577bb29f2bad24ee54bd4964d70318ff5917108c8efa6329d8cbb9fa9c1",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Lux:0",
+          "text": "Aim Rocket Grab at Lux when she steps up to poke; she has no dash, so a hit usually means a full combo.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Lux", "start": 19, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Blitzcrank:Lux:1",
+          "text": "After the grab, hit Lux with Power Fist, then use Static Field. She is fragile and the knock up keeps her in place.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 20, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 29,
+              "end": 39
+            },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 50,
+              "end": 62
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 95 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Blitzcrank:Lux:2",
+          "text": "Use Static Field when Lux has a shield up from Prismatic Barrier; it destroys shields and silences her.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Lux-W", "start": 47, "end": 64 },
+            { "kind": "keyword", "key": "silenced", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Blitzcrank:Lux:3",
+          "text": "Stay behind minions when Lux is ready to throw Light Binding. It only roots the first two enemies hit, so let minions soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Lux-Q", "start": 47, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Blitzcrank:Lux:4",
+          "text": "Rocket Grab stops at the first unit it hits, so wait for a clear line to Lux, free of minions.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 73, "end": 76 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Blitzcrank:Lux:5",
+          "text": "Use Overdrive to close the gap or dodge out of Lucent Singularity. You are slowed afterward, so don't use it if Lux still has her root.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Lux-E", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 },
+            { "kind": "champion", "key": "Lux", "start": 112, "end": 115 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f4efb78016534a26b510f3e7ca41c8c2a70b06ae1ec261fbb107679a02a45154",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Milio:0",
+          "text": "Aim Rocket Grab at Milio when he steps up beside minions; it stops at the first unit it hits, so keep a clear line to him.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Milio", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Blitzcrank:Milio:1",
+          "text": "Follow a successful grab with Power Fist, then Static Field at level 6, to burst Milio before his ally can help.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 30,
+              "end": 40
+            },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 47,
+              "end": 59
+            },
+            { "kind": "champion", "key": "Milio", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Blitzcrank:Milio:2",
+          "text": "Look for moments when Milio is isolated from his carry; his movement is weaker alone, so he is easier to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "isolated", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "isolated", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Blitzcrank:Milio:3",
+          "text": "Use Static Field when Milio has put a shield on his ally; it destroys shields and silences nearby enemies briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "silenced", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Blitzcrank:Milio:4",
+          "text": "Pull Milio toward your tower, then hit Power Fist so the tower gets free hits on him.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f7f65c975a0ef48f9fec633ce4e527f589a1b643b9f11eb9e084d6fda4cf1161",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Nami:0",
+          "text": "Aim Rocket Grab at Nami when she steps up to use Aqua Prison or Ebb and Flow. Pulling her in lets you follow with Power Fist.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nami", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Nami-Q", "start": 49, "end": 60 },
+            { "kind": "ability", "key": "Nami-W", "start": 64, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 114,
+              "end": 124
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Blitzcrank:Nami:1",
+          "text": "Stay behind minions when Nami is ready to throw Aqua Prison, because Rocket Grab stops at the first enemy it hits and she is hard to reach otherwise.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Nami-Q", "start": 48, "end": 59 },
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Blitzcrank:Nami:2",
+          "text": "Step out of the way of Aqua Prison; the bubble takes a moment to land. Once she has used it, walk up and look for your grab.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Blitzcrank:Nami:3",
+          "text": "Use Overdrive to close the gap on Nami, but remember you are slowed when it ends. Do not use it if her ally can punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Nami", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Blitzcrank:Nami:4",
+          "text": "Level 6 lets you finish a pulled Nami with Static Field, which also silences her so she cannot cast her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 33, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 43,
+              "end": 55
+            },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Blitzcrank:Nami:5",
+          "text": "Avoid trading while her ally has Tidecaller's Blessing active; wait it out, since it slows and adds damage for only a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 33, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6ff4e009181a1835a0973fde2957cde05bc688f5a555b9cd8248681d01864f89",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Nautilus:0",
+          "text": "Stay behind your minions when Nautilus is in range. Dredge Line stops at the first enemy it hits, so a minion in front of you takes the anchor instead.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Blitzcrank:Nautilus:1",
+          "text": "Use Rocket Grab on Nautilus when he walks up to trade, then follow with Power Fist. Both can start the fight on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nautilus", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Blitzcrank:Nautilus:2",
+          "text": "Hold Static Field for when Nautilus has Titan's Wrath up. It destroys his shield and silences him.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "silenced", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Blitzcrank:Nautilus:3",
+          "text": "Don't run early out of Riptide when you are next to Nautilus. Wait for the waves to finish, or you take extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Nautilus", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Blitzcrank:Nautilus:4",
+          "text": "Don't let Nautilus's first attack land on you. Staggering Blow roots you briefly, and that leaves you open to a follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 10, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 47,
+              "end": 62
+            },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "45dc725a11c01e4bb2fd0b882db6fcbb785c8ea71d8c752c8e5c9719c457249a",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Pantheon:0",
+          "text": "Aim Rocket Grab at Pantheon when he walks up to trade; pulling him in is the start of your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Blitzcrank:Pantheon:1",
+          "text": "Follow a grab with Power Fist, so he is knocked up and you keep control of the fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 19,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Blitzcrank:Pantheon:2",
+          "text": "Pantheon's Aegis Assault only blocks damage from the front. Don't hit him head-on while he braces; get behind him or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Blitzcrank:Pantheon:3",
+          "text": "Use Static Field at level 6 when he jumps on your carry; it silences him and breaks any shield he has.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Blitzcrank:Pantheon:4",
+          "text": "Use Overdrive to close the gap or run away after a trade, but you will be slowed when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Blitzcrank:Pantheon:5",
+          "text": "Stay away from Pantheon when your health is low; Shield Vault stuns you and then he can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ace965496b406d98a198c9e8dba9763ab82c64726658a3b28863e660f8b643cf",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Pyke:0",
+          "text": "Aim Rocket Grab at Pyke when he has no minions in front of him; the hand stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pyke", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Blitzcrank:Pyke:1",
+          "text": "Pyke is fragile, so follow a grab with Power Fist and Static Field to burst him down before he can escape.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 39,
+              "end": 49
+            },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Blitzcrank:Pyke:2",
+          "text": "Use Static Field when Pyke is about to shield or when he tries to dash away; it silences nearby enemies briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "silenced", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Blitzcrank:Pyke:3",
+          "text": "Don't chase Pyke when he vanishes; he heals while hidden. Hold your damage for when you can see him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Blitzcrank:Pyke:4",
+          "text": "Hit Pyke with Power Fist when he walks up to hook you; it knocks him up and interrupts his approach.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "3006917073a288496d3d8e0de2316bb75e4d446978d0565f73ab8b17129ae822",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Senna:0",
+          "text": "Aim Rocket Grab down the lane and not through minions; it stops at the first unit it hits, and Senna can stay behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Senna", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Blitzcrank:Senna:1",
+          "text": "Senna has long attack range, so pull her in with Rocket Grab when she stands at max range to poke. Then hit her with Power Fist.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-Q",
+              "start": 49,
+              "end": 60
+            },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 117,
+              "end": 127
+            }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Blitzcrank:Senna:2",
+          "text": "Save Static Field for when Senna is rooted or caught; it silences her briefly, so she cannot cast Piercing Darkness or Last Embrace.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 57, "end": 65 },
+            { "kind": "ability", "key": "Senna-Q", "start": 98, "end": 115 },
+            { "kind": "ability", "key": "Senna-W", "start": 119, "end": 131 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Blitzcrank:Senna:3",
+          "text": "Use Overdrive to close the gap after Senna spends Last Embrace. Expect to be slowed when it ends, so only commit if the grab is likely.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-W", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Senna", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Senna-W", "start": 50, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "91f2817b2ce2dd56273f01ea38f66b353ad5aa0076c5bcbe44563ebfe8f7b977",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Seraphine:0",
+          "text": "Throw Rocket Grab when Seraphine steps up to poke or last-hit; she has no escape that dodges it, so a hit usually means a kill threat.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Seraphine", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "support:Blitzcrank:Seraphine:1",
+          "text": "Follow a grab with Power Fist for a knock up, then finish with Static Field at level 6 to silence her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 19,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 36, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 63,
+              "end": 75
+            },
+            { "kind": "keyword", "key": "silenced", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Blitzcrank:Seraphine:2",
+          "text": "Use Static Field to destroy the shield from Surround Sound before you go in on her or her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Seraphine-W", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Blitzcrank:Seraphine:3",
+          "text": "Stay behind minions when Seraphine has Beat Drop ready, because it slows you and can stop your approach.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 39, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Blitzcrank:Seraphine:4",
+          "text": "Her High Note and Beat Drop outrange your reach, so don't stand still in the open. Close the gap with Overdrive, then grab.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 18, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-W",
+              "start": 102,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b76fa784acfc67a7702f9a28f875db54845a6d6a18f919d6723fa2900380d9d8",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Sona:0",
+          "text": "Aim Rocket Grab at Sona when no minion is between you. She is fragile, and a pull takes her away from her partner.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sona", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Blitzcrank:Sona:1",
+          "text": "Follow a successful grab with Power Fist to knock Sona up and burst her down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-E",
+              "start": 30,
+              "end": 40
+            },
+            { "kind": "champion", "key": "Sona", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Blitzcrank:Sona:2",
+          "text": "Use Static Field when Sona has shielded her team with Aria of Perseverance. It destroys shields and silences her.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Sona-W", "start": 54, "end": 74 },
+            { "kind": "keyword", "key": "silenced", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Blitzcrank:Sona:3",
+          "text": "Sona out-pokes you, so stay behind minions when you are in her range and don't stand where Hymn of Valor can hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sona-Q", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f482e63085fd83f948a59ee71052bd9a74383730dbba73bc4887cce18da79399",
+      "tips": [
+        {
+          "id": "support:Blitzcrank:Thresh:0",
+          "text": "Stay behind minions when Thresh aims Death Sentence; it stops at the first unit it hits, so a minion in the line takes the hook instead of you.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Blitzcrank:Thresh:1",
+          "text": "Watch Thresh's long cast time on Death Sentence and step sideways as soon as it begins.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Blitzcrank:Thresh:2",
+          "text": "Aim Rocket Grab at Thresh when he walks up for a soul or to poke. Follow with Power Fist to knock him up.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Thresh", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Blitzcrank-E", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Blitzcrank:Thresh:3",
+          "text": "Use Static Field when Thresh or his partner has a shield from Dark Passage; it destroys shields and silences them.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Thresh-W", "start": 62, "end": 74 },
+            { "kind": "keyword", "key": "silenced", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Blitzcrank:Thresh:4",
+          "text": "Do not rush in with Overdrive when it is about to end; the slow afterward leaves you easy to hit with Flay.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-W",
+              "start": 20,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Thresh-E", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

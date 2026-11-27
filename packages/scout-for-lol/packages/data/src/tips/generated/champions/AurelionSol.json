@@ -1,0 +1,1219 @@
+{
+  "schemaVersion": 1,
+  "champion": "AurelionSol",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "4f30bff8a493134438bd2a3a14e8f40ecd1855a5a5230a561f3a52844d868a9e",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:general:0",
+          "text": "Hold Breath of Light on the same enemy champion for a full second to trigger its bonus burst, and keep it on them to gather Stardust.",
+          "refs": [
+            { "kind": "ability", "key": "AurelionSol-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:AurelionSol:general:1",
+          "text": "Drop Singularity on a wave or a trapped enemy; it drags them toward the center, and low-health enemies there die instantly.",
+          "refs": [
+            { "kind": "ability", "key": "AurelionSol-E", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:AurelionSol:general:2",
+          "text": "Use Astral Flight to reposition or chase, and keep channeling Breath of Light while you fly, since it has no cooldown then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 62,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:AurelionSol:general:3",
+          "text": "Get a takedown soon after hurting a champion and Astral Flight comes back almost at once, so chain fights.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 49,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:AurelionSol:general:4",
+          "text": "Falling Star lands after a delay, so aim it where enemies are heading or when they are stuck, such as inside Singularity.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 109,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:AurelionSol:general:5",
+          "text": "When your Stardust is full, Falling Star becomes The Skies Descend, which knocks up and slows. Save it for a team fight.",
+          "refs": [
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:AurelionSol:general:6",
+          "text": "Hit champions with your damaging abilities every chance you get. Stardust is permanent and makes all your abilities stronger.",
+          "refs": [],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:AurelionSol:general:7",
+          "text": "Don't start Astral Flight when you are stunned or rooted; you won't fly, and any hard crowd control during the flight knocks you down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 12,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:AurelionSol:combo:0",
+          "name": "Astral Flight beam chase",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "AurelionSol-W" },
+            { "kind": "ability", "key": "AurelionSol-Q" }
+          ],
+          "when": "When chasing a fleeing enemy or kiting around a fight.",
+          "whenRefs": [],
+          "text": "Fly with Astral Flight and channel Breath of Light during the flight. The beam has no cooldown or duration limit while you fly, so you keep burning the target.",
+          "textRefs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 9,
+              "end": 22
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 35,
+              "end": 50
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "614061ac1e1488b0813caaecefbc6f5bb37c7fe0877dd3bca5555ca5c9b09f0d",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Ahri:0",
+          "text": "Stay behind minions so Charm is hard to land; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:AurelionSol:Ahri:1",
+          "text": "Hold Singularity for when Ahri is charmed or dashes in close; she is easy to pin down in the black hole.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:AurelionSol:Ahri:2",
+          "text": "Fight her when Spirit Rush is on cooldown; she is much easier to catch and kill then.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:AurelionSol:Ahri:3",
+          "text": "Keep Breath of Light on Ahri to wear her down, but step aside from Orb of Deception, which passes through everything in its line.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "28170c51ac47d48585cf090279fd33a35442f1a4c2f103ffd22dd2bf40fef3bd",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Akali:0",
+          "text": "Put Singularity on the spot where Akali must stand to trade. It pulls her in and hurts her over time.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Akali", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:AurelionSol:Akali:1",
+          "text": "Use Astral Flight to get away when Akali jumps on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:AurelionSol:Akali:2",
+          "text": "Hit the smoke and the area around Akali with Breath of Light and Singularity. Area damage still hits her inside Twilight Shroud and shows where she is.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 34, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 45,
+              "end": 60
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 65,
+              "end": 76
+            },
+            { "kind": "ability", "key": "Akali-W", "start": 112, "end": 127 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:AurelionSol:Akali:3",
+          "text": "Keep Falling Star ready for Akali's dash. It stuns her where she lands, and she cannot dodge it easily once she is committed.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:AurelionSol:Akali:4",
+          "text": "Stay at long range and poke her with Breath of Light. She runs out of energy after a few Five Point Strikes.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 37,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b6d63a9f6b30e41a28e0979d5e8afbc9781393162c3cbb1656920eb25e603061",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Anivia:0",
+          "text": "Fight early, before Anivia has mana for Glacial Storm.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Anivia-R", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:AurelionSol:Anivia:1",
+          "text": "Do not fly in with Astral Flight straight into Crystallize; the wall knocks you aside. Go around it or wait for it to melt.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 19,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Anivia-W", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:AurelionSol:Anivia:2",
+          "text": "Sidestep Flash Frost; if it hits you, Frostbite will hurt a lot more, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Anivia-E", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:AurelionSol:Anivia:3",
+          "text": "Drop Singularity on Anivia when she stands still or walls; it drags her toward the center and burns her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Anivia", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:AurelionSol:Anivia:4",
+          "text": "Kill Anivia a second time after she turns into an egg; hit it fast with Breath of Light before she is reborn.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 72,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5197e6f3ed781d52eb3544376054545b676dca0c5e2a28d802e12e963957478f",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Aurora:0",
+          "text": "Cast Singularity on Aurora when she is cornered or walks into your minions. Enemies in the center die instantly at low health, so use it to finish her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:AurelionSol:Aurora:1",
+          "text": "Hold Falling Star until Aurora has used Across the Veil. Her invisibility is short, so aim where she will land and stun her there.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aurora-W", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:AurelionSol:Aurora:2",
+          "text": "Keep channeling Breath of Light on Aurora, since each full second adds a burst. Break it off when she is about to hit you with Twofold Hex.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 16,
+              "end": 31
+            },
+            { "kind": "champion", "key": "Aurora", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 127, "end": 138 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:AurelionSol:Aurora:3",
+          "text": "Use Astral Flight to dodge her Twofold Hex and The Weirding, then burn her down with Breath of Light. Knockdown or root stops the flight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "ability", "key": "Aurora-Q", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Aurora-E", "start": 47, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 85,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7329c334180ea0bf33a1d542a72b5ee48d624e92fdd42dadd9ad58c024b6b6da",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Cassiopeia:0",
+          "text": "Stay out of Cassiopeia's poison range and avoid long trades; Twin Fang hits very hard once she has poisoned you.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:AurelionSol:Cassiopeia:1",
+          "text": "Hold Astral Flight to escape or chase; Miasma grounds you, so don't fly into her clouds.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:AurelionSol:Cassiopeia:2",
+          "text": "Turn away as Petrifying Gaze goes off so you are slowed rather than stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 13,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:AurelionSol:Cassiopeia:3",
+          "text": "Keep hitting her with Breath of Light from long range; she must walk in to answer, and the beam hurts more the longer it stays on her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 22,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:AurelionSol:Cassiopeia:4",
+          "text": "Place Singularity where she stands to farm; she is dragged in and takes damage, so she has to move.",
+          "refs": [
+            { "kind": "ability", "key": "AurelionSol-E", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e5b590df5eeb4e2c7c9ae633e337a5925f0bd3bf35e046d80bbdf7c3893299f5",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Fizz:0",
+          "text": "Hold Falling Star until Fizz has used Playful, since he cannot be hit while balanced on it.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:AurelionSol:Fizz:1",
+          "text": "Keep Singularity ready for when Fizz jumps in; the black hole drags him and punishes a lone dive.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Fizz", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:AurelionSol:Fizz:2",
+          "text": "Stay at long range and keep Breath of Light on him; Fizz must close the gap and is slowed when he lands his own tools.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 28,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Fizz", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:AurelionSol:Fizz:3",
+          "text": "Do not stand in a line with minions you cannot escape from; Fizz walks through them with Nimble Fighter and Urchin Strike hits you quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 60, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Fizz-passive",
+              "start": 89,
+              "end": 103
+            },
+            { "kind": "ability", "key": "Fizz-Q", "start": 108, "end": 121 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:AurelionSol:Fizz:4",
+          "text": "Keep Astral Flight for escaping Chum the Waters when the fish hits; the shark takes a moment to arrive, so fly out before it erupts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Fizz-R", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "06bd050886cc86cdceebfb3a57d6106dd37b12c8b5977dc511a237c041c19566",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Malzahar:0",
+          "text": "Keep Breath of Light on Malzahar early, but stop when you see Call of the Void aimed at you. A silence cuts the beam off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 62, "end": 78 },
+            { "kind": "keyword", "key": "silenced", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:AurelionSol:Malzahar:1",
+          "text": "Malzahar's Void Shift cuts damage until he is hit. Start with a short poke to break it, then use your full damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 0, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:AurelionSol:Malzahar:2",
+          "text": "Don't fly at Malzahar with Astral Flight unless you can cover the gap, because Nether Grasp suppresses you.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 13, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 27,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Malzahar-R", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:AurelionSol:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions. When they die it spreads onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:AurelionSol:Malzahar:4",
+          "text": "Place Singularity where Malzahar stands to farm. It drags him toward the center.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 6,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "54ee8f37eb1fb8e8c4650ebdb6a44d6436d3291be29b731004d97fb1d1ee054a",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Orianna:0",
+          "text": "Keep Breath of Light on Orianna for full seconds, since each full second adds a burst of extra damage and builds your Stardust.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:AurelionSol:Orianna:1",
+          "text": "Orianna can only hit around her Ball. Stay out of its area and walk up when it is far from her.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:AurelionSol:Orianna:2",
+          "text": "Save Astral Flight for chasing a weakened Orianna. A kill soon after damaging her refunds most of its cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Orianna", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:AurelionSol:Orianna:3",
+          "text": "Avoid being near her Ball when she has Command: Shockwave ready. It stuns and pulls you in, so stay out of its short range.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 39, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:AurelionSol:Orianna:4",
+          "text": "Drop Singularity on her when she is stuck in the lane or pinned by a fight, so she takes damage while being dragged inward.",
+          "refs": [
+            { "kind": "ability", "key": "AurelionSol-E", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:AurelionSol:Orianna:5",
+          "text": "Her Command: Dissonance field slows you, so don't chase through it. Fly around it or wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Astral Flight lets Breath of Light channel freely to burn Orianna while chasing or kiting her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 0,
+              "end": 13
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 19,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Orianna", "start": 58, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f562bf5fc5c9aa01813b6e526cda9eb3a865df436679bb6e7d62365de5f0d475",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Ryze:0",
+          "text": "Stay out of Spell Flux range when you can. A Flux-marked target lets Ryze deal big Overload damage and root you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Ryze", "start": 69, "end": 73 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 83, "end": 91 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:AurelionSol:Ryze:1",
+          "text": "Save Astral Flight to dash away after Ryze uses Rune Prison. It also lets you keep Breath of Light going while you move.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Ryze", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Ryze-W", "start": 48, "end": 59 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 83,
+              "end": 98
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:AurelionSol:Ryze:2",
+          "text": "Land Falling Star on Ryze when he is rooted or busy with a portal. A stun also cancels his Realm Warp.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 },
+            { "kind": "ability", "key": "Ryze-R", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:AurelionSol:Ryze:3",
+          "text": "Put Singularity on Ryze when he stands still to cast. It drags him inward and keeps him in your damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Ryze", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ceba2e2d4a55ea3604f044490a6517b8bbc55cb63b9c4b0cd6df843af9d0f34c",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Sylas:0",
+          "text": "Keep Singularity on Sylas when he dashes in. It drags him toward the center, and he takes damage the whole time.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:AurelionSol:Sylas:1",
+          "text": "Hold Falling Star for when Sylas lunges at you or you can see where he is going to land. It stuns him, and the star lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:AurelionSol:Sylas:2",
+          "text": "Hold Breath of Light on Sylas while you stay out of his reach. Each full second of breath hits him with a burst of bonus damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:AurelionSol:Sylas:3",
+          "text": "Use Astral Flight to get away when Sylas has Abduct ready. It only works if you are not caught by it first, so fly before he lands the pull.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Sylas", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Astral Flight's beam chase keeps burning Sylas when he dashes in and out with Abscond.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 0,
+              "end": 13
+            },
+            { "kind": "champion", "key": "Sylas", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8fdf973a43418d3bade4a9575740db26090c8425503e2d385d021562e89d79b6",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:TwistedFate:0",
+          "text": "Keep the beam from Breath of Light on Twisted Fate while he shuffles Pick a Card; the Gold Card stun is the thing to watch for.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 19,
+              "end": 34
+            },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 38,
+              "end": 50
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 69,
+              "end": 80
+            },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:AurelionSol:TwistedFate:1",
+          "text": "Put Singularity where Twisted Fate will stand when he trades. It pulls him in and wears down his health.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:AurelionSol:TwistedFate:2",
+          "text": "When Destiny goes off, expect Twisted Fate to appear nearby. Stay near your lane or your team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:AurelionSol:TwistedFate:3",
+          "text": "Use Astral Flight to get away from Twisted Fate. Do it before he has a card ready, as being stunned in the air stops your flight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 35,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cfc933e22954e3163414d809fffb73cab8667a717cf37445cb157413d5891d14",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Viktor:0",
+          "text": "Don't stand in Gravity Field; staying inside slows you and then stuns you, so step out right away.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:AurelionSol:Viktor:1",
+          "text": "Hold Breath of Light until Viktor is committed or out of position, since channeling it keeps you rooted in place for his Hextech Ray.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Viktor", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Viktor-E", "start": 121, "end": 132 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:AurelionSol:Viktor:2",
+          "text": "Place Singularity where Viktor will have to stand to last-hit; it drags him toward the center while it ticks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 6,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Viktor", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:AurelionSol:Viktor:3",
+          "text": "Use Falling Star on Viktor when Gravity Field is on cooldown or he has just used it; the stun makes it hard for him to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Viktor-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:AurelionSol:Viktor:4",
+          "text": "Fight Viktor with Astral Flight ready; it gets you in and out and a quick takedown refunds most of its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 18,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:AurelionSol:Viktor:5",
+          "text": "Break line of sight before Arcane Storm lands; it follows whoever it hit, so keep moving away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "60144d89b3dc6e51824677c6339b92b363415406fea699ecbbd54baf6a59cd0d",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Yasuo:0",
+          "text": "Aim Singularity where Yasuo will stand when he dashes in; the black hole drags him toward the center, and it hurts more as it kills low-health targets.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 4,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:AurelionSol:Yasuo:1",
+          "text": "Don't rely on Breath of Light to hit him from range when he has Wind Wall ready; the wall blocks projectiles, so wait for it to be used.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 14,
+              "end": 29
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 64, "end": 73 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:AurelionSol:Yasuo:2",
+          "text": "Stay off Yasuo when he has two Steel Tempest stacks; his whirlwind knocks you up, so step sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:AurelionSol:Yasuo:3",
+          "text": "Use Astral Flight to get away from Yasuo's dash-ins, and keep breathing on him while you fly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:AurelionSol:Yasuo:4",
+          "text": "Falling Star stuns, so land it on Yasuo when he commits to a trade. Cast it early, because it lands after a delay.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 13, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "87859a960d427e4ad039832a50e4db8bf05550695cb83621ba81c53848115669",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Yone:0",
+          "text": "Place Singularity on Yone when he walks up to trade; he gets dragged toward the center and can't easily slip out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 6,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:AurelionSol:Yone:1",
+          "text": "Keep Breath of Light on Yone from long range, and keep it going so the bonus burst keeps landing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 5,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:AurelionSol:Yone:2",
+          "text": "Hold Astral Flight to get away from Yone's all-in, or to line up Breath of Light once you've hurt him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 65,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:AurelionSol:Yone:3",
+          "text": "Stay out of the line of his Fate Sealed at level 6; it stuns you and pulls you to him.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 28, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:AurelionSol:Yone:4",
+          "text": "Use Falling Star on Yone when he is stuck in a fight or trying to chase; it stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:AurelionSol:combo:0",
+          "note": "Yone's spirit form and dashes make him slippery, but the unlimited-duration beam keeps burning him in flight.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 0, "end": 4 }]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7b99897dffd239b809829c6ce3fd9b1a4d39c60b60f90bee8cfdc3c6531457ac",
+      "tips": [
+        {
+          "id": "middle:AurelionSol:Zed:0",
+          "text": "Hold Falling Star until Zed commits with Death Mark or walks into range; it stuns him and he can't dodge once it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Zed-R", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:AurelionSol:Zed:1",
+          "text": "Cast Singularity on yourself or where Zed will land; it drags him toward the center and deals damage over time, so he can't easily stay and trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 5,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Zed", "start": 38, "end": 41 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:AurelionSol:Zed:2",
+          "text": "Use Breath of Light to poke Zed when his Living Shadow is on cooldown, and keep your distance so his Razor Shuriken is hard to land.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 4,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Zed", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Zed-W", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Zed-Q", "start": 101, "end": 115 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:AurelionSol:Zed:3",
+          "text": "Save Astral Flight to escape once Zed uses Death Mark on you; it moves you out of his reach after the dash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Zed", "start": 34, "end": 37 },
+            { "kind": "ability", "key": "Zed-R", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

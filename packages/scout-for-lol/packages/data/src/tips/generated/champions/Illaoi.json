@@ -1,0 +1,882 @@
+{
+  "schemaVersion": 1,
+  "champion": "Illaoi",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "76d9693c441aee4824b10c3618b9bc58f1f9aad09ad7bf2d9aadff62294e41f6",
+      "tips": [
+        {
+          "id": "top:Illaoi:general:0",
+          "text": "Walk up and use Harsh Lesson on the enemy champion when Tentacles are near. It makes them slam the target, and they heal you when they hit a champion.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Illaoi:general:1",
+          "text": "Fight near Tentacles, not away from them. Without them Illaoi loses much of her power.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Illaoi:general:2",
+          "text": "Use Test of Spirit on an enemy champion when you want a fight. Once their spirit dies or they run too far, they are slowed and marked.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Illaoi:general:3",
+          "text": "Whittle the enemy down before using Test of Spirit. The spirit copies their current health, so it dies faster.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Illaoi:general:4",
+          "text": "Aim Tentacle Smash at where the enemy will be, because it takes a moment to swing. It also grows stronger as you rank it up.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Illaoi:general:5",
+          "text": "Use Leap of Faith to follow up an engage or when the enemy jumps on you. Avoid being the first one into a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-R", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Illaoi:general:6",
+          "text": "Once you use Leap of Faith, trade freely. Harsh Lesson has a short cooldown and your Tentacles can't be targeted and slam faster.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-R", "start": 13, "end": 26 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Illaoi:combo:0",
+          "name": "Free Harsh Lesson mid-cast",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Illaoi-Q" },
+            { "kind": "ability", "key": "Illaoi-W" }
+          ],
+          "when": "When you are low on mana or want to hide the order of your abilities in a trade.",
+          "whenRefs": [],
+          "text": "Harsh Lesson can be used during another ability's cast time. Mana is spent at the end of the cast, so you can sometimes get both for the price of one.",
+          "textRefs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 0, "end": 12 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "772e635737cdf6969700c37912776e1c46e8c95639c91e197f89d90f0b651d7c",
+      "tips": [
+        {
+          "id": "top:Illaoi:Aatrox:0",
+          "text": "Fight next to terrain so Tentacles can slam Aatrox when you hit him with Harsh Lesson.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 73, "end": 85 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Illaoi:Aatrox:1",
+          "text": "Aim Tentacle Smash where Aatrox will walk, not where he stands. His slow Infernal Chains pulls make him hold still, so punish that.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 73, "end": 88 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Illaoi:Aatrox:2",
+          "text": "Leave the Infernal Chains circle by walking toward the sides or at Aatrox, or you get pulled back and hurt again.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Aatrox", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Illaoi:Aatrox:3",
+          "text": "Use Test of Spirit on Aatrox when he is already hurt, since the spirit shares his health and dies faster.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Illaoi:Aatrox:4",
+          "text": "Aatrox's The Darkin Blade is telegraphed; step out of the edge so you are not knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ec053ad0dc27623483caf6b8f870499874fb58856157fb8507e8d3f2b718a5e5",
+      "tips": [
+        {
+          "id": "top:Illaoi:Briar:0",
+          "text": "Aim Test of Spirit at Briar before she gets close. Her Blood Frenzy forces her to attack the nearest enemy, so she can't easily dodge or retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Illaoi:Briar:1",
+          "text": "Fight Briar next to your Tentacles. Harsh Lesson makes them slam at her and heals you when they hit.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Illaoi:Briar:2",
+          "text": "Don't stand by a wall when Briar charges Chilling Scream; if it is fully charged, it knocks you into the wall and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Briar-E", "start": 41, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Illaoi:Briar:3",
+          "text": "Save Leap of Faith for when Briar dives on you. It damages her and spawns more Tentacles around you.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "623a9dd19216a51c6721845b9a9d1681477cd13e3823ba31011c0151a5df9c19",
+      "tips": [
+        {
+          "id": "top:Illaoi:Darius:0",
+          "text": "Fight Darius next to terrain so your Tentacles can join in with Harsh Lesson and heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Illaoi:Darius:1",
+          "text": "Aim Tentacle Smash at Darius as he walks up; it is long range and gets you the first hit.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Illaoi:Darius:2",
+          "text": "Stay out of Apprehend's range when it is ready, since it pulls you off your Tentacles.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Illaoi:Darius:3",
+          "text": "Use Test of Spirit when Darius is hurt; the spirit takes damage for him and the Tentacles then keep hitting him.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Illaoi:Darius:4",
+          "text": "Back off when Darius has many Hemorrhage stacks, because Noxian Guillotine then hits very hard.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 14, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 30,
+              "end": 40
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 57, "end": 74 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "855c9e19e4ad2ffd5e2f7f249ff5b07846aaf1bfc8904c305a103a688676972c",
+      "tips": [
+        {
+          "id": "top:Illaoi:Fiora:0",
+          "text": "Don't throw Test of Spirit when Fiora's Riposte is ready; she can turn it into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Fiora", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Fiora-W", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Illaoi:Fiora:1",
+          "text": "Bait Riposte with Tentacle Smash first, then use Test of Spirit once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Illaoi:Fiora:2",
+          "text": "Fight near your Tentacles, and kill the ones she can reach; they make her short trades much weaker.",
+          "refs": [],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Illaoi:Fiora:3",
+          "text": "Watch for Lunge when a Vital faces you. She jumps in, so keep Harsh Lesson ready to answer.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 62, "end": 74 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "23df3f7d60ecb9c969d3f5f0efd8c7eb32e39f9b170ec83ec2cf6fac77bc755a",
+      "tips": [
+        {
+          "id": "top:Illaoi:Gangplank:0",
+          "text": "Stay close to walls and fight near Tentacles; they hit hard and heal you when they strike champions.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Illaoi:Gangplank:1",
+          "text": "Use Test of Spirit on Gangplank to pull his spirit out. Kill it and he is slowed and marked, drawing Tentacles.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Gangplank", "start": 22, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Illaoi:Gangplank:2",
+          "text": "Gangplank can cleanse your slow with Remove Scurvy, so bait it out before committing to a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Illaoi:Gangplank:3",
+          "text": "Hit Powder Kegs with a basic attack to defuse them. They only explode if Gangplank breaks them.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Illaoi:Gangplank:4",
+          "text": "Watch your health after level 6, since Cannon Barrage can hit you from anywhere. Do not sit low in the open.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba2683b27a7af187d804f457239d5684380b898b55a93dd5b68417dff2e7f17c",
+      "tips": [
+        {
+          "id": "top:Illaoi:Garen:0",
+          "text": "Fight beside your Tentacles. Pull Garen toward them before using Harsh Lesson so they slam him too.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Illaoi:Garen:1",
+          "text": "Use Test of Spirit on Garen only when you can fight back. His Decisive Strike clears the slow and silences you.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Garen-Q", "start": 62, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 93 },
+            { "kind": "keyword", "key": "silenced", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Illaoi:Garen:2",
+          "text": "Keep Garen's health from dropping you low; Demacian Justice finishes low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Garen-R", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Illaoi:Garen:3",
+          "text": "Stay out of Judgment's spin range. Fight beside your Tentacles and minions so the damage is spread.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbf2fd5ff48f80fe6306c2198b2e6ac050fe4a91dd72db51a51b4ba29f8bbf63",
+      "tips": [
+        {
+          "id": "top:Illaoi:Jayce:0",
+          "text": "Make sure Tentacles are near before you fight Jayce. Use Harsh Lesson to command them to slam him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Illaoi:Jayce:1",
+          "text": "Sidestep Shock Blast; it stops at the first enemy it hits, so stand behind a minion to block it.",
+          "refs": [],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Illaoi:Jayce:2",
+          "text": "Land Test of Spirit when Jayce is at range, then fight near your Tentacles. If the spirit dies he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Illaoi:Jayce:3",
+          "text": "Jayce can knock you away with Thundering Blow after you leap in, so use Tentacle Smash first to keep him in your Tentacles' reach.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Illaoi:Jayce:4",
+          "text": "Do not take his poke for free early on. Back off if he gets ahead.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e05210aba8df5deef53708c5743584824e7c8b24fb80c4e8edaf7d4d3065130",
+      "tips": [
+        {
+          "id": "top:Illaoi:KSante:0",
+          "text": "Hold Test of Spirit until K'Sante walks up; if the spirit dies or he runs out of range, he is slowed and Tentacles chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "KSante", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Illaoi:KSante:1",
+          "text": "Fight near terrain so Tentacles can join. Use Harsh Lesson to make them slam at K'Sante.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 46, "end": 58 },
+            { "kind": "champion", "key": "KSante", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Illaoi:KSante:2",
+          "text": "Aim Tentacle Smash at where K'Sante is walking, not where he stands. The cast is slow, and he can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Illaoi:KSante:3",
+          "text": "Stay out of his Ntofo Strikes range when he has a stack. The second cast pulls you in and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Illaoi:KSante:4",
+          "text": "When he goes All Out with Leap of Faith's help, fight back. He loses much of his health and defenses, so he is easier to kill.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Illaoi-R", "start": 26, "end": 39 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a0a2dabbd64b102058606c13a127b3fd8507222d687712e43f9ceb644672c426",
+      "tips": [
+        {
+          "id": "top:Illaoi:Malphite:0",
+          "text": "Fight Malphite near Tentacles. Use Tentacle Smash or Harsh Lesson there so they slam him too.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 35, "end": 49 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Illaoi:Malphite:1",
+          "text": "Malphite's Unstoppable Force knocks you up, so stay away from him at level 6 when he is close. Don't clump with your Tentacles' reach out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Illaoi:Malphite:2",
+          "text": "Malphite's Ground Slam cuts your Attack Speed, so don't chase into it; let your Tentacles do the work.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-E", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Illaoi:Malphite:3",
+          "text": "Test of Spirit is best used when he is already hurt, since the spirit copies his current health and is easier to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e2c534413eef2c26cb98f82376247ba8edb1820b30e366491728a850cb9713f1",
+      "tips": [
+        {
+          "id": "top:Illaoi:Mordekaiser:0",
+          "text": "Keep Tentacles close when you fight Mordekaiser. Harsh Lesson makes nearby Tentacles slam him as you strike.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 36,
+              "end": 47
+            },
+            { "kind": "ability", "key": "Illaoi-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Illaoi:Mordekaiser:1",
+          "text": "Don't group up with allies for Leap of Faith to hit. Save it for when Mordekaiser commits.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-R", "start": 31, "end": 44 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Illaoi:Mordekaiser:2",
+          "text": "Step out of Death's Grasp; if you're pulled, you're dragged away from your Tentacles.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 12,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Illaoi:Mordekaiser:3",
+          "text": "Stay away from Mordekaiser once he has Darkness Rise running. It keeps hurting you while you stand near him.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 15,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 39,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Illaoi:Mordekaiser:4",
+          "text": "Mordekaiser's Realm of Death cuts you off from your Tentacles, so keep your distance and don't give him an easy target.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 0, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 14,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bda4aee1adf3c0db5b601f108696c6a7a368e09dc9ddb6aff8483669e47a3d42",
+      "tips": [
+        {
+          "id": "top:Illaoi:Rumble:0",
+          "text": "Fight Rumble near terrain so Tentacles spawn. Use Harsh Lesson to make them slam him and heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Illaoi:Rumble:1",
+          "text": "Hit Rumble with Test of Spirit when he is Overheated. He cannot cast spells, so he cannot easily escape.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Illaoi:Rumble:2",
+          "text": "Step out of Flamespitter's cone while it burns. Close the distance with Harsh Lesson instead of walking through the flames.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Illaoi:Rumble:3",
+          "text": "Leave The Equalizer's burning area quickly; it slows you and hurts for as long as you stay in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Illaoi:Rumble:4",
+          "text": "Aim Tentacle Smash where Rumble will be standing after he is slowed by Electro Harpoon.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rumble", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Rumble-E", "start": 71, "end": 86 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fb101438626176c85dfd4e99e3d2c67ea9fdcef9d77b0418610bf5d99728cd99",
+      "tips": [
+        {
+          "id": "top:Illaoi:Sion:0",
+          "text": "Fight beside your Tentacles, and use Harsh Lesson to pull them onto Sion. Without Tentacles you lose most of your power.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 37, "end": 49 },
+            { "kind": "champion", "key": "Sion", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Illaoi:Sion:1",
+          "text": "Stay out of the line of a charging Decimating Smash. If you are hit after a long charge, you are stunned and lose the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 35, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 104 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Illaoi:Sion:2",
+          "text": "Use Tentacle Smash on Sion when he is slowed or charging, since he stands still while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Illaoi:Sion:3",
+          "text": "Do not chase Sion once he dies; he comes back and hits hard. Back off and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b5563a12d1d5fb1f61edb5d0eee74806c4480e2462f484c4903c943bcf3ac106",
+      "tips": [
+        {
+          "id": "top:Illaoi:Teemo:0",
+          "text": "Walk straight at Teemo with Harsh Lesson. It closes the gap with a leap and calls your Tentacles in.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Illaoi:Teemo:1",
+          "text": "Fight near terrain, where your Tentacles spawn. Do the same when Teemo is invisible, and keep your Tentacles close.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Illaoi:Teemo:2",
+          "text": "Use Test of Spirit on Teemo when he is close to you. Spirit damage echoes to him, and he is slowed if he leaves its range.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Illaoi:Teemo:3",
+          "text": "Look out for mushrooms from Noxious Trap before you walk into bushes or choke points. They slow you and reveal you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Illaoi:Teemo:4",
+          "text": "Attack mushrooms to destroy them; only champion basic attacks can.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Illaoi:Teemo:5",
+          "text": "Expect his Blinding Dart to make your Tentacle Smash easy to dodge. Stand still when it's coming and your attacks will still land.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 38, "end": 52 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e74e5c03b999dd9c5b9dc67bfc3c1e7a1d2cfdfdf9971b88f25ea73b8062ed99",
+      "tips": [
+        {
+          "id": "top:Illaoi:Vayne:0",
+          "text": "Pull Vayne's spirit with Test of Spirit when she steps up to attack; Tentacles then chase her and she is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Illaoi:Vayne:1",
+          "text": "Fight near Tentacles, and kill Vayne's spirit so she is slowed and marked.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Illaoi:Vayne:2",
+          "text": "Do not stand beside terrain when Vayne has Condemn ready; a wall hit stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Vayne-E", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Illaoi:Vayne:3",
+          "text": "Aim Tentacle Smash where Vayne will Tumble, not where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Illaoi:Vayne:4",
+          "text": "Use Harsh Lesson to leap onto Vayne when she is out of range; it also commands nearby Tentacles to slam her.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Vayne", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b53dfd688e793de2b1e429be8ea27f49726b7bf349477ba6dc5361a60d669860",
+      "tips": [
+        {
+          "id": "top:Illaoi:Yone:0",
+          "text": "Aim Test of Spirit at Yone when he walks up to trade; fighting beside your Tentacles is where you win.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Illaoi:Yone:1",
+          "text": "Land Tentacle Smash in the path of Yone's dash in; his Mortal Steel is a short thrust and he must come close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-Q", "start": 55, "end": 67 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Illaoi:Yone:2",
+          "text": "Use Harsh Lesson to leap onto Yone when he is near your Tentacles, so they slam him as well.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Illaoi:Yone:3",
+          "text": "Watch for Fate Sealed; it stuns you and pulls you out of position, away from your Tentacles.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-R", "start": 10, "end": 21 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 31 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Illaoi:Yone:4",
+          "text": "Yone gets a shield from Spirit Cleave when it hits, so don't count on a quick burst; keep your Tentacles hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

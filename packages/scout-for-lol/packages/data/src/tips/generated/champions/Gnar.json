@@ -1,0 +1,1007 @@
+{
+  "schemaVersion": 1,
+  "champion": "Gnar",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "76be69fa9e1947ccea412eb49e582d32172d8d9c52ce93816d52f6c7cb993339",
+      "tips": [
+        {
+          "id": "top:Gnar:general:0",
+          "text": "Throw Boomerang Throw at long range to poke, then step toward the returning boomerang to catch it and get the ability back sooner.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gnar:general:1",
+          "text": "Line up Boomerang Throw so it hits more than one enemy; targets hit on the way back take less damage, and each enemy is hit only once per pass.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gnar:general:2",
+          "text": "Hit the same enemy three times with attacks or abilities to trigger Hyper for bonus damage and a burst of speed. It works best against high-health targets.",
+          "refs": [],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gnar:general:3",
+          "text": "Use Hop to jump onto a minion or enemy and bounce further. That makes it an escape, or a way to slow an enemy you want to chase.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gnar:general:4",
+          "text": "Watch your Rage bar. Fighting builds it, and at full Rage your next ability turns you into Mega Gnar, so choose a fight where you want that to happen.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gnar:general:5",
+          "text": "After Mega Gnar ends you are tired and can't gain Rage for a while. Play safe until it passes.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gnar:general:6",
+          "text": "As Mega Gnar, use Wallop on enemies who are close to you. It stuns them and deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Gnar:general:7",
+          "text": "Fight with a wall behind your target when you cast GNAR!. Enemies thrown into the wall are stunned and take extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gnar:general:8",
+          "text": "As Mega Gnar, walk over your Boulder Toss boulder after it lands to pick it up and get most of the cooldown back.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Gnar:combo:0",
+          "name": "Hop bounce into Boomerang",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Gnar-E" },
+            { "kind": "ability", "key": "Gnar-Q" }
+          ],
+          "when": "When engaging a target in mini form and you want to hit the boomerang during the dash.",
+          "whenRefs": [],
+          "text": "Hop lets you cast Boomerang Throw in mid-air. Bounce off the enemy and throw the boomerang at once so the slow lands as you close in.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "b7acbc31d9b4d0d04e71cca559658b06156f60b77da344390017b233b2a7490d",
+      "tips": [
+        {
+          "id": "top:Gnar:Aatrox:0",
+          "text": "Poke with Boomerang Throw from long range while he walks up; it slows him, and catching it on the way back shortens its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gnar:Aatrox:1",
+          "text": "Mini Gnar outranges Aatrox, so keep your distance and attack from there. Aatrox has to close the gap, so hit him as he steps in.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Aatrox", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Aatrox", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Gnar:Aatrox:2",
+          "text": "Walk out of Infernal Chains sideways or toward him, since the pull only happens if you stay in the area.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gnar:Aatrox:3",
+          "text": "Hop away from The Darkin Blade; it has long, telegraphed hit zones. Leaping out of one costs him a lot of cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Gnar:Aatrox:4",
+          "text": "Fight near a wall once you turn into Mega Gnar; GNAR! stuns anyone knocked into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Gnar-R", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gnar:Aatrox:5",
+          "text": "Hit him three times with Hyper to deal bonus damage based on his max health and gain speed.",
+          "refs": [],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e4aec9ee1804a32e3295cec5b0038499be088e9b13fcfc63e4504f92e89ce7c9",
+      "tips": [
+        {
+          "id": "top:Gnar:Briar:0",
+          "text": "Throw Boomerang Throw from long range to slow Briar and poke her down. Stay out of her leap range so she can't reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Briar", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Gnar:Briar:1",
+          "text": "Mini Gnar outranges Briar, so keep your distance and hit her with Hyper's third-hit damage as she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Gnar:Briar:2",
+          "text": "Use Hop on Briar or a minion to bounce away. The bounce slows her if you land on her, which helps you escape her stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 11, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Gnar:Briar:3",
+          "text": "Stand near a wall before you fight, so GNAR! can throw her into it if she dives onto you and leave her stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Gnar:Briar:4",
+          "text": "Briar charges at the nearest champion once her frenzy starts. Stay close to your minions and your team so her forced attacks hit something other than you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "28a68252d2e66ba8cb1d8331fa5d971749b476a5ceb8d97b37e58ebd955282f2",
+      "tips": [
+        {
+          "id": "top:Gnar:Darius:0",
+          "text": "Throw Boomerang Throw from max range and catch it on its return; you out-range Darius and get the cooldown back sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Gnar:Darius:1",
+          "text": "Stay out of Apprehend range; when it is on cooldown, poke Darius freely.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Darius", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gnar:Darius:2",
+          "text": "Don't let Darius stack Hemorrhage by trading in melee. Back away from his Decimate, and hit him after the swing.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 10, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 23,
+              "end": 33
+            },
+            { "kind": "ability", "key": "Darius-Q", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Gnar:Darius:3",
+          "text": "Use Hop to bounce away from Darius when he gets close; Crippling Strike slows hard, so keep out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Darius-W", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Gnar:Darius:4",
+          "text": "As Mega Gnar, use GNAR! near a wall to stun Darius, who has few ways to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Gnar-R", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Darius", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gnar:Darius:5",
+          "text": "Stay healthy: low health lets Noxian Guillotine finish you, especially against a stacked Hemorrhage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 30, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 89,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9902606ba730b8a7e45d2da0a08f0853679bd23e5f4ef58eb09b0c8e69475a15",
+      "tips": [
+        {
+          "id": "top:Gnar:Fiora:0",
+          "text": "Don't use Hop or Wallop on Fiora when Riposte is ready; she turns your stun into hers.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Fiora-W", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Gnar:Fiora:1",
+          "text": "Keep Fiora at range with Boomerang Throw while mini; you outrange her and the slow blunts her Lunge.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Gnar:Fiora:2",
+          "text": "Watch where her Vital appears; she tries to Lunge in from that side, so step away and punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Gnar:Fiora:3",
+          "text": "Use GNAR! near a wall to stun Fiora, but only once Riposte has been spent.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Fiora", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Fiora-W", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "666419b361dcee320cccb34b305fb4fdac67ab65557de7252229e501453b1279",
+      "tips": [
+        {
+          "id": "top:Gnar:Gangplank:0",
+          "text": "Throw Boomerang Throw at Gangplank from long range, then catch it to get the cooldown back.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Gnar:Gangplank:1",
+          "text": "Stay out of Powder Keg blasts; they slow you and hurt. Gangplank can only blow up a keg he has placed, so back off from kegs near you.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Gangplank", "start": 55, "end": 64 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Gnar:Gangplank:2",
+          "text": "Attack a keg yourself to defuse it before Gangplank can use it in a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Gnar:Gangplank:3",
+          "text": "Use Hop to dodge Gangplank's follow-up, and bounce off a minion to travel further.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gnar:Gangplank:4",
+          "text": "Line up GNAR! so Gangplank hits a wall; he is stunned and takes more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 8, "end": 13 },
+            { "kind": "champion", "key": "Gangplank", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gnar:Gangplank:5",
+          "text": "Watch for Gangplank at level 6; Cannon Barrage can hit you from anywhere on the map when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba849b29672dec7d3b9378c833c9cce0925de5fec6ba2448711cba7a37b02a46",
+      "tips": [
+        {
+          "id": "top:Gnar:Garen:0",
+          "text": "Poke Garen with Boomerang Throw from long range. Slowing him makes it hard for him to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gnar:Garen:1",
+          "text": "Garen can remove your slow with Decisive Strike and then silence you. Keep distance from him when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "silenced", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gnar:Garen:2",
+          "text": "Hop away when Garen spins with Judgment. Don't stay beside him, because the spin hurts and cuts your Armor.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Garen-E", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gnar:Garen:3",
+          "text": "Garen heals quickly if he goes unhit for a while. Keep hitting him from range so he can't heal back up.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gnar:Garen:4",
+          "text": "As Mega Gnar, use GNAR! to knock Garen into a wall for a stun; Wallop also stuns, so use it to hold him in place.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Gnar-R", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Garen", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Gnar:Garen:5",
+          "text": "Keep your health up when Garen's Demacian Justice is ready. It deals heavy damage to low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Garen-R", "start": 33, "end": 49 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2cf4e87fe1c4b8cc5df40ab4d132dadbbb06fc457f6c3a51898533ef854f8d85",
+      "tips": [
+        {
+          "id": "top:Gnar:Jayce:0",
+          "text": "Dodge Shock Blast and catch your Boomerang Throw on its return to cut its cooldown.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gnar:Jayce:1",
+          "text": "Jayce out-ranges you in cannon form. Hop onto a minion or him to close in and slow him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gnar:Jayce:2",
+          "text": "Pull Jayce toward a wall with GNAR! when you are Mega; the stun makes him easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gnar-R", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gnar:Jayce:3",
+          "text": "Hit Jayce three times in a row to trigger Hyper for extra damage and a burst of speed.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Gnar:Jayce:4",
+          "text": "Do not fight Jayce when his Thundering Blow is ready and you are near him; it knocks you back and hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 13, "end": 18 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef37ff54078dded1a62ade21f981d87b43a7e978a40130383f3b91fa81846350",
+      "tips": [
+        {
+          "id": "top:Gnar:KSante:0",
+          "text": "Poke with Boomerang Throw from long range and walk to catch it on the way back; K'Sante has to close the gap to answer.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KSante", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Gnar:KSante:1",
+          "text": "Stay out of K'Sante's reach while Ntofo Strikes is ready. Two hits make it pull you in and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "KSante-Q", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gnar:KSante:2",
+          "text": "Keep Wallop and Hyper hits spread across the fight. Every third hit on K'Sante deals extra damage and gives you a burst of speed to disengage.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gnar:KSante:3",
+          "text": "Do not stand near a wall when K'Sante has All Out. He can pull you over it, hit you again and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "KSante-R", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Gnar:KSante:4",
+          "text": "When K'Sante goes All Out he becomes much squishier. Trade hard then, and use Hop to chase or escape.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gnar:KSante:5",
+          "text": "Use your Mega Gnar ultimate to stun K'Sante into a wall, but only once you have full Rage.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e7082014cece4cdf4388e6cc1c3accffe1954a2388260a7d7ead504a71ccf7d",
+      "tips": [
+        {
+          "id": "top:Gnar:Malphite:0",
+          "text": "Poke Malphite with Boomerang Throw from long range as mini. Catching it brings the cooldown back faster, so keep your distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Gnar:Malphite:1",
+          "text": "Don't trade while Malphite's Granite Shield is up, because his Armor is far higher then. Poke him once the shield is broken.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 18, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 29,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Gnar:Malphite:2",
+          "text": "Stay out of Malphite's reach at level 6. Unstoppable Force can't be stopped, so keep Hop ready to move away from his landing.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malphite-R", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gnar:Malphite:3",
+          "text": "Stay away from Malphite's slowing Seismic Shard, which also speeds him up. Don't get caught while slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gnar:Malphite:4",
+          "text": "Fight near terrain when you transform, so GNAR! can knock Malphite into a wall and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 42, "end": 47 },
+            { "kind": "champion", "key": "Malphite", "start": 58, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3bcb6f62b7af7f84b52d1b82f4bbcf4f1850c900211e1e7e5b96b37e17a28992",
+      "tips": [
+        {
+          "id": "top:Gnar:Mordekaiser:0",
+          "text": "Keep your distance from Mordekaiser. Mini Gnar has long range, so poke him with Boomerang Throw and catch it to shorten its cooldown.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Gnar", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gnar:Mordekaiser:1",
+          "text": "Stay out of a straight line from Mordekaiser, because Death's Grasp pulls you into his Darkness Rise aura.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 54,
+              "end": 67
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 87,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Gnar:Mordekaiser:2",
+          "text": "Use Hop to get away from him after a trade, and bounce off a minion to travel further.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gnar:Mordekaiser:3",
+          "text": "Fight near walls when you are Mega: GNAR! stuns him if he hits one.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 36, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gnar:Mordekaiser:4",
+          "text": "Do not hit a shielded Mordekaiser with everything; wait until his Indestructible shield fades.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 22,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 66,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gnar:Mordekaiser:5",
+          "text": "Save Hop to escape once Realm of Death takes you in; your team cannot reach you there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 24,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "37f80d548d628cf0426785c6dfc9c1da21822a02283288151016e0ae538a572d",
+      "tips": [
+        {
+          "id": "top:Gnar:Rumble:0",
+          "text": "Poke with Boomerang Throw from long range and catch it to cut its cooldown. Mini Gnar outranges Rumble.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gnar", "start": 81, "end": 85 },
+            { "kind": "champion", "key": "Rumble", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Gnar:Rumble:1",
+          "text": "Fight Rumble when he Overheats; he can't cast spells then.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gnar:Rumble:2",
+          "text": "Stand near a wall when you turn Mega, then use GNAR! to throw Rumble into it for a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 47, "end": 52 },
+            { "kind": "champion", "key": "Rumble", "start": 62, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Gnar:Rumble:3",
+          "text": "Don't stand in Flamespitter's cone or The Equalizer's fire; step out sideways, because they burn max Health and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Rumble-R", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gnar:Rumble:4",
+          "text": "Use Hop to dodge Electro Harpoon and jump in once it's spent.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2b6254bc62da0d5aa655c71f7f2cc261e27323aa3f99d23ddfee76b9af9b7990",
+      "tips": [
+        {
+          "id": "top:Gnar:Sion:0",
+          "text": "Poke Sion with Boomerang Throw from range and catch it to cut its cooldown; his slow, short-range tools can't reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Gnar:Sion:1",
+          "text": "Watch Sion's charge: when he starts Decimating Smash, walk sideways or use Hop to leave the line before he releases.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Sion-Q", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gnar:Sion:2",
+          "text": "Don't trade while Sion's Soul Furnace shield is up; wait for it to fade or break before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Sion-W", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Gnar:Sion:3",
+          "text": "Use Wallop or GNAR! near a wall so Sion is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 14, "end": 19 },
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gnar:Sion:4",
+          "text": "Don't kill Sion carelessly in a trade; Glory in Death makes him hit very fast, so back away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sion-passive", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ab81ecae448fa88b0237099a1bd692f00e46ff9f4d47383b59b1550c5b94aab7",
+      "tips": [
+        {
+          "id": "top:Gnar:Teemo:0",
+          "text": "Use Boomerang Throw to poke Teemo from range, and catch it on the way back to shorten its cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Teemo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gnar:Teemo:1",
+          "text": "Do not walk into brush blindly; Teemo can hide there and trap you. Watch for his mushrooms near the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Gnar:Teemo:2",
+          "text": "Keep Hop for escaping or closing; bouncing off Teemo slows him heavily, which sets up your trade.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Gnar:Teemo:3",
+          "text": "Expect Blinding Dart when you walk up to him; your attacks will miss while blinded, so back off and wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gnar:Teemo:4",
+          "text": "Once you turn Mega, use Wallop or GNAR! on Teemo, especially next to a wall, to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Gnar-R", "start": 34, "end": 39 },
+            { "kind": "champion", "key": "Teemo", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "db4796e8b6a5906ae45c494ff99b7af32e052ae24ce6c79b5ce54cdacbb51ba7",
+      "tips": [
+        {
+          "id": "top:Gnar:Vayne:0",
+          "text": "Hit Vayne with Boomerang Throw to keep her slowed and stop her from kiting you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gnar:Vayne:1",
+          "text": "Fight away from walls, since Condemn stuns you if it knocks you into terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Gnar:Vayne:2",
+          "text": "Vayne is fragile, so use Hop to close in and bounce off her, then pressure her hard.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Gnar:Vayne:3",
+          "text": "Do not trade by auto-attacking her for long; Silver Bolts deals extra true damage on the third hit against your health.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Gnar:Vayne:4",
+          "text": "Try to be big with a wall behind Vayne, because GNAR! stuns her if she hits it.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Gnar-R", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:Gnar:combo:0",
+          "note": "Hop into Boomerang slows Vayne as Gnar closes in, which helps against her Tumble-based kiting.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Gnar", "start": 34, "end": 38 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f92cb4a94cb29a2d2d69cf4ffddfe36cd7a85c68411d5892ec028338b0d48e75",
+      "tips": [
+        {
+          "id": "top:Gnar:Yone:0",
+          "text": "Throw Boomerang Throw from max range to slow Yone, then walk to catch it on the way back so it comes off cooldown sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gnar:Yone:1",
+          "text": "Use your long range as mini Gnar to poke Yone, and stay out of his short Mortal Steel reach.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Yone", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Yone-Q", "start": 73, "end": 85 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gnar:Yone:2",
+          "text": "Save Hop for escaping once Yone has two stacks of Mortal Steel, because his third cast dashes and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Yone-Q", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gnar:Yone:3",
+          "text": "Fight Yone near a wall as Mega Gnar, since GNAR! stuns him if he is thrown into it.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Gnar", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Gnar-R", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gnar:Yone:4",
+          "text": "Hit Yone with three attacks or abilities in a row to trigger Hyper. It deals extra damage based on his max health and speeds you up.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 4, "end": 8 }],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gnar:Yone:5",
+          "text": "Hit Yone with Wallop in Mega form to stun him. Then follow up with your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

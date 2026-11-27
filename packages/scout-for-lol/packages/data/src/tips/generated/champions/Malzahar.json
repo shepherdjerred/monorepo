@@ -1,0 +1,3158 @@
+{
+  "schemaVersion": 1,
+  "champion": "Malzahar",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "0635a0006aa7cc88b998e634762b9ece62e943024174d214af2c2ce5a70b0f76",
+      "tips": [
+        {
+          "id": "middle:Malzahar:general:0",
+          "text": "Cast Malefic Visions on an enemy, then hit them with Call of the Void to refresh it and keep the damage going.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Malzahar:general:1",
+          "text": "Aim Call of the Void so the enemy walks between the two portals. It silences them, so use it when they try to cast a key spell.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:general:2",
+          "text": "Put Malefic Visions on a minion to clear the wave. It finishes weak minions and spreads to the next enemy when its victim dies.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:general:3",
+          "text": "Cast your other spells before Void Swarm. Each cast adds a stack, so you summon extra Voidlings.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:general:4",
+          "text": "Hold Void Swarm until enemies or a wave are close, so the Voidlings have something to attack.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Malzahar:general:5",
+          "text": "Avoid taking damage in lane. Void Shift then stays up and shields you from damage and crowd control.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 29,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Malzahar:general:6",
+          "text": "Use Nether Grasp on a target that can't escape. They are suppressed for the whole channel, so don't move or cast until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Malzahar:general:7",
+          "text": "Keep your distance when you channel Nether Grasp. Flash or a teleport interrupts you, and Malzahar can't cast other spells mid-channel.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 36, "end": 48 },
+            { "kind": "summoner-spell", "key": "4", "start": 50, "end": 55 },
+            { "kind": "champion", "key": "Malzahar", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Malzahar:combo:0",
+          "name": "Three-Voidling stack",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Malzahar-E" },
+            { "kind": "ability", "key": "Malzahar-Q" },
+            { "kind": "ability", "key": "Malzahar-W" }
+          ],
+          "when": "Before a trade or when pushing the wave, once you have two casts of other spells off cooldown.",
+          "whenRefs": [],
+          "text": "Casting Malefic Visions and Call of the Void each gives a stack. Void Swarm then spawns three Voidlings that focus the infected target.",
+          "textRefs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Malzahar-W", "start": 65, "end": 75 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "e6c21b370acafef50e8ce3ce4fcf7403c77fe76f5446cf6b714a685121da10f3",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Ahri:0",
+          "text": "Stay behind your minions when Ahri is looking at you, so her Charm hits a minion and not you.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Ahri-E", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Malzahar:Ahri:1",
+          "text": "Void Shift blocks crowd control while it is up, so avoid taking damage from Ahri before you walk up to trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Ahri", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Malzahar:Ahri:2",
+          "text": "Silence Ahri with Call of the Void when she dashes in or goes for her combo; she cannot use her abilities while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Ahri", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 112, "end": 120 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Malzahar:Ahri:3",
+          "text": "Put Malefic Visions on Ahri, then refresh it with Call of the Void so it keeps ticking while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ahri", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:Ahri:4",
+          "text": "Use Nether Grasp on Ahri once she has used Spirit Rush; she is far easier to catch and kill without it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ahri", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ahri-R", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Malzahar:Ahri:5",
+          "text": "Cast Void Swarm when Ahri or her minions are close, so the Voidlings have targets to attack.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0cf8418abd5a4622f904db7d7f9e543c6cde04d2b9b2f9e51b6f39682c3ed2e",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Akali:0",
+          "text": "Aim Call of the Void at Akali when she steps up to trade. Being silenced stops her from dashing away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 64, "end": 72 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Akali:1",
+          "text": "Try not to take damage in lane. Void Shift then stays up and blunts her burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 32,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Malzahar:Akali:2",
+          "text": "Save Nether Grasp for when Akali jumps in on you. It stops her mid-combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Malzahar:Akali:3",
+          "text": "Put Void Swarm down when Akali is nearby. The Voidlings chase her, and they do extra damage to anyone under Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 108, "end": 123 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Malzahar:Akali:4",
+          "text": "Akali can still be hit by area spells inside Twilight Shroud, and that briefly shows where she is. Aim Call of the Void at the smoke.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-W", "start": 45, "end": 60 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 103, "end": 119 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Akali, and Voidlings keep up pressure on her if she dives in.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f9165056a99ed714e81275bb5587733f037c8bb9dfdba5702356f984d5de3d47",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Akshan:0",
+          "text": "Aim Call of the Void at Akshan when he walks up to trade; the silence stops him from using Heroic Swing to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Akshan", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 62, "end": 69 },
+            { "kind": "ability", "key": "Akshan-E", "start": 91, "end": 103 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Akshan:1",
+          "text": "Do not rely on Call of the Void to stop Heroic Swing. Akshan can still use its second and third casts while silenced, so stay careful once he has the hook out.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Akshan-E", "start": 40, "end": 52 },
+            { "kind": "champion", "key": "Akshan", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Malzahar:Akshan:2",
+          "text": "Put Malefic Visions on Akshan, then refresh it with Call of the Void to keep the damage ticking while you stay at range.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akshan", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Malzahar:Akshan:3",
+          "text": "Stay out of Akshan's reach, since his Avengerang hits on the way out and again on the way back. Step aside after it goes past you.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Malzahar:Akshan:4",
+          "text": "Use Void Swarm to make Akshan back off. The Voidlings go after enemies marked by Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Akshan", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Malzahar:Akshan:5",
+          "text": "Take care when you are out of position. At level 6, Nether Grasp suppresses Akshan and holds him in place for the whole channel.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 52, "end": 64 },
+            { "kind": "champion", "key": "Akshan", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "474fea949a778aa4390b13ff9bc4b0cef7a7afe87d95e548f684d089a7d08578",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Anivia:0",
+          "text": "Dodge Flash Frost by stepping sideways, and stay away from its end point, where it stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Malzahar:Anivia:1",
+          "text": "Use Call of the Void on Anivia when she commits to a cast; the silence cuts off her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Malzahar:Anivia:2",
+          "text": "Keep Malefic Visions on Anivia and refresh it with Call of the Void to wear her down.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 51, "end": 67 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Malzahar:Anivia:3",
+          "text": "Avoid damage in lane so Void Shift stays up; it lets you ignore a Flash Frost stun and take less damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 24,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Anivia-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Malzahar:Anivia:4",
+          "text": "After she uses Rebirth, she cannot act while in her egg; use that time to push or take the egg down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 15,
+              "end": 22
+            }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "14c24010ded9be153adef36757c61b9bc125eb0db1e14f6eb203b1564b78b2da",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Annie:0",
+          "text": "Keep track of Annie's Pyromania counter; when it is full, stay out of her range, because her next spell stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 14, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 22,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Malzahar:Annie:1",
+          "text": "Avoid taking damage when you can; the longer Void Shift stays up, the safer you are against Annie's burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 45,
+              "end": 55
+            },
+            { "kind": "champion", "key": "Annie", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Malzahar:Annie:2",
+          "text": "Silence Annie with Call of the Void when she steps up to trade, so she can't cast her stun.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Annie", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Malzahar:Annie:3",
+          "text": "Put Malefic Visions on her, then refresh it with Call of the Void to keep the damage going.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Annie:4",
+          "text": "Use Void Swarm with its extra stacks to push the wave or pressure Annie.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Annie", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Malzahar:Annie:5",
+          "text": "Stay away from Tibbers after Annie summons him; he burns nearby enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Malzahar:Annie:6",
+          "text": "Use Nether Grasp on Annie when she tries to go in with her bear, to stop her from casting.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Annie", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "06bd050886cc86cdceebfb3a57d6106dd37b12c8b5977dc511a237c041c19566",
+      "tips": [
+        {
+          "id": "middle:Malzahar:AurelionSol:0",
+          "text": "Silence Aurelion Sol with Call of the Void when he starts channeling Breath of Light; he can't cast while silenced, so you can follow up safely.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "AurelionSol", "start": 8, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 26, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 69,
+              "end": 84
+            },
+            { "kind": "keyword", "key": "silenced", "start": 106, "end": 114 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Malzahar:AurelionSol:1",
+          "text": "Keep Malefic Visions on Aurelion Sol and refresh it with Call of the Void so he takes steady damage while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 24,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Malzahar:AurelionSol:2",
+          "text": "Use Nether Grasp on Aurelion Sol when he flies in on you with Astral Flight. It stops him and he can't use his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 20,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 62,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Malzahar:AurelionSol:3",
+          "text": "Stay out of the black hole from Singularity. Walk out of its edge early, before you are dragged to the center.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 32,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Malzahar:AurelionSol:4",
+          "text": "Watch for the long delay on Falling Star. Walk out of the marked area and you avoid the stun.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:AurelionSol:5",
+          "text": "Void Swarm gives Voidlings that chase targets with Malefic Visions. Send them at Aurelion Sol when he is busy channeling.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 51, "end": 66 },
+            { "kind": "champion", "key": "AurelionSol", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc9c2f2b436a20df60adbfb1ef5206e22b48f245230fee099050105bf481e736",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Aurora:0",
+          "text": "Aim Call of the Void where Aurora will land, since her Across the Veil hop is invisible; the silence stops her next spell and she can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Aurora-W", "start": 55, "end": 70 },
+            { "kind": "keyword", "key": "silenced", "start": 93, "end": 100 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Aurora:1",
+          "text": "Keep Void Shift up by dodging her Twofold Hex and The Weirding; any hit on you removes the protection.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "ability", "key": "Aurora-Q", "start": 34, "end": 45 },
+            { "kind": "ability", "key": "Aurora-E", "start": 50, "end": 62 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Malzahar:Aurora:2",
+          "text": "Put Malefic Visions on her early in a trade, then refresh it with Call of the Void so the damage keeps ticking while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Malzahar:Aurora:3",
+          "text": "Save Nether Grasp for when she commits. It suppresses her, so she can't hop away with Across the Veil.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Aurora-W", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Malzahar:Aurora:4",
+          "text": "Cast Void Swarm when she walks up to trade. Voidlings chase enemies hit by Malefic Visions, so they add damage and keep her busy.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 75, "end": 90 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "823842b9b5b644050f7c0d03bb5f6ac0c2c3f59e13f1a0b3628128dbcae04c99",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Azir:0",
+          "text": "Aim Call of the Void at Azir when he walks up to attack. The silence stops him casting Shifting Sands or Emperor's Divide to escape or fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Azir", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 68 },
+            { "kind": "ability", "key": "Azir-E", "start": 87, "end": 101 },
+            { "kind": "ability", "key": "Azir-R", "start": 105, "end": 121 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Azir:1",
+          "text": "Put Malefic Visions on Azir, then refresh it with Call of the Void. You keep damaging him while you stay out of range of his soldiers.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Azir", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Malzahar:Azir:2",
+          "text": "Stay out of the area around Azir's Sand Soldiers. Fight him when his soldiers have expired or are far from you.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Malzahar:Azir:3",
+          "text": "Wait for Azir to use Shifting Sands, then punish him. Nether Grasp then lands without him escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Azir", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Azir-E", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Malzahar:Azir:4",
+          "text": "Void Shift protects you while you take no damage. Avoid Azir's poke so it stays up when he tries to trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Azir", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Azir:5",
+          "text": "Cast Void Swarm when Azir's soldiers or the wave are near. The Voidlings help you trade and clear minions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Azir", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cbfdb42931a2889384097c5617e0f64b19e22744fdcc5e663e148576ba29a571",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Brand:0",
+          "text": "Dodge Sear and Pillar of Flame; Brand cannot start his combo without landing one.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Malzahar:Brand:1",
+          "text": "Silence Brand with Call of the Void when he steps up; he can't combo you while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Brand", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Malzahar:Brand:2",
+          "text": "Keep away from your own minions when Pyroclasm is cast; the slow fireball gives you time to step away from allies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Malzahar:Brand:3",
+          "text": "Use Malefic Visions on Brand and refresh it with Call of the Void to keep pressure on him.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Brand:4",
+          "text": "Avoid damage in lane so Void Shift is up when Brand tries to burst you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 24,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Brand", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "14ba165cb51f4608645e974447586c4eda165cea9fce9229538a7361bccb9feb",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Briar:0",
+          "text": "Keep Void Shift up by dodging poke and avoiding trades you don't need. Briar's stun from Head Rush can't land on you while it is active.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Briar", "start": 71, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 },
+            { "kind": "ability", "key": "Briar-Q", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Malzahar:Briar:1",
+          "text": "Silence Briar with Call of the Void as she leaps in, so she can't follow up with Chilling Scream.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Briar", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Briar-E", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Malzahar:Briar:2",
+          "text": "Cast Void Swarm when Briar is close. Voidlings chase enemies and keep her busy while you back away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Malzahar:Briar:3",
+          "text": "Put Malefic Visions on Briar early in a trade, then refresh it with Call of the Void.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Briar:4",
+          "text": "Save Nether Grasp for when Briar commits to you. It suppresses her, so she can't cast her abilities or leap away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "98099a31fac0e8df71c2e3a13e87d64de694e98f7e07acc820d4792cfaa298e6",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Cassiopeia:0",
+          "text": "Hit Cassiopeia with Call of the Void when she steps up to cast; she is silenced and cannot cast Twin Fang.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 20, "end": 36 },
+            { "kind": "keyword", "key": "silenced", "start": 71, "end": 79 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 96,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Malzahar:Cassiopeia:1",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Malzahar:Cassiopeia:2",
+          "text": "Try not to take poke in lane so Void Shift stays up and protects you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 16, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 32,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Malzahar:Cassiopeia:3",
+          "text": "Cast Malefic Visions on her, then refresh it with Call of the Void. She cannot easily ignore the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Malzahar:Cassiopeia:4",
+          "text": "Avoid standing in Miasma; you are slowed and cannot dash out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 18,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5fc302e7a679e6df405bc379d574a83e5c6404a01ff9d0fa992f09e352ea4f38",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Diana:0",
+          "text": "Keep Call of the Void ready for when Diana dashes in; being silenced stops her from casting her spells mid-fight.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Malzahar:Diana:1",
+          "text": "Stay away from Diana's Crescent Strike. If you are marked with Moonlight, expect her to dash onto you with Lunar Rush right away.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Diana-Q", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Diana-E", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Malzahar:Diana:2",
+          "text": "Void Shift protects you while you are undamaged, so stay out of her poke to keep it up when she tries to jump on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "keyword", "key": "poke", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Malzahar:Diana:3",
+          "text": "Put Malefic Visions on Diana early and refresh it with Call of the Void, so she takes steady damage while she waits on cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Malzahar:Diana:4",
+          "text": "Use Void Swarm before she engages so the Voidlings are already out to distract and damage her.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Diana:5",
+          "text": "Save Nether Grasp for when Diana has used her dash, since she cannot jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Diana", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "57b14ecbc503c385f08043ba5ac955bad737e48fc676d0cf3fd7ff7639f930c1",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Ekko:0",
+          "text": "Cast Call of the Void on Ekko when he walks up to trade; being silenced stops him from using Phase Dive and Timewinder.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ekko", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Ekko-E", "start": 93, "end": 103 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 108, "end": 118 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Ekko:1",
+          "text": "Keep Malefic Visions on Ekko and refresh it with Call of the Void so he keeps taking damage while he plays around his cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ekko", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Malzahar:Ekko:2",
+          "text": "Save Nether Grasp for when Ekko is committed to a fight. Once he uses Chronobreak, you can trade much more freely.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Ekko-R", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Malzahar:Ekko:3",
+          "text": "Stay out of his Parallel Convergence circle. It only stuns if Ekko steps into it, so watch where he walks.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "champion", "key": "Ekko", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Malzahar:Ekko:4",
+          "text": "Avoid taking damage in lane so Void Shift stays up. It cuts the damage from his poke and ignores his slows.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 31,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "poke", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Malzahar:Ekko:5",
+          "text": "Put Void Swarm down when Ekko is near so the Voidlings pressure him and he can't stand in your minions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ekko", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f644563f479be8ec9131fb0e46b90e86ee8891350b2d9f722d6ecc83e4944cb8",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Ezreal:0",
+          "text": "Dodge Ezreal's Mystic Shot by standing behind minions; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Malzahar:Ezreal:1",
+          "text": "Land Call of the Void on Ezreal when he is lined up to shoot; silenced, he can't use Arcane Shift to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 62, "end": 70 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 85, "end": 97 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Malzahar:Ezreal:2",
+          "text": "Put Malefic Visions on Ezreal, then refresh it with Call of the Void to keep the damage going.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Malzahar:Ezreal:3",
+          "text": "Ezreal is fragile, so use Nether Grasp at level 6 when he has used Arcane Shift.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Malzahar:Ezreal:4",
+          "text": "Avoid taking poke when you can; Void Shift stays up only while you are undamaged, so it protects you from his burst.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 13, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 32,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1487ca28733f0e0a5e1370dc4edd877f603fd5d0daf4207904d8a564b2b8b221",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Fizz:0",
+          "text": "Hold Call of the Void for when Fizz lands from Playful; he is hard to catch otherwise, and the silence stops Trickster follow-ups.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Fizz:1",
+          "text": "Keep Void Shift up by avoiding early trades. Fizz's Chum the Waters cannot attach to you while it is active.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Fizz", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Fizz-R", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "middle:Malzahar:Fizz:2",
+          "text": "Put Malefic Visions on Fizz and refresh it with Call of the Void to keep damage ticking while he dodges around.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Fizz:3",
+          "text": "Save Nether Grasp for after Fizz uses Playful. It suppresses him, so he cannot jump away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Malzahar:Fizz:4",
+          "text": "Summon Voidlings when Fizz walks up to trade. They keep hitting him while he dives through your minions.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5ea37616d6918df7cadd1cdad43c5f43f4dcf44751af2a94f0fea5f214e0f683",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Galio:0",
+          "text": "Keep Void Shift up by avoiding poke in lane. It makes Galio's all-in much weaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "keyword", "key": "poke", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Galio", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Malzahar:Galio:1",
+          "text": "Silence Galio with Call of the Void when he starts charging Shield of Durand, but expect him to release it anyway.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Galio", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "Galio-W", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Malzahar:Galio:2",
+          "text": "Galio is slowed while charging Shield of Durand, so land Call of the Void and Malefic Visions on him then.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Galio-W", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 57, "end": 73 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 78, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Malzahar:Galio:3",
+          "text": "Stay out of Justice Punch range; Galio can't dash through walls, so keep terrain between you.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Galio", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Malzahar:Galio:4",
+          "text": "Watch for Galio ally icons going missing; Hero's Entrance can be interrupted with crowd control before he leaps.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Galio-R", "start": 42, "end": 57 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Malzahar:Galio:5",
+          "text": "Cast Void Swarm when Galio is near to add damage; Voidlings go for targets hit by Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Galio", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 82, "end": 97 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3025b064f96957a8ca3f55c586a64af698d512374c311d09828f846837758b23",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Hwei:0",
+          "text": "Stay out of Hwei's Severing Bolt and Crushing Maw range early; sidestep the delayed lightning instead of walking straight at him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Malzahar:Hwei:1",
+          "text": "Rush Hwei right after he paints a Torment spell; the casting time leaves him open. Silence him with Call of the Void as you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "silenced", "start": 83, "end": 90 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Malzahar:Hwei:2",
+          "text": "Put Malefic Visions on Hwei, then refresh it with Call of the Void so the damage keeps ticking while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Hwei", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Malzahar:Hwei:3",
+          "text": "Use Void Swarm on the minion wave while Hwei is near, so the Voidlings pressure him and the wave without you stepping forward.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Hwei", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Malzahar:Hwei:4",
+          "text": "Avoid taking damage from Hwei in lane. Void Shift stays up only while you are untouched, so don't give him a free poke.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 25, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 39,
+              "end": 49
+            },
+            { "kind": "keyword", "key": "poke", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Hwei:5",
+          "text": "At level 6, use Nether Grasp when Hwei is caught out. It suppresses him, so his spells can't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Hwei", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d98b78fd684c9262953b17d7d890cfeb79d88b55ec37861cb64c914af25bd89b",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Irelia:0",
+          "text": "Wait for Irelia to dash in, then hit her with Call of the Void; the silence stops her from using Flawless Duet.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 46, "end": 62 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 75 },
+            { "kind": "ability", "key": "Irelia-E", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Malzahar:Irelia:1",
+          "text": "Keep Irelia off your minions. Without them Bladesurge has nothing to dash through and she cannot close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Irelia:2",
+          "text": "Do not take free poke from Irelia; every hit you avoid keeps Void Shift ready to blunt her all-in.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Irelia", "start": 27, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 61,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Irelia:3",
+          "text": "Hold Nether Grasp for when she commits to a fight; it stops her where she stands.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Malzahar:Irelia:4",
+          "text": "Put Malefic Visions on her, then refresh it with Call of the Void to keep damage ticking while she tries to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings from Malefic Visions and Call of the Void add pressure on Irelia, who can dash through them.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 21, "end": 36 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 41, "end": 57 },
+            { "kind": "champion", "key": "Irelia", "start": 74, "end": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6dff9aefc1c3deaf3c4994f3dd0e4c2307703066db89c3b08acb4952020e4945",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Kassadin:0",
+          "text": "Use Void Shift as cover: stay undamaged and Kassadin's burst will mostly bounce off. Avoid his poke so it stays up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Kassadin", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Malzahar:Kassadin:1",
+          "text": "Cast Call of the Void on Kassadin when he dashes in to trade. Being silenced stops his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kassadin", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Malzahar:Kassadin:2",
+          "text": "Kassadin's Null Sphere can interrupt your Nether Grasp channel, so use it when he has no Null Sphere ready.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 42, "end": 54 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Malzahar:Kassadin:3",
+          "text": "Put Malefic Visions on Kassadin, then refresh it with Call of the Void. He takes steady damage while closing the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kassadin", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Malzahar:Kassadin:4",
+          "text": "Kassadin takes reduced magic damage, so lean on Voidlings from Void Swarm to keep pressure on him after he has used his abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malzahar-W", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "623e19b463fefcd60a67ecea8d52c150ddc57424bfe37dba12b2f811454ed283",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Katarina:0",
+          "text": "Hit Katarina with Call of the Void when she dashes in. Silenced, she can't use Shunpo or Death Lotus.",
+          "refs": [
+            { "kind": "champion", "key": "Katarina", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Katarina-E", "start": 79, "end": 85 },
+            { "kind": "ability", "key": "Katarina-R", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Malzahar:Katarina:1",
+          "text": "Save Nether Grasp for when Katarina commits with Death Lotus. It suppresses her and ends the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Katarina", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Katarina-R", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Malzahar:Katarina:2",
+          "text": "Stay out of damage so Void Shift stays ready; it cuts the damage from Katarina's opening burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 22,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Katarina", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Malzahar:Katarina:3",
+          "text": "Summon Voidlings with Void Swarm before she arrives. They distract her and keep hitting her while you cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Malzahar:Katarina:4",
+          "text": "Put Malefic Visions on Katarina early, then refresh it with Call of the Void to keep her damaged while she waits for Daggers.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Katarina", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fbd7cf9bdfa1d66f66f5557df08dcc476c4a245831ad3d45561166a21082a2cf",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Leblanc:0",
+          "text": "Fight LeBlanc while Void Shift is active. It blocks most of her damage and her Ethereal Chains root.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 20,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Leblanc-E", "start": 79, "end": 94 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Leblanc:1",
+          "text": "Silence LeBlanc with Call of the Void when she dashes in. She cannot return with Distortion while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Leblanc", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 21, "end": 37 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 81, "end": 91 },
+            { "kind": "keyword", "key": "silenced", "start": 98, "end": 106 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Leblanc:2",
+          "text": "Put Malefic Visions on her, then refresh it with Call of the Void. It is steady damage while she tries to farm.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Leblanc:3",
+          "text": "Cast Void Swarm when she is close, so the Voidlings chase her. They prefer enemies with Malefic Visions on them.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Malzahar:Leblanc:4",
+          "text": "Save Nether Grasp for when she commits. She cannot jump away with Distortion while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 66, "end": 76 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "87c775352b53e73ddf3074ba6b78e77e696965f20be5f25b94eaaf61e6a0500c",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Lissandra:0",
+          "text": "Cast Call of the Void on Lissandra when she walks up to Ring of Frost range; she is silenced and cannot use her spells to start a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Lissandra", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 56, "end": 69 },
+            { "kind": "keyword", "key": "silenced", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Malzahar:Lissandra:1",
+          "text": "Stay out of Ring of Frost range early. Its cooldown is long at low ranks, so trade with her right after she uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Malzahar:Lissandra:2",
+          "text": "Keep Malefic Visions on her and refresh it with Call of the Void so the damage keeps ticking while you hold your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Malzahar:Lissandra:3",
+          "text": "Hold Void Shift by avoiding her poke. It only returns after you go without damage, so a clean lane keeps you safe from her all-in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Malzahar:Lissandra:4",
+          "text": "Use Nether Grasp on her when she is about to jump in with Glacial Path. Suppression stops her from recasting it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Lissandra:5",
+          "text": "Put Void Swarm down when she is close to your wave. The Voidlings chase enemies that Malefic Visions has hit.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 85, "end": 100 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "19b35a1205fbea5a5f2f3e8ba0104c494dc522da1fbe37b95a5fe169f3e3ceed",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Lux:0",
+          "text": "Keep Void Shift up by not taking poke from Lux; when it is active, her Light Binding does not root you and her damage is cut sharply.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Lux", "start": 43, "end": 46 },
+            { "kind": "ability", "key": "Lux-Q", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Lux:1",
+          "text": "Silence Lux with Call of the Void when she walks up to trade or throws her spells, so she cannot cast.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Lux", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Malzahar:Lux:2",
+          "text": "Put Malefic Visions on Lux, then refresh it with Call of the Void to keep the damage ticking while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Malzahar:Lux:3",
+          "text": "Use Malefic Visions on the minions near her so they die and pass it on to her. It also clears minions fast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Malzahar:Lux:4",
+          "text": "Look for Nether Grasp at level 6 when Lux is close. She cannot cast spells while held, so her Final Spark and Light Binding are shut off.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 38, "end": 41 },
+            { "kind": "ability", "key": "Lux-R", "start": 94, "end": 105 },
+            { "kind": "ability", "key": "Lux-Q", "start": 110, "end": 123 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Malzahar:Lux:5",
+          "text": "Step out of the way of Lucent Singularity's blast; its slow makes you easy to hit with Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 23, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 },
+            { "kind": "ability", "key": "Lux-Q", "start": 87, "end": 100 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5238f1719f4cb5a2a50852d5b2454788e8e89e3564f224b5e79b25fdcf33f33e",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Mel:0",
+          "text": "Wait for Mel to use Rebuttal before you throw Call of the Void or Nether Grasp; it destroys projectiles, so bait it first.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Mel-W", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 46, "end": 62 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Malzahar:Mel:1",
+          "text": "Use Call of the Void to keep Mel silenced when she steps up to trade, so she can't cast Solar Snare.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Mel", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Mel-E", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Malzahar:Mel:2",
+          "text": "Stay out of Solar Snare's range; it roots longer the farther it flies. Keep Void Shift up by avoiding her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 76,
+              "end": 86
+            },
+            { "kind": "keyword", "key": "poke", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Malzahar:Mel:3",
+          "text": "Her Rebuttal and Solar Snare orb are both blocked by a spell shield, but without one, her root is your main danger. Stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Mel-E", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Malzahar:Mel:4",
+          "text": "Put Malefic Visions on Mel and refresh it with Call of the Void so your damage keeps ticking while she backs off.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Mel", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Malzahar:Mel:5",
+          "text": "Cast Void Swarm when the enemy is close so the Voidlings attack Mel and keep her busy.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Mel", "start": 64, "end": 67 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Malzahar:Mel:6",
+          "text": "Back off when you're low and Mel's hits have stacked up; her next hit can finish you. Let the stacks fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "58a4f8eb3710d1f46511b21414f5e648aaa16170030cf7ea7a58be736eb4b28a",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Naafiri:0",
+          "text": "Keep Void Shift up by dodging Naafiri's early pokes. If she hits you, it goes down and she can jump on you freely.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Malzahar:Naafiri:1",
+          "text": "Aim Call of the Void where Naafiri will land after she dashes in. Being silenced stops her from using her abilities to escape or finish you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Naafiri:2",
+          "text": "Cast Nether Grasp on Naafiri when she commits to a fight. It holds her in place while her packmates keep attacking you, so check how many are around.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Malzahar:Naafiri:3",
+          "text": "Put Void Swarm down between you and Naafiri when she closes in. The Voidlings give you something to fight her packmates with.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Malzahar:Naafiri:4",
+          "text": "Use Malefic Visions on Naafiri from long range and refresh it with Call of the Void to keep the damage ticking while she stays away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings can help clear Naafiri's packmates and push the wave, though she can still dash in on Malzahar.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 25, "end": 32 },
+            { "kind": "champion", "key": "Malzahar", "start": 96, "end": 104 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c20d5846206d3449a7bb6f2a4c73a068ce16c45b682d7d50568d37f7e0912191",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Orianna:0",
+          "text": "Cast Malefic Visions on Orianna, then use Call of the Void to refresh it. She takes steady damage while you stay out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Orianna:1",
+          "text": "Use Call of the Void on Orianna before she can combo you. A silenced Orianna can't use her abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 68 },
+            { "kind": "champion", "key": "Orianna", "start": 69, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Orianna:2",
+          "text": "Avoid taking damage so Void Shift is ready. Then Orianna's Command: Shockwave can't stun you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 23,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Orianna", "start": 49, "end": 56 },
+            { "kind": "ability", "key": "Orianna-R", "start": 59, "end": 77 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Malzahar:Orianna:3",
+          "text": "Stay out of the area around the Ball. Orianna can only hit what is near it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Malzahar:Orianna:4",
+          "text": "Cast Void Swarm after your other spells to build up Voidlings. Send them at Orianna while she is busy with the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Malzahar:Orianna:5",
+          "text": "Use Nether Grasp when Orianna has no escape ready. She is held in place and takes damage for as long as the tether lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Orianna", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings and Malefic Visions pressure Orianna, whose Attack and Dissonance must deal with the Voidlings.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 20, "end": 35 },
+            { "kind": "champion", "key": "Orianna", "start": 45, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "16d149d73f8c4c3efe90d0fe42239988c1ee45706a3bbdaa280830430a34c9de",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Qiyana:0",
+          "text": "Stay back from walls and brush when Qiyana has her ultimate; Supreme Display of Talent stuns anyone caught near terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 61, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Malzahar:Qiyana:1",
+          "text": "Aim Call of the Void where Qiyana will dash in; the silence stops Audacity and her other abilities from being cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Qiyana", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Malzahar:Qiyana:2",
+          "text": "Keep Void Shift up by dodging early damage. While it is active, Qiyana's trades hurt far less and her crowd control cannot touch you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Qiyana", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Malzahar:Qiyana:3",
+          "text": "Save Nether Grasp for when Qiyana dashes onto you; it suppresses her and ends her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Qiyana", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Malzahar:Qiyana:4",
+          "text": "Drop Void Swarm in front of you before she engages; the Voidlings hit her and give you a buffer.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Qiyana, and the Voidlings keep hitting her if she dashes away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 26, "end": 32 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f369b558cbfa0a53e6807bf24ca7c81c73611ba762e115101bfe796f2d09e602",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Ryze:0",
+          "text": "Aim Call of the Void at where Ryze will walk. A silence stops his combo, and he has no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ryze", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "silenced", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Malzahar:Ryze:1",
+          "text": "Do not take damage for free. Void Shift protects you only while you have not been hit, so avoid Ryze's poke.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 29,
+              "end": 39
+            },
+            { "kind": "champion", "key": "Ryze", "start": 96, "end": 100 },
+            { "kind": "keyword", "key": "poke", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Malzahar:Ryze:2",
+          "text": "Put Malefic Visions on Ryze, then refresh it with Call of the Void. Your Voidlings go after targets with Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 50, "end": 66 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Malzahar:Ryze:3",
+          "text": "Once Ryze has Flux on you, expect Rune Prison to root you. Stay away from him until it falls off.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ryze-W", "start": 34, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Malzahar:Ryze:4",
+          "text": "Use Nether Grasp at level 6 when Ryze is in range. A stun on Ryze cancels his Realm Warp portal as well.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Ryze", "start": 61, "end": 65 },
+            { "kind": "ability", "key": "Ryze-R", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6f984448806ff9b0291bbba17f9f93ab262e25b7b0479aeea6defe59c28710b2",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Sylas:0",
+          "text": "Keep Void Shift up by dodging Sylas's pokes; if he lands Chain Lash, the shield is gone and he will look to jump on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Sylas:1",
+          "text": "Aim Call of the Void at Sylas when he dashes in with Abscond or Abduct; it silences him and stops his follow-up abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Sylas:2",
+          "text": "Put Malefic Visions on Sylas before he trades, then refresh it with Call of the Void so the damage keeps ticking.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Malzahar:Sylas:3",
+          "text": "Save Nether Grasp for when Sylas jumps on you or tries to steal it; it holds him in place and cannot be dodged.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Malzahar:Sylas:4",
+          "text": "Call Void Swarm out when Sylas is near, because the Voidlings go after enemies hit by Malefic Visions and give you a safe damage source.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "22c387a43d2df8ff9425829c153cfc722b88e28abffd0db82b5fcd7fd17e29df",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Syndra:0",
+          "text": "Keep Void Shift up by dodging her spells; any hit from Syndra ends it, so stay out of her range between trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Syndra", "start": 55, "end": 61 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Malzahar:Syndra:1",
+          "text": "Use Call of the Void when Syndra steps up to place a sphere; if it lands she is silenced and cannot cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Syndra", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "silenced", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Malzahar:Syndra:2",
+          "text": "Put Malefic Visions on Syndra, then refresh it with Call of the Void to keep her taking damage while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Syndra", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Malzahar:Syndra:3",
+          "text": "Cast Void Swarm when Syndra is close, so the Voidlings chase her and pressure her; they go after targets with Malefic Visions first.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Syndra", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 110, "end": 125 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Malzahar:Syndra:4",
+          "text": "Save Nether Grasp for when Syndra is committed to a fight; it holds her in place, so she cannot cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Syndra", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2198d0edc92210234e736842d1fafb2f4ab644c287db4155be8cac8b8e966902",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Taliyah:0",
+          "text": "Stay out of Taliyah's Unraveled Earth stones; if she shoves you into them with Seismic Shove, you get stunned and take extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 79, "end": 92 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Taliyah:1",
+          "text": "Keep Void Shift up by dodging her Threaded Volley; it only works when you haven't been hit lately, so don't trade needlessly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Malzahar:Taliyah:2",
+          "text": "Silence her with Call of the Void when she steps up to cast, since she needs her abilities to fight you.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Malzahar:Taliyah:3",
+          "text": "Open with Malefic Visions, then refresh it with Call of the Void to keep the damage going while you stay at range.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Taliyah:4",
+          "text": "Use Nether Grasp on her once she has used Seismic Shove, so she has less to answer with.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Malzahar:Taliyah:5",
+          "text": "Cast Void Swarm only when enemies are near, and let the Voidlings pressure her while you stay back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings and Malefic Visions pressure Taliyah in lane, and Call of the Void's silence blocks her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 14, "end": 29 },
+            { "kind": "champion", "key": "Taliyah", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 60, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cd37cd6f763ae9489d460d9e4f88e140499aa818693aa5900176e49f989e8ed7",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Talon:0",
+          "text": "Keep Void Shift up by dodging Talon's early pokes; while it is active he takes far less damage and cannot be stunned or slowed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 },
+            { "kind": "keyword", "key": "slowed", "start": 120, "end": 126 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Talon:1",
+          "text": "Aim Call of the Void at Talon when he jumps in; the silence stops him casting his spells for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 59 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Malzahar:Talon:2",
+          "text": "Hold Nether Grasp for when Talon commits to you; it suppresses him so he cannot jump away or use Shadow Assault.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Talon-R", "start": 97, "end": 111 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Malzahar:Talon:3",
+          "text": "Put Malefic Visions on Talon from range, then refresh it with Call of the Void to keep the damage ticking.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Talon:4",
+          "text": "Cast Void Swarm when Talon is near; the Voidlings keep him busy and soak up his attention.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Malzahar:Talon:5",
+          "text": "Watch for Talon vanishing from lane; he roams fast with Assassin's Path, so push the wave before you follow or ping your team.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-E", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Call of the Void silences Talon, which can stop his dash or stealth spells while Voidlings chase him.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "004b2a4e30467f7c98f9846d9e4c8fd27f3d96d3d8eaf1c2e9545c21986639e4",
+      "tips": [
+        {
+          "id": "middle:Malzahar:TwistedFate:0",
+          "text": "Stay out of combat when you can; Void Shift protects you only while you have not been hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 33,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Malzahar:TwistedFate:1",
+          "text": "Use Call of the Void when Twisted Fate starts Pick a Card. The silence stops him from casting Wild Cards, though he can still lock in a card.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 26,
+              "end": 38
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 46,
+              "end": 57
+            },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 94,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Malzahar:TwistedFate:2",
+          "text": "Put Malefic Visions on Twisted Fate, then refresh it with Call of the Void to keep the damage running.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 23,
+              "end": 35
+            },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:TwistedFate:3",
+          "text": "Watch for Destiny. Twisted Fate can teleport to you, so keep your distance from his gate when you push.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "860f31e127fcedcc34f02d727bcf24f5c65a2a97e9f45e95353fc5ccf5516d13",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Veigar:0",
+          "text": "Stay out of Veigar's Event Horizon edge. Inside the cage you can still move, but touching the edge stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Veigar-E", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Veigar:1",
+          "text": "Walk sideways when Veigar casts Dark Matter; it lands after a delay and can be dodged.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Veigar-W", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Malzahar:Veigar:2",
+          "text": "Use Call of the Void to silence Veigar when he starts a combo, so he cannot cast his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Veigar", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Malzahar:Veigar:3",
+          "text": "Put Malefic Visions on Veigar, then refresh it with Call of the Void for steady damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Veigar", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Veigar:4",
+          "text": "Avoid taking hits in lane so Void Shift is ready; it can absorb the first spell Veigar throws.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 29,
+              "end": 39
+            },
+            { "kind": "champion", "key": "Veigar", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Malzahar:Veigar:5",
+          "text": "Veigar is fragile, so when you are in range, Nether Grasp will hold him in place while you deal heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "156d793ce03e3f018a49975932d62df1ef870ec003103e07ef14b1b8edd02efa",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Vex:0",
+          "text": "Keep Void Shift up by dodging Vex's poke; once she hits you it is gone, and her fear can then catch you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Vex", "start": 30, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Malzahar:Vex:1",
+          "text": "Silence Vex with Call of the Void when she steps in to fight. She cannot cast Personal Space or Looming Darkness while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Vex", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 },
+            { "kind": "ability", "key": "Vex-W", "start": 78, "end": 92 },
+            { "kind": "ability", "key": "Vex-E", "start": 96, "end": 112 },
+            { "kind": "keyword", "key": "silenced", "start": 119, "end": 127 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Malzahar:Vex:2",
+          "text": "Put Malefic Visions on Vex, then refresh it with Call of the Void so it keeps ticking while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vex", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:Vex:3",
+          "text": "Cast Void Swarm only when Vex or minions are close, so the Voidlings have something to attack.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Vex", "start": 26, "end": 29 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Malzahar:Vex:4",
+          "text": "Do not walk into Vex's Looming Darkness. Stay out of its reach so you are not slowed while she follows up.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 17, "end": 20 },
+            { "kind": "ability", "key": "Vex-E", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Malzahar:Vex:5",
+          "text": "At level 6, use Nether Grasp when Vex has used her escapes or shield. It suppresses her and she cannot cast back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Vex", "start": 34, "end": 37 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cff7432bc44c2ff6bdf1398da445783ed8ef96cd06ee3917de7d059beade6dbc",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Viktor:0",
+          "text": "Use Call of the Void to silence Viktor when he steps up to trade, so he can't answer with his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Viktor", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Malzahar:Viktor:1",
+          "text": "Aim Call of the Void at where Viktor will stand. It lands after a short delay, so he can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Malzahar:Viktor:2",
+          "text": "Stay out of Gravity Field. If you are caught in it, walk out before it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Malzahar:Viktor:3",
+          "text": "Hold back Void Shift by avoiding Viktor's poke, since it only protects you when you haven't been hit lately.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 10,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Viktor", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Malzahar:Viktor:4",
+          "text": "Cast Void Swarm when Viktor or his minions are close, so the Voidlings have something to attack.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:Viktor:5",
+          "text": "Use Nether Grasp on Viktor when his Gravity Field is on cooldown. You can't be interrupted by his Hextech Ray while Void Shift is up.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viktor", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Viktor-W", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "Viktor-E", "start": 98, "end": 109 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 116,
+              "end": 126
+            }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1ac0dbf089f48b4434baf597e9d6f5bbb355dab1038325e450c26317b434ca6",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Vladimir:0",
+          "text": "Open with Call of the Void when Vladimir steps up to trade; the silence stops his Sanguine Pool.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Vladimir", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "silenced", "start": 64, "end": 71 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Vladimir:1",
+          "text": "Hold Nether Grasp until Vladimir has used Sanguine Pool, or he can dodge it by becoming untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vladimir", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Malzahar:Vladimir:2",
+          "text": "Keep Malefic Visions on Vladimir and refresh it with Call of the Void so he takes steady damage while he sustains with Transfusion.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vladimir", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 53, "end": 69 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 119, "end": 130 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Malzahar:Vladimir:3",
+          "text": "Stay out of damage between trades so Void Shift is ready when Vladimir dives in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 37,
+              "end": 47
+            },
+            { "kind": "champion", "key": "Vladimir", "start": 62, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Malzahar:Vladimir:4",
+          "text": "Cast Void Swarm when Vladimir is near, with stacks built up; Voidlings keep pressure on him and block his path.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Vladimir", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b2472b443ae64d8afa87e8103da5011c14759698d45bfe23102e16861124ffbf",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Xerath:0",
+          "text": "Close the distance on Xerath and trade; he is weak up close and his long range does little once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Malzahar:Xerath:1",
+          "text": "Use Call of the Void when Xerath starts charging Arcanopulse or walks up to cast; a silenced Xerath cannot fire anything back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Xerath", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "silenced", "start": 84, "end": 92 },
+            { "kind": "champion", "key": "Xerath", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Malzahar:Xerath:2",
+          "text": "Stay out of a straight line with Xerath when you are not trading. Shocking Orb stuns the first enemy it hits, and that includes your Voidlings.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-E", "start": 66, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Malzahar:Xerath:3",
+          "text": "Keep Void Shift up by dodging his spells. While it is active, Xerath's stun and slows can't affect you and his damage is mostly cut.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Xerath", "start": 62, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Malzahar:Xerath:4",
+          "text": "Put Malefic Visions on Xerath, then refresh it with Call of the Void to keep the damage ticking while you stay out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Xerath", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Malzahar:Xerath:5",
+          "text": "Cast Void Swarm when Xerath is near the minions or you. Voidlings go after enemies with Malefic Visions on them, and Xerath has to deal with them.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Xerath", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 88, "end": 103 },
+            { "kind": "champion", "key": "Xerath", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Malzahar:Xerath:6",
+          "text": "Use Nether Grasp on Xerath when he channels Rite of the Arcane, or when he is caught out. It suppresses him, so he can't cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Xerath-R", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Three Voidlings add pressure to push the wave against Xerath, who relies on poking with long-range spells.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 54, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c86c1eabad9469f97d5e5cf36a52eb3b2417f2e743e72a1bc45b80de5b98794b",
+      "tips": [
+        {
+          "id": "middle:Malzahar:XinZhao:0",
+          "text": "Keep Call of the Void for when Xin Zhao dashes in; the silence stops his Three Talon Strike combo.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:XinZhao:1",
+          "text": "Stay out of Audacious Charge range, since Challenged targets can be charged from farther away. Poke him from range instead.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-E", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Malzahar:XinZhao:2",
+          "text": "Do not take free damage before he reaches you; staying untouched keeps Void Shift ready to block his first burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 71,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:XinZhao:3",
+          "text": "Put Malefic Visions on him early and refresh it with Call of the Void to keep the damage ticking.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Malzahar:XinZhao:4",
+          "text": "Use Nether Grasp when Xin Zhao has no way to reach you; his Crescent Guard is the one to fear if he gets in first.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Malzahar:XinZhao:5",
+          "text": "Cast Void Swarm when Xin Zhao is near so the Voidlings keep hitting him while you back away. They go for targets carrying Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 122, "end": 137 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7cfcb1578f911eede94911622c75649e870afd6a2c22806a825eda59d52e7c53",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Yasuo:0",
+          "text": "Aim Call of the Void at Yasuo when he walks up to the wave; it silences him and stops his dashes and Wind Wall.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yasuo", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 101, "end": 110 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Yasuo:1",
+          "text": "Stay in the lane and keep Malefic Visions on Yasuo; Call of the Void refreshes it, so he keeps taking damage while he is silenced.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 26, "end": 41 },
+            { "kind": "champion", "key": "Yasuo", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 52, "end": 68 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Malzahar:Yasuo:2",
+          "text": "Cast Nether Grasp on Yasuo when he commits to a fight; he cannot dash away or attack while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Malzahar:Yasuo:3",
+          "text": "Put Void Swarm down on Yasuo in the lane; the Voidlings chase enemies hit by Malefic Visions, which is harder for him to ignore.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 77, "end": 92 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Malzahar:Yasuo:4",
+          "text": "Cast your spells on Yasuo from long range. His Wind Wall blocks projectiles, so wait until it ends before using Call of the Void.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 47, "end": 56 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 112, "end": 128 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e06d0118c43c3c0b755258224faa63290036d4bb735df0e45d6b55961c0dfe47",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Yone:0",
+          "text": "Cast Call of the Void on Yone when he walks up to trade; the silence stops his dash and Soul Unbound.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 68 },
+            { "kind": "ability", "key": "Yone-E", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Yone:1",
+          "text": "Keep Malefic Visions on Yone and refresh it with Call of the Void to wear him down from range.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Malzahar:Yone:2",
+          "text": "Stay away from his Mortal Steel range once he has two stacks. The third cast dashes at you and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Malzahar:Yone:3",
+          "text": "Hold Nether Grasp for when Yone commits to you. It suppresses him and he can't use Soul Unbound to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Yone-E", "start": 83, "end": 95 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Malzahar:Yone:4",
+          "text": "Place Void Swarm Voidlings ahead of you when Yone is close. They hit him while you back away.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Malzahar:Yone:5",
+          "text": "Avoid taking damage between fights so Void Shift is up. It blocks most damage and stops his knock up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 38,
+              "end": 48
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Malzahar:combo:0",
+          "note": "Voidlings from the stack help push the wave and pressure Yone, whose listed abilities include no ranged poke.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 57, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bbf0637092e91bc3c98408ff05fbb99ad262871b689c113806baffd767cca9ed",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Zed:0",
+          "text": "Stay out of damage so Void Shift stays up; it shrugs off Zed's burst and crowd control while it lasts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 22,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Zed", "start": 57, "end": 60 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Malzahar:Zed:1",
+          "text": "Silence Zed with Call of the Void when he comes in to trade, so he can't use his abilities.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Zed", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Malzahar:Zed:2",
+          "text": "Save Nether Grasp for when Zed commits to you. It suppresses him, so he can't act or flee.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Malzahar:Zed:3",
+          "text": "Cast Void Swarm when Zed or his minions are near. The Voidlings hit him and his shadows get distracted.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Zed:4",
+          "text": "Put Malefic Visions on Zed while you are safe, then refresh it with Call of the Void to keep the damage going.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "109bf7f4ca7b614fc55f19df13a8f8b78fe8b460c6470671470e3169fa8b7c7f",
+      "tips": [
+        {
+          "id": "middle:Malzahar:Zoe:0",
+          "text": "Stay in Void Shift range of safety: avoid chip damage in lane so Void Shift keeps blocking Zoe's burst and her Sleepy Trouble Bubble slow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 8,
+              "end": 18
+            },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 65,
+              "end": 75
+            },
+            { "kind": "champion", "key": "Zoe", "start": 91, "end": 94 },
+            { "kind": "ability", "key": "Zoe-E", "start": 111, "end": 132 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Malzahar:Zoe:1",
+          "text": "Silence Zoe with Call of the Void when she steps up to trade, so she can't cast Portal Jump or Sleepy Trouble Bubble.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Zoe", "start": 8, "end": 11 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 },
+            { "kind": "ability", "key": "Zoe-R", "start": 80, "end": 91 },
+            { "kind": "ability", "key": "Zoe-E", "start": 95, "end": 116 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Malzahar:Zoe:2",
+          "text": "Hit Zoe with Nether Grasp when she is out of position; she can't dodge once it lands, and the Void Shift passive keeps you safe from her follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 13, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 94,
+              "end": 104
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Malzahar:Zoe:3",
+          "text": "Punish Zoe after she uses Portal Jump: she can't move for a moment and must come back to where she started.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Malzahar:Zoe:4",
+          "text": "Use Malefic Visions on Zoe from range, then refresh it with Call of the Void for steady damage while she stays back.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zoe", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Malzahar:Zoe:5",
+          "text": "Cast Void Swarm when Zoe is near, so the Voidlings chase her instead of idling.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zoe", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,3289 @@
+{
+  "schemaVersion": 1,
+  "champion": "Teemo",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "187188755c13beb283d6ef4aec7af7ec8c49253541ecf26bc5f5e1a494026b66",
+      "tips": [
+        {
+          "id": "top:Teemo:general:0",
+          "text": "Use Blinding Dart on melee champions before they walk up to trade; a blinded enemy's attacks miss, so you take less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Teemo:general:1",
+          "text": "Auto-attack the enemy between dart casts; Toxic Shot poisons them and keeps hurting after you step back.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Teemo:general:2",
+          "text": "Stand in a brush and stay still to turn invisible with Guerrilla Warfare, then attack for extra Attack Speed when you reveal yourself.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 55,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:general:3",
+          "text": "Place Noxious Trap in the brush and on the paths the enemy takes to reach you; anyone who steps on one is slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:general:4",
+          "text": "Throw a Noxious Trap onto an existing mushroom to make it bounce further, which gives you more reach to set up a trap behind the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 8, "end": 20 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:general:5",
+          "text": "Use Move Quick to chase a slowed enemy or to escape a gank. Taking damage from champions or turrets turns off its passive speed for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:general:6",
+          "text": "Clear a minion wave faster with Noxious Trap. Keep a charge or two for the enemy jungler.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:general:7",
+          "text": "Put mushrooms near Dragon and Baron to see when enemies come to take them.",
+          "refs": [],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Teemo:combo:0",
+          "name": "Mushroom bounce",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Teemo-R" },
+            { "kind": "ability", "key": "Teemo-R" }
+          ],
+          "when": "When you want a trap deeper into a lane, jungle entrance or objective than your throw range allows.",
+          "whenRefs": [],
+          "text": "A later-game combo with two charges: throw one mushroom, then throw a second onto it. The second bounces forward past the first and lands further away.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Teemo:combo:1",
+          "name": "Brush ambush",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Teemo-passive" }, "attack"],
+          "when": "When an enemy walks near the brush you are hiding in, for example the top lane river brush.",
+          "whenRefs": [],
+          "text": "Stay hidden in the brush, then attack as the enemy steps close. Leaving stealth gives bonus attack speed, so the first few hits come out much faster.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "34d22090d8b240b402ed3fbd210780a4c10289b6b181d5df650b00e0c5431e73",
+      "tips": [
+        {
+          "id": "top:Teemo:Aatrox:0",
+          "text": "Hit Aatrox with Blinding Dart when he walks up to trade; blinded, his attacks miss.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Aatrox:1",
+          "text": "Use Blinding Dart from long range, then keep poking with Toxic Shot attacks. Aatrox has to walk into you to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Teemo-E", "start": 57, "end": 67 },
+            { "kind": "champion", "key": "Aatrox", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Teemo:Aatrox:2",
+          "text": "Place Noxious Trap mushrooms in the brush and on the path Aatrox takes to reach you. They slow him and show where he is.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Aatrox:3",
+          "text": "Move sideways when Infernal Chains is coming at you, because it can only pull you back if you stay inside its circle. Move Quick helps you get out.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Teemo-W", "start": 118, "end": 128 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Teemo:Aatrox:4",
+          "text": "Stay out of the reach of The Darkin Blade's tip, because that is where it hits hardest. Hold your distance, since the hits are telegraphed.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6dbcc4d23c6ff2224e11c45391123f8dcc6f929ed2baa90d8a84607514c6e0b5",
+      "tips": [
+        {
+          "id": "top:Teemo:Akali:0",
+          "text": "Hit Akali with Blinding Dart when she comes in; the blind makes her basic attacks miss, which blunts her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Teemo:Akali:1",
+          "text": "Drop Noxious Trap in the spots Akali dashes to or retreats through; she gets slowed and revealed when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Akali:2",
+          "text": "Keep poking with Toxic Shot while she is low on energy, because she cannot trade back much then.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Akali:3",
+          "text": "Stand in brush and stay invisible with Guerrilla Warfare so Akali has trouble picking her moment to start a fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 39,
+              "end": 56
+            },
+            { "kind": "champion", "key": "Akali", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Teemo:Akali:4",
+          "text": "Hit the Twilight Shroud area with Noxious Trap or Blinding Dart as she hides; a trap reveals her once she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Teemo-R", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "top:Teemo:Akali:5",
+          "text": "Once Akali has her ultimate at level 6, do not stand weakened; Perfect Execution finishes low-health targets, so back off to safety.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-R", "start": 63, "end": 80 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "44115b9f0b7bb287f2d4f721dd654aab77d05aed684483a76f7f7ec49d458938",
+      "tips": [
+        {
+          "id": "top:Teemo:Ambessa:0",
+          "text": "Hit Ambessa with Blinding Dart when she walks up to fight; blinded, her attacks miss, which blunts her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Teemo:Ambessa:1",
+          "text": "Keep out of her reach and poke with Toxic Shot attacks; she has to close the gap and you can keep your distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Teemo-E", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Teemo:Ambessa:2",
+          "text": "Throw Noxious Trap in the paths she takes toward you, such as the lane brush; she is slowed and revealed when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Ambessa:3",
+          "text": "Save Move Quick for when she locks onto you with Public Execution range in mind; its sprint helps you get away after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Ambessa:4",
+          "text": "Do not stand in brush hoping to hide from her at level 6; she can blink to the farthest enemy champion in a line and suppress you.",
+          "refs": [],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:0",
+          "note": "Deep mushrooms slow Ambessa, whose dashes close the gap, so traps ahead of her punish her approach.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 20, "end": 27 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "22c0af844a9e2b6a1ee34eb2856fa9a18f0e99c25db0546de6164d13b00a32d3",
+      "tips": [
+        {
+          "id": "top:Teemo:Anivia:0",
+          "text": "Hit Anivia with Blinding Dart before she walks up to trade; blinded, her attacks miss, and her Frostbite and Flash Frost still land.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Anivia-E", "start": 95, "end": 104 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 109, "end": 120 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Teemo:Anivia:1",
+          "text": "Stay out of a straight line from Anivia and sidestep Flash Frost. Getting hit leaves you slowed, and the stun comes when it bursts at its end.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 53, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Teemo:Anivia:2",
+          "text": "Toss Noxious Trap behind you and in bushes as you retreat; Anivia has to chase through it and gets slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Teemo:Anivia:3",
+          "text": "Trade with Toxic Shot when her Flash Frost is on cooldown; the poison keeps ticking while you walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Anivia:4",
+          "text": "Her egg from Rebirth is a window to push or trade freely, so do not chase it; kill her again once she hatches.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 13,
+              "end": 20
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Teemo:Anivia:5",
+          "text": "Use Move Quick to close in or run out of range when her Crystallize wall goes up.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Anivia-W", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush lets Teemo open with fast hits when Anivia walks close, since she has no listed way to see him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "champion", "key": "Anivia", "start": 52, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "60b85db2c1a7a603114482c8e401bdbb5a854692f671c5771753c7cd27a45c39",
+      "tips": [
+        {
+          "id": "top:Teemo:Aurora:0",
+          "text": "Hit Aurora with Blinding Dart when she walks up to trade; blinded, her basic attacks miss, so she can't win a short fight.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Teemo:Aurora:1",
+          "text": "Aurora fights best up close, so keep attacking her from range with Toxic Shot and step back when she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Teemo-E", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Teemo:Aurora:2",
+          "text": "Throw Noxious Trap where she will land after Across the Veil or in her escape path; it reveals her and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Aurora-W", "start": 45, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Teemo:Aurora:3",
+          "text": "Don't stand still in the open waiting to turn invisible; Aurora's Twofold Hex reaches far and hits you from long range. Wait in a brush instead.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Teemo:Aurora:4",
+          "text": "Place mushrooms around your lane and in the brush. When Aurora leaves her rift, a trap makes her slowed and revealed.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1589d7456f2d095025742eb002e75c3320b1a5a008cb5e16b6f6d024c35c5841",
+      "tips": [
+        {
+          "id": "top:Teemo:Briar:0",
+          "text": "Hit Briar with Blinding Dart when she leaps in; blinded, her attacks miss, which blunts her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Teemo:Briar:1",
+          "text": "Toss a Noxious Trap behind you or in the lane bush before she engages, so she is slowed and revealed when she chases.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Teemo:Briar:2",
+          "text": "Stay at long range and poke with Toxic Shot; Briar has no health regeneration of her own and must trade to heal.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Briar", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Teemo:Briar:3",
+          "text": "Use Move Quick to run away once Briar locks onto you in Blood Frenzy; she is forced to chase and cannot choose another target.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Briar", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2451b1d40610feb3f81e4d8a034067e732243b25e93a92714c8c25bf2af0b44f",
+      "tips": [
+        {
+          "id": "top:Teemo:Camille:0",
+          "text": "Hit Camille with Blinding Dart when she walks up to trade; blinded, her attacks miss, so her Precision Protocol hits do little.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Camille-Q", "start": 93, "end": 111 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Teemo:Camille:1",
+          "text": "Keep poking her with Toxic Shot from long range and stay out of reach of her Tactical Sweep.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Camille-W", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Teemo:Camille:2",
+          "text": "Plant Noxious Trap near walls and in brush where she likes to use Hookshot. Her dash then lands her in a slow.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Camille-E", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Teemo:Camille:3",
+          "text": "Hold Blinding Dart for her Hookshot dash in. If she is blinded, her follow-up attacks miss.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Camille-E", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:Camille:4",
+          "text": "Use Move Quick to run away when she dives onto you. Her Hextech Ultimatum traps you in a zone, so stay far from her once she has level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bd965632960753b612cb7db595a1b168e6e6486a9c89cb2f4a1be269d4a45319",
+      "tips": [
+        {
+          "id": "top:Teemo:Chogath:0",
+          "text": "Hit Cho'Gath with Blinding Dart before he walks up to trade; his attacks miss while he is blinded.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Teemo:Chogath:1",
+          "text": "Stay at long range and poke with Toxic Shot attacks. Cho'Gath has to walk into your range to trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Chogath", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Teemo:Chogath:2",
+          "text": "Stand away from where Rupture is aimed. Its ground warning shows where it lands, so step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Teemo:Chogath:3",
+          "text": "Keep your distance from Cho'Gath; Feral Scream is short range and silences you if you are caught in the cone.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Chogath-W", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "silenced", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Chogath:4",
+          "text": "Place Noxious Trap in the lane bushes and behind you. Cho'Gath will be slowed when he steps on one and chases you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Chogath", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Teemo:Chogath:5",
+          "text": "Take damage from Cho'Gath and Move Quick stops working for a while. Avoid his hits to keep your speed.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Teemo-W", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0dd0ebf8def8a346d4b03142f598477e9506b31bac9a8c3662eb64fbfab8242e",
+      "tips": [
+        {
+          "id": "top:Teemo:Darius:0",
+          "text": "Poke Darius with Blinding Dart whenever you can. It has more range than your attacks, and the blind makes his basic attacks miss.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Teemo:Darius:1",
+          "text": "Keep Darius out of reach. He wants to get close, so hit him from range and back away before he can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Teemo:Darius:2",
+          "text": "Throw a Noxious Trap at your feet or in the brush he walks toward. He gets slowed and revealed, so he can't close the gap easily.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 8, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Teemo:Darius:3",
+          "text": "Use Move Quick to walk away when his Apprehend is on cooldown, and to run if he gets close. You only get the speed boost while he isn't hitting you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Darius-E", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Teemo:Darius:4",
+          "text": "Stay out of Apprehend's cone. Once he pulls you in, you are knocked up and can't get away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Teemo:Darius:5",
+          "text": "Don't fight Darius when he has many bleed stacks on you. Back off, since Noxian Guillotine hurts more the more stacks he has.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Darius-R", "start": 73, "end": 90 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "90e42e5b9714e948a2f77ffc251e905a181f5f7844d7a2373a5ae0d7c6acf80a",
+      "tips": [
+        {
+          "id": "top:Teemo:DrMundo:0",
+          "text": "Poke Dr. Mundo with Blinding Dart and Toxic Shot while he walks up; he has no way to close the gap except by being close, so stay at range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "DrMundo", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Teemo-E", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Teemo:DrMundo:1",
+          "text": "Stay out of line with Infected Bonesaw. It hurts more the more Health you have, and it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 22, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Teemo:DrMundo:2",
+          "text": "Put Noxious Trap in the paths Dr. Mundo walks to reach you; he is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "DrMundo", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Teemo:DrMundo:3",
+          "text": "Do not rely on trapping him in place. Goes Where He Pleases resists the first immobilizing effect that hits him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 38,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:DrMundo:4",
+          "text": "Do not stand beside him while Heart Zapper charges. It hurts nearby enemies and heals him when he recasts it.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:DrMundo:5",
+          "text": "Use Move Quick to walk away when he commits. Do not trade for long, because Maximum Dosage lets him heal through your damage.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 76, "end": 90 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Brush ambush gets fast first hits on Mundo, who has no listed way to hit a hidden target.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b69149275f811c118cb2ec7c6a1a8ae1aaac52d8e989a7ab2086883a360ba8d",
+      "tips": [
+        {
+          "id": "top:Teemo:Fiora:0",
+          "text": "Fire Blinding Dart at Fiora when she walks up to trade; blinded, her attacks miss, and her Vital hits can fail too.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Fiora:1",
+          "text": "Do not use Blinding Dart on her while Riposte is ready; she parries it and you waste your best tool.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Fiora-W", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Teemo:Fiora:2",
+          "text": "Poke her with Toxic Shot attacks from long range, and back off once she lunges in.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Teemo:Fiora:3",
+          "text": "Place Noxious Trap behind you and in bushes where she will lunge or chase; she gets slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Teemo:Fiora:4",
+          "text": "Her Grand Challenge makes her faster near you, so use Move Quick early to run away and keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Teemo-W", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "83317069963e2cca1daf9b22bb82884c2873e3bd799d7278487fb803161f8b56",
+      "tips": [
+        {
+          "id": "top:Teemo:Gangplank:0",
+          "text": "Hit Gangplank with Blinding Dart when he walks up to last-hit; his Parrrley attacks can miss while he is blinded.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 67, "end": 75 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Teemo:Gangplank:1",
+          "text": "Toss Noxious Trap into the bushes and onto his path. He is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Teemo:Gangplank:2",
+          "text": "Keep poking him with Toxic Shot from long range, and back off before he can close in on you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Gangplank:3",
+          "text": "Don't expect to hold him with slows. Remove Scurvy clears them, so Noxious Trap won't pin him down while it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Teemo-R", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Teemo:Gangplank:4",
+          "text": "Hit his Powder Keg with a basic attack to defuse it. An enemy who destroys a keg defuses it safely.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Gangplank is melee, so he must step close to the brush where Teemo's hidden attack-speed burst hits first.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Teemo", "start": 61, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b0812ea1b81fb045c9ce2e2d936dbead35020c9c8298695406b870cde8585359",
+      "tips": [
+        {
+          "id": "top:Teemo:Garen:0",
+          "text": "Hit Garen with Blinding Dart before he gets close; a blinded Garen misses his attacks and cannot trade well.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 },
+            { "kind": "champion", "key": "Garen", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Teemo:Garen:1",
+          "text": "Stay at long range and auto attack him so Toxic Shot keeps ticking; Garen has no ranged way to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 42, "end": 52 },
+            { "kind": "champion", "key": "Garen", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Teemo:Garen:2",
+          "text": "Hit him with Toxic Shot to stop his Perseverance healing; keep poking him so he cannot regenerate.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 13, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 36,
+              "end": 48
+            },
+            { "kind": "keyword", "key": "poke", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Teemo:Garen:3",
+          "text": "Throw Noxious Trap in the path he walks to you; it slows him, and the slow is removed only if he uses Decisive Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "ability", "key": "Garen-Q", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Teemo:Garen:4",
+          "text": "Use Move Quick to run away when Garen's Decisive Strike is spent or when he is low enough to threaten Demacian Justice.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Garen-Q", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Garen-R", "start": 102, "end": 118 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Garen:5",
+          "text": "Hide in brush to turn invisible with Guerrilla Warfare and ambush him with extra attack speed when he walks up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 37,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ab81ecae448fa88b0237099a1bd692f00e46ff9f4d47383b59b1550c5b94aab7",
+      "tips": [
+        {
+          "id": "top:Teemo:Gnar:0",
+          "text": "Throw Blinding Dart at Gnar before he walks up to trade; his attacks miss while he is blinded, and he is mini and wants to poke you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Gnar", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Teemo:Gnar:1",
+          "text": "Stay out of Gnar's Boomerang Throw line, and keep your distance until you want to fight; he outranges you in mini form.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Teemo:Gnar:2",
+          "text": "Hide mushrooms from Noxious Trap near walls and in brush that Gnar must walk through; he is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 20, "end": 32 },
+            { "kind": "champion", "key": "Gnar", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:Gnar:3",
+          "text": "Keep trading with Toxic Shot while Gnar is mini; the poison keeps ticking after he backs away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 18, "end": 28 },
+            { "kind": "champion", "key": "Gnar", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Gnar:4",
+          "text": "Fight Gnar when he has just turned back from Mega; he cannot gain Rage for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Teemo:Gnar:5",
+          "text": "Do not stand near a wall when Gnar is Mega; GNAR! throws you into it and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Gnar-R", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9bf25420a49743cb8d3b80fe3a080976fbc454e845c50af98dba474e98ced8c6",
+      "tips": [
+        {
+          "id": "top:Teemo:Gragas:0",
+          "text": "Hit Gragas with Blinding Dart when he walks up to trade; blinded, his attacks miss and Drunken Rage's empowered hit is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Gragas-W", "start": 87, "end": 99 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Teemo:Gragas:1",
+          "text": "Stay at long range and poke with Toxic Shot attacks; the poison keeps hurting Gragas after you step back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Gragas", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Teemo:Gragas:2",
+          "text": "Keep Noxious Trap mushrooms behind you and in the brush. When Gragas jumps in with Body Slam, he can land on one and get slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gragas", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Gragas-E", "start": 83, "end": 92 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 127 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Teemo:Gragas:3",
+          "text": "Do not stand where Gragas can hit you with Body Slam; the stun lets him and his Barrel Roll burst you down.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Gragas-E", "start": 43, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Teemo:Gragas:4",
+          "text": "Step out of the area where Barrel Roll comes to rest before it blows up; the longer it sits, the more it hurts and slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fdf1eac0f2195895fc081baea29cf57a4bf1891f88376c9ae46055965b3c2fbd",
+      "tips": [
+        {
+          "id": "top:Teemo:Gwen:0",
+          "text": "Hit Gwen with Blinding Dart when she walks up to trade; blinded, her attacks miss, which blunts her Snip Snip! stacks and empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 100, "end": 110 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Teemo:Gwen:1",
+          "text": "Poke her with Toxic Shot from range and stay out of her reach. She needs to attack a few times to set up her damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Teemo:Gwen:2",
+          "text": "Do not waste damage on Gwen while Hallowed Mist is up; she cannot be targeted from outside it. Back off and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Gwen-W", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Teemo:Gwen:3",
+          "text": "Put Noxious Trap where she dashes in or stands to fight; it slows her and shows where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Gwen:4",
+          "text": "Use Move Quick to step away after Gwen uses Skip 'n Slash; her empowered attacks hit hard and reach further for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Gwen", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Gwen-E", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:Gwen:5",
+          "text": "Sidestep between Needlework casts; she must hit something to recast, and the later casts hurt most.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e0b6c35719eacad7fb21b7c905b8be82535f460aaf81d882a17c59aef742b7ec",
+      "tips": [
+        {
+          "id": "top:Teemo:Heimerdinger:0",
+          "text": "Hit Heimerdinger with Blinding Dart before he trades; it blinds him so his attacks miss, and it outranges his basic attacks.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Teemo-Q", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Teemo:Heimerdinger:1",
+          "text": "Stay out of range of his grenade; if it stuns you, his turrets charge up and you take heavy damage.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:Heimerdinger:2",
+          "text": "Hide in brush with Guerrilla Warfare and wait for him to walk forward, then attack with Toxic Shot to poison him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 19,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Teemo-E", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Teemo:Heimerdinger:3",
+          "text": "Place Noxious Trap mushrooms around his turrets and in the lane's brush. He is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Teemo:Heimerdinger:4",
+          "text": "Don't stand beside his turrets. Fight him away from them, or push the wave and make him come to you.",
+          "refs": [],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Brush ambush gives fast first hits, but Heimerdinger's turrets and grenade punish Teemo once he is revealed.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 40,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Teemo", "start": 82, "end": 87 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b5563a12d1d5fb1f61edb5d0eee74806c4480e2462f484c4903c943bcf3ac106",
+      "tips": [
+        {
+          "id": "top:Teemo:Illaoi:0",
+          "text": "Poke with Toxic Shot attacks and Blinding Dart from range, and stay out of Illaoi's reach. She wants to get close, and your poison wears her down first.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Illaoi", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Teemo:Illaoi:1",
+          "text": "Use Blinding Dart on Illaoi when she walks up to attack. A blinded enemy misses their basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Illaoi", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Teemo:Illaoi:2",
+          "text": "Place Noxious Trap mushrooms in the paths she uses to approach. They leave her slowed and make it harder for her to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Illaoi:3",
+          "text": "Use Move Quick to walk away when she leaps in with Harsh Lesson. Her Tentacles only hit while she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Teemo:Illaoi:4",
+          "text": "Hit the Tentacles Illaoi creates. The Tentacles are what make her strong, so killing them weakens her fights.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Teemo:Illaoi:5",
+          "text": "Stay away from the Spirit that Test of Spirit pulls out of you. Fight back or walk away so the Tentacles can't hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Illaoi's Tentacles spawn on terrain, but Teemo's brush ambush gets fast first hits as she walks close.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Teemo", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "402efe30510cfbdf18704ae7cab09493c6549054c9a7b66637d54e2640c1c720",
+      "tips": [
+        {
+          "id": "top:Teemo:Irelia:0",
+          "text": "Use Blinding Dart on Irelia when she wants to trade; she is blinded and her basic attacks miss, and her Bladesurge still lands.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Irelia", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 104, "end": 114 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Teemo:Irelia:1",
+          "text": "Throw Noxious Trap where Irelia walks to trade or farm; she is slowed and revealed, and she cannot dash in through the slow so easily.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Irelia", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 123 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Teemo:Irelia:2",
+          "text": "Hit Irelia with Toxic Shot from long range and back off. She has to run through minions to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-E", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Teemo:Irelia:3",
+          "text": "Do not fight while Irelia is charging Defiant Dance; it cuts your damage and crowd control cannot stop it. Wait for it to end, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Irelia-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Teemo:Irelia:4",
+          "text": "Stay out of the line between Flawless Duet's blades; you get stunned. Step sideways when she throws the first blade.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 29, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Irelia:5",
+          "text": "Hide in brush and stand still to turn invisible with Guerrilla Warfare, then ambush Irelia when she steps up for minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 53,
+              "end": 70
+            },
+            { "kind": "champion", "key": "Irelia", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9f0a672886916f659a7f08824e6add346141779723339f527eab685567740bc3",
+      "tips": [
+        {
+          "id": "top:Teemo:Jax:0",
+          "text": "Use Blinding Dart on Jax when he leaps in or tries to trade; his basic attacks miss while he is blinded, which cuts his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jax", "start": 21, "end": 24 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Teemo:Jax:1",
+          "text": "Poke Jax from range with Toxic Shot attacks and back off before he can leap onto you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Teemo-E", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Teemo:Jax:2",
+          "text": "Don't attack Jax while Counter Strike is up; he dodges your attacks and then stuns you. Wait for it to end, then hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 13, "end": 16 },
+            { "kind": "ability", "key": "Jax-E", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Teemo:Jax:3",
+          "text": "Throw Noxious Trap mushrooms behind you and in the brush on your side of the lane. Jax slowed by one is easier to kite.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Jax", "start": 83, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Jax:4",
+          "text": "Jax can leap to wards, so place mushrooms near any ward he has. A leap that lands on a trap sets it off.",
+          "refs": [{ "kind": "champion", "key": "Jax", "start": 0, "end": 3 }],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Teemo:Jax:5",
+          "text": "Avoid long fights once Jax has built up his attack speed; fight in short bursts and use Move Quick to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Teemo-W", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a8ca19a7a6eee9ffa22e9d6633bf9869a721a74b40852b761238eaea59b6317",
+      "tips": [
+        {
+          "id": "top:Teemo:Jayce:0",
+          "text": "Hit Jayce with Blinding Dart when he swings in melee; a blind makes his basic attacks miss, so his trades are weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Teemo:Jayce:1",
+          "text": "Stay at the edge of Blinding Dart range and poison him with Toxic Shot while he is in Cannon Stance.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Teemo-E", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Jayce:2",
+          "text": "Drop Noxious Trap where Jayce will land or chase you. He is slowed and revealed when he steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Jayce:3",
+          "text": "Stand in brush with Guerrilla Warfare, then poison him when he walks up to last-hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 20,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Teemo:Jayce:4",
+          "text": "After To the Skies! lands on you, run with Move Quick, since Jayce is slowed and can't follow up fast.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 43, "end": 53 },
+            { "kind": "champion", "key": "Jayce", "start": 61, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush keeps Teemo invisible, so Jayce's leap and swaps have no target until Teemo attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 22, "end": 27 },
+            { "kind": "champion", "key": "Jayce", "start": 42, "end": 47 },
+            { "kind": "champion", "key": "Teemo", "start": 86, "end": 91 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "18de78256f97298a5d6de6b5009872d49d93f46d8672790eff44eb7cf643bc03",
+      "tips": [
+        {
+          "id": "top:Teemo:KSante:0",
+          "text": "Keep Blinding Dart for when K'Sante walks up to trade; his attacks then miss for a while, so his trade falls apart.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:KSante:1",
+          "text": "Stay at long range and poison him with Toxic Shot while he is walking up. He has no ranged way to reach you except Ntofo Strikes.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 39, "end": 49 },
+            { "kind": "ability", "key": "KSante-Q", "start": 115, "end": 128 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Teemo:KSante:2",
+          "text": "Throw Noxious Trap in the brush and on his usual approach paths. He is slowed and revealed when he steps on one, so you can kite him.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:KSante:3",
+          "text": "Don't stand in line with K'Sante when his Ntofo Strikes has two stacks. The second hit pulls you in and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "KSante-Q", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Teemo:KSante:4",
+          "text": "Stay away from walls when K'Sante has All Out ready. He can pull you through terrain and hit you again.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "KSante-R", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Teemo:KSante:5",
+          "text": "Use Move Quick to walk away from Path Maker's dash. A long charge makes the stun longer, so move away when he starts charging.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "KSante-W", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f67207b813c1f40dbb8df38339c9670a8d9c8859ea9267562bbd61c35b4e8221",
+      "tips": [
+        {
+          "id": "top:Teemo:Kayle:0",
+          "text": "Hit Kayle with Toxic Shot while she is still melee, before level 6. She cannot reach you easily and you win trades.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-E", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Teemo:Kayle:1",
+          "text": "Use Blinding Dart when Kayle runs up to trade, so her attacks miss and her early game is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kayle", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Teemo:Kayle:2",
+          "text": "Place Noxious Trap on the paths Kayle takes to the lane, so she is slowed when she approaches.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Kayle", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Kayle:3",
+          "text": "Dodge Radiant Blast by standing out of line, or keep a minion between you; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Teemo:Kayle:4",
+          "text": "Be wary of Kayle after level 6. Her range grows and Divine Ascent makes her attacks strong, so stay away from her unless you can hit her first.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 52,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "06e00e3b281dc0056a9641526e7398974f9db3712c00048ded0e3e42533795df",
+      "tips": [
+        {
+          "id": "top:Teemo:Kennen:0",
+          "text": "Hit Kennen with Blinding Dart when he walks up to trade; his basic attacks miss while he is blinded, so his empowered attack is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Teemo:Kennen:1",
+          "text": "Stay at long range and poke with Toxic Shot attacks. Kennen has to take risks to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Kennen", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Teemo:Kennen:2",
+          "text": "Throw Noxious Trap mushrooms in the bushes and on the paths Kennen walks. A trap slows him and reveals him.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Kennen", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Teemo:Kennen:3",
+          "text": "Stay out of the range of Thundering Shuriken. Once Kennen has marks on you, back away, because the third hit stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 25, "end": 44 },
+            { "kind": "champion", "key": "Kennen", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Teemo:Kennen:4",
+          "text": "Use Move Quick to run away when Kennen dashes in with Lightning Rush. Hit him with a dart afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Kennen", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Kennen-E", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e13f10b9e2e6de625784c2bbb6358aa14999225cfc3e198088c23a70b36e687f",
+      "tips": [
+        {
+          "id": "top:Teemo:Kled:0",
+          "text": "Hit Kled with Blinding Dart when he walks up to trade; blinded, his attacks miss, so his Violent Tendencies burst does little.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Kled-W", "start": 89, "end": 107 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Teemo:Kled:1",
+          "text": "Stay at long range and poke with Toxic Shot attacks. Kled has to close the gap, so back away as he comes.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Kled", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Teemo:Kled:2",
+          "text": "Place Noxious Trap mushrooms in the lane bushes and on his approach path. A slowed Kled is easier to kite.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "champion", "key": "Kled", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Kled:3",
+          "text": "Stand out of range of Bear Trap on a Rope. If it hooks you, walk away from Kled before he pulls you in.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 22, "end": 41 },
+            { "kind": "champion", "key": "Kled", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Teemo:Kled:4",
+          "text": "Once Kled is dismounted, he is weaker and loses his abilities, so push the fight and punish him.",
+          "refs": [{ "kind": "champion", "key": "Kled", "start": 5, "end": 9 }],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8f8268987771c8a1ed4bf827a91b26d00b40136e38ffa6d1c1c3fc305debd0fa",
+      "tips": [
+        {
+          "id": "top:Teemo:Malphite:0",
+          "text": "Hit Malphite with Blinding Dart before he trades; his Attacks miss while he is blinded, so his Thunderclap empowered hit is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 },
+            { "kind": "ability", "key": "Malphite-W", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Teemo:Malphite:1",
+          "text": "Poke with Toxic Shot attacks from long range. Malphite has to walk up to you, and Seismic Shard is his only ranged tool.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Teemo:Malphite:2",
+          "text": "Throw Noxious Trap behind you and on your escape path. Malphite is slowed and revealed when he steps on one while chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 55, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Malphite:3",
+          "text": "Stay out of his range once he reaches level 6. Unstoppable Force can't be stopped by crowd control and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Malphite:4",
+          "text": "Stand in brush and stay still so Guerrilla Warfare hides you. Attack when he steps close to get the extra Attack Speed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 33,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2b2f47e78bc498f7d12de37f1984818a5caeb02067543da3bbe201a071d6fc09",
+      "tips": [
+        {
+          "id": "top:Teemo:Mordekaiser:0",
+          "text": "Hit Mordekaiser with Blinding Dart before he walks up to trade; blinded, his basic attacks miss, which also slows how fast his Darkness Rise builds.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 21, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 127,
+              "end": 140
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Teemo:Mordekaiser:1",
+          "text": "Keep your distance and poke with Toxic Shot attacks. Back away before he reaches you, because his damage aura only hurts enemies close to him.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Teemo:Mordekaiser:2",
+          "text": "Stay out of a straight line from him, because Death's Grasp pulls you in. Step sideways once you see the claw appear.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 46,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Teemo:Mordekaiser:3",
+          "text": "Put Noxious Trap mushrooms in the brush and on the path he walks. He gets slowed and revealed, which gives you time to retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Mordekaiser:4",
+          "text": "Hold Move Quick for when he pulls you in or closes on you. The sprint keeps its speed while you are hit.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Mordekaiser:5",
+          "text": "Don't spend your whole fight hitting his Indestructible shield. Wait for it to fade, or poke when it is down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 41,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ebc5235743d9fefb8d1f7958cf69a8e5facef5febebd8ff745e18e982ac0bab3",
+      "tips": [
+        {
+          "id": "top:Teemo:Naafiri:0",
+          "text": "Hit Naafiri with Blinding Dart when she commits to a fight; the blind makes her basic attacks miss, which blunts her trades.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Teemo:Naafiri:1",
+          "text": "Keep your distance and auto her with Toxic Shot; she has to run into you to trade, and the poison keeps ticking when she backs off.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Teemo:Naafiri:2",
+          "text": "Hide Noxious Trap mushrooms behind you and in the brush she walks through; she gets slowed and revealed when she steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Naafiri:3",
+          "text": "Her Packmates will chase you, so fight when the enemy is alone and has few packmates around.",
+          "refs": [],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Teemo:Naafiri:4",
+          "text": "Use Move Quick to run away when she dashes onto you with Hounds' Pursuit, and stay out of damage so the speed boost stays on.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dcfd91efd12af219ac61d5882605c47cc0016d14f9ef39d5b9338a4dd159d009",
+      "tips": [
+        {
+          "id": "top:Teemo:Nasus:0",
+          "text": "Hit Nasus with Blinding Dart when he walks up to last-hit; blinded, his Siphoning Strike attack misses.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Teemo:Nasus:1",
+          "text": "Poke him with Toxic Shot attacks from long range and keep walking away so he cannot reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Teemo:Nasus:2",
+          "text": "Toss Noxious Trap on the path he walks to you; he is slowed and cannot catch you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Nasus:3",
+          "text": "Stay out of Wither range. If it lands, you are slowed hard and your attacks come slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Teemo:Nasus:4",
+          "text": "Do not fight Nasus while Fury of the Sands is active; run and let the cooldown tick.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Nasus-R", "start": 25, "end": 42 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Teemo:Nasus:5",
+          "text": "Use Move Quick to run away after a trade; it keeps its speed even if you are hit.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "55b1c4c724ed620e9114c3bcb018da8832162280c1fb5dd2ffa00bfe06f8e0d6",
+      "tips": [
+        {
+          "id": "top:Teemo:Olaf:0",
+          "text": "Poke Olaf with Blinding Dart and your poison from range, and do not let him reach you. He is stronger the closer he gets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Olaf", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:Olaf:1",
+          "text": "Place Noxious Trap mushrooms where Olaf walks to the lane, so the slow punishes his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Olaf", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Teemo:Olaf:2",
+          "text": "Stay clear of Undertow's line and keep minions between you; it slows and cuts your Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Teemo:Olaf:3",
+          "text": "Do not rely on slows or stuns once Ragnarok starts; Olaf shrugs them off. Back away from him and let it run out.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Olaf-R", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Olaf", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "606b8642fca3dfc4f4c88504f2fb55e91b9271c8cfcb26feebb97f18da381bb4",
+      "tips": [
+        {
+          "id": "top:Teemo:Ornn:0",
+          "text": "Hit Ornn with Blinding Dart when he walks up to trade or last-hit; blinded, his basic attacks miss.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Ornn:1",
+          "text": "Stay out of reach of Ornn's Searing Charge by fighting away from walls; he needs terrain to knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ornn-E", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Ornn:2",
+          "text": "Hide in brush with Guerrilla Warfare and attack from it. Ornn has no way to see you coming.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 19,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Ornn", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Teemo:Ornn:3",
+          "text": "Plant Noxious Trap in the paths Ornn walks to the wave and behind your own wave. He is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Ornn", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Teemo:Ornn:4",
+          "text": "Poke him with Toxic Shot attacks from range, since Ornn has no long ranged attack to answer except Volcanic Rupture.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Ornn", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 99, "end": 115 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Teemo:Ornn:5",
+          "text": "Sidestep Volcanic Rupture. Getting hit slows you and sets up the rest of his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fdf578cd348c624fb98889a0f28ab154ff69332a1a11d66811f3b8f6a802bd79",
+      "tips": [
+        {
+          "id": "top:Teemo:Pantheon:0",
+          "text": "Hit Pantheon with Blinding Dart when he walks up to trade; his attacks will miss while he is blinded.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Teemo:Pantheon:1",
+          "text": "Keep poking him with Toxic Shot from long range and don't let him close the gap for free.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Teemo:Pantheon:2",
+          "text": "Place Noxious Trap mushrooms behind you and near the bush. When Pantheon leaps in, he will be slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 64, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Teemo:Pantheon:3",
+          "text": "Move away from Pantheon when his Shield Vault is ready, because it will stun you. Don't stand where he can easily reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 33, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Teemo:Pantheon:4",
+          "text": "Don't attack Pantheon from the front while he braces with Aegis Assault. Wait it out or hit him from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Pantheon:5",
+          "text": "Stay healthy: a thrown Comet Spear hits much harder when you are low. Use Move Quick to get away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Teemo-W", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ad248d79e70e1abce98b062df66812797608832583aff881aa31e8cb666009a",
+      "tips": [
+        {
+          "id": "top:Teemo:Quinn:0",
+          "text": "Hit Quinn with Blinding Dart when she goes for a trade; her attacks miss while she is blinded, which blunts her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Teemo:Quinn:1",
+          "text": "Stay at range and poke her with Toxic Shot; she has to cross a lot of ground to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Teemo-E", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Teemo:Quinn:2",
+          "text": "Drop Noxious Trap behind you or in the brush she likes to come from; she gets slowed and revealed when she steps on it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Quinn:3",
+          "text": "Watch for Quinn's Vault: it dashes onto you and bounces her back out, so don't chase her after it.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Quinn-E", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Quinn:4",
+          "text": "When her Behind Enemy Lines channel starts, she is about to roam. Push the wave, then place mushrooms in the lanes she would use to get to you.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-R", "start": 9, "end": 27 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e587174522648846f35d0f84b2588608c7cfdbd120ce351b6fca123bccbee9f",
+      "tips": [
+        {
+          "id": "top:Teemo:Renekton:0",
+          "text": "Blind Renekton with Blinding Dart before he trades. His attacks then miss, so Ruthless Predator does little.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Renekton-W", "start": 78, "end": 95 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Teemo:Renekton:1",
+          "text": "Stay at long range and keep attacking with Toxic Shot. Renekton has to dash in to reach you, and the poison keeps hurting him when he backs out.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 43, "end": 53 },
+            { "kind": "champion", "key": "Renekton", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Teemo:Renekton:2",
+          "text": "Put Noxious Trap mushrooms in the bushes and along the path Renekton walks to you. He gets slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Renekton", "start": 60, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Renekton:3",
+          "text": "Be ready when Renekton's Fury is high. The empowered Ruthless Predator stuns for much longer, so keep your distance and don't let him reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Renekton-W", "start": 53, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Teemo:Renekton:4",
+          "text": "Use Move Quick to run away after Renekton dashes in. It only gives its full speed if you haven't been hit recently.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Renekton", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6765746bdf6507f92782182bd90ad5acb2c91d44876cd12847e6f9a5c83828cb",
+      "tips": [
+        {
+          "id": "top:Teemo:Riven:0",
+          "text": "Hit Riven with Blinding Dart when she walks up to trade; blinded, her attacks miss, so her all-in loses most of its damage.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Teemo:Riven:1",
+          "text": "Keep your distance and trade with Toxic Shot attacks; Riven has to dash in to reach you, so poke her whenever she steps forward.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 34, "end": 44 },
+            { "kind": "champion", "key": "Riven", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Teemo:Riven:2",
+          "text": "Throw Noxious Trap behind you and at the sides of your lane position; Riven is slowed and revealed if she dashes onto one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Riven", "start": 70, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Riven:3",
+          "text": "Riven's Ki Burst stuns at close range, so don't let her stand next to you. Use Move Quick to walk away when she is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 8, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Teemo-W", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Teemo:Riven:4",
+          "text": "Move Quick's speed boost is lost when she damages you, so use the active to run when she is already on you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Riven has no listed stealth reveal, so a brush ambush can open a fast attack-speed trade on her.",
+          "refs": [{ "kind": "champion", "key": "Riven", "start": 0, "end": 5 }]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "aac5c3ff288812f7ea5d44162dbc8091344baf1ffaf81415ced527cae3c4382c",
+      "tips": [
+        {
+          "id": "top:Teemo:Rumble:0",
+          "text": "Hit Rumble with Blinding Dart before he walks up to trade, so his attacks miss while you poison him.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:Rumble:1",
+          "text": "Keep auto-attacking from range so Toxic Shot keeps ticking on Rumble. Back off once he closes in with Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 34, "end": 44 },
+            { "kind": "champion", "key": "Rumble", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Teemo:Rumble:2",
+          "text": "Put Noxious Trap in the bush and on the paths Rumble uses to reach you. He gets slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Rumble:3",
+          "text": "Look for the moment Rumble overheats. He can't cast spells then, so poke him freely, but stay away from his hard-hitting attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Rumble:4",
+          "text": "Rumble's Electro Harpoon slows you. Use Move Quick to get away and out of range of his next one.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rumble-E", "start": 9, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Teemo-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e6416eccd13f7e702fdc590ec0d8a498678479d324313c66154c0a1114299d77",
+      "tips": [
+        {
+          "id": "top:Teemo:Sett:0",
+          "text": "Hit Sett with Blinding Dart when he walks up to trade; blinded, his punches miss, so his Knuckle Down bonus damage is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 },
+            { "kind": "ability", "key": "Sett-Q", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Teemo:Sett:1",
+          "text": "Stay at long range and poke with Toxic Shot. Sett has to walk into you, and he is slowed less when he cannot reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 },
+            { "kind": "champion", "key": "Sett", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Teemo:Sett:2",
+          "text": "Place Noxious Trap mushrooms in the lane behind you and on his approach path. Sett is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Sett", "start": 78, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Teemo:Sett:3",
+          "text": "Stay out of Facebreaker range. If he pulls you from both sides with minions, you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Teemo:Sett:4",
+          "text": "Do not trade into his Haymaker when he has taken lots of damage. It turns that damage into a shield and a strong punch.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Teemo:Sett:5",
+          "text": "Use Move Quick to escape when he commits. Take no damage and you keep the passive speed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e7f0631f5898ea5907c0cd34262c079b784c637a94ec643e8d59a28491922d56",
+      "tips": [
+        {
+          "id": "top:Teemo:Shen:0",
+          "text": "Poke Shen with Blinding Dart when he walks up to last-hit; his attacks miss while he is blinded, which weakens his trades.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Teemo:Shen:1",
+          "text": "Stay out of Shadow Dash range, because getting taunted lets Shen hit you with attacks. Teemo has little health to spare.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Shen", "start": 60, "end": 64 },
+            { "kind": "champion", "key": "Teemo", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Teemo:Shen:2",
+          "text": "Put Noxious Trap in the brush and along Shen's path. He gets slowed and revealed, which makes it easy to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Teemo:Shen:3",
+          "text": "Trade with Toxic Shot attacks from range. Back off when Shen's Twilight Assault empowers his next attacks, since they hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Shen", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Shen-Q", "start": 63, "end": 79 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2e8dc46a56eca8277bd03f0b0c31bdf6f34356cdef244d632210e88fca16d8cd",
+      "tips": [
+        {
+          "id": "top:Teemo:Singed:0",
+          "text": "Hit Singed with Blinding Dart before he walks up to Fling you; a blinded enemy misses basic attacks, so he trades poorly.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Singed-E", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Teemo:Singed:1",
+          "text": "Poke Singed with Blinding Dart and Toxic Shot from long range, and stay out of his Poison Trail.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Singed", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 17, "end": 30 },
+            { "kind": "ability", "key": "Teemo-E", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Singed-Q", "start": 83, "end": 95 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Teemo:Singed:2",
+          "text": "Place Noxious Trap mushrooms in the lane behind you and in nearby brush. Singed chasing you will slow himself on them.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Singed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Singed:3",
+          "text": "Use Move Quick to run away when Singed runs at you. Mega Adhesive slows you, so stay out of its area.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Singed", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Singed-W", "start": 52, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Singed:4",
+          "text": "Do not stand close to Singed when he has Mega Adhesive ready. Fling into it leaves you rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Singed-W", "start": 41, "end": 54 },
+            { "kind": "ability", "key": "Singed-E", "start": 62, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "58165ba3da2058a2b38527330c59511f08bc573d63690369307db6e93e98fa4b",
+      "tips": [
+        {
+          "id": "top:Teemo:Sion:0",
+          "text": "Stay out of Sion's range while he charges Decimating Smash; if you see him start, step to the side or back away before it releases.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Sion:1",
+          "text": "Put Blinding Dart on Sion and keep poking with attacks; Toxic Shot punishes him when he must walk up.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Teemo-E", "start": 56, "end": 66 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Teemo:Sion:2",
+          "text": "Place Noxious Trap mushrooms behind you and in the lane's bushes so Sion gets slowed when he chases.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 68, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Sion:3",
+          "text": "Use Move Quick to escape after Sion's Roar of the Slayer slows you, and avoid fighting when he is shielded.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Sion-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Teemo:Sion:4",
+          "text": "Do not kill Sion carelessly in a fight; he comes back with Glory in Death and hits very fast, so back away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-passive", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b7cbdd1ff9109f171def7d6143865877c65d3de2e768164b349927fb97ea93f0",
+      "tips": [
+        {
+          "id": "top:Teemo:TahmKench:0",
+          "text": "Hit Tahm Kench with Blinding Dart when he walks up to trade; blinded, his attacks miss and he can't trade well.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Teemo:TahmKench:1",
+          "text": "Stay out of Tongue Lash range and keep minions out of its path, since it hits the first enemy in its line.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Teemo:TahmKench:2",
+          "text": "Poke with Toxic Shot attacks, then step back before he gets three stacks of An Acquired Taste on you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 10, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 76,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Teemo:TahmKench:3",
+          "text": "Plant Noxious Trap in the brush and along his path; he gets slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:TahmKench:4",
+          "text": "Move away from the spot he targets when you see Abyssal Dive start, since it knocks up and stuns everyone there.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 48, "end": 60 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 86 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Teemo:TahmKench:5",
+          "text": "Hit him with Toxic Shot during Thick Skin's shield window; the shield only lasts a short time, so poke again afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e55688a177e84a06e6c9f8bf8b8f9369fc87dfd1eee6a7ad40520e3e5015e534",
+      "tips": [
+        {
+          "id": "top:Teemo:Tryndamere:0",
+          "text": "Hit Tryndamere with Blinding Dart before he walks up to trade; his basic attacks will miss while he is blinded, so he gains less Fury.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Teemo:Tryndamere:1",
+          "text": "Poke him with Toxic Shot attacks early and often. If he can't last-hit minions, he can't build Fury to heal.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Teemo:Tryndamere:2",
+          "text": "Throw Noxious Trap mushrooms in the path he dashes along and behind you. They slow him and reveal him if he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Tryndamere:3",
+          "text": "Keep Move Quick ready for when he dives in. Running away from him also leaves you open to Mocking Shout's slow, so don't rely on running alone.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 5, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 90,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Teemo:Tryndamere:4",
+          "text": "Don't chase him when he gets low. Undying Rage keeps him alive, so wait for it to end before you commit.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 34, "end": 46 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Faster first hits from the brush ambush help against Tryndamere, who is a melee champion that must walk up to you.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 53, "end": 63 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "69a35e7a65a95513d1e2fb00449ad13f8a5a129799085421232fb10854f898b2",
+      "tips": [
+        {
+          "id": "top:Teemo:Urgot:0",
+          "text": "Hit Urgot with Blinding Dart when he walks up; it stops his basic attacks, so Echoing Flames can't fire.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Urgot-passive",
+              "start": 78,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "top:Teemo:Urgot:1",
+          "text": "Stay at long range and poke him with Toxic Shot. He has to walk into you, and Corrosive Charge is easy to dodge when you move.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Teemo-E", "start": 37, "end": 47 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 78, "end": 94 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Teemo:Urgot:2",
+          "text": "Play back from Disdain; it stuns and throws you when it connects. Place Noxious Trap mushrooms behind you so a chasing Urgot steps on them.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 15, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Teemo-R", "start": 72, "end": 84 },
+            { "kind": "champion", "key": "Urgot", "start": 119, "end": 124 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Teemo:Urgot:3",
+          "text": "Once Urgot is low, run away from him fast; Fear Beyond Death can pull you in. Stay above the low-health line while the drill is on you.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Urgot-R", "start": 43, "end": 60 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bea871156c201039bca84434c709319b5571f359ff121911efb8d780d2baa2c9",
+      "tips": [
+        {
+          "id": "top:Teemo:Varus:0",
+          "text": "Hit Varus with Blinding Dart when he walks up to trade; blinded, his attacks miss and Blighted Quiver stacks stop building.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Varus-W", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Teemo:Varus:1",
+          "text": "Stay out of the long reach of Piercing Arrow and step sideways while he charges it; it is a narrow line.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Teemo:Varus:2",
+          "text": "Hide in brush and wait; Guerrilla Warfare lets you move unseen there, so you can step out and trade with Toxic Shot.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 24,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Teemo-E", "start": 105, "end": 115 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Teemo:Varus:3",
+          "text": "Drop Noxious Trap behind you when you retreat from Varus; the trap slows him if he chases.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Varus", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Teemo:Varus:4",
+          "text": "Keep your Move Quick speed by avoiding damage, so you can dodge Hail of Arrows and walk away from his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "Varus-E", "start": 64, "end": 78 },
+            { "kind": "keyword", "key": "poke", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Varus:5",
+          "text": "Be careful at level 6; if Chain of Corruption lands, you are rooted and cannot trade back. Stay far from his line of fire.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 26, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hidden in brush, Teemo's faster first hits can punish Varus walking close, as Varus is a ranged champion.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Varus", "start": 54, "end": 59 },
+            { "kind": "champion", "key": "Varus", "start": 78, "end": 83 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "da20ac27467b159f2e3d3b711ef6300a55280015cbad8fe36e8e1ad4ee8df286",
+      "tips": [
+        {
+          "id": "top:Teemo:Vayne:0",
+          "text": "Hit Vayne with Blinding Dart when she walks up to attack; she is blinded and her attacks miss for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Teemo:Vayne:1",
+          "text": "Use Blinding Dart on her before she trades, since her best damage comes from her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Teemo:Vayne:2",
+          "text": "Throw Noxious Trap near walls and in brush at your side of the lane; she is slowed and revealed when she steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Teemo:Vayne:3",
+          "text": "Stand with your back away from walls when she has Condemn ready; a wall hit stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 50, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Vayne:4",
+          "text": "Poke her with Toxic Shot attacks from range, because she is fragile and hates being worn down.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "48bda0aafc50d1e17e2c652d00ca7a395323bf3b16dd408baa36afe5739c2c08",
+      "tips": [
+        {
+          "id": "top:Teemo:Vladimir:0",
+          "text": "Hit Vladimir with Blinding Dart before he reaches you; a blinded Vladimir misses his basic attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 },
+            { "kind": "champion", "key": "Vladimir", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Teemo:Vladimir:1",
+          "text": "Stay at range and poke with Toxic Shot; Vladimir's Transfusion heals him, so a quick trade costs you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Teemo-E", "start": 28, "end": 38 },
+            { "kind": "champion", "key": "Vladimir", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Teemo:Vladimir:2",
+          "text": "Put Noxious Trap on the paths Vladimir walks to catch him; he is slowed and revealed.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Vladimir", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Vladimir:3",
+          "text": "Don't chase while Vladimir is in Sanguine Pool; he can't be targeted and it hurts and slows you if you stay near.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Teemo:Vladimir:4",
+          "text": "Use Move Quick to get out of Hemoplague range and away from his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4418556efb98cf31706487d90f3c88e0c3eb9edc9735b0de798be22c5e061c9b",
+      "tips": [
+        {
+          "id": "top:Teemo:Volibear:0",
+          "text": "Hit Volibear with Blinding Dart when he runs at you; a blinded Volibear misses his basic attacks, though Frenzied Maul still lands.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 },
+            { "kind": "champion", "key": "Volibear", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Volibear-W", "start": 105, "end": 118 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Teemo:Volibear:1",
+          "text": "Keep your distance and auto him with Toxic Shot. He has no ranged poke, so he must walk up to you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 37, "end": 47 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Teemo:Volibear:2",
+          "text": "Toss Noxious Trap in front of you on his approach path. Getting slowed makes it harder for him to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Teemo:Volibear:3",
+          "text": "Do not let him reach you when Thundering Smash is ready, because it stuns on hit. Back away when he gets close and he fast-closes the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 30, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Volibear:4",
+          "text": "Stand in the brush and wait unseen. Hit him with Blinding Dart as he walks past to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Teemo:Volibear:5",
+          "text": "Step away from the spot where Sky Splitter is landing; it is slow to fall and hurts big.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "67deb79cf4ac295f05cfafb59926b5096c059ba8903bcf60b0299bb78ef356af",
+      "tips": [
+        {
+          "id": "top:Teemo:XinZhao:0",
+          "text": "Hit Xin Zhao with Blinding Dart as he runs in. His attacks miss, so his trade is much weaker.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Teemo:XinZhao:1",
+          "text": "Poke with Toxic Shot and back off. Xin Zhao has to chase you, and the poison keeps hurting him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:XinZhao:2",
+          "text": "Put Noxious Trap mushrooms behind you and in nearby brush. Xin Zhao's charge and chase run you into them, and they slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 59, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Teemo:XinZhao:3",
+          "text": "Don't stand close to Xin Zhao. Audacious Charge closes the gap fast, and Three Talon Strike's third attack knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 31, "end": 47 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Teemo:XinZhao:4",
+          "text": "Use Move Quick to get away once Xin Zhao commits. It also lets you kite him between your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21090af294e04103b1a6437b194943e3e35fe2103ea5e5dd927bd1955fdd70ec",
+      "tips": [
+        {
+          "id": "top:Teemo:Yasuo:0",
+          "text": "Hit Yasuo with Blinding Dart when he walks up to trade; his attacks miss while he is blinded, which blunts his all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Teemo:Yasuo:1",
+          "text": "Don't send Blinding Dart into a Wind Wall; it blocks projectiles. Wait for the wall to fade, then throw it.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Teemo:Yasuo:2",
+          "text": "Place Noxious Trap in the brush and on the path Yasuo walks to farm. He gets slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Yasuo:3",
+          "text": "Keep poking with Toxic Shot attacks from max range. Yasuo has to dash in through minions to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Yasuo", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Teemo:Yasuo:4",
+          "text": "Stay out of Steel Tempest's line when it has two stacks, because the whirlwind knocks you up. Step sideways when you see it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c05e6476e91a829420f0f507210bdd3512db552119e684305d307157734a119c",
+      "tips": [
+        {
+          "id": "top:Teemo:Yone:0",
+          "text": "Hit Yone with Blinding Dart when he walks up to trade; the blind makes his attacks miss, so his fight is much weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 14, "end": 27 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Teemo:Yone:1",
+          "text": "Keep poking with Toxic Shot attacks from range and back off before Yone can reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Teemo-E", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Yone", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Teemo:Yone:2",
+          "text": "Put Noxious Trap in the brush and on the path Yone takes to reach you; he is slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 46, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Teemo:Yone:3",
+          "text": "Stay away from Yone once he has used Fate Sealed or when his Mortal Steel stacks are ready; a knock up plus the pull can kill you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Yone-R", "start": 37, "end": 48 },
+            { "kind": "ability", "key": "Yone-Q", "start": 61, "end": 73 },
+            { "kind": "keyword", "key": "knocked-up", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Teemo:Yone:4",
+          "text": "Use Move Quick to run away when Yone dashes in with Soul Unbound.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Yone-E", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Teemo:combo:1",
+          "note": "Hiding in brush lets Teemo open with fast hits on Yone if he walks close, before Yone's dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Yone", "start": 81, "end": 85 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "8e6688ea6e76216c62398403891fafa5af68e43a60414ae469378cb58d158d47",
+      "tips": [
+        {
+          "id": "top:Teemo:Yorick:0",
+          "text": "Hit Yorick with Blinding Dart when he walks up to hit you; a blinded enemy misses their basic attacks, which blunts his Last Rites.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 120, "end": 130 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Teemo:Yorick:1",
+          "text": "Poke him with Toxic Shot attacks from range and walk away; his Mourning Mist slows only briefly, so keep your distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Yorick-E", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Teemo:Yorick:2",
+          "text": "Throw Noxious Trap behind your own position and on the paths he takes to reach you; he gets slowed and revealed when he steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Teemo:Yorick:3",
+          "text": "Stay out of his Dark Procession ring; walls trap you inside, so walk away or break it with basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Teemo:Yorick:4",
+          "text": "Kill Mist Walkers quickly with basic attacks so Yorick has fewer helpers, and watch for the Maiden of the Mist at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e4e7e01907c03aae539f404a667ab24e8d202d168536683d32ae7ee22b6ca900",
+      "tips": [
+        {
+          "id": "top:Teemo:Zaahen:0",
+          "text": "Use Blinding Dart on Zaahen when he walks up to trade; a blinded Zaahen can't land his attacks, including the empowered one from The Darkin Glaive.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zaahen", "start": 21, "end": 27 },
+            { "kind": "champion", "key": "Zaahen", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 129, "end": 146 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Teemo:Zaahen:1",
+          "text": "Poke him with Toxic Shot attacks from a safe range. Zaahen has to cross the gap to fight, and the poison keeps ticking while he does.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Teemo-E", "start": 14, "end": 24 },
+            { "kind": "champion", "key": "Zaahen", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Teemo:Zaahen:2",
+          "text": "Throw Noxious Trap on the path Zaahen takes to reach you, or in the brush he walks through. A trap slows him and shows where he is.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Zaahen", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Teemo:Zaahen:3",
+          "text": "Zaahen's Dreaded Return is a line shot, so stay out of its line. Use Move Quick to speed away after a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 9, "end": 23 },
+            { "kind": "ability", "key": "Teemo-W", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Teemo:Zaahen:4",
+          "text": "Back off once Cultivation of War has stacked up from hitting you; he hits much harder when it fills. Don't let long trades feed him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 14,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

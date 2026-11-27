@@ -1,0 +1,3129 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ezreal",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "f0d3cf36aa140f30f53d931890d23deeb3342fd1d3942db5fedad5b8f063705d",
+      "tips": [
+        {
+          "id": "middle:Ezreal:general:0",
+          "text": "Land Mystic Shot on enemies as often as you can; each hit shortens your other cooldowns, so poking with it keeps your whole kit ready.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Ezreal:general:1",
+          "text": "Mystic Shot stops at the first enemy it hits, so line it up where minions are not in the way, or you will waste it on a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ezreal:general:2",
+          "text": "Fire Essence Flux onto an enemy champion, then hit them with Mystic Shot to detonate it. Detonating with an ability gives back mana.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ezreal:general:3",
+          "text": "Save Arcane Shift for dodging enemy skill shots or escaping a gank. Do not spend it just to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Ezreal:general:4",
+          "text": "Use Arcane Shift to get a better angle for your next Mystic Shot or Essence Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 53, "end": 64 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ezreal:general:5",
+          "text": "Hit with several abilities in a row to build Rising Spell Force, which makes your attacks faster. Keep landing spells during a fight to hold the stacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ezreal-passive",
+              "start": 45,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Ezreal:general:6",
+          "text": "Aim Trueshot Barrage down a lane to hit minion waves and enemies far away. It has very long range, so use it to finish weakened enemies across the map.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Ezreal:general:7",
+          "text": "Ezreal is fragile, so stay at long range and keep minions between you and enemies that can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Ezreal:combo:0",
+          "name": "Shift to reposition after Mystic Shot",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Ezreal-Q" },
+            { "kind": "ability", "key": "Ezreal-E" }
+          ],
+          "when": "When an enemy has just dodged or been hit and you need to escape.",
+          "whenRefs": [],
+          "text": "Because Mystic Shot lowers your cooldowns, landing it can bring Arcane Shift back sooner. Blink away right after the shot.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 64, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f58b7b69345989749464b3d58823f04113dc06ecdcdd2a3cee9eb71ed24da5e5",
+      "tips": [
+        {
+          "id": "adc:Ezreal:general:0",
+          "text": "Poke with Mystic Shot whenever the enemy walks up to last-hit. Each hit shortens your other cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ezreal:general:1",
+          "text": "Aim Mystic Shot so a minion is not in the line, because it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Ezreal:general:2",
+          "text": "Land Essence Flux on an enemy champion, then hit them with an attack or ability to detonate it. Detonating with an ability gives your mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Ezreal:general:3",
+          "text": "Use Arcane Shift to dodge a skill shot or to reposition. Its bolt then homes in on the nearest enemy, and it picks one marked by Essence Flux first.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 129, "end": 141 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:general:4",
+          "text": "Hold Arcane Shift for when an enemy dives on you. Ezreal is fragile, so don't spend it on poke.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ezreal", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ezreal:general:5",
+          "text": "Chain your spells in a fight. Every enemy you hit with an ability adds attack speed through Rising Spell Force.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ezreal-passive",
+              "start": 92,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Ezreal:general:6",
+          "text": "Fire Trueshot Barrage down a lane to hit several minion waves, or to finish a fleeing enemy from far away. It has very long range.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Ezreal:combo:0",
+          "name": "Flux then Shot detonate",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Ezreal-W" },
+            { "kind": "ability", "key": "Ezreal-Q" }
+          ],
+          "when": "Trading with an enemy champion in lane when both skillshots are available.",
+          "whenRefs": [],
+          "text": "Put the orb on the target first, then fire Mystic Shot so it detonates the mark. The detonation refunds mana, and the Q hit cuts your cooldowns.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 43, "end": 54 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "f31b7860fd92ce53116a6a8687d1f94a301932ba937e832cb2c69c526857b442",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Ahri:0",
+          "text": "Stay behind minions when Ahri is in range, because Charm ends at the first unit it hits. Stand in a clear line only when Charm is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Ahri-E", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ezreal:Ahri:1",
+          "text": "If Ahri charms you, hold Arcane Shift for her next move; blinking away once the charm ends keeps you out of her follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 25, "end": 37 },
+            { "kind": "ability", "key": "Ahri-E", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ezreal:Ahri:2",
+          "text": "Poke Ahri with Mystic Shot while she farms. Each hit lowers your cooldowns, so you can follow up with Essence Flux sooner.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ahri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 102, "end": 114 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Ezreal:Ahri:3",
+          "text": "Take the fight to Ahri while Spirit Rush is down. She has much less ability to escape or reposition then.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ahri-R", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ezreal:Ahri:4",
+          "text": "Step aside from Orb of Deception, since it hits you on the way out and again on the way back. Walk out of its line instead of staying in it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a940b194fe6518c493059fd57348bdfde1e10917132b8aa1d9dd987d3c9d1aa9",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Akali:0",
+          "text": "Keep poking with Mystic Shot while Akali walks up, and shoot through the minions only when none block the line, since it stops at the first enemy hit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ezreal:Akali:1",
+          "text": "Save Arcane Shift to escape when Akali jumps on you. It blinks you away and still hits the nearest enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ezreal:Akali:2",
+          "text": "Hit Akali with Essence Flux, then follow up with an attack or ability. You get bonus damage and mana back.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ezreal:Akali:3",
+          "text": "Akali is fragile early, so trade while her energy is low. Her Five Point Strike is strongest at full energy and maximum range.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-Q", "start": 62, "end": 79 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Ezreal:Akali:4",
+          "text": "When Akali drops Twilight Shroud, stop chasing and aim Trueshot Barrage or your area spells at the smoke. Area spells that hit her reveal her briefly.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Ezreal:Akali:5",
+          "text": "Play safe at level 6 and keep Arcane Shift ready. Perfect Execution lets Akali jump on you from a long way off.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 30, "end": 42 },
+            { "kind": "ability", "key": "Akali-R", "start": 50, "end": 67 },
+            { "kind": "champion", "key": "Akali", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Arcane Shift blinks Ezreal out of Akali's reach after Mystic Shot when she tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Akali", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 54, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cc96a82350402e29b8b2210a406688c1d3db016c02fbb55b65c63232e8c54b19",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Anivia:0",
+          "text": "Keep minions between you and Anivia, and sidestep Flash Frost. Getting hit leaves you slowed and open to a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 50, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 92 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Ezreal:Anivia:1",
+          "text": "Save Arcane Shift to escape after Anivia lands Flash Frost, before Frostbite follows up.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Anivia", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 47, "end": 58 },
+            { "kind": "ability", "key": "Anivia-E", "start": 67, "end": 76 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Ezreal:Anivia:2",
+          "text": "Poke Anivia with Mystic Shot and Essence Flux while she is low on mana, because Glacial Storm drains her fast.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 33, "end": 45 },
+            { "kind": "ability", "key": "Anivia-R", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ezreal:Anivia:3",
+          "text": "After Anivia turns into an egg, hit it or make her fight in a bad position. Do not waste a big ability on her passive.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dcbb5543743a5c050e9f000076ae67d5d1792dfc27cc3e5264bc50a903ec0a15",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Aurora:0",
+          "text": "Aim Mystic Shot at Aurora through the minion line only when it is clear; it stops at the first enemy it hits, so minions will eat it.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ezreal:Aurora:1",
+          "text": "Keep your distance and poke with Mystic Shot. Aurora has to close in to trade with you, so punish her when she steps up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 33, "end": 44 },
+            { "kind": "champion", "key": "Aurora", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ezreal:Aurora:2",
+          "text": "Stay out of The Weirding's line. If you are hit you are slowed and easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ezreal:Aurora:3",
+          "text": "Save Arcane Shift to escape when Aurora gets close, rather than spending it to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ezreal:Aurora:4",
+          "text": "When Aurora vanishes with Across the Veil, do not chase blindly. Wait for her to reappear and back away from where she could hop to.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ezreal:Aurora:5",
+          "text": "Do not walk into the ring from Between Worlds; enemies touching its edge are slowed, while Aurora can cross it quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 31, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 },
+            { "kind": "champion", "key": "Aurora", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5f18554283beef0277e85f9daf9f1c4698e80aa0b15495994fdc0a401b3ba8be",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Cassiopeia:0",
+          "text": "Keep minions between you and Cassiopeia so Noxious Blast and Twin Fang are harder to land. Take your own shots from the side.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 29, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 43,
+              "end": 56
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Ezreal:Cassiopeia:1",
+          "text": "Do not rely on Arcane Shift to dodge when Miasma is on you; it cannot be used while you are grounded. Step out of the clouds on foot.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ezreal:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off; you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ezreal:Cassiopeia:3",
+          "text": "Hit Cassiopeia with Mystic Shot from long range when she walks up to last-hit; she is a fragile target.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "3031afb86cf87327a9655b478ca6626bd1e0b38c8c2ec853735f65ce066ef8d4",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Fizz:0",
+          "text": "Keep Mystic Shot aimed at Fizz whenever he walks up to the minions. It hits the first enemy in its path, so line it up where no minion stands in front of him.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Ezreal:Fizz:1",
+          "text": "Save Arcane Shift for when Fizz dives on you. Blink away, and the bolt will still hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Ezreal:Fizz:2",
+          "text": "Fizz is untargetable during Playful, so wait until it ends to hit him with your spells instead of wasting them.",
+          "refs": [{ "kind": "champion", "key": "Fizz", "start": 0, "end": 4 }],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ezreal:Fizz:3",
+          "text": "At level 6, stay away from the middle of the lane. Chum the Waters can hit you from a long way off and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Ezreal:Fizz:4",
+          "text": "Poke Fizz with Mystic Shot and Essence Flux while his Urchin Strike is on cooldown. He has no easy way to reach you then.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f644563f479be8ec9131fb0e46b90e86ee8891350b2d9f722d6ecc83e4944cb8",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Malzahar:0",
+          "text": "Stay out of Malzahar's Call of the Void line; being silenced stops Arcane Shift, so you can't escape his follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ezreal:Malzahar:1",
+          "text": "Poke with Mystic Shot while minions are not between you; he has no long-range answer except Call of the Void.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 92, "end": 108 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ezreal:Malzahar:2",
+          "text": "Hit Malzahar with Essence Flux and follow up with Mystic Shot to detonate it and win the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ezreal:Malzahar:3",
+          "text": "Don't waste a full burst on Malzahar while his Void Shift is active; it cuts the damage he takes. Wait until he takes damage from a minion or is hit once.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 28, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ezreal:Malzahar:4",
+          "text": "Step away from minions carrying Malefic Visions; when they die it jumps to the nearest enemy, which could be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ezreal:Malzahar:5",
+          "text": "Keep Arcane Shift ready when he reaches level 6; Nether Grasp suppresses you, so stay out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5b77e861a518387ae90adb8a16981dff6173e2515e6570a362c83c64000d1d23",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Orianna:0",
+          "text": "Stay out of Orianna's Ball range. Her spells only hit around the Ball, so check where it sits before you step up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ezreal:Orianna:1",
+          "text": "Keep Arcane Shift ready for her level 6 Command: Shockwave. Blink out of the area before the pull lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Orianna-R", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Ezreal:Orianna:2",
+          "text": "Hit Orianna with Mystic Shot while the Ball is far from her. She can't easily answer with her spells.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ezreal:Orianna:3",
+          "text": "Move sideways when Orianna sends Command: Attack. It's a slow-moving line, so you can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Orianna-Q", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Mystic Shot cuts cooldowns so Arcane Shift returns sooner to blink away from Orianna's Shockwave.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 30, "end": 42 },
+            { "kind": "champion", "key": "Orianna", "start": 77, "end": 84 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a1e47538b77bbb2612160712f5b7327b79d6d8162d30741f10d8883f35d12dc8",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Ryze:0",
+          "text": "Keep minions between you and Ryze, since Overload only hits the first enemy in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ezreal:Ryze:1",
+          "text": "Stay out of Rune Prison range; if Ryze has already put Flux on you, it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Ryze", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ezreal:Ryze:2",
+          "text": "Land Mystic Shot on Ryze to bring your other cooldowns down, then follow up with Essence Flux.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ezreal:Ryze:3",
+          "text": "Save Arcane Shift to escape once Ryze has rooted you or is about to.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ezreal:Ryze:4",
+          "text": "Ryze is fragile when he opens a Realm Warp portal. Stun or otherwise disable him to cancel it.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-R", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "9f1eb33ea858b4201f680e6f85f623ea3412b96e6655f55a6e4e41212c797d51",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Sylas:0",
+          "text": "Stay behind minions when Sylas is in range. Mystic Shot stops at the first enemy it hits, and Sylas's Abduct chains are blocked the same way.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 44, "end": 55 },
+            { "kind": "champion", "key": "Sylas", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ezreal:Sylas:1",
+          "text": "Keep Arcane Shift ready for when Sylas uses Abscond. Blink away as soon as he commits, so Abduct has nothing to pull him onto.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Ezreal:Sylas:2",
+          "text": "Poke him from long range with Mystic Shot. Sylas has to walk up to hit you, and each hit lowers your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 30, "end": 41 },
+            { "kind": "champion", "key": "Sylas", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ezreal:Sylas:3",
+          "text": "Respect Kingslayer when he is low on health. He heals back a lot from it, so finish him with burst or don't chase.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-W", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ezreal:Sylas:4",
+          "text": "Before you fire Trueshot Barrage, check whether Sylas can steal it with Hijack. If he can, wait for another chance.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 16, "end": 32 },
+            { "kind": "champion", "key": "Sylas", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Sylas-R", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Ezreal:Sylas:5",
+          "text": "Keep your distance from Chain Lash. If you get slowed, Sylas can follow up with Abduct.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 24, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 },
+            { "kind": "champion", "key": "Sylas", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ezreal:combo:0",
+          "note": "Arcane Shift can blink Ezreal out of range after Mystic Shot when Sylas closes in with his dash.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 49, "end": 60 },
+            { "kind": "champion", "key": "Sylas", "start": 66, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "10c60acab47ee2217051bf7a8a82a471baabfd68ba24649fed5f77cd98d3f9c9",
+      "tips": [
+        {
+          "id": "middle:Ezreal:TwistedFate:0",
+          "text": "Stay out of range of Twisted Fate's Gold Card. Once you are stunned, Wild Cards will land on you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 21,
+              "end": 33
+            },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 69,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Ezreal:TwistedFate:1",
+          "text": "Keep minions between you and Twisted Fate, and poke with Mystic Shot while his Pick a Card is on cooldown.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 29,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 57, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 79,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Ezreal:TwistedFate:2",
+          "text": "Save Arcane Shift to dodge the Gold Card stun or to get away when Twisted Fate uses Destiny. It is your best way out of a gank.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 66,
+              "end": 78
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 84,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ezreal:TwistedFate:3",
+          "text": "Treat Destiny as a warning. When Twisted Fate uses it, back off toward safety before he gates in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 6,
+              "end": 13
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1ae3732232374292c26a081fd9cf0cbf09cceb9714ef41a929ecead5a445b64e",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Viktor:0",
+          "text": "Poke Viktor with Mystic Shot from long range, and keep it aimed so a minion doesn't block it, since it stops at the first enemy hit.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ezreal:Viktor:1",
+          "text": "Stay out of Hextech Ray range, and sidestep it when you see him aim. It is a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Ezreal:Viktor:2",
+          "text": "Don't stand in Gravity Field. If you stay inside, you get slowed and then stunned, so walk out right away.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Ezreal:Viktor:3",
+          "text": "Keep Arcane Shift ready to escape when Viktor gets close. Use it to leave Gravity Field or to dodge his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Viktor-W", "start": 74, "end": 87 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Ezreal:Viktor:4",
+          "text": "Land Essence Flux on Viktor, then detonate it with Mystic Shot. This deals extra damage and gives your mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ezreal:Viktor:5",
+          "text": "Move out of Arcane Storm as soon as it lands. It follows you, so keep walking away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ezreal:Viktor:6",
+          "text": "Fight him early, before he has built up augments. Kills make his abilities stronger.",
+          "refs": [],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ad520541f632e8dc054890744a0aa4ee378bbb1490a1cf88eb53fb37edbfff23",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Yasuo:0",
+          "text": "Keep Mystic Shot aimed at Yasuo's lane approach; he has no way to stop it except Wind Wall, so fire when it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Ezreal:Yasuo:1",
+          "text": "Wait for Yasuo to spend Wind Wall before you throw Essence Flux or Trueshot Barrage, because the wall destroys projectiles.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 51, "end": 63 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Ezreal:Yasuo:2",
+          "text": "Stay behind minions so Yasuo cannot reach you with Sweeping Blade, and use Arcane Shift to get away once he dashes at you.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 51, "end": 65 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Ezreal:Yasuo:3",
+          "text": "Sidestep Steel Tempest, since it is narrow. When he has two stacks, he fires a whirlwind that knocks you up, so stay out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8bf37d591f707487cf72fcb2ab4b826af2eeb13269464cbad85df943da803aff",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Yone:0",
+          "text": "Poke with Mystic Shot from long range and keep minions out of the way; Yone has to walk up to you, so hit him as he closes in.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Ezreal:Yone:1",
+          "text": "Use Arcane Shift to escape when Yone dashes at you with a Mortal Steel whirlwind. It's a short blink, so use it before he is on top of you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Yone-Q", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Ezreal:Yone:2",
+          "text": "Stay out of Yone's Fate Sealed range at level 6. If it hits you, you are stunned and pulled to him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Yone-R", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ezreal:Yone:3",
+          "text": "Hit Yone with Essence Flux, then follow with Mystic Shot to pop it. This refunds mana and cuts your cooldowns, so you can keep poking.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Ezreal:Yone:4",
+          "text": "Don't trade while Yone's Spirit Cleave shield is up. Wait for it to fade, then hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Yone-W", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ezreal:Yone:5",
+          "text": "When Yone is in spirit form from Soul Unbound, back away. The damage you take comes back as extra damage when he snaps to his body.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-E", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "355a91156a5e0da3cd195f0df64ef53c747c990edf2845e30a8e094ca1952d44",
+      "tips": [
+        {
+          "id": "middle:Ezreal:Zed:0",
+          "text": "Poke with Mystic Shot from long range; each hit lowers your cooldowns, so you can keep sending more at Zed.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Zed", "start": 103, "end": 106 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ezreal:Zed:1",
+          "text": "Keep minions between you and Zed. Mystic Shot stops at the first enemy it hits, so aim it down a clear lane.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ezreal:Zed:2",
+          "text": "When Zed dives you, use Arcane Shift to blink away. Its bolt still hits him as you leave.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ezreal:Zed:3",
+          "text": "Hold Arcane Shift for when Zed uses Death Mark. After he lands on you, blink out and stay away from his shadow until the mark pops.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Zed-R", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Ezreal:Zed:4",
+          "text": "Zed is fragile, so punish him with Essence Flux and then a Mystic Shot after he uses Living Shadow, since his shadow is then out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 35, "end": 47 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 59, "end": 70 },
+            { "kind": "ability", "key": "Zed-W", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "293ba19b6b9ccf7faab9f2b15e2c6fce0555a96712c7c63c3831f59b13c12dca",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Aphelios:0",
+          "text": "Poke with Mystic Shot whenever Aphelios steps up for a last hit; each hit also shortens your other cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Aphelios", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Aphelios:1",
+          "text": "Keep minions between you and Aphelios when he holds the purple gun; if he slows then roots you, you are stuck and easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ezreal:Aphelios:2",
+          "text": "Save Arcane Shift to escape a root or to line up a shot, not to walk forward into him.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ezreal:Aphelios:3",
+          "text": "Aphelios is fragile, so when he spends his weapons and has none ready, look for an all-in with Essence Flux then Mystic Shot.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 95, "end": 107 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 113, "end": 124 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Ezreal:Aphelios:4",
+          "text": "Use Trueshot Barrage to finish him when he is low and running away; it has very long range.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot lets Ezreal trade with Aphelios in lane, refunding mana and cutting cooldowns on a hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Aphelios", "start": 38, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "50832995d71f037dd3076f0f36160d28239e88c6601eff0f90ab8877a137f97a",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Ashe:0",
+          "text": "Poke Ashe with Mystic Shot when no minion is in the way. Every hit lowers your other cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ezreal:Ashe:1",
+          "text": "Keep Arcane Shift ready to escape when Ashe has Enchanted Crystal Arrow up; the stun is deadly if it hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ashe", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Ashe-R", "start": 48, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ezreal:Ashe:2",
+          "text": "Play near your minions so Ashe's Volley hits them first and not you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ashe-W", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Ezreal:Ashe:3",
+          "text": "Tag Ashe with Essence Flux, then hit her with an ability to blow it up and get mana back.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Ezreal:Ashe:4",
+          "text": "Stay out of Ashe's attack range; each of her attacks slows you, making your next shots harder to dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4942046c0c968a04316843fb1acd3a30d9c1b65a54889a6543432e9e8c183390",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Brand:0",
+          "text": "Dodge Brand's Sear and Pillar of Flame first; without an ablaze target, his stun combo can't start.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Brand-W", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "ablaze", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "adc:Ezreal:Brand:1",
+          "text": "Keep minions between you and Brand; Sear stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ezreal:Brand:2",
+          "text": "Walk out of Pillar of Flame's circle as soon as it appears; it erupts after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Brand:3",
+          "text": "Save Arcane Shift to escape once Brand has you ablaze; it gets you out of the follow-up stun.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Ezreal:Brand:4",
+          "text": "Poke Brand with Mystic Shot whenever he steps up; each hit shortens your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ezreal:Brand:5",
+          "text": "Stay away from your support when Pyroclasm is cast; its first missile is slow, so you have time to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "964c3fe817888ad9606806c8c7911394ecf0627399c92c42eef8c4216a86c128",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Caitlyn:0",
+          "text": "Keep minions between you and Caitlyn so Piltover Peacemaker hits them first and does less damage to you.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 40, "end": 59 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Ezreal:Caitlyn:1",
+          "text": "Do not walk through brush or unseen ground near Caitlyn; a Yordle Snap Trap there roots you for an easy Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 104,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Ezreal:Caitlyn:2",
+          "text": "Use Mystic Shot on minions or her to shorten your cooldowns, then trade with Essence Flux when she steps up.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Ezreal:Caitlyn:3",
+          "text": "Save Arcane Shift to escape or dodge her 90 Caliber Net and Piltover Peacemaker, not to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Caitlyn-E", "start": 41, "end": 55 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 60, "end": 79 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ezreal:Caitlyn:4",
+          "text": "Stay healthy at long range; Ace in the Hole can reach you, and it is blocked if an ally stands in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 28, "end": 43 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot lets you trade at range, and Caitlyn's net only slows after she fires it.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 44, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "db8741e62a660c0742f93cfcb8c3a53c416f04908b290b13b3b6e64faae8f9e5",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Cassiopeia:0",
+          "text": "Do not rely on Arcane Shift when you are inside Miasma; you are grounded and cannot blink. Stay out of the clouds.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Cassiopeia:1",
+          "text": "Hit Cassiopeia with Mystic Shot whenever she steps up to cast; she is easy to line up and it lowers your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Ezreal:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia when Petrifying Gaze is coming, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 31,
+              "end": 46
+            },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Cassiopeia:3",
+          "text": "Walk sideways out of Noxious Blast; it lands after a short delay, and poisoned you take heavy Twin Fang damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 21,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 94,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ezreal:Cassiopeia:4",
+          "text": "Take the fight to her; she is fragile and the Essence Flux mark plus Mystic Shot can burst her quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 46, "end": 58 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6b842ce8018f88d967c640a72be446654c9dfaf681085fab14fae77db7e33243",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Corki:0",
+          "text": "Keep minions between you and Corki so Phosphorus Bomb and his Missile Barrage are harder to land. Missile Barrage still splashes on you.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Corki-Q", "start": 38, "end": 53 },
+            { "kind": "ability", "key": "Corki-R", "start": 62, "end": 77 },
+            { "kind": "ability", "key": "Corki-R", "start": 98, "end": 113 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Ezreal:Corki:1",
+          "text": "Use Mystic Shot on Corki whenever you can. Each hit shortens your other cooldowns, so you can use Arcane Shift sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Corki", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 98, "end": 110 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Ezreal:Corki:2",
+          "text": "Mark Corki with Essence Flux, then hit him with an attack or ability to set it off for extra damage.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Corki", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Ezreal:Corki:3",
+          "text": "Step out of the cone when Corki starts Gatling Gun, since the longer it hits you the more of your defenses it strips.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Corki-E", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Corki:4",
+          "text": "Attack Corki right after he lands from Valkyrie; he is exposed then.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Corki-W", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7443fb91dd141839eda74bd1f2e51ddb74f368a21150ee15476bfe537581e8dd",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Draven:0",
+          "text": "Poke Draven with Mystic Shot when minions are not blocking the line; the first enemy hit stops it, so line it up on him.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ezreal:Draven:1",
+          "text": "Draven wants to hit hard in a short trade, so stay out of his reach and trade from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ezreal:Draven:2",
+          "text": "Hit Draven with Essence Flux, then follow with an attack or ability to pop the mark and get your mana back.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 16, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ezreal:Draven:3",
+          "text": "Keep Arcane Shift ready to dodge Stand Aside, because it knocks you back and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Draven-E", "start": 33, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Ezreal:Draven:4",
+          "text": "Once Draven has a lot of kills, avoid fights where he can finish you with Whirling Death. Use Trueshot Barrage to hit him from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Draven-R", "start": 74, "end": 88 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "04e0c2125f835c92af57b6dddc46f2699daf9471526a9b054cd21814d668ff79",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Hwei:0",
+          "text": "Stay out of Hwei's Crushing Maw and Gaze of the Abyss range, and keep minions between you when he casts; he must predict where you will stand.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Ezreal:Hwei:1",
+          "text": "Sidestep Severing Bolt; it lands after a delay, so keep moving when he aims at you.",
+          "refs": [],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Ezreal:Hwei:2",
+          "text": "Walk in on Hwei right after he casts a Torment spell, because he is easy to rush down then.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Ezreal:Hwei:3",
+          "text": "Use Arcane Shift to dodge Hwei's slow fireball or lightning, then fire Mystic Shot back at him.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Hwei", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Ezreal:Hwei:4",
+          "text": "Hit Hwei with Essence Flux, then Mystic Shot to detonate it. Ezreal gets mana back and trades well.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 33, "end": 44 },
+            { "kind": "champion", "key": "Ezreal", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot trades well against Hwei when both skillshots are up, and Q hits shorten your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 35, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5fad64fefa495f6c5a4415eeba48a17a04288679df5fe816fe3d16548ed034ec",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Jhin:0",
+          "text": "Walk Mystic Shot lines through minions only when none stand in front; the bolt stops at the first enemy, so line it up on Jhin directly.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jhin", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Ezreal:Jhin:1",
+          "text": "Stay out of Jhin's reach when his Captive Audience traps are ready; stepping on one leaves you slowed and revealed.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-E", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Ezreal:Jhin:2",
+          "text": "Do not get hit by Deadly Flourish right after you take damage from Jhin or his support; you will be rooted. Stay away from his aim line.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 18, "end": 33 },
+            { "kind": "champion", "key": "Jhin", "start": 67, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ezreal:Jhin:3",
+          "text": "Trade when Jhin is reloading after his fourth shot; he cannot attack then, so poke him freely.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 11, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Jhin:4",
+          "text": "Use Arcane Shift to dodge Deadly Flourish or to escape a trap, since it blinks away right as the shot lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Ezreal:Jhin:5",
+          "text": "Put Essence Flux on Jhin, then follow with Mystic Shot to pop it and get mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jhin", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Ezreal:Jhin:6",
+          "text": "Fire Trueshot Barrage at a weakened Jhin running away; its range is huge. Stay far from his Curtain Call cone.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Jhin-R", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d2828b5cbfe80d0b78fd6eab799c60d74e2d169fe10b00dc7a8f24c81a36fd56",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Jinx:0",
+          "text": "Poke with Mystic Shot whenever minions don't block the line; each hit also shortens your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Jinx:1",
+          "text": "Stay out of Flame Chompers range. If you get rooted by them, Jinx can hit you with everything.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 45, "end": 51 },
+            { "kind": "champion", "key": "Jinx", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Ezreal:Jinx:2",
+          "text": "Use Arcane Shift to escape after Jinx has used Flame Chompers, or to dodge her Zap! shot.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jinx", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jinx-W", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Ezreal:Jinx:3",
+          "text": "Jinx is fragile, so mark her with Essence Flux and follow with an attack or Mystic Shot when she steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Ezreal:Jinx:4",
+          "text": "Keep your distance when Jinx has her rockets out, because her range is longer. Trade when she is on the minigun.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ea3fcc585cc133778a8d19dc1b34caad6992811f515607a5fb277c8210b14951",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Kaisa:0",
+          "text": "Poke Kai'Sa with Mystic Shot whenever minions are not in the way; each hit also shortens your other cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Kaisa:1",
+          "text": "Stay out of Icathian Rain range early. It needs an enemy nearby to cast, so Kai'Sa has to walk close to use it.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Kaisa", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ezreal:Kaisa:2",
+          "text": "Use Arcane Shift to get away when Kai'Sa dashes in with Killer Instinct, or to line up a shot. Keep it for her all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kaisa", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Ezreal:Kaisa:3",
+          "text": "Hit Essence Flux, then follow with Mystic Shot or an attack to detonate it for extra damage and mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Ezreal:Kaisa:4",
+          "text": "Kai'Sa is fragile, so punish her after she uses Void Seeker and has it on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "caf3b81fb550b854e22c430b6d39b13d66c5c83cc5322715bca110bcee4a6321",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Kalista:0",
+          "text": "Stay out of Kalista's attack range when you can; her dashes only work while she is attacking, so she has little reach beyond it.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:Ezreal:Kalista:1",
+          "text": "Hit Kalista with Mystic Shot while she is winding up an attack; she cannot cancel it, so she is easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "adc:Ezreal:Kalista:2",
+          "text": "Keep minions between you and Kalista. Her Pierce stops at the first enemy it hits, and Mystic Shot works the same way, so line up shots with that in mind.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 87, "end": 98 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "adc:Ezreal:Kalista:3",
+          "text": "Save Arcane Shift to get away when Kalista hops onto you. Her Rend slows you, so leave before she stacks many spears.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Kalista", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Kalista-E", "start": 62, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Ezreal:Kalista:4",
+          "text": "Stay clear of her support when Fate's Call is ready. It can knock you up, so keep Arcane Shift ready to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kalista-R", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "759dc3f93a2bbfd06f6b5dc9532a2568a8cf3c59e4a3884d6d61d41a2ffea038",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Karthus:0",
+          "text": "Keep minions between you and Karthus. Lay Waste hits hard on a lone target, so don't stand by yourself in range.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Ezreal:Karthus:1",
+          "text": "Poke Karthus with Mystic Shot from long range. Each hit lowers your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Ezreal:Karthus:2",
+          "text": "Go around Wall of Pain or wait for it to fade; walking through it slows you and cuts your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ezreal:Karthus:3",
+          "text": "Save Arcane Shift to get away when Karthus tries to trade with Defile. Stay out of its short range.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Karthus", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Karthus-E", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ezreal:Karthus:4",
+          "text": "Stay away from his corpse after you kill him. He keeps casting with Death Defied for a few seconds.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 68,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Karthus:5",
+          "text": "Keep your health high after level 6. Requiem hits you from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5e3363cbb08e26eacf1a9c88a70482c9b14055b5f9758feb84e77105dee9cefc",
+      "tips": [
+        {
+          "id": "adc:Ezreal:KogMaw:0",
+          "text": "Poke Kog'Maw with Mystic Shot whenever he steps up to last-hit; he has no quick escape, so keep the pressure on.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "KogMaw", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Ezreal:KogMaw:1",
+          "text": "Stay out of Caustic Spittle's line and keep minions between you and it; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Ezreal:KogMaw:2",
+          "text": "Step out of the Void Ooze trail or you'll be slowed. Don't fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:KogMaw:3",
+          "text": "Use Arcane Shift to dodge Living Artillery. It lands after a short delay, so move or blink as it falls.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Ezreal:KogMaw:4",
+          "text": "Hit Kog'Maw with Essence Flux, then follow with an attack or ability. It pays back mana when an ability pops it.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Ezreal:KogMaw:5",
+          "text": "Stay away from Kog'Maw once he dies. Icathian Surprise explodes after a short delay, so run.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 15, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "KogMaw-passive",
+              "start": 37,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot detonating Essence Flux trades well while Kog'Maw's short base range keeps him in reach.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "KogMaw", "start": 54, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0bd4d72a2093dac325071eaa39d621ab74a59c5b3b0fd9e4bfb970064ad0084a",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Lucian:0",
+          "text": "Poke Lucian with Mystic Shot when he steps up to last-hit; it is a long-range shot and cuts your other cooldowns when it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Lucian:1",
+          "text": "Do not trade up close. Lucian has strong burst but little sustained damage, so fight from long range and back off when he dashes in.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Ezreal:Lucian:2",
+          "text": "Keep minions between you and Lucian, because his Ardent Blaze explodes on the first enemy it hits, so minions in front soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Lucian-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Ezreal:Lucian:3",
+          "text": "Save Arcane Shift to get out of Lucian's burst, or to line up a shot after he dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lucian", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ezreal:Lucian:4",
+          "text": "Hit Lucian with Essence Flux, then pop it with Mystic Shot for extra damage and mana back.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Lucian:5",
+          "text": "Use Trueshot Barrage from far away to finish a Lucian who has burned his dash and run low.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Lucian", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot's cooldown cuts let Ezreal keep trading against Lucian's short-range poke in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 32, "end": 38 },
+            { "kind": "champion", "key": "Lucian", "start": 60, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "70dcddd0d3cef5c7649157011caa7297d2d3e62388733c3870a555935e830bd9",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Lux:0",
+          "text": "Stay out of Light Binding's line by keeping minions between you and Lux. It stops at the first two enemies, so a minion in front of you soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Lux", "start": 68, "end": 71 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Ezreal:Lux:1",
+          "text": "If you get rooted, you can't dodge the follow-up. Use Arcane Shift before it lands, while you can still move.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Ezreal:Lux:2",
+          "text": "Poke Lux with Mystic Shot from long range. Each hit shortens your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Lux:3",
+          "text": "Lux is fragile, so hit her with Essence Flux and then follow up with an attack or ability to detonate it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Ezreal:Lux:4",
+          "text": "Step out of Lucent Singularity's circle. It slows you, and it blows up for damage after a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Lux:5",
+          "text": "Move sideways when you see the red line from Final Spark, since it fires a warning beam first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "22ccb1c5d55800499017149b5448b0bcd5355a14b1916910c9b4e78640898e18",
+      "tips": [
+        {
+          "id": "adc:Ezreal:MissFortune:0",
+          "text": "Keep minions between you and Miss Fortune so Double Up can't reach you, and poke her with Mystic Shot when she steps up.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 45,
+              "end": 54
+            },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Ezreal:MissFortune:1",
+          "text": "Hit Miss Fortune with Mystic Shot to damage her and lower your cooldowns. Any damage you deal also ends her Strut speed bonus.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 22, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 108,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Ezreal:MissFortune:2",
+          "text": "Stay out of Make It Rain, since being slowed there makes you easy to hit. Walk around the edge of the area.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:MissFortune:3",
+          "text": "Save Arcane Shift to dodge Bullet Time or to get out of the cone. Move sideways first if you can.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 27,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ezreal:MissFortune:4",
+          "text": "Put Essence Flux on Miss Fortune and then detonate it with Mystic Shot or an attack for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 4, "end": 16 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 20,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a739fc6c11da916717ed2e5a57d3fec7bedc80a64b6fd9b29a0e467f679774dc",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Nilah:0",
+          "text": "Poke Nilah with Mystic Shot from long range and keep minions out of her path; she wants to close the gap and fight.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nilah", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ezreal:Nilah:1",
+          "text": "Keep Arcane Shift ready for when Nilah dashes at you; blink away and the bolt hits her as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nilah", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ezreal:Nilah:2",
+          "text": "Do not auto-attack Nilah while Jubilant Veil is up; she dodges attacks. Use your abilities instead.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Nilah-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Ezreal:Nilah:3",
+          "text": "Stay away from Nilah when Apotheosis is ready at level 6; it pulls you to her. Save Arcane Shift to get out once it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Nilah-R", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Ezreal:Nilah:4",
+          "text": "Land Essence Flux on Nilah, then follow with Mystic Shot to pop it and get mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nilah", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b8d7ad1bae25b43fc2f3f385e399556c06eae9e3c4b0b3aa9f8bcd691477a904",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Samira:0",
+          "text": "Keep minions between you and Samira when you fire Mystic Shot, because it stops at the first enemy it hits. Aim along a clear line to her.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Samira:1",
+          "text": "Samira's Blade Whirl destroys missiles that enter it. Wait until it ends before you fire Essence Flux or Mystic Shot.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-W", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 89, "end": 101 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Ezreal:Samira:2",
+          "text": "Samira is strongest up close, so poke her from long range. Back away when she builds speed and closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Samira:3",
+          "text": "Save Arcane Shift to get out when Samira dashes in with Wild Rush. Use it to escape rather than to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Samira", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Samira-E", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ezreal:Samira:4",
+          "text": "Samira's Inferno Trigger needs a full Style rating. When she looks ready to use it, stay out of its short range.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-R", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "87cacb0b09154d7abda06456314a1d94ecfc44834ffd7083bef7d075c664d3a9",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Senna:0",
+          "text": "Keep minions between you and Senna's Last Embrace; it stops at the first enemy it hits, and a root on you lets her team punish you.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Senna-W", "start": 37, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Ezreal:Senna:1",
+          "text": "Once Last Embrace is on cooldown, walk up and trade with Mystic Shot. Senna has no dash to dodge your shots.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 57, "end": 68 },
+            { "kind": "champion", "key": "Senna", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Ezreal:Senna:2",
+          "text": "Save Arcane Shift to step out of Last Embrace's delay. The root only lands after a short wait, so you can blink away before it spreads.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Ezreal:Senna:3",
+          "text": "Senna outranges you as she collects Mist. Poke her early with Mystic Shot and fight before her attack range grows.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Ezreal:Senna:4",
+          "text": "Hit Senna with Essence Flux, then follow with an attack or ability to pop it. Her team is fragile, so burst whoever is closest.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f85c4a5103f0b686eea1d44f2130ec619d80e3cd8ff8d1ce1bfabb1836d8f54e",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Sivir:0",
+          "text": "Hold your skill shots while Spell Shield is up; it blocks one ability. Wait for her to use it or for it to run out, then fire.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Sivir:1",
+          "text": "Poke Sivir with Mystic Shot from long range. Keep minions out of the line so they don't stop it.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Ezreal:Sivir:2",
+          "text": "Dodge Boomerang Blade. If it hits you on the way out, stay out of its path as it returns.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Sivir:3",
+          "text": "Use Arcane Shift to escape when Sivir runs at you after attacking you, since her Fleet of Foot makes her fast.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sivir", "start": 32, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Sivir-passive",
+              "start": 81,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ezreal:Sivir:4",
+          "text": "Don't leave Sivir alone to push the wave. She clears minions fast with Ricochet and can take your turret down.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sivir-W", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6cd9551f50e09ff6dfdd285105fb7ff5faaf89f5b20654e2ff9c64bb0ba6c8d2",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Smolder:0",
+          "text": "Poke Smolder early with Mystic Shot; his early game is weak and he wants safe farm to stack Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 24, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 92,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Smolder:1",
+          "text": "Stay behind minions when Smolder is in range, since his Achooo! is a line shot that minions can block.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Smolder-W", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Ezreal:Smolder:2",
+          "text": "Use Arcane Shift to dodge Achooo! or to escape after you are slowed; save it for when you are hit or about to be.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Smolder-W", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Ezreal:Smolder:3",
+          "text": "Hit Smolder with Essence Flux, then follow with Mystic Shot or an attack to pop it for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Smolder:4",
+          "text": "Smolder's flight bolts hit the nearest, most wounded enemy. Don't stand low and close to him when he takes off with Flap, Flap, Flap.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-E", "start": 116, "end": 132 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Ezreal:Smolder:5",
+          "text": "Play to deny his stacks late: Smolder gets stronger the longer he farms, so fight him before he gets big.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mana refund and Q cooldown cuts let Ezreal keep poking Smolder while his Q stacks build.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 36, "end": 42 },
+            { "kind": "champion", "key": "Smolder", "start": 55, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d1b59a238d468385a8597dfbc3a5a064a491fdeffcb118aacd92be1b75a27fb7",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Tristana:0",
+          "text": "Poke Tristana with Mystic Shot while a minion is not in the way. Each hit lowers your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ezreal:Tristana:1",
+          "text": "Tristana outranges you more as she levels. Do not stand in front of her attack range, and use Arcane Shift to get away when she jumps on you.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Ezreal:Tristana:2",
+          "text": "When Tristana puts Explosive Charge on you, back away from her. Fewer attacks and abilities landing means less damage when it goes off.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Tristana-E", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ezreal:Tristana:3",
+          "text": "Save Arcane Shift for when Tristana uses Rocket Jump or Buster Shot on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Tristana", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Tristana-W", "start": 41, "end": 52 },
+            { "kind": "ability", "key": "Tristana-R", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Ezreal:Tristana:4",
+          "text": "Mark Tristana with Essence Flux, then detonate it with Mystic Shot for extra damage and mana back.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a0891670f9f619cf0a339fba46cf8db647321cc3349ce34718e9de6f12ad0512",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Twitch:0",
+          "text": "Keep minions between you and Twitch, and use Mystic Shot to poke when he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Ezreal:Twitch:1",
+          "text": "Walk out of Venom Cask clouds quickly; staying in means being slowed and taking more Deadly Venom.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 85,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Ezreal:Twitch:2",
+          "text": "Do not trade when Twitch has many Deadly Venom stacks on you; Contaminate hits harder with each stack.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 18, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 34,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 62, "end": 73 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Twitch:3",
+          "text": "Twitch is fragile; once he shows himself, hit him with Essence Flux then Mystic Shot to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 55, "end": 67 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Ezreal:Twitch:4",
+          "text": "Save Arcane Shift to dodge Twitch's engage or Contaminate, not to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Twitch", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Twitch-E", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ezreal:Twitch:5",
+          "text": "Play safe if you suspect Twitch has vanished with Ambush; ping his absence to your team.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Twitch-Q", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a3d0dec1fd1aac93fc9e5af326cf71e5b6633979a417f69265aadd4b6c65035",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Varus:0",
+          "text": "Poke Varus with Mystic Shot when minions don't block the line. Each hit also shortens your other cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Ezreal:Varus:1",
+          "text": "Keep minions between you and Varus while he charges Piercing Arrow. Step out of the line before he releases it.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Varus-Q", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Ezreal:Varus:2",
+          "text": "Use Arcane Shift to get out of Chain of Corruption's path, or to escape once he lands it. Being rooted near him is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Varus-R", "start": 31, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Ezreal:Varus:3",
+          "text": "Stay out of Hail of Arrows' ground. It leaves you slowed and cuts your healing, so you can't dodge his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Ezreal:Varus:4",
+          "text": "Don't let Varus hit you with several attacks in a row. Blight stacks make his abilities hurt much more.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "36fa2a7196765b0a4334e9396a369b663b4b958e0ca4d022401d3392ce8868af",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Vayne:0",
+          "text": "Stay away from walls when Vayne is near; Condemn into terrain stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Ezreal:Vayne:1",
+          "text": "Poke Vayne with Mystic Shot from long range; she is fragile and has to play carefully.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ezreal:Vayne:2",
+          "text": "Keep Arcane Shift ready as your escape when Vayne closes in, and blink away from her, not toward her.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ezreal:Vayne:3",
+          "text": "Mark Vayne with Essence Flux, then hit her with Mystic Shot to detonate it and refund mana.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ezreal:Vayne:4",
+          "text": "Avoid taking three hits in a row from Vayne; Silver Bolts deals extra damage on the third.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Vayne-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b217b064ced51593fd7a4784ac7358340071d71b659f98bdd804a659b64f9bcc",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Veigar:0",
+          "text": "Watch for Veigar's Event Horizon and do not walk into its edge. If you are already inside, you can still move and attack.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Veigar-E", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Ezreal:Veigar:1",
+          "text": "Keep moving when Dark Matter is coming down. Step out of the marked area, because it lands after a delay.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Veigar:2",
+          "text": "Keep Arcane Shift ready as an escape from Event Horizon or Dark Matter. It also fires a bolt at the nearest enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Veigar-E", "start": 42, "end": 55 },
+            { "kind": "ability", "key": "Veigar-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Ezreal:Veigar:3",
+          "text": "Poke Veigar with Mystic Shot from long range. He is fragile, and every hit shortens your cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Ezreal:Veigar:4",
+          "text": "Do not let minions die to Baleful Strike for free. Fight him when his Baleful Strike is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 26, "end": 40 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 70, "end": 84 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Ezreal:Veigar:5",
+          "text": "Stay healthy near level 6. Primordial Burst hits harder the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7fa0a0e7062154a4414cba361fc43f62bc90dd0bf1bc3f4cd7c32bb7e9335b52",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Xayah:0",
+          "text": "Poke with Mystic Shot whenever Xayah steps up to last-hit; each hit also shortens your other cooldowns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Xayah", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Ezreal:Xayah:1",
+          "text": "Stay at long range. Xayah has to walk up to you, so punish her with Mystic Shot and Essence Flux first.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 68, "end": 79 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ezreal:Xayah:2",
+          "text": "Keep minions between you and Xayah's daggers, since Mystic Shot stops at the first enemy and your own shots get blocked the same way.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "adc:Ezreal:Xayah:3",
+          "text": "Save Arcane Shift to dodge when Xayah's feathers are down and she calls them back, or to escape if she roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Xayah", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Ezreal:Xayah:4",
+          "text": "Don't try to burst Xayah while she's in the air with Featherstorm; she can't be targeted. Wait for her to land, then trade.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Xayah-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Mystic Shot's hit cuts cooldowns and refunds mana, helping Ezreal sustain trades with Xayah.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ezreal", "start": 59, "end": 65 },
+            { "kind": "champion", "key": "Xayah", "start": 86, "end": 91 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "01ed4ac72e057ecacb127a40cc9590e072e33f1b516a8914c3c43addfe1ca047",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Yasuo:0",
+          "text": "Keep Mystic Shot and Essence Flux aimed at Yasuo when he is not near his Wind Wall; they are your poke, and Mystic Shot is cheap to throw.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 21, "end": 33 },
+            { "kind": "champion", "key": "Yasuo", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 73, "end": 82 },
+            { "kind": "keyword", "key": "poke", "start": 98, "end": 102 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 108, "end": 119 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Ezreal:Yasuo:1",
+          "text": "Wait for Wind Wall to be used before throwing your key skill shots; it destroys every projectile you fire into it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 9, "end": 18 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Ezreal:Yasuo:2",
+          "text": "Keep minions between you and Yasuo and stay away from his Steel Tempest whirlwind; being knocked up lets him follow with Last Breath.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 58, "end": 71 },
+            { "kind": "keyword", "key": "knocked-up", "start": 89, "end": 99 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 121, "end": 132 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Ezreal:Yasuo:3",
+          "text": "Save Arcane Shift to escape when Yasuo dashes at you with Sweeping Blade, not to start trades.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Ezreal:Yasuo:4",
+          "text": "Punish Yasuo right after he fires his whirlwind; his next Steel Tempest is a short thrust again, so he is weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "579eed36a42050ed768e651ff28539c8d7f6c6c44765b41c06449815d418dd03",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Yunara:0",
+          "text": "Hit Mystic Shot on Yunara whenever she steps up to last-hit; it is a long-range shot and each hit lowers your other cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yunara", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Ezreal:Yunara:1",
+          "text": "Aim Mystic Shot through the lane so minions don't block it; it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Ezreal:Yunara:2",
+          "text": "Use Arcane Shift to step out of her slowing bead, since you can see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Ezreal:Yunara:3",
+          "text": "Save Arcane Shift for when she turns on Transcend One's Self; she then has a dash and a strong beam, so stay out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Yunara-R", "start": 40, "end": 60 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Ezreal:Yunara:4",
+          "text": "Take the fight to her. Yunara needs time to build up Unleash, so trade early with Essence Flux and a follow-up before she can use Cultivation of Spirit.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 82, "end": 94 },
+            { "kind": "ability", "key": "Yunara-Q", "start": 130, "end": 151 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "918fafc5d228029f034545fa2ad24db9f31b6455c904117f090558d52da05647",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Zeri:0",
+          "text": "Aim Mystic Shot at Zeri when no minion is in the line; it stops at the first enemy it hits, so clear the path first.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zeri", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Ezreal:Zeri:1",
+          "text": "Stay out of Zeri's Burst Fire range, which is shorter than your Mystic Shot. Poke her from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Ezreal:Zeri:2",
+          "text": "Put Essence Flux on Zeri, then follow with Mystic Shot to pop it and get your mana back.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zeri", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Ezreal:Zeri:3",
+          "text": "Hold Arcane Shift as an escape. Zeri is quick and can dash over walls, so a wasted blink gets you caught.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zeri", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Ezreal:Zeri:4",
+          "text": "Zeri is fragile, so hit her when her Ultrashock Laser is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-W", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Ezreal:Zeri:5",
+          "text": "Hit Zeri with Trueshot Barrage from afar when she is low on health; it deals big damage across the whole map.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6643aa265fee9e234802e4543cd0cc7ec70282469492897059a4f9a05681727b",
+      "tips": [
+        {
+          "id": "adc:Ezreal:Ziggs:0",
+          "text": "Walk around Ziggs' mines instead of through them; stepping on one slows you and makes his other spells easier to land.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Ezreal:Ziggs:1",
+          "text": "Use Arcane Shift to step out of the way of Satchel Charge or Bouncing Bomb once you see Ziggs commit his spell.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 43, "end": 57 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 61, "end": 74 },
+            { "kind": "champion", "key": "Ziggs", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Ezreal:Ziggs:2",
+          "text": "Hit Ziggs with Mystic Shot when he uses his spells. His cooldowns are long, so that is when he can't answer.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Ezreal:Ziggs:3",
+          "text": "Ziggs is fragile, so poke him from long range with Mystic Shot and Essence Flux. Make him back off from the wave.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 51, "end": 62 },
+            { "kind": "ability", "key": "Ezreal-W", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Ezreal:Ziggs:4",
+          "text": "Stay out of Ziggs' ultimate blast center, and walk out when you see the warning circle. Mega Inferno Bomb hurts most in the middle.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-R", "start": 88, "end": 105 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": [
+        {
+          "comboId": "adc:Ezreal:combo:0",
+          "note": "Flux then Shot trades well into Ziggs, and Q hits cut your cooldowns to keep up poke.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 32, "end": 37 }
+          ]
+        }
+      ]
+    }
+  ]
+}

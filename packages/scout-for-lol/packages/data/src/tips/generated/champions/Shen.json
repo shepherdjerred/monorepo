@@ -1,0 +1,2163 @@
+{
+  "schemaVersion": 1,
+  "champion": "Shen",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "449d48da66eb7d335d55ddda9452c81dcdf106bac02d1fc8b77267a1cd9eccdf",
+      "tips": [
+        {
+          "id": "top:Shen:general:0",
+          "text": "Walk up and hit with Twilight Assault's empowered attacks when you trade. They deal extra damage based on the target's max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 21, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Shen:general:1",
+          "text": "Send the Spirit Blade through the enemy with Twilight Assault as you pull it back. Hitting a champion makes them slowed and gives you more Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 45, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Shen:general:2",
+          "text": "Aim Shadow Dash so it catches the enemy in the line. They are taunted and must walk at you, so follow up with your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Shen:general:3",
+          "text": "Hitting an enemy champion with Shadow Dash or Twilight Assault gives Energy back, so use them on champions and not only on minions.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 31, "end": 42 },
+            { "kind": "ability", "key": "Shen-Q", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Shen:general:4",
+          "text": "Place Spirit's Refuge where a fight will happen. It blocks enemy basic attacks on you and your allies standing inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Shen:general:5",
+          "text": "Use any ability when you trade, because Ki Barrier gives you a shield. Touching an enemy champion with an ability makes it come back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-passive", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Shen:general:6",
+          "text": "Watch your allies' health after level 6. Stand United lets you shield a teammate anywhere on the map and teleport to them after a channel.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Shen:general:7",
+          "text": "Don't use Stand United with enemies able to interrupt you. Stuns and other hard crowd control cancel the channel before you arrive.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Shen:combo:0",
+          "name": "Dash into Twilight Assault",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Shen-E" },
+            { "kind": "ability", "key": "Shen-Q" },
+            "attack"
+          ],
+          "when": "When trading with a taunted enemy in lane.",
+          "whenRefs": [],
+          "text": "Cast the Q while still dashing. It pulls the blade through the taunted enemy, slows them and empowers your attacks, so you can hit them as soon as you land.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Shen:combo:1",
+          "name": "Moving the Refuge zone",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Shen-W" },
+            { "kind": "ability", "key": "Shen-Q" }
+          ],
+          "when": "When you want to protect an ally and the blade isn't where the fight is.",
+          "whenRefs": [],
+          "text": "Place the zone, then recall the blade with Q. The protective zone is dragged along with the blade, so you can reposition it.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7549cb910886e4b42c45e94628e95a835d3eb8ec83de3896f2c1c1765346e88",
+      "tips": [
+        {
+          "id": "support:Shen:general:0",
+          "text": "Dash into the enemy with Shadow Dash to taunt them, then let your carry hit them while they are forced to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Shen:general:1",
+          "text": "Cast Spirit's Refuge when enemies are about to auto-attack you or your carry. It blocks their basic attacks for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Shen:general:2",
+          "text": "Use Twilight Assault to pull the blade back through enemies. It leaves them slowed, and your next attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Shen:general:3",
+          "text": "Hit an enemy champion with Twilight Assault before you attack. That gives you extra Attack Speed and more damage on your next attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Shen:general:4",
+          "text": "Hitting enemies with Twilight Assault or Shadow Dash gives Energy back. Use them on champions to keep trading.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 21, "end": 37 },
+            { "kind": "ability", "key": "Shen-E", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Shen:general:5",
+          "text": "From level 6, watch the map for allies in trouble. Stand United shields them right away, and you teleport to them after the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Shen:general:6",
+          "text": "Casting any spell gives you a shield. Affecting an enemy champion with that spell makes Ki Barrier come back sooner, so look for chances to hit them.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-passive", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Shen:general:7",
+          "text": "If your Spirit Blade is stopped on its way back, you get no empowered attacks or shield. Don't recall it through anything that could block it.",
+          "refs": [],
+          "pWrong": 0.43
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Shen:combo:0",
+          "name": "Flash taunt",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Shen-E" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When the enemy is just out of Shadow Dash range and you want to taunt them anyway.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Shen-E", "start": 30, "end": 41 }
+          ],
+          "text": "Flashing during the dash ends it early, but the end-of-dash check still hits enemies at the Flash location. This adds reach to your taunt.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 92, "end": 97 }
+          ]
+        },
+        {
+          "id": "support:Shen:combo:1",
+          "name": "Dash into Spirit Blade",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Shen-E" },
+            { "kind": "ability", "key": "Shen-Q" }
+          ],
+          "when": "When you taunt an enemy and want to hit them with the Spirit Blade and an empowered attack.",
+          "whenRefs": [],
+          "text": "You can cast Twilight Assault while dashing. Throw it back through the taunted enemy as you dash to slow them and get the empowered attacks.",
+          "textRefs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "c3b5998324cef840aeefcbfc899cb73f42c569f6ba3f47a3e2c0dd6e605b3f04",
+      "tips": [
+        {
+          "id": "top:Shen:Aatrox:0",
+          "text": "Use Spirit's Refuge when Aatrox walks up to trade; his basic attacks and Deathbringer Stance bonus hit are blocked while you stand in the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 25, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 73,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Shen:Aatrox:1",
+          "text": "Hit Aatrox with Twilight Assault first, then fight him with your empowered attacks; they hit harder and attack faster.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Shen-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Shen:Aatrox:2",
+          "text": "Dash into Aatrox with Shadow Dash when he spends his dash or swings; he is taunted and must fight you.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Shen-E", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Shen:Aatrox:3",
+          "text": "Step out of the edges of The Darkin Blade; the tips of each swing knock you up and hurt the most.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Shen:Aatrox:4",
+          "text": "At level 6, look for ways to use Stand United to join a fight elsewhere when your lane is pushed and Aatrox is stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 33, "end": 45 },
+            { "kind": "champion", "key": "Aatrox", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Shadow Dash taunts Aatrox, so you can follow with Twilight Assault and an empowered attack to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Shen-Q", "start": 50, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "fab8b6d44f3df9fda98ce6060d27a4c92cb91dd78b0ca486cda5e2f29b472fb2",
+      "tips": [
+        {
+          "id": "top:Shen:Briar:0",
+          "text": "Walk up and use Shadow Dash on Briar when she is in Blood Frenzy; she can only chase the nearest enemy, so you can lead her into a fight with your team.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Briar", "start": 31, "end": 36 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Shen:Briar:1",
+          "text": "Use Spirit's Refuge when Briar is hitting you or an ally in Blood Frenzy; it blocks her basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Shen:Briar:2",
+          "text": "Hit Briar with the Spirit Blade from Twilight Assault so she is slowed when moving away and your next attacks hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shen-Q", "start": 37, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Shen:Briar:3",
+          "text": "Her Head Rush is a stun; stay out of its range if you can, and trade right after she spends it.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Shen:Briar:4",
+          "text": "When Briar charges Chilling Scream near a wall, stay out of the line; a full charge knocks back and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Briar-E", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Briar's Blood Frenzy self-taunts her, so Shen's taunt-based Dash into Twilight Assault trade is safer.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Shen", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Shen-Q", "start": 70, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3cfb812a03d2d8553bc0f5516d15209b9737f454dc8501b6a8fea2b556669147",
+      "tips": [
+        {
+          "id": "top:Shen:Darius:0",
+          "text": "Stay out of Apprehend range when you can. If Darius pulls you in, you eat his full combo, so keep Shadow Dash ready to take him back.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Shen-E", "start": 98, "end": 109 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Shen:Darius:1",
+          "text": "Fight him when Apprehend is on cooldown. He has no way to pull you in then, so poke him with Twilight Assault and your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 },
+            { "kind": "ability", "key": "Shen-Q", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Shen:Darius:2",
+          "text": "Cast Spirit's Refuge when Darius commits to an attack. It blocks his basic attacks, including Crippling Strike, which cuts down his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Darius-W", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Shen:Darius:3",
+          "text": "Taunt Darius with Shadow Dash while his Decimate is winding up. It stops him from standing and trading freely.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Shen-E", "start": 18, "end": 29 },
+            { "kind": "ability", "key": "Darius-Q", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Shen:Darius:4",
+          "text": "Hit him with Twilight Assault and then attack. The slow and extra attack speed help you win short trades and walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Shen:Darius:5",
+          "text": "At level 6, use Stand United on a hurt ally to shield them and teleport in. Watch Noxian Guillotine, which can finish weak allies.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Darius-R", "start": 82, "end": 99 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Taunting Darius with Shadow Dash lets Twilight Assault slow him and your empowered hits land in the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Shen-E", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Shen-Q", "start": 38, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "27f4fb32918edd5563828e49a73a79e4da7ad724e1e97c5b8b98afb5a97b4fc0",
+      "tips": [
+        {
+          "id": "top:Shen:Fiora:0",
+          "text": "Don't land Shadow Dash on Fiora while Riposte is ready; she blocks the taunt and answers with a slow or stun. Bait Riposte out first.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Fiora", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Fiora-W", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 },
+            { "kind": "ability", "key": "Fiora-W", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Shen:Fiora:1",
+          "text": "Once Fiora has used Riposte, dash in with Shadow Dash and trade while it recharges.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Fiora-W", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Shen-E", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Shen:Fiora:2",
+          "text": "Cast Spirit's Refuge on yourself when Fiora commits to a fight; it blocks her basic attacks and her Lunge damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Fiora", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Shen:Fiora:3",
+          "text": "Use Twilight Assault to hit Fiora, then fight her with the empowered attacks. She is slowed when moving away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Fiora", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Shen:Fiora:4",
+          "text": "Use Stand United to shield a teammate Fiora is diving, or to join a fight elsewhere once you reach level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Fiora", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b2164399321afd4b72f03ff5e54e4eb0400db70c89da6eceddd921c033f0ae8e",
+      "tips": [
+        {
+          "id": "top:Shen:Gangplank:0",
+          "text": "Dash with Shadow Dash onto Gangplank when he is out of position; the taunt forces him to attack you and breaks his keg setup.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Shen:Gangplank:1",
+          "text": "Watch for Remove Scurvy; he can cleanse your taunt, so dash when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Shen:Gangplank:2",
+          "text": "Stay away from Powder Keg blasts; they slow you and hit hard, so do not walk next to kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Shen:Gangplank:3",
+          "text": "Recall Twilight Assault through Gangplank to slow him and power up your next attacks, then fight him up close.",
+          "refs": [
+            { "kind": "item", "key": "2001", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Shen-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Shen:Gangplank:4",
+          "text": "Use Stand United to join fights when Gangplank's Cannon Barrage lands on an ally; the shield helps them survive.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 37, "end": 46 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Shadow Dash taunts Gangplank, and Twilight Assault then slows him so you can hit him with empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Gangplank", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Shen-Q", "start": 34, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e309a7ecafda1a3bf3382f9b8aea2ca05e88f247e198eae77cdc0b8a3ff18fb",
+      "tips": [
+        {
+          "id": "top:Shen:Garen:0",
+          "text": "Aim Shadow Dash at Garen to taunt him, then fight while he can't walk away from you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Shen:Garen:1",
+          "text": "Hit Garen with Twilight Assault on the way back so he's slowed. Then trade with your empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shen-Q", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Shen:Garen:2",
+          "text": "Garen heals when left alone, so keep hitting him with Twilight Assault and don't let him reset.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Shen-Q", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Shen:Garen:3",
+          "text": "Respect Garen's Decisive Strike; its silence stops your abilities. Stay back until he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Garen-Q", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "silenced", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Shen:Garen:4",
+          "text": "Back away from Garen when your health gets low; Demacian Justice can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "613117461da695ef8b9a06667d7214fab560b1d94dea90f3ae03ba76569e4c63",
+      "tips": [
+        {
+          "id": "top:Shen:Jayce:0",
+          "text": "Dash into Jayce with Shadow Dash when he comes in close; he is taunted and has to attack you. Follow with Twilight Assault's empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Shen-E", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Shen-Q", "start": 106, "end": 122 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Shen:Jayce:1",
+          "text": "Send the Spirit Blade through Jayce with Twilight Assault so he is slowed and your next attacks hit harder and faster.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Shen-Q", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Shen:Jayce:2",
+          "text": "Jayce's cannon stance pokes from far away. Trade only when Jayce is close, and stay out of his range when you cannot reach him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Jayce", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Shen:Jayce:3",
+          "text": "Place Spirit's Refuge where Jayce's melee attacks will land. It blocks his basic attacks, and also his Thundering Blow and Shock Blast damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Jayce", "start": 28, "end": 33 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Shen:Jayce:4",
+          "text": "Watch your Energy. Hitting Jayce with Twilight Assault or Shadow Dash gives some back, so use them to trade and keep going.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Shen-Q", "start": 38, "end": 54 },
+            { "kind": "ability", "key": "Shen-E", "start": 58, "end": 69 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c511424af9a2e1242a23e8e58f74d6c10cc8497f55a233502007e634a0abf841",
+      "tips": [
+        {
+          "id": "top:Shen:KSante:0",
+          "text": "Dodge K'Sante's stun-pull from Ntofo Strikes by watching for his second hit; if he lands one, expect the next to pull and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "KSante-Q", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Shen:KSante:1",
+          "text": "Use Shadow Dash to taunt K'Sante when he commits to a trade, then hit him with your empowered attacks from Twilight Assault.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "KSante", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Shen-Q", "start": 107, "end": 123 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Shen:KSante:2",
+          "text": "Send Twilight Assault back through K'Sante so it hits him; you get the stronger empowered attacks and slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Shen:KSante:3",
+          "text": "Place Spirit's Refuge where K'Sante will attack. It blocks his basic attacks and the empowered hit from his passive.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Shen:KSante:4",
+          "text": "Be careful when K'Sante goes All Out; he is much squishier then, so stay close and burst him instead of running.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "KSante-R", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5b28ea715b81650bba930d03c8783af88fb9f7641432d1cadccbd0eb1e73e120",
+      "tips": [
+        {
+          "id": "top:Shen:Malphite:0",
+          "text": "Dodge Malphite's Seismic Shard if you can, or stay near minions. It is a targeted spell, so you cannot dodge it; do not walk up while it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Shen:Malphite:1",
+          "text": "Hit Malphite with Twilight Assault when his Granite Shield is down, then follow with your empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Shen-Q", "start": 18, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 44,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Shen:Malphite:2",
+          "text": "Use Shadow Dash to taunt Malphite only when his Ground Slam is on cooldown, so you can fight without losing Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Malphite", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Malphite-E", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Shen:Malphite:3",
+          "text": "Use Stand United to join or save your allies against Malphite's Unstoppable Force; its shield absorbs some of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Malphite-R", "start": 64, "end": 81 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7bcfddb726580aa4fbd187cb0769206e1a08985b670a540b8d5b156984f2615e",
+      "tips": [
+        {
+          "id": "top:Shen:Mordekaiser:0",
+          "text": "Use Shadow Dash on Mordekaiser to taunt him, then attack. Only do it when his Obliterate is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 19,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 78,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Shen:Mordekaiser:1",
+          "text": "Stay away from Mordekaiser once Darkness Rise is active; its aura hurts everyone near him. Back off and wait for it to run out.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 15,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 32,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Shen:Mordekaiser:2",
+          "text": "Twilight Assault slows Mordekaiser if the Spirit Blade hits him on its way back. Use it to keep him from chasing you.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 0, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 22 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Shen:Mordekaiser:3",
+          "text": "Wait out the Indestructible shield before you attack him again. Hitting a fresh shield wastes your damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 13,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Shen:Mordekaiser:4",
+          "text": "Stay out of a straight line from Mordekaiser so Death's Grasp misses you. If it pulls you in, an Obliterate often follows.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 48,
+              "end": 61
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 97,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Shen:Mordekaiser:5",
+          "text": "Once Mordekaiser reaches level 6, stand away from him unless you have to fight. Realm of Death cuts you off from your allies, and Stand United can't help.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 80,
+              "end": 94
+            },
+            { "kind": "ability", "key": "Shen-R", "start": 130, "end": 142 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7f899b499ba9d33269a27efca314e4b02e6e1c9916de85119224341f162d1d67",
+      "tips": [
+        {
+          "id": "top:Shen:Rumble:0",
+          "text": "Dodge Electro Harpoon where you can. Getting hit twice slows you more and cuts your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Shen:Rumble:1",
+          "text": "Dash in with Shadow Dash when Rumble overheats. He can't cast then, so the taunt is hard for him to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Rumble", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Shen:Rumble:2",
+          "text": "Use Twilight Assault to hit Rumble; it slows him and empowers your next attacks. Then trade with those attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Shen:Rumble:3",
+          "text": "Step out of The Equalizer's fire quickly; staying in it hurts a lot. Walking toward Rumble out of the fire works better than running with it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Rumble", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Shen:Rumble:4",
+          "text": "Use Spirit's Refuge on yourself to block Rumble's basic attacks while he is overheating.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Rumble", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Shen:Rumble:5",
+          "text": "Look to teleport with Stand United to help allies in other lanes when your lane is pushed in. Rumble's damage is hard to trade with early.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Rumble", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash into Twilight Assault lets Shen taunt and pull Rumble, slowing him so Shen's attacks land.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Shen", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Rumble", "start": 52, "end": 58 },
+            { "kind": "champion", "key": "Shen", "start": 75, "end": 79 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6f5c76ecd7e9cba1ae567144ee33de3ca75fcc7bfa0b501a6009b4fb1f75bf4b",
+      "tips": [
+        {
+          "id": "top:Shen:Sion:0",
+          "text": "Don't stand still while Sion charges Decimating Smash; walk out of the line, since a full charge stuns for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sion-Q", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Shen:Sion:1",
+          "text": "Use Twilight Assault on Sion when you trade; the slow helps you move away when he starts to charge.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Shen:Sion:2",
+          "text": "Taunt Sion with Shadow Dash when he commits to a charge; it pulls him off his target.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Shen:Sion:3",
+          "text": "Hold back from Sion's Roar of the Slayer, because it slows you and he often follows it with a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Sion-E", "start": 22, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Shen:Sion:4",
+          "text": "Don't chase Sion into a kill; when he dies he comes back with Glory in Death and hits hard. Back off and wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-passive", "start": 62, "end": 76 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Sion, then Twilight Assault slows him and empowers your attacks for a clean trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Shen-Q", "start": 23, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "e7f0631f5898ea5907c0cd34262c079b784c637a94ec643e8d59a28491922d56",
+      "tips": [
+        {
+          "id": "top:Shen:Teemo:0",
+          "text": "Hit Teemo with Twilight Assault before you walk in. You get stronger attacks and he is slowed when he backs away.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shen-Q", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Shen:Teemo:1",
+          "text": "Use Shadow Dash to taunt Teemo when he is close, then attack him. He can't run while taunted.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Shen:Teemo:2",
+          "text": "Use Spirit's Refuge to block Teemo's attacks while you trade. His Toxic Shot hits are basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Teemo-E", "start": 66, "end": 76 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Shen:Teemo:3",
+          "text": "Don't walk into unwarded brush; Teemo can hide there and Noxious Trap mushrooms are stealthed. Check bushes before you step in.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Teemo-R", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Teemo, and Twilight Assault slows him so Shen can hit him right after landing.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Shen", "start": 53, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "ea21e62e7cbee5caa083e31ad8b86d30090a36b5ce767fc3ade4cbf39280ab68",
+      "tips": [
+        {
+          "id": "top:Shen:Vayne:0",
+          "text": "Land Shadow Dash on Vayne to taunt her, then fight right away. She is fragile and cannot kite you while she is taunted.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Shen:Vayne:1",
+          "text": "Don't let Vayne pin you against a wall. Condemn stuns and hurts a lot when you hit terrain, so stay away from walls.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Vayne-E", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Shen:Vayne:2",
+          "text": "Use Twilight Assault to recall your blade through Vayne; she is slowed when moving away, and your next attacks have longer reach.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Shen:Vayne:3",
+          "text": "Put Spirit's Refuge down where you will fight; it blocks Vayne's attacks, including her Silver Bolts hits.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Vayne-W", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Shen:Vayne:4",
+          "text": "Look for Vayne after Tumble is used up. Shadow Dash in then, since she has less room to dodge away.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Shen-E", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dash taunts Vayne, then Twilight Assault slows her and empowers attacks so Shen can trade.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Shen", "start": 75, "end": 79 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "e15caf8e7432d6e202184ef33184dd1a65ba9f2baea1931d521aa6718a9dd53f",
+      "tips": [
+        {
+          "id": "top:Shen:Yone:0",
+          "text": "Aim Shadow Dash at Yone when he walks up to trade; if he is taunted you get a free round of attacks on him.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Shen:Yone:1",
+          "text": "Send Twilight Assault through Yone and then hit him with your empowered attacks. It slows him if he tries to walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Shen:Yone:2",
+          "text": "Place Spirit's Refuge when Yone commits to a trade, since it blocks his basic attacks and the damage from his Mortal Steel.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Yone-Q", "start": 110, "end": 122 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Shen:Yone:3",
+          "text": "Once you reach level 6, use Stand United to shield an ally in trouble. You teleport to them after the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Shen:combo:0",
+          "note": "Dashing E into Q taunts-trade and slows Yone, so you can land basic attacks on him right away.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 40, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "89e87900e0f129eb9a6de3ed8bc3730eb56c14aa37c08d3bb194540da3082364",
+      "tips": [
+        {
+          "id": "support:Shen:Bard:0",
+          "text": "Walk over Bard's Caretaker's Shrine when you can; an enemy champion stepping on it destroys it, so his allies lose the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-W", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Shen:Bard:1",
+          "text": "Stay out of a straight line with another unit when Bard aims Cosmic Binding. Hit by two targets or a wall, you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 51, "end": 55 },
+            { "kind": "ability", "key": "Bard-Q", "start": 61, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Shen:Bard:2",
+          "text": "Use Shadow Dash to make Bard attack you when he steps up, then follow with Twilight Assault to hit him again and slow his retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Bard", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Shen-Q", "start": 75, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Shen:Bard:3",
+          "text": "Spirit's Refuge blocks basic attacks, including Bard's meep-empowered ones. Use it when you and your carry get poked.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Bard", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Shen:Bard:4",
+          "text": "You can follow Bard through his Magical Journey portal if it is safe. Be careful, because he can punish you on the other side.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Bard-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Shen:Bard:5",
+          "text": "Bard's Tempered Fate freezes everything it hits, so don't dash in on a frozen carry. Wait for it to end before you fight.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Bard-R", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Dashing into Twilight Assault slows Bard, who has no listed dash to escape the taunt follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Bard", "start": 36, "end": 40 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "dec169d7791b29a093b86cf557801ae81efed090bfc4f6e5cf0bf439ac2e2add",
+      "tips": [
+        {
+          "id": "support:Shen:Braum:0",
+          "text": "Aim Shadow Dash at Braum or his partner when Unbreakable is down; it taunts them so your team can hit them.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Braum", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Braum-E", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Shen:Braum:1",
+          "text": "Do not throw Twilight Assault into Braum's raised shield; wait until Unbreakable ends.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Braum", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Braum-E", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Shen:Braum:2",
+          "text": "Step out of range after Braum's first Concussive Blows hit; if allies hit you too, you get stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 24, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 38,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Shen:Braum:3",
+          "text": "Use Spirit's Refuge on your ally when Braum and his partner go for an all-in; it blocks their basic attacks, which also stops Concussive Blows stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Braum", "start": 38, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 126,
+              "end": 142
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Shen:Braum:4",
+          "text": "At level 6, use Stand United on a carry caught by Glacial Fissure or another all-in. Shen arrives between them and the nearest enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Braum-R", "start": 50, "end": 65 },
+            { "kind": "champion", "key": "Shen", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Braum then pulling Twilight Assault through him slows him and sets up your empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 28, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "ffd9c2325dd6b49374f98d2a7b50c31a724309a645fbee1eb239939d71dbf7fa",
+      "tips": [
+        {
+          "id": "support:Shen:Karma:0",
+          "text": "Dodge Inner Flame; it stops at the first enemy it hits and slows. Stand behind minions to absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Shen:Karma:1",
+          "text": "Move away from Focused Resolve's tether so you aren't rooted, then engage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Shen:Karma:2",
+          "text": "Step out of the flame circle that Mantra leaves behind. It explodes for heavy damage if you stay in it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Shen:Karma:3",
+          "text": "Use Shadow Dash to taunt Karma when she is in range. Follow with Twilight Assault for your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Karma", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Shen-Q", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Shen:Karma:4",
+          "text": "Use Spirit's Refuge when Karma's team wants to trade attacks, since it blocks basic attacks on you and your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Karma when she stays just out of Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Karma", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Shen-E", "start": 65, "end": 76 }
+          ]
+        },
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Karma and throwing Twilight Assault back slows her and gets empowered attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 28, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "b508e79acdeedfdaaee401591fb54f05271cd8b7f0f1e4400ca524cea3a73189",
+      "tips": [
+        {
+          "id": "support:Shen:Leona:0",
+          "text": "Dodge Leona's Zenith Blade; once it hits, she dashes in and roots you, so stay back when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Leona-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Shen:Leona:1",
+          "text": "Use Shadow Dash on Leona only after she spends her stun; the taunt then gives your carry time to hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Leona", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Shen:Leona:2",
+          "text": "Place Spirit's Refuge on your ADC when Leona engages; it blocks basic attacks, including her stunning Shield of Daybreak attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Leona", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Leona-Q", "start": 102, "end": 120 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Shen:Leona:3",
+          "text": "Leave the Solar Flare center once it is cast, so you are only slowed instead of stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 10, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Slowing a taunted Leona with Twilight Assault helps against her melee all-in kit.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Shen-Q", "start": 29, "end": 45 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "d4a496eb2cec58dac5a8f5299365a24f325c914ce2dbc4e3be7abf969a8b3ac5",
+      "tips": [
+        {
+          "id": "support:Shen:Lulu:0",
+          "text": "Walk up and hit with Shadow Dash only when Whimsy is used or on cooldown; if Lulu polymorphs you mid-dash, you lose the whole trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 21, "end": 32 },
+            { "kind": "ability", "key": "Lulu-W", "start": 43, "end": 49 },
+            { "kind": "champion", "key": "Lulu", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Shen:Lulu:1",
+          "text": "Stay behind minions so Pix's bolts from Pix, Faerie Companion hit the minions instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-passive", "start": 40, "end": 61 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Shen:Lulu:2",
+          "text": "Sidestep Glitterlance; it slows you and its two bolts can cross, so give it room instead of walking in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 9, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Shen:Lulu:3",
+          "text": "Use Spirit's Refuge on your ally when Lulu and her partner attack, since it blocks their basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lulu", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Shen:Lulu:4",
+          "text": "Pull the Spirit Blade back with Twilight Assault through the enemy to slow them and get empowered attacks for a quick trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Shen:Lulu:5",
+          "text": "Watch for Wild Growth on her carry; it knocks up enemies nearby, so keep your distance when they are about to engage.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-R", "start": 10, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 39, "end": 48 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Lulu when she kites out of Shadow Dash range with her slows.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lulu", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Shen-E", "start": 59, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "75e7fbc81cc5c548c02401b73602b71815493bac491d29724c7ffc4a7ee00b2d",
+      "tips": [
+        {
+          "id": "support:Shen:Lux:0",
+          "text": "Walk up and use Shadow Dash on Lux when her Light Binding is on cooldown; she has little to stop you and gets taunted into your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Lux", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Lux-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Shen:Lux:1",
+          "text": "Stay behind your minions or off her line, since Light Binding roots the first two enemies it hits and sets up her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 48, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Shen:Lux:2",
+          "text": "Hit Lux with Twilight Assault to slow her as she backs away, then follow with an empowered attack.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Shen-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Shen:Lux:3",
+          "text": "Drop Spirit's Refuge on your ally when Lux pokes with basic attacks; it blocks attacks and damage from abilities that use basic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Lux", "start": 39, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Shen:Lux:4",
+          "text": "Move to the side when Final Spark's red line appears, and use Stand United to save a far-away ally from a burst.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 22, "end": 33 },
+            { "kind": "ability", "key": "Shen-R", "start": 62, "end": 74 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Lux, who is easy to reach for a taunt only if she stays just out of range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Lux", "start": 32, "end": 35 }
+          ]
+        },
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Lux then throwing Twilight Assault slows her and sets up empowered attacks on a fragile target.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 9, "end": 12 },
+            { "kind": "ability", "key": "Shen-Q", "start": 27, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "4fdd01e5a16f306adb1854c0ab9d5dda6ebd32c3b18d149f0d3425be854185d2",
+      "tips": [
+        {
+          "id": "support:Shen:Milio:0",
+          "text": "Dash at Milio with Shadow Dash when he is away from his ally; he is taunted and cannot kick or hug until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Shen-E", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Shen:Milio:1",
+          "text": "Sidestep Ultra Mega Fire Kick; if it hits you are stunned and knocked back, so stay out of its line or behind a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 9, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Shen:Milio:2",
+          "text": "Recall Twilight Assault through Milio so he is slowed and your next attacks hit harder.",
+          "refs": [
+            { "kind": "item", "key": "2001", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Shen-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Milio", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Shen:Milio:3",
+          "text": "Use Spirit's Refuge to block attacks from his ally when you both trade, as the shield zone stops basic attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach, which helps catch Milio when he stays just outside Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Milio", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Shen-E", "start": 75, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "b02e506ffd8299d45eecf04653c8dbe4c8a3ea129636e930c2431fdcb35a14a0",
+      "tips": [
+        {
+          "id": "support:Shen:Nami:0",
+          "text": "Walk up and use Shadow Dash on Nami when her Aqua Prison is on cooldown; she has little to stop you and you taunt her into your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Nami", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Nami-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Shen:Nami:1",
+          "text": "Stay out of Aqua Prison's landing spot; it takes a moment to land, so keep moving sideways and never walk in a straight line toward Nami.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 132, "end": 136 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Shen:Nami:2",
+          "text": "Hit Nami with Twilight Assault on the way back to Shen, then punch her with the empowered attacks while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Shen-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Shen", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Shen:Nami:3",
+          "text": "Use Spirit's Refuge when you and your carry are being hit by basic attacks; it blocks them, though not turret shots.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Shen:Nami:4",
+          "text": "Don't fight an enemy carrying Tidecaller's Blessing; step back and let it run out before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 30, "end": 51 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Shen:Nami:5",
+          "text": "Watch for Tidal Wave from far away and step out of its path; it moves slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch Nami, who must otherwise stay out of range to avoid being engaged.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Nami", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "59a57b6e31def1fe20da620258bce999db38b243bb0e0974ddfe627e9e228079",
+      "tips": [
+        {
+          "id": "support:Shen:Nautilus:0",
+          "text": "Stay out of Dredge Line range and keep minions between you and Nautilus; the anchor stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nautilus", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Shen:Nautilus:1",
+          "text": "Cast Spirit's Refuge on your ally when Nautilus walks up to attack; it blocks his basic attacks, including the Staggering Blow root.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nautilus", "start": 39, "end": 47 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 111,
+              "end": 126
+            },
+            { "kind": "keyword", "key": "rooted", "start": 127, "end": 131 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Shen:Nautilus:2",
+          "text": "Use Twilight Assault to poke when the blade can pass through him, then hit him with the empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Shen:Nautilus:3",
+          "text": "Taunt Nautilus with Shadow Dash when he commits to a pull and misses, then trade while his Dredge Line is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Shen-E", "start": 20, "end": 31 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 91, "end": 102 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Shen:Nautilus:4",
+          "text": "Once you reach level 6, use Stand United on an ally Nautilus has pulled in; the shield helps them survive the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 28, "end": 40 },
+            { "kind": "champion", "key": "Nautilus", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 114 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Nautilus then throwing Twilight Assault back slows him and sets up Shen's empowered attack.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Shen-Q", "start": 32, "end": 48 },
+            { "kind": "champion", "key": "Shen", "start": 76, "end": 80 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "968d48d570ededce1cb48c1042075adcf83d84f9477823e9dffa98c823907050",
+      "tips": [
+        {
+          "id": "support:Shen:Pantheon:0",
+          "text": "Aim Shadow Dash at Pantheon when he is out of position. The taunt makes him hit you instead of your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Pantheon", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Shen:Pantheon:1",
+          "text": "Aegis Assault only blocks damage from the front. Dash behind Pantheon or wait out the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Shen:Pantheon:2",
+          "text": "Keep your health up. Pantheon's thrown Comet Spear hits much harder on low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Shen:Pantheon:3",
+          "text": "Use Spirit's Refuge on your ally when Pantheon leaps in. It blocks basic attacks, including his triple-strike attack after Shield Vault.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 123, "end": 135 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Shen:Pantheon:4",
+          "text": "Grand Starfall gives long warning. Move out of the area, or use Stand United to join and protect a threatened ally.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Shen-R", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Throwing Twilight Assault back through the taunted Pantheon slows him as he tries to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Pantheon", "start": 51, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "e7450b5b6e882bc13ebcfcd8888ebc948645db484ab191b08317af4a36c9ab22",
+      "tips": [
+        {
+          "id": "support:Shen:Pyke:0",
+          "text": "Dodge Pyke's Bone Skewer pull, then Shadow Dash onto him right after it misses so he can't follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Shen-E", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Shen:Pyke:1",
+          "text": "Cast Spirit's Refuge on your carry when Pyke commits; it blocks his basic attacks and the abilities that count as basic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Pyke", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Shen:Pyke:2",
+          "text": "Taunt Pyke with Shadow Dash when he walks up to engage, so your carry gets time to hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Shen:Pyke:3",
+          "text": "When sharks circle under your feet, Pyke is hiding nearby. Stay back from low-health allies and keep Shadow Dash ready.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Shen-E", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Shen:Pyke:4",
+          "text": "Use Stand United on a low-health ally Pyke is chasing; the shield grows as they lose health, and you arrive between them and the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4f0dfd9388f9ca3eb777288deb20c0e61f9f1c9c312b666d467d0419ba930065",
+      "tips": [
+        {
+          "id": "support:Shen:Senna:0",
+          "text": "Dodge nothing, just walk up: Shadow Dash taunts Senna, so use it when she is close and hit her while she can't walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 29, "end": 40 },
+            { "kind": "champion", "key": "Senna", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Shen:Senna:1",
+          "text": "Send Twilight Assault through Senna to slow her, then hit her with your empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Senna", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "support:Shen:Senna:2",
+          "text": "Drop Spirit's Refuge on your ADC when Senna pokes with basic attacks; it blocks basic attacks aimed at allied champions in the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Shen:Senna:3",
+          "text": "Stay out of Senna's line when Last Embrace is ready; her root is how she catches you for her team.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Taunting Senna and slowing her with Twilight Assault lets Shen land empowered attacks on her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 36, "end": 52 },
+            { "kind": "champion", "key": "Shen", "start": 58, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "510a168aadbba7e587958e6fc92fbb22230f99e89e2f037a71f8721da87e5bcb",
+      "tips": [
+        {
+          "id": "support:Shen:Seraphine:0",
+          "text": "Dash into Seraphine with Shadow Dash to taunt her, then hit her with your empowered attacks while she can't cast.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Shen-E", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Shen:Seraphine:1",
+          "text": "Stay out of a straight line from Seraphine; Beat Drop slows you and roots you if you are already slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 44, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Shen:Seraphine:2",
+          "text": "Use Twilight Assault to pull your Spirit Blade back through her; it slows her and powers up your next attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Shen:Seraphine:3",
+          "text": "Place Spirit's Refuge over your ADC when Seraphine's team goes for basic attacks; it blocks them.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Seraphine", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Shen:Seraphine:4",
+          "text": "Keep your distance from Encore when your team is bunched up; the charm can stretch across many champions.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-R", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "995b520b8b0dbc390d449197c1cb660f996525ba98afdb62bb6ebbd9ab33e261",
+      "tips": [
+        {
+          "id": "support:Shen:Sona:0",
+          "text": "Dash onto Sona with Shadow Dash when she stands close; the taunt forces her to attack you instead of casting freely.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Shen:Sona:1",
+          "text": "Throw Twilight Assault through Sona on its way back to slow her and power up your next attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Sona", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Shen:Sona:2",
+          "text": "Use Spirit's Refuge when Sona's Hymn of Valor and auto attacks come in; it blocks enemy basic attacks on you and your ally.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sona", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Sona-Q", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Shen:Sona:3",
+          "text": "Once you hit level 6, watch Sona's Crescendo and use Stand United to shield an ally and teleport in, or save them.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Sona-R", "start": 35, "end": 44 },
+            { "kind": "ability", "key": "Shen-R", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:1",
+          "note": "Dashing into a Spirit Blade slows a taunted Sona, who is otherwise hard to pin down.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 44, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "8e2bb0a4d1299c16a45dfe85f3002ab95b010f0c908fd7a760785315c90fd1be",
+      "tips": [
+        {
+          "id": "support:Shen:Thresh:0",
+          "text": "Dodge Death Sentence by watching Thresh's cast start; if it lands you are stunned and pulled, so stay out of a straight line with him.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Thresh", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Shen:Thresh:1",
+          "text": "Use Shadow Dash on Thresh when he misses Death Sentence; the taunt forces him to attack you while your team hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Thresh", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Shen:Thresh:2",
+          "text": "Twilight Assault passes through enemies, so throw it so it hits Thresh on the way back. He is slowed and your next attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-Q", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Shen:Thresh:3",
+          "text": "Spirit's Refuge blocks Thresh's basic attacks on you and your ally, so use it when he walks up to hit with his empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Thresh", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Shen:Thresh:4",
+          "text": "Take Thresh's souls as a cue: he is weaker before he collects them, so trade when he steps away to grab one.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": [
+        {
+          "comboId": "support:Shen:combo:0",
+          "note": "Flash adds taunt reach to catch a Thresh who stays just outside Shadow Dash range.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Thresh", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Shen-E", "start": 64, "end": 75 }
+          ]
+        }
+      ]
+    }
+  ]
+}

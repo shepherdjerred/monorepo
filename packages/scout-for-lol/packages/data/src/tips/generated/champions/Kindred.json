@@ -1,0 +1,2808 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kindred",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "8784ff592f22b78fd5f306e5e1e42d60ac834a3506129a518623c297c069901c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:general:0",
+          "text": "Cast Dance of Arrows to dash in and out of fights. It resets your basic attack timer, so attack right after it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Kindred:general:1",
+          "text": "Cast Wolf's Frenzy first, then use Dance of Arrows inside it. Dance of Arrows then comes back much sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 35, "end": 50 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Kindred:general:2",
+          "text": "Stay inside the Wolf's Frenzy area. If you walk out of it, Wolf stops attacking right away.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Kindred:general:3",
+          "text": "Use Mounting Dread to get the enemy slowed, then attack them three times to make Wolf pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Kindred:general:4",
+          "text": "Keep moving while you clear camps. Moving builds up Wolf's Frenzy's heal, and your next attack then heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Kindred:general:5",
+          "text": "Take the Hunts Wolf marks on jungle camps, and pick enemy champion Hunts you can finish. Each one makes your abilities stronger for good.",
+          "refs": [],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:general:6",
+          "text": "Let your team start big fights. Then use Lamb's Respite on your fighting allies so nobody dies while the blessing lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Kindred:general:7",
+          "text": "Step into Lamb's Respite yourself when you're low. You can't die inside it, and you get healed when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Kindred:combo:0",
+          "name": "Attack reset Q",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            { "kind": "ability", "key": "Kindred-Q" },
+            "attack"
+          ],
+          "when": "Trading or kiting in a fight when your attack speed is still low.",
+          "whenRefs": [],
+          "text": "Dance of Arrows resets your basic attack timer. Attack, dash with Q, then attack again straight away to fit in an extra hit.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "4c7d1cae4194a357271c3dfc2915c9ebbf3dfb6eb3732f36d6710539e60e10bc",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Aatrox:0",
+          "text": "Stay out of long fights with Aatrox; he heals from the damage he deals, so hit him with Dance of Arrows and step away instead of trading.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Kindred:Aatrox:1",
+          "text": "Slow Aatrox with Mounting Dread when he chases you, then finish your third attack to land the pounce while you back away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Aatrox", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kindred-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Kindred:Aatrox:2",
+          "text": "Watch his The Darkin Blade and step out of the marked ground. Use Dance of Arrows to dash away from the hit zones.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 10, "end": 26 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Aatrox:3",
+          "text": "Walk to the side or toward Aatrox to escape Infernal Chains before it pulls you back.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Kindred:Aatrox:4",
+          "text": "Do not rely on Lamb's Respite against Aatrox in a fight, because he can stay inside the zone as well.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Aatrox", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7dcb3fb8b800fe32089c4cc0fb2f5b900058178c2bcaabfa454134e48c75f8da",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Ambessa:0",
+          "text": "Stay out of melee range when you can; Ambessa wins short close fights, so keep your range and kite her with Mounting Dread to slow her.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Kindred-E", "start": 108, "end": 122 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Kindred:Ambessa:1",
+          "text": "Save Lamb's Respite for when Ambessa dives your team, so your carry survives her Public Execution damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Ambessa", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Kindred:Ambessa:2",
+          "text": "Ambessa's Lacerate slows heavily, so do not dash into her chain spin with Dance of Arrows. Dash only after it is spent.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 10, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Kindred:Ambessa:3",
+          "text": "Do not attack Ambessa while she braces with Repudiation; her shield absorbs your damage and makes her slam hit harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Kindred:Ambessa:4",
+          "text": "Place Wolf's Frenzy over a fight or camp you will hold, but stay inside it. Wolf's Frenzy ends if you leave the area.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Kindred-W", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Q resets the attack timer for an extra hit when trading or kiting, useful against Ambessa's melee dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 82, "end": 89 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f15391f1e067ee17336db9b7df22734dfda560710a45a2678eb20291ee257e90",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Amumu:0",
+          "text": "Stay behind minions and keep moving when Amumu is near. Bandage Toss stops at the first enemy it hits, so minions in the way can block it.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Kindred:Amumu:1",
+          "text": "Don't stand close to your allies when Amumu has Curse of the Sad Mummy ready. A stunned Kindred dies quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Amumu-R", "start": 48, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 },
+            { "kind": "champion", "key": "Kindred", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Amumu:2",
+          "text": "Wolf's Frenzy lets you fight Amumu inside the area. Dance of Arrows has a short cooldown there, so keep kiting.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Amumu", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Kindred:Amumu:3",
+          "text": "Use Mounting Dread to slow Amumu while you back away. Avoid fighting him up close, because Despair hurts more the longer you stay near.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Amumu", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Amumu-W", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "681942a3837c7622da621eae10083ea91c368c6e1b8202ee63c8c6e961b881d2",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Belveth:0",
+          "text": "Keep Mounting Dread for Bel'Veth when she dashes in. It slows her and sets up Wolf's pounce on your third attack.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Belveth", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Kindred:Belveth:1",
+          "text": "Stay away from Above and Below. It knocks you up and slows you, and she can dash straight back in afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Kindred:Belveth:2",
+          "text": "Use Dance of Arrows to dash away when she dives. Stay near your team, because you're fragile and she's strong in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Kindred:Belveth:3",
+          "text": "Cast Lamb's Respite when your team is fighting her and someone would die. Bel'Veth can't finish anyone inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Belveth", "start": 74, "end": 82 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Belveth:4",
+          "text": "Don't die near her. Each champion kill she gets adds permanent Lavender attack speed and a Void Coral for Endless Banquet.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-R", "start": 106, "end": 121 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Dance of Arrows resets the attack timer, adding an extra hit while trading with Bel'Veth in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Belveth", "start": 80, "end": 88 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b8ebd215d612fa97d82d39ba6b9bcde4b8fb69d712f0cc25cc598f0d17807854",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Brand:0",
+          "text": "Sidestep Brand's Sear and Pillar of Flame; his combo can't start until one lands.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Brand-Q", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Brand-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Brand:1",
+          "text": "Use Dance of Arrows to dash out when Brand has you ablaze, before Sear can stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "ablaze", "start": 51, "end": 57 },
+            { "kind": "ability", "key": "Brand-Q", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Kindred:Brand:2",
+          "text": "Stay away from your teammates when Brand casts Pyroclasm; it bounces between enemies and starts slowly, so you can react.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Brand-R", "start": 47, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:Brand:3",
+          "text": "Use Lamb's Respite when Brand lands his full combo on your team; it stops you dying and heals when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "89e1dbb6b6baf2e54a5594063b43e53753fb4d0dd5bbc0ec261b3d4036aeff60",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Briar:0",
+          "text": "Keep Mounting Dread ready for when Briar leaps in; it slows her, and three attacks on her bring Wolf in for a pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Kindred:Briar:1",
+          "text": "Briar is forced to attack the nearest enemy during Blood Frenzy, so step away with Dance of Arrows and make her chase you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Kindred:Briar:2",
+          "text": "Don't stand in Briar's Chilling Scream path at full charge; if it throws you into a wall, you take heavy damage and are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Briar-E", "start": 23, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Kindred:Briar:3",
+          "text": "Her bleed heals her, so burst her down quickly rather than trading slowly.",
+          "refs": [],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Briar:4",
+          "text": "Use Lamb's Respite when Briar dives your team; she can't kill anyone inside it, and everyone inside heals when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e04fff77f736b32b5cd97448f0608ea8d3865ccafd4f49ecfec2269ff94c81f",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Darius:0",
+          "text": "Stay out of Apprehend's cone. Being pulled in leaves you slowed next to Darius with nowhere to go.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 },
+            { "kind": "champion", "key": "Darius", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Kindred:Darius:1",
+          "text": "Use Mounting Dread on Darius as he closes in, and keep hitting him while backing away. His Crippling Strike slow is why you shouldn't let him reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Darius-W", "start": 91, "end": 107 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Kindred:Darius:2",
+          "text": "Use Dance of Arrows to hop away once Darius has spent Apprehend. He is easy to poke while that is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Darius-E", "start": 54, "end": 63 },
+            { "kind": "keyword", "key": "poke", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Kindred:Darius:3",
+          "text": "Cast Lamb's Respite on yourself when Darius goes for Noxian Guillotine. You can't die inside it, so the execute is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Darius-R", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1bf2dd5108a3edfb485951b5324242b8916ebb9314bee36ba0393f6687811af3",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Diana:0",
+          "text": "Dodge Crescent Strike. If you are marked with Moonlight, move away, because Lunar Rush will dash to you and refresh.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Diana-E", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Kindred:Diana:1",
+          "text": "Use Dance of Arrows to vault away when Diana dashes in. Stay near Wolf's Frenzy so it comes back quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Kindred-W", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Kindred:Diana:2",
+          "text": "Slow Diana with Mounting Dread when she dashes in without a way back out, then fight her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Kindred-E", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Diana:3",
+          "text": "Stay away from Diana while her Pale Cascade shield is up. Engage once it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Diana-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Kindred:Diana:4",
+          "text": "Keep your distance from Diana at level 6, because Moonfall pulls you in and slows you. Save Lamb's Respite for it.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Diana-R", "start": 50, "end": 58 },
+            { "kind": "ability", "key": "Kindred-R", "start": 92, "end": 106 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1f2577c5875d31963bb95c8eaee998d13b03a58bd24537838195f6e9b2a7e336",
+      "tips": [
+        {
+          "id": "jungle:Kindred:DrMundo:0",
+          "text": "Stay out of Dr. Mundo's reach and kite him, using Dance of Arrows to dash away while you keep shooting.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Kindred:DrMundo:1",
+          "text": "Mounting Dread slows him, but Goes Where He Pleases can resist it once. Spend a cheap slow first, then use your real fight tools.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 30,
+              "end": 51
+            },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Kindred:DrMundo:2",
+          "text": "Step on his dropped canister to destroy it. That denies his heal and keeps his passive on cooldown.",
+          "refs": [],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Kindred:DrMundo:3",
+          "text": "Don't stand next to him during Heart Zapper. His recast heals more if it hits you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Kindred:DrMundo:4",
+          "text": "Use Lamb's Respite when he dives your team, so your allies can't die while the blessing lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9b8f86d56a54b1ed4d9adccc3dfbcab5ece46bf73cb30554adce0a43e4e42d2f",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Ekko:0",
+          "text": "Use Mounting Dread on Ekko when he dashes in; the slow keeps him close, and your third attack makes Wolf pounce on him.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ekko", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Kindred:Ekko:1",
+          "text": "Ekko's stun zone is slow to arm and shows an image first. Stay out of the area and make him miss it.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "stunned", "start": 7, "end": 11 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Ekko:2",
+          "text": "Hit Ekko hard while Chronobreak is on cooldown; his escape and heal are gone, so he is easier to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ekko-R", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:Ekko:3",
+          "text": "Use Dance of Arrows to dodge Timewinder, and avoid the second hit when it returns to Ekko.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 29, "end": 39 },
+            { "kind": "champion", "key": "Ekko", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Kindred:Ekko:4",
+          "text": "Cast Lamb's Respite on your team in a fight so nobody dies. Ekko's Chronobreak still heals him, but it won't save him if you keep the pressure on.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Ekko", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Ekko-R", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2cffe3d3967ef4b0c2a30e1e1014f000571dbee9acc1749837588a800017e13c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Evelynn:0",
+          "text": "Hit Evelynn with Mounting Dread when she dives in; it slows her and sets up the Wolf pounce.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Kindred-E", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Evelynn:1",
+          "text": "Dance of Arrows is your escape. When the arrow on Allure points at you, stay near allies and keep it ready.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Kindred:Evelynn:2",
+          "text": "Use Lamb's Respite when Evelynn goes for Last Caress; it stops the burst from killing anyone inside.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Evelynn", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Evelynn:3",
+          "text": "Evelynn can hide in Demon Shade, so ward your camps and look for her before you walk into the jungle.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 20,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c95bb5d4837974a57ed1ed43e22ae04e37e20c32bd1ef4b0b65d3cafc1de8915",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Fiddlesticks:0",
+          "text": "Keep moving and watch brush and still scarecrows. Fiddlesticks can fear you with no warning, and then you can't kite.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 50,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Fiddlesticks:1",
+          "text": "Stay out of Reap's range. Being slowed and silenced stops Dance of Arrows, your main escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 12,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "silenced", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 58, "end": 73 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Kindred:Fiddlesticks:2",
+          "text": "Save Lamb's Respite for when Fiddlesticks channels Crowstorm on your team. It keeps allies alive through the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 51,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:Fiddlesticks:3",
+          "text": "Use Mounting Dread to slow Fiddlesticks when he closes in. Then use Dance of Arrows to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 27,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Kindred-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c42316934de619ccb213823de10d3daefe8dffa62d322b644afdf08c85e2fc27",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Graves:0",
+          "text": "Stay away from Graves when Quickdraw is ready; his dash into point-blank shots hurts a fragile marksman.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Graves-E", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Kindred:Graves:1",
+          "text": "Step out of Smoke Screen quickly; leaving it removes the slow and the vision loss right away.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Kindred:Graves:2",
+          "text": "Slow Graves with Mounting Dread when he dashes in, then keep your distance to fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kindred-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:Graves:3",
+          "text": "Cast Lamb's Respite on yourself when Graves bursts you, so you cannot die while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1c9c3e0e9dd09f8b6862c9433b8798c5a813ba4698fed2be3c1c256fc707ed3c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Gwen:0",
+          "text": "Use Mounting Dread on Gwen before she gets close; she is slowed, and your third attack makes Wolf pounce on her.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Gwen", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Kindred:Gwen:1",
+          "text": "Don't waste Wolf's Frenzy chasing Gwen while she stands in Hallowed Mist; enemies outside it can't target her.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Gwen", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Gwen-W", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Kindred:Gwen:2",
+          "text": "Wait for Gwen to leave her Hallowed Mist; the mist follows her only once, then it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Gwen-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Gwen:3",
+          "text": "Use Dance of Arrows to dash out of Gwen's Needlework line; she needs to hit something to keep recasting.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Gwen-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Kindred:Gwen:4",
+          "text": "Save Lamb's Respite for a fight where Gwen's team is about to burst your carry; it keeps allies alive inside.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "437194110be6eb029d416337e574fb4ed42b6870bdc1d0ea19bd0c611da8d071",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Hecarim:0",
+          "text": "Stay at range and kite. Hecarim wants to run you down, and you are the squishier one.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Kindred:Hecarim:1",
+          "text": "Slow Hecarim with Mounting Dread when he charges in. Keep hitting him so Wolf pounces.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Hecarim", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Kindred-E", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Kindred:Hecarim:2",
+          "text": "Use Dance of Arrows to vault away from his Devastating Charge. Don't stand still when it comes.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 43, "end": 61 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Kindred:Hecarim:3",
+          "text": "Don't fight inside Spirit of Dread for long. It damages you and heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:Hecarim:4",
+          "text": "Keep Lamb's Respite for when Onslaught of Shadows lands and your team is in danger. Stand clear of its fear if you can.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 29, "end": 49 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d7cd35e50f08de77f6fd713d58ac1e744cbdb159a81cc3ce1b67e0ec17909ec7",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Ivern:0",
+          "text": "Ivern's Rootcaller is a straight line that stops at the first enemy it hits. Walk behind a minion or ally, or use Dance of Arrows to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 114, "end": 129 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Kindred:Ivern:1",
+          "text": "Avoid fighting Ivern alone while Daisy! is out; wait for her to expire or for allies to join you.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Ivern-R", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Kindred:Ivern:2",
+          "text": "Hunt him down when Daisy! is on cooldown, since he has few ways to escape once he is slowed by Mounting Dread.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-R", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 },
+            { "kind": "ability", "key": "Kindred-E", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Kindred:Ivern:3",
+          "text": "Ivern's Brushmaker brush lasts a long time and hides ambushes. Check it before you walk through, and use Wolf's Frenzy to look ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ivern-W", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Kindred-W", "start": 105, "end": 118 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Kindred:Ivern:4",
+          "text": "Contest his camps. While he channels Friend of the Forest he can't act, and damage or crowd control interrupts it, so he loses the camp.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ivern-passive",
+              "start": 37,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7d580fad8273807b2d7550508286c4a6a095e812d3119a1c554790480e6bb6e8",
+      "tips": [
+        {
+          "id": "jungle:Kindred:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks up everyone in that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Kindred:JarvanIV:1",
+          "text": "Keep Dance of Arrows ready for when Jarvan leaps in with Cataclysm. Dash out before he lands, or you are stuck in the arena.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 57, "end": 66 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Kindred:JarvanIV:2",
+          "text": "Use Mounting Dread on Jarvan when he closes in. It slows him so you can back away.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:JarvanIV:3",
+          "text": "Save Lamb's Respite for his dive on you or your carry. Stay inside it so nobody dies while the fight plays out.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ecdab5776a46a70f6655c6655c88793357e0017507aa4c24c016dbfedaa26383",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Jax:0",
+          "text": "Kite Jax with Dance of Arrows and keep your distance. He wins long fights because his attacks speed up the longer he keeps hitting.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Kindred:Jax:1",
+          "text": "Do not attack Jax while Counter Strike is up. It dodges your basic attacks, then he stuns you when it ends, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Jax-E", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Kindred:Jax:2",
+          "text": "Slow Jax with Mounting Dread when he jumps in, so you can get away from him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Kindred-E", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Kindred:Jax:3",
+          "text": "Save Lamb's Respite for when Jax dives your team. It keeps your allies and you from dying while he is in the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jax", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e692b97bd5a6c36d0a178776535c9fdcec227c430d8e48f9720463dd53a51665",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Jayce:0",
+          "text": "Stay away from Jayce's Thundering Blow range. It roots you and knocks you back, which can leave you stuck in a losing fight.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Kindred:Jayce:1",
+          "text": "Use Mounting Dread on Jayce when he leaps in, to slow him. Then hit him three times so Wolf pounces.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Jayce:2",
+          "text": "Jayce is strong early, so play safe until you have some Hunts done. Pick a Hunt you can reach safely.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Kindred:Jayce:3",
+          "text": "Dodge Shock Blast and keep your distance. After Jayce uses it, he is open to your Dance of Arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 82, "end": 97 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Jayce:4",
+          "text": "Fight Jayce inside Wolf's Frenzy. Your Dance of Arrows has a shorter cooldown there, and Jayce has to take Wolf's bites.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Kindred-W", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 39, "end": 54 },
+            { "kind": "champion", "key": "Jayce", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "The Q attack reset lets Kindred kite Jayce, whose Thundering Blow knocks back and slows her approach.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "champion", "key": "Jayce", "start": 37, "end": 42 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5596296e0351ad365e9e2a0c3ffff3c1cd5f29f3dc323d0fe99b3173c36fe0e3",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Karthus:0",
+          "text": "Stay out of Wall of Pain; it slows you and cuts your Magic Resist, which makes you easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Kindred:Karthus:1",
+          "text": "Stand next to minions or monsters so Lay Waste hits more than one target and loses its double damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Kindred:Karthus:2",
+          "text": "Dash in with Dance of Arrows to dodge his Lay Waste, then punish him; Karthus is slow and has no escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 42, "end": 51 },
+            { "kind": "champion", "key": "Karthus", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Kindred:Karthus:3",
+          "text": "Keep your health up so Requiem cannot kill you. Use Lamb's Respite to protect you and your team when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Kindred-R", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Kindred:Karthus:4",
+          "text": "After you kill Karthus, move away from his corpse; he can keep casting for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1710d6891b07c2077cc0dd18d0733b194761a64b90003041db87e1f5f8a980a5",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Kayn:0",
+          "text": "Hit Kayn with Mounting Dread when he dives. The slow and your attacks set up Wolf's pounce.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kindred-E", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Kayn:1",
+          "text": "Watch for the warning on the terrain edge when Kayn uses Shadow Step. He is probably coming for you, so stay near allies.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Kayn-E", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:Kayn:2",
+          "text": "Dodge Blade's Reach. Without it Kayn has to be close to use Umbral Trespass.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Kayn-R", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Kindred:Kayn:3",
+          "text": "Use Dance of Arrows to hop away from Kayn's dash, then shoot back from range.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Kindred:Kayn:4",
+          "text": "Cast Lamb's Respite when Kayn bursts out of Umbral Trespass, so you and your allies can't die from it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Kayn-R", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2ab085d195a4fe4ca416964b46d078bb4c18022b86956372cbe469232d269fe3",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Khazix:0",
+          "text": "Stay near minions or allies so Kha'Zix cannot get the extra damage from Taste Their Fear on you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Kindred:Khazix:1",
+          "text": "Once Kha'Zix has used Leap, he cannot jump in again for a while; that is your moment to fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Khazix-E", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Kindred:Khazix:2",
+          "text": "Use Mounting Dread to slow Kha'Zix when he closes in, then back away and keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Khazix", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Kindred:Khazix:3",
+          "text": "Cast Lamb's Respite when Kha'Zix dives you or an ally; it stops everyone inside from dying while he is committed.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Kindred:Khazix:4",
+          "text": "Drop Wolf's Frenzy on your position and fight inside it, so Wolf bites Kha'Zix as he jumps in.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c1aa8a878e226cecff1813f8d2f94d3009ff618ae1a179d6cd298db2cc2bd59",
+      "tips": [
+        {
+          "id": "jungle:Kindred:LeeSin:0",
+          "text": "Lee Sin needs his abilities to land to chain together. Stay back from Sonic Wave and use Dance of Arrows to dodge his dash.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 89, "end": 104 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Kindred:LeeSin:1",
+          "text": "Stay spread out from your team so one Dragon's Rage kick can't knock several allies up.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Kindred:LeeSin:2",
+          "text": "Use Mounting Dread on Lee Sin when he runs in. It slows him and your hits then bring Wolf in.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Kindred:LeeSin:3",
+          "text": "Lee Sin takes magic damage badly, so use Wolf's Frenzy on him; its bites are magic.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Kindred-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Kindred:LeeSin:4",
+          "text": "Cast Lamb's Respite on your team when Lee Sin dives you. Nobody inside can die while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "LeeSin", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6c3fa5e051abeb72f2d020e01383f23ab1e9654fbe0750d22ca54d23c7b70035",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Lillia:0",
+          "text": "Use Mounting Dread on Lillia when she runs at you; the slow keeps her close, and your third attack makes Wolf pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Lillia", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Kindred:Lillia:1",
+          "text": "Dance of Arrows lets you dash away from Watch Out! Eep! just before it lands; its centre hits hardest, so don't stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Lillia-W", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Kindred:Lillia:2",
+          "text": "Stay out of a straight line with Lillia when she throws Swirlseed. It rolls until it hits something, so step aside.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Lillia-E", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Kindred:Lillia:3",
+          "text": "Save Lamb's Respite for when Lillia puts your team to sleep with Lilting Lullaby. Your allies can't die while inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Lillia", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Lillia-R", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c412dc87b1c3de66cd13d6b2cc9d0073eeb5a1316d0d9528ae737e44593101c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:MasterYi:0",
+          "text": "Kite Master Yi with Dance of Arrows and Mounting Dread. Keep your distance, since he will kill you if he reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "Kindred-E", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Kindred:MasterYi:1",
+          "text": "Don't rely on Mounting Dread's slow once he activates Highlander. He becomes immune to slows, so use your distance instead.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 54, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Kindred:MasterYi:2",
+          "text": "Keep Dance of Arrows ready as an escape. Use it to dash away when Master Yi lands on you with Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 66, "end": 75 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 94, "end": 106 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Kindred:MasterYi:3",
+          "text": "Keep hitting Master Yi while he heals with Meditate. He needs mana to keep it going, so wear that down.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 13, "end": 22 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c71acacdc5c2b0f93114a3e6df252c8a54ce696f01532853848a12183c9382e6",
+      "tips": [
+        {
+          "id": "jungle:Kindred:MonkeyKing:0",
+          "text": "Kite Wukong with Dance of Arrows, and dash away the moment he jumps on you with Nimbus Strike.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:MonkeyKing:1",
+          "text": "After Wukong dashes in, wait a moment before using abilities; the clone from Warrior Trickster may be what you see.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 77, "end": 94 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Kindred:MonkeyKing:2",
+          "text": "Use Mounting Dread to keep Wukong slowed as he approaches, and stay out of reach of Cyclone, which knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Kindred:MonkeyKing:3",
+          "text": "Cast Lamb's Respite when Wukong dives your team; he can't finish anyone inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Kindred:MonkeyKing:4",
+          "text": "Avoid long fights with Wukong; his Stone Skin gets tougher the longer he keeps hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 35,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69517e73a78efaa2915bb38d5b45aefdfaa1514e005c6e9aa814198dd1a79899",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Naafiri:0",
+          "text": "Use Mounting Dread on Naafiri when she dives in; the slow gives you time to back away from her short burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Kindred:Naafiri:1",
+          "text": "Hold Lamb's Respite for when Naafiri commits with Hounds' Pursuit on you or a teammate; nobody inside can die until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Kindred:Naafiri:2",
+          "text": "Dash away with Dance of Arrows after she lands on you, then shoot her and her packmates as you go.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Kindred:Naafiri:3",
+          "text": "Stay at long range and kite; Naafiri is fragile once her dashes are spent, so punish her while Eviscerate is down.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Q reset fits an extra hit when trading or kiting Naafiri, whose dashes and packmates close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 49, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b06c00ccf5fdd2f7122ac941fdf4aa3c96d31f15bf6082d5d8174a6e2b5d77b",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Nidalee:0",
+          "text": "Stay out of Nidalee's long Javelin Toss line; sidestep it with Dance of Arrows, since it hurts most from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Kindred:Nidalee:1",
+          "text": "Save Dance of Arrows for when Nidalee jumps in as a cougar; vault away, then fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nidalee", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Nidalee:2",
+          "text": "Use Mounting Dread on Nidalee when she dives so she is slowed and can't easily chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nidalee", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Kindred:Nidalee:3",
+          "text": "Cast Lamb's Respite on yourself and allies when Nidalee goes for a kill; she can't finish anyone inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nidalee", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Kindred:Nidalee:4",
+          "text": "Watch the brush for Bushwhack traps before walking through; they are invisible, so avoid brush paths Nidalee likely trapped.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 101, "end": 108 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aa69402d06c2d738df2615c4824db30f8bc5534acd4b92eddf142e4f7e295cf1",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Nocturne:0",
+          "text": "Keep Dance of Arrows ready to jump away when Nocturne dashes in; he wants to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nocturne", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Kindred:Nocturne:1",
+          "text": "Slow Nocturne with Mounting Dread when he runs at you, and stay near your team when Paranoia is cast.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Kindred-E", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Kindred:Nocturne:2",
+          "text": "Do not waste Dance of Arrows on his Shroud of Darkness; wait until the shield is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Kindred:Nocturne:3",
+          "text": "Use Lamb's Respite when Nocturne lands on you or an ally, so the target survives his attack.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bffe1ec203ca2bccbbf335fbbd993024555e1214499da2849b44a1da23d32fc7",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Nunu:0",
+          "text": "Dodge Biggest Snowball Ever! with a sharp turn or a dash from Dance of Arrows, not by running straight away.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 6, "end": 28 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Nunu:1",
+          "text": "Stay out of range of Snowball Barrage's blast, or you get slowed and then rooted. Move away once you are hit.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Kindred:Nunu:2",
+          "text": "Use Mounting Dread on Nunu to slow him as he rolls in, then back away while kiting him.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Kindred:Nunu:3",
+          "text": "Leave Absolute Zero's area right away, since it slows more the longer you stay. Dance of Arrows can get you out.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 80, "end": 95 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Kindred:Nunu:4",
+          "text": "Contest the camps Nunu is clearing; Consume takes monsters fast, so you can't win a long invade against him.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-Q", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "db4241a55bd810677a3a62142f19ccb3429a41c2ae4773df873da15d6c0d2973",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Pantheon:0",
+          "text": "Keep your distance from Pantheon and kite him; Dance of Arrows lets you vault away after he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Pantheon:1",
+          "text": "Watch for Shield Vault; you are stunned and he wins the trade. Stay near teammates or a place to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-W", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Kindred:Pantheon:2",
+          "text": "Do not attack Pantheon head-on while he braces with Aegis Assault; hit him from behind or wait.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Pantheon:3",
+          "text": "Slow Pantheon with Mounting Dread when he jumps in, so he cannot chase you down.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Kindred-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Kindred:Pantheon:4",
+          "text": "Stay healthy; when Kindred is low, Comet Spear hurts a lot. Use Lamb's Respite to survive his dive.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 35, "end": 46 },
+            { "kind": "ability", "key": "Kindred-R", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e58f459b8dab90536fd2b904539a9ace54b4f740652f5d3096de6b5426bddedf",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Qiyana:0",
+          "text": "Cast Mounting Dread on Qiyana to slow her, then hit her twice more so Wolf pounces. She is an assassin and dies fast once you land it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Kindred:Qiyana:1",
+          "text": "Save Lamb's Respite for her Supreme Display of Talent. Stand inside the zone with your team so nobody dies to the stun burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 28, "end": 53 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Kindred:Qiyana:2",
+          "text": "Qiyana jumps in with Audacity to reach you. Keep Dance of Arrows ready to vault away and shoot back.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Kindred:Qiyana:3",
+          "text": "Use Wolf's Frenzy on the river or brush she fights in. Wolf hits her while you stay on the edge of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fd11ec9f6a73602722a1287f28569c4a030fd909612d5a19744e62f06b7ce901",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Rammus:0",
+          "text": "Keep Dance of Arrows ready to jump away when Rammus rolls at you. Powerball stops on the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Rammus", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Kindred:Rammus:1",
+          "text": "Stay away from Rammus when you can. His Frenzying Taunt forces you to attack him instead of fighting back.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Rammus-E", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Kindred:Rammus:2",
+          "text": "Don't attack Rammus while Defensive Ball Curl is up, since it hits you back and he is very tanky. Hit him when it is off.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Rammus-W", "start": 26, "end": 45 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Kindred:Rammus:3",
+          "text": "Use Lamb's Respite to keep your team alive when Rammus and his team dive in. It stops allies from dying inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rammus", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "83fc05618f48869ab5e5f228c6b895c77ed2c4aea764367de2c0f0a947ea361f",
+      "tips": [
+        {
+          "id": "jungle:Kindred:RekSai:0",
+          "text": "Move around between attacks while jungling; Wolf's Frenzy heals you through its passive, and Rek'Sai's Tremor Sense reveals you only when you move.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 44, "end": 57 },
+            { "kind": "champion", "key": "RekSai", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Kindred:RekSai:1",
+          "text": "Use Mounting Dread on Rek'Sai when she dives in, so she is slowed and you can finish her with your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "RekSai", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Kindred:RekSai:2",
+          "text": "Keep Lamb's Respite for when Rek'Sai uses Void Rush on you or a teammate; she can't kill anyone inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "RekSai", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "RekSai-R", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Kindred:RekSai:3",
+          "text": "Use Dance of Arrows to dash away after Rek'Sai knocks you up, or to get out of range before she builds full Fury.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "RekSai", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Kindred:RekSai:4",
+          "text": "Stay away from Rek'Sai's Furious Bite when her Fury is full; it turns into true damage.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Rek'Sai's Queen's Wrath adds attack speed and burst, so the extra hit from the Q reset helps you trade and kite.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 0, "end": 7 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3667787748731a991698bf8954881c3412bc57e28ebc56b3c862da5d59534ea8",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Rengar:0",
+          "text": "Stay out of brush and keep your distance; Rengar leaps from it with Unseen Predator and can jump on you from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 42, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Rengar-passive",
+              "start": 68,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Kindred:Rengar:1",
+          "text": "Save Dance of Arrows to escape once Rengar leaps onto you, or if Bola Strike slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Rengar", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Rengar-E", "start": 65, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Kindred:Rengar:2",
+          "text": "Watch for the marker over you when Rengar uses Thrill of the Hunt; he is close, so ready Mounting Dread and your escape.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Rengar-R", "start": 47, "end": 65 },
+            { "kind": "ability", "key": "Kindred-E", "start": 89, "end": 103 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Kindred:Rengar:3",
+          "text": "Fight Rengar when his Ferocity is low; an empowered Bola Strike roots, and an empowered Battle Roar cleanses him.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Rengar-E", "start": 52, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Rengar-W", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Kindred:Rengar:4",
+          "text": "Cast Lamb's Respite on yourself and your team when Rengar dives, so he cannot finish anyone.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Rengar", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "68a47846dc96b0cc741c37ed0f76a6911052dc6cedadf9ab417074774e4321fb",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Sejuani:0",
+          "text": "Stay out of a straight line from Sejuani so Glacial Prison misses you; it stops on the first champion it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Sejuani:1",
+          "text": "Do not slow Sejuani with Mounting Dread when she has Frost Armor; she is immune to slows then.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 7, "end": 11 },
+            { "kind": "champion", "key": "Sejuani", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Kindred-E", "start": 25, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Kindred:Sejuani:2",
+          "text": "Use Dance of Arrows to hop away from Arctic Assault, and keep your distance when she is near her melee allies.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Kindred:Sejuani:3",
+          "text": "Cast Lamb's Respite on your team when Sejuani's stun lands on an ally in a fight; it keeps them alive until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sejuani", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4375419cfeec17f047e66c0bcf37444db07159778257bfd8723077ade2e3c55d",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Shaco:0",
+          "text": "Watch for Shaco going invisible. Back away from your team's weak points and hold Dance of Arrows so you can dash out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Kindred:Shaco:1",
+          "text": "Use Mounting Dread on Shaco when he appears; it slows him so he struggles to stay behind you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shaco", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Kindred:Shaco:2",
+          "text": "Hit the Hallucinate clone from range; it explodes when it dies. Don't stand next to it when it dies.",
+          "refs": [
+            { "kind": "ability", "key": "Shaco-R", "start": 8, "end": 19 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Shaco:3",
+          "text": "Avoid walking through bushes and camps you haven't checked. Shaco's Jack In The Box is hidden and will fear and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Shaco-W", "start": 68, "end": 83 },
+            { "kind": "keyword", "key": "rooted", "start": 112, "end": 116 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "02bc68a4216d3e900998bd8c787001ceaf9208d858fd620e6b7cea18baefcf20",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Shyvana:0",
+          "text": "Keep your distance from Shyvana. She gets strong from hitting you, so poke her with attacks and don't trade in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Kindred:Shyvana:1",
+          "text": "Use Mounting Dread early to slow Shyvana, then keep attacking her from range.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 32 },
+            { "kind": "champion", "key": "Shyvana", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Kindred:Shyvana:2",
+          "text": "Save Dance of Arrows to dash away when Shyvana comes in with Dragon's Descent.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 61, "end": 77 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Shyvana:3",
+          "text": "Hit Shyvana while her Dragon Fury is low; she can't transform until it is full.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:Shyvana:4",
+          "text": "Cast Lamb's Respite when you and your allies are inside a Shyvana fight; nobody inside can die.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0c17322e1b87fc33855833b31897771c99593052438154271160e0c15ae7bad6",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Skarner:0",
+          "text": "Keep Dance of Arrows ready to dash away from Skarner's charge. Once he grabs you, you cannot escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Skarner", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Kindred:Skarner:1",
+          "text": "Stay away from walls when Skarner charges at you; hitting one with him stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Kindred:Skarner:2",
+          "text": "Stay out of Impale's reach and keep your dash for it; being suppressed usually gets you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:Skarner:3",
+          "text": "Use Mounting Dread to slow Skarner and kite him; he has to stick to you to do his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Skarner", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Kindred:Skarner:4",
+          "text": "Save Lamb's Respite for when Skarner dives your team; it keeps allies alive while he fights.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e314fded8ae6ed2890751be651c2d18fa5be080aed665298a3428f3ec82aa140",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Sylas:0",
+          "text": "Use Mounting Dread on Sylas to slow him, then land your attacks on him; the third one makes Wolf pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Kindred:Sylas:1",
+          "text": "Don't stand in Sylas's reach when Abduct is ready; it stuns and pulls him onto you. Keep a camp or wall between you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Kindred:Sylas:2",
+          "text": "Keep Lamb's Respite for a big fight. Sylas cannot kill anyone inside it, and it heals everyone in it when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Kindred:Sylas:3",
+          "text": "Finish Sylas fast when he is low. Kingslayer heals him more when he is hurt, so burst him before he lunges.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Sylas-W", "start": 34, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Kindred:Sylas:4",
+          "text": "Hold Dance of Arrows to dash away after Sylas commits his chains. Dashing into Wolf's Frenzy also shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Kindred-W", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "22bb3529b394597ea172f4ad0c87b438d8c43b32dec6f99df55bd6eacfc743f2",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Talon:0",
+          "text": "Stay close to your team and keep Dance of Arrows ready to vault away when Talon jumps in.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 33, "end": 48 },
+            { "kind": "champion", "key": "Talon", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Kindred:Talon:1",
+          "text": "Cast Lamb's Respite on yourself when Talon bursts you; he cannot kill you while you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Kindred:Talon:2",
+          "text": "Talon can slip away with Shadow Assault. Do not chase him blindly when he turns invisible.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Kindred:Talon:3",
+          "text": "Use Mounting Dread on Talon to slow him when he comes in, then keep attacking to land the pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Talon:4",
+          "text": "Talon can vault walls with Assassin's Path to reach you, so keep track of where he is and do not stand alone near thin walls.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-E", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "915af0daa832e0d533de30689957cdf38cdbcd8c71f51a13c40dc0319fc6ed7e",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Trundle:0",
+          "text": "Do not fight Trundle inside his Frozen Domain; pull the fight outside the ice.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Trundle-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Kindred:Trundle:1",
+          "text": "Leave Pillar of Ice quickly, since it slows you heavily. Dance of Arrows can vault you out.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 57, "end": 72 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:Trundle:2",
+          "text": "Stay out of his reach early; Chomp lowers your Attack Damage and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-Q", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Kindred:Trundle:3",
+          "text": "Use Mounting Dread to slow Trundle and kite him from range.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Trundle", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Kindred:Trundle:4",
+          "text": "Cast Lamb's Respite when Trundle dives your team; his Subjugate cannot kill anyone inside.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Trundle", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Trundle-R", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "584a6c434636bd7ab243f4dcc724cb9c3e725b04fa9fa3cea4eca6a0baff6b85",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Udyr:0",
+          "text": "Keep your distance from Udyr; he has few ranged options. Shoot with Dance of Arrows and back away.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Kindred:Udyr:1",
+          "text": "Slow Udyr with Mounting Dread as he runs at you, and keep hitting him while you retreat.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Udyr", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kindred-E", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Kindred:Udyr:2",
+          "text": "Save Dance of Arrows to dash away when he pounces; his stun can only hit you once in a while.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Kindred:Udyr:3",
+          "text": "Place Wolf's Frenzy on the ground where Udyr must fight you; stay inside it, because it ends if you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Udyr", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Kindred:Udyr:4",
+          "text": "Cast Lamb's Respite in a fight that goes badly; allies inside can't die while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1c93861d3d28d5c20ece19520e7b25ac1a0c9bea34de5c011dbb0c6f9314fdae",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Vi:0",
+          "text": "Stay out of a fully charged Vault Breaker's line; if you see Vi start charging, step sideways or back off.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Kindred:Vi:1",
+          "text": "Do not trade punches for long. Vi's third hit shreds your Armor and speeds her up, so use Dance of Arrows to hop out of the brawl.",
+          "refs": [
+            { "kind": "champion", "key": "Vi", "start": 31, "end": 33 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 90, "end": 105 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Vi:2",
+          "text": "Slow Vi with Mounting Dread when she dives in, then back away and keep hitting her from range.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kindred-E", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Kindred:Vi:3",
+          "text": "Vi's Cease and Desist cannot be stopped once it starts. Keep Dance of Arrows ready for after her dash, not during it.",
+          "refs": [
+            { "kind": "champion", "key": "Vi", "start": 0, "end": 2 },
+            { "kind": "ability", "key": "Vi-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 61, "end": 76 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Vi:4",
+          "text": "If Vi dives on you in a fight, cast Lamb's Respite on yourself and your allies so nobody dies while she is on top of you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e95865a594578b03383f530f2d009f47bf42974caeb532b077f459ddac953022",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Viego:0",
+          "text": "Use Mounting Dread on Viego when he tries to jump on you; it leaves him slowed and easier to kite.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Kindred:Viego:1",
+          "text": "Stay out of a fight where Viego has just killed someone; he can possess the fallen champion and gain their abilities. Hit him before he reaches the wraith.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Kindred:Viego:2",
+          "text": "Keep Lamb's Respite for a fight that is going badly. Viego can't kill anyone inside it, and your team heals when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Viego", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Kindred:Viego:3",
+          "text": "Dash away with Dance of Arrows when Viego charges Spectral Maw. It is a straight shot that stops at the first enemy it hits, so you can sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Viego", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Viego-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d578191fc0808b62e3d7d288aaf056a87097b692d578649e28a9d9357353d716",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Volibear:0",
+          "text": "Keep Dance of Arrows ready for when Volibear runs at you. Vault away so he can't reach you with Thundering Smash's stun.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Volibear", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 96, "end": 112 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Kindred:Volibear:1",
+          "text": "Slow Volibear with Mounting Dread when he charges in. It buys you room to kite him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Kindred-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Kindred:Volibear:2",
+          "text": "Use Lamb's Respite when Volibear dives your team. Nobody inside can die until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Volibear", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Kindred:Volibear:3",
+          "text": "Stay clear of Sky Splitter's marked ground when you see Volibear cast it. It slows you and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Volibear", "start": 56, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Kindred:combo:0",
+          "note": "Extra hit from the reset lets Kindred trade while Volibear's Relentless Storm attack speed is still building.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 30, "end": 37 },
+            { "kind": "champion", "key": "Volibear", "start": 50, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "07b83545c5d66db330fff5b2abeabefd7a704042249f16a83d6877d6eeb1041d",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Warwick:0",
+          "text": "Keep your distance from Warwick and save Dance of Arrows to dash away, though a held Jaws of the Beast can still follow you.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 41, "end": 56 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 85, "end": 102 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Kindred:Warwick:1",
+          "text": "Stay healthy; Warwick hunts low health targets with Blood Hunt and heals when he is hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Warwick-W", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Kindred:Warwick:2",
+          "text": "Cast Mounting Dread on Warwick as he approaches; it leaves him slowed and gives you room to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Warwick", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Kindred:Warwick:3",
+          "text": "Use Lamb's Respite on yourself if Warwick ultimates you; it keeps you from dying while he channels.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Warwick", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9842131376e78dd7148c798e010c16603789ae687341c7caf1cf0e3b31b55a6c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:XinZhao:0",
+          "text": "Kite Xin Zhao with Dance of Arrows and keep your distance. Once Three Talon Strike lands its third attack, he knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 64, "end": 82 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Kindred:XinZhao:1",
+          "text": "Use Mounting Dread on Xin Zhao as he charges in. The slow gives you time to back away from him.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Kindred:XinZhao:2",
+          "text": "Stay spread from your team, or away from Xin Zhao, until he has used Crescent Guard. Its knockback and damage hurt a fragile Kindred badly.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 69, "end": 83 },
+            { "kind": "champion", "key": "Kindred", "start": 125, "end": 132 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Kindred:XinZhao:3",
+          "text": "Place Wolf's Frenzy where Xin Zhao has to fight. Dance of Arrows then has a short cooldown while you stand inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Kindred:XinZhao:4",
+          "text": "Cast Lamb's Respite when Xin Zhao dives your team. Anyone inside cannot die, so his burst is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8208058836ddb57f3043cdb07ed68a7d14ef11e83d80f830bfd6622cd195513c",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Zac:0",
+          "text": "Stay out of Zac's reach when he charges Elastic Slingshot; being knocked up and stunned there is deadly for you.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Zac-E", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Kindred:Zac:1",
+          "text": "Step on the goo Zac sheds to destroy it and stop his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 16, "end": 19 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Kindred:Zac:2",
+          "text": "Use Mounting Dread to slow Zac and kite him with Dance of Arrows; he has to close the gap to hurt you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Zac", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Kindred:Zac:3",
+          "text": "When Zac splits into bloblets, kill them all so he cannot come back.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 5, "end": 8 }],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Kindred:Zac:4",
+          "text": "Save Lamb's Respite for when Zac dives your team; it keeps allies alive while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zac", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a18331dfa19c2a1821b46d7a520f0b9e5bd52c0bd5f0dad8f9cbe4814b1473c0",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Zed:0",
+          "text": "Cast Lamb's Respite on yourself when Death Mark is on you; you cannot die while inside it, so the mark's burst cannot kill you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Zed-R", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Kindred:Zed:1",
+          "text": "Stay close to your team when Zed is around. He wants to catch you alone, and Kindred is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "isolated", "start": 66, "end": 71 },
+            { "kind": "champion", "key": "Kindred", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Kindred:Zed:2",
+          "text": "Use Mounting Dread on Zed as he dives in; it slows him, and your third attack makes Wolf pounce.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 22, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Kindred:Zed:3",
+          "text": "Dance of Arrows lets you dash away after Zed swaps to his shadow. Use it to leave his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 41, "end": 44 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Zed:4",
+          "text": "Drop Wolf's Frenzy on yourself when Zed jumps on you, so Wolf bites him and your Dance of Arrows comes back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e8c2259a8915a67a24bcd6cfb858cfc6af843494c142210481d657c4f89fc20",
+      "tips": [
+        {
+          "id": "jungle:Kindred:Zyra:0",
+          "text": "Stay out of Grasping Roots range, and sidestep it; Kindred is fragile and a root usually means she dies.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Kindred", "start": 51, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Kindred:Zyra:1",
+          "text": "Step on Zyra's seeds before she grows them, and dodge back at the last moment if she casts at them as you step.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Kindred:Zyra:2",
+          "text": "Use Dance of Arrows to dash out of the delayed Deadly Spines, not toward it.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Zyra-Q", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Kindred:Zyra:3",
+          "text": "Zyra's plants have fixed, low health and expire fast. Move the fight away from her seeds, or close in when she plants too far from herself.",
+          "refs": [{ "kind": "champion", "key": "Zyra", "start": 0, "end": 4 }],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Kindred:Zyra:4",
+          "text": "Use Mounting Dread to slow Zyra when she is exposed, so her plants cannot protect her.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Zyra", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

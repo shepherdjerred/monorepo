@@ -1,0 +1,937 @@
+{
+  "schemaVersion": 1,
+  "champion": "Warwick",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "656e18ab1ef99ebf747d3d66314c7cd1e8fb1c137ec5cd1c66d0e509e6c76311",
+      "tips": [
+        {
+          "id": "jungle:Warwick:general:0",
+          "text": "Hold the Jaws of the Beast button on a runner so Warwick follows them, even through dashes. Tap it instead when you only want a quick bite.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 9, "end": 26 },
+            { "kind": "champion", "key": "Warwick", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Warwick:general:1",
+          "text": "Follow the Blood Hunt trails to enemies who are low on health; Warwick runs faster toward them and attacks much faster against them.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Warwick", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Warwick:general:2",
+          "text": "Cast Blood Hunt when you arrive at a fight, even if nobody is hurt, to mark the closest enemy and get the speed bonus on them.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Warwick:general:3",
+          "text": "Use Primal Howl to take less damage while you fight, then let it end next to enemies so they flee in fear.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Warwick:general:4",
+          "text": "Cast Infinite Duress toward a target you can reach; the leap gets longer with extra Move Speed. It heals Warwick for the damage it deals.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Warwick", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Warwick:general:5",
+          "text": "Fight when Warwick is low on health, because Eternal Hunger heals him with each attack. Stay in the fight and keep attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 11, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 45,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Warwick:general:6",
+          "text": "Use Jaws of the Beast on big jungle monsters to heal, since it deals extra damage based on the target's health.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Warwick:general:7",
+          "text": "Don't start Infinite Duress on a target with a spell shield or crowd control immunity; the channel won't begin.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Warwick:combo:0",
+          "name": "Held Q follow",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Warwick-Q" }],
+          "when": "When chasing a fleeing or dashing enemy that you want to stay attached to.",
+          "whenRefs": [],
+          "text": "Hold the Q button instead of tapping it. Warwick clamps on and follows the target through dashes and teleports, then leaps behind them.",
+          "textRefs": [
+            { "kind": "champion", "key": "Warwick", "start": 41, "end": 48 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "c1a62915e0a45b28de335dc1d98dc6701a675187f88e18fb279c89ec4f2e0aed",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Graves:0",
+          "text": "Hold Jaws of the Beast on Graves so Warwick sticks to him and follows his Quickdraw dash. Graves has a hard time shaking you off.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Graves", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "Warwick", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Graves-E", "start": 74, "end": 83 },
+            { "kind": "champion", "key": "Graves", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Warwick:Graves:1",
+          "text": "Use Blood Hunt once Graves is low on health. You get faster to him and attack much faster, so chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Graves", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Warwick:Graves:2",
+          "text": "Save Infinite Duress for when Graves has used Quickdraw. He can't easily get out of the long suppression.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Graves", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Graves-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Warwick:Graves:3",
+          "text": "Use Primal Howl when Graves bursts you at close range. It cuts the damage you take, then makes him flee.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Warwick:Graves:4",
+          "text": "Don't fight inside Smoke Screen. You are slowed and can't see out of it, so wait for it to fade or step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 19, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fc531f3091c4637709e3ebac12526a7f52431256fd68d4dbbb7133a0ac37f7d",
+      "tips": [
+        {
+          "id": "jungle:Warwick:JarvanIV:0",
+          "text": "Hold Jaws of the Beast when Jarvan IV tries to leave; Warwick follows his movement, even through a dash.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "JarvanIV", "start": 28, "end": 37 },
+            { "kind": "champion", "key": "Warwick", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Warwick:JarvanIV:1",
+          "text": "Use Primal Howl to take less damage while he fights you; it fears him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Warwick:JarvanIV:2",
+          "text": "Aim Infinite Duress at Jarvan IV when he is low; the suppression stops him from using Cataclysm or Dragon Strike while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "JarvanIV", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 86, "end": 95 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 99, "end": 112 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Warwick:JarvanIV:3",
+          "text": "Stay out of the line between Jarvan IV and his Demacian Standard, or you will be knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 47, "end": 64 },
+            { "kind": "keyword", "key": "knocked-up", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Warwick:JarvanIV:4",
+          "text": "Once he is hurt, use Blood Hunt to chase him down; Warwick gets faster and attacks quicker against low-health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 21, "end": 31 },
+            { "kind": "champion", "key": "Warwick", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "593da9b8eec0f9462d5822e332d72847b42b6f4afff10a088c0fe3b9ce4afb16",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Kayn:0",
+          "text": "Press Primal Howl when Kayn dives onto you; it cuts the damage you take, then the howl sends him running in fear.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Warwick:Kayn:1",
+          "text": "Hold Jaws of the Beast on Kayn when he dashes or flees; Warwick sticks to him and follows his movement.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Kayn", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Warwick", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Warwick:Kayn:2",
+          "text": "Once Kayn is hurt, follow the trails from Blood Hunt to finish him. Use the active to mark him if you can't find him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Warwick-W", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Warwick:Kayn:3",
+          "text": "Fight Kayn when your health is low enough for Eternal Hunger to heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 46,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Warwick:Kayn:4",
+          "text": "Aim Infinite Duress at Kayn once he is low. The leap stops on the first champion it hits, and the suppression keeps him from escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e0ffff18906d32e97bb12140c3cfa98b3939f4481d779bcc6eda0f694b13972",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Khazix:0",
+          "text": "Fight near allied minions or champions so Kha'Zix is not hitting you while you are isolated; Taste Their Fear hurts far more against a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "isolated", "start": 83, "end": 91 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Warwick:Khazix:1",
+          "text": "Hold Jaws of the Beast when Kha'Zix leaps away; Warwick follows him through the leap and keeps biting.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Khazix", "start": 28, "end": 35 },
+            { "kind": "champion", "key": "Warwick", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-E", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Warwick:Khazix:2",
+          "text": "Use Infinite Duress when Kha'Zix has just spent Leap. It suppresses him, so he cannot jump out, and it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Khazix", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Khazix-E", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Warwick:Khazix:3",
+          "text": "Press Primal Howl when Kha'Zix dives you. It cuts the damage you take, and the fear at the end pushes him off you.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Khazix", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Warwick:Khazix:4",
+          "text": "Once Kha'Zix is hurt, Blood Hunt shows you where he is and speeds you toward him. Chase him when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Warwick-W", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Warwick:Khazix:5",
+          "text": "Do not fight Kha'Zix when you are low and alone. Staying healthy denies him easy kills and the extra damage he deals.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 13, "end": 20 },
+            { "kind": "keyword", "key": "isolated", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "07b83545c5d66db330fff5b2abeabefd7a704042249f16a83d6877d6eeb1041d",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Kindred:0",
+          "text": "Hold Jaws of the Beast when Kindred tries to leave; Warwick follows her through her Dance of Arrows dash and stays on her.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Kindred", "start": 28, "end": 35 },
+            { "kind": "champion", "key": "Warwick", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 84, "end": 99 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Warwick:Kindred:1",
+          "text": "Use Infinite Duress on Kindred once she is hurt; she is fragile and the suppression stops her from kiting away.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kindred", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Warwick:Kindred:2",
+          "text": "Do not ultimate into her Lamb's Respite zone; it stops everyone inside from dying, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Warwick:Kindred:3",
+          "text": "Follow the Blood Hunt trails once Kindred drops low on health, and chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Kindred", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Warwick:Kindred:4",
+          "text": "Use Primal Howl when she dives in on you; the damage reduction helps, and the fear after it stops her kiting.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "41cf5268de9dfa024889a66b57cf6f4fa48457b9500adc948ebb9ec1f9d6c6cc",
+      "tips": [
+        {
+          "id": "jungle:Warwick:LeeSin:0",
+          "text": "Hold Jaws of the Beast when Lee Sin dashes away; Warwick follows the target and stays on them through a Resonating Strike or Safeguard.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "LeeSin", "start": 28, "end": 35 },
+            { "kind": "champion", "key": "Warwick", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Warwick:LeeSin:1",
+          "text": "Chase Lee Sin once he is hurt. Blood Hunt senses him below half health and speeds you toward him, so follow the trail to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Warwick-W", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Warwick:LeeSin:2",
+          "text": "Use Primal Howl as Lee Sin dives on you. It cuts his damage, and the fear at the end gives you space to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "LeeSin", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Warwick:LeeSin:3",
+          "text": "Fight Lee Sin when you are low on health. Eternal Hunger heals you with each attack, and the healing is much larger when you are very low.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 42,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Warwick:LeeSin:4",
+          "text": "Cast Infinite Duress to catch Lee Sin when he is hurt or trying to escape. You are immune to crowd control during the leap, so his slow cannot stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "LeeSin", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q stays attached through Lee Sin's Safeguard dash, so he can't easily ward-hop away.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 30, "end": 37 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "05e22c50b7a0020809b6ef101ebc18f18799ea134f85cfd49590d67008a5cf9c",
+      "tips": [
+        {
+          "id": "jungle:Warwick:MasterYi:0",
+          "text": "Hold Jaws of the Beast on Master Yi; you follow him even when he runs, and you stay on him through Highlander.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "MasterYi", "start": 26, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Warwick:MasterYi:1",
+          "text": "Save Infinite Duress for when Master Yi is on cooldown; he cannot dodge it with Alpha Strike once you are suppressing him.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Warwick:MasterYi:2",
+          "text": "Use Primal Howl when he dives in; the damage reduction helps you survive and the fear stops his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Warwick:MasterYi:3",
+          "text": "Hurt Master Yi to make him spend mana on Meditate, then use Blood Hunt to track him when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 41, "end": 49 },
+            { "kind": "ability", "key": "Warwick-W", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ca80538db2312c2505c5cad07ad45a912f0e617da424bbefc8f9a3d75f156347",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Naafiri:0",
+          "text": "Hold Jaws of the Beast when Naafiri tries to dash away; Warwick follows her movement and stays on her.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "champion", "key": "Warwick", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Warwick:Naafiri:1",
+          "text": "Use Primal Howl before she dives in; it cuts the damage you take, then Fears her if she is still close.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Warwick:Naafiri:2",
+          "text": "Once Naafiri is hurt, use Blood Hunt to follow her trail and finish her; your attacks speed up against weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Warwick-W", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Warwick:Naafiri:3",
+          "text": "Her Packmates add damage to her fights, so avoid long brawls early and focus Naafiri herself with Infinite Duress.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 77, "end": 84 },
+            { "kind": "ability", "key": "Warwick-R", "start": 98, "end": 113 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Warwick:Naafiri:4",
+          "text": "Stay above half health in fights; below that, Eternal Hunger heals you with every attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 46,
+              "end": 60
+            }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "974a4a58ad92d0eb72b253d6d5c52bc8c826b2a0f7ccf9cdd7fb56b97198de5f",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Nocturne:0",
+          "text": "Hold off on Infinite Duress when Nocturne has Shroud of Darkness ready; if it blocks the leap, Warwick wastes his biggest fight tool.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Nocturne", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 46, "end": 64 },
+            { "kind": "champion", "key": "Warwick", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Warwick:Nocturne:1",
+          "text": "Bait Shroud of Darkness with Jaws of the Beast first, then jump in once it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 29, "end": 46 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Warwick:Nocturne:2",
+          "text": "Use Primal Howl as Nocturne commits to a fight; the damage reduction helps, and the fear at the end pushes him off you.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Warwick:Nocturne:3",
+          "text": "Once Nocturne drops low, follow the trails from Blood Hunt to finish him; you move faster and attack faster against him.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Warwick-W", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Warwick:Nocturne:4",
+          "text": "Hold Jaws of the Beast when Nocturne tries to run or dash away; Warwick follows his movement.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Nocturne", "start": 28, "end": 36 },
+            { "kind": "champion", "key": "Warwick", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fad5031409a8620e95df1ddf2031fa47ada47a98a54edc56a40c4a26ef954fd1",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Shyvana:0",
+          "text": "Hold Jaws of the Beast on Shyvana when she tries to run; Warwick follows her through dashes and keeps biting.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Shyvana", "start": 26, "end": 33 },
+            { "kind": "champion", "key": "Warwick", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Warwick:Shyvana:1",
+          "text": "Hunt her down with Infinite Duress when she is without her dragon form; the suppression stops her from casting abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Warwick:Shyvana:2",
+          "text": "Use Blood Hunt to find Shyvana once she is hurt; you gain speed and attack speed toward her.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Shyvana", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Warwick:Shyvana:3",
+          "text": "Turn on Primal Howl before she hits you with Molten Burst or Emberstrike, then fight her while the damage reduction lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 45, "end": 57 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Warwick:Shyvana:4",
+          "text": "Fight her early, before Dragon's Descent is ready; without it she is much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 24, "end": 40 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q keeps Warwick attached through Shyvana's dashes and teleports, so she struggles to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 38, "end": 45 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6aaa22a940cb46a5e37f9d1492f0dde481924e22860e3ce6d393457a526534af",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Skarner:0",
+          "text": "Keep Primal Howl ready for when Skarner charges at you with Ixtal's Impact; fearing him at the right moment can save you from being dragged into a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 },
+            { "kind": "ability", "key": "Skarner-E", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Warwick:Skarner:1",
+          "text": "Fight Skarner when his Shattered Earth is on cooldown; with it down his sustained damage and slow drop a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Warwick:Skarner:2",
+          "text": "Use Blood Hunt to find Skarner once he is hurt, then chase him down with the extra Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Warwick:Skarner:3",
+          "text": "Hold Jaws of the Beast on Skarner so you stay on him when he runs or dashes.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8bcd94a089bb0d6e8f2c7a67a0064d8d52dbdd6209ef6066bce25a3c95cf39bc",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Sylas:0",
+          "text": "Hold Jaws of the Beast when Sylas dashes away; Warwick follows his movement and stays on him.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 },
+            { "kind": "champion", "key": "Warwick", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Warwick:Sylas:1",
+          "text": "Use Blood Hunt to find Sylas once he is hurt; the trail leads you to him and you attack much faster.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Warwick:Sylas:2",
+          "text": "Cast Primal Howl before Sylas engages; it cuts his damage and then fears him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Warwick:Sylas:3",
+          "text": "Save Infinite Duress to catch Sylas after he spends his dash; it suppresses him and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Warwick:combo:0",
+          "note": "Held Q stays attached through Sylas's Abscond dash, so he can't easily escape the chase.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "94f78a869533fc3d4ab3cf4ead3c524d33c6c5f469e44f8f77298e5916223395",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Talon:0",
+          "text": "Cast Primal Howl just before Talon dives you; it cuts the damage you take, then Fears him away when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Warwick:Talon:1",
+          "text": "Once Talon is low on health, use Blood Hunt and chase him; you move faster toward him and attack faster.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Warwick-W", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Warwick:Talon:2",
+          "text": "Hold Jaws of the Beast when Talon jumps over a wall; you follow his movement and stay stuck to him.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Warwick:Talon:3",
+          "text": "Save Infinite Duress for when Talon commits to a fight; it suppresses him and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Warwick:Talon:4",
+          "text": "Fight when you are below half health; Eternal Hunger heals you with every attack, which helps against Talon's burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 38,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Talon", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69288d677aafd7bd10d7a2cab3346a9913cc36b4935490869533aa27eb6b909c",
+      "tips": [
+        {
+          "id": "jungle:Warwick:Viego:0",
+          "text": "Hold Jaws of the Beast on Viego when he tries to run or dash away; you stay clamped to him and follow his movement.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Warwick:Viego:1",
+          "text": "Use Primal Howl before Viego's Spectral Maw stun or burst lands; it cuts the damage you take, then fears him when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Viego-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Warwick:Viego:2",
+          "text": "Once Viego is low on health, follow the Blood Hunt trail and finish him; you gain Attack Speed and Move Speed against him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Warwick-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Warwick:Viego:3",
+          "text": "Hit Viego with Infinite Duress when he is cornered or low. He cannot escape while suppressed, and you heal from the damage.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Warwick-R", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Warwick:Viego:4",
+          "text": "Fight Viego when he has no fresh kill. After a takedown he can possess the dead champion and heal, so avoid giving him one.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1766c477d98015efe44120abd9ab783af41f847cdf35d607b4df13b81d9a13fa",
+      "tips": [
+        {
+          "id": "jungle:Warwick:XinZhao:0",
+          "text": "Keep your health up. Blood Hunt makes you fast and strong against low-health enemies, but Xin Zhao's burst is dangerous when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-W", "start": 21, "end": 31 },
+            { "kind": "champion", "key": "XinZhao", "start": 90, "end": 98 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Warwick:XinZhao:1",
+          "text": "Use Primal Howl when Xin Zhao dives in. It cuts the damage you take, then fears him.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Warwick:XinZhao:2",
+          "text": "Hold Jaws of the Beast to stay on Xin Zhao if he runs or dashes. Do not use it when he is about to knock you up with his third strike.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-Q", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "XinZhao", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Warwick:XinZhao:3",
+          "text": "Use Infinite Duress on Xin Zhao once he has spent his Audacious Charge. The suppression heals you and keeps him from fighting back.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,1049 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kayle",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "a697a7b799fa6baa8be8edd148c9749b076d7db267f2443d76e0223982cc41d9",
+      "tips": [
+        {
+          "id": "top:Kayle:general:0",
+          "text": "Play safe and farm until level 6, when Kayle becomes ranged. Before that she is a weak melee champion, so avoid long trades.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Kayle:general:1",
+          "text": "Hit the enemy with Radiant Blast before you trade. It leaves them slowed and cuts their Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Kayle:general:2",
+          "text": "Aim Radiant Blast at the first enemy in its path. It stops there, so a minion in the way takes the hit instead of your target.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Kayle:general:3",
+          "text": "Keep attacking to build Zeal. At full stacks Divine Ascent gives Kayle extra Move Speed, so keep hitting while you chase or run.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 45,
+              "end": 58
+            },
+            { "kind": "champion", "key": "Kayle", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kayle:general:4",
+          "text": "Before level 6, use Starfire Spellblade to hit from a distance. Its attack is ranged, which lets you poke an enemy who would otherwise trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 20, "end": 39 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Kayle:general:5",
+          "text": "Use Celestial Blessing on yourself to heal and run faster when you want to disengage or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Kayle:general:6",
+          "text": "Cast Divine Judgment on yourself when the enemy focuses you. You can't be damaged, and the swords hit enemies around you when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kayle:general:7",
+          "text": "At level 11, fire waves from Divine Ascent hit everything in a line when you attack at full Zeal. Fight in lines of enemies and minions.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 29,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "7a186037cd35049b8810f4636d1e1ae57ba683f88290b25e4bffef7552e42226",
+      "tips": [
+        {
+          "id": "top:Kayle:Aatrox:0",
+          "text": "Play safe until level 6, when Kayle gains range. Before that Aatrox can walk up and win trades.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Aatrox", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Kayle:Aatrox:1",
+          "text": "Hit Aatrox with Radiant Blast when he commits; it leaves him slowed and makes your follow-up attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Kayle:Aatrox:2",
+          "text": "Use Starfire Spellblade to hit him from a distance before you ascend, and to trade at range once you have it.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 4, "end": 23 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Kayle:Aatrox:3",
+          "text": "Step sideways, or toward him, when Infernal Chains lands; leaving the circle in time avoids the pull and the second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kayle:Aatrox:4",
+          "text": "Watch the direction of each The Darkin Blade swing and walk out of the edge, where it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Kayle:Aatrox:5",
+          "text": "Keep Celestial Blessing for escaping once Aatrox is on you, as it gives you move speed.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Aatrox", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kayle:Aatrox:6",
+          "text": "If Aatrox uses World Ender, keep your distance. Use Divine Judgment on yourself if he catches you.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Kayle-R", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8479c1e9c18ee659f6e99716b1400bd7e992de3557c251b1375867ad3031ec6b",
+      "tips": [
+        {
+          "id": "top:Kayle:Briar:0",
+          "text": "Play safe before level 6. Kayle is a weak melee champion until she gains range, so do not trade with Briar early.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Briar", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Kayle:Briar:1",
+          "text": "Hit Briar with Radiant Blast when she leaps in; it leaves her slowed so you can walk away from her attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Kayle:Briar:2",
+          "text": "Save Divine Judgment for yourself when Briar jumps on you. You can't be hurt for a moment, and her fight is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Kayle:Briar:3",
+          "text": "Use Celestial Blessing to run away when Briar is on you. The Move Speed helps you escape.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Briar", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Kayle:Briar:4",
+          "text": "Once you are ranged, use Starfire Spellblade to hit Briar from a distance. Stay away from her so she can't easily reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 25, "end": 44 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "47d7ec90b3fa8cf7c7ade6dde41c034adf631289301af2687d961ad478ca30db",
+      "tips": [
+        {
+          "id": "top:Kayle:Darius:0",
+          "text": "Stay away from Darius until level 6; before then you are a weak melee champion and he wins close trades.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Kayle:Darius:1",
+          "text": "Hit Darius with Radiant Blast at long range as he walks up; it slows him and lowers his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Kayle:Darius:2",
+          "text": "Do not stand in front of Apprehend; being pulled in lets him stack Hemorrhage and trade on his terms.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 25, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 67,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Kayle:Darius:3",
+          "text": "Once you have range from Divine Ascent, kite Darius and keep fighting him from a distance.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 25,
+              "end": 38
+            },
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Kayle:Darius:4",
+          "text": "Use Celestial Blessing to run away when Darius closes in; the Move Speed helps you escape his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kayle:Darius:5",
+          "text": "Save Divine Judgment for yourself when Darius threatens Noxian Guillotine; you cannot be damaged while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Darius-R", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bcf9b679b673e4021af408d184da5e0601cf6d38e1582639101c8c7bc1574095",
+      "tips": [
+        {
+          "id": "top:Kayle:Fiora:0",
+          "text": "Play safe until level 6, when Kayle gains range. Fiora is strongest while you are still a weak melee champion, so do not accept long fights early.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Fiora", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Kayle:Fiora:1",
+          "text": "Land Radiant Blast on Fiora when she steps up to trade; it leaves her slowed and cuts her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Kayle:Fiora:2",
+          "text": "Do not cast Radiant Blast while Fiora is using Riposte, because it blocks projectiles. Wait until the parry ends, then fire.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Fiora", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Fiora-W", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Kayle:Fiora:3",
+          "text": "Fight Fiora from range once you are ranged. Starfire Spellblade lets you hit her from afar before level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Kayle-E", "start": 44, "end": 63 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Kayle:Fiora:4",
+          "text": "Save Celestial Blessing for running away from Fiora's Lunge, or to heal after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Fiora", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9701d9c469d289e55438d8be1161c4f760d7725cb5514bb424d16a206a21326d",
+      "tips": [
+        {
+          "id": "top:Kayle:Gangplank:0",
+          "text": "Play safe until level 6, when Kayle gains range. Before that, Gangplank can walk up and trade with you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Gangplank", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Kayle:Gangplank:1",
+          "text": "Hit Gangplank with Radiant Blast when he walks up to a keg; he is slowed and loses Armor and Magic Resist, so you can trade or step away.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Kayle:Gangplank:2",
+          "text": "Gangplank's Remove Scurvy clears slows, so wait for it to be used before you commit to a long chase.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kayle:Gangplank:3",
+          "text": "Once you have range, hit Gangplank from afar with Starfire Spellblade and stay out of his keg range.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Kayle-E", "start": 50, "end": 69 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Kayle:Gangplank:4",
+          "text": "Use Divine Judgment on yourself when Cannon Barrage lands on you. You take no damage, though you still get slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 37, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "14c04c650c9fcd5f31e654b4ca6b7888d3950c7b2fdf83a8259fee074e7e8374",
+      "tips": [
+        {
+          "id": "top:Kayle:Garen:0",
+          "text": "Play safe until level 6. Before then Kayle is a weak melee champion, and Garen's Judgment and Decisive Strike beat her in a straight fight.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "Garen", "start": 73, "end": 78 },
+            { "kind": "ability", "key": "Garen-E", "start": 81, "end": 89 },
+            { "kind": "ability", "key": "Garen-Q", "start": 94, "end": 109 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Kayle:Garen:1",
+          "text": "Hit Garen with Radiant Blast from long range; it leaves him slowed and makes your follow-up attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Kayle:Garen:2",
+          "text": "Garen's Decisive Strike removes slows from him, so don't count on Radiant Blast to hold him back when he uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Kayle:Garen:3",
+          "text": "Once you have range, kite Garen. Use Starfire Spellblade for a ranged hit as he closes in, then step back.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Kayle-E", "start": 37, "end": 56 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Kayle:Garen:4",
+          "text": "Stay out of Garen's reach when his health is low or yours is. Demacian Justice finishes weakened targets fast.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Garen-R", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kayle:Garen:5",
+          "text": "Save Divine Judgment for yourself when Garen dives you. It makes you invulnerable, though it won't stop him slowing or silencing you.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Garen", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "995abf5654a329da36b7377d3ba1a2be5b3730941fd1e2efbbc1b8520697909a",
+      "tips": [
+        {
+          "id": "top:Kayle:Jayce:0",
+          "text": "Play safe and farm until level 6, when Divine Ascent gives you range. Jayce is strong early, so do not take even trades before then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 39,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Jayce", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Kayle:Jayce:1",
+          "text": "Use Radiant Blast on Jayce when he leaps in so he is slowed and takes less from your follow-up hits.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Kayle:Jayce:2",
+          "text": "Aim Radiant Blast carefully; it stops on the first enemy hit, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Kayle:Jayce:3",
+          "text": "Save Divine Judgment for yourself when Jayce threatens a kill; you become Invulnerable and he wastes his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Kayle:Jayce:4",
+          "text": "Hit Jayce with Starfire Spellblade as a ranged attack to trade without stepping into his hammer range.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kayle-E", "start": 15, "end": 34 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b9311c686caecd8d6525151a230aa84deb79a2e64cebba2e6869c70cc26de692",
+      "tips": [
+        {
+          "id": "top:Kayle:KSante:0",
+          "text": "Play safe until level 6. Before then Kayle is a weak melee champion, and K'Sante can walk up and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "KSante", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Kayle:KSante:1",
+          "text": "Hit K'Sante with Radiant Blast when he walks up; the slow and lowered resistances help you win the short trade and get away.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 17, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Kayle:KSante:2",
+          "text": "Stay away when K'Sante has two Ntofo Strikes stacks. The next one pulls you in and leaves you stunned.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "KSante-Q", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Kayle:KSante:3",
+          "text": "Once you are ranged, keep your distance and use Starfire Spellblade to hit him from afar. Never stand next to him.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 48, "end": 67 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Kayle:KSante:4",
+          "text": "Save Celestial Blessing for when Path Maker or All Out comes at you; the Move Speed helps you run.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "KSante-W", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "KSante-R", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Kayle:KSante:5",
+          "text": "Cast Divine Judgment on yourself when K'Sante goes All Out on you. You take no damage and the blast hits him when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "KSante-R", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c59e7a83eed9448328286243fc680314a2e5329c0958dff7e6b492236edae848",
+      "tips": [
+        {
+          "id": "top:Kayle:Malphite:0",
+          "text": "Play safe until level 6, when Divine Ascent gives you range. Malphite can trade freely with you while you are still a melee champion.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 30,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Malphite", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Kayle:Malphite:1",
+          "text": "Land Radiant Blast on Malphite when he walks up to trade; it slows him and lowers his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Kayle:Malphite:2",
+          "text": "Aim Radiant Blast carefully. It stops on the first enemy it hits, so a minion in the way will absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Kayle:Malphite:3",
+          "text": "Do not trade melee with Malphite while he has Thunderclap ready. His empowered attack and the cone behind it hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malphite-W", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Kayle:Malphite:4",
+          "text": "Once you have range, hit Malphite with Starfire Spellblade from afar and walk away from his Seismic Shard.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Kayle-E", "start": 39, "end": 58 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 92, "end": 105 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Kayle:Malphite:5",
+          "text": "Stay out of Unstoppable Force range or you will be knocked up. Keep Divine Judgment ready for yourself if he dives.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 12, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 51, "end": 61 },
+            { "kind": "ability", "key": "Kayle-R", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1acf5d14db03c5b90689df4dcf3591cf44f7aa3f47a50612253dfebc6ec83e04",
+      "tips": [
+        {
+          "id": "top:Kayle:Mordekaiser:0",
+          "text": "Play safe until level 6; before then Kayle is a weak melee champion and Mordekaiser can win trades against her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Kayle:Mordekaiser:1",
+          "text": "Hit the enemy with Radiant Blast when he walks up; it leaves him slowed so you can step away from his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 19, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Kayle:Mordekaiser:2",
+          "text": "Stay out of the range of Death's Grasp. If it pulls you in, you are stuck next to his damage aura.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 25,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Kayle:Mordekaiser:3",
+          "text": "Back away once Darkness Rise is active; its aura keeps hurting you while you are close.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 15,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kayle:Mordekaiser:4",
+          "text": "Once you are ranged, poke him from afar with Starfire Spellblade and keep out of his reach.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Kayle-E", "start": 45, "end": 64 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Kayle:Mordekaiser:5",
+          "text": "Stay close to a teammate in fights. Realm of Death cuts you off, but Divine Judgment can make you invulnerable until it ends.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 36,
+              "end": 50
+            },
+            { "kind": "ability", "key": "Kayle-R", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0c6ab33909e490e9da85326665768659dd09f2e052c02361be47cb3c37c44caa",
+      "tips": [
+        {
+          "id": "top:Kayle:Rumble:0",
+          "text": "Play safe and farm until level 6, when Kayle gains range. Before that Rumble can push you around, so don't take long trades.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Rumble", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Kayle:Rumble:1",
+          "text": "Use Radiant Blast to slow Rumble before you trade. It also cuts his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "champion", "key": "Rumble", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Kayle:Rumble:2",
+          "text": "When Rumble overheats and can't cast, step in and hit him with Starfire Spellblade. His attacks do hit harder then, so don't stay in too long.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kayle-E", "start": 63, "end": 82 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Kayle:Rumble:3",
+          "text": "Step out of The Equalizer's burning trail quickly. Use Celestial Blessing for the speed boost if you are caught inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Kayle-W", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Kayle:Rumble:4",
+          "text": "Stay out of his Flamespitter cone. It hurts more the longer you stand in it, and more still when Rumble is in the Danger Zone.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Rumble", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ae2aa8e2c80c73de84dde5455c75d7a451ca582316105576a4516b9174fa00fd",
+      "tips": [
+        {
+          "id": "top:Kayle:Sion:0",
+          "text": "Play safe until level 6, when Divine Ascent gives you range. Until then Sion can walk up and hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 30,
+              "end": 43
+            },
+            { "kind": "champion", "key": "Sion", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Kayle:Sion:1",
+          "text": "Stay out of Sion's Decimating Smash line when you see him charge. A long charge stuns you, so move sideways early.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Kayle:Sion:2",
+          "text": "Hit Sion with Radiant Blast from long range to slow him and cut his Armor and Magic Resist. A slowed Sion has a harder time closing in.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 },
+            { "kind": "champion", "key": "Sion", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Kayle:Sion:3",
+          "text": "Use Starfire Spellblade's ranged attack to poke Sion early, before you reach level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 },
+            { "kind": "champion", "key": "Sion", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Kayle:Sion:4",
+          "text": "Sion revives after he dies and hits very fast. Kite away with Celestial Blessing instead of trading with him.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayle-W", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Kayle:Sion:5",
+          "text": "Cast Divine Judgment on yourself when Sion's Unstoppable Onslaught is coming. You take no damage, and the stun still wastes his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Sion", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Sion-R", "start": 45, "end": 66 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f67207b813c1f40dbb8df38339c9670a8d9c8859ea9267562bbd61c35b4e8221",
+      "tips": [
+        {
+          "id": "top:Kayle:Teemo:0",
+          "text": "Play safe until level 6, when Kayle becomes ranged. Until then Teemo can out-trade you with his longer reach.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 30, "end": 35 },
+            { "kind": "champion", "key": "Teemo", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Kayle:Teemo:1",
+          "text": "Hit Teemo with Radiant Blast to slow him and strip his defenses, then follow with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Kayle:Teemo:2",
+          "text": "Do not walk into brush without checking it. Teemo can sit there unseen, and Guerrilla Warfare gives him bonus Attack Speed when he steps out.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 44, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 76,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Kayle:Teemo:3",
+          "text": "Avoid wandering into unwarded lane space, because a Noxious Trap there will slow you and deal damage over time.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 52, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Kayle:Teemo:4",
+          "text": "Use Celestial Blessing for the Move Speed to run out of a trap or to chase Teemo once you can hit him from range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Teemo", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Kayle:Teemo:5",
+          "text": "Past level 11, your fire waves and Starfire Spellblade let you win trades. Hit him from range and do not let him poison you repeatedly.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d9c12ec76b97d4e156556b232f334f4dd22f0fe14587e223c77ff37388f3974a",
+      "tips": [
+        {
+          "id": "top:Kayle:Vayne:0",
+          "text": "Play safe until level 6, when you become ranged. Before that you are a weak melee champion and Vayne can push you around.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Kayle:Vayne:1",
+          "text": "Hit Vayne with Radiant Blast when she walks up to attack. She is slowed and takes extra damage from your follow-up hits.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Kayle:Vayne:2",
+          "text": "Stay away from walls when Vayne has Condemn ready. A knockback into terrain stuns you and deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kayle:Vayne:3",
+          "text": "Use Divine Judgment on yourself when Vayne and her allies dive you. You can't be damaged, though you still can be stunned or slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Vayne", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 121 },
+            { "kind": "keyword", "key": "slowed", "start": 125, "end": 131 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Kayle:Vayne:4",
+          "text": "Take fights with Starfire Spellblade ready. It gives you ranged reach before level 6 and more damage once Vayne is hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-E", "start": 17, "end": 36 },
+            { "kind": "champion", "key": "Vayne", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c28d29a2296a66bf5cbb146c9f7045ca584c7adfa7d73ded2edf6198bed20ffe",
+      "tips": [
+        {
+          "id": "top:Kayle:Yone:0",
+          "text": "Play safe and farm until level 6, when Divine Ascent gives you range. Until then Yone outfights you in melee.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 39,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Yone", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Kayle:Yone:1",
+          "text": "Land Radiant Blast on Yone when he walks up; he is slowed and his armor drops, so he cannot easily close on you.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Kayle:Yone:2",
+          "text": "Do not stand in a line with Yone when Fate Sealed is ready. It stuns you and pulls you to him, and Divine Judgment cannot stop that.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Yone-R", "start": 38, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Kayle-R", "start": 99, "end": 114 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "top:Kayle:Yone:3",
+          "text": "Use Divine Judgment on yourself if Yone dives you with Fate Sealed; you take no damage, and Yone's burst is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Yone-R", "start": 55, "end": 66 },
+            { "kind": "champion", "key": "Yone", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Kayle:Yone:4",
+          "text": "Use Celestial Blessing for the extra Move Speed to run away when Yone engages.",
+          "refs": [
+            { "kind": "ability", "key": "Kayle-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

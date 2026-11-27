@@ -1,0 +1,2195 @@
+{
+  "schemaVersion": 1,
+  "champion": "Karma",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "07a131f19c8ca9674c0843a12965adfaab086f41ddcfed4338b05085ebe8ad44",
+      "tips": [
+        {
+          "id": "support:Karma:general:0",
+          "text": "Land Inner Flame on the enemy champion, not just minions. Hitting champions with your damaging abilities and basic attacks brings Mantra back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Karma-R", "start": 130, "end": 136 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Karma:general:1",
+          "text": "Inner Flame stops at the first unit it hits, so aim it where no minion stands between you and the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Karma:general:2",
+          "text": "Use Focused Resolve on an enemy champion and keep within range so the tether holds. If it stays unbroken, they take damage again and are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 137, "end": 143 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:general:3",
+          "text": "Cast Mantra before Focused Resolve when you want a longer root. It also heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-W", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:general:4",
+          "text": "Shield your carry with Inspire when the enemy is about to trade on them. The Move Speed also helps them step out of danger.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Karma:general:5",
+          "text": "Cast Mantra before Inspire when your team is grouped. Allies near your target also get a shield and Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-E", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Karma:general:6",
+          "text": "Cast Mantra before Inner Flame to leave a fire circle that slows enemies inside and then hurts them. Use it to zone them or finish a chase.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-Q", "start": 19, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "ce26af3262233b6acc518fef1c4ad198e6e376fa1f831dd0e8c2c44ba13b5d96",
+      "tips": [
+        {
+          "id": "support:Karma:Alistar:0",
+          "text": "Keep your distance from Alistar and poke with Inner Flame. His engage needs to reach you first.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Karma-Q", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Karma:Alistar:1",
+          "text": "Put Focused Resolve on Alistar as he charges; if he stays tethered he is rooted and cannot follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Alistar", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "support:Karma:Alistar:2",
+          "text": "Slow Alistar with Inner Flame when he walks up. He will have a hard time reaching you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Alistar", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Karma-Q", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Karma:Alistar:3",
+          "text": "Stay away from walls and turrets with Alistar near; Headbutt can knock you into trouble before Pulverize lands.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Alistar-W", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 95, "end": 104 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Karma:Alistar:4",
+          "text": "Hold Mantra for a Soulflare when Alistar is stuck in a fight; the lingering circle slows and then bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Alistar", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Karma:Alistar:5",
+          "text": "Back off when Alistar uses Unbreakable Will; hitting him then does little.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Alistar-R", "start": 27, "end": 43 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5774059dc6ae5dceb722ece6135a0b74dc1329e2ae526c194d696d47ee3002a0",
+      "tips": [
+        {
+          "id": "support:Karma:Anivia:0",
+          "text": "Dodge Flash Frost by staying out of its line; it keeps going through minions, so minions will not shield you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Karma:Anivia:1",
+          "text": "Use Inner Flame on Anivia to make her slowed, then back off before she follows with Frostbite.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Anivia-E", "start": 84, "end": 93 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Karma:Anivia:2",
+          "text": "Use Focused Resolve on Anivia when she is out of position; she is rooted if she stays tethered.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Karma:Anivia:3",
+          "text": "Put Inspire on yourself or your ally before Flash Frost lands; the shield absorbs Frostbite and the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 44, "end": 55 },
+            { "kind": "ability", "key": "Anivia-E", "start": 82, "end": 91 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Karma:Anivia:4",
+          "text": "Do not fully commit to killing Anivia early. Rebirth brings her back with full health if the egg survives.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 45,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "505bf761cb9380213d450e51931bb35e7e7258e89638dd1b2ae9fd1f1e55af10",
+      "tips": [
+        {
+          "id": "support:Karma:Bard:0",
+          "text": "Hit Bard with Inner Flame when he walks up for chimes or last-hits; each hit on a champion cuts Mantra's cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Karma-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Karma-R", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Karma:Bard:1",
+          "text": "Stay out of a straight line with your own ally or a wall when Bard is aiming; his Cosmic Binding stuns if it hits a second enemy or terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Bard-Q", "start": 82, "end": 96 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Karma:Bard:2",
+          "text": "Use Focused Resolve on Bard when he steps forward, then keep him in range so the tether holds and he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Bard", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Karma:Bard:3",
+          "text": "Shield your carry with Inspire when Bard's bolt is coming; it also speeds them up to dodge the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Bard", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Karma:Bard:4",
+          "text": "If Bard opens a Magical Journey portal, you can follow him through it when it is safe, so don't panic when he vanishes.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Bard-E", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "dd299a975f32c5b1778002258debc3b8a972fb13416fb07fa617cbf9be735c4d",
+      "tips": [
+        {
+          "id": "support:Karma:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits them first; it only pulls the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Karma:Blitzcrank:1",
+          "text": "Slow him with Inner Flame when he walks up, so he can't easily close the distance for a grab.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karma-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Blitzcrank:2",
+          "text": "Use Focused Resolve on him and walk away from the tether to root him. Blitzcrank has no escape except Overdrive.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 64 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 70, "end": 80 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-W",
+              "start": 102,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "support:Karma:Blitzcrank:3",
+          "text": "Shield your carry with Inspire when Blitzcrank's Static Field is ready; Static Field destroys shields when he uses it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 36, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Blitzcrank-R",
+              "start": 49,
+              "end": 61
+            },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Karma:Blitzcrank:4",
+          "text": "Inspire gives Move Speed; cast it on yourself or your ally when you see Blitzcrank's hand, then dodge sideways.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "23747a4bf975cfe56e95e0e7ef29bc1d1794459321ee183d664aff902e95525a",
+      "tips": [
+        {
+          "id": "support:Karma:Brand:0",
+          "text": "Hit Brand with Inner Flame whenever he steps up to poke; it slows him and trims the cooldown on Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Karma-R", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Karma:Brand:1",
+          "text": "Put Inspire on your ally when Brand's Sear is coming; the shield and speed help you dodge the stun that follows.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Brand", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Brand-Q", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Karma:Brand:2",
+          "text": "Keep your allies spread out. Brand's Conflagration spreads further from a burning target, so a bunched group takes more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Brand-E", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Karma:Brand:3",
+          "text": "Use Focused Resolve on Brand when he commits to a combo. If he stays in range, he is rooted and you can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Karma:Brand:4",
+          "text": "Cast Mantra before Inspire in a team fight; the shield then covers your nearby allies too, which helps against Pyroclasm.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-E", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Brand-R", "start": 111, "end": 120 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7516c34140c4cf189f8b7463d7052b6e48e0946883c9b833098b349329a114d7",
+      "tips": [
+        {
+          "id": "support:Karma:Braum:0",
+          "text": "Aim Inner Flame down the line before Braum raises Unbreakable; his shield destroys it when he faces you, so wait until it drops.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Braum", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Braum-E", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Karma:Braum:1",
+          "text": "Inner Flame stops at the first enemy it hits, so a minion in front of Braum soaks it. Line up a clear shot.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Braum", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Karma:Braum:2",
+          "text": "Stay out of Braum's reach when you walk up. Do not let him land a basic attack or Winter's Bite, or his team can stack a stun on you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Braum-Q", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Karma:Braum:3",
+          "text": "Use Focused Resolve on Braum when he steps forward to engage; the root holds him in place. Keep your distance so the tether is not broken.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Braum", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Karma:Braum:4",
+          "text": "Put Inspire on your carry when Braum threatens to dive. The shield and speed help them escape his slow.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Braum", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Braum:5",
+          "text": "Dodge Glacial Fissure by moving sideways during its long cast, and do not cross the ice it leaves behind.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7cdb04eb17105951199015bd5d671ddfbf069f6ff2c6d5369abbe15099f9e803",
+      "tips": [
+        {
+          "id": "support:Karma:Camille:0",
+          "text": "Hit Camille with Inner Flame when she walks up; it slows her and each hit on a champion shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Karma-Q", "start": 17, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Karma-R", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Karma:Camille:1",
+          "text": "Use Focused Resolve on Camille when she dives in. If she stays in range, she is rooted and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Camille", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Karma:Camille:2",
+          "text": "Put Inspire on your ally before Camille dives. The shield and Move Speed help them survive her stun and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Camille", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Karma:Camille:3",
+          "text": "Save Mantra with Inspire for when Camille dives onto a group. It shields nearby allies as well.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-E", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Camille", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Karma:Camille:4",
+          "text": "Stay away from walls. Camille needs terrain for Hookshot, so standing out in open lane makes her dive harder.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Camille-E", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d2c8baecbb49ab98223cc90da6218992ba6ea3d014beb6e86c2581bdbe894b6a",
+      "tips": [
+        {
+          "id": "support:Karma:Janna:0",
+          "text": "Land Inner Flame on Janna and her partner; each champion hit lowers the cooldown of Mantra.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Janna", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Karma-R", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Janna:1",
+          "text": "Use Focused Resolve on Janna and walk after her; if the tether holds, she is rooted and cannot use Zephyr or flee.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Janna", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 },
+            { "kind": "ability", "key": "Janna-W", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Karma:Janna:2",
+          "text": "Stay out of a charging Howling Gale's path; it knocks you up, so listen for the charge sound.",
+          "refs": [
+            { "kind": "ability", "key": "Janna-Q", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Janna:3",
+          "text": "Hold your attack while Janna channels Monsoon only if you can interrupt her; otherwise back off, since she heals her allies.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Janna-R", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "66a339a2baf990c29c40c8f82ff09a7567c015dfabaa2e9e2743753203b00a4f",
+      "tips": [
+        {
+          "id": "support:Karma:Leona:0",
+          "text": "Keep your distance from Leona and poke with Inner Flame; its bolt stops at the first enemy it hits, so aim it at her rather than a minion in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Karma-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Leona:1",
+          "text": "Slow Leona with Inner Flame when she dashes in, so you can walk away from her follow-up.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Leona", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Karma:Leona:2",
+          "text": "Tether Leona with Focused Resolve when she closes in and then step away. If the tether holds, she is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Karma-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Karma:Leona:3",
+          "text": "Shield yourself or your carry with Inspire just before Leona engages. Its move speed helps you get out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Leona", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Karma:Leona:4",
+          "text": "Land your abilities on Leona's team to bring Mantra back sooner, then use it for a bigger slow or a stronger shield.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Karma-R", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Karma:Leona:5",
+          "text": "Move out of the center of Solar Flare when you see it land. Only the middle stuns, and the rest of it only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Leona-R", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ac5405fc2fc3b6fdd93c1fc29a6122cd051e297b1b235c5ac8e31f7522b63a36",
+      "tips": [
+        {
+          "id": "support:Karma:Lulu:0",
+          "text": "Land Inner Flame on Lulu and her partner to slow them and lower Mantra's cooldown. Hit her whenever she steps up to use Glitterlance.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Lulu", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Karma-R", "start": 64, "end": 70 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 120, "end": 132 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Karma:Lulu:1",
+          "text": "Stand behind your minions. Inner Flame stops at the first unit it hits, so line up a clear path before you fire.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Karma:Lulu:2",
+          "text": "Use Focused Resolve on Lulu from long range and keep the tether unbroken. She has to stay in range or take the second hit and be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lulu", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 129, "end": 135 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Karma:Lulu:3",
+          "text": "Shield your carry with Inspire when Lulu's Pix harass or Glitterlance is about to land. Use Mantra first when you need to cover your whole team in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Lulu", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 57, "end": 69 },
+            { "kind": "ability", "key": "Karma-R", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Karma:Lulu:4",
+          "text": "Stay out of Whimsy range when you can, or keep Inspire ready to speed an ally away. Do not walk up carelessly while it is available.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-W", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Karma-E", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b398a7d8a61b1a32c1873d965e25f753d49c53e4b4d036c625a25e311dedd6c4",
+      "tips": [
+        {
+          "id": "support:Karma:Lux:0",
+          "text": "Use Focused Resolve on Lux and keep your distance from her so the tether holds. She is easier to catch when rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Karma:Lux:1",
+          "text": "Stay out of a straight line with Lux and stand behind minions. Light Binding only roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Karma:Lux:2",
+          "text": "Hit Lux with Inner Flame when she walks up to trade. Each hit shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Karma-Q", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Karma-R", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Karma:Lux:3",
+          "text": "Shield your carry with Inspire when Lux is about to throw Lucent Singularity or Light Binding, and use the speed to leave the area.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Lux", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Lux-E", "start": 58, "end": 76 },
+            { "kind": "ability", "key": "Lux-Q", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Karma:Lux:4",
+          "text": "Step out of Lucent Singularity before it blows up. Leave the circle quickly, because it slows anyone inside.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f04af7d0108c65001bceef40a3d3f2d7060d389622fe0f10da432527b321279c",
+      "tips": [
+        {
+          "id": "support:Karma:Maokai:0",
+          "text": "Hit Maokai with Inner Flame from long range; it slows him and each hit shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Karma-R", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Karma:Maokai:1",
+          "text": "Don't waste spells on Maokai when he is hurt; every spell that hits him speeds up his self-heal. Aim at his partner when you can.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Karma:Maokai:2",
+          "text": "Step out of Twisted Advance range, or save Inspire to speed up and break away, because it roots on arrival.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-W", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Karma-E", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Karma:Maokai:3",
+          "text": "Keep away from bushes where Maokai may have tossed a Sapling. Those hit much harder and last longer.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Maokai:4",
+          "text": "Use Focused Resolve on Maokai when he walks up. Keep your distance for the root to land.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Maokai", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c92fa7b645dc9c9fe1d82f38998eb623b6126e2c48a363230244bbbabfe41c9b",
+      "tips": [
+        {
+          "id": "support:Karma:Mel:0",
+          "text": "Hold Inner Flame until Mel has used Rebuttal; the nova destroys projectiles that touch it, so a blast thrown into it is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Mel", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Mel-W", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Karma:Mel:1",
+          "text": "Stay out of the line of Solar Snare. Karma is easy to catch with it, and the longer it travels, the longer the root lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 24, "end": 35 },
+            { "kind": "champion", "key": "Karma", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 111, "end": 115 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Karma:Mel:2",
+          "text": "Tether Mel with Focused Resolve when she is out of position. Walk out of her reach and she gets rooted, so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Karma-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Karma:Mel:3",
+          "text": "Back off when her Overwhelm marker shows on your health bar and your health is low; one more hit can kill you.",
+          "refs": [],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Karma:Mel:4",
+          "text": "Land a hit on Mel to shorten Mantra's cooldown. Then use Mantra on Inner Flame to slow her with a lingering circle.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Karma-R", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Karma-R", "start": 57, "end": 63 },
+            { "kind": "ability", "key": "Karma-Q", "start": 67, "end": 78 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cdd2e0441921e269264e6becfe9cfa52259a13585869a103dd3140def47ca61f",
+      "tips": [
+        {
+          "id": "support:Karma:Milio:0",
+          "text": "Hit Milio with Inner Flame when he walks up; it slows him, and each hit shortens Mantra's cooldown with Gathering Fire.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Karma-R", "start": 81, "end": 87 },
+            {
+              "kind": "ability",
+              "key": "Karma-passive",
+              "start": 104,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Karma:Milio:1",
+          "text": "Tether Milio with Focused Resolve when he is far from his allies, then walk after him so the tether holds and he gets rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Karma-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Karma:Milio:2",
+          "text": "Aim Inner Flame carefully into the lane; it stops on the first unit it hits, so a minion in front will soak it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Milio:3",
+          "text": "Shield yourself or your carry with Inspire right before Milio's kick lands; it gives a shield and speed to walk out of the explosion.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Milio", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Karma:Milio:4",
+          "text": "Use Mantra with Focused Resolve to root Milio for longer when you commit to a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-W", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Milio", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d745ecaf8e8fe69325d7ebaaea1680d44cd7901619acd4292dda9888e3a2421c",
+      "tips": [
+        {
+          "id": "support:Karma:Morgana:0",
+          "text": "Stay behind minions so Dark Binding hits them first; it stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Morgana:1",
+          "text": "Use Inspire on yourself or your carry when Morgana is ready to throw Dark Binding; the shield does not stop the root, so dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Morgana", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 69, "end": 81 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Karma:Morgana:2",
+          "text": "Do not waste Focused Resolve while Black Shield is up; it blocks the root. Wait until the shield is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Morgana-E", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Karma:Morgana:3",
+          "text": "Step out of Tormented Shadow quickly, especially when low on Health, since it hurts more then.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Karma:Morgana:4",
+          "text": "Poke with Inner Flame at range; it slows Morgana and the hits shorten your Mantra wait.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 10, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 },
+            { "kind": "champion", "key": "Morgana", "start": 41, "end": 48 },
+            { "kind": "ability", "key": "Karma-R", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8738c2f24b3a5841b7f944cc152a7a16674d349a25304bd62981e4d0157ea6de",
+      "tips": [
+        {
+          "id": "support:Karma:Nami:0",
+          "text": "Aim Inner Flame at the enemy champion, not a minion in front; it bursts on the first unit it hits. Hitting champions also shortens Mantra's cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Karma-R", "start": 131, "end": 137 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Karma:Nami:1",
+          "text": "Use Focused Resolve when Nami has just thrown her bubble. Staying tethered roots her, so she can't dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nami", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Karma:Nami:2",
+          "text": "Aqua Prison lands slowly after she throws it. Walk sideways as soon as she casts and keep Inspire ready to speed up your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Karma-E", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Karma:Nami:3",
+          "text": "Trade with Inner Flame when her Tidecaller's Blessing is spent or on cooldown. Her empowered attacks slow and hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Nami-E", "start": 32, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Nami:4",
+          "text": "Step out of the wave from Tidal Wave early; it travels slowly. Use Inspire to shield your team if it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Karma-E", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "de0946a8781286618ef7acda997c5f1b0f6b2184088a1aa7611796729d63da89",
+      "tips": [
+        {
+          "id": "support:Karma:Nautilus:0",
+          "text": "Stay out of Dredge Line range and behind your minions; Inner Flame stops at the first unit it hits, so you can still poke from safety.",
+          "refs": [
+            { "kind": "ability", "key": "Nautilus-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Karma-Q", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Karma:Nautilus:1",
+          "text": "Tether Nautilus with Focused Resolve and walk away so the tether holds. He is rooted and cannot close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Karma:Nautilus:2",
+          "text": "Hit Nautilus with Inner Flame to cut Mantra's cooldown, and slow him as he walks up.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Karma-Q", "start": 18, "end": 29 },
+            { "kind": "ability", "key": "Karma-R", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Nautilus:3",
+          "text": "Hold Inspire for your carry when Nautilus is near. The shield and speed help them survive and get away.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Nautilus", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a80d24b33a1b8f4ec545c3f9772eeb9706095737fa775be24f57110cd1b95190",
+      "tips": [
+        {
+          "id": "support:Karma:Neeko:0",
+          "text": "Hit Neeko with Inner Flame when she walks up to trade; the slow makes it harder for her to land Tangle-Barbs or reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Neeko-E", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Karma:Neeko:1",
+          "text": "Stay out of line with Neeko's Tangle-Barbs and keep minions out of its path, because it grows stronger after hitting something.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Neeko-E", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Karma:Neeko:2",
+          "text": "Use Focused Resolve on Neeko when she is at the edge of her range, then stay on the tether to root her.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "support:Karma:Neeko:3",
+          "text": "Shield your ally with Inspire before Neeko's Pop Blossom lands; it cannot stop the knock up, but it soaks some of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 22, "end": 29 },
+            { "kind": "champion", "key": "Neeko", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Neeko-R", "start": 45, "end": 56 },
+            { "kind": "keyword", "key": "knocked-up", "start": 83, "end": 91 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Karma:Neeko:4",
+          "text": "Do not trust a lone minion or ally that stands oddly near you. Neeko can be disguised, so hit it with Focused Resolve to reveal her.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Karma-W", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a7c5bee71521b6962d65656ea73a34fb54226a21b2b018a3c5971ee02b96b1e8",
+      "tips": [
+        {
+          "id": "support:Karma:Pantheon:0",
+          "text": "Use Focused Resolve when Pantheon jumps on you or your carry; if the tether holds, he is rooted. Keep out of his reach so he cannot break it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Karma:Pantheon:1",
+          "text": "Poke with Inner Flame when Pantheon walks up to last-hit; it slows him and each hit shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Pantheon", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Karma-R", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Karma:Pantheon:2",
+          "text": "Put Inspire on your carry before Pantheon can jump in. The shield and the speed boost make his stun-and-burst trade much weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Pantheon", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Karma:Pantheon:3",
+          "text": "Save Mantra for when you need it in a fight. Empowered Inspire shields the allies near your target too.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-E", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0c348187d2be9057f49262c105569fcaed37ca425409f6c4a679903d5c7f7424",
+      "tips": [
+        {
+          "id": "support:Karma:Poppy:0",
+          "text": "Poke with Inner Flame from long range; Poppy has to walk up to you, and each hit on her shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karma-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Poppy", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Karma-R", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Karma:Poppy:1",
+          "text": "Stay out of her reach and watch her Heroic Charge. If it carries you or your carry into a wall, you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Poppy-E", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Karma:Poppy:2",
+          "text": "Put Inspire on an ally Poppy targets. The shield absorbs her damage and the speed helps them get away.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Poppy:3",
+          "text": "Use Focused Resolve on Poppy when she commits to a fight. Your tether roots her if she can't break it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Karma:Poppy:4",
+          "text": "Don't rely on dashes or knockbacks near Poppy while Steadfast Presence is up, because it stops dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Poppy-W", "start": 52, "end": 70 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Karma:Poppy:5",
+          "text": "Move away when you see Poppy spinning her hammer for Keeper's Verdict. It sends you flying toward your Nexus, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Poppy-R", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ba2c450344fd9236386b5735f662a5172e6c7f26cad90f1c814b87ca2834f5da",
+      "tips": [
+        {
+          "id": "support:Karma:Pyke:0",
+          "text": "Hit Pyke with Inner Flame when he walks up to hook; it slows him and each hit shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Karma-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Karma-R", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Pyke:1",
+          "text": "Shield your carry with Inspire when Pyke is about to hook; it also speeds them up so they can get away.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Pyke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Pyke:2",
+          "text": "Use Focused Resolve on Pyke when he dives in. He is revealed, and if he stays in range he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Pyke", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Pyke:3",
+          "text": "Keep your low-health allies away from Pyke, since Death From Below executes them. Shield them with Inspire.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 50, "end": 66 },
+            { "kind": "ability", "key": "Karma-E", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Karma:Pyke:4",
+          "text": "Chase Pyke after a trade and deny his healing. Gift of the Drowned Ones only heals him when you can't see him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Pyke-passive", "start": 47, "end": 71 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "27aeb40006dedcad906adbb7f140ba5eb6d11bb84001bff10a82a70c6f240f8a",
+      "tips": [
+        {
+          "id": "support:Karma:Rakan:0",
+          "text": "Hit Rakan with Inner Flame from range; it slows him and every hit shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Karma-R", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Karma:Rakan:1",
+          "text": "Tether Rakan with Focused Resolve when he is far from his partner; stay in range and he gets rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Karma-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Karma:Rakan:2",
+          "text": "Stay out of Grand Entrance range and spread from your lane partner; it knocks up everyone close to where Rakan lands.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "knocked-up", "start": 71, "end": 80 },
+            { "kind": "champion", "key": "Rakan", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Karma:Rakan:3",
+          "text": "Rakan's dash shows where he is going. Aim Inner Flame at the spot he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Karma:Rakan:4",
+          "text": "Put Inspire on your partner when Rakan's team threatens to engage; the shield and speed help you escape.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Rakan", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9c6a47dc0e4cbd679c3ea87b7927989a6eaab6b0ebc4f5a1885680792ff988d8",
+      "tips": [
+        {
+          "id": "support:Karma:Rell:0",
+          "text": "Keep Inner Flame and Focused Resolve ready for when Rell dismounts. Poke her from range so she can't get close.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Karma-W", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Rell", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "support:Karma:Rell:1",
+          "text": "Put Inspire on yourself or your ally before Rell's Shattering Strike lands; it destroys shields, so a shield cast early is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Rell", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Rell-Q", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "support:Karma:Rell:2",
+          "text": "Use Focused Resolve on Rell when she charges in. If she stays tethered she is rooted, so she can't reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Rell", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Karma:Rell:3",
+          "text": "Slow Rell with Inner Flame when she runs at you; she then has a harder time closing the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rell", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Rell:4",
+          "text": "Mantra on Inner Flame at level 6 makes a slowing field that punishes Rell for walking in. Use it when the enemy bunches up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Karma-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Rell", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "81642ab058171a8824f9920d02afe8711b7c9f0934263cc39dbc8a6055bf81d3",
+      "tips": [
+        {
+          "id": "support:Karma:Senna:0",
+          "text": "Hit Senna with Inner Flame when she walks up to attack; she has to stand close to trade, so poke her and slow her.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Karma:Senna:1",
+          "text": "Tether Senna with Focused Resolve when she steps forward, then keep her in range so she ends up rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Karma-W", "start": 18, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Karma:Senna:2",
+          "text": "Keep Mantra ready. Land Inner Flame or Focused Resolve on Senna to bring it back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-Q", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Karma-W", "start": 39, "end": 54 },
+            { "kind": "champion", "key": "Senna", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Senna:3",
+          "text": "Stay out of a line with Senna and her teammates. Last Embrace stops at the first enemy it hits, so stand behind a minion.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Senna-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Karma:Senna:4",
+          "text": "Use Inspire on yourself or your carry when Senna's Last Embrace is coming. The shield and speed help you get out of the root.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Senna", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Senna-W", "start": 51, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "348ef8c6d7b7d2d4c56c0f473922f94973f253303b0186fbcdca578d1a52e3c0",
+      "tips": [
+        {
+          "id": "support:Karma:Seraphine:0",
+          "text": "Land Inner Flame on Seraphine to slow her, then follow with Focused Resolve so she cannot walk out of the tether.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Seraphine", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Karma-W", "start": 60, "end": 75 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Karma:Seraphine:1",
+          "text": "Hit Seraphine with abilities often; each hit on a champion shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Karma-R", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Karma:Seraphine:2",
+          "text": "Stay out of a line with Seraphine's Beat Drop; if you are already slowed it roots you, so avoid being slowed first.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 36, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 76, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Karma:Seraphine:3",
+          "text": "Shield your carry with Inspire when Seraphine's Encore charm is coming; the shield and speed help you survive the follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 23, "end": 30 },
+            { "kind": "champion", "key": "Seraphine", "start": 36, "end": 45 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Karma:Seraphine:4",
+          "text": "Empower Inner Flame with Mantra to zone Seraphine; the fire circle slows anyone who stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Karma-R", "start": 25, "end": 31 },
+            { "kind": "champion", "key": "Seraphine", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ffd9c2325dd6b49374f98d2a7b50c31a724309a645fbee1eb239939d71dbf7fa",
+      "tips": [
+        {
+          "id": "support:Karma:Shen:0",
+          "text": "Poke Shen with Inner Flame from long range; the first target hit takes the blast and is slowed, so he has trouble closing the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Shen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Karma:Shen:1",
+          "text": "Stay out of Shadow Dash range. If he misses, hit him with Inner Flame and Focused Resolve while he is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Karma-Q", "start": 58, "end": 69 },
+            { "kind": "ability", "key": "Karma-W", "start": 74, "end": 89 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Karma:Shen:2",
+          "text": "Use Focused Resolve when Shen dives in, then back away so the tether holds and he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Shen", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Karma:Shen:3",
+          "text": "Put Inspire on your carry when Shen threatens a dive. The shield and speed help them get away.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Shen", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Karma:Shen:4",
+          "text": "Keep hitting Shen with abilities to bring Mantra back faster, then use it on Inner Flame for a big area hit.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Karma-R", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Karma-Q", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "78f80058b529cc95ae0834fa05cb90cba5d9875a1243e5ff5823ab7bd7f48bee",
+      "tips": [
+        {
+          "id": "support:Karma:Sona:0",
+          "text": "Land Inner Flame on Sona; she has little health early, and the slow keeps her from backing away.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Karma:Sona:1",
+          "text": "Tether Sona with Focused Resolve and stay close so the root lands. She is fragile, so you can follow up with a kill.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Karma-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Karma:Sona:2",
+          "text": "Stay out of Sona's range of Hymn of Valor when you can, so she can't build Accelerando cheaply off you.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sona-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Karma:Sona:3",
+          "text": "Spread out from your partner so Crescendo cannot stun you both at once. Back off if Sona's ultimate is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 32, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Sona", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Sona:4",
+          "text": "Use Inspire on your carry before a trade to shield them and speed them up.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4f62392851081ad1090c7741356fdf659392a1b6a912597826f19f766f4afabb",
+      "tips": [
+        {
+          "id": "support:Karma:Soraka:0",
+          "text": "Dodge Starcall, as every hit slows you and heals Soraka. Stay out of its range when she is aiming.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 },
+            { "kind": "champion", "key": "Soraka", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "support:Karma:Soraka:1",
+          "text": "Wait for Equinox to be used, then poke her back. Its cooldown is long, and she cannot easily zone you afterwards.",
+          "refs": [
+            { "kind": "ability", "key": "Soraka-E", "start": 9, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Soraka:2",
+          "text": "Use Focused Resolve on Soraka and stick to her. Her lane partner cannot easily help once she is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Soraka", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Karma:Soraka:3",
+          "text": "Hit her with Inner Flame to bring Mantra back sooner. Land it on Soraka rather than on minions.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Karma-R", "start": 34, "end": 40 },
+            { "kind": "champion", "key": "Soraka", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Karma:Soraka:4",
+          "text": "Cast Inspire on your carry to shield them and speed them up when Soraka's Equinox is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Soraka", "start": 65, "end": 71 },
+            { "kind": "ability", "key": "Soraka-E", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a811b1567de8f4cceb49d2eec45e02c852ef0d856cd01e2c7d5a4aaf4abd9f00",
+      "tips": [
+        {
+          "id": "support:Karma:Swain:0",
+          "text": "Aim Inner Flame at the first target in its path; it stops on the first unit it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Karma:Swain:1",
+          "text": "Use Inner Flame to poke Swain from long range, since his Death's Hand has a shorter reach than your spell.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Swain", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Swain-Q", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Karma:Swain:2",
+          "text": "Hitting Swain with your damaging abilities lowers Mantra's cooldown, so keep trading when he steps up.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Karma-R", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Karma:Swain:3",
+          "text": "Put Inspire on your carry just before Swain's Nevermove returns; the shield and speed help them break free after the root.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Swain", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "Swain-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Karma:Swain:4",
+          "text": "Use Mantra with Focused Resolve to root Swain longer when he dives in; step away from him so the tether holds.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Swain", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Karma:Swain:5",
+          "text": "When Swain turns into his demon, run away and slow him with Inner Flame instead of fighting inside his range.",
+          "refs": [
+            { "kind": "champion", "key": "Swain", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Karma-Q", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "23028627edbf904121c58b95b241caa2e86d8cc3010788cf1bcef74d4ec55cb9",
+      "tips": [
+        {
+          "id": "support:Karma:TahmKench:0",
+          "text": "Poke Tahm Kench with Inner Flame from long range; it slows him, and every hit on a champion shortens Mantra's cooldown.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Karma-Q", "start": 21, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Karma-R", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Karma:TahmKench:1",
+          "text": "Stay out of range when his Tongue Lash is ready. A stunned Karma gets devoured or pulled into the enemy team.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 58 },
+            { "kind": "champion", "key": "Karma", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Karma:TahmKench:2",
+          "text": "Watch for Abyssal Dive. He channels for a while before landing, so step away from the marked spot instead of staying in it.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-W", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Karma:TahmKench:3",
+          "text": "Hit Tahm Kench with Focused Resolve while he is channeling Abyssal Dive. Rooting him stops the dive.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Karma-W", "start": 20, "end": 35 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Karma:TahmKench:4",
+          "text": "Hold Inspire for yourself or your carry when his Tongue Lash comes. It gives a shield and speed to get out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Karma:TahmKench:5",
+          "text": "Don't waste long fights trading into his Thick Skin. Poke him when he has just taken damage and can't heal it back.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8e2e5d8c5d1f3d9eac22c440734767f0d9797171d9a2ad3c037a0553ee3ebac9",
+      "tips": [
+        {
+          "id": "support:Karma:Taric:0",
+          "text": "Hit Taric with Inner Flame when he walks up to the minions; he is slowed and you shorten Mantra's wait.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-Q", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "ability", "key": "Karma-R", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Karma:Taric:1",
+          "text": "Stay out of Dazzle's line and keep moving after Taric starts the wind-up; it bursts a moment later, so you can step aside.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 12, "end": 18 },
+            { "kind": "champion", "key": "Taric", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Karma:Taric:2",
+          "text": "Use Focused Resolve on Taric only when he cannot easily step out of range. Staying tethered is what roots him.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Taric", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Karma:Taric:3",
+          "text": "Use Mantra before Inner Flame to leave a fire circle that slows him. It punishes Taric when he lingers in the minion wave.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 18, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 },
+            { "kind": "champion", "key": "Taric", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1f5fa870c741831f189541a6e2e24e50b827a329206295e68bbe8b0f15ce7786",
+      "tips": [
+        {
+          "id": "support:Karma:Thresh:0",
+          "text": "Hit the enemy with Inner Flame whenever you can; each champion it hits shortens the wait for Mantra, and the slow helps you keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 19, "end": 30 },
+            { "kind": "ability", "key": "Karma-R", "start": 93, "end": 99 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Karma:Thresh:1",
+          "text": "Stand behind your minions. Death Sentence stops at the first unit it hits, so a minion in front of you can catch the hook.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Karma:Thresh:2",
+          "text": "Watch Thresh's cast animation start, then step sideways. Death Sentence takes time to cast, so dodge as soon as you see it begin.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Karma:Thresh:3",
+          "text": "Use Inspire on yourself or your carry when Thresh looks ready to engage. The shield and speed boost help you break away from a pull or a Flay.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Thresh", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Thresh-E", "start": 137, "end": 141 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Karma:Thresh:4",
+          "text": "Root Thresh with Focused Resolve when he comes in to hook. Make sure you stay in range so the tether stays unbroken.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Thresh", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-W", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "support:Karma:Thresh:5",
+          "text": "Save Mantra for Focused Resolve when you are fighting Thresh, since it roots longer and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Karma-W", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Thresh", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ddaf0a0c6cab81c6fd37dece662b72d20d0e9b27844bc279cce3123770763355",
+      "tips": [
+        {
+          "id": "support:Karma:Velkoz:0",
+          "text": "Hit Vel'Koz with Inner Flame to slow him; he has little mobility, so follow up with Focused Resolve while he is stuck in range.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Karma-Q", "start": 17, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Karma-W", "start": 84, "end": 99 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Karma:Velkoz:1",
+          "text": "Stay behind your minions when Vel'Koz aims Plasma Fission. The bolt keeps going after a hit and splits, so it can still reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Velkoz", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Velkoz-Q", "start": 43, "end": 57 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Karma:Velkoz:2",
+          "text": "Save Inspire for when Vel'Koz casts Tectonic Disruption. It shields you and speeds you up to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Velkoz", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Velkoz-E", "start": 36, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Karma:Velkoz:3",
+          "text": "Use Mantra with Focused Resolve to root Vel'Koz for longer when he is in a good spot to be caught.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-W", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Velkoz", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c3fd386606f9835a7523c401a4e9c6fc7f48e66602b341191b54bba4036d254a",
+      "tips": [
+        {
+          "id": "support:Karma:Xerath:0",
+          "text": "Close the gap on Xerath and trade; he is weak up close and his long range does little once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Karma:Xerath:1",
+          "text": "Use Focused Resolve on Xerath when he is out of position; if he stays tethered he is rooted and easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Xerath", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Karma:Xerath:2",
+          "text": "Fire Inner Flame at Xerath when he stands behind minions? It stops at the first unit, so line it up on him with no minion in front.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Xerath", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Karma:Xerath:3",
+          "text": "Keep Inspire ready for your carry; the shield and speed help them dodge Shocking Orb and Eye of Destruction.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-E", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Xerath-E", "start": 72, "end": 84 },
+            { "kind": "ability", "key": "Xerath-W", "start": 89, "end": 107 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Karma:Xerath:4",
+          "text": "Hit Xerath with abilities to bring Mantra back sooner, then use it on Inner Flame for a big burst.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-R", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Karma-Q", "start": 70, "end": 81 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1c6d6af5466b0c9204990c4a7d8f6f7e325857dbe4ecbd1b501f15a178f0ab7f",
+      "tips": [
+        {
+          "id": "support:Karma:Yuumi:0",
+          "text": "Aim Inner Flame at Yuumi when she is detached; she can't be targeted while attached, so wait for her to hop off before you poke.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yuumi", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Karma:Yuumi:1",
+          "text": "Hit Yuumi with Focused Resolve while she is off her partner. It tethers her, reveals her, and roots her if she can't break away.",
+          "refs": [
+            { "kind": "champion", "key": "Yuumi", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Karma-W", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Karma:Yuumi:2",
+          "text": "Inner Flame stops at the first enemy it hits, so aim at the ADC when Yuumi stands behind. Anyone near the blast is hurt and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Yuumi", "start": 69, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 124, "end": 130 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Karma:Yuumi:3",
+          "text": "Use Mantra before Inner Flame when both enemies are close together. The flame circle punishes anyone who stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f4c9612076c2c8ed21c2f0ae5995bc277d516b1a2dfe0a875359fe4d9246d855",
+      "tips": [
+        {
+          "id": "support:Karma:Zilean:0",
+          "text": "Stay out of Time Bomb's small circle, and walk away from a bomb that sticks to you. Do not stand next to your ally when a second bomb is thrown.",
+          "refs": [
+            { "kind": "ability", "key": "Zilean-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Karma:Zilean:1",
+          "text": "Hit Zilean with Inner Flame when he walks up to the minions. It slows him and shortens the wait for Mantra.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Karma-R", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Karma:Zilean:2",
+          "text": "Use Focused Resolve with Mantra on Zilean. He is slow to kill, so the longer root gives you time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-W", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Karma-R", "start": 25, "end": 31 },
+            { "kind": "champion", "key": "Zilean", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Karma:Zilean:3",
+          "text": "Zilean's Chronoshift can bring his carry back, so hold your last hit until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zilean-R", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0b30e3075cf6df7b63a4a4656335aca15c3ab05c4a0254d4d649802fe5069bb4",
+      "tips": [
+        {
+          "id": "support:Karma:Zyra:0",
+          "text": "Hit Zyra with Inner Flame from long range; the blast slows her and each hit shortens Mantra's cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Karma-Q", "start": 14, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "ability", "key": "Karma-R", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "support:Karma:Zyra:1",
+          "text": "Stay out of Zyra's Grasping Roots line, and keep Inspire ready to speed yourself or your carry away if it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Zyra-E", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Karma-E", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Karma:Zyra:2",
+          "text": "Zyra is fragile. Tether her with Focused Resolve and make her stay still, or she breaks the tether and the root fails.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Karma-W", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Karma:Zyra:3",
+          "text": "Walk over Zyra's seeds before she can grow plants from them. Fight away from her seeds.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Karma:Zyra:4",
+          "text": "Use Mantra with Inner Flame when Zyra stands still to plant or cast; the circle of flame punishes her for staying there.",
+          "refs": [
+            { "kind": "ability", "key": "Karma-R", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Karma-Q", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Zyra", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

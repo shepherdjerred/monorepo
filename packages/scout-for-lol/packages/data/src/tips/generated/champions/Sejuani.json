@@ -1,0 +1,850 @@
+{
+  "schemaVersion": 1,
+  "champion": "Sejuani",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "18ee3f5beee21127bc71080e9fc067d9f3fd778454d173f7b7e656ee5d5d2efa",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:general:0",
+          "text": "Use Arctic Assault to chase a runner or escape a bad fight. It has no minimum range, so you can use it even at close range.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Sejuani:general:1",
+          "text": "Aim Arctic Assault at an enemy champion. The charge stops when it hits one, and the enemy is knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "knocked-up", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Sejuani:general:2",
+          "text": "Melee allies add stacks with their attacks, so watch who they are hitting. Cast Permafrost once the target has four stacks to stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Sejuani:general:3",
+          "text": "Land both swings of Winter's Wrath. The second swing does most of the damage and leaves enemies slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-W", "start": 20, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Sejuani:general:4",
+          "text": "Hit an enemy with Glacial Prison from far away. A longer throw stuns for longer and makes an ice storm that slows nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Sejuani:general:5",
+          "text": "Save Glacial Prison for fights where your team is close enough to follow up on the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Sejuani:general:6",
+          "text": "Hit a stunned enemy with your next attack or ability. It deals bonus damage based on their maximum health.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Sejuani:general:7",
+          "text": "Start fights while Frost Armor is up. It makes you tougher and stops enemy slows from working on you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Sejuani:combo:0",
+          "name": "Hidden ult animation",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Sejuani-R" },
+            { "kind": "ability", "key": "Sejuani-Q" }
+          ],
+          "when": "When you want to throw Glacial Prison without the enemy reading the long cast animation.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 23, "end": 37 }
+          ],
+          "text": "Cast Glacial Prison, then use Arctic Assault right away to hide the cast animation. Arctic Assault can be cast during other abilities without cancelling them.",
+          "textRefs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 30, "end": 44 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 84, "end": 98 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "6326d499c2e013ca2d7cf116d06d64544320060bb0a608e77cced1b4570128e4",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Graves:0",
+          "text": "Get Frost stacks on Graves with Winter's Wrath, or have a melee ally hit him, then use Permafrost to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 32, "end": 46 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 87, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Sejuani:Graves:1",
+          "text": "Charge in with Arctic Assault when Graves has used Quickdraw. The charge stops on the first enemy champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Graves", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Graves-E", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Sejuani:Graves:2",
+          "text": "Walk through the Smoke Screen without worry. Frost Armor makes you immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Sejuani:Graves:3",
+          "text": "Keep Glacial Prison for when Graves has used Quickdraw and your team is nearby to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Graves-E", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6aa5629a4f7986a8e7f813696df70c8eb6346cf7609e3d90cf09236a4ec9ada",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:JarvanIV:0",
+          "text": "Hit Jarvan with the full Winter's Wrath; the second swing slows and does the most damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-W", "start": 25, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Sejuani:JarvanIV:1",
+          "text": "Keep Frost Armor up before you fight Jarvan; it makes you sturdier and ignores his Golden Aegis slow.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 83, "end": 95 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Sejuani:JarvanIV:2",
+          "text": "Do not stand between Jarvan and his Demacian Standard; Dragon Strike will knock you up on the way.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 36, "end": 53 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Sejuani:JarvanIV:3",
+          "text": "Hold Glacial Prison for when Jarvan commits with Cataclysm; his arena's walls keep his allies from helping while you stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c5ffeb3b83ed5e843a34a28e252cba74feae22ec33bf4bb292ad7412da35ae2",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Kayn:0",
+          "text": "Wait until Kayn commits to a fight, then use Glacial Prison on him; the stun and the slow make it hard for him to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 45, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Sejuani:Kayn:1",
+          "text": "Aim Arctic Assault at Kayn when he dashes into terrain or turns to run. It knocks him up and ends his Shadow Step.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Kayn-E", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Sejuani:Kayn:2",
+          "text": "Hit Kayn with Winter's Wrath, then stun him with Permafrost once four stacks are on him. Your melee allies' attacks add stacks too.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Sejuani:Kayn:3",
+          "text": "Kayn can still be stunned while in terrain, so stun him with Permafrost to end Shadow Step and stop his escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 61, "end": 71 },
+            { "kind": "ability", "key": "Kayn-E", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e5acf9af316d85d7fa9360340c373071990ba7dc2700ed83b4e1d15455469fc7",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Khazix:0",
+          "text": "Stay near your allies and minions when Kha'Zix is around. Taste Their Fear hits much harder on a target who is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 58, "end": 74 },
+            { "kind": "keyword", "key": "isolated", "start": 111, "end": 119 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Sejuani:Khazix:1",
+          "text": "Aim Glacial Prison at Kha'Zix when he jumps in. A stunned Kha'Zix can't finish his dive, and your team can kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 57 },
+            { "kind": "champion", "key": "Khazix", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Sejuani:Khazix:2",
+          "text": "Chase Kha'Zix down with Arctic Assault when he is low and running. It knocks him up on the way through.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Sejuani:Khazix:3",
+          "text": "Kha'Zix's Leap has a long cooldown. Once he has used it, he is easy to catch, so punish him then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Khazix-E", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Sejuani:Khazix:4",
+          "text": "Hit him with the second swing of Winter's Wrath. It does most of the damage and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-W", "start": 33, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "68a47846dc96b0cc741c37ed0f76a6911052dc6cedadf9ab417074774e4321fb",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Kindred:0",
+          "text": "Throw Glacial Prison at Kindred when she is fighting your team; she is fragile and a stun lets your allies burst her down.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Sejuani:Kindred:1",
+          "text": "Hit Kindred with Arctic Assault when she steps in to fight; she gets knocked up and you can follow with Permafrost.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "knocked-up", "start": 69, "end": 79 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 104, "end": 114 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Sejuani:Kindred:2",
+          "text": "Fight inside Lamb's Respite only if you must; nobody dies there, so back off and re-engage once it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Sejuani:Kindred:3",
+          "text": "Walk in and fight through Mounting Dread; Frost Armor from Fury of the North makes you immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 26, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Sejuani-passive",
+              "start": 59,
+              "end": 76
+            },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "77d500eb3a128f581e865c1c20ad851894a66ede63cab45c3fa4f4fed162ee59",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:LeeSin:0",
+          "text": "Dodge Sonic Wave by sidestepping it; the first enemy it hits is marked, and without a hit Lee Sin cannot dash to you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Sejuani:LeeSin:1",
+          "text": "Use Arctic Assault to knock Lee Sin up when he dashes in, and punish him with Permafrost after.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Sejuani:LeeSin:2",
+          "text": "Stay spread out from your team so one Dragon's Rage cannot knock several people into each other.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Sejuani:LeeSin:3",
+          "text": "Lee Sin is weak to magic damage, so hit him with Glacial Prison and your magic abilities in a fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Sejuani:LeeSin:4",
+          "text": "Keep Frost Armor up before fights; Cripple cannot slow you while it is active.",
+          "refs": [],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f7f03c19c278025bc09a3e6044ddf7df72847f628a1630001ca4bb70e7efb1f7",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:MasterYi:0",
+          "text": "Save Glacial Prison for when Master Yi has used Alpha Strike or Highlander is down; stuns still work on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "MasterYi", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 48, "end": 60 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 64, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Sejuani:MasterYi:1",
+          "text": "Do not rely on slows once Highlander starts. Use Arctic Assault or Permafrost to stop him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 49, "end": 63 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Sejuani:MasterYi:2",
+          "text": "Hold Permafrost until he is not about to jump away with Alpha Strike, since he can't be targeted while it jumps.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Sejuani:MasterYi:3",
+          "text": "Hit him a few times so Meditate costs him mana to heal, and look to gank him early with teammates.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "61b9b4ff97701173bdd185c937ad9ead8f1f581310ae631cc0226573e3b59f7c",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Naafiri:0",
+          "text": "Hit Naafiri with Arctic Assault when she commits to a fight; the knock up gives your team time to follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "knocked-up", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Sejuani:Naafiri:1",
+          "text": "Wait to throw Glacial Prison until Naafiri is committed to an attack or dash, then follow with your team.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Naafiri", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Sejuani:Naafiri:2",
+          "text": "Winter's Wrath slows with its second swing, so use it to catch Naafiri when she backs away after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-W", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Sejuani:Naafiri:3",
+          "text": "Naafiri's Packmates can be hit when she is not untargetable, so use Winter's Wrath to hit both her and them together.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Sejuani:Naafiri:4",
+          "text": "Save Permafrost for Naafiri when she has four stacks, to stun her and set up a big hit from your team.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Sejuani:combo:0",
+          "note": "Hiding Glacial Prison's cast with Arctic Assault makes it harder for Naafiri to react before the ult lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 7, "end": 21 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 34, "end": 48 },
+            { "kind": "champion", "key": "Naafiri", "start": 69, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "54a4aacd5e9e8f8761dbab5a38a70110f0507fe01b176d1ad044dd7291ac8f09",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Nocturne:0",
+          "text": "Aim Arctic Assault at Nocturne when he commits. It knocks him up, though Shroud of Darkness can block it, so bait the shield first with a cheaper ability.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 73, "end": 91 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Sejuani:Nocturne:1",
+          "text": "Save Arctic Assault for when Nocturne casts Unspeakable Horror. Dashing away breaks the tether before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Sejuani:Nocturne:2",
+          "text": "Stay close to your team when Nocturne casts Paranoia. Glacial Prison is best used after he dashes in.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 44, "end": 52 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9993de49f6d646f9156f4266c350b40632e6bb90b2b880e0982964f1974032e8",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Shyvana:0",
+          "text": "Hit Shyvana with Arctic Assault when she tries to fight, then follow with Winter's Wrath; stay close so you can stack Permafrost fast.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 74, "end": 88 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 118, "end": 128 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Sejuani:Shyvana:1",
+          "text": "Be careful fighting Shyvana when her Dragon Fury is full; she can fly in with Dragon's Descent and make you flee.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 78, "end": 94 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Sejuani:Shyvana:2",
+          "text": "Stay out of range early and poke her while her Dragon Fury is low; she gets strong from fighting.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Sejuani:Shyvana:3",
+          "text": "Wait for Inferno Aegis to break or end before you commit your stun, because her shield soaks your damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 9, "end": 22 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "199a14aa39b237e979131e19874d696c6d5e0b44ee219bbfe1a0aabf9017b9ca",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Skarner:0",
+          "text": "Stun Skarner with Glacial Prison or Permafrost when he starts Ixtal's Impact. A stun ends his charge.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 36, "end": 46 },
+            { "kind": "ability", "key": "Skarner-E", "start": 62, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Sejuani:Skarner:1",
+          "text": "Hit Skarner with Arctic Assault as he charges in. It knocks him up and cancels the charge.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Sejuani:Skarner:2",
+          "text": "Keep Frost Armor up before you fight him. It shrugs off his slows and adds Armor and Magic Resist.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Sejuani:Skarner:3",
+          "text": "Do not stay near walls when Skarner charges at you. A wall slam stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Sejuani:Skarner:4",
+          "text": "Step out of Impale's path or use a dash. It can be dodged, and after the cast time it hits only what lies ahead of him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b7afa1f58294c8b5b9996c0af424c43fa21160db7ed360caef4be82d0cdba628",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Sylas:0",
+          "text": "Save Arctic Assault for when Sylas dashes in with Abscond or Abduct; it knocks him up and cuts his combo short.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Sejuani:Sylas:1",
+          "text": "Hit Sylas with Glacial Prison from long range so he is stunned longer and slowed by the storm. Throw it when your team can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Sejuani:Sylas:2",
+          "text": "Do not trade into Sylas when he is low on health; Kingslayer heals him back up. Finish him with a stun instead.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Sylas-W", "start": 50, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Sejuani:Sylas:3",
+          "text": "Stay close to melee allies so they stack Permafrost, then stun Sylas with it to lock him down before he can escape.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "champion", "key": "Sylas", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e8001a22351d06df2ccc7be35fb2a0fa74d7973efe27a8ea317786c3d9b495ac",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Talon:0",
+          "text": "Hit Talon with Arctic Assault when he commits. Being knocked up stops him from escaping or finishing his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Sejuani:Talon:1",
+          "text": "Save Glacial Prison for when Talon uses Shadow Assault to flee or goes invisible. Being stunned stops him leaving.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Talon-R", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Sejuani:Talon:2",
+          "text": "Stay close to your melee allies so Permafrost stacks up. Then stun Talon when he dives your team.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-E", "start": 35, "end": 45 },
+            { "kind": "champion", "key": "Talon", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Sejuani:Talon:3",
+          "text": "Frost Armor makes you immune to slows, so Rake's slow does not stop you chasing Talon.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Talon-W", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 },
+            { "kind": "champion", "key": "Talon", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "622ef38ef4191236444a6f4988407629fea4edc8a6baced6e3f76c12127ea1a9",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:Viego:0",
+          "text": "Throw Glacial Prison at Viego when your team can follow up; the stun and the slow in the ice storm make him easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Sejuani:Viego:1",
+          "text": "Aim Arctic Assault at Viego when he charges Spectral Maw or tries to dash away. It knocks him up, and the charge stops on the first champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Viego-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Sejuani:Viego:2",
+          "text": "Hit Viego with Winter's Wrath, then use Permafrost once he has full stacks. The stun gives you a free window to fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 40, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Sejuani:Viego:3",
+          "text": "Play close to your melee allies in fights. Their attacks stack Frost on Viego for Permafrost.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a8e32022b22ab4850ee3fb2dfc1bf4becb8d2c54efe8e82109d7fbd8bfba420d",
+      "tips": [
+        {
+          "id": "jungle:Sejuani:XinZhao:0",
+          "text": "Pick fights where your melee allies hit Xin Zhao. Their attacks stack Frost so Permafrost can stun him.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 79, "end": 89 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Sejuani:XinZhao:1",
+          "text": "Spread your team out before Xin Zhao uses Crescent Guard. Its sweep deals big damage and knocks back whoever is not marked.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Sejuani:XinZhao:2",
+          "text": "Try to stop Xin Zhao finishing his Three Talon Strike attacks. Hit him with Arctic Assault or Glacial Prison before he lands the third.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 35, "end": 53 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 76, "end": 90 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 94, "end": 108 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Sejuani:XinZhao:3",
+          "text": "Frost Armor makes you immune to Xin Zhao's slows from Wind Becomes Lightning and Audacious Charge. Fight him while it is up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 54, "end": 76 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

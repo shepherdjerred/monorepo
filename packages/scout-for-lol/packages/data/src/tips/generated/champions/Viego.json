@@ -1,0 +1,2741 @@
+{
+  "schemaVersion": 1,
+  "champion": "Viego",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "1fa4e33736ed99fffa4e091e599b922cadd961f83de4950d55b0e599d92d2593",
+      "tips": [
+        {
+          "id": "jungle:Viego:general:0",
+          "text": "Hold Spectral Maw a moment before releasing; a longer charge stuns longer and reaches farther. A quick tap is fine to finish a fleeing target.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:general:1",
+          "text": "Cast Blade of the Ruined King on the enemy, then attack right away; your next attack hits twice and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 5, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Viego:general:2",
+          "text": "Use Harrowed Path to hide in the Mist and walk up to a lane unseen. Attacking or casting breaks the camouflage, so open your gank with it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Viego:general:3",
+          "text": "Fight inside the Mist of Harrowed Path; you attack faster while you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:general:4",
+          "text": "Use Heartbreaker on the weakest enemy in a fight. It hits the lowest-health champion, slows them, and knocks back others nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Viego:general:5",
+          "text": "Attack the wraith after a kill to possess the dead enemy. Wait until no enemy can hit you, because you can't act while you wind up.",
+          "refs": [],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Viego:general:6",
+          "text": "Damage an enemy before they die so a wraith appears. Take the kill soon after, since the wraith only lasts a short time.",
+          "refs": [],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Viego:general:7",
+          "text": "Use Heartbreaker to end a possession early, as it also gives you a free cast of it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Viego:combo:0",
+          "name": "Wall Mist ambush",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Viego-E" },
+            { "kind": "ability", "key": "Viego-W" }
+          ],
+          "when": "When ganking from a brush or wall and you want to stay hidden until the last moment.",
+          "whenRefs": [],
+          "text": "Cast Harrowed Path at a wall to spread Mist, then stand still in it for camouflage and bonus speed. Charge Spectral Maw from the Mist to start the gank.",
+          "textRefs": [
+            { "kind": "ability", "key": "Viego-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Viego-W", "start": 107, "end": 119 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "21280f3bc1ef9b1fb7bc6d16b705d03b727be5a0bead8a0333bcdaf4ab063cdc",
+      "tips": [
+        {
+          "id": "jungle:Viego:Aatrox:0",
+          "text": "Hold Spectral Maw a moment before releasing; a longer charge stuns longer and lets you land a clean hit on Aatrox.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "champion", "key": "Aatrox", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Aatrox:1",
+          "text": "Hit Aatrox with an ability first, then attack him; Blade of the Ruined King then strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viego-Q", "start": 51, "end": 75 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:Aatrox:2",
+          "text": "Aatrox heals a lot when he hits you, so burst him fast instead of dragging out a long trade.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Aatrox:3",
+          "text": "Use Heartbreaker to finish a weakened Aatrox. It targets the lowest-health champion and slows them heavily.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aatrox", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Viego:Aatrox:4",
+          "text": "Slip into the Mist from Harrowed Path to hide and reposition before ganking, so Aatrox does not see you coming.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 24, "end": 37 },
+            { "kind": "champion", "key": "Aatrox", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4b9b71f7b509848f14556df97ebfe3a61ad75a481bcf269a9777b08e1b0d5f27",
+      "tips": [
+        {
+          "id": "jungle:Viego:Ambessa:0",
+          "text": "Hold Spectral Maw a moment before you release it; a longer charge stuns longer, so wait until Ambessa is close to land a long stun.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 },
+            { "kind": "champion", "key": "Ambessa", "start": 94, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 130 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Ambessa:1",
+          "text": "Aim Spectral Maw with care; it stops at the first unit it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Ambessa:2",
+          "text": "Use Harrowed Path to hide in the mist and start fights from camouflage, or to slip away when Ambessa is hunting you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Ambessa:3",
+          "text": "Open a trade with an ability, then attack. Blade of the Ruined King hits twice and heals you after you damage her with an ability.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 43, "end": 67 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Viego:Ambessa:4",
+          "text": "Expect Ambessa to dash in on you after an ability. Stun her with Spectral Maw as she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Viego-W", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Viego:Ambessa:5",
+          "text": "Save Heartbreaker to finish a hurt Ambessa; it hits harder the more health she is missing.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "374e25be85f83ab7dc4bfb768a0203c996b2ffc25e6f20947c58320a4d2a80e0",
+      "tips": [
+        {
+          "id": "jungle:Viego:Amumu:0",
+          "text": "Stay out of a line with Amumu's Bandage Toss; if he is not stopped he will pull to you and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Amumu:1",
+          "text": "Hit Amumu with Spectral Maw first and stun him when he rushes in; a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Viego:Amumu:2",
+          "text": "Spread out from your team when Amumu's ultimate is ready, so Curse of the Sad Mummy cannot catch everyone.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Amumu-R", "start": 61, "end": 83 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Viego:Amumu:3",
+          "text": "Avoid long fights beside Amumu; Despair keeps hurting you, and it is worse for high-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Amumu-W", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Viego:Amumu:4",
+          "text": "Use Heartbreaker to escape Amumu's ultimate fight or to finish low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Amumu", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Viego:combo:0",
+          "note": "Camouflage from Harrowed Path hides Viego's approach before Spectral Maw starts the gank on Amumu.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Viego", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Viego-W", "start": 60, "end": 72 },
+            { "kind": "champion", "key": "Amumu", "start": 92, "end": 97 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abbdf007f801f2450f9bc34a7d2c3f5e442451b42f779da8a88e16543e752906",
+      "tips": [
+        {
+          "id": "jungle:Viego:Belveth:0",
+          "text": "Charge Spectral Maw before an all-in so the stun lasts longer, and aim it so it hits Bel'Veth first, not a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Belveth", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Belveth:1",
+          "text": "Do not fight Bel'Veth for long while she is in Royal Maelstrom; she takes less damage and heals. Wait it out or fight after it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Belveth-E", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Belveth:2",
+          "text": "Hide in the Mist from Harrowed Path to approach Bel'Veth unseen, then open with an ability so your next attack strikes twice.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 22, "end": 35 },
+            { "kind": "champion", "key": "Belveth", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Viego:Belveth:3",
+          "text": "Watch for Above and Below; if it hits you, you are knocked up and slowed, and she gets her dash back to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-W", "start": 10, "end": 25 },
+            { "kind": "keyword", "key": "knocked-up", "start": 51, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7ab8ec421316bfd6a5a1cf46d9f8cb6d7466d20813af3e09575240601606e00e",
+      "tips": [
+        {
+          "id": "jungle:Viego:Brand:0",
+          "text": "Dodge Sear sideways. Brand needs to land something first to start his combo, and a dodged Sear ruins his timing.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Brand-Q", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Viego:Brand:1",
+          "text": "Keep minions between you and Brand. Sear ends at the first unit it hits, so a minion in front of you soaks it.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Viego:Brand:2",
+          "text": "Walk out of Pillar of Flame after it appears. It lands after a short delay, so do not stand still.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Viego:Brand:3",
+          "text": "Use Spectral Maw to stun Brand when he is close. A longer charge gives a longer stun, but he can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Brand", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Brand:4",
+          "text": "Stay away from your allies when Pyroclasm starts. It is slow at first, so you can step away from the group.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e73fa5b263a187f88919fb414acab00eef0dec419083cb8a0afbf881b1a0bde2",
+      "tips": [
+        {
+          "id": "jungle:Viego:Briar:0",
+          "text": "Aim Spectral Maw at Briar as she leaps in; it stops at the first enemy it hits and stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Viego:Briar:1",
+          "text": "Fight Briar when Chilling Scream is on cooldown; she loses her healing and her knockback stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Briar-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Viego:Briar:2",
+          "text": "Do not fight near walls when Briar is charging Chilling Scream; a full charge knocks you into them and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-E", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Viego:Briar:3",
+          "text": "Use Harrowed Path to hide in the Mist and scout Briar, then strike first with Blade of the Ruined King.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Viego-Q", "start": 78, "end": 102 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6bfbc94d426c75e2b4257f3441fef1330422d9cc2bf47bdb2b0b80a7b5c62e77",
+      "tips": [
+        {
+          "id": "jungle:Viego:Darius:0",
+          "text": "Stay out of Apprehend range and sidestep its cone; getting pulled in starts a fight Darius wins.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Viego:Darius:1",
+          "text": "Do not fight Darius when he has many Hemorrhage stacks; Noxian Guillotine then hits very hard.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 13, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 37,
+              "end": 47
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Darius:2",
+          "text": "Use Spectral Maw to stun Darius when he is on top of you, then trade with Blade of the Ruined King.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Darius", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Viego-Q", "start": 74, "end": 98 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Darius:3",
+          "text": "Poke Darius while Apprehend is on cooldown; he cannot catch you easily then.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e82860f2d5729a6921b1822a73ae117296b0de7ef9709393aaaee7388690609",
+      "tips": [
+        {
+          "id": "jungle:Viego:Diana:0",
+          "text": "Hit Diana with Spectral Maw when she dashes at you. A longer charge stuns for longer, which stops her chain of spells.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Viego:Diana:1",
+          "text": "Dodge Crescent Strike. If you are marked with Moonlight, step away, because Lunar Rush on you comes right back.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 6, "end": 21 },
+            { "kind": "ability", "key": "Diana-E", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Viego:Diana:2",
+          "text": "Wait out the Pale Cascade shield before you engage Diana. It only lasts a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Diana", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Diana:3",
+          "text": "Don't clump with your team near Diana at level 6. Moonfall pulls everyone in and hurts more for each champion caught.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Diana-R", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Viego:Diana:4",
+          "text": "Use Heartbreaker to finish Diana when she is low. It strikes the enemy champion who is hurt the most.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "05f108893c2abcd69a6a1fe4c70ae6795d6e42d0a0ac2942e3fbedf974aec3ae",
+      "tips": [
+        {
+          "id": "jungle:Viego:DrMundo:0",
+          "text": "Do not rely on Spectral Maw to stun Mundo the first time; his passive resists it. Hit him once to use it up, then go in.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Viego:DrMundo:1",
+          "text": "Step on the canister Mundo drops after resisting your stun so he cannot heal from it.",
+          "refs": [],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Viego:DrMundo:2",
+          "text": "Dodge Infected Bonesaw; it hurts more the healthier you are and leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Viego:DrMundo:3",
+          "text": "Use Harrowed Path to hide in the Mist and move around Mundo, then pick fights on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Viego:DrMundo:4",
+          "text": "Trade with Blade of the Ruined King, then leave when Mundo uses Heart Zapper, since he stores damage and heals it back.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 11, "end": 35 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Viego:DrMundo:5",
+          "text": "Burst Mundo as soon as he uses Maximum Dosage, or leave; a long fight lets him heal through your damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a4b856e10f46944990dfe85165845108407f88a671d9981941cd631da067658",
+      "tips": [
+        {
+          "id": "jungle:Viego:Ekko:0",
+          "text": "Charge Spectral Maw a little before releasing it so Ekko is stunned longer. Aim it carefully, because it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Ekko", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Viego:Ekko:1",
+          "text": "Hit Ekko with an ability first, then attack him. Blade of the Ruined King then strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Viego-Q", "start": 49, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Viego:Ekko:2",
+          "text": "Hold Heartbreaker for a fight where Ekko is low on health. It targets the lowest-health champion, and Ekko's Chronobreak can still pull him away.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Ekko", "start": 102, "end": 106 },
+            { "kind": "ability", "key": "Ekko-R", "start": 109, "end": 120 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Viego:Ekko:3",
+          "text": "Hide in the mist from Harrowed Path before you ambush Ekko. Attacking or casting breaks the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 22, "end": 35 },
+            { "kind": "champion", "key": "Ekko", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d2fe13211d8c26ff5a5246d2ed9fa6090cd87eac48552128832070aa0dea4ada",
+      "tips": [
+        {
+          "id": "jungle:Viego:Evelynn:0",
+          "text": "Stay away from Evelynn when Allure is marked on you and an arrow points at her; get next to allies or minions before she reaches you.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Viego:Evelynn:1",
+          "text": "Hit Evelynn with Spectral Maw when she dashes in; a longer charge stuns her for longer.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Viego-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Evelynn:2",
+          "text": "Keep your health up against Evelynn; Last Caress does far more damage once you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Viego:Evelynn:3",
+          "text": "Use Blade of the Ruined King after an ability so your next attack strikes twice and heals you in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 4, "end": 28 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Viego:Evelynn:4",
+          "text": "Place vision on your jungle; Evelynn becomes camouflaged after level 6 and ambushes from the dark.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7889eb8ef5da836cb5f601f8784caef47d50912ad525426b03ca484aaedea6f4",
+      "tips": [
+        {
+          "id": "jungle:Viego:Fiddlesticks:0",
+          "text": "Break up Fiddlesticks' ambushes by checking brush with your trinket and by watching your own camp for signs of him. His fear works only if you cannot see him.",
+          "refs": [],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Viego:Fiddlesticks:1",
+          "text": "Spectral Maw is your answer to Fiddlesticks channeling Bountiful Harvest. Hit him with the stun and the channel is interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 0, "end": 12 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 31,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 55,
+              "end": 72
+            },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Viego:Fiddlesticks:2",
+          "text": "Stay out of Reap's center when you can. It slows you and silences you there, so you cannot cast your abilities.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 12,
+              "end": 16
+            },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "silenced", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Viego:Fiddlesticks:3",
+          "text": "Use Harrowed Path mist to hide and wait. Fiddlesticks is weak if you reach him first, because he has little to protect himself.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 41,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Viego:Fiddlesticks:4",
+          "text": "Use Heartbreaker when you see Crowstorm start. It ends the channel early and can remove him from the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 30,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7fe58a53d28b54e61f62b9609dcaf1eba409403ef77a1c50da27c9b17bc0f90a",
+      "tips": [
+        {
+          "id": "jungle:Viego:Graves:0",
+          "text": "Charge Spectral Maw longer before releasing it on Graves; a longer charge stuns him longer and reaches farther.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Viego:Graves:1",
+          "text": "Step out of Smoke Screen quickly; leaving the cloud removes its slow and the vision loss.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Viego:Graves:2",
+          "text": "Hit Graves with Blade of the Ruined King first, then attack; your next attack strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viego-Q", "start": 16, "end": 40 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Graves:3",
+          "text": "Use Harrowed Path to hide and approach Graves unseen, but attacking or casting breaks the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Graves:4",
+          "text": "Hold Heartbreaker until Graves has used Quickdraw; without his dash he struggles to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Graves-E", "start": 40, "end": 49 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "16597303615723ea095c5535d8356acb45d1eba9b470a18b945244546c34beaf",
+      "tips": [
+        {
+          "id": "jungle:Viego:Gwen:0",
+          "text": "Charge Spectral Maw a little longer before you release it, and Gwen is stunned for longer. Do not release it into her Hallowed Mist; it blocks the projectile.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 63, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 },
+            { "kind": "ability", "key": "Gwen-W", "start": 118, "end": 131 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Viego:Gwen:1",
+          "text": "Gwen cannot be targeted from outside her Hallowed Mist. Wait for the Mist to end or step inside before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gwen-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Viego:Gwen:2",
+          "text": "Use Blade of the Ruined King on Gwen, then attack her right away. The second hit heals you and wins the short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 4, "end": 28 },
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Viego:Gwen:3",
+          "text": "Jump on Gwen before she has attacked a few times. She needs those hits to power up Snip Snip!.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Viego:Gwen:4",
+          "text": "Use Heartbreaker to finish Gwen when she is low on health. She is slowed so she cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gwen", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "88bb7c2b923ba4f2992e65bf125af2c694313a283ca7297758400f6e5fb67c60",
+      "tips": [
+        {
+          "id": "jungle:Viego:Hecarim:0",
+          "text": "Dodge Hecarim's Devastating Charge or hit him with Spectral Maw as he runs in. Stunning him cancels his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Viego-W", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Viego:Hecarim:1",
+          "text": "Hecarim heals from Spirit of Dread when you fight next to him, so burst him fast or step out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Viego:Hecarim:2",
+          "text": "Stay spread out from your team when Onslaught of Shadows is up, since its fear is what starts his fights.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 36, "end": 56 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Viego:Hecarim:3",
+          "text": "Use Harrowed Path to hide in the Mist and scout or reposition. It gives you camouflage if you stop attacking and casting.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "014abf964c6339ebf723a51fce807a67ad90d14ed11712132e07c4edc85480a0",
+      "tips": [
+        {
+          "id": "jungle:Viego:Ivern:0",
+          "text": "Hit Spectral Maw on Ivern when he walks up to a camp; it stuns him, and his friend Daisy can't help while he can't act.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ivern", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Viego:Ivern:1",
+          "text": "Hold Spectral Maw's charge a little longer before you release it when Ivern is in range; a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ivern", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Viego:Ivern:2",
+          "text": "Hide in the Mist from Harrowed Path before a gank so you can walk up unseen.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Ivern:3",
+          "text": "Use Heartbreaker to finish a fight when Ivern is the lowest on health; it slows him hard and hits for more as his health drops.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ivern", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Viego:Ivern:4",
+          "text": "Hit Ivern with an ability, then attack once; Blade of the Ruined King makes that attack strike twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-Q", "start": 45, "end": 69 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac06157b0f00e6804f946d2683f374d6562f558092d5f84a699d3678850d06f",
+      "tips": [
+        {
+          "id": "jungle:Viego:JarvanIV:0",
+          "text": "Dodge the line between Jarvan and his Demacian Standard. Stepping out of it avoids the knock up from Dragon Strike.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 38, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 95 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 101, "end": 114 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Viego:JarvanIV:1",
+          "text": "Charge Spectral Maw before Jarvan closes in. A longer charge stuns him for longer, and the stun gives you time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Viego:JarvanIV:2",
+          "text": "Wait until Jarvan has used Cataclysm before you commit to a fight. Heartbreaker can then get you out of the fight or finish a low-health target.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "Viego-R", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Viego:JarvanIV:3",
+          "text": "Use Harrowed Path to hide in its mist and scout for Jarvan. Gain camouflage before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fb1b669aa681ba6477582e39232cd41b870663b6bde51844c659dab37f4ece6",
+      "tips": [
+        {
+          "id": "jungle:Viego:Jax:0",
+          "text": "Don't auto-attack Jax while Counter Strike is up. Back off or wait it out, since it dodges your attacks and then stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Jax-E", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 118 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Viego:Jax:1",
+          "text": "Hit Jax with Spectral Maw to stun him before he gets going. A longer charge means a longer stun.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Viego-W", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Jax:2",
+          "text": "Trade in short bursts instead of long fights. Jax's damage rises the longer he keeps attacking with Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 46, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Jax-passive",
+              "start": 100,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:Jax:3",
+          "text": "Use Blade of the Ruined King to damage Jax first, so your next attack hits twice and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 4, "end": 28 },
+            { "kind": "champion", "key": "Jax", "start": 39, "end": 42 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c34f788f8b94577592c0141b542c47ff78afca0594202f6ea1cdd3669979bdd1",
+      "tips": [
+        {
+          "id": "jungle:Viego:Jayce:0",
+          "text": "Charge Spectral Maw a bit before you release it. A longer charge stuns longer, and it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Viego:Jayce:1",
+          "text": "Jayce can knock you back with his hammer. Stay away from walls and don't walk straight at him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Viego:Jayce:2",
+          "text": "Use Harrowed Path to hide in the Mist and surprise Jayce. Attacking or casting breaks the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Jayce:3",
+          "text": "Hit Jayce with an ability first, then attack him. Blade of the Ruined King then strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-Q", "start": 50, "end": 74 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Jayce:4",
+          "text": "Use Heartbreaker on Jayce when he is low. It targets the lowest-health champion and slows them heavily.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1817348eaf006ca91334a186dc2379801a8b108a011e42407b1141959c15307e",
+      "tips": [
+        {
+          "id": "jungle:Viego:Karthus:0",
+          "text": "Hit Karthus with Spectral Maw to stun him, then dive in. It stops at the first enemy, so line it up with no minions in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Viego-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:Karthus:1",
+          "text": "Use Harrowed Path to stay hidden near Karthus, then strike before he can aim Lay Waste at you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Karthus", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Viego:Karthus:2",
+          "text": "Don't walk over a Wall of Pain if you can go around; it slows you and cuts your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Karthus:3",
+          "text": "Step away from Karthus's corpse after you kill him; he can keep casting Defile and Lay Waste for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Karthus-E", "start": 72, "end": 78 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 83, "end": 92 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Viego:Karthus:4",
+          "text": "Keep your health up from level 6 on, since Requiem reaches you anywhere. Back off when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b1f7102e7c9ee9495e4fc51fe1edb3fb735c3218630a3d700272ea4e01c310ba",
+      "tips": [
+        {
+          "id": "jungle:Viego:Kayn:0",
+          "text": "Charge Spectral Maw a little before releasing so the stun lasts longer, and aim at Kayn when he commits to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Kayn", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Kayn:1",
+          "text": "Stun Kayn with Spectral Maw when he goes into terrain with Shadow Step; hard crowd control ends it immediately.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Kayn-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Viego:Kayn:2",
+          "text": "Stay out of Blade's Reach range when you can; it slows you and lets Kayn follow with Umbral Trespass.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 },
+            { "kind": "champion", "key": "Kayn", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Kayn-R", "start": 85, "end": 100 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Viego:Kayn:3",
+          "text": "Use Harrowed Path to hide in the mist and reposition before fights; Kayn may lose track of you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kayn", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0337ffa614651452dd7217e65f27f72728d4ebb2fe541c0149d99a9ea994557c",
+      "tips": [
+        {
+          "id": "jungle:Viego:Khazix:0",
+          "text": "Stay near your minions or allies so Kha'Zix cannot get the extra damage from Taste Their Fear on an isolated target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 36, "end": 43 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 77, "end": 93 },
+            { "kind": "keyword", "key": "isolated", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Khazix:1",
+          "text": "Fight Kha'Zix once Leap and Void Assault are on cooldown; he has little way to escape or engage then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Khazix-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Viego:Khazix:2",
+          "text": "Hold Spectral Maw until Kha'Zix is close, then charge it to stun him; he cannot easily dodge a stun at close range.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Viego:Khazix:3",
+          "text": "Use Harrowed Path to hide in its mist and wait for Kha'Zix to walk by. Attack him first when he comes close.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Khazix", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e95865a594578b03383f530f2d009f47bf42974caeb532b077f459ddac953022",
+      "tips": [
+        {
+          "id": "jungle:Viego:Kindred:0",
+          "text": "Aim Spectral Maw at Kindred when she has no dash ready; the stun lets you catch someone who is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kindred", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Viego:Kindred:1",
+          "text": "Do not chase Kindred while she has Dance of Arrows ready. She can dash away and hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Viego:Kindred:2",
+          "text": "Stay out of Lamb's Respite when you try to kill. No one inside can die, so finish elsewhere or wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Kindred:3",
+          "text": "Use Harrowed Path in the jungle to hide and move closer to Kindred before you jump on her.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kindred", "start": 59, "end": 66 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4276d7c5b813b8488e17669319de24c634901a3898242468966a7073f05c8616",
+      "tips": [
+        {
+          "id": "jungle:Viego:LeeSin:0",
+          "text": "Hold Spectral Maw for when Lee Sin dashes in or lines up. A longer charge stuns longer, but he can see you winding up.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Viego:LeeSin:1",
+          "text": "Lee Sin's Dragon's Rage knocks you back and you can't act until it lands. Spread out from your teammates so they don't get hit when you are kicked into them.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 10, "end": 23 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Viego:LeeSin:2",
+          "text": "Use Harrowed Path to hide in the Mist and make Lee Sin lose track of you before he ganks. Attacking breaks the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Viego:LeeSin:3",
+          "text": "After Lee Sin hits Tempest, he can slow you with Cripple. Don't run straight away, fight back with Blade of the Ruined King.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Viego-Q", "start": 99, "end": 123 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb6a49968f417bc3a30037a44baf368e06d44c9cba18a040e26ed5c31e3b2e86",
+      "tips": [
+        {
+          "id": "jungle:Viego:Lillia:0",
+          "text": "Charge Spectral Maw a little before releasing it so the stun lasts longer, and aim it at Lillia when she hops in with Watch Out! Eep!.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Lillia", "start": 89, "end": 95 },
+            { "kind": "ability", "key": "Lillia-W", "start": 118, "end": 133 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Viego:Lillia:1",
+          "text": "Spectral Maw can be blocked by the first unit it hits, so line it up on Lillia with no other target in front.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Lillia", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:Lillia:2",
+          "text": "Lillia is hard to catch once her Blooming Blows stacks build up. Stun her with Spectral Maw first, then use Blade of the Ruined King to finish the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Lillia-Q", "start": 33, "end": 47 },
+            { "kind": "ability", "key": "Viego-W", "start": 79, "end": 91 },
+            { "kind": "ability", "key": "Viego-Q", "start": 108, "end": 132 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Viego:Lillia:3",
+          "text": "Use Heartbreaker to start a fight on a low-health Lillia. It also knocks back her allies and ends any Possession, so cast it only when you want that.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lillia", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Viego:Lillia:4",
+          "text": "Stay out of Lilting Lullaby's reach when she has marked you with Dream Dust. Being stunned or killed first wins the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-R", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Viego:Lillia:5",
+          "text": "Sidestep Swirlseed; it keeps rolling until it hits someone or a wall, so the slow is easy to dodge by moving off its line.",
+          "refs": [
+            { "kind": "ability", "key": "Lillia-E", "start": 9, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:Lillia:6",
+          "text": "Walk out of the center of Lillia's big strike as it winds up, since the middle hurts far more than the edge.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1a4c66f5dcf711e5a8cb65cfccdcef962c514e942ff6fe765b4a91cd0a3259f9",
+      "tips": [
+        {
+          "id": "jungle:Viego:MasterYi:0",
+          "text": "Charge Spectral Maw to stun Master Yi when he jumps in; Highlander does not stop stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 56, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:MasterYi:1",
+          "text": "Do not rely on slowing him once Highlander is on, because he ignores slows. Use stuns or knock backs instead.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 32, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Viego:MasterYi:2",
+          "text": "Save Heartbreaker for when Master Yi is hurt; it goes for the enemy who is lowest on Health. His Meditate heal can undo your damage, so burst him through it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "MasterYi", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Viego:MasterYi:3",
+          "text": "Use Harrowed Path to hide and gain Attack Speed while you wait near Master Yi's camps.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "MasterYi", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Viego:MasterYi:4",
+          "text": "Chase him when Alpha Strike is on cooldown, since he cannot escape or dodge your abilities then.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b3269f2fc521b9eed54cf218a3f89afa48297f5eb895ea132e3715a27634933b",
+      "tips": [
+        {
+          "id": "jungle:Viego:MonkeyKing:0",
+          "text": "Aim Spectral Maw at Wukong when he dashes in with Nimbus Strike. It stuns the first enemy it hits, which may be a clone, so wait for the real one.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 20, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 50,
+              "end": 63
+            },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Viego:MonkeyKing:1",
+          "text": "Wait a moment after Wukong uses Warrior Trickster before you commit spells, so you hit the real Wukong and not his clone.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 20, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 32,
+              "end": 49
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Viego:MonkeyKing:2",
+          "text": "Fight Wukong away from your own allies. He gets tougher with each hit he lands, so keep fights short and avoid long brawls with him.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Viego:MonkeyKing:3",
+          "text": "Stay away from Wukong when Cyclone is ready, because it knocks you up. Use Harrowed Path to reposition before he can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 15, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 27,
+              "end": 34
+            },
+            { "kind": "ability", "key": "Viego-E", "start": 75, "end": 88 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a15df01a28c91df82bee5126fc1922fd51ed38311fac632deb2da25034924890",
+      "tips": [
+        {
+          "id": "jungle:Viego:Naafiri:0",
+          "text": "Hold Spectral Maw a moment before releasing it so the stun lasts longer. It stops at the first enemy hit, so line it up.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Viego:Naafiri:1",
+          "text": "Hit Naafiri with an ability first, then attack her; Blade of the Ruined King strikes twice and heals you in the extended fight.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Viego-Q", "start": 52, "end": 76 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Viego:Naafiri:2",
+          "text": "Wait for Naafiri to commit Hounds' Pursuit or Eviscerate, then fight her; she is easier to catch with her dash on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 27, "end": 42 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Viego:Naafiri:3",
+          "text": "Use Harrowed Path to hide in the mist and walk up on Naafiri for a surprise fight, or to slip away when she jumps you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Viego:Naafiri:4",
+          "text": "Save Heartbreaker for when Naafiri is low on health; it picks the lowest-health enemy and slows them, so she can't run.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Viego:Naafiri:5",
+          "text": "If you kill Naafiri, attack the wraith that appears to possess her; you get her abilities and a heal.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aac11d3f9808b3f239363708f1abf76c073281f50dc6fb687271397bd168a0f5",
+      "tips": [
+        {
+          "id": "jungle:Viego:Nidalee:0",
+          "text": "Dodge Nidalee's Javelin Toss when she is far away; it hurts most from range. Step sideways, because it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Viego:Nidalee:1",
+          "text": "Aim Spectral Maw at Nidalee when she Pounces in; a charged shot stuns her for longer. Stunned, she can't chase or flee.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nidalee", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Viego:Nidalee:2",
+          "text": "Hold your Spectral Maw for when Nidalee goes in for the kill. Takedown does huge damage to Hunted targets, and a stun cuts it off.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Nidalee", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Viego:Nidalee:3",
+          "text": "Walk around brush and unseen ground carefully, since Bushwhack traps are invisible once armed. Don't path through spots where Nidalee has been standing.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Viego:combo:0",
+          "note": "Camouflage from Harrowed Path hides his gank start, though Nidalee's Bushwhack traps can still catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Nidalee", "start": 59, "end": 66 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5720f41cb50cf352e4da93db9ae173910938cf27ff258d6511ffac6e804586a0",
+      "tips": [
+        {
+          "id": "jungle:Viego:Nocturne:0",
+          "text": "Do not stun Nocturne with Spectral Maw while his Shroud of Darkness is up; it blocks the spell. Wait for it to fade.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Viego-W", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 49, "end": 67 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Viego:Nocturne:1",
+          "text": "Step away from Nocturne when he casts Unspeakable Horror. Getting out of range breaks the tether before the fear.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Viego:Nocturne:2",
+          "text": "Stay near your team once Nocturne casts Paranoia. He can dash to any champion, and you cannot see far.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Viego:Nocturne:3",
+          "text": "Use Harrowed Path to hide in the Mist. Nocturne's Duskbringer trail is not blocked by it, so watch for his trail.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Nocturne", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f399746324131574edf563fc9d2e5903d7ec99902434aeb1f5dbf16c0fdbc914",
+      "tips": [
+        {
+          "id": "jungle:Viego:Nunu:0",
+          "text": "Stun Nunu with Spectral Maw if he is close, and sidestep sharply to dodge Biggest Snowball Ever!",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Nunu-W", "start": 74, "end": 96 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Viego:Nunu:1",
+          "text": "Step out of Snowball Barrage's snowballs, or move away before the root lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Nunu:2",
+          "text": "Do not stand in Absolute Zero for its full length. Leave its area or interrupt it with a stun from Spectral Maw.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "ability", "key": "Viego-W", "start": 99, "end": 111 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4b4cced1973b3132e174b720cbb2f79e4f172df435a67dc0a3115bd715833d81",
+      "tips": [
+        {
+          "id": "jungle:Viego:Pantheon:0",
+          "text": "Charge Spectral Maw before you release it; a longer charge stuns Pantheon for longer, but he can hit you while you charge.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 },
+            { "kind": "champion", "key": "Pantheon", "start": 65, "end": 73 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Viego:Pantheon:1",
+          "text": "Do not fight Pantheon head-on while Aegis Assault is up; step to his side or wait until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Pantheon:2",
+          "text": "Stay healthy near Pantheon; his thrown Comet Spear hits hard against low Health enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Pantheon:3",
+          "text": "Leave when you see Grand Starfall's warning; Heartbreaker can escape his landing or catch an enemy low on Health afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Viego-R", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f4a915cb33b1569e39dccc65dfafedd2b60e3162efddd89d23ce45efc62b10f",
+      "tips": [
+        {
+          "id": "jungle:Viego:Qiyana:0",
+          "text": "Hold Spectral Maw a moment before releasing it; a longer charge stuns Qiyana for longer, and she is easy to kill while stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 },
+            { "kind": "champion", "key": "Qiyana", "start": 70, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Viego:Qiyana:1",
+          "text": "Use Harrowed Path to hide in the Mist and approach unseen, then start the fight with an attack or Spectral Maw.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Viego-W", "start": 98, "end": 110 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Viego:Qiyana:2",
+          "text": "Spectral Maw ends on the first enemy it hits, so aim it so a minion does not catch it before Qiyana.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Qiyana", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Viego:Qiyana:3",
+          "text": "Hit Qiyana with an ability, then attack her; Blade of the Ruined King strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viego-Q", "start": 45, "end": 69 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:Qiyana:4",
+          "text": "Qiyana is fragile, so Heartbreaker can finish her when she is the lowest-health enemy; she is slowed and cannot easily run.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Viego-R", "start": 22, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d85bc1087435f3e650505baff9c02bbbd0258efe8dad25403c09c7e50929cc94",
+      "tips": [
+        {
+          "id": "jungle:Viego:Rammus:0",
+          "text": "Don't fight Rammus while Defensive Ball Curl is up; his armor is huge and your attacks hurt you through it.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Rammus-W", "start": 25, "end": 44 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Viego:Rammus:1",
+          "text": "Trade when Defensive Ball Curl is down; Rammus is much weaker without it.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-W", "start": 11, "end": 30 },
+            { "kind": "champion", "key": "Rammus", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Rammus:2",
+          "text": "Hit Rammus with Spectral Maw as he rolls in; the stun stops him from reaching you.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viego-W", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Viego:Rammus:3",
+          "text": "Stay away from Rammus when Frenzying Taunt is ready; being taunted in a fight is deadly for you.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Rammus-E", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "11b95d68e9a4823bef4e261d81e2f301dd7fe8018d22e83fa5332f152dc138d3",
+      "tips": [
+        {
+          "id": "jungle:Viego:RekSai:0",
+          "text": "Hit Rek'Sai with Spectral Maw and hold the charge a little longer to stun her longer. Follow up with Blade of the Ruined King while she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Viego-W", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 },
+            { "kind": "ability", "key": "Viego-Q", "start": 101, "end": 125 },
+            { "kind": "keyword", "key": "stunned", "start": 139, "end": 146 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Viego:RekSai:1",
+          "text": "Hit her with an ability first, then attack, so Blade of the Ruined King strikes twice and heals you in a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 47, "end": 71 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Viego:RekSai:2",
+          "text": "Use Harrowed Path to hide in the Mist and reposition. Attacking or casting breaks the camouflage, so wait for a good moment to jump her.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Viego:RekSai:3",
+          "text": "Be careful when her Fury is full, because her bite then deals extra damage. Fight a little earlier or later than that.",
+          "refs": [],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:RekSai:4",
+          "text": "Do not walk away when Rek'Sai marks you. Void Rush can't be stopped, so stay near your team instead of running alone.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "RekSai-R", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c29a7f88513ea6ee3e6175e5792f9c6afd8f943850f2dac445eaabb8bbeb8c5a",
+      "tips": [
+        {
+          "id": "jungle:Viego:Rengar:0",
+          "text": "Stun Rengar with Spectral Maw when he leaps out of brush; a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Viego-W", "start": 17, "end": 29 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Viego:Rengar:1",
+          "text": "Avoid fighting Rengar near brush, since his leap closes the gap instantly and starts his Ferocity.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Viego:Rengar:2",
+          "text": "Expect Rengar to ambush you when he is at full Ferocity; his empowered Bola Strike roots you, so keep distance.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Rengar-E", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:Rengar:3",
+          "text": "Stay with your team when Rengar uses Thrill of the Hunt; a marker shows above the champion he is closing on.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Rengar-R", "start": 37, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Viego:Rengar:4",
+          "text": "Hit Rengar with Blade of the Ruined King after a Spectral Maw to get the second strike and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viego-Q", "start": 16, "end": 40 },
+            { "kind": "ability", "key": "Viego-W", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "622ef38ef4191236444a6f4988407629fea4edc8a6baced6e3f76c12127ea1a9",
+      "tips": [
+        {
+          "id": "jungle:Viego:Sejuani:0",
+          "text": "Step out of the way of Glacial Prison. Its long range and heavy stun are the biggest danger to you in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 23, "end": 37 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Viego:Sejuani:1",
+          "text": "Hold Spectral Maw until Sejuani commits with Arctic Assault, then stun her. Her charge ends on the first champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sejuani", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Viego:Sejuani:2",
+          "text": "Stay away from Sejuani and her melee allies when you fight. Their attacks build up Frost, and then Permafrost stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 99, "end": 109 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Viego:Sejuani:3",
+          "text": "Dodge the second swing of Winter's Wrath, which hits hardest and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-W", "start": 26, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b2a80b57c7fe767dab24fb0a0016daae2910e2939909df3fa814e21cfff0ce64",
+      "tips": [
+        {
+          "id": "jungle:Viego:Shaco:0",
+          "text": "Walk around bushes and camp entrances carefully. Shaco's Jack In The Box is invisible, and it will fear and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Shaco-W", "start": 57, "end": 72 },
+            { "kind": "keyword", "key": "rooted", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Viego:Shaco:1",
+          "text": "Hit Shaco with Spectral Maw when he appears from Deceive. It stuns the first enemy it hits, and a full charge stuns for longer.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 49, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Shaco:2",
+          "text": "Stay with your team when Shaco is around. He wants to hit you from behind, so face him and do not fight alone.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6ada07fadd818886929f2424004f9495db3b776863d67770f4f920f2cc3f273",
+      "tips": [
+        {
+          "id": "jungle:Viego:Shyvana:0",
+          "text": "Hold Spectral Maw charged to stun Shyvana as she runs at you; a longer charge stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Viego:Shyvana:1",
+          "text": "Hit Shyvana with an ability, then attack. Blade of the Ruined King strikes twice and heals you in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Viego-Q", "start": 42, "end": 66 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Shyvana:2",
+          "text": "Hide in Harrowed Path's mist to ambush or to escape. Attacking or casting breaks the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 8, "end": 21 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:Shyvana:3",
+          "text": "Keep your distance and poke Shyvana while her Dragon Fury is low. She is weak when she cannot attack you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Viego:Shyvana:4",
+          "text": "Use Heartbreaker to finish off a weakened Shyvana; it picks the lowest-health enemy and slows them.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e126f0d2314065355598e700c856e163f7e7277d367cce902fcbbc5687f6d2f9",
+      "tips": [
+        {
+          "id": "jungle:Viego:Skarner:0",
+          "text": "Aim Spectral Maw at Skarner as he charges at you. Its stun stops him from carrying you into a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Viego:Skarner:1",
+          "text": "Don't fight with your back to a wall when Skarner is near. Ixtal's Impact can slam you into it.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Skarner-E", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Skarner:2",
+          "text": "Step out of Impale's line or use Flash before it lands. It can be dodged.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 },
+            { "kind": "summoner-spell", "key": "4", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Skarner:3",
+          "text": "Don't ignore Skarner's steady damage. Break off from long fights once Quaking has built up on you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "05f72edae991fe195070715d02a9b15d71b2b47b06c67a31bf0927515815e739",
+      "tips": [
+        {
+          "id": "jungle:Viego:Sylas:0",
+          "text": "Hold Spectral Maw until Sylas commits, then charge it before releasing; a longer charge stuns him for longer and sets up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Sylas:1",
+          "text": "Hit Sylas with an ability, then attack him right away; Blade of the Ruined King makes that attack strike twice and heal you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-Q", "start": 55, "end": 79 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Viego:Sylas:2",
+          "text": "Sylas heals more from Kingslayer when he is low, so finish him fast and do not let a low-health Sylas walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 22, "end": 32 },
+            { "kind": "champion", "key": "Sylas", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Viego:Sylas:3",
+          "text": "Stay hidden in Harrowed Path mist before a gank; you are camouflaged until you attack or cast.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Viego:Sylas:4",
+          "text": "Use Heartbreaker when Sylas is the most wounded enemy nearby; it goes for the enemy who is lowest on health.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bf080df22758c51ff99dada89244ca0ef58d7ccadbab8050cf4fc4284e18a6f9",
+      "tips": [
+        {
+          "id": "jungle:Viego:Talon:0",
+          "text": "Hit Talon with Spectral Maw when he leaps in. The stun stops his combo, and a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Viego-W", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Viego:Talon:1",
+          "text": "Talon can vanish with Shadow Assault. Stay close to your team and don't chase him alone while it's available.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Talon:2",
+          "text": "Hide in the Mist from Harrowed Path to ambush Talon. Stay out of his Rake range, since it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 22, "end": 35 },
+            { "kind": "champion", "key": "Talon", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Talon-W", "start": 69, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3494dc531cd1d20f4d4e459718a9c98da9703c8778f0c629b44ab38421bf66b9",
+      "tips": [
+        {
+          "id": "jungle:Viego:Trundle:0",
+          "text": "Avoid fighting on Trundle's Frozen Domain; he is much faster and hits much harder there. Pull the fight off the ice.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Trundle-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Viego:Trundle:1",
+          "text": "Leave Pillar of Ice quickly; it slows you, and Trundle uses it to cut off your escape.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 },
+            { "kind": "champion", "key": "Trundle", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Viego:Trundle:2",
+          "text": "Charge Spectral Maw before Trundle reaches you so you can stun him. Longer charge, longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Trundle", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Trundle:3",
+          "text": "Use Harrowed Path to hide, then jump the fight with the extra Attack Speed. Trundle cannot target you while you are camouflaged.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Trundle", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Viego:Trundle:4",
+          "text": "Trundle heals when enemies die near him, so do not fight beside minions or a dead champion that gives him that health.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "35ef46901bd1ac3864c37be3f96c2579df37be601e67787eda959fb943fd2d0c",
+      "tips": [
+        {
+          "id": "jungle:Viego:Udyr:0",
+          "text": "Keep your distance from Udyr; he has few ranged options, so poke with Spectral Maw and Blade of the Ruined King instead of trading up close.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Viego-W", "start": 70, "end": 82 },
+            { "kind": "ability", "key": "Viego-Q", "start": 87, "end": 111 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Viego:Udyr:1",
+          "text": "Don't let Udyr's Blazing Stampede attack land on you; fight him where you can see him coming and sidestep the dash.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Udyr-E", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Viego:Udyr:2",
+          "text": "Fight Udyr when his Awaken is spent; after an Awakened ability he can't Awaken others for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Udyr:3",
+          "text": "Hit Udyr with an ability first, then attack, so Blade of the Ruined King strikes twice and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Viego-Q", "start": 48, "end": 72 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4da931ba6f132a71560471ab3ebd10cdcbfe562fd4372ac462c13ab837c11da0",
+      "tips": [
+        {
+          "id": "jungle:Viego:Vi:0",
+          "text": "Hold Spectral Maw a moment before you release it; a longer charge stuns longer, so Vi has less time to get away or fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Vi:1",
+          "text": "Do not rely on dodging Cease and Desist by moving. Vi cannot be stopped mid-dash, so use your untargetable moment or stay near allies.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-R", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Viego:Vi:2",
+          "text": "Break up long brawls: Vi gets faster and shreds your Armor once she lands a third hit on you.",
+          "refs": [],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Viego:Vi:3",
+          "text": "Use Harrowed Path to hide in the mist before a gank. Attacking or casting breaks the camouflage, so close in without hitting first.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Vi:4",
+          "text": "Use Heartbreaker to finish a weakened Vi; it targets the enemy with the lowest health left and leaves them slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a0fd6dcd5128b0e0768fad5fe5d9dcbc132bd15a4acbb52551633de461aa62d0",
+      "tips": [
+        {
+          "id": "jungle:Viego:Volibear:0",
+          "text": "Charge Spectral Maw a little before releasing it on Volibear; it stuns longer, but he can still dive in fast.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "Volibear", "start": 52, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Viego:Volibear:1",
+          "text": "Stay out of Volibear's reach when his Thundering Smash is ready. It speeds him toward you and stuns on his next Attack.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 38, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Viego:Volibear:2",
+          "text": "Use Harrowed Path to hide and reposition in its Mist before a fight; you gain Attack Speed inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Viego:Volibear:3",
+          "text": "Hit Volibear with an ability, then attack him; Blade of the Ruined King strikes a second time and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Viego-Q", "start": 47, "end": 71 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Viego:Volibear:4",
+          "text": "Use Heartbreaker on a low-health Volibear. Expect him to get tougher if he has used Stormbringer.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Volibear", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Volibear-R", "start": 84, "end": 96 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "69288d677aafd7bd10d7a2cab3346a9913cc36b4935490869533aa27eb6b909c",
+      "tips": [
+        {
+          "id": "jungle:Viego:Warwick:0",
+          "text": "Stay out of Warwick's reach when he holds Jaws of the Beast; dashing away will not shake him off.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 42, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Viego:Warwick:1",
+          "text": "Aim Spectral Maw at Warwick as he closes in. The stun gives you time to trade or get away.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Warwick", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Viego:Warwick:2",
+          "text": "Keep your health up; Warwick tracks you once you are low and hits much faster.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Viego:Warwick:3",
+          "text": "Use Harrowed Path to hide in the mist and break Warwick's chase. Attacking or casting spoils the camouflage.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Warwick", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Viego:Warwick:4",
+          "text": "Warwick heals when he is low, so save your stun to finish him instead of spending it early.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "47182c0349e6706b5b998ab26ed8b855e477aa19d26ad2d3fb00592086641eb5",
+      "tips": [
+        {
+          "id": "jungle:Viego:XinZhao:0",
+          "text": "Charge Spectral Maw longer for a longer stun, but release it before Xin Zhao reaches you. The stun is the best way to stop his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Viego:XinZhao:1",
+          "text": "Stay out of the enemy's reach. Xin Zhao's third Three Talon Strike hit knocks you up, so back away or stun him before he finishes it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 48, "end": 66 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Viego:XinZhao:2",
+          "text": "Use Harrowed Path to hide in the Mist and gain Attack Speed. Fight inside it when Xin Zhao comes at you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Viego:XinZhao:3",
+          "text": "Use Heartbreaker to finish a weak Xin Zhao. It picks the enemy champion who is lowest on health.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "92282121bf4a769305565cf34b28f0ffa866f3a9f4a60e607e4726e2f922a965",
+      "tips": [
+        {
+          "id": "jungle:Viego:Zac:0",
+          "text": "Stay out of Zac's Elastic Slingshot range when you hear him charging. Spectral Maw stuns him and cancels his leap if you land it first.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Zac-E", "start": 18, "end": 35 },
+            { "kind": "ability", "key": "Viego-W", "start": 70, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Viego:Zac:1",
+          "text": "Step on Zac's goo chunks to destroy them. That stops him healing from them in a long trade.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 8, "end": 11 }],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Viego:Zac:2",
+          "text": "Zac's Stretching Strikes slows you and ties you to him for a short time. Break away from him before he can hit you with a second strike.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zac-Q", "start": 6, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Viego:Zac:3",
+          "text": "Kill every one of Zac's bloblets when Cell Division triggers, or he comes back. Your Heartbreaker can also help catch them.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Zac-passive", "start": 38, "end": 51 },
+            { "kind": "ability", "key": "Viego-R", "start": 85, "end": 97 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Viego:Zac:4",
+          "text": "Use Harrowed Path to hide in the mist and avoid Zac's stretching strikes when you are about to be attacked.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zac", "start": 48, "end": 51 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1599309582348ea13340b9ab6a134c033194fa4455205f4e90add2163dc58ec3",
+      "tips": [
+        {
+          "id": "jungle:Viego:Zed:0",
+          "text": "Hold Spectral Maw until Zed commits to a dash or a Death Mark; the stun can stop him in the middle of his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Zed-R", "start": 51, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Viego:Zed:1",
+          "text": "Charge Spectral Maw a little longer when you can; a longer charge stuns for longer and reaches further.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Viego:Zed:2",
+          "text": "Use a damaging ability first, then attack, so Blade of the Ruined King hits twice and heals you in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-Q", "start": 46, "end": 70 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Viego:Zed:3",
+          "text": "Zed's Shadow Slash slows you only when a shadow hits you, so fight the real Zed, not his shadows.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-E", "start": 6, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Zed", "start": 76, "end": 79 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Viego:Zed:4",
+          "text": "If you kill Zed within a few seconds of damaging him, attack the wraith to heal and take his body, but only when no enemies are near.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 12, "end": 15 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Viego:Zed:5",
+          "text": "Use Harrowed Path to hide in the mist and wait for Zed to walk past, then start the fight with Spectral Maw.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 51, "end": 54 },
+            { "kind": "ability", "key": "Viego-W", "start": 95, "end": 107 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "250918da3102d482f30601e2f473935b829d73ac7e6607d15df2f7a9a61b1c9f",
+      "tips": [
+        {
+          "id": "jungle:Viego:Zyra:0",
+          "text": "Step around seeds Zyra plants; walking on them destroys them and reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Viego:Zyra:1",
+          "text": "Dodge Grasping Roots before you dash in; it roots you and you can't reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Viego:Zyra:2",
+          "text": "Aim Spectral Maw at Zyra to stun her; she is fragile once she is caught.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zyra", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Viego:Zyra:3",
+          "text": "Fight away from her plants, which expire quickly. Kill Zyra first with Heartbreaker if she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 55, "end": 59 },
+            { "kind": "ability", "key": "Viego-R", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Viego:Zyra:4",
+          "text": "Leave the area of Stranglethorns before it snaps up; you can't act while knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-R", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 83 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

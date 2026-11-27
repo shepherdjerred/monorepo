@@ -1,0 +1,1035 @@
+{
+  "schemaVersion": 1,
+  "champion": "Olaf",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "0508d38381f4a2cf5caacb43269809cf061add9f743ea1b789c9fea83e37ad14",
+      "tips": [
+        {
+          "id": "top:Olaf:general:0",
+          "text": "Throw Undertow at the enemy, then walk over the axe to pick it up. Grabbing it quickly cuts the cooldown, so you can throw again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Olaf:general:1",
+          "text": "Throw Undertow from long range when you want to chase or harass. The enemy is slowed for longer the farther the axe flies.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Olaf:general:2",
+          "text": "Keep attacking with basic attacks between casts. Each one shortens the cooldown of Reckless Swing, so you can use it again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Olaf:general:3",
+          "text": "Use Reckless Swing to finish a low-health enemy. It deals true damage, and if the enemy dies the health cost is refunded.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Olaf:general:4",
+          "text": "Cast Tough It Out when a trade starts. It gives attack speed and a shield, and the shield grows the more health you have lost.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Olaf:general:5",
+          "text": "Hold Ragnarok until an enemy would stun or slow you. It removes those effects and makes you immune to them for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Olaf:general:6",
+          "text": "Keep hitting enemy champions with attacks and Reckless Swing during Ragnarok to extend it. Chase hard while you are immune.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 46, "end": 60 },
+            { "kind": "ability", "key": "Olaf-R", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Olaf:general:7",
+          "text": "Berserker Rage makes you stronger as your health drops, so a low-health fight is not lost. Still, do not stay low against enemies who can burst you down.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-passive", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Olaf:combo:0",
+          "name": "Axe pickup reset",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Olaf-Q" }],
+          "when": "Trading or last-hitting in lane when you want Undertow back up quickly.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 46, "end": 54 }
+          ],
+          "text": "Throw the axe where you will walk next, then pick it up right after it lands. Picking it up early cuts the cooldown, and an instant pickup refunds it fully.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Olaf:combo:1",
+          "name": "Tough It Out attack reset",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            { "kind": "ability", "key": "Olaf-W" },
+            "attack"
+          ],
+          "when": "In melee trades when you want a faster follow-up auto.",
+          "whenRefs": [],
+          "text": "Tough It Out resets your basic attack timer. Cast it right after an auto so the next auto comes out sooner.",
+          "textRefs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 0, "end": 12 }
+          ]
+        },
+        {
+          "id": "top:Olaf:combo:2",
+          "name": "Ragnarok cleanse",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Olaf-R" }],
+          "when": "When an enemy stuns, roots or slows you and you want to keep fighting.",
+          "whenRefs": [],
+          "text": "Ragnarok removes all disables on you and makes you immune to them while it is active. Cast it while you are disabled to break free and keep chasing.",
+          "textRefs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 0, "end": 8 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "302fe0f772a1dfad42471627dc8e1bfdd8dc1ee5901450d8391356d0466441a5",
+      "tips": [
+        {
+          "id": "top:Olaf:Aatrox:0",
+          "text": "Throw Undertow at Aatrox when he walks up to trade; it slows him and cuts his Armor, so your follow-up hits land harder.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Aatrox", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Olaf:Aatrox:1",
+          "text": "Walk over your axe after throwing Undertow so it comes back sooner and you can harass again.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Olaf:Aatrox:2",
+          "text": "Use Reckless Swing in every trade; it deals true damage, and attacking lowers its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Olaf:Aatrox:3",
+          "text": "Save Ragnarok for when Aatrox pulls you in with Infernal Chains; it removes the pull's disable and keeps you fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Olaf:Aatrox:4",
+          "text": "Cast Tough It Out when you start trading; the shield and Attack Speed let you win the extended fight against Aatrox's healing.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 109, "end": 115 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07dc1d248705b89c2f1d216059aebd538e74d8487efd57c393e191944b5f3672",
+      "tips": [
+        {
+          "id": "top:Olaf:Briar:0",
+          "text": "Save Ragnarok for when Briar jumps on you; it cleanses her stun and makes you immune to more, so she cannot lock you down.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Olaf:Briar:1",
+          "text": "Throw Undertow at Briar as she charges in; she is slowed and loses Armor, so your follow-up hits land harder.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Briar", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Olaf:Briar:2",
+          "text": "Use Tough It Out when Briar locks onto you in her frenzy; the shield and Attack Speed help you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Olaf:Briar:3",
+          "text": "Pick the axe back up after throwing Undertow, so you can poke her again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Olaf:Briar:4",
+          "text": "Her bleed heals her, so keep hitting her with Reckless Swing for true damage when she is low; it ignores her bonus resistances.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "994a016536d066376135debdcdd592899f6a18de6ab5484de72bea62b1f26d3b",
+      "tips": [
+        {
+          "id": "top:Olaf:Darius:0",
+          "text": "Throw Undertow at Darius when he walks up, then pick the axe back up to cut its cooldown. It slows him and lowers his Armor for your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Olaf:Darius:1",
+          "text": "Use Ragnarok when Darius pulls you in. It cleanses the knock up and protects you from further disables while you fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Darius", "start": 18, "end": 24 },
+            { "kind": "keyword", "key": "knocked-up", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Olaf:Darius:2",
+          "text": "Don't fight him in a long trade while his Hemorrhage stacks are high. Back off and let them run out before you go in again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 42,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Olaf:Darius:3",
+          "text": "Activate Tough It Out as the trade starts. The shield and Attack Speed help you win the close fight.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Olaf:Darius:4",
+          "text": "Hit him with Reckless Swing in a trade; it deals true damage, so his Armor doesn't reduce it.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 13, "end": 27 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:1",
+          "note": "The Tough It Out reset speeds up your follow-up auto in melee trades against Darius.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 77, "end": 83 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "dd4f93375111fc14494c42e6fd6989a9b8b3751e99d3fc4124db092978982cb0",
+      "tips": [
+        {
+          "id": "top:Olaf:Fiora:0",
+          "text": "Don't use Reckless Swing or aim a stun-like disable into Riposte; wait until she has finished the parry, then trade.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 10, "end": 24 },
+            { "kind": "ability", "key": "Fiora-W", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Olaf:Fiora:1",
+          "text": "Throw Undertow at her when she lunges in; she is slowed and loses Armor, so your trade gets better.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Olaf:Fiora:2",
+          "text": "Pick up your axe after Undertow so it comes back quickly and you can keep poking her.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Fiora:3",
+          "text": "Save Ragnarok for when she commits; you shrug off her disables, and her Riposte can't turn them against you.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Fiora-W", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Olaf:Fiora:4",
+          "text": "Use Tough It Out when she starts a trade; the shield and Attack Speed help you win a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b23a8f2e33ffd0dbf55270da4519e826ab90facb99c341c7317a2f52cae3d280",
+      "tips": [
+        {
+          "id": "top:Olaf:Gangplank:0",
+          "text": "Throw Undertow at Gangplank when he steps up to hit a minion, then pick the axe back up to get the ability ready sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Gangplank", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Olaf:Gangplank:1",
+          "text": "Use Reckless Swing in a trade; it deals true damage, and your basic attacks shorten its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Olaf:Gangplank:2",
+          "text": "Wait to start your all-in until Gangplank has used Remove Scurvy, because it clears stuns and slows from you.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Olaf:Gangplank:3",
+          "text": "Use Ragnarok when you commit; he can't stop you with slows or stuns, and hitting him keeps it going.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Olaf:Gangplank:4",
+          "text": "Stay out of his Powder Keg blasts, because they slow you. Step out of range of a keg before he can shoot it.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Olaf:Gangplank:5",
+          "text": "Use Tough It Out when you trade; the shield and extra Attack Speed help most when you are already hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fd72b3765742b4400c5e808e88d5cc24445401de5cb87cb21708e6d03049e185",
+      "tips": [
+        {
+          "id": "top:Olaf:Garen:0",
+          "text": "Throw Undertow at Garen when he walks up; he is slowed, and his Armor drops so your next hits hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Olaf:Garen:1",
+          "text": "Pick up your axe after throwing Undertow so you can throw it again sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Garen:2",
+          "text": "Garen's Decisive Strike removes slows and silences you, so throw Undertow again once it is gone or trade with Reckless Swing instead.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "silenced", "start": 42, "end": 50 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 65, "end": 73 },
+            { "kind": "ability", "key": "Olaf-E", "start": 110, "end": 124 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Olaf:Garen:3",
+          "text": "Reckless Swing deals true damage, so use it on Garen when his Courage is up and his Armor is high.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Garen-W", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Olaf:Garen:4",
+          "text": "Save Ragnarok for when Garen tries to silence or lock you down; you cleanse it and cannot be disabled.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Garen:5",
+          "text": "Do not fight at low health near Garen's Demacian Justice, even though Olaf gets stronger when hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Garen-R", "start": 40, "end": 56 },
+            { "kind": "champion", "key": "Olaf", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d95695450e3ad91be907ac9b584e34ec1b5bec1e9bce723029d2e95587f548c9",
+      "tips": [
+        {
+          "id": "top:Olaf:Jayce:0",
+          "text": "Throw Undertow at Jayce when he walks up to trade, then pick the axe back up to shorten its cooldown. He is slowed and loses Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Jayce", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Olaf:Jayce:1",
+          "text": "Save Ragnarok for when Jayce tries to root and knock you back with Thundering Blow or slow you with To the Skies!. It cleanses you and makes you immune to them.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Olaf:Jayce:2",
+          "text": "Use Tough It Out when you start trading in melee. The shield and Attack Speed win short fights against his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Olaf:Jayce:3",
+          "text": "Keep hitting him with Reckless Swing between attacks. It deals true damage, so his Hammer Stance defenses do not reduce it.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Olaf:Jayce:4",
+          "text": "Fight when you are lower on Health; Berserker Rage gives you more Life Steal and Attack Speed, so you can win a long melee trade.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-passive", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:2",
+          "note": "Ragnarok cleanses and blocks the slow from Jayce's To the Skies! and the knockback from Thundering Blow.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Jayce", "start": 43, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "49b361d961b5d30023d0000e07a9181865dd026379670795d3fc22e2ef6e7d97",
+      "tips": [
+        {
+          "id": "top:Olaf:KSante:0",
+          "text": "Throw Undertow at K'Sante when he walks up to trade, then pick the axe back up to bring the cooldown down fast.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "KSante", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Olaf:KSante:1",
+          "text": "Use Ragnarok when K'Sante tries to stun or pull you; you cleanse it and can't be disabled while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "KSante", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Olaf:KSante:2",
+          "text": "Hit K'Sante with attacks and Reckless Swing during Ragnarok to keep it running; true damage ignores his armor.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Olaf-E", "start": 29, "end": 43 },
+            { "kind": "ability", "key": "Olaf-R", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Olaf:KSante:3",
+          "text": "Cast Tough It Out when you start trading for more Attack Speed and a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Olaf:KSante:4",
+          "text": "Be careful when K'Sante goes All Out; he loses much of his resistances and health, so burst him down.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "KSante-R", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "683b0053521fe061a634e1da18695023ce82a866eba51f592f43bf2f1a71b51c",
+      "tips": [
+        {
+          "id": "top:Olaf:Malphite:0",
+          "text": "Throw Undertow at Malphite and pick the axe back up quickly; it makes the cooldown much shorter and lets you poke him again.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Malphite", "start": 18, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Olaf:Malphite:1",
+          "text": "Hit Malphite with Undertow before you trade; it cuts his Armor and slows him so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 18, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Olaf:Malphite:2",
+          "text": "Use Reckless Swing to break his Granite Shield, since it deals true damage that Armor does not reduce.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 32,
+              "end": 46
+            }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Olaf:Malphite:3",
+          "text": "Save Ragnarok for when Malphite is about to use Unstoppable Force; it cleanses you and you can't be knocked up while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Malphite-R", "start": 48, "end": 65 },
+            { "kind": "keyword", "key": "knocked-up", "start": 100, "end": 110 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "top:Olaf:Malphite:4",
+          "text": "Cast Tough It Out when you start trading so you hit faster and get a shield, which offsets his Ground Slam.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Malphite-E", "start": 95, "end": 106 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": [
+        {
+          "comboId": "top:Olaf:combo:1",
+          "note": "Tough It Out resets autos for a quicker follow-up in melee trades against Malphite.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Malphite", "start": 74, "end": 82 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "890f9293e091e7b7c3992932ed07677b7f6fccda1358f8a2cf81aa00bf3569a6",
+      "tips": [
+        {
+          "id": "top:Olaf:Mordekaiser:0",
+          "text": "Pick up your axe after Undertow lands to cut its cooldown, but not if Mordekaiser's Death's Grasp is ready to pull you in.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 23, "end": 31 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 70,
+              "end": 81
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 84,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Olaf:Mordekaiser:1",
+          "text": "Use Ragnarok when Mordekaiser pulls or slows you; it cleanses you and stops more disables for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Olaf:Mordekaiser:2",
+          "text": "Keep hitting Mordekaiser during Ragnarok so it lasts longer, and fight him before he reaches level 6.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 13,
+              "end": 24
+            },
+            { "kind": "ability", "key": "Olaf-R", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Olaf:Mordekaiser:3",
+          "text": "Open with Undertow so he is slowed and loses Armor, then follow up with Reckless Swing for true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 10, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Olaf-E", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Olaf:Mordekaiser:4",
+          "text": "Use Tough It Out in a trade for the shield and Attack Speed; the shield grows the more health you have lost.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0eed3ac02dcb4dd5237af25855323f4d6ceeab6a38102318b30bcba74331aa2",
+      "tips": [
+        {
+          "id": "top:Olaf:Rumble:0",
+          "text": "Throw Undertow at Rumble when he steps up to farm, then pick the axe back up to get the ability back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Rumble", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Olaf:Rumble:1",
+          "text": "Go in when Rumble is overheating; he cannot cast spells then, so trade hard with Reckless Swing and your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Olaf-E", "start": 81, "end": 95 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Rumble:2",
+          "text": "Use Tough It Out as you walk in to absorb his poke and boost your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Olaf:Rumble:3",
+          "text": "Save Ragnarok for when Rumble tries to slow you; it clears slows and makes you immune to them, so you can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Rumble", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Olaf:Rumble:4",
+          "text": "Step out of the fire trail from The Equalizer quickly, or use Ragnarok to push through the slow.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Olaf-R", "start": 62, "end": 70 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e03b9babf4b5347c134edf84dc9ced9da01e4d55bf0936fda2684e730efa840",
+      "tips": [
+        {
+          "id": "top:Olaf:Sion:0",
+          "text": "Throw Undertow at Sion from long range to slow him, then walk onto the axe to pick it up and get Undertow back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Sion:1",
+          "text": "Sidestep Decimating Smash when you see Sion charging. If it lands after a long charge you are stunned, so stay out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Sion", "start": 39, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Olaf:Sion:2",
+          "text": "Save Ragnarok for when Sion lands a stun or knock up on you. It cleanses it and makes you immune to disables for a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Olaf:Sion:3",
+          "text": "Use Reckless Swing to finish Sion when he is low. It deals true damage, so his shield and armor do not blunt it.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Olaf:Sion:4",
+          "text": "Hit Sion with Undertow before you trade. It cuts his Armor, so your attacks hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Sion:5",
+          "text": "Use Tough It Out when you start a trade. The shield and Attack Speed make the fight better for you.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Sion:6",
+          "text": "When Sion dies and comes back, back away. His Glory in Death attacks are very fast and heal him, so don't fight him until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-passive", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "55b1c4c724ed620e9114c3bcb018da8832162280c1fb5dd2ffa00bfe06f8e0d6",
+      "tips": [
+        {
+          "id": "top:Olaf:Teemo:0",
+          "text": "Walk through brush and bushes with care; Teemo can sit invisible in them. Stay out of his range until you know where he is.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Olaf:Teemo:1",
+          "text": "Hit Teemo with Undertow to slow him, then run in and trade. Pick the axe back up so you can throw it again soon.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Olaf:Teemo:2",
+          "text": "Activate Ragnarok once Teemo's Blinding Dart and mushrooms are the main threat; it removes slows and keeps you immune while you chase.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 9, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Olaf:Teemo:3",
+          "text": "Use Reckless Swing for true damage when you reach him. Stand and fight rather than walk away from his poison.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Olaf:Teemo:4",
+          "text": "Click suspicious mushrooms with basic attacks to destroy them before you walk into them.",
+          "refs": [],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "afc46ace02d9f262509dd07b5899024824a66320207917ed21d8845af7458745",
+      "tips": [
+        {
+          "id": "top:Olaf:Vayne:0",
+          "text": "Throw Undertow at Vayne when she backs up or steps in to last-hit; she is slowed, so you can catch her and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Vayne", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Olaf:Vayne:1",
+          "text": "Walk over your axe after throwing it so Undertow comes back quickly and you can keep up the pressure.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Olaf:Vayne:2",
+          "text": "Stay out of long fights until you have closed the gap. Once on her, hit with Reckless Swing, and Vayne will struggle to keep you off.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 77, "end": 91 },
+            { "kind": "champion", "key": "Vayne", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Olaf:Vayne:3",
+          "text": "Save Ragnarok for when Vayne tries to Condemn you into a wall; it removes the stun and makes you immune to more.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Vayne-E", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Olaf:Vayne:4",
+          "text": "Fight away from walls so Condemn can only push you and not stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Olaf:Vayne:5",
+          "text": "Use Tough It Out when you go in; the shield and extra Attack Speed help you win the short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "19c3a298f8f2644ac171527575ea7c698c282dbaeb5a5e418173204b08d85161",
+      "tips": [
+        {
+          "id": "top:Olaf:Yone:0",
+          "text": "Throw Undertow at Yone as he walks up to farm, then pick the axe back up to bring the cooldown down. It slows him and lowers his Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Olaf:Yone:1",
+          "text": "Use Ragnarok when Yone's Fate Sealed or Mortal Steel knock up is coming. Olaf cleanses it and ignores disables, so you can keep hitting him.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Yone-R", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Yone-Q", "start": 40, "end": 52 },
+            { "kind": "champion", "key": "Olaf", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Olaf:Yone:2",
+          "text": "Trade with Reckless Swing, which deals true damage, then keep attacking. Each attack lowers its cooldown, so you can swing again soon.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-E", "start": 11, "end": 25 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Olaf:Yone:3",
+          "text": "Cast Tough It Out when you start a trade. You get a shield and extra Attack Speed, and the shield is bigger the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Olaf:Yone:4",
+          "text": "Don't be afraid of low health. Berserker Rage makes Olaf hit faster and heal more the lower he is, so Yone can't easily poke you out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Olaf-passive",
+              "start": 31,
+              "end": 45
+            },
+            { "kind": "champion", "key": "Olaf", "start": 52, "end": 56 },
+            { "kind": "champion", "key": "Yone", "start": 102, "end": 106 },
+            { "kind": "keyword", "key": "poke", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

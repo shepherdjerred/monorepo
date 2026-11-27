@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zeri",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "7f55dc962cbc313352f1043f7631ddaa55dda9c5ee21571079bde80705bf4bd3",
+      "tips": [
+        {
+          "id": "adc:Zeri:general:0",
+          "text": "Keep moving and keep firing Burst Fire; moving and casting it both charge your passive, so your next attack hits much harder when it is full.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 28, "end": 38 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Zeri:general:1",
+          "text": "Aim Burst Fire at the enemy you want to hit. It stops at the first enemy it hits, so shoot past minions only after Spark Surge.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Zeri-E", "start": 115, "end": 126 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "adc:Zeri:general:2",
+          "text": "Fire Ultrashock Laser at an enemy to get them slowed, then keep hitting them. Aimed at a wall, it turns into a laser that hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Zeri:general:3",
+          "text": "Use Spark Surge to jump over walls to escape or reposition. Casting it next to terrain makes the dash go much farther.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Zeri:general:4",
+          "text": "Hit enemies with Burst Fire after Spark Surge to get it back sooner. Chain attacks on champions to dash again quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Zeri-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Zeri:general:5",
+          "text": "Start a fight with Lightning Crash once you are close to the enemy champions. Hitting one gives you attack speed and move speed, so keep hitting them.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-R", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Zeri:general:6",
+          "text": "You can still fire Burst Fire while silenced, so do not back off just because you are silenced.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 19, "end": 29 },
+            { "kind": "keyword", "key": "silenced", "start": 36, "end": 44 },
+            { "kind": "keyword", "key": "silenced", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "f28c91a8c9b87823f99d4a719e7b950d5f294e4df01c43b9cabf6edc1c07fc27",
+      "tips": [
+        {
+          "id": "adc:Zeri:Ashe:0",
+          "text": "Keep Spark Surge ready as your escape. Ashe has few ways to stop you, but her slows and arrow punish you if you are caught.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Zeri:Ashe:1",
+          "text": "Stay out of a straight line from Ashe when her Enchanted Crystal Arrow is ready. Walking in one line makes it much easier to hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Ashe-R", "start": 47, "end": 70 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Zeri:Ashe:2",
+          "text": "Poke Ashe with Burst Fire from range, then use Ultrashock Laser against a wall to slow her and hit her for more.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "Zeri-W", "start": 47, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Zeri:Ashe:3",
+          "text": "Ashe's Volley is blocked by minions, so stand behind them or keep a minion between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ashe-W", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Zeri:Ashe:4",
+          "text": "Gank-proof yourself: Ashe is a good target to catch, so look for chances to burst her at level 6 with Lightning Crash.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Zeri-R", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "61e4fd2e88c9b4f24f6b1406216dd372850fe04e1376dcda2ae00dd13d39e05b",
+      "tips": [
+        {
+          "id": "adc:Zeri:Caitlyn:0",
+          "text": "Stay out of Caitlyn's long range. Her Piltover Peacemaker pokes you from far away, so keep minions between you and her.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 38, "end": 57 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Zeri:Caitlyn:1",
+          "text": "Caitlyn may have traps hidden where you walk. Be careful when you dash with Spark Surge, as a trap roots you for a long time.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Zeri-E", "start": 76, "end": 87 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Zeri:Caitlyn:2",
+          "text": "Use Ultrashock Laser to slow Caitlyn when she steps up, then trade with Burst Fire while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Caitlyn", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 72, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Zeri:Caitlyn:3",
+          "text": "Spark Surge lets Burst Fire pierce. Use it to hit Caitlyn and her minions together when you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Caitlyn", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Zeri:Caitlyn:4",
+          "text": "Stand behind a minion or an ally when Caitlyn channels Ace in the Hole, so the shot hits them instead.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "918fafc5d228029f034545fa2ad24db9f31b6455c904117f090558d52da05647",
+      "tips": [
+        {
+          "id": "adc:Zeri:Ezreal:0",
+          "text": "Stay out of Ezreal's Mystic Shot line, and keep minions between you and him so it stops on them.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Zeri:Ezreal:1",
+          "text": "Slow Ezreal with Ultrashock Laser, then close in and hit him. He is fragile.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ezreal", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Zeri-W", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Zeri:Ezreal:2",
+          "text": "Use Spark Surge to dodge his shots and close the gap. Once he has used Arcane Shift, he has no easy escape.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 71, "end": 83 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Zeri:Ezreal:3",
+          "text": "Trade with Burst Fire when his Mystic Shot is on cooldown, since he has no other quick poke.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "08ed302cf38c15d4005a500cc958169ffd2d46ed2caf1bd3d2158fcba1846241",
+      "tips": [
+        {
+          "id": "adc:Zeri:Jhin:0",
+          "text": "Stay out of Deadly Flourish's line when Jhin's minions or support have just hit you. Right after that hit, it roots you.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Jhin", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Zeri:Jhin:1",
+          "text": "Jhin cannot attack while he reloads after his fourth shot. Use Burst Fire and walk in to trade then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Zeri:Jhin:2",
+          "text": "Jhin leaves invisible traps in lane. Check bushes and your usual paths before you dash with Spark Surge, because a trap slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-E", "start": 92, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 120, "end": 125 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Zeri:Jhin:3",
+          "text": "Use Ultrashock Laser to slow Jhin when he walks up. He has little to stop you from kiting him.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Jhin", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "39238db4224c2f66285b235cce39f35b0d64cd9b20d2011f9db2a886d81ca24d",
+      "tips": [
+        {
+          "id": "adc:Zeri:Jinx:0",
+          "text": "Poke Jinx with Burst Fire while she walks up to last-hit; it has no cooldown, so keep it going from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Zeri:Jinx:1",
+          "text": "Stay out of Jinx's Zap! line, because being slowed and revealed lets her follow up with Flame Chompers!.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jinx-W", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Jinx-E", "start": 88, "end": 103 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Zeri:Jinx:2",
+          "text": "Jinx's Flame Chompers! root only if you step on one, so use Spark Surge to cross over them instead of walking into them.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jinx-E", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Zeri-E", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Zeri:Jinx:3",
+          "text": "Use Ultrashock Laser on Jinx when she backs against a wall; the pulse hitting terrain turns into a laser that slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jinx", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Zeri:Jinx:4",
+          "text": "Trade with Lightning Crash at level 6 when Jinx is close; the speed and attack speed let you out-fight her in a short brawl.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-R", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Jinx", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "02139ac4ae535fb412875fcc4a4f29e4bb3dc3c853b912d7fa701b9f7e544135",
+      "tips": [
+        {
+          "id": "adc:Zeri:Kaisa:0",
+          "text": "Kai'Sa wins when she gets close and you stay stuck in place. Keep moving and use Burst Fire to poke from range.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Zeri:Kaisa:1",
+          "text": "Use Spark Surge to dash away when Kai'Sa jumps in with Killer Instinct. Fire Ultrashock Laser at her afterwards to slow her.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 55, "end": 70 },
+            { "kind": "ability", "key": "Zeri-W", "start": 77, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Zeri:Kaisa:2",
+          "text": "Step out of Void Seeker's line, because it hits the first enemy in its path and sets up Kai'Sa's Plasma. Standing behind minions can block it.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Kaisa", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Zeri:Kaisa:3",
+          "text": "Burst Fire still works while you are silenced, so keep shooting when Kai'Sa tries to shut you down.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-Q", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "silenced", "start": 37, "end": 45 },
+            { "kind": "champion", "key": "Kaisa", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1247b8269ebc21c3d4fad6cf8e5e1fed21751335b56ae5b722d2887b236b30e8",
+      "tips": [
+        {
+          "id": "adc:Zeri:MissFortune:0",
+          "text": "Do not stand in line behind a minion when Miss Fortune has Double Up ready; the shot bounces onto you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 42,
+              "end": 54
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 59,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Zeri:MissFortune:1",
+          "text": "Step out of Make It Rain quickly. Being slowed inside it makes you easy prey for Miss Fortune.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "champion", "key": "MissFortune", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Zeri:MissFortune:2",
+          "text": "Use Ultrashock Laser to slow Miss Fortune when she steps forward to last-hit. Aim it at a nearby wall so the laser also hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "MissFortune", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Zeri:MissFortune:3",
+          "text": "Hit Miss Fortune to cancel her speed boost from Strut.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 48,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Zeri:MissFortune:4",
+          "text": "Do not sit near Miss Fortune at level 6 where Bullet Time can hit you. Use Spark Surge to break away from it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 16,
+              "end": 28
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 46,
+              "end": 57
+            },
+            { "kind": "ability", "key": "Zeri-E", "start": 75, "end": 86 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f7dae39ef9d8ef43ff3a2c89c3d0f7e0fc1c6c81fb8047de931ed9cb2996138a",
+      "tips": [
+        {
+          "id": "adc:Zeri:Smolder:0",
+          "text": "Hit Smolder with Ultrashock Laser to slow him, then trade with Burst Fire while he can't walk away.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Zeri-W", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Zeri:Smolder:1",
+          "text": "Push him early and hurt him while he is weak; he wants to farm stacks safely, so do not let him.",
+          "refs": [],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Zeri:Smolder:2",
+          "text": "Use Spark Surge to dodge Achooo! and to close in for a trade, then keep firing Burst Fire through the dash's bonus.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Smolder-W", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 79, "end": 89 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Zeri:Smolder:3",
+          "text": "Stay spread from your support so one MMOOOMMMM! does not hit you both.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-R", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "78e0cb96cef57526db6e4244b1a5e248de58ab2abe15c50472335f0f5c4079ef",
+      "tips": [
+        {
+          "id": "adc:Zeri:Yunara:0",
+          "text": "Use Ultrashock Laser on Yunara when she walks up to trade; it slows her and is hard for her to avoid at long range.",
+          "refs": [
+            { "kind": "ability", "key": "Zeri-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Zeri:Yunara:1",
+          "text": "Stay out of the path of Yunara's prayer bead. It slows heavily on hit, so keep Spark Surge ready to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Zeri-E", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Zeri:Yunara:2",
+          "text": "Zeri can still cast Burst Fire while silenced, so keep shooting if you get caught.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 20, "end": 30 },
+            { "kind": "keyword", "key": "silenced", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Zeri:Yunara:3",
+          "text": "Back off when Yunara uses her ultimate. Her beam hits hard and slows, and her dash lets her close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 14, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Zeri:Yunara:4",
+          "text": "Trade and push while Yunara's ultimate is down. Without it she has less speed and less damage against you.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

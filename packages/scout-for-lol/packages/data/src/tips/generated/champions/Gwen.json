@@ -1,0 +1,1839 @@
+{
+  "schemaVersion": 1,
+  "champion": "Gwen",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "e2fe75788bf8ad67d213583029f8d2b88623a32988addd538ba659bf2b6022e2",
+      "tips": [
+        {
+          "id": "top:Gwen:general:0",
+          "text": "Hit an enemy with a basic attack before you cast Snip Snip!. Each hit builds a stack, and every stack adds another snip.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gwen:general:1",
+          "text": "Aim the center of Snip Snip! at the enemy champion, since the center deals true damage and applies A Thousand Cuts, which heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Gwen-passive",
+              "start": 99,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:general:2",
+          "text": "Use Snip Snip! to finish low-health minions, since it kills them instantly when they are low.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Gwen:general:3",
+          "text": "Dash in with Skip 'n Slash, then attack right away. The first empowered hit refunds part of its cooldown, so you can dash again soon.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:general:4",
+          "text": "Use Hallowed Mist to dodge a big spell or a trade. Enemy champions outside the mist can't target you, and their projectiles are destroyed.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gwen:general:5",
+          "text": "Stay inside Hallowed Mist to keep your protection. The mist follows you once when you leave, and after that it fades.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gwen:general:6",
+          "text": "Fire Needlework at long range to start a fight. Recast it as long as the needles keep landing, since each recast sends more needles.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Gwen:general:7",
+          "text": "Needlework leaves enemies slowed. Use that to chase them down, or aim it through a group so A Thousand Cuts hits several of them.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Gwen-passive",
+              "start": 92,
+              "end": 107
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Gwen:combo:0",
+          "name": "Mist follows your dash",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Gwen-W" },
+            { "kind": "ability", "key": "Gwen-E" }
+          ],
+          "when": "When you want to keep the Hallowed Mist on you while closing in or backing off, such as against ranged poke or a tower.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 26, "end": 39 }
+          ],
+          "text": "Cast W, then dash out with E. The mist moves to where the dash ends, so you stay untargetable to enemies outside it without spending the recast.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "957fcf8d9ad410d82e7a69bbb5064683fdc1fb4b1f35b8475fc24f8195447250",
+      "tips": [
+        {
+          "id": "jungle:Gwen:general:0",
+          "text": "Attack before you cast Snip Snip! so your hits build stacks; each stack adds another snip.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Gwen:general:1",
+          "text": "Aim the center of Snip Snip! at the enemy, since the center turns some damage into true damage and applies A Thousand Cuts.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Gwen-passive",
+              "start": 107,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Gwen:general:2",
+          "text": "Dash in with Skip 'n Slash, then attack right away. The first empowered hit gives back part of its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Gwen:general:3",
+          "text": "Use Hallowed Mist when monsters hit you. Their attacks from outside the mist do no damage to Gwen.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gwen", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Gwen:general:4",
+          "text": "Step inside Hallowed Mist in a fight to dodge enemy champions' targeted attacks and spells. It follows you once if you leave, then fades.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Gwen:general:5",
+          "text": "Open with Needlework on a distant target so they are slowed, then recast it as they stay in range for more needles.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 10, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Gwen:general:6",
+          "text": "Needlework needles pass through units, so aim down a line with several enemies to hit them all and heal more.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Gwen:combo:0",
+          "name": "Dash, hit, snip",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Gwen-E" },
+            "attack",
+            { "kind": "ability", "key": "Gwen-Q" }
+          ],
+          "when": "When you want to burst a champion or a camp after building a few Snippy stacks.",
+          "whenRefs": [],
+          "text": "Dash in, then land one empowered attack to get part of the dash cooldown back and add a stack. Then cast the scissors so they snip once more.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "f77f1f41e75ac948be47f03035c95b01710878ebbaa1b7b143faecf463be7a40",
+      "tips": [
+        {
+          "id": "top:Gwen:Aatrox:0",
+          "text": "Use Hallowed Mist when Aatrox casts The Darkin Blade or Infernal Chains. He can't target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 36, "end": 52 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 56, "end": 71 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Gwen:Aatrox:1",
+          "text": "Aatrox's attacks are telegraphed, so dodge them. Sidestep The Darkin Blade, and run toward him or to the sides to leave Infernal Chains.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 58, "end": 74 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 120, "end": 135 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Gwen:Aatrox:2",
+          "text": "Attack minions and Aatrox to build Snip Snip! stacks before you cast it; a full set of snips hurts him far more.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Gwen:Aatrox:3",
+          "text": "Keep your distance when Aatrox uses World Ender. A takedown extends it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Aatrox:4",
+          "text": "Dash in with Skip 'n Slash, then attack right away. The first empowered attack refunds some of its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2f8c8e0de5ea49a3272f695447b8a0745108f6c75b5eebf8512ccee2f277b421",
+      "tips": [
+        {
+          "id": "top:Gwen:Briar:0",
+          "text": "Stay out of Briar's Head Rush range early. If she stuns you, you can't use your abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Briar-Q", "start": 20, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Gwen:Briar:1",
+          "text": "Cast Hallowed Mist when Briar dives in. She can't hit you from outside it, so she has to enter the Mist to fight you.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gwen:Briar:2",
+          "text": "Hit Briar with Snip Snip! while she charges Chilling Scream, since she can't move during the charge.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "Briar-E", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gwen:Briar:3",
+          "text": "Stay away from walls when Briar charges Chilling Scream. A full charge knocks you into one and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 40, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a3d526f4a39733c9c1022da95616ecb6b3e6c4dfa36815420bf389b6773de331",
+      "tips": [
+        {
+          "id": "top:Gwen:Darius:0",
+          "text": "Stay out of Apprehend's range and angle. Being pulled next to Darius is how he wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Gwen:Darius:1",
+          "text": "Use Hallowed Mist when Darius commits, since he cannot target you from outside it. His Noxian Guillotine is blocked too.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Darius-R", "start": 87, "end": 104 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "top:Gwen:Darius:2",
+          "text": "Poke Darius while Apprehend is on cooldown. Then he cannot pull you in.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gwen:Darius:3",
+          "text": "Do not fight long trades. Hemorrhage stacks build, and Darius gets stronger the longer a fight goes on.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 26,
+              "end": 36
+            },
+            { "kind": "champion", "key": "Darius", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gwen:Darius:4",
+          "text": "Use Skip 'n Slash to dodge out of Decimate's swing, then hit back when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Darius-Q", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a63dea3b40da2686e06e516cd2caec1b7878f1e11580a2582ee74cda1989fdf",
+      "tips": [
+        {
+          "id": "top:Gwen:Fiora:0",
+          "text": "Don't use Needlework slow or other crowd control on Fiora while Riposte is ready; she turns it into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 10, "end": 20 },
+            { "kind": "champion", "key": "Fiora", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Fiora-W", "start": 64, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Gwen:Fiora:1",
+          "text": "Cast Hallowed Mist when Fiora dives; she can't target you from outside it, and your armor and magic resist rise.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gwen:Fiora:2",
+          "text": "Fiora wants to hit a Vital with Lunge, so watch where it is and step so she can't line it up.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Gwen:Fiora:3",
+          "text": "Keep attacking so Snip Snip! has stacks, and fight Fiora while Riposte is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 18, "end": 28 },
+            { "kind": "champion", "key": "Fiora", "start": 51, "end": 56 },
+            { "kind": "ability", "key": "Fiora-W", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Gwen:Fiora:4",
+          "text": "Use Skip 'n Slash to dodge back out after you trade, so Fiora can't finish her Vitals.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "efe963d14fd6e98a8d325c127861315c3e07a863530273b13c1d3264d5bd1b6e",
+      "tips": [
+        {
+          "id": "top:Gwen:Gangplank:0",
+          "text": "Use Hallowed Mist when Gangplank commits Parrrley or a keg. His shots are destroyed on the mist and he can't target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Gwen:Gangplank:1",
+          "text": "Stay out of Powder Keg blasts. They slow you and hit hard, so don't dash in with Skip 'n Slash next to kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Gwen-E", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gwen:Gangplank:2",
+          "text": "Gangplank cleanses with Remove Scurvy, so slow him with Needlework only when you can follow up, not as a blind opener.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Gwen-R", "start": 56, "end": 66 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Gwen:Gangplank:3",
+          "text": "Attack with Gwen's basic attacks first to build Snip Snip! stacks, then cut him once the stacks are up.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4f2a15ff19098909c188e9151f224a6b55607911d99b9f139dde2f5d46711bf8",
+      "tips": [
+        {
+          "id": "top:Gwen:Garen:0",
+          "text": "Hit Garen with Needlework to slow him, but expect Decisive Strike to remove the slow and let him run at you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Gwen-R", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Garen-Q", "start": 50, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gwen:Garen:1",
+          "text": "Step back from Garen's Judgment; it hurts most when only you are in range. Stay near minions.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-E", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Gwen:Garen:2",
+          "text": "Stay out of Garen's reach once he uses Decisive Strike; the silence can cut off Hallowed Mist, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Garen-Q", "start": 39, "end": 54 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 },
+            { "kind": "ability", "key": "Gwen-W", "start": 80, "end": 93 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gwen:Garen:3",
+          "text": "Use Hallowed Mist to dodge Demacian Justice when you are low; Garen can't target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Garen-R", "start": 27, "end": 43 },
+            { "kind": "champion", "key": "Garen", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Gwen:Garen:4",
+          "text": "Poke Garen from range with Snip Snip! after a few attacks; his regeneration only works when you stop hitting him.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7129224733372490c4920dfc950b91699bcc086fc2d1b0c7b640d1312fbca1be",
+      "tips": [
+        {
+          "id": "top:Gwen:Jayce:0",
+          "text": "Stay out of Jayce's cannon range and dodge Shock Blast; it stops at the first enemy it hits, so keep a minion in its path.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "top:Gwen:Jayce:1",
+          "text": "Jump on Jayce early with Skip 'n Slash and attack him a few times so Snip Snip! hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Gwen-E", "start": 25, "end": 38 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Gwen:Jayce:2",
+          "text": "Use Hallowed Mist when Jayce commits his burst; his Shock Blast and Thundering Blow can't target or reach you from outside.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gwen:Jayce:3",
+          "text": "Jayce's To the Skies! leaves you slowed, so make sure Hallowed Mist is up before he can leap on you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Gwen-W", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Hallowed Mist stays on Gwen after her dash, shielding her from Jayce's ranged poke outside the zone.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Gwen", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Jayce", "start": 63, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0007f46fa8f1b6c2cdd2c9204b98ad1cabadbaa73b419ecfb5963b7690fc94c0",
+      "tips": [
+        {
+          "id": "top:Gwen:KSante:0",
+          "text": "Cast Hallowed Mist when K'Sante's empowered Ntofo Strikes or Path Maker is coming; he cannot target you from outside the mist.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 44, "end": 57 },
+            { "kind": "ability", "key": "KSante-W", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Gwen:KSante:1",
+          "text": "Attack him with your basic attacks before using Snip Snip!, so it snips more times and hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Gwen:KSante:2",
+          "text": "Land Snip Snip! with the enemy in the center of the cone; that part deals true damage, which ignores his armor and magic resistance.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gwen:KSante:3",
+          "text": "Use Skip 'n Slash to step out of the way of his stun, then hit him with your first empowered attack to get the cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Gwen:KSante:4",
+          "text": "Walk to the side when he charges Path Maker, because it travels in a straight line he picked when he started.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gwen:KSante:5",
+          "text": "Fight him in long trades; he is a tank, and your passive deals damage based on his health and heals you.",
+          "refs": [],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gwen:KSante:6",
+          "text": "When he goes All Out, he loses lots of health and resistances. Hit him hard with all three Needlework casts and he can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Gwen-R", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d18fe16e9d595987520b1ed8e458cd00e6a56623413c36523c9bc75c07c13006",
+      "tips": [
+        {
+          "id": "top:Gwen:Malphite:0",
+          "text": "Hit Malphite with a few attacks before using Snip Snip! so it has extra snips and hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Gwen:Malphite:1",
+          "text": "Step out of Seismic Shard's path or keep your distance; getting slowed makes his engage easy.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gwen:Malphite:2",
+          "text": "Hold Hallowed Mist for Unstoppable Force; staying inside it when he lands means he can't target you from outside.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Malphite-R", "start": 23, "end": 40 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Gwen:Malphite:3",
+          "text": "Skip 'n Slash gets you in and out of range; attack once after it to get some cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Malphite:4",
+          "text": "Gwen's damage is mostly magic and partly true, so Malphite's armor does little against her; trade with her stacks and keep attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c253d17ee996e64747a6a94002cbedf6ec015bfd992ffd364e60457864fcb38",
+      "tips": [
+        {
+          "id": "top:Gwen:Mordekaiser:0",
+          "text": "Stay out of Mordekaiser's reach and keep your distance when Darkness Rise is active; fighting inside the aura costs you a lot.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 12,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 60,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Mordekaiser:1",
+          "text": "Sidestep Death's Grasp; being pulled into him is how he starts his trades.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-E", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gwen:Mordekaiser:2",
+          "text": "Use Hallowed Mist when Mordekaiser's Realm of Death is coming or his burst starts; he cannot target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 23,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 37,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gwen:Mordekaiser:3",
+          "text": "Use Needlework to poke him while he walks up, and slow him before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gwen:Mordekaiser:4",
+          "text": "Skip 'n Slash in and out for quick trades; pick a moment when his Indestructible is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 0, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 66,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "76258dcf4e0394c1b725b98e4401d3b5b118bbfa6d768c7a41e909d3f418a860",
+      "tips": [
+        {
+          "id": "top:Gwen:Rumble:0",
+          "text": "Get Attacks in before you cast Snip Snip!. Each hit adds a stack, so the spell snips more times.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gwen:Rumble:1",
+          "text": "Dash in with Skip 'n Slash and attack right away. The first hit refunds some of its cooldown and gives you range and attack speed.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gwen:Rumble:2",
+          "text": "Stay in Hallowed Mist to dodge his Electro Harpoon. Projectiles from outside the mist are destroyed.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Rumble-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Gwen:Rumble:3",
+          "text": "Go all in when Rumble Overheats; he can't cast any spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gwen:Rumble:4",
+          "text": "Fight him away from the burning trail of The Equalizer. Stepping out of it fast saves a lot of damage and slow.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Gwen:Rumble:5",
+          "text": "Use Needlework to chase when Rumble runs. Each recast needs a hit, so aim well.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Rumble", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Mist moving with her dash keeps Gwen untargetable to Rumble's Flamethrower and Harpoon while she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Rumble", "start": 53, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "cfef8bd785f017da9f69a90450494e2c12f44db71fd251cf4a2c74fb16a58465",
+      "tips": [
+        {
+          "id": "top:Gwen:Sion:0",
+          "text": "Step out of Decimating Smash's line when Sion starts charging; a long charge stuns you for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Sion:1",
+          "text": "Use Hallowed Mist when Sion charges at you; he can't target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Gwen:Sion:2",
+          "text": "Stay out of Roar of the Slayer; being slowed lets Sion land his big smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "champion", "key": "Sion", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Gwen:Sion:3",
+          "text": "Trade with Skip 'n Slash and attacks; the dash lets you step out of his reach and the empowered hits refund its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Gwen:Sion:4",
+          "text": "Needlework slows Sion and ends up hitting hard against his large health pool; recast it when he walks into the needles.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 11, "end": 16 },
+            { "kind": "champion", "key": "Sion", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fdf1eac0f2195895fc081baea29cf57a4bf1891f88376c9ae46055965b3c2fbd",
+      "tips": [
+        {
+          "id": "top:Gwen:Teemo:0",
+          "text": "Walk at Teemo with Skip 'n Slash and attack right away; the first empowered hit gives back part of its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Gwen-E", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Teemo:1",
+          "text": "Stay out of Teemo's range, since Toxic Shot punishes backing out after a hit. Commit only when ready to trade fully.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Teemo-E", "start": 33, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gwen:Teemo:2",
+          "text": "Use Hallowed Mist when Teemo fires Blinding Dart; his dart cannot reach you while you stand inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Gwen:Teemo:3",
+          "text": "Hit a few attacks to build Snippy before Snip Snip!, so it snips more times and heals you through A Thousand Cuts.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 41, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Gwen-passive",
+              "start": 98,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Gwen:Teemo:4",
+          "text": "Watch for Noxious Trap in bushes and choke points; mushrooms are stealthed, and stepping on one slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Teemo:5",
+          "text": "Use the long range of Needlework to hit Teemo when he is invisible in a bush and lining up a trap.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 22, "end": 32 },
+            { "kind": "champion", "key": "Teemo", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fb9d970087c65d6947ffa1764c410cca64fa75e09b5bc04e2747316d7d727a26",
+      "tips": [
+        {
+          "id": "top:Gwen:Vayne:0",
+          "text": "Get on top of Vayne. She is fragile, and Skip 'n Slash lets you close the gap quickly and hit her with a faster, longer-reaching attack.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Gwen-E", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Gwen:Vayne:1",
+          "text": "Attack a few times first to build Snippy stacks before Snip Snip!, so it snips more times when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Vayne:2",
+          "text": "Cast Hallowed Mist when Vayne is about to hit you with Condemn. It destroys projectiles from enemies outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Vayne-E", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Gwen:Vayne:3",
+          "text": "Stay away from walls when Vayne has Condemn ready, or you will be stunned and take extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gwen:Vayne:4",
+          "text": "Use Needlework to leave Vayne slowed so she can't Tumble away easily, then recast it while you chase.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gwen:Vayne:5",
+          "text": "Hit Vayne three times in a row and she takes extra true damage from Silver Bolts. Swap in and out of trades instead of staying in long exchanges.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vayne-W", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:Gwen:combo:0",
+          "note": "Mist follows the dash, so Gwen can close on Vayne while staying untargetable outside the mist.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "8cdf79dda39a0c541d8f31e33fcc45c5deca1ce593fdf8af10c8db59f1d980f9",
+      "tips": [
+        {
+          "id": "top:Gwen:Yone:0",
+          "text": "Use Hallowed Mist when Yone commits with Fate Sealed or a trade. You can't be targeted from outside the zone, and the mist only follows you once.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Yone-R", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Gwen:Yone:1",
+          "text": "Build stacks by attacking minions and Yone, then hit him with the center of Snip Snip!",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 76, "end": 86 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gwen:Yone:2",
+          "text": "Stay out of Mortal Steel's line. Two hits give Yone a dash that knocks you up, so back away once he lands the first.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gwen:Yone:3",
+          "text": "Fight Yone right after you use Skip 'n Slash. The attack speed and extra range win you the short trade, and your first hit refunds part of its cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Gwen-E", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gwen:Yone:4",
+          "text": "Don't trade for long while Yone is in Soul Unbound. His damage is stored and then repeated as true damage when he snaps back, so back off or burst him first.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Yone-E", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a7aa4a4ca3fac165420385c8e3b2d38e452f10452604f1e099266f1bd3e901a1",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Graves:0",
+          "text": "Walk out of Smoke Screen right away; the slow ends as soon as you leave the cloud.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Gwen:Graves:1",
+          "text": "Use Hallowed Mist when Graves lines up End of the Line or Collateral Damage; he cannot target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Graves-Q", "start": 39, "end": 54 },
+            { "kind": "ability", "key": "Graves-R", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Gwen:Graves:2",
+          "text": "Hit Graves with Needlework to slow him, then recast it while he is stuck in range.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Gwen-R", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Gwen:Graves:3",
+          "text": "Fight Graves up close with Skip 'n Slash and Snip Snip!. His shotgun is weaker at long range, and his damage is mostly physical.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Gwen-E", "start": 27, "end": 40 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 45, "end": 55 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5580b8651e52e39d7cb1d1feed22d10383ab22c2126edf0d40297deb39a11bc",
+      "tips": [
+        {
+          "id": "jungle:Gwen:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks you up if you are in his path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Gwen:JarvanIV:1",
+          "text": "Use Hallowed Mist when Jarvan jumps in with Cataclysm; enemies outside it cannot target you. Fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Gwen:JarvanIV:2",
+          "text": "Jarvan's Golden Aegis slows you. Use Needlework to slow him back and keep him from catching you.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-W", "start": 9, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Gwen-R", "start": 37, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Gwen:JarvanIV:3",
+          "text": "Attack him before using Snip Snip! to build stacks, since each stack adds a snip.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d8dda31ab038a71765eb89a1c975b8dca5eb26a672289b404aacaaadfc060ec5",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Kayn:0",
+          "text": "Dodge Blade's Reach when Kayn swings it. Without a hit, he cannot use Umbral Trespass on you from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Kayn-R", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Gwen:Kayn:1",
+          "text": "Save Hallowed Mist for when Kayn dives in with Umbral Trespass, and stay inside it. He cannot target you from outside the Mist.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kayn", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Kayn-R", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Gwen:Kayn:2",
+          "text": "Slow Kayn with Needlework as he runs through walls, then hit him again to shorten Shadow Step and keep him from escaping.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Gwen-R", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "Kayn-E", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Gwen:Kayn:3",
+          "text": "Watch for the warning marker on nearby walls. It shows Kayn is close and can come out of the terrain beside you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac99053aec32be1a2e6695c9f6937858e3d75ac4ab5d561d3e5bdca212385f8c",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Khazix:0",
+          "text": "Stay near your minions or allies so Kha'Zix can't get the Isolated bonus damage from Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "isolated", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Gwen:Khazix:1",
+          "text": "Use Hallowed Mist when Kha'Zix jumps in; he can't target you from outside it, so his burst is wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Khazix", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Gwen:Khazix:2",
+          "text": "Attack while Kha'Zix is out of cooldowns. He is weak without Leap, so that is the time to fight him.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Khazix-E", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Gwen:Khazix:3",
+          "text": "Slow Kha'Zix with Needlework when he tries to run, then recast it to finish him off.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Gwen-R", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1c9c3e0e9dd09f8b6862c9433b8798c5a813ba4698fed2be3c1c256fc707ed3c",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Kindred:0",
+          "text": "Dodge Kindred's Mounting Dread; the slow and Wolf's pounce after three attacks are how she catches you.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Kindred-E", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Gwen:Kindred:1",
+          "text": "Cast Hallowed Mist when Kindred dives you; she can't target you from outside it, so her attacks are wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Gwen:Kindred:2",
+          "text": "Hit Kindred with Needlework to keep her slowed and recast it; this makes it hard for her to kite.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Gwen-R", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Gwen:Kindred:3",
+          "text": "Don't try to finish a fight inside Lamb's Respite; no one can die there until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Gwen:Kindred:4",
+          "text": "Attack Kindred first with Skip 'n Slash, then fight; Kindred is fragile, so pressure forces her to play safe.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Gwen-E", "start": 26, "end": 39 },
+            { "kind": "champion", "key": "Kindred", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aaa875ff57fa94694f610c79b2f7c2d2123b4b33bdd8538042c35758718cb48d",
+      "tips": [
+        {
+          "id": "jungle:Gwen:LeeSin:0",
+          "text": "Hallowed Mist makes you untargetable to Lee Sin when he is outside it. Cast it when he starts his dash with Resonating Strike.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Gwen:LeeSin:1",
+          "text": "Dodge Sonic Wave. It stops at the first enemy it hits, so stand behind a minion to avoid it.",
+          "refs": [],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Gwen:LeeSin:2",
+          "text": "Save Hallowed Mist for the moment Lee Sin starts Dragon's Rage. If you are untargetable, the kick will not land.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Gwen:LeeSin:3",
+          "text": "Fight him with Skip 'n Slash and attacks, then finish the trade with Snip Snip! once you have stacks built up.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 69, "end": 79 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6a846da21fdcb9c64a10703add2455dcd44baf984c921f8bb36962c411dc22b0",
+      "tips": [
+        {
+          "id": "jungle:Gwen:MasterYi:0",
+          "text": "Keep Hallowed Mist for when Master Yi jumps on you; he can't target you from outside it, so Alpha Strike fails.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Gwen:MasterYi:1",
+          "text": "Use Needlework to slow Master Yi before he turns on Highlander; after that he ignores slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "MasterYi", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 52, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Gwen:MasterYi:2",
+          "text": "Hit Master Yi with a few attacks while he heals with Meditate, so he spends mana to keep up.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Gwen:MasterYi:3",
+          "text": "Fight him after Skip 'n Slash, when you have the extra attack speed and range to hit him as he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "859b17089c1b4279e5d13dc07113dd5808d9e3f6efe683ec9d9a3393b10aa24e",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Naafiri:0",
+          "text": "Cast Hallowed Mist when Naafiri channels Hounds' Pursuit, so the hit lands on nothing and you take no burst.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Gwen:Naafiri:1",
+          "text": "Stay inside Hallowed Mist when Naafiri dives, since enemies outside it cannot target you. Their projectiles are destroyed on the way in.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Naafiri", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Gwen:Naafiri:2",
+          "text": "Hit her packmates and her together with Snip Snip! in a fight; it hits everything in its cone, so aim it at the group.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Gwen:Naafiri:3",
+          "text": "Slow her with Needlework when she is running off after a trade, then recast to finish her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Gwen-R", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1713c31f2de824c3aee2c3a4969695b38fe6dfa95dba85d99eec6c0ee637d0de",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Nocturne:0",
+          "text": "Step into Hallowed Mist when Nocturne goes for Unspeakable Horror or Paranoia; he cannot target you from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 47, "end": 65 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 69, "end": 77 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Gwen:Nocturne:1",
+          "text": "Move out of Unspeakable Horror's range to break the tether before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Gwen:Nocturne:2",
+          "text": "Hold Skip 'n Slash to break away from Nocturne's tether.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Nocturne", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Gwen:Nocturne:3",
+          "text": "Do not waste Needlework or Snip Snip! into Shroud of Darkness; wait for its short shield to fade.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 27, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 43, "end": 61 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Gwen:Nocturne:4",
+          "text": "Stay near your allies when Paranoia goes off; Nocturne can only dash to one target.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 },
+            { "kind": "champion", "key": "Nocturne", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Gwen:Nocturne:5",
+          "text": "Land Needlework on Nocturne so he is slowed, then recast it to keep hitting him.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbe8a6fe3757a1179e8779b6f72f71fc4f69229efc311a34b68f846b30669b19",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Shyvana:0",
+          "text": "Stay away from Shyvana early. Much of her power comes from hitting things, so she is weak when you can keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Gwen:Shyvana:1",
+          "text": "Step into Hallowed Mist when Shyvana dives. She cannot target you from outside it, and her Molten Burst is destroyed on the mist.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 91, "end": 103 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Gwen:Shyvana:2",
+          "text": "Hit Shyvana with Needlework as she comes in; it slows her, and you can recast it to hit her again.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Gwen-R", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Gwen:Shyvana:3",
+          "text": "Use Skip 'n Slash to dash away from Shyvana after a trade, or to close in and attack her first.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shyvana", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7074cf643156ee63555202b71feb5f163d3732a63d35442aa0724f36b753bcd7",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Skarner:0",
+          "text": "Stay inside Hallowed Mist when Skarner commits; he cannot target you there, and his Impale cannot grab you.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Skarner", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "Skarner-R", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Gwen:Skarner:1",
+          "text": "Do not fight near walls when Skarner charges at you; Ixtal's Impact stuns you if he pins you against one.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Gwen:Skarner:2",
+          "text": "Use Needlework to slow Skarner as he closes in, then keep moving between recasts.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Gwen:Skarner:3",
+          "text": "Skip 'n Slash away from Skarner when he comes for you; its dash is hard for him to track.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Skarner", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "653cd06059b98dee8ff0f2353b5663aa7e495a10dd04748a83fbfd8e153115bd",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Sylas:0",
+          "text": "Use Hallowed Mist when Sylas goes for Abduct. His chains are destroyed against you outside the mist, so you can dodge his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Gwen:Sylas:1",
+          "text": "Stay in the mist and let Sylas waste his abilities, then fight him back once his cooldowns are down.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Gwen:Sylas:2",
+          "text": "Sylas's health bar can mislead you. Kingslayer heals him when he is low, so don't chase a nearly dead Sylas without a finishing burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 36, "end": 46 },
+            { "kind": "champion", "key": "Sylas", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Gwen:Sylas:3",
+          "text": "Fight Sylas when he has no Hijack to take your ultimate. Needlework can be stolen and used against you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-R", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Gwen-R", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Gwen:Sylas:4",
+          "text": "Attack Sylas to build Snip Snip! stacks before you cast it, so it hits hard when he comes in.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 22, "end": 32 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d7c48dcbcc2ba7f3e2462a5b8a5ed88949dcc7945bc694606e242604d786faa2",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Talon:0",
+          "text": "Use Hallowed Mist when Talon commits; he can't target you from outside it, so his burst gets wasted.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Gwen:Talon:1",
+          "text": "Stay in the mist. It follows you only once, so leaving it again lets Talon hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Gwen:Talon:2",
+          "text": "Slow Talon with Needlework when he turns on you or tries to escape.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Talon", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gwen-R", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Gwen:Talon:3",
+          "text": "Fight Talon after Shadow Assault is spent; he has no easy escape then.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Talon-R", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Gwen:Talon:4",
+          "text": "Keep attacking so Snip Snip! has stacks before Talon arrives; it hits harder with them.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 18, "end": 28 },
+            { "kind": "champion", "key": "Talon", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "16597303615723ea095c5535d8356acb45d1eba9b470a18b945244546c34beaf",
+      "tips": [
+        {
+          "id": "jungle:Gwen:Viego:0",
+          "text": "Hold Hallowed Mist for when Viego dives you. Spectral Maw cannot hit you through it, and he cannot target you from outside.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Viego-W", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Gwen:Viego:1",
+          "text": "Fight with Skip 'n Slash and keep attacking Viego. The attacks give you extra range and heal you when they hit champions.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Viego", "start": 44, "end": 49 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Gwen:Viego:2",
+          "text": "Slow Viego with Needlework before he gets close. Aim to hit him with all the recasts, since you need to hit something to recast.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Gwen-R", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Gwen:Viego:3",
+          "text": "Do not walk through the Mist from Harrowed Path alone. Viego can hide in it and ambush you.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-E", "start": 34, "end": 47 },
+            { "kind": "champion", "key": "Viego", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Gwen:Viego:4",
+          "text": "Stay healthy when your allies fall near Viego. He can possess a dead enemy and gain their abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ca4a88d4f9f046a78cbf71ddb8140a6ac5c500f2c6aa227e4e16738c0beeef5e",
+      "tips": [
+        {
+          "id": "jungle:Gwen:XinZhao:0",
+          "text": "Use Hallowed Mist when Xin Zhao dives in. He can't target you with Audacious Charge from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Gwen:XinZhao:1",
+          "text": "Stay out of Wind Becomes Lightning's long thrust. It slows you and lets Xin Zhao charge from farther away.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 12, "end": 34 },
+            { "kind": "champion", "key": "XinZhao", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Gwen:XinZhao:2",
+          "text": "Attack before you cast Snip Snip! so you have stacks and it snips more times.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-Q", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Gwen:XinZhao:3",
+          "text": "Skip 'n Slash away after Xin Zhao's third Three Talon Strike hit lands, or stay out of his range so he can't finish it and knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Gwen:XinZhao:4",
+          "text": "Use Needlework to slow Xin Zhao when he runs at you. Keep your distance when he has Crescent Guard.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 84, "end": 98 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

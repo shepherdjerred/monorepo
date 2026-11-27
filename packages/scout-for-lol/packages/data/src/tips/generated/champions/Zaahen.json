@@ -1,0 +1,945 @@
+{
+  "schemaVersion": 1,
+  "champion": "Zaahen",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "b7623f61ea4bfed372da9d3a0698ba65506718d368a3dd3480a7107100d80ecb",
+      "tips": [
+        {
+          "id": "top:Zaahen:general:0",
+          "text": "Hit enemy champions with attacks and abilities to build stacks in a trade. Fight until they are full, because Zaahen then hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Zaahen:general:1",
+          "text": "Take trades with full stacks. If you would die then, Cultivation of War revives you after a short time spent untargetable and unable to act.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 53,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Zaahen:general:2",
+          "text": "Start trades with The Darkin Glaive. Its double strike heals you, and you can recast it to knock the enemy up.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 18, "end": 35 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Zaahen:general:3",
+          "text": "Use The Darkin Glaive on minions when you need a little health back. It heals less on them than on champions.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Zaahen:general:4",
+          "text": "Aim Dreaded Return so the enemy is caught at the far end of the line. It pulls them toward you and stuns them briefly, so follow up with attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Zaahen:general:5",
+          "text": "Land Aureate Rush so the enemy is at the edge of the slice. The outer edge does extra damage, including a share of their max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Zaahen:general:6",
+          "text": "Use Aureate Rush to close the gap on someone walking away, then attack right after the slice.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Zaahen:general:7",
+          "text": "Use Grim Deliverance to finish a fight. You cannot be crowd controlled while casting, and it heals you for each champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Zaahen:general:8",
+          "text": "Don't fire Grim Deliverance at a spot the enemy can walk out of. Wait until they are stuck, such as right after Dreaded Return.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 11, "end": 27 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 112, "end": 126 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "2f3c414621fc363de4d1d403e58f7c86fb98e512d6088f3f695560963694ee8a",
+      "tips": [
+        {
+          "id": "top:Zaahen:Aatrox:0",
+          "text": "Dodge The Darkin Blade by moving to the side; its swings are slow and telegraphed. Don't stand at the far edge, where the knock up lands.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "knocked-up", "start": 122, "end": 130 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Zaahen:Aatrox:1",
+          "text": "Land Dreaded Return on Aatrox to pull him into your range, then follow with The Darkin Glaive and its recast.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 76, "end": 93 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Zaahen:Aatrox:2",
+          "text": "Use Aureate Rush and hit with the outer edge for the most damage; each hit also feeds Cultivation of War.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 86,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Zaahen:Aatrox:3",
+          "text": "Stay away from Aatrox when he uses World Ender, or he can revive and run you down. Hold Grim Deliverance to answer his fight.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 35, "end": 46 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "54963a1c3c6fdf5d7bf55b4bcee90b145eedd752c7b8a16fb67c96fa771ba698",
+      "tips": [
+        {
+          "id": "top:Zaahen:Briar:0",
+          "text": "Hit Briar with Dreaded Return when she runs at you; it pulls her back toward you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Zaahen:Briar:1",
+          "text": "Hit Briar with the edge of Aureate Rush for extra damage based on her max Health.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Zaahen:Briar:2",
+          "text": "Keep Cultivation of War stacking by hitting Briar with attacks and abilities, since each hit adds Attack Damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 5,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Briar", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Zaahen:Briar:3",
+          "text": "Stay away from walls when Briar is charging Chilling Scream; the full scream stuns you if you hit one.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 44, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Zaahen:Briar:4",
+          "text": "Use The Darkin Glaive in fights to heal off Briar's damage, and recast it to knock her up.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Briar", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b489aa5a118a61c4dbb0a1511d034103beedab2c418e3401907c9d14eba51510",
+      "tips": [
+        {
+          "id": "top:Zaahen:Darius:0",
+          "text": "Pull Darius in with Dreaded Return only when you can fight right after; being close is where he is strongest.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 20, "end": 34 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Zaahen:Darius:1",
+          "text": "Do not walk into Apprehend range when it is ready; it pulls you in and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Zaahen:Darius:2",
+          "text": "Keep fights short, hitting with The Darkin Glaive and Aureate Rush, and leave before Darius stacks Hemorrhage to full.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 32, "end": 49 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 54, "end": 66 },
+            { "kind": "champion", "key": "Darius", "start": 85, "end": 91 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 99,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Zaahen:Darius:3",
+          "text": "Grim Deliverance makes you immune to crowd control as you cast it, so use it to escape or turn a fight if Darius pulls.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "738a93da0990b4e37227bcedaf1c4a76f4d5e269257799a255a0736483364087",
+      "tips": [
+        {
+          "id": "top:Zaahen:Fiora:0",
+          "text": "Do not throw Dreaded Return or the knock up from The Darkin Glaive into Fiora while Riposte is ready. She turns it into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 49, "end": 66 },
+            { "kind": "champion", "key": "Fiora", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Fiora-W", "start": 84, "end": 91 },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Zaahen:Fiora:1",
+          "text": "Bait out Riposte with a cheap move, then fight while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Zaahen:Fiora:2",
+          "text": "Keep hitting her to build up your stacks. Once they are full, you win longer fights.",
+          "refs": [],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Zaahen:Fiora:3",
+          "text": "Use Aureate Rush to close the gap and hit her with the edge of the swing for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Zaahen:Fiora:4",
+          "text": "Use Grim Deliverance when you are being hit. You cannot be crowd controlled while you cast it, and you heal from champions you hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "40b15b9ce90c99e1ada8a4735bdbf3ebbd05ba30506e420f3f53a794ef7fddae",
+      "tips": [
+        {
+          "id": "top:Zaahen:Gangplank:0",
+          "text": "Land Dreaded Return on Gangplank when he steps up to place a keg. The pull puts him in your range.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Gangplank", "start": 23, "end": 32 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Zaahen:Gangplank:1",
+          "text": "Hit Gangplank with the outer edge of Aureate Rush for extra damage. Do not dash into a cluster of kegs.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Zaahen:Gangplank:2",
+          "text": "Remove Scurvy cleanses crowd control. Wait for it to be used before you go for the pull and knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Zaahen:Gangplank:3",
+          "text": "Break kegs by attacking them. If an enemy destroys a keg, it is defused and does nothing.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Zaahen:Gangplank:4",
+          "text": "Wait for level 6 and fight him with Grim Deliverance. Gangplank's Cannon Barrage can still hit you from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 36, "end": 52 },
+            { "kind": "champion", "key": "Gangplank", "start": 54, "end": 63 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 66, "end": 80 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dedf746077dc4c9c798510c46f5d0f0410ac29d8f6325db0e183f908a6978e9d",
+      "tips": [
+        {
+          "id": "top:Zaahen:Garen:0",
+          "text": "Land Dreaded Return on Garen at its far end to stun and pull him into your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Zaahen:Garen:1",
+          "text": "Do not start a trade right after Garen readies Decisive Strike; his silence would cut your abilities off.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Garen-Q", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "silenced", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Zaahen:Garen:2",
+          "text": "Fight Garen with The Darkin Glaive; it heals you and its recast knocks him up.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 17, "end": 34 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Zaahen:Garen:3",
+          "text": "Do not stand inside Judgment alone with Garen. Fight near minions so the nearest-enemy bonus lands on them.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "Garen", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Zaahen:Garen:4",
+          "text": "Stay healthy when Garen reaches level 6. Demacian Justice deals more damage the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Garen-R", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Zaahen:Garen:5",
+          "text": "Hit Garen when he cannot heal. Damage stops Perseverance, so keep poking him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 44,
+              "end": 56
+            },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e49a2238a472645756392ccb5b5311672a234afbdce8cc4fc373298ca813e34",
+      "tips": [
+        {
+          "id": "top:Zaahen:Jayce:0",
+          "text": "Walk at Jayce with The Darkin Glaive ready and hit him with the empowered attack; it heals you back after his pokes.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 19, "end": 36 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Zaahen:Jayce:1",
+          "text": "Hit Jayce with Dreaded Return when he stands at range; it stuns him briefly and pulls him to you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Zaahen:Jayce:2",
+          "text": "Sidestep Shock Blast, or put a minion in front of you to absorb it, since it blows up on the first enemy it touches.",
+          "refs": [],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Zaahen:Jayce:3",
+          "text": "Use Grim Deliverance when Jayce is in range to burst him; you can't be crowd controlled while it winds up, so his knockback can't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Zaahen:Jayce:4",
+          "text": "Stay out of the Lightning Field's range when Jayce leaps in; his jump slows you, so don't be caught chasing him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b787e36d27a933f45d1ecc2268f732cb22a0238ed728a4fb288b51fdea0b7a8",
+      "tips": [
+        {
+          "id": "top:Zaahen:KSante:0",
+          "text": "Hit Dreaded Return at long range to stun and pull K'Sante in, then follow with The Darkin Glaive.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "KSante", "start": 50, "end": 57 },
+            { "kind": "ability", "key": "Zaahen-Q", "start": 79, "end": 96 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Zaahen:KSante:1",
+          "text": "Stay out of a line from K'Sante when his Ntofo Strikes has one stack; a second hit pulls and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 41, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Zaahen:KSante:2",
+          "text": "Build stacks with Cultivation of War by hitting K'Sante with every ability, then fight while you are full, because that is when you hit hardest.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 18,
+              "end": 36
+            },
+            { "kind": "champion", "key": "KSante", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Zaahen:KSante:3",
+          "text": "Aureate Rush hits hardest at the edge of the slice, so land it with K'Sante at the outer ring of your swing.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "KSante", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Zaahen:KSante:4",
+          "text": "When K'Sante goes All Out his health drops and he loses most of his armor, so burst him then with Grim Deliverance.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 98, "end": 114 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e163a397104413ecd8e4bdea3a9e3822edda44efc61f236e3a89befe3373dda3",
+      "tips": [
+        {
+          "id": "top:Zaahen:Malphite:0",
+          "text": "Stay out of Malphite's range when Ground Slam is ready; it shrinks your Attack Speed.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malphite-E", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Zaahen:Malphite:1",
+          "text": "Build up your passive stacks by hitting Malphite with Aureate Rush and Dreaded Return, then fight once the stacks are high.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 40, "end": 48 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 54, "end": 66 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Zaahen:Malphite:2",
+          "text": "Use The Darkin Glaive to heal back what Malphite's poke takes from you.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Malphite", "start": 40, "end": 48 },
+            { "kind": "keyword", "key": "poke", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Zaahen:Malphite:3",
+          "text": "Do not stand still after Seismic Shard slows you; Malphite speeds up and will catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 25, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Malphite", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0993fd416c4a51445fb9d91c53d2fce8f2acf20954a3b34982f533e264a50682",
+      "tips": [
+        {
+          "id": "top:Zaahen:Mordekaiser:0",
+          "text": "Sidestep Death's Grasp; it pulls you into Mordekaiser's range. Stay out of his reach when it is ready.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 9,
+              "end": 22
+            },
+            { "kind": "champion", "key": "Mordekaiser", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Zaahen:Mordekaiser:1",
+          "text": "Pull Mordekaiser in with Dreaded Return and stun him briefly, then hit him with Aureate Rush's edge for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 25, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Zaahen:Mordekaiser:2",
+          "text": "Wait out his Indestructible shield before you keep trading. It fades quickly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 13,
+              "end": 27
+            }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Zaahen:Mordekaiser:3",
+          "text": "Use The Darkin Glaive's recast to knock him up when you want to leave or finish a trade. It heals you on the first hit.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Zaahen:Mordekaiser:4",
+          "text": "Short trades beat long ones. Leave when Darkness Rise turns on, since its aura damages you every second.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 40,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "60ad3bc5236b7ef7dcc5a7e0ebf9266db2a8718b246f7ffa3de5cb4bcfbb4b87",
+      "tips": [
+        {
+          "id": "top:Zaahen:Rumble:0",
+          "text": "Use Dreaded Return to pull Rumble to you when he stands at range; the pull briefly stuns him, so follow up at once.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Zaahen:Rumble:1",
+          "text": "Attack Rumble when he overheats; he cannot cast spells, so go in and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Zaahen:Rumble:2",
+          "text": "Dodge Electro Harpoon where you can; two hits stack a heavy slow and cut your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Zaahen:Rumble:3",
+          "text": "Step out of the cone when Flamespitter starts; it keeps burning while you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 26, "end": 38 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Zaahen:Rumble:4",
+          "text": "Hold Grim Deliverance for when Rumble is low; you take less damage while casting it, and it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Rumble", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "21c2d09254be30e38310edd2107497a97e8525d5f3c9e98400a534f296e2e252",
+      "tips": [
+        {
+          "id": "top:Zaahen:Sion:0",
+          "text": "Stay out of the line of Decimating Smash when Sion starts charging; a long charge stuns you for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Sion", "start": 46, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Zaahen:Sion:1",
+          "text": "Hit Sion with Dreaded Return to pull him in and start a fight on your terms; it also stuns him briefly.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Zaahen:Sion:2",
+          "text": "Keep trading with attacks and abilities so your stacks build; Zaahen hits much harder once they are full.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Zaahen:Sion:3",
+          "text": "Grim Deliverance makes you immune to crowd control while you cast it, so use it to escape or answer Sion's charge.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Sion", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Zaahen:Sion:4",
+          "text": "Sion's Soul Furnace shield blows up after a while; step away when it detonates, or break the shield early.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sion-W", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Zaahen:Sion:5",
+          "text": "When Sion dies he returns in a frenzy; back away and wait it out instead of chasing.",
+          "refs": [{ "kind": "champion", "key": "Sion", "start": 5, "end": 9 }],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e4e7e01907c03aae539f404a667ab24e8d202d168536683d32ae7ee22b6ca900",
+      "tips": [
+        {
+          "id": "top:Zaahen:Teemo:0",
+          "text": "Walk around Teemo's likely trap spots and look for mushrooms in brush. Break them by attacking them instead of stepping on them.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Zaahen:Teemo:1",
+          "text": "Land Dreaded Return on Teemo to pull him in and then fight him up close. He has to stay at range to be safe.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Zaahen:Teemo:2",
+          "text": "Open a trade with Aureate Rush. Dash onto Teemo and hit him with the edge of the slice for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-E", "start": 18, "end": 30 },
+            { "kind": "champion", "key": "Teemo", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Zaahen:Teemo:3",
+          "text": "Don't hang around after you've been hit by Toxic Shot. Fight fully or leave, because backing out slowly leaves you poisoned.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Zaahen:Teemo:4",
+          "text": "Zaahen's Grim Deliverance can finish a Teemo trade at level 6. He heals from it, and he can't be crowd controlled while casting.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Teemo", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "670708e05f099b969ada020ade16fcf0e5d23f971fa32c529db0251708da6c92",
+      "tips": [
+        {
+          "id": "top:Zaahen:Vayne:0",
+          "text": "Close the gap on Vayne with Aureate Rush, and hit her with the outer edge of the slice for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Zaahen-E", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Zaahen:Vayne:1",
+          "text": "Use Dreaded Return when Vayne backs up. It pulls her back to you so you can keep hitting her.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Zaahen:Vayne:2",
+          "text": "Stay away from walls when Vayne has Condemn ready. A wall hit stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Zaahen:Vayne:3",
+          "text": "Vayne is fragile, so push her hard. Keep hitting her to fill Cultivation of War for a strong all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 61,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Zaahen:Vayne:4",
+          "text": "Use The Darkin Glaive's recast to knock her up when you reach her. It stops her from walking away.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Zaahen:Vayne:5",
+          "text": "Use Grim Deliverance to finish her at level 6. You can't be crowd controlled while casting it.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3754831e2bac3424a135da7e64d054cf9e5539dd622f884db5da2701c31110f0",
+      "tips": [
+        {
+          "id": "top:Zaahen:Yone:0",
+          "text": "Land Dreaded Return on Yone when he dashes in; the pull and stun set up your Darkin Glaive.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Zaahen:Yone:1",
+          "text": "Use the Darkin Glaive recast to knock Yone up, then keep hitting him to power up Cultivation of War.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-Q", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 38, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 81,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Zaahen:Yone:2",
+          "text": "Yone's third Mortal Steel dashes and knocks up. Stay out of his range when he has two stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-Q", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "knocked-up", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Zaahen:Yone:3",
+          "text": "Yone's Soul Unbound repeats his damage when it ends. Back off while he is in spirit form.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Zaahen:Yone:4",
+          "text": "Use Grim Deliverance to survive Fate Sealed; you cannot be crowd controlled while casting it. Cast it before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-R", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Yone-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

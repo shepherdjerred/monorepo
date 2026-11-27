@@ -1,0 +1,4556 @@
+{
+  "schemaVersion": 1,
+  "champion": "Darius",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "777067b84fe66315912baf204bf35af37251f50d06033e48715b49f2601529f5",
+      "tips": [
+        {
+          "id": "top:Darius:general:0",
+          "text": "Walk up and hit with the edge of Decimate at its outer ring. The inner handle does less damage and adds no Hemorrhage stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 33, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 107,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Darius:general:1",
+          "text": "Hit the enemy champion with Decimate's edge whenever you can. It heals you more for each champion the edge hits.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:general:2",
+          "text": "Use Crippling Strike on your next attack when the enemy tries to walk away. It leaves them slowed so you can keep hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:general:3",
+          "text": "Use Apprehend to drag an enemy who is backing off into your range. It pulls them in and knocks them up, so follow with attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:general:4",
+          "text": "Don't try to move or cast Decimate right after Apprehend. Darius is stuck for a moment, so aim it carefully.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Darius-E", "start": 47, "end": 56 },
+            { "kind": "champion", "key": "Darius", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:general:5",
+          "text": "Build up Hemorrhage stacks with attacks and abilities before you use Noxian Guillotine. It deals the most damage against a fully stacked target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 69, "end": 86 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:general:6",
+          "text": "Recast Noxian Guillotine right away if it kills. At its top rank, a kill resets it fully, so you can keep chaining fights.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 7, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:general:7",
+          "text": "Don't use Noxian Guillotine on a target who is rooted or grounded, because Darius can't cast it. Wait until you are free.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 10, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 47, "end": 53 },
+            { "kind": "champion", "key": "Darius", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:general:8",
+          "text": "Stay in the fight and keep trading. Darius gets stronger the longer it lasts, and he has little to escape with.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Darius:combo:0",
+          "name": "Crippling Strike animation cancel",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Darius-W" },
+            "attack",
+            { "kind": "ability", "key": "Darius-Q" }
+          ],
+          "when": "When you want to trade fast in melee range.",
+          "whenRefs": [],
+          "text": "Cast Decimate during the Crippling Strike attack animation. The empowered hit still lands and you save time.",
+          "textRefs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Darius-W", "start": 25, "end": 41 }
+          ]
+        },
+        {
+          "id": "top:Darius:combo:1",
+          "name": "Decimate edge poke",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Darius-Q" }],
+          "when": "When harassing in lane while the enemy stands at the edge of your range.",
+          "whenRefs": [],
+          "text": "Hit with the outer edge of Decimate, not the handle. The edge deals full damage, applies a bleed stack, and heals you.",
+          "textRefs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 27, "end": 35 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "34459309552c5280930913c649662a118a2ff484300a5801bb251230ececa23c",
+      "tips": [
+        {
+          "id": "jungle:Darius:general:0",
+          "text": "Hit enemies with the edge of Decimate, not the close-in handle. Only the edge adds a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 29, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 85,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:general:1",
+          "text": "Use Decimate on large jungle monsters too. Hitting them with the edge heals you, which helps you clear camps without backing.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Darius:general:2",
+          "text": "Attack with Crippling Strike when an enemy tries to run. It leaves them slowed so you can catch them.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Darius:general:3",
+          "text": "Pull enemies in with Apprehend, then follow with Decimate and attacks. You cannot move or cast Decimate for a moment after the pull, so attack first.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "Darius-Q", "start": 49, "end": 57 },
+            { "kind": "ability", "key": "Darius-Q", "start": 95, "end": 103 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Darius:general:4",
+          "text": "Build up Hemorrhage stacks with attacks before you use Noxian Guillotine. More stacks make it hit much harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:general:5",
+          "text": "Look for kills with Noxian Guillotine in a skirmish. A kill lets you recast it, so you can chain onto the next weakened enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 20, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:general:6",
+          "text": "Take longer fights. Darius gets stronger the more attacks he lands, so don't leave a fight early once you're ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "1777c5bb91e4d00a1915c9638d74bf55bfd0f3f7d1f1e7c30369fda69cf89a10",
+      "tips": [
+        {
+          "id": "top:Darius:Aatrox:0",
+          "text": "Hold Apprehend until Aatrox commits to a dash or chain, then pull him in and fight while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Darius:Aatrox:1",
+          "text": "Hit Aatrox with Decimate on its edge, not the handle, so you get a Hemorrhage stack and heal.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 16, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 67,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Darius:Aatrox:2",
+          "text": "Walk out of The Darkin Blade's sweet spot at the edge of each swing; it is slow and easy to see coming.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Darius:Aatrox:3",
+          "text": "Land Crippling Strike when Aatrox tries to leave, so he cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Darius:Aatrox:4",
+          "text": "Save Noxian Guillotine for when Aatrox is low and has taken many Hemorrhage stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Aatrox", "start": 32, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 65,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dc804d71cabb9088909c2ada9a4b1355c14ad1cd0aeac88e956d47daf34289bb",
+      "tips": [
+        {
+          "id": "top:Darius:Akali:0",
+          "text": "Hold Apprehend until Akali steps close or uses her dash. Pulling her in sets up a deadly trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Akali", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:Akali:1",
+          "text": "Hit her with Crippling Strike when she tries to leave. It slows her heavily so you can keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 13, "end": 29 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Darius:Akali:2",
+          "text": "Swing Decimate with her inside the edge, not the handle; the edge adds a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 73,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Akali:3",
+          "text": "Hit Akali with Noxian Guillotine when she is low. It deals true damage, so her escape tools can't save her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-R", "start": 15, "end": 32 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Darius:Akali:4",
+          "text": "Step away from Twilight Shroud smoke. Swing Decimate into it anyway, since area attacks still hit her inside.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-W", "start": 15, "end": 30 },
+            { "kind": "ability", "key": "Darius-Q", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Darius:Akali:5",
+          "text": "Back off when Akali has Perfect Execution at level 6 and you are low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Akali-R", "start": 24, "end": 41 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Cancelling Decimate into Crippling Strike speeds up the trade once Akali is in melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Darius-W", "start": 25, "end": 41 },
+            { "kind": "champion", "key": "Akali", "start": 67, "end": 72 }
+          ]
+        },
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Akali for full damage, a bleed stack and healing when she stands at range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Akali", "start": 20, "end": 25 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f99a29f6b7e3053f6aca89da5dbf5901ffdbb69455d1077ac581f7f7293aeede",
+      "tips": [
+        {
+          "id": "top:Darius:Ambessa:0",
+          "text": "Hit Ambessa with Apprehend when she dashes in or steps up to trade; the pull stops her slipping away and sets up your Crippling Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Darius-W", "start": 118, "end": 134 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Darius:Ambessa:1",
+          "text": "Use Decimate from the edge of its range when she walks up, so you hit her with the blade and get the healing.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Darius:Ambessa:2",
+          "text": "Hit her with Crippling Strike when she tries to leave; she is slowed and cannot run away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Darius:Ambessa:3",
+          "text": "Build up Hemorrhage stacks with attacks before Noxian Guillotine; it hurts far more on a bleeding target and can finish her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Ambessa:4",
+          "text": "Do not walk into Repudiation after hitting her; she shields up and then slams the ground around her. Step back out of range, then go in again.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8cfcdd0f122ac75f296be12b713f07e2497be801ce29008bd8511889b7e81cab",
+      "tips": [
+        {
+          "id": "top:Darius:Anivia:0",
+          "text": "Dodge Flash Frost by stepping aside; it is slow, and its stun only lands if the ice bursts on you.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:Anivia:1",
+          "text": "Use Apprehend to pull Anivia in when she is within range, then hit her with Crippling Strike so she cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Darius-W", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Darius:Anivia:2",
+          "text": "Walk around her Crystallize wall instead of trying to cross it; it lasts only a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Anivia:3",
+          "text": "When Anivia becomes an egg, hit it to stop her Rebirth. Do not walk off and let her come back with full health.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 47,
+              "end": 54
+            }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Darius:Anivia:4",
+          "text": "Leave Glacial Storm quickly; it slows you and hurts more once it is fully formed.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f39bde00875fe8d1980e831ce075d05a9b16398d230aebd55a8440627b6b5fc5",
+      "tips": [
+        {
+          "id": "top:Darius:Aurora:0",
+          "text": "Catch Aurora with Apprehend when she steps up to trade; she is slowed and pulled in, so your attacks and Decimate land easily.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "ability", "key": "Darius-Q", "start": 105, "end": 113 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Darius:Aurora:1",
+          "text": "Use Crippling Strike on Aurora when she tries to run or hop away; the slow makes her easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Aurora:2",
+          "text": "Swing Decimate when Aurora is at the edge of its range, and hit her with the blade, not the handle, to heal and stack Hemorrhage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 118,
+              "end": 128
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Darius:Aurora:3",
+          "text": "Look to finish her with Noxian Guillotine once she is low and Hemorrhage is stacked; she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 24, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 62,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Aurora:4",
+          "text": "Do not walk into her at range; The Weirding and Twofold Hex punish a straight approach. Wait until Aurora has used them, then step in.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 48, "end": 59 },
+            { "kind": "champion", "key": "Aurora", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f2b51e328c430e9df14a2207b2303ec8a9a8fa55121804d8f945ae3028488e69",
+      "tips": [
+        {
+          "id": "top:Darius:Briar:0",
+          "text": "Pull Briar with Apprehend when she leaps in on you, then hit her while she is slowed so she cannot get away.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Darius:Briar:1",
+          "text": "Land Crippling Strike when she is in Blood Frenzy; she cannot choose to walk away, so the slow keeps her in your axe range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Darius:Briar:2",
+          "text": "Trade with Decimate at its edge when she walks up; you heal more if you hit her with the blade and not the handle.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 11, "end": 19 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Briar:3",
+          "text": "Look for the kill with Noxian Guillotine after a few attacks have stacked Hemorrhage on her. She heals back up if you wait too long.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 23, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 74,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Darius:Briar:4",
+          "text": "Do not fight her when she can use Chilling Scream fully charged near a wall; the stun can lose you the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 34, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "96dd3fc96d08a6ee4e62b3dd259687cb168e384566cfb43fb30d4f49ebdf2998",
+      "tips": [
+        {
+          "id": "top:Darius:Camille:0",
+          "text": "Use Apprehend when Camille steps up to trade; it pulls her in, knocks her up and slows her so you can land your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Camille", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Camille:1",
+          "text": "Swing Decimate at the edge of its range so the blade hits her and the handle does not.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Camille:2",
+          "text": "Camille's Tactical Sweep heals her on champions, so stay out of its outer edge, or trade back right after it.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-W", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Darius:Camille:3",
+          "text": "Stack Hemorrhage with attacks and abilities before Noxian Guillotine; the more stacks, the bigger the true damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Camille:4",
+          "text": "Use Crippling Strike to slow Camille when she tries to leave, and keep hitting her.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Camille", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3282c72ae71da25c25267c8fef7f3e2384c4fb9df0034cd49aad0fbcb10f68fc",
+      "tips": [
+        {
+          "id": "top:Darius:Chogath:0",
+          "text": "Walk out of Rupture's smoke cloud as soon as you see it. The knock up lasts only briefly, but a hit leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Chogath:1",
+          "text": "Hook Cho'Gath with Apprehend when he is at the edge of your range, then hit him right away while he is pulled in.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Darius-E", "start": 19, "end": 28 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Darius:Chogath:2",
+          "text": "Hit him with Crippling Strike to slow him, so he can't line up Rupture or walk away from your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Chogath-Q", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Darius:Chogath:3",
+          "text": "Trade right after Cho'Gath uses Feral Scream, since he has spent his silence and has to wait for it to come back.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Chogath-W", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Darius:Chogath:4",
+          "text": "Do not let Cho'Gath eat minions unchallenged; keep pushing him off them so Feast can't make him large and sturdy.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Chogath-R", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Darius:Chogath:5",
+          "text": "Look to finish him with Noxian Guillotine once he is low and your bleeds are stacked; it deals true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 24, "end": 41 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bb51850d9e8afe0f02111e7312b2162605263f7eded8bd150e17dd9547bbfa28",
+      "tips": [
+        {
+          "id": "top:Darius:DrMundo:0",
+          "text": "Apprehend does not work on Mundo while his passive is ready; it blocks the pull. Bait the passive out first, or use Decimate and Crippling Strike instead.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 116, "end": 124 },
+            { "kind": "ability", "key": "Darius-W", "start": 129, "end": 145 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Darius:DrMundo:1",
+          "text": "Step on the canister Mundo drops after resisting your pull to destroy it, so he cannot heal from it.",
+          "refs": [],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Darius:DrMundo:2",
+          "text": "Dodge Infected Bonesaw by sidestepping; it is a narrow line and the first enemy it hits stops it, so keep minions between you.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:DrMundo:3",
+          "text": "Hold Crippling Strike to slow Mundo when he runs at you, so you can keep hitting him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:DrMundo:4",
+          "text": "Do not hit Mundo too long during Heart Zapper; he stores damage and heals it back. Back off or stay out of range when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Darius:DrMundo:5",
+          "text": "Burst Mundo down fast once he uses Maximum Dosage, because he heals through slow damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate hits at range, heals you, and stacks bleed, helping you trade against Mundo's cleavers.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0fd0539e9de54da47cd8262dd4871fe60a17297b0cd194826a2761a4a1fa5c05",
+      "tips": [
+        {
+          "id": "top:Darius:Fiora:0",
+          "text": "Hit Fiora with Decimate at its edge, and avoid the handle. The handle does less damage and adds no Hemorrhage.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 15, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 99,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Fiora:1",
+          "text": "Do not use Apprehend while Riposte is ready. She can parry the pull and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "Fiora-W", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Fiora:2",
+          "text": "Bait out Riposte with a basic attack or Crippling Strike, then pull her once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Darius-W", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Darius:Fiora:3",
+          "text": "Stay in the fight and keep stacking Hemorrhage. Noxian Guillotine finishes her when her health is low.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 36,
+              "end": 46
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ad4817064c940c6a40142d50a98ec3abd4484524a5522cb219f02967883543a4",
+      "tips": [
+        {
+          "id": "top:Darius:Gangplank:0",
+          "text": "Land Apprehend when Gangplank walks up to shoot or place a keg; the pull drags him into your reach.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Gangplank", "start": 20, "end": 29 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Darius:Gangplank:1",
+          "text": "Hit Gangplank with Decimate's edge at max range, not the handle, to get the full damage and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Darius-Q", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Gangplank:2",
+          "text": "Use Crippling Strike to slow Gangplank, then stay on him; he struggles to keep range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Gangplank", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Gangplank:3",
+          "text": "Stay out of keg blasts; they slow you and hit hard. You can attack a keg to defuse it safely.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Darius:Gangplank:4",
+          "text": "Stack Hemorrhage, then finish with Noxian Guillotine; Remove Scurvy only heals him and cannot stop the true damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 35, "end": 52 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Darius:Gangplank:5",
+          "text": "After level 6, expect Cannon Barrage on you when low; do not flee into it.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1764ff2d30c4dc4059fc98f27b024e62694ae0a06345a966d578f3594e09a15e",
+      "tips": [
+        {
+          "id": "top:Darius:Garen:0",
+          "text": "Hit Garen with Apprehend as he steps in; pull him into your axe and fight on your terms.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Darius:Garen:1",
+          "text": "Play around Garen's Decisive Strike; if he hits you, you are silenced and can't use your abilities for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Garen-Q", "start": 20, "end": 35 },
+            { "kind": "keyword", "key": "silenced", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Garen:2",
+          "text": "Swing Decimate from max range to poke Garen, then back off before he reaches you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "Garen", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Garen:3",
+          "text": "Keep hitting Garen so Hemorrhage stacks. Noxian Guillotine does far more damage at full stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 22,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 41, "end": 58 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Darius:Garen:4",
+          "text": "Garen's Courage shield makes short trades weak. Wait for it to be used before you commit.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Darius:Garen:5",
+          "text": "Don't stay in Judgment's spin; leave it quickly or fight when he cannot spin freely.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 14, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Garen:6",
+          "text": "Use Crippling Strike to slow Garen when he tries to run, and keep trading while he can't leave.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Garen", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Garen:7",
+          "text": "Keep your health up; Demacian Justice finishes you faster the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 21, "end": 37 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "28a68252d2e66ba8cb1d8331fa5d971749b476a5ceb8d97b37e58ebd955282f2",
+      "tips": [
+        {
+          "id": "top:Darius:Gnar:0",
+          "text": "Wait until Gnar's Boomerang Throw is spent, then walk up and hit him; he is easy to catch when his poke is down.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 11, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Gnar:1",
+          "text": "Use Apprehend to pull Gnar in when he stands at the edge of his range, then follow with Crippling Strike so he stays slowed and cannot kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Gnar", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Darius-W", "start": 88, "end": 104 },
+            { "kind": "keyword", "key": "slowed", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Darius:Gnar:2",
+          "text": "Swing Decimate so the edge catches Gnar; it stacks Hemorrhage and heals you. The handle does not add a stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Gnar", "start": 35, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 51,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Darius:Gnar:3",
+          "text": "Fight away from walls when Gnar is Mega; his GNAR! stuns you if it throws you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Gnar-R", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Gnar:4",
+          "text": "Trade hard right after Gnar turns back to Mini; he cannot gain Rage for a while and is weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Gnar:5",
+          "text": "Once Hemorrhage is stacked, use Noxian Guillotine to finish a low-health Gnar; kills let you cast it again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 32, "end": 49 },
+            { "kind": "champion", "key": "Gnar", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8d60ec34150246123cd67ec6dec1d89ddc81006c40a930975b4adc97502544d8",
+      "tips": [
+        {
+          "id": "top:Darius:Gragas:0",
+          "text": "Hit Gragas with Decimate at the edge of its range. The edge deals full damage and the handle deals less.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Gragas:1",
+          "text": "Walk out of the Barrel Roll area before it goes off. Staying inside lets it slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Gragas:2",
+          "text": "Pull Gragas in with Apprehend when he is out of position, then trade fast, building Hemorrhage stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 20, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 84,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Darius:Gragas:3",
+          "text": "Watch for Body Slam when you step forward. Fight him when it is on cooldown and chasing him is not risky.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 10, "end": 19 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:Gragas:4",
+          "text": "Do not fight near the enemy tower with Gragas's ultimate ready. Explosive Cask can knock you into danger.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Gragas-R", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Gragas:5",
+          "text": "Play around his empowered attack from Drunken Rage; it hurts more the more health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a3d526f4a39733c9c1022da95616ecb6b3e6c4dfa36815420bf389b6773de331",
+      "tips": [
+        {
+          "id": "top:Darius:Gwen:0",
+          "text": "Pull Gwen in with Apprehend when she steps up to hit a minion, then trade with Decimate and your attacks while she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Darius-Q", "start": 79, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Darius:Gwen:1",
+          "text": "Hit Gwen with the edge of Decimate at its far reach, not the handle. The edge adds a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-Q", "start": 26, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 85,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Darius:Gwen:2",
+          "text": "Do not chase Gwen inside her Hallowed Mist. She cannot be targeted from outside it, so wait for it to end or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Gwen-W", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Darius:Gwen:3",
+          "text": "Use Crippling Strike to slow Gwen when she tries to leave, so you can catch her.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Gwen", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Gwen:4",
+          "text": "Fight when Gwen has used Hallowed Mist. Stack Hemorrhage, then finish with Noxian Guillotine at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Gwen-W", "start": 25, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 46,
+              "end": 56
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 75, "end": 92 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Gwen and heals Darius, offsetting her on-hit damage and healing in short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Gwen", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Darius", "start": 35, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c01a88abb288a1341c07222b01b9eec10b9302a609f3844823c699e560c17f12",
+      "tips": [
+        {
+          "id": "top:Darius:Heimerdinger:0",
+          "text": "Walk up when Heimerdinger's grenade is on cooldown, because he cannot stun you then.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 13,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:Heimerdinger:1",
+          "text": "Use Apprehend to pull Heimerdinger away from his turrets, then fight him there.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 22,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Darius:Heimerdinger:2",
+          "text": "Take down all his turrets together with the help of minions instead of one at a time.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Heimerdinger:3",
+          "text": "Use Crippling Strike to slow him once you are close, so he cannot walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Heimerdinger:4",
+          "text": "Wait for his ultimate to be down before going for the kill; he has little left to escape you.",
+          "refs": [],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Darius:Heimerdinger:5",
+          "text": "Use Decimate on him from the edge of its range to heal and build Hemorrhage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 65,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "623a9dd19216a51c6721845b9a9d1681477cd13e3823ba31011c0151a5df9c19",
+      "tips": [
+        {
+          "id": "top:Darius:Illaoi:0",
+          "text": "Pull Illaoi off her Tentacles with Apprehend, then fight her away from the terrain where they spawn.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Darius:Illaoi:1",
+          "text": "Hit Illaoi with Crippling Strike when she steps in; the slow stops her from escaping and keeps her in your Decimate.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-W", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Darius-Q", "start": 107, "end": 115 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Darius:Illaoi:2",
+          "text": "Hit her with the edge of Decimate at its outer range, because the handle gives no Hemorrhage stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 25, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 82,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Illaoi:3",
+          "text": "Build up Hemorrhage stacks before Noxian Guillotine; it deals more damage with each stack and can finish her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 34, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Illaoi:4",
+          "text": "Avoid a long fight beside her Tentacles; they heal her when they hit you. Burst her down quickly or back off.",
+          "refs": [],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aaa6a9fb5a80372b3286a36a47f2d4cac88d3c46a100b4ddfd24bdca6de3ee55",
+      "tips": [
+        {
+          "id": "top:Darius:Irelia:0",
+          "text": "Hit Irelia with Apprehend when she dashes in. Pulling her next to you lets you start your Hemorrhage stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 90,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Irelia:1",
+          "text": "Fight her away from minion waves. Without minions, Bladesurge has fewer targets to dash to.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Irelia:2",
+          "text": "Don't spend Decimate or Apprehend on Defiant Dance. Wait until she releases, then hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Darius-E", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Irelia-W", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Darius:Irelia:3",
+          "text": "Hit Irelia with Crippling Strike when she dashes in. It slows her, so she cannot kite you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-W", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Darius:Irelia:4",
+          "text": "Fight Irelia when her Ionian Fervor stacks are down. She attacks more slowly and hits less hard.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Irelia-passive",
+              "start": 22,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Irelia:5",
+          "text": "Look for Noxian Guillotine once she is low and you have stacked Hemorrhage. Her escapes are weaker without Bladesurge.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 9, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 64,
+              "end": 74
+            },
+            { "kind": "ability", "key": "Irelia-Q", "start": 107, "end": 117 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c7cc46b5dca6e7afb03917677b66584623ec9ac5149f12809619e929a7acafa1",
+      "tips": [
+        {
+          "id": "top:Darius:Jax:0",
+          "text": "Wait until Counter Strike ends before attacking Jax; his dodge makes your attacks miss, then he stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Jax", "start": 48, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Darius:Jax:1",
+          "text": "Pull Jax in with Apprehend after he uses Counter Strike or Leap Strike, then keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Jax-E", "start": 41, "end": 55 },
+            { "kind": "ability", "key": "Jax-Q", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Darius:Jax:2",
+          "text": "Swing Decimate at the edge of its range so Jax takes the full hit. Heal if he stays in range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Jax", "start": 43, "end": 46 },
+            { "kind": "summoner-spell", "key": "7", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Darius:Jax:3",
+          "text": "Slow Jax with Crippling Strike when he leaps in, so he can't easily get away or keep attacking.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Darius-W", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Jax:4",
+          "text": "Stop Jax from attacking in a row; his Attack Speed grows with each hit, so break up his fight with Apprehend and Decimate.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Darius-E", "start": 99, "end": 108 },
+            { "kind": "ability", "key": "Darius-Q", "start": 113, "end": 121 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "cf7473415b4f7f739f2a9cb084566e0635b63514a7869acb3fe3da7fac7bb305",
+      "tips": [
+        {
+          "id": "top:Darius:Jayce:0",
+          "text": "Walk up and hit Jayce with Apprehend when he is in cannon form; the pull and knock up bring him into your axe range, so he can't keep poking.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Darius-E", "start": 27, "end": 36 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 85 },
+            { "kind": "keyword", "key": "poke", "start": 134, "end": 140 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Darius:Jayce:1",
+          "text": "Stay close once you are on him. Crippling Strike leaves him slowed so he cannot kite you back.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 32, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Darius:Jayce:2",
+          "text": "Land Decimate with the edge for healing, and build Hemorrhage stacks before you fight. Five stacks make you hit much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 51,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Jayce:3",
+          "text": "Save Noxian Guillotine for when Jayce is low after stacks have built up. A kill lets you cast it again.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Jayce's Thundering Blow knocks back, so edge-hitting Decimate pokes him back and heals Darius.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Darius-Q", "start": 53, "end": 61 },
+            { "kind": "champion", "key": "Darius", "start": 87, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0fe6b79d38a89d34131f797b2ba8f362c61165f9a4d1d1bd724445c80fec6463",
+      "tips": [
+        {
+          "id": "top:Darius:KSante:0",
+          "text": "Walk up and hit K'Sante with Decimate from the edge of its range, then step back before he can answer with Ntofo Strikes.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Darius-Q", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "KSante-Q", "start": 107, "end": 120 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Darius:KSante:1",
+          "text": "Use Crippling Strike to keep K'Sante slowed when he tries to walk away or reach you. It also makes your next attack hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Darius:KSante:2",
+          "text": "Pull K'Sante in with Apprehend when his Path Maker is on cooldown. He can't ram you or stun you with it, so you can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "KSante-W", "start": 40, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Darius:KSante:3",
+          "text": "Build up Hemorrhage stacks before you use Noxian Guillotine. It deals true damage, so it cuts through his tankiness.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 42, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:KSante:4",
+          "text": "When K'Sante goes All Out, he loses a lot of health and armor. Fight him hard then, because he is much easier to kill.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "47d7ec90b3fa8cf7c7ade6dde41c034adf631289301af2687d961ad478ca30db",
+      "tips": [
+        {
+          "id": "top:Darius:Kayle:0",
+          "text": "Pressure Kayle before level 6; she is a weak melee champion and cannot trade well with you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 9, "end": 14 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Darius:Kayle:1",
+          "text": "Hook Kayle with Apprehend when she steps up to last-hit, then fight while she is pulled in and slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Kayle:2",
+          "text": "Hit Kayle with Decimate at the edge of its range so the blade lands and you heal.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Darius:Kayle:3",
+          "text": "Use Crippling Strike to stay on Kayle when she tries to kite; its heavy slow keeps her close.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kayle", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Darius:Kayle:4",
+          "text": "Do not use Noxian Guillotine while Kayle is invulnerable from Divine Judgment; wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 11, "end": 28 },
+            { "kind": "champion", "key": "Kayle", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Kayle-R", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Darius:Kayle:5",
+          "text": "After Kayle gets range, she is hard to catch, so end the lane early with a lead.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "64797198c3063c82744b92cd3223765a7844581f4cd9173478929d4392f3b864",
+      "tips": [
+        {
+          "id": "top:Darius:Kennen:0",
+          "text": "Hit Kennen with Apprehend when he comes in to trade. The pull keeps him in reach so you can hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Kennen:1",
+          "text": "Keep minions between you and Kennen. Thundering Shuriken stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 37, "end": 56 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Kennen:2",
+          "text": "Avoid taking three Mark of the Storm hits in a row. The stun leaves you open to a big trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 19,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Kennen:3",
+          "text": "Hit him with Crippling Strike when he tries to leave. The slow makes it hard for him to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Kennen:4",
+          "text": "Kennen is fragile, so punish him when he gets careless with Lightning Rush. Turn and attack him as it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kennen-E", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Kennen:5",
+          "text": "Hit Kennen with Decimate to heal and build Hemorrhage stacks. Use the edge of the axe, not the handle.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 16, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 43,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:Kennen:6",
+          "text": "Wait for the end of Slicing Maelstrom before you commit. Fighting him inside it hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-R", "start": 20, "end": 37 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Decimate's edge poke hits Kennen at range, applying a bleed stack and healing Darius.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Kennen", "start": 26, "end": 32 },
+            { "kind": "champion", "key": "Darius", "start": 78, "end": 84 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "895eac32a8e34c56356817c924dc6712bb0c66a3f0c2fbca7f70510cdf556d69",
+      "tips": [
+        {
+          "id": "top:Darius:Kled:0",
+          "text": "Pull Kled in with Apprehend when he walks up to trade, then follow with Crippling Strike so he stays slowed and cannot easily leave.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Darius-W", "start": 72, "end": 88 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Darius:Kled:1",
+          "text": "Hit Kled with the edge of Decimate at its far reach, not the handle. The edge adds a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-Q", "start": 26, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 85,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Kled:2",
+          "text": "Step out of line or fight near minions when Kled throws Bear Trap on a Rope. If it hooks you, stay close and he will pull you in.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Kled-Q", "start": 56, "end": 75 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Darius:Kled:3",
+          "text": "Respect Kled when Violent Tendencies is ready, since his fourth hit hurts. Trade when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Kled-W", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Kled:4",
+          "text": "Once Skaarl runs and Kled is dismounted, press him with Decimate and Noxian Guillotine. He cannot use Jousting or his charge until he remounts.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Darius-Q", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Darius-R", "start": 69, "end": 86 },
+            { "kind": "ability", "key": "Kled-E", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Darius:Kled:5",
+          "text": "Build up Hemorrhage stacks with attacks, then finish Kled with Noxian Guillotine. More stacks mean more damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Kled", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Darius-R", "start": 63, "end": 80 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Crippling Strike's slow helps Darius stay on Kled in melee and win the short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "champion", "key": "Kled", "start": 45, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "e779c88170bc73830480a3a9d6f8bf3a02c45eb22769dc485ace026c5806de60",
+      "tips": [
+        {
+          "id": "top:Darius:Malphite:0",
+          "text": "Don't stand in Malphite's range for long; Seismic Shard slows you and speeds him up.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Malphite:1",
+          "text": "Pull Malphite in with Apprehend when you want to fight, then trade fast before his Ground Slam cuts your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Darius-E", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Malphite-E", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Darius:Malphite:2",
+          "text": "Break his Granite Shield with a quick Decimate swing, then stack Hemorrhage while it is down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 10,
+              "end": 24
+            },
+            { "kind": "ability", "key": "Darius-Q", "start": 38, "end": 46 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 65,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Darius:Malphite:3",
+          "text": "Stay out of a Malphite fight when Unstoppable Force is ready; it lands on you whatever you do.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Malphite-R", "start": 34, "end": 51 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d2172ae4e519b161d9b2d26e034d09758f330c35237176bf750df9f92af506d2",
+      "tips": [
+        {
+          "id": "top:Darius:Mordekaiser:0",
+          "text": "Hook Mordekaiser with Apprehend when he walks up to trade. Then hit him with Crippling Strike so he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Darius-E", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Darius-W", "start": 77, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Mordekaiser:1",
+          "text": "Use Decimate from the edge of its range to poke him, and avoid staying inside his aura.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Darius:Mordekaiser:2",
+          "text": "Hold your attacks while Indestructible is up. Hit him again after the shield fades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 24,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Darius:Mordekaiser:3",
+          "text": "Do not stand beside Mordekaiser once Darkness Rise is on. Back off and let it run out.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 20,
+              "end": 31
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 37,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Darius:Mordekaiser:4",
+          "text": "Keep Noxian Guillotine away from Mordekaiser until Realm of Death is used. It cannot be cast inside.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 51,
+              "end": 65
+            }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Darius:Mordekaiser:5",
+          "text": "Stay away from the line of Death's Grasp. It drags you into his reach and follows with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 27,
+              "end": 40
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 87,
+              "end": 97
+            }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0dc5795397e2dca9cf1465a7b187250975df3cfb71be3d8fdea4a7d3f460e324",
+      "tips": [
+        {
+          "id": "top:Darius:Naafiri:0",
+          "text": "Wait for Naafiri to use Eviscerate, then walk up and fight. She is easier to catch while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Naafiri:1",
+          "text": "Land Apprehend when she tries to back away. She is pulled in, knocked up and slowed, so you can follow with your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "knocked-up", "start": 62, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Darius:Naafiri:2",
+          "text": "Swing Decimate when her Packmates and she are all close to you. The blade hits each of them and heals you for each champion hit.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Darius:Naafiri:3",
+          "text": "Use Crippling Strike to slow her when she tries to run out of a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Naafiri:4",
+          "text": "Build Hemorrhage stacks on her before you use Noxian Guillotine. It will usually finish her once she is low.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 46, "end": 63 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Naafiri safely and heals Darius, helping him win the early lane trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Darius", "start": 45, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "7ecfa4decfaa225fcb124f26c77d44661e7ecf58bc0603dfe3b885ae61e1b4df",
+      "tips": [
+        {
+          "id": "top:Darius:Nasus:0",
+          "text": "Hit Nasus with Apprehend when he steps up to last-hit, then trade with Decimate and Crippling Strike.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 },
+            { "kind": "ability", "key": "Darius-Q", "start": 71, "end": 79 },
+            { "kind": "ability", "key": "Darius-W", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Darius:Nasus:1",
+          "text": "Do not let Nasus land Wither on you; it makes you slowed and weakens your attacks more the longer it lasts. Trade fast or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Nasus-W", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Nasus:2",
+          "text": "Punish Nasus early, before Siphoning Strike has grown; deny his last-hits with Decimate from the edge of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 27, "end": 43 },
+            { "kind": "ability", "key": "Darius-Q", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Darius:Nasus:3",
+          "text": "Do not fight inside Fury of the Sands; Nasus becomes much sturdier and burns you as you stand near him.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 20, "end": 37 },
+            { "kind": "champion", "key": "Nasus", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Nasus:4",
+          "text": "Build Hemorrhage stacks before Noxian Guillotine; it deals more damage the more stacks Nasus has on him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 31, "end": 48 },
+            { "kind": "champion", "key": "Nasus", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Decimate's edge poke hits at long range and heals Darius, helping him trade before Nasus closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Darius", "start": 50, "end": 56 },
+            { "kind": "champion", "key": "Nasus", "start": 83, "end": 88 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "994a016536d066376135debdcdd592899f6a18de6ab5484de72bea62b1f26d3b",
+      "tips": [
+        {
+          "id": "top:Darius:Olaf:0",
+          "text": "Use Apprehend to pull Olaf in, but expect him to answer with Ragnarok. Ragnarok cleanses the disable and makes him immune to more.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Olaf", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Olaf-R", "start": 61, "end": 69 },
+            { "kind": "ability", "key": "Olaf-R", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Darius:Olaf:1",
+          "text": "Step out of the line of Undertow, and don't let Olaf pick the axe up for free. Picking it up cuts the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 24, "end": 32 },
+            { "kind": "champion", "key": "Olaf", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Darius:Olaf:2",
+          "text": "Finish Olaf before he gets low. His Berserker Rage gives him more Attack Speed and Life Steal the lower he gets.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Olaf-passive", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Olaf:3",
+          "text": "Use Crippling Strike to keep Olaf slowed while Hemorrhage stacks build, so he can't easily walk away from the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Olaf", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 47,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:Olaf:4",
+          "text": "Swing Decimate when Olaf is in range to heal back some of the damage you took.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Olaf", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes for full damage and a bleed stack while Olaf stands at the edge of range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Olaf", "start": 60, "end": 64 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "941963b092a0bd1bc672cc4ab64ce4ec7c74127190a7fbd0bf5d98cf57454bc2",
+      "tips": [
+        {
+          "id": "top:Darius:Ornn:0",
+          "text": "Pull Ornn in with Apprehend when he walks up to trade, then hit him with Decimate and your attacks while he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Darius-Q", "start": 73, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 111, "end": 117 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Darius:Ornn:1",
+          "text": "Stay out of a straight line with a wall behind you. Searing Charge into terrain knocks you up and stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 52, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Darius:Ornn:2",
+          "text": "Sidestep Volcanic Rupture. It slows you, and the pillar at its end blocks your path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Ornn:3",
+          "text": "Land Crippling Strike on Ornn when he tries to leave. It slows him heavily, so you can catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ornn", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Darius:Ornn:4",
+          "text": "Don't try to stop Bellows Breath with crowd control. Ornn moves through it, so stay clear of the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 18, "end": 32 },
+            { "kind": "champion", "key": "Ornn", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Darius:Ornn:5",
+          "text": "Build Hemorrhage stacks on Ornn before level 6. Noxian Guillotine then hits very hard, and a kill lets you cast it again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Ornn", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Darius-R", "start": 48, "end": 65 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc51b043b68c4de9661e7ffc56efa62d7ad10989a469c85579d8bf7b60f44f31",
+      "tips": [
+        {
+          "id": "top:Darius:Pantheon:0",
+          "text": "Pull Pantheon in with Apprehend when he lands from Shield Vault. It leaves him slowed and in your range.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Darius-E", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 51, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Darius:Pantheon:1",
+          "text": "Don't swing Decimate or attack into Aegis Assault from the front. Walk around to his side or back, or wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Darius:Pantheon:2",
+          "text": "Use Crippling Strike to slow Pantheon when he tries to leave, then chase and stack Hemorrhage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Pantheon", "start": 29, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 83,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Pantheon:3",
+          "text": "Stay healthy against Pantheon. When your health is low, a thrown Comet Spear hurts much more.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 65, "end": 76 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Darius:Pantheon:4",
+          "text": "When Pantheon uses Grand Starfall, he is gone for a few seconds. Push the wave or reposition, and don't stand in the target area.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "510348e879f2fa2527f59c28a2e1fb57171500a843362780a1ab60c45aa90dfa",
+      "tips": [
+        {
+          "id": "top:Darius:Quinn:0",
+          "text": "Pull Quinn in with Apprehend when she vaults away or tries to kite, then follow with Crippling Strike so she stays slowed and cannot walk out.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Darius-W", "start": 85, "end": 101 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Darius:Quinn:1",
+          "text": "Swing Decimate when Quinn is in range to poke her. Hit her with the edge, not the handle, so you heal and add a Hemorrhage stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Quinn", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 112,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Darius:Quinn:2",
+          "text": "Look for the kill with Noxian Guillotine once Quinn has several Hemorrhage stacks. Quinn is fragile, so it hits very hard.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 23, "end": 40 },
+            { "kind": "champion", "key": "Quinn", "start": 46, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 64,
+              "end": 74
+            },
+            { "kind": "champion", "key": "Quinn", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Darius:Quinn:3",
+          "text": "Quinn is weaker in a long, close fight. Push your lead and trade when Vault is on cooldown, so she cannot bounce away.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-E", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "79bd9a92a06a191be97cf797f54ab84fed6d7a319e5d574adbd43b6c6a8b5f16",
+      "tips": [
+        {
+          "id": "top:Darius:Renekton:0",
+          "text": "Land Apprehend when Renekton dashes in or tries to leave; the pull and slow set up your stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Renekton", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Darius:Renekton:1",
+          "text": "Respect Ruthless Predator when his Fury is high; it stuns for much longer, so keep your distance then.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 8, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Renekton:2",
+          "text": "Use Decimate when he walks into range, hitting with the blade rather than the handle for full damage and healing.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Renekton:3",
+          "text": "Use Crippling Strike to slow Renekton after he dashes in, so he can't easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Renekton", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Renekton:4",
+          "text": "Harass Renekton when he can't fight back; keeping his Fury low makes his abilities much weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 7, "end": 15 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Darius:Renekton:5",
+          "text": "Finish him with Noxian Guillotine once he has many bleeds on him; it deals more damage with each stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes Renekton from range, and its bleed and heal help you trade against his Fury-based attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Renekton", "start": 20, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b33ef569524198e41da50b02b2e2b8b0e6e8ea537b283a7d2d0beac0cf915640",
+      "tips": [
+        {
+          "id": "top:Darius:Riven:0",
+          "text": "Aim Apprehend at Riven when she dashes in. Pulling her out of her combo leaves her short on escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Riven", "start": 17, "end": 22 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Darius:Riven:1",
+          "text": "Swing Decimate at the edge of its reach so the blade hits her and not the handle. Hit her with it when she steps in to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Darius:Riven:2",
+          "text": "Respect Ki Burst: when she's close, you can be stunned and eat a full combo. Stay a step out of range until she spends it.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 8, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:Riven:3",
+          "text": "Use Crippling Strike to slow her when she tries to dash out, then chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Riven:4",
+          "text": "Look for a longer fight. Hemorrhage stacks build, and Riven has little defense or healing, so you win if she can't leave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 25,
+              "end": 35
+            },
+            { "kind": "champion", "key": "Riven", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Darius:Riven:5",
+          "text": "Finish her with Noxian Guillotine when she is low and fully bled.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5c981ffa8d30bb6743ea9bc7dedcfc993b4a74b7efac6ad95a07f4bdfa989c39",
+      "tips": [
+        {
+          "id": "top:Darius:Rumble:0",
+          "text": "Walk up when Electro Harpoon is spent. Rumble has little to stop you then, and you can land Apprehend.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 13, "end": 28 },
+            { "kind": "champion", "key": "Rumble", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Darius-E", "start": 92, "end": 101 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Darius:Rumble:1",
+          "text": "Pull Rumble with Apprehend, then use Decimate and your attacks. He has few ways to escape once you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Darius-Q", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Darius:Rumble:2",
+          "text": "Hit Rumble with the edge of Decimate, not the handle. Only the edge adds a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 28, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 75,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Rumble:3",
+          "text": "Attack Rumble while he's overheating and can't cast. Crippling Strike slows him so he can't get away.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Darius-W", "start": 53, "end": 69 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Rumble:4",
+          "text": "Leave The Equalizer's trail as soon as you see the rockets drop. Standing in it costs you a lot of health.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 6, "end": 19 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "dec5a455a7183092fec31a93ac006e1e96ab18dc87712c8b3333e3f96afed174",
+      "tips": [
+        {
+          "id": "top:Darius:Sett:0",
+          "text": "Hit Sett with Decimate at its edge, not the handle, so you get a Hemorrhage stack and heal. Step in close enough to reach him with the blade.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-Q", "start": 14, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 65,
+              "end": 75
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Darius:Sett:1",
+          "text": "Pull Sett in with Apprehend when he tries to walk away or trade, then keep hitting him while he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Darius:Sett:2",
+          "text": "Land Crippling Strike when Sett tries to back off or run at you, so he is slowed and you stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Sett", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Sett:3",
+          "text": "Sett's Haymaker turns damage he has taken into a shield. Trade in short bursts so he cannot bank much damage, and fight again once it has faded.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-W", "start": 7, "end": 15 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Darius:Sett:4",
+          "text": "Save Noxian Guillotine until you have built Hemorrhage stacks on Sett, so it hits much harder. Use it to finish him once he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 44,
+              "end": 54
+            },
+            { "kind": "champion", "key": "Sett", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3cfb812a03d2d8553bc0f5516d15209b9737f454dc8501b6a8fea2b556669147",
+      "tips": [
+        {
+          "id": "top:Darius:Shen:0",
+          "text": "Land Apprehend when Shen walks up to last-hit, then follow with Crippling Strike and Decimate. He has few ways to escape the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Shen", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Darius-W", "start": 64, "end": 80 },
+            { "kind": "ability", "key": "Darius-Q", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Darius:Shen:1",
+          "text": "Do not hit Shen while Spirit's Refuge is up. It blocks your basic attacks, so wait for it to end or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Shen-W", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Shen:2",
+          "text": "Stay out of Shadow Dash's line. If you are taunted, you will walk into Shen and his empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Shen", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Darius:Shen:3",
+          "text": "Hit Shen with Decimate from the edge of its range. His Twilight Assault empowered attacks hurt, so do not stand beside him.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-Q", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Shen-Q", "start": 55, "end": 71 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Darius:Shen:4",
+          "text": "After level 6, expect Shen to teleport in with Stand United to save an ally. Do not chase far from your side of the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Shen-R", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9347deb907483e5dbdf83aacfa08be36007303120ccda4298812ecf2656b95fe",
+      "tips": [
+        {
+          "id": "top:Darius:Singed:0",
+          "text": "Hook Singed with Apprehend as he runs by, so he cannot kite you and you can fight him up close.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Darius:Singed:1",
+          "text": "Do not stand in his Poison Trail; fight from outside it or step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-Q", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:Singed:2",
+          "text": "Avoid standing in Mega Adhesive when Singed is near. If he Flings you into it, you are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 18, "end": 31 },
+            { "kind": "champion", "key": "Singed", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:Singed:3",
+          "text": "Use Crippling Strike to slow Singed when he flees, then finish him with Noxian Guillotine once he has several bleeds.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Singed", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Darius-R", "start": 72, "end": 89 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Darius:Singed:4",
+          "text": "Swing Decimate when Singed is close to heal back poison damage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Singed", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "Crippling Strike's slow helps Darius stick to Singed and land Decimate in a fast melee trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "champion", "key": "Singed", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Darius-Q", "start": 62, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "292c573b6514dd2770a91cf3fdf3ff218204958fef2a9f9bd4fc032f6edb04a6",
+      "tips": [
+        {
+          "id": "top:Darius:Sion:0",
+          "text": "Walk out of the way of a charging Decimating Smash instead of standing in it. If Sion releases it early, it is weaker and doesn't stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 34, "end": 50 },
+            { "kind": "champion", "key": "Sion", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 130, "end": 134 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Sion:1",
+          "text": "Pull Sion in with Apprehend while he charges Decimating Smash. It is a good way to catch him if he has stayed in place.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Sion-Q", "start": 45, "end": 61 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Darius:Sion:2",
+          "text": "Use Decimate at the edge of its range to poke Sion when his Roar of the Slayer is on cooldown. It also heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 41, "end": 45 },
+            { "kind": "champion", "key": "Sion", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Sion-E", "start": 60, "end": 78 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Darius:Sion:3",
+          "text": "Hit Sion with Crippling Strike to slow him hard, then stack bleeds. A slowed Sion has trouble getting away or lining up his charge.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-W", "start": 14, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 },
+            { "kind": "champion", "key": "Sion", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Darius:Sion:4",
+          "text": "When Sion's shield from Soul Furnace is up, wait before you go in. Its recast explosion hurts, so fight when it is gone or he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-W", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Darius:Sion:5",
+          "text": "Don't finish Sion with Noxian Guillotine and then stay close. He returns with Glory in Death, so back away from him until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Darius-R", "start": 23, "end": 40 },
+            { "kind": "ability", "key": "Sion-passive", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate hits full damage and heals Darius, which is good for poking Sion at the edge of range.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 41, "end": 47 },
+            { "kind": "champion", "key": "Sion", "start": 74, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "fc777e9d880dcd479ae6862f4e26861249fc6debf5452f346c36815d058fcf9f",
+      "tips": [
+        {
+          "id": "top:Darius:TahmKench:0",
+          "text": "Walk up and use Decimate when Tahm Kench is in range; the edge hit heals you and puts a Hemorrhage stack on him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 16, "end": 24 },
+            { "kind": "champion", "key": "TahmKench", "start": 30, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 88,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Darius:TahmKench:1",
+          "text": "Hit Tahm Kench with Crippling Strike when he tries to leave, so he stays slowed and you can keep fighting.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Darius-W", "start": 20, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:TahmKench:2",
+          "text": "Pull him in with Apprehend so you can stack Hemorrhage and trade while his Tongue Lash is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 44,
+              "end": 54
+            },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 75, "end": 86 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Darius:TahmKench:3",
+          "text": "Hit him with Noxian Guillotine once he has many Hemorrhage stacks, because it hurts more with each stack.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 13, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 48,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Darius:TahmKench:4",
+          "text": "Don't fight right after Tahm Kench has taken a lot of damage and then waited. Thick Skin heals him back up when he is left alone.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 78, "end": 88 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0dd0ebf8def8a346d4b03142f598477e9506b31bac9a8c3662eb64fbfab8242e",
+      "tips": [
+        {
+          "id": "top:Darius:Teemo:0",
+          "text": "Walk up to Teemo and use Apprehend to pull him in. He can't kite you once he is knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Darius-E", "start": 25, "end": 34 },
+            { "kind": "keyword", "key": "knocked-up", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Darius:Teemo:1",
+          "text": "Land Crippling Strike on Teemo when you close in. It slows him heavily so he can't walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Teemo:2",
+          "text": "Check bushes before walking in, as Teemo can hide there unseen. Mushrooms are hard to spot, so don't chase him through unknown ground.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Darius:Teemo:3",
+          "text": "Hit a mushroom with basic attacks to destroy it before it goes off. It has very little health.",
+          "refs": [],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Darius:Teemo:4",
+          "text": "Hit Teemo with Decimate from the edge of its range. The blade deals full damage and you heal when it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "90e4f1964e173641d89ea67fc0d7aae751b6df86f87ff1067310c4c033fc904a",
+      "tips": [
+        {
+          "id": "top:Darius:Tryndamere:0",
+          "text": "Use Decimate from the edge of its range to hit Darius hard and heal; don't stand at the handle, which hits weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Darius", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Darius:Tryndamere:1",
+          "text": "Pull Tryndamere in with Apprehend when he tries to dash away, then follow with Crippling Strike so he stays slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Darius-E", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Darius-W", "start": 79, "end": 95 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Darius:Tryndamere:2",
+          "text": "Don't use Noxian Guillotine to finish Tryndamere while Undying Rage is active; he can't be killed. Wait until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 10, "end": 27 },
+            { "kind": "champion", "key": "Tryndamere", "start": 38, "end": 48 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 55, "end": 67 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:Tryndamere:3",
+          "text": "Harass Tryndamere early so he can't gain Fury from last-hits and heal with Bloodlust.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Darius:Tryndamere:4",
+          "text": "Chase Tryndamere with care; Mocking Shout slows you when you face away and cuts your damage.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Tryndamere-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bd2ee7f1a35cea2142d5ce4ad4cd46303e8979cd3ccc5666d1131aa11d1ac4df",
+      "tips": [
+        {
+          "id": "top:Darius:Urgot:0",
+          "text": "Once Urgot's Disdain is spent, step in and trade, because he has lost his stun and his shield.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Urgot-E", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Darius:Urgot:1",
+          "text": "Use Apprehend to pull Urgot in when he stands at range with Corrosive Charge. Then fight him up close.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Urgot", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Urgot-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Darius:Urgot:2",
+          "text": "Use Crippling Strike to slow Urgot when he walks away firing Purge, so you can stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Urgot", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Urgot-W", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Darius:Urgot:3",
+          "text": "Build up Hemorrhage stacks on Urgot, then finish him with Noxian Guillotine when he is low.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Urgot", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Darius-R", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Darius:Urgot:4",
+          "text": "Side-step Corrosive Charge by moving away from where it lands. It explodes after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-Q", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "35aed897f1758f2cc45c42a4da7198f2dc31adbaae4f7e7478188bbaf9fd2b74",
+      "tips": [
+        {
+          "id": "top:Darius:Varus:0",
+          "text": "Catch Varus with Apprehend when he charges Piercing Arrow; the pull knocks him up and brings him into your reach.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Varus-Q", "start": 43, "end": 57 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Darius:Varus:1",
+          "text": "Use Crippling Strike on Varus to slow him heavily so he cannot kite away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Varus", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Varus:2",
+          "text": "Walk through minions toward Varus, and dodge Hail of Arrows by not standing in the marked ground.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Varus-E", "start": 45, "end": 59 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Darius:Varus:3",
+          "text": "Be wary of Chain of Corruption; once rooted, Varus's arrows hurt. Run far from the tendril to break it.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 11, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 43 },
+            { "kind": "champion", "key": "Varus", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Darius:Varus:4",
+          "text": "Use Decimate to heal when Varus is within reach, and press your lead once he has used his skills.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Varus", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Varus is a ranged poker, so Decimate's edge lets Darius harass him while he stays at range.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Darius-Q", "start": 28, "end": 36 },
+            { "kind": "champion", "key": "Darius", "start": 49, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b7c47d955407045fb25560890599ee3018f9e7894281dc92c5023d690021b5a",
+      "tips": [
+        {
+          "id": "top:Darius:Vayne:0",
+          "text": "Hit Vayne with Apprehend to pull her in; she is fragile and cannot trade well up close.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Darius:Vayne:1",
+          "text": "Swing Decimate at max range to poke her, but expect Tumble to dodge it if she sees it coming.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Vayne:2",
+          "text": "Do not fight with a wall behind you; Condemn pins you there for a stun and heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 37, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Darius:Vayne:3",
+          "text": "Use Crippling Strike to slow her when she tries to back away, then stay on her to stack bleeds.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Darius:Vayne:4",
+          "text": "Wait out Condemn before you go in; when it is on cooldown, you can walk onto her.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 9, "end": 16 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Darius:Vayne:5",
+          "text": "Finish her with Noxian Guillotine once she has a few bleeds on her; it deals more damage with each one.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 16, "end": 33 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2d090908a83b2ced77356b180f429499e528f311e759b73f605b42492d6737a4",
+      "tips": [
+        {
+          "id": "top:Darius:Vladimir:0",
+          "text": "Walk up and hit Vladimir with Apprehend when Sanguine Pool is on cooldown. He can't escape you then.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Darius-E", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Darius:Vladimir:1",
+          "text": "Don't chase Vladimir into his Sanguine Pool. He is untargetable inside it and you will be slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 30, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Darius:Vladimir:2",
+          "text": "Use Decimate on Vladimir at the edge of its range, since the blade hits harder than the handle. It also heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Vladimir", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Darius:Vladimir:3",
+          "text": "Stack Hemorrhage with attacks before Noxian Guillotine. The more stacks, the more damage it does to Vladimir.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 37, "end": 54 },
+            { "kind": "champion", "key": "Vladimir", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Darius:Vladimir:4",
+          "text": "Kill Vladimir before Hemoplague bursts. It heals him if it hits you, and you take extra damage while it is on you.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "70527ca260c1f6140801458dfc6b8ab23d0d783c8282f8424161162b2b40bece",
+      "tips": [
+        {
+          "id": "top:Darius:Volibear:0",
+          "text": "Hit Volibear with Decimate from the edge of its range, and avoid standing next to him when he has Thundering Smash up.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Darius-Q", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 98, "end": 114 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Darius:Volibear:1",
+          "text": "Pull Volibear in with Apprehend when he runs at you with Thundering Smash. If it knocks him up first, his stun is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Darius-E", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Darius:Volibear:2",
+          "text": "Step out of the Sky Splitter circle once you see Volibear cast it. It lands after a delay.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Volibear", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Darius:Volibear:3",
+          "text": "Use Crippling Strike to slow Volibear when he tries to leave or to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Volibear", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Darius:Volibear:4",
+          "text": "Build up Hemorrhage stacks before Noxian Guillotine. Volibear's Frenzied Maul heals him in a long fight, so finish him quickly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 34, "end": 51 },
+            { "kind": "champion", "key": "Volibear", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Volibear-W", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:0",
+          "note": "The fast Crippling Strike and Decimate trade lets Darius burst before Volibear's attack speed stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Darius-Q", "start": 30, "end": 38 },
+            { "kind": "champion", "key": "Darius", "start": 50, "end": 56 },
+            { "kind": "champion", "key": "Volibear", "start": 70, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "96eae34fa0c8d74598053ede038b17fed973f5167dd30510512766928530e9f3",
+      "tips": [
+        {
+          "id": "top:Darius:XinZhao:0",
+          "text": "Hit Xin Zhao with Apprehend when he tries to start a fight. Pulling him in stops him from picking the moment of the trade.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Darius:XinZhao:1",
+          "text": "Use Crippling Strike on him when he charges in. It slows him heavily so he can't finish his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Darius:XinZhao:2",
+          "text": "Swing Decimate when he stands next to you so you heal. Aim to hit him with the edge of the axe, not the handle.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Darius:XinZhao:3",
+          "text": "Stack Hemorrhage on him before you use Noxian Guillotine. It deals much more damage the more stacks he has.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 39, "end": 56 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "acb18bd113633eed608ddc2631fb75841d89008bf5c4144e294227fef576a87e",
+      "tips": [
+        {
+          "id": "top:Darius:Yasuo:0",
+          "text": "Hit Yasuo with Decimate from the edge of its range; the handle does less damage and adds no Hemorrhage stack.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 15, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 92,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Darius:Yasuo:1",
+          "text": "Use Apprehend to pull Yasuo in, then hit him with Crippling Strike so he stays slowed and cannot easily walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Darius-W", "start": 50, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Darius:Yasuo:2",
+          "text": "Yasuo's Wind Wall blocks projectiles, but Apprehend is not blocked by it, so pull him through the wall.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Darius-E", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Darius:Yasuo:3",
+          "text": "Look for Noxian Guillotine once Hemorrhage is stacked high; it hits harder with each stack and can finish a fleeing Yasuo.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 9, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 32,
+              "end": 42
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e2b27521d0f9db49395c620375cb160fe118733279046a67316707626b737fc4",
+      "tips": [
+        {
+          "id": "top:Darius:Yone:0",
+          "text": "Use Apprehend when Yone steps in to trade; it pulls him onto you, knocks him up and slows him, so you can start your Hemorrhage stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 117,
+              "end": 127
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Darius:Yone:1",
+          "text": "Swing Decimate when Yone is at the edge of its range. It hits for full damage and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Darius:Yone:2",
+          "text": "Hit Yone with Crippling Strike when he tries to run away or reset. It slows him heavily so you can follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-W", "start": 14, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Yone:3",
+          "text": "Keep Yone on five Hemorrhage stacks, then finish him with Noxian Guillotine. It hurts most against a target with many stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 18,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Yone:4",
+          "text": "Yone's Soul Unbound gives him speed and escape, so save Apprehend to catch him when he uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 },
+            { "kind": "ability", "key": "Darius-E", "start": 56, "end": 65 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Hitting Yone with Decimate's outer edge pokes him, heals you, and stacks bleed in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Darius-Q", "start": 18, "end": 26 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "7cc847324c681149456b54772c0c85a77266ed0d5f15bf2014a8924d55f6a8b0",
+      "tips": [
+        {
+          "id": "top:Darius:Yorick:0",
+          "text": "Hit Yorick with Apprehend when his Dark Procession is on cooldown; he has no easy way to block you then.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 },
+            { "kind": "ability", "key": "Yorick-W", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Darius:Yorick:1",
+          "text": "Break Dark Procession by attacking it, or walk around it, rather than waiting it out.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Darius:Yorick:2",
+          "text": "Kill Mist Walkers with a basic attack before you fight Yorick; each one dies to a single hit.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Darius:Yorick:3",
+          "text": "Swing Decimate at long range to poke Yorick, and keep him off his graves.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Yorick", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Darius:Yorick:4",
+          "text": "Build Hemorrhage stacks, then finish with Noxian Guillotine before Yorick heals back up with Last Rites.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 42, "end": 59 },
+            { "kind": "champion", "key": "Yorick", "start": 67, "end": 73 },
+            { "kind": "ability", "key": "Yorick-Q", "start": 93, "end": 103 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b489aa5a118a61c4dbb0a1511d034103beedab2c418e3401907c9d14eba51510",
+      "tips": [
+        {
+          "id": "top:Darius:Zaahen:0",
+          "text": "Hit Zaahen with Decimate from the edge of its range so the handle does not waste the blade's Hemorrhage stack.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-Q", "start": 16, "end": 24 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 93,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Darius:Zaahen:1",
+          "text": "Use Apprehend when Zaahen dashes in or tries to walk away; it pulls him back and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zaahen", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Darius:Zaahen:2",
+          "text": "Do not rely on Noxian Guillotine to finish Zaahen when his stacks are full; he can revive instead of dying.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 15, "end": 32 },
+            { "kind": "champion", "key": "Zaahen", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Darius:Zaahen:3",
+          "text": "Keep Crippling Strike ready to slow Zaahen when he tries to trade, so you can stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Zaahen", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Darius:Zaahen:4",
+          "text": "Step out of line with Dreaded Return so it does not catch you, and punish him while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Zaahen-W", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": [
+        {
+          "comboId": "top:Darius:combo:1",
+          "note": "Edge Decimate pokes heal you, which offsets Zaahen's Darkin Glaive healing in extended trades.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Zaahen", "start": 44, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "82124f9598c282e20a0252efa8c5c2370661937b35ae808f33306cacaec49d67",
+      "tips": [
+        {
+          "id": "jungle:Darius:Graves:0",
+          "text": "Hit Graves with Apprehend to pull him in. Then fight up close, where he cannot kite you.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Darius:Graves:1",
+          "text": "Landing Crippling Strike slows Graves heavily. Follow up with Decimate to stack Hemorrhage and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 8, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "champion", "key": "Graves", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Darius-Q", "start": 62, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 80,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Darius:Graves:2",
+          "text": "Leave the Smoke Screen cloud right away. Its slow ends as soon as you step out.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Darius:Graves:3",
+          "text": "Graves has few ways to get out of a fight once you are on him. Press your lead and finish with Noxian Guillotine.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Darius-R", "start": 95, "end": 112 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Darius:Graves:4",
+          "text": "Watch for Quickdraw. Once Graves has used it, he has fewer escapes, so commit to the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-E", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Graves", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b9b7309e1493edc90e9824cac9bab7fda6ac53f6d01f65adfe1299129bb54fe3",
+      "tips": [
+        {
+          "id": "jungle:Darius:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks up anyone in that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Darius:JarvanIV:1",
+          "text": "Pull Jarvan in with Apprehend when he comes close, then swing Decimate. Stacking Hemorrhage fast wins you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Darius-Q", "start": 62, "end": 70 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 81,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Darius:JarvanIV:2",
+          "text": "Hit Jarvan with Crippling Strike to slow him when he tries to run or dive. It is hard for him to leave after that.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Darius:JarvanIV:3",
+          "text": "Inside a Cataclysm ring you can still use Apprehend and Noxian Guillotine. Jarvan is trapped with you, so go all in if you have the health.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "Darius-E", "start": 42, "end": 51 },
+            { "kind": "ability", "key": "Darius-R", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "afa12d5460a9d4e872a2e860efccfd19f1a797f822dd0ff3ec141f3c93ee77a3",
+      "tips": [
+        {
+          "id": "jungle:Darius:Kayn:0",
+          "text": "Hit Kayn with Apprehend when he fights near you; it pulls him in and knocks him up, so you can keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-E", "start": 14, "end": 23 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Darius:Kayn:1",
+          "text": "Hit Kayn with Crippling Strike when he tries to run; the slow makes it hard for him to get away.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Darius-W", "start": 14, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Darius:Kayn:2",
+          "text": "Build up Hemorrhage stacks with attacks before you use Noxian Guillotine on Kayn. More stacks make it hit much harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 55, "end": 72 },
+            { "kind": "champion", "key": "Kayn", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:Kayn:3",
+          "text": "Use Decimate when Kayn stands close to you. It heals you for each enemy champion it hits with the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Darius:Kayn:4",
+          "text": "Stay in a long fight if you can. Darius gets stronger the longer it lasts, and Kayn's burst is strongest at the start.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 },
+            { "kind": "champion", "key": "Kayn", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f7fa919aefe3d7824c797806189e273e38b048c4ad157a81de24b62d327ab32",
+      "tips": [
+        {
+          "id": "jungle:Darius:Khazix:0",
+          "text": "Keep Apprehend for when Kha'Zix jumps in or tries to leave. Pulling him back stops his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Darius:Khazix:1",
+          "text": "Stay near your minions, allies or turret. Kha'Zix's Taste Their Fear hurts far more when you are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 42, "end": 49 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 52, "end": 68 },
+            { "kind": "keyword", "key": "isolated", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "jungle:Darius:Khazix:2",
+          "text": "After Kha'Zix uses Leap and Void Assault, he is exposed. Press your lead and chase him down.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Khazix-E", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Khazix-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Darius:Khazix:3",
+          "text": "Land Crippling Strike when Kha'Zix tries to run. It slows him heavily and keeps him in reach of your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Khazix", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Darius:Khazix:4",
+          "text": "Hit Kha'Zix with Decimate's edge, not the handle. The edge gives you a Hemorrhage stack and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-Q", "start": 17, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 71,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e04fff77f736b32b5cd97448f0608ea8d3865ccafd4f49ecfec2269ff94c81f",
+      "tips": [
+        {
+          "id": "jungle:Darius:Kindred:0",
+          "text": "Hit Kindred with Apprehend when she is out of position; it pulls her to you and slows her, so she can't kite away.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Darius:Kindred:1",
+          "text": "Land Crippling Strike on Kindred when she tries to run. The heavy slow keeps her in range for your follow-up hits.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Kindred", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Darius:Kindred:2",
+          "text": "Kindred is fragile, so stack Hemorrhage on her with Decimate and basic attacks, then finish with Noxian Guillotine.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 29,
+              "end": 39
+            },
+            { "kind": "ability", "key": "Darius-Q", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Darius-R", "start": 97, "end": 114 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Darius:Kindred:3",
+          "text": "Don't fight inside Lamb's Respite. Nobody can die in it, so wait for it to end before you commit to a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Darius:Kindred:4",
+          "text": "Fight Kindred away from Wolf's Frenzy. Wolf's bites and her faster Dance of Arrows cooldown make the fight worse for you inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Kindred-W", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "677a3f8e8996d329829d64f03962d0fb1d35470f98b70b20b4fe9d82eab15a49",
+      "tips": [
+        {
+          "id": "jungle:Darius:LeeSin:0",
+          "text": "Hit Lee Sin with Apprehend when he dashes in with Resonating Strike. It pulls him to you and stops him fighting at his own range.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Darius:LeeSin:1",
+          "text": "Stack Hemorrhage on Lee Sin with attacks and Decimate, then finish him with Noxian Guillotine when he is low.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Darius-Q", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Darius-R", "start": 76, "end": 93 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Darius:LeeSin:2",
+          "text": "Stay away from walls and teammates when Lee Sin is near. Dragon's Rage knocks you back and hurts anyone you hit.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Darius:LeeSin:3",
+          "text": "Lee Sin slows you with Tempest when you chase him. Hit him with Crippling Strike to slow him back and keep him in the fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Darius-W", "start": 64, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fe265fe1acbbc66aa7e2a0a4035a74b2d5ecfdb6cfe01e3971d374703b4b4506",
+      "tips": [
+        {
+          "id": "jungle:Darius:MasterYi:0",
+          "text": "Build up Hemorrhage stacks on Master Yi and then use Noxian Guillotine. It finishes him before he can run away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "champion", "key": "MasterYi", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Darius-R", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Darius:MasterYi:1",
+          "text": "Hit Master Yi with Apprehend as he jumps in or tries to run. Highlander does not stop the pull, so he cannot just walk away.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Darius-E", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Darius:MasterYi:2",
+          "text": "Do not hit Master Yi with Crippling Strike when Highlander is active. He ignores the slow.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "Darius-W", "start": 26, "end": 42 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 48, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Darius:MasterYi:3",
+          "text": "Hit Master Yi a few times so he has to spend mana on Meditate to heal. Cast Decimate when he is not untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 53, "end": 61 },
+            { "kind": "ability", "key": "Darius-Q", "start": 76, "end": 84 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Darius:MasterYi:4",
+          "text": "Master Yi is untargetable during Alpha Strike, so do not waste Apprehend or Noxian Guillotine on him while he is mid-jump.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 33, "end": 45 },
+            { "kind": "ability", "key": "Darius-E", "start": 63, "end": 72 },
+            { "kind": "ability", "key": "Darius-R", "start": 76, "end": 93 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "98265b1857aa93948d75f0d2978af790bf3992d1788ab217c6ac76bd96708049",
+      "tips": [
+        {
+          "id": "jungle:Darius:Naafiri:0",
+          "text": "Hit Naafiri with Apprehend when she dashes in or tries to leave; it pulls her to you and slows her, so she cannot simply run off.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Darius:Naafiri:1",
+          "text": "Swing Decimate when her Packmates and she are all next to you; it hits everything around you and heals you for each champion hit.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Darius:Naafiri:2",
+          "text": "Hit Naafiri with Crippling Strike when she tries to run; the slow lets you catch her and finish her off.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-W", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Darius:Naafiri:3",
+          "text": "Stack Hemorrhage with attacks before you use Noxian Guillotine on her; it deals more damage with more stacks, and a kill lets you cast it again.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 6,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 45, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Darius:Naafiri:4",
+          "text": "Fight Naafiri in a drawn-out brawl rather than a quick trade. Darius gets stronger the longer a fight lasts, while she wants a fast burst.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "86a32adfe6f230224938fa5d25b748c95d97d2d4e4711bc801d9640d39de0cc4",
+      "tips": [
+        {
+          "id": "jungle:Darius:Nocturne:0",
+          "text": "Bait out Shroud of Darkness before you throw Apprehend; wait for the shield to fade.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Darius-E", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Darius:Nocturne:1",
+          "text": "Do not use Noxian Guillotine while Shroud of Darkness is up; it will be blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 11, "end": 28 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Darius:Nocturne:2",
+          "text": "Stay close to Nocturne with Crippling Strike so he can't run, and fight where you stack bleeds.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Darius-W", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Darius:Nocturne:3",
+          "text": "Break Unspeakable Horror's tether by moving out of range or using a dash before it ends, so you are not feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Darius:Nocturne:4",
+          "text": "When the map goes dark from Paranoia, stay near allies; Nocturne can then jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 28, "end": 36 },
+            { "kind": "champion", "key": "Nocturne", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f960f8987652518532b1c430355f999e292f9aeb8c59963d9956ddb87b201760",
+      "tips": [
+        {
+          "id": "jungle:Darius:Shyvana:0",
+          "text": "Pull Shyvana in with Apprehend when she is low on Dragon Fury. She has no ultimate to answer you with.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Darius:Shyvana:1",
+          "text": "Hit Shyvana with Decimate from the edge of its range. Stay out of the close handle zone, where it deals little damage.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Darius-Q", "start": 17, "end": 25 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Darius:Shyvana:2",
+          "text": "Wait out Inferno Aegis before you commit. Her shield and speed boost fade quickly, and then she is easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Darius:Shyvana:3",
+          "text": "Use Crippling Strike when she turns to run. Its heavy slow keeps her close for the rest of your combo.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Darius:Shyvana:4",
+          "text": "Don't chase her into Dragon Form with low health. Her Dragon's Descent makes her much tankier and her fire hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "10cf6df7c5c7f769686694cfbcac0ed04892f9f487c93aea74fe9ebd3ae2eda7",
+      "tips": [
+        {
+          "id": "jungle:Darius:Skarner:0",
+          "text": "Hook Skarner with Apprehend when he comes at you, then fight him while he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Darius:Skarner:1",
+          "text": "Stay away from walls when Skarner charges; if he drags you into one, you take damage and are stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Darius:Skarner:2",
+          "text": "Use Crippling Strike to stop Skarner from running away after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Darius:Skarner:3",
+          "text": "Decimate heals you for each enemy champion it hits with the edge, so use it when Skarner is in range during a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Skarner", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:Skarner:4",
+          "text": "Move out of the way of Impale or you will be suppressed and dragged away.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a878afe28f6df6e595e394c868cf366a21c5280859218a49fcbaed118ca012ef",
+      "tips": [
+        {
+          "id": "jungle:Darius:Sylas:0",
+          "text": "Pull Sylas in with Apprehend when he dashes close, then hit him with Crippling Strike so he stays slowed and can't leave.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "Darius-W", "start": 69, "end": 85 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Darius:Sylas:1",
+          "text": "Keep hitting Sylas to build Hemorrhage before you use Noxian Guillotine; the damage grows with each stack.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 28,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 54, "end": 71 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Darius:Sylas:2",
+          "text": "Swing Decimate when Sylas is close to you; it heals you and adds a Hemorrhage stack when the edge hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 67,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Darius:Sylas:3",
+          "text": "Fight Sylas when he can't steal your ultimate, and don't count on a long fight while Kingslayer is ready to heal him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c3fdd4c71a8e1e273523b6fe112414a0ee64312feac604b459ef2254e9515681",
+      "tips": [
+        {
+          "id": "jungle:Darius:Talon:0",
+          "text": "Hold Apprehend until Talon jumps on you or tries to escape. Pulling him back makes it hard for him to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Darius:Talon:1",
+          "text": "Fight Talon in a long trade. Decimate heals you, and you are stronger the longer the fight goes.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Darius-Q", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Darius:Talon:2",
+          "text": "Use Crippling Strike on Talon when he tries to run. It slows him heavily.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Darius:Talon:3",
+          "text": "Save Noxian Guillotine for when Talon is low. He is a burst champion, so he is weak when his abilities are on cooldown, and you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Darius:Talon:4",
+          "text": "Watch for Talon to go invisible with Shadow Assault. Expect a second hit from the blades when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-R", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6bfbc94d426c75e2b4257f3441fef1330422d9cc2bf47bdb2b0b80a7b5c62e77",
+      "tips": [
+        {
+          "id": "jungle:Darius:Viego:0",
+          "text": "Pull Viego in with Apprehend when he winds up on a wraith or tries to run; he is slowed and knocked up while you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Darius-E", "start": 19, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Darius:Viego:1",
+          "text": "Hit Viego with Crippling Strike when he tries to leave a fight; the slow is heavy and lets you catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-W", "start": 15, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Darius:Viego:2",
+          "text": "Build up Hemorrhage with attacks and Decimate before Noxian Guillotine; the more stacks, the harder it hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Darius-Q", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Darius-R", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Darius:Viego:3",
+          "text": "Save Noxian Guillotine to finish Viego when he is low; if it kills, you can cast it again.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Viego", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Darius:Viego:4",
+          "text": "Hit Viego with the edge of Decimate, not the handle, so you heal and add a Hemorrhage stack.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Darius-Q", "start": 27, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 75,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f384b635091cfd4927747bb2ef8ef67460ec996db3db74cb9d7419e9def762d4",
+      "tips": [
+        {
+          "id": "jungle:Darius:XinZhao:0",
+          "text": "Land Apprehend when Xin Zhao charges in or tries to leave. It pulls him back and breaks his rhythm.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Darius:XinZhao:1",
+          "text": "Hit Xin Zhao with Crippling Strike so he is slowed heavily and can't run to chain his Three Talon Strike attacks.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Darius-W", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Darius:XinZhao:2",
+          "text": "Swing Decimate when he stands in the edge range, not the handle. It heals you and stacks Hemorrhage.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 6, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 89,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Darius:XinZhao:3",
+          "text": "Don't use Noxian Guillotine right after he casts Crescent Guard; it's wasted if you can't get close to finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 10, "end": 27 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

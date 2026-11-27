@@ -1,0 +1,1069 @@
+{
+  "schemaVersion": 1,
+  "champion": "Riven",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "b422cf82ceada815d559bb439d62981cf8f6b5d5e734f6b79f542c182bda5140",
+      "tips": [
+        {
+          "id": "top:Riven:general:0",
+          "text": "Use Broken Wings between minions to close in and trade. Cast it at the enemy champion, not a minion, so the dash locks onto them.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Riven:general:1",
+          "text": "Weave basic attacks between your ability casts. Each cast charges Runic Blade, and every charge adds extra damage to an attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Riven-passive",
+              "start": 66,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Riven:general:2",
+          "text": "Lead a fight with Broken Wings, then use Ki Burst when the enemy is close to stun them. Follow with attacks while they can't act.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Riven-W", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Riven:general:3",
+          "text": "Use Valor to escape or to absorb the enemy's harass. Don't spend it early if you need it to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Riven:general:4",
+          "text": "Save the third cast of Broken Wings for the finishing move. It knocks enemies up and can cross terrain, which helps you chase or flee.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Riven:general:5",
+          "text": "Activate Blade of the Exile before you start a full trade. Then finish a weakened enemy with its recast, which hits harder the lower their health is.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-R", "start": 9, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Riven:general:6",
+          "text": "Don't start a fight with your whole combo spent. Riven has no healing and little defense, so keep Valor ready for what comes back.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Riven-E", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Riven:combo:0",
+          "name": "Fast Q cancel",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Riven-Q" }, "attack"],
+          "when": "Any time you Q into melee range and want the attack to come out quickly between recasts.",
+          "whenRefs": [],
+          "text": "Riven's Q resets her attack timer. Move right after each Q cast and attack at once, so the Q-attack-Q-attack rhythm stays quick.",
+          "textRefs": [
+            { "kind": "champion", "key": "Riven", "start": 0, "end": 5 }
+          ]
+        },
+        {
+          "id": "top:Riven:combo:1",
+          "name": "Shield Q burst",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Riven-E" },
+            { "kind": "ability", "key": "Riven-W" },
+            { "kind": "ability", "key": "Riven-Q" }
+          ],
+          "when": "Engaging a target that is just out of Ki Burst range and you want a shield as you go in.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Riven-W", "start": 38, "end": 46 }
+          ],
+          "text": "Valor closes the gap and shields you. Ki Burst can be cast during the dash, then Broken Wings follows up.",
+          "textRefs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 38, "end": 46 },
+            { "kind": "ability", "key": "Riven-Q", "start": 81, "end": 93 }
+          ]
+        },
+        {
+          "id": "top:Riven:combo:2",
+          "name": "Third Q wall hop",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Riven-Q" }],
+          "when": "Escaping or chasing across thin walls, such as those in the jungle.",
+          "whenRefs": [],
+          "text": "The third Broken Wings cast can cross terrain and gains extra dash range through walls. Line up two recasts first, then use the last Q to hop over thin walls.",
+          "textRefs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 10, "end": 22 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "7609d614e51fc19cc7951563f0ac009d5ab583e3c72cc5823f95cdfaa1832734",
+      "tips": [
+        {
+          "id": "top:Riven:Aatrox:0",
+          "text": "Dodge The Darkin Blade by dashing sideways with Valor; the first cast is a long line and the later ones are slower to turn.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 },
+            { "kind": "ability", "key": "Riven-E", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Riven:Aatrox:1",
+          "text": "Use Ki Burst to stun Aatrox when he walks in to trade, then fight back while he can't act.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Riven:Aatrox:2",
+          "text": "Step out of Infernal Chains toward the sides or toward Aatrox so you aren't pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Aatrox", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Riven:Aatrox:3",
+          "text": "Trade when Deathbringer Stance is on cooldown; his empowered attack heals him and hurts more.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 11,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Riven:Aatrox:4",
+          "text": "Stay out of his reach when World Ender is active, because he is stronger and heals more for as long as it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8a27eeb721babc44cdf92e5f3e1bbfac30299f4a19d6ba1d38376589fbcfcdd5",
+      "tips": [
+        {
+          "id": "top:Riven:Briar:0",
+          "text": "Keep Ki Burst ready for when Briar leaps in with Head Rush or Blood Frenzy; stunning her stops her forced attacks and lets you trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-Q", "start": 49, "end": 58 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Riven:Briar:1",
+          "text": "Use Valor to absorb Briar's burst when she lands on you, then answer with Broken Wings and Ki Burst.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Riven-Q", "start": 74, "end": 86 },
+            { "kind": "ability", "key": "Riven-W", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Riven:Briar:2",
+          "text": "Hold Valor for when Briar charges Chilling Scream; the full scream can knock you into a wall and stun you, so dash out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Briar-E", "start": 34, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Riven:Briar:3",
+          "text": "Finish Briar with Blade of the Exile's wind slash once she is low; its damage rises as her health drops.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Riven-R", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Riven:Briar:4",
+          "text": "Burst Briar quickly and avoid long fights; her bleed heals her the longer a trade drags on.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b33ef569524198e41da50b02b2e2b8b0e6e8ea537b283a7d2d0beac0cf915640",
+      "tips": [
+        {
+          "id": "top:Riven:Darius:0",
+          "text": "Stay out of Apprehend's cone; if he pulls you in, he gets a free hit on you. Walk at an angle and keep Valor ready to dash out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Riven-E", "start": 103, "end": 108 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Riven:Darius:1",
+          "text": "Trade while Apprehend is on cooldown. Darius has no way to pull you in then, so you can dash in and out freely.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Riven:Darius:2",
+          "text": "Do not stand next to Darius when Decimate swings. Fight at the handle's inner edge or outside the swing, and dodge it with Broken Wings or Valor.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Darius-Q", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Riven-Q", "start": 123, "end": 135 },
+            { "kind": "ability", "key": "Riven-E", "start": 139, "end": 144 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Riven:Darius:3",
+          "text": "Use Ki Burst to get him stunned when he commits, then back away. A stunned Darius can't finish his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 74 },
+            { "kind": "champion", "key": "Darius", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Riven:Darius:4",
+          "text": "Short trades beat long fights. His bleed stacks the longer you stay in melee, so leave before it reaches full stacks.",
+          "refs": [],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Riven:Darius:5",
+          "text": "Keep your health high once he has stacks on you. Noxian Guillotine hurts more the more bleed stacks you carry.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 49, "end": 66 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e047565f8551dc1699b7cb001c28624364bdf64f3e062637f97526397174a86d",
+      "tips": [
+        {
+          "id": "top:Riven:Fiora:0",
+          "text": "Don't use Ki Burst on Fiora when her Riposte is ready; she turns the stun against you and you get stunned back.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Fiora-W", "start": 37, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Riven:Fiora:1",
+          "text": "Bait Riposte with a cheap move first, then jump in with Broken Wings once it is spent and you can hit her freely.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Riven-Q", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Riven:Fiora:2",
+          "text": "Use Valor to dodge her Lunge and to absorb her trade; the shield helps most when she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Riven:Fiora:3",
+          "text": "Her Bladework slows your first hit, so don't stand and trade; move off and use your dashes to stay out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Riven:Fiora:4",
+          "text": "Save Blade of the Exile for when she has used Riposte; the Wind Slash hits hard on a hurt Fiora.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-R", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Fiora-W", "start": 46, "end": 53 },
+            { "kind": "champion", "key": "Fiora", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e141409393f888523dda6fffa756c6c3336669568b2b7bbf92daf1484197aa6f",
+      "tips": [
+        {
+          "id": "top:Riven:Gangplank:0",
+          "text": "Dash in with Broken Wings only when Parrrley is on cooldown and no kegs are near; stay away from kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Riven:Gangplank:1",
+          "text": "Stun Gangplank with Ki Burst when he walks up to hit a keg, then trade hard.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Riven-W", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Riven:Gangplank:2",
+          "text": "Gangplank can cleanse your stun with Remove Scurvy, so look for it to be on cooldown before you commit your full combo.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Riven:Gangplank:3",
+          "text": "Use Valor to dodge Powder Keg explosions and absorb his poke with its shield.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 19, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Riven:Gangplank:4",
+          "text": "Finish a low-health Gangplank with Blade of the Exile's wind slash; it hits harder the less health he has.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 20, "end": 29 },
+            { "kind": "ability", "key": "Riven-R", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d3bf2e5eb08d7dd5a8513991769f8daca9495602ddaabe4b677dac03d6692e9",
+      "tips": [
+        {
+          "id": "top:Riven:Garen:0",
+          "text": "Do not run in with Broken Wings alone; Garen can answer with Decisive Strike and silence you mid-combo.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 19, "end": 31 },
+            { "kind": "champion", "key": "Garen", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Garen-Q", "start": 61, "end": 76 },
+            { "kind": "keyword", "key": "silenced", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Riven:Garen:1",
+          "text": "Use Valor to dash out of Judgment's range; staying inside it means taking its full damage.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Garen-E", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Riven:Garen:2",
+          "text": "Garen can finish you with Demacian Justice once you are low, so back away before you reach that point.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-R", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Riven:Garen:3",
+          "text": "Trade often and hurt him early. Perseverance heals him fully if you leave him alone for a few seconds.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 32,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "086ba04b91d2c7649355db273a7fbddfd2d723db172eba9b647e8803bb4274e7",
+      "tips": [
+        {
+          "id": "top:Riven:Jayce:0",
+          "text": "Walk up and stun Jayce with Ki Burst when he leaps in with To the Skies!, then trade back while he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Riven-W", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Riven:Jayce:1",
+          "text": "Use Valor to dodge or absorb his Shock Blast poke, then close the gap with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Riven-Q", "start": 75, "end": 87 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Riven:Jayce:2",
+          "text": "Stay close to Jayce in cannon form. Up close he has to swap to his hammer, and you can burst him while he does.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 14, "end": 19 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Riven:Jayce:3",
+          "text": "Save Valor for his Thundering Blow; it will knock you back, so keep your shield ready to take the hit.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Riven:Jayce:4",
+          "text": "Finish a low-health Jayce with the Blade of the Exile wind slash; it hits harder the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Riven-R", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps you close in on Jayce, and Ki Burst stuns him before Broken Wings follows up.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Jayce", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Riven-W", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Riven-Q", "start": 74, "end": 86 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4d102efff223a08afb17803cce53dda2427bc01844c56967a8269efee366b553",
+      "tips": [
+        {
+          "id": "top:Riven:KSante:0",
+          "text": "Do not run in against Ntofo Strikes when he has two stacks; the shockwave pulls and stuns you. Use Valor to dash off its line.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 },
+            { "kind": "ability", "key": "Riven-E", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Riven:KSante:1",
+          "text": "Fight him in the short window after Path Maker is spent. Its charge reduces his damage taken and cannot be interrupted, so do not stun him during it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 36, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 130, "end": 134 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Riven:KSante:2",
+          "text": "Trade when his Ntofo Strikes is on cooldown. Open with Broken Wings, then Ki Burst to stun him and finish the combo.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Riven-Q", "start": 55, "end": 67 },
+            { "kind": "ability", "key": "Riven-W", "start": 74, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Riven:KSante:3",
+          "text": "When All Out starts, he is much squishier. Fight back then, and do not chase him if you cannot burst him fast.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Riven:KSante:4",
+          "text": "Save Valor to dodge his All Out pull or Path Maker, and use Blade of the Exile when he is low to finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "KSante-R", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-W", "start": 40, "end": 50 },
+            { "kind": "ability", "key": "Riven-R", "start": 60, "end": 78 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0eaba9cf34a425ae7b601e8fd684b07f2166923425ff4b269fbc3a3b8f0dd1a5",
+      "tips": [
+        {
+          "id": "top:Riven:Malphite:0",
+          "text": "Do not let Malphite hit you with Seismic Shard for free; he gets faster as you get slowed. Stay out of his range when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 33, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Riven:Malphite:1",
+          "text": "Open with Ki Burst when Malphite walks up, then finish your combo. The stun gives you time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Riven:Malphite:2",
+          "text": "Trade right after Granite Shield breaks, when his Armor from Thunderclap is lower. Hit him again once the shield has recharged and you will do less.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 18,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Malphite-W", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Riven:Malphite:3",
+          "text": "Ground Slam cuts your Attack Speed, so use Valor to get out of its range before you trade, or step out right after.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-E", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Riven-E", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Riven:Malphite:4",
+          "text": "Watch for his level 6 and keep Valor ready; Unstoppable Force cannot be stopped once he starts the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Malphite-R", "start": 44, "end": 61 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield and Ki Burst's stun help Riven close the gap on Malphite and follow up with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Riven", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Malphite", "start": 63, "end": 71 },
+            { "kind": "ability", "key": "Riven-Q", "start": 91, "end": 103 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "46c15a0860604bb779a46aa06a15e33296903c5aa467713b348d001471682f19",
+      "tips": [
+        {
+          "id": "top:Riven:Mordekaiser:0",
+          "text": "Do not fight inside Mordekaiser's range when his Darkness Rise is up; trade with a quick combo and step out.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 20,
+              "end": 31
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 49,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Riven:Mordekaiser:1",
+          "text": "Hold Valor to dodge Death's Grasp; its pull lands after a brief delay, so dash sideways as it arrives.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 20,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Riven:Mordekaiser:2",
+          "text": "Stun Mordekaiser with Ki Burst when he commits to a Obliterate, then hit him while he cannot answer.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Riven-W", "start": 22, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 52,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Riven:Mordekaiser:3",
+          "text": "Save Broken Wings to escape once Mordekaiser uses Realm of Death; you are cut off from your team.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-Q", "start": 5, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 33,
+              "end": 44
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 50,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Riven:Mordekaiser:4",
+          "text": "Burst through Indestructible before he can use it, or wait it out; his shield grows the longer he fights you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 14,
+              "end": 28
+            }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "78cd7ec45fc47d10ec4fbcaf2c419877079686c8d976a41d393fde6e1dabbedf",
+      "tips": [
+        {
+          "id": "top:Riven:Rumble:0",
+          "text": "Bait out Scrap Shield before you commit your full combo, or your burst gets soaked.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-W", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Riven:Rumble:1",
+          "text": "Watch for Rumble overheating. While he cannot cast, go in with Broken Wings and Ki Burst.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Riven-Q", "start": 63, "end": 75 },
+            { "kind": "ability", "key": "Riven-W", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Riven:Rumble:2",
+          "text": "Use Valor to dodge Electro Harpoon; the dash and shield help you get close without being slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rumble-E", "start": 19, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Riven:Rumble:3",
+          "text": "Stun Rumble with Ki Burst when you close in, so you can fight him without being burned by Flamespitter.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Rumble", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Riven-W", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 90, "end": 102 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Riven:Rumble:4",
+          "text": "Do not stand in The Equalizer's fire. Dash out of it with Valor or Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Riven-E", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Riven-Q", "start": 67, "end": 79 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps absorb Rumble's poke while Ki Burst stuns him as you close in with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Rumble", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Riven-W", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Riven-Q", "start": 88, "end": 100 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "fba77e211248697bd897fff097069c2f9e4e8d0f219429167208eacef0d7fff2",
+      "tips": [
+        {
+          "id": "top:Riven:Sion:0",
+          "text": "Sidestep or dash away from Sion's Decimating Smash once he charges; the stun is long, so stay out of the line until he releases.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sion-Q", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Riven:Sion:1",
+          "text": "Use Valor to dodge Decimating Smash when Sion releases it, then punish him with Ki Burst while he is locked in place.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Sion", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Riven-W", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Riven:Sion:2",
+          "text": "Break Sion's shield with a quick combo before he detonates Soul Furnace, or step back out of its range.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Sion-W", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Riven:Sion:3",
+          "text": "Stay out of the line of Roar of the Slayer; it slows you and lowers your Armor, which makes his follow-up hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 24, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Riven:Sion:4",
+          "text": "Don't finish Sion carelessly in a fight; back off and let his Glory in Death run out instead of trading with him.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 62, "end": 76 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6765746bdf6507f92782182bd90ad5acb2c91d44876cd12847e6f9a5c83828cb",
+      "tips": [
+        {
+          "id": "top:Riven:Teemo:0",
+          "text": "Don't commit to Teemo while he can blind you with Blinding Dart. Wait until it is spent, then go in with your combo.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Riven:Teemo:1",
+          "text": "Use Valor to absorb his Toxic Shot poke and close in. Take the shield before he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-E", "start": 24, "end": 34 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Riven:Teemo:2",
+          "text": "Watch the ground for Noxious Trap before you dash around; mushrooms are hidden and slow you. Enemy attacks can destroy them.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 21, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Riven:Teemo:3",
+          "text": "Stun Teemo with Ki Burst once you are on top of him, then finish with Broken Wings. He has no way to stop you once you close in.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Teemo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Riven-W", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Riven-Q", "start": 70, "end": 82 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield and Ki Burst's stun help Riven close the gap on a kiting Teemo.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Riven-W", "start": 19, "end": 27 },
+            { "kind": "champion", "key": "Riven", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Teemo", "start": 72, "end": 77 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "aff74a84487123ccb7f4a3a6635a71649675c797a29987d129842f0631644720",
+      "tips": [
+        {
+          "id": "top:Riven:Vayne:0",
+          "text": "Hold Ki Burst until Vayne is close, then stun her and trade fast; she is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Riven:Vayne:1",
+          "text": "Do not dash in a straight line at Vayne with Broken Wings when Condemn is ready; she can knock you back into a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Riven-Q", "start": 45, "end": 57 },
+            { "kind": "ability", "key": "Vayne-E", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Riven:Vayne:2",
+          "text": "Fight away from walls, since Condemn only stuns you when you hit terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Riven:Vayne:3",
+          "text": "Break your attacks on Vayne so she does not get her third Silver Bolts hit; trade in short bursts, not long fights.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Vayne-W", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Riven:Vayne:4",
+          "text": "Use Valor to close the gap after Vayne uses Tumble to move away.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2de1d049af6e9e96b9aeef71a06ebca193e4f47332162798a1736362aaebac6a",
+      "tips": [
+        {
+          "id": "top:Riven:Yone:0",
+          "text": "Walk up and stun Yone with Ki Burst when he commits to Spirit Cleave or Mortal Steel, then trade with Broken Wings while he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 12, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Riven-W", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Yone-W", "start": 55, "end": 68 },
+            { "kind": "ability", "key": "Yone-Q", "start": 72, "end": 84 },
+            { "kind": "ability", "key": "Riven-Q", "start": 102, "end": 114 },
+            { "kind": "keyword", "key": "stunned", "start": 127, "end": 134 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Riven:Yone:1",
+          "text": "Use Valor to absorb or dodge Yone's Mortal Steel thrust, then step back in with Broken Wings.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Yone-Q", "start": 36, "end": 48 },
+            { "kind": "ability", "key": "Riven-Q", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Riven:Yone:2",
+          "text": "When Yone has two stacks from Mortal Steel, expect a dash and knock up. Stay out of its range or hold Ki Burst ready to stun him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-Q", "start": 30, "end": 42 },
+            { "kind": "ability", "key": "Riven-W", "start": 102, "end": 110 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Riven:Yone:3",
+          "text": "Do not chase Yone during Soul Unbound. He snaps back to his body and repeats part of the damage he dealt, so back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Yone-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Riven:Yone:4",
+          "text": "Yone's Spirit Cleave shield is weak when it hits only you, so a quick trade after he uses it can be worth it.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-W", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Riven:Yone:5",
+          "text": "Finish a hurt Yone with Blade of the Exile's wind slash. It hits harder the lower his health is.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Riven-R", "start": 24, "end": 42 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Riven:combo:1",
+          "note": "Valor's shield helps absorb Yone's poke when you engage, and Ki Burst adds a stun to follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Riven-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Riven-W", "start": 61, "end": 69 }
+          ]
+        }
+      ]
+    }
+  ]
+}

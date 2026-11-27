@@ -1,0 +1,1102 @@
+{
+  "schemaVersion": 1,
+  "champion": "Galio",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "ece523360cc3db6680db6db266dc3afd605608a14d5acd56e7d28e5f3af2f307",
+      "tips": [
+        {
+          "id": "middle:Galio:general:0",
+          "text": "Aim Winds of War so both windblasts meet on the enemy. The tornado they form hurts high-health targets most, and it keeps going after the blasts pass minions.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Galio:general:1",
+          "text": "Hold Shield of Durand to charge it before a fight. A longer charge taunts for longer and hits harder, but you move slower while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Galio:general:2",
+          "text": "Release Shield of Durand even when you are crowd controlled. It still goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Galio:general:3",
+          "text": "Use the step back in Justice Punch to dodge enemy spells. Aim it carefully, because Galio stops when he hits terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 21, "end": 34 },
+            { "kind": "champion", "key": "Galio", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Galio:general:4",
+          "text": "Land Justice Punch on a champion to leave them knocked up, then follow with your other abilities while they cannot act.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "knocked-up", "start": 47, "end": 57 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Galio:general:5",
+          "text": "Click an ally on the minimap to cast Hero's Entrance and help a distant lane. Your allies in the area also get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Galio:general:6",
+          "text": "Use your abilities on enemy champions between basic attacks. Each hit shortens the cooldown of Colossal Smash, so you get that empowered attack more often.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Galio-passive",
+              "start": 95,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Galio:combo:0",
+          "name": "Minimap Hero's Entrance",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Galio-R" }],
+          "when": "When a far-off ally needs help or a fight starts elsewhere on the map and you want to roam from mid.",
+          "whenRefs": [],
+          "text": "Click an ally's icon on the minimap to cast it without leaving lane. You can arrive at a fight before the enemy expects you.",
+          "textRefs": []
+        },
+        {
+          "id": "middle:Galio:combo:1",
+          "name": "Punch step-back dodge",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Galio-E" }],
+          "when": "When an enemy skillshot is about to hit you and Justice Punch is ready.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Galio-E", "start": 48, "end": 61 }
+          ],
+          "text": "Galio steps back before the dash, so casting early can dodge the spell. Aim so the dash still goes where you want.",
+          "textRefs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 }
+          ]
+        },
+        {
+          "id": "middle:Galio:combo:2",
+          "name": "Shield release while crowd controlled",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Galio-W" }],
+          "when": "When you are stunned or caught by crowd control while charging Shield of Durand.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Galio-W", "start": 63, "end": 79 }
+          ],
+          "text": "You can release the charge even while crowd controlled. This lets you taunt and damage nearby enemies instead of just waiting out the effect.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "03ad27f201aa440d1894309cadac7379ec467676a88f3d997272a6047e522334",
+      "tips": [
+        {
+          "id": "middle:Galio:Ahri:0",
+          "text": "Release Shield of Durand just as Charm or Fox-Fire arrives; it cuts the magic damage you take and shrugs off her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 },
+            { "kind": "ability", "key": "Ahri-E", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Ahri-W", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Galio:Ahri:1",
+          "text": "Hold Justice Punch for when Ahri uses Charm or dashes close; it knocks her up and the step back can dodge her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ahri-E", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Galio:Ahri:2",
+          "text": "Wait out Spirit Rush's cooldown, then trade and go for her. She has much less escape without it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Galio:Ahri:3",
+          "text": "Winds of War makes her move off the lane's line; aim it where she stands to farm, and hit her with the tornado.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Galio:Ahri:4",
+          "text": "Keep minions between you and Charm, since it stops at the first enemy hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "89f939f3d4a23668d10d5905c029f8c5b0af110af6cdba8ceebdc4bf32b2e737",
+      "tips": [
+        {
+          "id": "middle:Galio:Akali:0",
+          "text": "Hold Shield of Durand when Akali dives in and release it as she arrives; it taunts her and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Akali", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Galio:Akali:1",
+          "text": "Aim Justice Punch at Akali when she lands next to you; it knocks her up and her escapes stop working for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Galio:Akali:2",
+          "text": "Akali can hide in Twilight Shroud, so fire Winds of War into the smoke; it hits an area and the tornado keeps damaging.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Akali-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Galio-Q", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Galio:Akali:3",
+          "text": "Keep Shield of Durand's passive shield up by staying out of damage before she engages; she deals mostly magic damage, which it absorbs.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Galio:Akali:4",
+          "text": "Use Hero's Entrance to join a fight or save a teammate Akali is diving, but start it before she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "If Akali's burst stuns or catches Galio, he can still release Shield of Durand to taunt and damage her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 3, "end": 8 },
+            { "kind": "champion", "key": "Galio", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Galio-W", "start": 62, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "113e6a5ed6f186dd365b0b7c6c9010052d2621b5836630735a4db4b5aad971f1",
+      "tips": [
+        {
+          "id": "middle:Galio:Anivia:0",
+          "text": "Walk up and use Justice Punch when Anivia is close; the knock up lets you follow with Winds of War before she can react.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Anivia", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "knocked-up", "start": 56, "end": 64 },
+            { "kind": "ability", "key": "Galio-Q", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Galio:Anivia:1",
+          "text": "Charge Shield of Durand as Flash Frost flies at you; it cuts the magic damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Galio:Anivia:2",
+          "text": "Do not run into Crystallize with Justice Punch; Galio's dash stops on terrain, so the wall can ruin your engage.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Galio-E", "start": 33, "end": 46 },
+            { "kind": "champion", "key": "Galio", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Galio:Anivia:3",
+          "text": "Her Rebirth egg is weak. Use Hero's Entrance with a teammate nearby to finish it off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 4,
+              "end": 11
+            },
+            { "kind": "ability", "key": "Galio-R", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Galio:Anivia:4",
+          "text": "Step out of Glacial Storm quickly, since you are slowed inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e527163fbd7f6c80cb1ef8983c4b090946c0a72310af8a83413386734778bae5",
+      "tips": [
+        {
+          "id": "middle:Galio:Aurora:0",
+          "text": "Release Shield of Durand when Aurora steps in to trade; it cuts her damage and taunts her so she can't slip away.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Aurora", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Galio:Aurora:1",
+          "text": "Aim Justice Punch where Aurora will end up, since her Across the Veil hop leaves her invisible for a moment. Don't punch at empty ground.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aurora-W", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Galio:Aurora:2",
+          "text": "Aurora does mostly magic damage, so charge Shield of Durand before her Twofold Hex lands to take much less from it.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Galio-W", "start": 43, "end": 59 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Galio:Aurora:3",
+          "text": "Winds of War can hit Aurora from long range and keeps going after it hits. Throw it when she walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Aurora", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Galio:Aurora:4",
+          "text": "Don't run into the rift from Between Worlds. Walking through its edge slows you, so wait for it to close or fight outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 29, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Galio:Aurora:5",
+          "text": "Use Hero's Entrance to join a fight elsewhere, but do it when Aurora can't kill you during the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7f39810323588593af60eb81e3bbed994074fcc4aef718df3eba22d4c56dab84",
+      "tips": [
+        {
+          "id": "middle:Galio:Cassiopeia:0",
+          "text": "Charge Shield of Durand before her Noxious Blast lands; it cuts the magic damage you take, and releasing it taunts her if she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Galio:Cassiopeia:1",
+          "text": "Look for Justice Punch when she steps up to hit you. Knocked up, she cannot dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "knocked-up", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Galio:Cassiopeia:2",
+          "text": "Use the step back of Justice Punch to dodge her Noxious Blast or Twin Fang, then dash in.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 21, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 48,
+              "end": 61
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 65, "end": 74 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Galio:Cassiopeia:3",
+          "text": "Fire Winds of War from range when she stands still in the Miasma or at the edge of lane. It goes through minions.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Galio:Cassiopeia:4",
+          "text": "Walls stop Justice Punch, so do not rely on it to chase her over terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Galio:Cassiopeia:5",
+          "text": "Use Hero's Entrance to join fights from far away and drop on her. Her Miasma grounds you, but it cannot stop the jump once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "05c7dd826ad4f0d2294f398847af60ac2030d98b0b472990c19931d449103b80",
+      "tips": [
+        {
+          "id": "middle:Galio:Fizz:0",
+          "text": "Charge Shield of Durand before Fizz jumps in, then release it when he lands. It cuts his damage and taunts him close to you.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Galio:Fizz:1",
+          "text": "Fizz can't be hit while he balances on his trident. Wait until he lands, then punish him with Justice Punch.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Galio-E", "start": 94, "end": 107 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Galio:Fizz:2",
+          "text": "Fire Winds of War at Fizz when he stands in a lane to trade. It keeps going through minions, so you can poke him with it.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Galio:Fizz:3",
+          "text": "Use Hero's Entrance to join fights elsewhere on the map. Fizz can't easily chase you while you are in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Galio:Fizz:4",
+          "text": "Use the magic damage reduction from Shield of Durand against Fizz's burst. Almost all his damage is magic.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 36, "end": 52 },
+            { "kind": "champion", "key": "Fizz", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5ea37616d6918df7cadd1cdad43c5f43f4dcf44751af2a94f0fea5f214e0f683",
+      "tips": [
+        {
+          "id": "middle:Galio:Malzahar:0",
+          "text": "Use Justice Punch on Malzahar when his Void Shift is down; while it is up he takes little damage and ignores the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Malzahar", "start": 21, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 39,
+              "end": 49
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 113, "end": 121 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Galio:Malzahar:1",
+          "text": "Hold Shield of Durand charged as Malzahar casts at you. It cuts magic damage, and he deals only magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Malzahar", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Galio:Malzahar:2",
+          "text": "Start charging Shield of Durand before Call of the Void lands; you can still release it while silenced.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 15, "end": 31 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 39, "end": 55 },
+            { "kind": "keyword", "key": "silenced", "start": 94, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Galio:Malzahar:3",
+          "text": "Walk out of the lines of Call of the Void; the portals take a moment to fire, so sidestep them.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Galio:Malzahar:4",
+          "text": "Hero's Entrance lets you join side lanes fast when Malzahar pushes the wave. Roam when he is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Malzahar", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Galio:Malzahar:5",
+          "text": "Hit Malzahar with Winds of War from range to poke him down; he is mostly safe only while Void Shift is up.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Galio-Q", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 45, "end": 49 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 89,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "899ebb3069aadca52fe1c8544d39377059ac41c68fcb586bb7d8befc395998bf",
+      "tips": [
+        {
+          "id": "middle:Galio:Orianna:0",
+          "text": "Walk up and use Justice Punch when Orianna steps forward to poke or last-hit; she has no dash, so the knock up is hard for her to avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Orianna", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 },
+            { "kind": "keyword", "key": "knocked-up", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Galio:Orianna:1",
+          "text": "Hold Shield of Durand while Orianna trades. It cuts her magic damage, and Galio's shield also soaks her spells.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Orianna", "start": 28, "end": 35 },
+            { "kind": "champion", "key": "Galio", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Galio:Orianna:2",
+          "text": "Fire Winds of War through the minions at Orianna. The windblasts keep going after a hit, so the tornado can still form on her.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Orianna", "start": 41, "end": 48 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Galio:Orianna:3",
+          "text": "Release Shield of Durand as she walks in to ult or engage. The taunt stops her from walking away, and it works even while you are crowd controlled.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Galio:Orianna:4",
+          "text": "Use Hero's Entrance to join side lane fights and punish Orianna when she roams. Cast it from the minimap on an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Orianna", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "67f732ca8e87af309c8388fe9406401de5912e45d0f06a85b7f604344abf1ba1",
+      "tips": [
+        {
+          "id": "middle:Galio:Ryze:0",
+          "text": "Charge Shield of Durand before Ryze's spells land; it cuts the magic damage he deals, and he does little else.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Ryze", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Galio:Ryze:1",
+          "text": "Release Shield of Durand when Ryze steps close, so he is taunted and cannot freely cast on you.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Ryze", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Galio:Ryze:2",
+          "text": "Use Justice Punch to close the gap when Ryze is out of his rooted combo; the step back can also dodge his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ryze", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Galio:Ryze:3",
+          "text": "Fire Winds of War from long range to poke Ryze; the tornado hurts more against his health pool.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 },
+            { "kind": "champion", "key": "Ryze", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Galio:Ryze:4",
+          "text": "Hero's Entrance can land you on top of Ryze to join side lane fights; cast it from the minimap on an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Ryze", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d55d0bf9018985c37c1cf9240621b4f9776e8e4ccffd0b1396d6871fb851b566",
+      "tips": [
+        {
+          "id": "middle:Galio:Sylas:0",
+          "text": "Charge Shield of Durand when Sylas walks up to trade; it cuts the magic damage he deals and taunts him if you release it close.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Sylas", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Galio:Sylas:1",
+          "text": "Keep your passive shield up by staying out of damage between trades; Sylas deals only magic damage, which it absorbs.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Galio:Sylas:2",
+          "text": "Use Justice Punch when Sylas dashes in with Kingslayer or Abscond; the step back can also dodge his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Sylas-W", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Galio:Sylas:3",
+          "text": "Fire Winds of War at Sylas when he stands in the lane; the tornado that forms hurts more against his health.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Galio:Sylas:4",
+          "text": "Sylas heals most when he is low, so don't leave him alive at low health in range of Kingslayer. Finish him with a burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 84, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Galio:Sylas:5",
+          "text": "Hijack on Hero's Entrance gives Sylas a shield for his team too. Use Hero's Entrance before he can steal it, or when he is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-R", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Galio-R", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Sylas", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Galio-R", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:1",
+          "note": "Sylas's Abduct is a skillshot, and stepping back with Justice Punch early can dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-E", "start": 54, "end": 67 }
+          ]
+        },
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "If Sylas's Abduct knocks you up, you can still release Shield of Durand to taunt and damage him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Galio-W", "start": 55, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1e2e1ecaf6235aac2ab6d48ff29894cbe13b307f23bd874dcdb2ad32b916589a",
+      "tips": [
+        {
+          "id": "middle:Galio:TwistedFate:0",
+          "text": "Charge Shield of Durand when Twisted Fate goes for his Gold Card attack; it cuts the magic damage you take and you can release it even while stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 29,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "stunned", "start": 141, "end": 148 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Galio:TwistedFate:1",
+          "text": "Wait for Twisted Fate to spend Wild Cards, then step in with Justice Punch to knock him up.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 9, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 31,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Galio-E", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Galio:TwistedFate:2",
+          "text": "Use the step back of Justice Punch to dodge Wild Cards or a Gold Card attack.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 21, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 44,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Galio:TwistedFate:3",
+          "text": "Aim Winds of War so both windblasts meet on him; the tornado hurts a lot more against his low Health.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Galio:TwistedFate:4",
+          "text": "Look for Hero's Entrance when Twisted Fate uses Destiny to teleport, so you can arrive with your team at the same fight.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 9, "end": 24 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 30,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 48,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6066f72626a4214ff4c94d647cbdbe919f3336b3cf2ef269178f4b06b7d4877b",
+      "tips": [
+        {
+          "id": "middle:Galio:Viktor:0",
+          "text": "Charge Shield of Durand before Viktor's spells land; it cuts magic damage, and almost everything he has is magic.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Galio:Viktor:1",
+          "text": "Release Shield of Durand when Viktor steps close to taunt him, then punch him with Justice Punch while he can't walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Galio-E", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Galio:Viktor:2",
+          "text": "Aim Justice Punch so the dash doesn't hit a wall; it stops on terrain, and you lose the chance to knock him up.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Galio:Viktor:3",
+          "text": "Use the step back of Justice Punch to dodge Viktor's Hextech Ray or Gravity Field timing.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 21, "end": 34 },
+            { "kind": "champion", "key": "Viktor", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Viktor-E", "start": 53, "end": 64 },
+            { "kind": "ability", "key": "Viktor-W", "start": 68, "end": 81 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Galio:Viktor:4",
+          "text": "Walk out of Gravity Field before it stuns you; once it is set, don't stand inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Galio:Viktor:5",
+          "text": "Fire Winds of War at Viktor when he stands still to cast; the tornado hurts him more because it uses his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Galio:Viktor:6",
+          "text": "Use Hero's Entrance to join side-lane fights and push Viktor's team away from Arcane Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Viktor", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Viktor-R", "start": 78, "end": 90 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e8e827f48bb75ffef764ff8fdbdd5a84e71741280b73031507e58231679587d7",
+      "tips": [
+        {
+          "id": "middle:Galio:Yasuo:0",
+          "text": "Hold Shield of Durand when Yasuo walks in to trade; it cuts his damage, and releasing it taunts him so you can follow with Justice Punch.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Galio-E", "start": 123, "end": 136 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Galio:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks Winds of War, so wait for it to fade before you throw it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Galio-Q", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Galio:Yasuo:2",
+          "text": "Knocking Yasuo up with Justice Punch lets him use Last Breath, so only punch him when you can win the fight that follows.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Galio-E", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Galio:Yasuo:3",
+          "text": "Use Winds of War to poke him when his dash has no minion to use, and make the tornado catch him as he steps in.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Galio:Yasuo:4",
+          "text": "Your Hero's Entrance lands a knock up on his team, so aim it where allies will be hit by his Last Breath only when you are ready for it.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-R", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 93, "end": 104 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while knocked up lets Galio taunt and damage Yasuo instead of waiting.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 49, "end": 54 },
+            { "kind": "champion", "key": "Yasuo", "start": 72, "end": 77 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6c3f8544f40c0c5392bab61d6c2136660069bc8631d4ebcdb1929bb08d6e229c",
+      "tips": [
+        {
+          "id": "middle:Galio:Yone:0",
+          "text": "Charge Shield of Durand when Yone walks up to trade, then release it to taunt him. It also cuts the damage he deals to you.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Galio:Yone:1",
+          "text": "Use Winds of War from long range to poke him while he walks up for minions. The tornado also hurts a lot of his health.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Galio:Yone:2",
+          "text": "Use Justice Punch when Yone commits to a dash or a fight. It knocks him up, so you can follow with your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Galio:Yone:3",
+          "text": "Yone's Fate Sealed can pull your allies out of position, so use Hero's Entrance to land beside them and fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 },
+            { "kind": "ability", "key": "Galio-R", "start": 64, "end": 79 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Galio:Yone:4",
+          "text": "Don't rely on Justice Punch to chase him over walls. Galio's dash stops on terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 14, "end": 27 },
+            { "kind": "champion", "key": "Galio", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while crowd controlled lets Galio taunt Yone instead of waiting it out.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 55, "end": 60 },
+            { "kind": "champion", "key": "Yone", "start": 67, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2e45957c889e24f50e2ab7238a991825d72ac8fb672559922b26376589c54301",
+      "tips": [
+        {
+          "id": "middle:Galio:Zed:0",
+          "text": "Charge Shield of Durand before Zed dives in; it cuts the physical damage from his Razor Shuriken and Shadow Slash, and release it to taunt him.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Zed", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Zed-Q", "start": 82, "end": 96 },
+            { "kind": "ability", "key": "Zed-E", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Galio:Zed:1",
+          "text": "Zed's Death Mark makes him untargetable while he dashes in. Hit him with Justice Punch once he lands, or release Shield of Durand to taunt him.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Galio-E", "start": 73, "end": 86 },
+            { "kind": "ability", "key": "Galio-W", "start": 113, "end": 129 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Galio:Zed:2",
+          "text": "Use Winds of War to poke Zed from range, and while his Shadow is out, stay away from it, since it can slow you with Shadow Slash.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 106 },
+            { "kind": "ability", "key": "Zed-E", "start": 116, "end": 128 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Galio:Zed:3",
+          "text": "Zed is weak right after he casts Living Shadow. Punish him with Justice Punch then, because he has less mobility.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-W", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Galio-E", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Galio:Zed:4",
+          "text": "Zed's Death Mark detonates after a delay and his damage during it adds on. Keep Shield of Durand charged as he fights you, to cut that damage.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "Galio-W", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": [
+        {
+          "comboId": "middle:Galio:combo:2",
+          "note": "Releasing Shield of Durand while stunned lets Galio taunt Zed even when caught.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-W", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Galio", "start": 46, "end": 51 },
+            { "kind": "champion", "key": "Zed", "start": 58, "end": 61 }
+          ]
+        }
+      ]
+    }
+  ]
+}

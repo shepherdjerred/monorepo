@@ -1,0 +1,2727 @@
+{
+  "schemaVersion": 1,
+  "champion": "Shyvana",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "55b182605a36bb559e843584a91caa4807b60e9a598f0d6b5e7887c5098bf7df",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:general:0",
+          "text": "Cast Emberstrike before you attack a camp or an enemy; each hit lowers its cooldown, so keep attacking to use it again and again.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Shyvana:general:1",
+          "text": "Use Inferno Aegis when you start a camp; the shield and speed boost help you clear, and the blast hits everything around you.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Shyvana:general:2",
+          "text": "Use Inferno Aegis when you gank; the speed boost gets bigger when you run toward enemy champions.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shyvana:general:3",
+          "text": "Aim Molten Burst at a fleeing enemy; it leaves them slowed so you can catch up and attack.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Shyvana:general:4",
+          "text": "Keep hitting enemy champions to fill your Dragon Fury, and cast Dragon's Descent once it is full to fly into the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Shyvana:general:5",
+          "text": "Fight enemies who are grouped up while you are in Dragon Form; Molten Burst then pierces through them all and leaves a burning trail.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Shyvana:general:6",
+          "text": "Take down large monsters and enemy champions; each kill adds Scalemail stacks, which make you tougher.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Shyvana-passive",
+              "start": 61,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "df90a6a05bbbdb89233c4739963d78dd5c8d5615aefffcf1e0d1fe75179f4455",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Aatrox:0",
+          "text": "Stay close to Aatrox and keep attacking. Emberstrike and your Fury grow from hitting him, and he beats you if you stay at a distance.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Shyvana:Aatrox:1",
+          "text": "Use Inferno Aegis when you fight Aatrox. The shield and speed help you close in, and the blast hurts him when it goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:Shyvana:Aatrox:2",
+          "text": "Use Molten Burst on Aatrox when he backs away, so he is slowed and cannot easily dodge or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aatrox", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Shyvana:Aatrox:3",
+          "text": "Cast Dragon's Descent in fights where Aatrox's Infernal Chains would pull you. It makes you Unstoppable as you fly in.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Shyvana:Aatrox:4",
+          "text": "Walk to the side of the hit zones of The Darkin Blade, then fight back when he finishes the swings.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ab0af8f3ba5e113fd970a12400127460dbce0f3d86ca1ae628b76a2396c1ee7",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Ambessa:0",
+          "text": "Use Inferno Aegis when Ambessa jumps on you; the shield grows with enemy champions nearby, and the blast hurts her if she stays.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Shyvana:Ambessa:1",
+          "text": "Fight Ambessa in Dragon Form; Molten Burst then pierces and leaves a burning trail, and she stays slowed as you chase.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Shyvana:Ambessa:2",
+          "text": "Do not fight her while Dragon's Descent is unready; she hits hard and your Dragon Fury runs out quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Shyvana:Ambessa:3",
+          "text": "Chain Emberstrike attacks on her; each hit shortens its cooldown and the extra casts add damage in a short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6ad4b7da02b744e48e58da3eceef26b855d9ac520b7a27a7b4f69a0bf24a8d44",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Amumu:0",
+          "text": "Stay away from Amumu's Bandage Toss line; walking beside minions makes it harder for him to start a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Shyvana:Amumu:1",
+          "text": "Don't stand in Despair when you can avoid it; it hurts more the more Health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Amumu-W", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Shyvana:Amumu:2",
+          "text": "Don't clump with allies when Amumu has Curse of the Sad Mummy ready.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Amumu-R", "start": 39, "end": 61 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Shyvana:Amumu:3",
+          "text": "Use Inferno Aegis when you walk toward Amumu; the shield and speed help you close in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Amumu", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "18346d79ed2854415bc2bb4fcf6e1c85121d5fca3e8c7bb6f17af736c9fde664",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Belveth:0",
+          "text": "Fight Bel'Veth when Inferno Aegis is ready; the shield grows with each enemy champion nearby, and its blast hurts her when you pop it.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Shyvana:Belveth:1",
+          "text": "Use Molten Burst to slow Bel'Veth when she dashes, so she cannot easily slip away or line up her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Belveth", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Shyvana:Belveth:2",
+          "text": "Chain your Emberstrike casts between attacks so you deal extra damage in every swing of a short trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Shyvana:Belveth:3",
+          "text": "Take fights early before Bel'Veth stacks up attack speed; she gets much stronger the longer the game goes.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:Belveth:4",
+          "text": "Do not run away in a straight line; Bel'Veth's Void Surge dashes catch you, and Above and Below can knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Belveth-Q", "start": 47, "end": 57 },
+            { "kind": "ability", "key": "Belveth-W", "start": 80, "end": 95 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Shyvana:Belveth:5",
+          "text": "Use Dragon's Descent to fly out of or into a fight. You can't be pushed around while flying, and the fear stops her from attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "411b8ee147a0aefc8aac5c6aabe3b4b046d320be0ead170a2f5825ca9dd51a66",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Brand:0",
+          "text": "Close the gap with Dragon's Descent, since Brand wants to stay at range. Its fear leaves him unable to cast for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Brand", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Shyvana:Brand:1",
+          "text": "Dodge Sear and Pillar of Flame. Brand needs one of them to land before his combo can start.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Shyvana:Brand:2",
+          "text": "Sidestep Sear after Brand has hit you with another ability. If you are ablaze, it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 9, "end": 13 },
+            { "kind": "champion", "key": "Brand", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "ablaze", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Shyvana:Brand:3",
+          "text": "Use Inferno Aegis when you walk in on Brand. It shields you and speeds you up toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Brand", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Shyvana:Brand:4",
+          "text": "Stay away from your allies when Pyroclasm goes out. It starts slowly, so you have time to move.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a7ba197311db1d237b4238e2414a29f212830b7cf21ff0d6c98bd5a98ca42148",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Briar:0",
+          "text": "Cast Molten Burst at Briar as she leaps in or runs away; the slowed enemy is easier to catch and hit with Emberstrike.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 106, "end": 117 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Shyvana:Briar:1",
+          "text": "Use Inferno Aegis when Briar jumps on you; the shield soaks her burst and the blast hurts her when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Shyvana:Briar:2",
+          "text": "Fight Briar in Dragon Form when you can; the bigger fireball and the heal from Inferno Aegis beat her bleed healing in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Shyvana:Briar:3",
+          "text": "Briar's Head Rush stun is short and lands on whoever she picks. Keep your cooldowns ready so you can trade right back once it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Briar-Q", "start": 8, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f960f8987652518532b1c430355f999e292f9aeb8c59963d9956ddb87b201760",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Darius:0",
+          "text": "Keep your distance early. Darius is strongest when he can trade close up, so make him walk into your Molten Burst instead of brawling.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shyvana:Darius:1",
+          "text": "Cast Inferno Aegis as Darius closes in. The shield soaks his damage and the speed boost lets you walk away or turn and fight.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Shyvana:Darius:2",
+          "text": "Fire Molten Burst right after Darius uses Apprehend. He is left without his pull and can be harassed.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Darius-E", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Shyvana:Darius:3",
+          "text": "Don't stand in a tight line with allies when you fight in Dragon Form. Darius's Decimate hits everyone around him and heals him for each champion hit.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Darius-Q", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Shyvana:Darius:4",
+          "text": "Step out of the outer edge of Decimate. Its handle does less damage, so stay close to him rather than at the blade's edge.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Shyvana:Darius:5",
+          "text": "Slow him with Molten Burst when you want to leave a fight. Crippling Strike will slow you hard if he reaches you first.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Darius-W", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shyvana:Darius:6",
+          "text": "Don't fight him at low health once he has built up bleeding. Noxian Guillotine hits harder with each stack and can finish you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-R", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d71cdc7884ce66aca748ae7e9de23ea06adc20eddf451cd4c8ea19860469ecdc",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Diana:0",
+          "text": "Save Dragon's Descent for when Diana pulls you in, since you are Unstoppable while flying and can escape her pull and fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Shyvana:Diana:1",
+          "text": "Hit Diana with Molten Burst as she dashes in; it leaves her slowed and gives you room to fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Shyvana:Diana:2",
+          "text": "Use Inferno Aegis as the fight starts; the shield soaks her burst and the explosion hurts her when she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Shyvana:Diana:3",
+          "text": "Chain Emberstrike casts with your attacks once Diana is on you; her low defenses mean sustained hits add up quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Diana", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c10b8374567df233a1059ed446cc85e30a671651c03d5547931fc940a993e0cf",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:DrMundo:0",
+          "text": "Keep Mundo from getting free Infected Bonesaw hits; the slow lets him catch you and he heals when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:DrMundo:1",
+          "text": "Skip using crowd control to lock Mundo down; Goes Where He Pleases blocks the first one, so bait it out first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "DrMundo-passive",
+              "start": 45,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Shyvana:DrMundo:2",
+          "text": "Hit Mundo with burst after he uses Maximum Dosage begins; if he lives he heals through it, so fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Shyvana:DrMundo:3",
+          "text": "Use Inferno Aegis when Mundo is next to you; the shield grows with nearby enemies and the blast hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Shyvana:DrMundo:4",
+          "text": "Step on Mundo's canister to destroy it so he cannot heal from it.",
+          "refs": [],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "474e2801685d040c1cf9441094989bf249a2a0fb8ab733b1e5944d51ca0be294",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Ekko:0",
+          "text": "Stay close to Ekko and keep hitting him; Shyvana's power comes from fighting up close, and Ekko wants to trade at range.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 14, "end": 18 },
+            { "kind": "champion", "key": "Shyvana", "start": 41, "end": 48 },
+            { "kind": "champion", "key": "Ekko", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Shyvana:Ekko:1",
+          "text": "Use Inferno Aegis when you walk onto Ekko; the shield and extra speed help you close in and take his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Shyvana:Ekko:2",
+          "text": "Hit Ekko with Molten Burst to keep him slowed so he can't easily escape your Emberstrike hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Shyvana:Ekko:3",
+          "text": "Cast Dragon's Descent on Ekko once he has used Chronobreak. He can't rewind out of the fight, and you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ekko", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ekko-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Shyvana:Ekko:4",
+          "text": "Step out of the Parallel Convergence circle when you see its image appear. Being stunned in it will cost you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8fb826fb05541468c15e483ef6cfa9701e3db0998d351ceeee4fc90cc6601289",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Evelynn:0",
+          "text": "Do not stand in melee with Evelynn after she marks you with Allure. Move away or keep allies near you so she cannot reach you uncontested.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Shyvana:Evelynn:1",
+          "text": "Use Inferno Aegis when Evelynn jumps in; the shield and speed help you survive her burst, and its blast hurts her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Evelynn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Shyvana:Evelynn:2",
+          "text": "Use Molten Burst to slow Evelynn as she comes in, then fight back with Emberstrike.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Evelynn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Shyvana:Evelynn:3",
+          "text": "Keep your health up. Evelynn's Last Caress deals huge damage to low-health targets, so retreat before you drop low.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb53ca2f3a21835d04a388953cdea6abe48201fb064ada49c0905d1613fae402",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Fiddlesticks:0",
+          "text": "Be careful in brush and when Fiddlesticks stands still. A scarecrow may be him, and Terrify, Reap or Bountiful Harvest can fear you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 84,
+              "end": 91
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 93,
+              "end": 97
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 101,
+              "end": 118
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Shyvana:Fiddlesticks:1",
+          "text": "Do not walk into the middle of Reap. You will be slowed and silenced, so step out of the area to stay free of the silence.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 31,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 68 },
+            { "kind": "keyword", "key": "silenced", "start": 114, "end": 121 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Shyvana:Fiddlesticks:2",
+          "text": "Fiddlesticks is fragile. Once you reach him, hit him with Emberstrike and use Inferno Aegis to shield against his burst.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 0,
+              "end": 12
+            },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 58, "end": 69 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 78, "end": 91 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Shyvana:Fiddlesticks:3",
+          "text": "Use Dragon's Descent to escape or cut through Crowstorm. You are Unstoppable while you fly, so his channel cannot hold you in place.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 46,
+              "end": 55
+            }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Shyvana:Fiddlesticks:4",
+          "text": "Move away from your allies when he channels Crowstorm, and do not stand in it. It hits everyone in the area for several seconds.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 44,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e36e69e64ccb4871478e4f78a81174cefa178504b802941a1d3a3d6e360e92df",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Graves:0",
+          "text": "Stay close to Graves; Shyvana is weak when kept at range, so use Dragon's Descent to land on him instead of walking up through his shots.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 14, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Shyvana:Graves:1",
+          "text": "Use Inferno Aegis before you step into his range; the shield soaks his burst and the speed boost closes the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Shyvana:Graves:2",
+          "text": "Aim Molten Burst at him when he tries to back away; it leaves him slowed so you can catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Shyvana:Graves:3",
+          "text": "Do not fight inside his Smoke Screen; it slows you and hides what is outside. Step out and the slow ends.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 24, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Shyvana:Graves:4",
+          "text": "Hold Dragon's Descent until you are in Dragon Form's reach of him; the fear stops him from shooting for a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbe8a6fe3757a1179e8779b6f72f71fc4f69229efc311a34b68f846b30669b19",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Gwen:0",
+          "text": "Use Molten Burst to slow Gwen as she tries to run, then hit her with attacks; she cannot be targeted while she stays inside her mist.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Gwen", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Shyvana:Gwen:1",
+          "text": "Wait out Hallowed Mist instead of chasing. Enemy attacks and spells aimed at Gwen from outside it are destroyed, so save your abilities until she leaves it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-W", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Gwen", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Gwen:2",
+          "text": "Use Inferno Aegis when you fight Gwen; the shield and speed boost help you close in and survive her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gwen", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shyvana:Gwen:3",
+          "text": "Jump on Gwen early, before she has built up her attacks. Her damage needs several hits to get going.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Shyvana:Gwen:4",
+          "text": "Hit Gwen with Emberstrike attacks as she skirmishes; they cut its cooldown, so you can fire it again soon.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b1b84fcdb53bf27f529072a7dc6a38797224c321063691870f137aab8e3ab796",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Hecarim:0",
+          "text": "Use Molten Burst on Hecarim as he charges in; he is slowed, which makes it easier to stay near him and keep hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Hecarim", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Shyvana:Hecarim:1",
+          "text": "Cast Inferno Aegis when Hecarim runs at you; the shield soaks his burst and the explosion hurts him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Hecarim", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Shyvana:Hecarim:2",
+          "text": "Don't fight Hecarim right after he lines up Devastating Charge from far away; it knocks you back and hits hard when he has traveled far.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shyvana:Hecarim:3",
+          "text": "Bring Dragon's Descent into a fight only when your Fury is full, then fight Hecarim in Dragon Form so Emberstrike and Molten Burst get stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Hecarim", "start": 76, "end": 83 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 102, "end": 113 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 118, "end": 130 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Hecarim:4",
+          "text": "Stay close to Hecarim and keep hitting him with Emberstrike; he has little way to stop you once you are on him.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 48, "end": 59 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac79caf2ce64a8465f29698f16a6f4d51b022ef538acc2f33005dfc2f1dcb47b",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Ivern:0",
+          "text": "Ivern can't attack or be attacked by most jungle monsters, so he clears by freeing camps. Use that to track him: a camp that grows a grove is one he is taking.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Ivern:1",
+          "text": "Cast Dragon's Descent over Ivern and his allies in a fight; the enemies it hits flee and can't escape, which breaks up his peel.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ivern", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Shyvana:Ivern:2",
+          "text": "Dodge Rootcaller when you walk toward him; if it hits, you are rooted and open to Daisy and his team.",
+          "refs": [
+            { "kind": "ability", "key": "Ivern-Q", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Shyvana:Ivern:3",
+          "text": "Use Inferno Aegis when you walk into brush fights; the shield and speed help you reach him before he slips away.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shyvana:Ivern:4",
+          "text": "Aim Molten Burst at him as he retreats; it slows him, so you can catch up.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "eb12a5d49ff3feb3d14b10aae4bfae676c0c3468a35068160937aadeb17799ba",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:JarvanIV:0",
+          "text": "Keep your distance from Jarvan and stay out of the line between him and his Demacian Standard. Otherwise Dragon Strike knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 76, "end": 93 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 105, "end": 118 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Shyvana:JarvanIV:1",
+          "text": "Use Inferno Aegis for the shield and the speed boost when you close in on Jarvan. It is strongest when he is near you.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Shyvana:JarvanIV:2",
+          "text": "Fly out of Cataclysm's walls with Dragon's Descent once you have enough Fury. Movement abilities can pass through the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 34, "end": 50 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Shyvana:JarvanIV:3",
+          "text": "Hit Jarvan with Molten Burst to slow him while you attack. Aim it so he cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a2defd641cad12f6bf118ca01a07930a907a4ff9a02ceb63759a5986a7c01709",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Jax:0",
+          "text": "Don't auto-attack Jax while Counter Strike is up; you will miss and he then stuns you. Step back or use abilities until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 18, "end": 21 },
+            { "kind": "ability", "key": "Jax-E", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Shyvana:Jax:1",
+          "text": "Hit Jax with Molten Burst as he leaps in; it slows him, and you can stay on him with Emberstrike.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Shyvana:Jax:2",
+          "text": "Use Inferno Aegis when Jax commits; the shield soaks his burst and the speed lets you chase or leave.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jax", "start": 23, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Shyvana:Jax:3",
+          "text": "Jax gets stronger the longer he keeps hitting you with Relentless Assault. Break his attack chain by backing off and re-engaging.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Jax-passive", "start": 55, "end": 73 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Shyvana:Jax:4",
+          "text": "Save Dragon's Descent to jump on Jax once Counter Strike is spent; the fear stops his attack chain.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jax", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Jax-E", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "47f7bcf2c5a2d4d06d5e2433cd9302ca1a586a04e6c93083235a5491fc217080",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Jayce:0",
+          "text": "Stay close to Jayce. Shyvana gains power from hitting him, and he is weak when you reach him in melee, so close the gap with Dragon's Descent.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 14, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 125, "end": 141 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Shyvana:Jayce:1",
+          "text": "When Jayce is in Cannon form, fight him up close with Emberstrike. Don't stand at range and trade shots with him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Shyvana:Jayce:2",
+          "text": "Use Inferno Aegis when you go in on Jayce. The shield and the speed boost toward him help you reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Shyvana:Jayce:3",
+          "text": "Hit Jayce with Molten Burst so he is slowed and can't kite you easily. In Dragon Form it also pierces and leaves a damaging trail.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "963e97c0fe1c305444914f78fc0793c5f98fa6cfe81f1f4f97159e60e8e5c03a",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Karthus:0",
+          "text": "Close the gap with Inferno Aegis; the shield and extra speed toward Karthus let you reach him through his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 19, "end": 32 },
+            { "kind": "champion", "key": "Karthus", "start": 68, "end": 75 },
+            { "kind": "keyword", "key": "poke", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Shyvana:Karthus:1",
+          "text": "Use Dragon's Descent to jump onto Karthus; he is hurt a lot once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Karthus", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Shyvana:Karthus:2",
+          "text": "Do not walk through Wall of Pain if you can walk around; it slows you and cuts your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 20, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shyvana:Karthus:3",
+          "text": "Step away from his corpse after you kill him; Death Defied lets him keep casting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 46,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:Karthus:4",
+          "text": "Stay healthy enough to survive Requiem, and back off to heal when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Shyvana:Karthus:5",
+          "text": "Aim Molten Burst at him as he backs away; it slows him so you can catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b8d758cec895212d7bba1ae3b2ecdaa21dc338df802b15879fafee83bfb3bbf",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Kayn:0",
+          "text": "Fight Kayn once you have Dragon's Descent ready; the fear and extra health let you win a straight fight, so look for him after you land the first hit.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Shyvana:Kayn:1",
+          "text": "Hit Kayn with Molten Burst when he runs away; he is slowed and easier to catch, and the fireball goes a long way.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 14, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Shyvana:Kayn:2",
+          "text": "Turn on Inferno Aegis when Kayn jumps in or you fight him; the shield grows with each enemy champion nearby and you run faster toward him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 8, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shyvana:Kayn:3",
+          "text": "Chain your Emberstrike recasts into your basic attacks when you trade; each attack is reset, so you deal a lot in a short fight.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2da9e2c46cfe742ffd88ec50be78ed4b3cb803261aabd20712bd4c7207c25535",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Khazix:0",
+          "text": "Stay near your laner or camps when Kha'Zix is around; alone, you take far more damage from Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "isolated", "start": 54, "end": 59 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 91, "end": 107 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Shyvana:Khazix:1",
+          "text": "When Kha'Zix leaps in, turn on Inferno Aegis; the shield soaks his burst and the detonation hurts him if he stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Shyvana:Khazix:2",
+          "text": "Use Molten Burst on Kha'Zix when he runs; it leaves him slowed so you can catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Shyvana:Khazix:3",
+          "text": "Fight him once his Leap is on cooldown; he has few ways to escape or dive then.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Shyvana:Khazix:4",
+          "text": "Trade with Emberstrike autos when he comes to you; keep attacking to refill your Dragon Fury for Dragon's Descent.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 11, "end": 22 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 97, "end": 113 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "02bc68a4216d3e900998bd8c787001ceaf9208d858fd620e6b7cea18baefcf20",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Kindred:0",
+          "text": "Dive Kindred when she is out of position. Dragon's Descent makes you unstoppable, and its fear stops her from kiting you.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Shyvana:Kindred:1",
+          "text": "Close the gap with Inferno Aegis; it gives you extra move speed, more when you run toward enemy champions, so Kindred can't just walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 19, "end": 32 },
+            { "kind": "champion", "key": "Kindred", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Kindred:2",
+          "text": "Use Molten Burst to get her slowed before you commit. A slowed Kindred can't back away from your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            { "kind": "champion", "key": "Kindred", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Shyvana:Kindred:3",
+          "text": "Don't use your full burst while Lamb's Respite is active. Enemies inside can't die, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:Kindred:4",
+          "text": "Chain your Emberstrike hits when you fight her; she is fragile and takes heavy damage from your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bdeaed8e294f972e043c582cbc01e75518a1a8ff575e794be4c339abbf91e8af",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:LeeSin:0",
+          "text": "Stay close to Lee Sin and keep attacking. Your damage and Dragon Fury come from hitting him, and he is weak when he cannot chain his abilities.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shyvana:LeeSin:1",
+          "text": "Use Inferno Aegis when Lee Sin dives in; the shield and speed help you survive and stay on him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shyvana:LeeSin:2",
+          "text": "Aim Molten Burst at Lee Sin as he leaves or chases. It slows him, and he takes magic damage, which his Iron Will does not reduce.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Shyvana:LeeSin:3",
+          "text": "Stay away from your teammates when Lee Sin has Dragon's Rage; a kick that sends him into allies hurts them.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "45e01f3a2cf421f6a64c7314e1be30952586665fa40de335b3702918c1871032",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Lillia:0",
+          "text": "Use Molten Burst on Lillia when she runs away; the slow makes her easier to catch and she cannot kite you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lillia", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Lillia:1",
+          "text": "Cast Dragon's Descent only when you can land on her; she will struggle to escape once you are on top of her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Shyvana:Lillia:2",
+          "text": "Open a fight with Inferno Aegis; the shield absorbs her poke and the speed boost lets you close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Lillia:3",
+          "text": "Stay on her with Emberstrike attacks instead of chasing without hitting; its attacks reset and shorten the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "359f66ec168c0dfbb8a317dcb9c6e2952e631d291be841fbdcee93805014503f",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:MasterYi:0",
+          "text": "Stay close and keep hitting Master Yi. Emberstrike resets your attacks, and Inferno Aegis gives you a shield and speed to trade with him.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 39, "end": 50 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 76, "end": 89 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Shyvana:MasterYi:1",
+          "text": "Do not rely on Molten Burst to catch him once Highlander is active; he is immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 46, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shyvana:MasterYi:2",
+          "text": "Hit him a few times when he heals with Meditate so he burns mana. Do not chase him while he channels, because he takes much less damage then.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 39, "end": 47 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Shyvana:MasterYi:3",
+          "text": "Save Dragon's Descent to fear him when he dives in. He can't act while he is in the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a06407a6ca580fde1dd5cdf890fbfe898bd83951ba0b3eb4f04620c34bc8bd84",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:MonkeyKing:0",
+          "text": "Wait a moment before using abilities when Wukong disappears; Warrior Trickster leaves a clone, so hit the real one.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Shyvana:MonkeyKing:1",
+          "text": "Use Inferno Aegis when Wukong dives in with Nimbus Strike. The shield absorbs his burst and the blast hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Shyvana:MonkeyKing:2",
+          "text": "Hit Wukong with Molten Burst to keep him slowed when he tries to chase or run away.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Shyvana:MonkeyKing:3",
+          "text": "Do not stand next to your allies when Wukong uses Cyclone. It knocks everyone up and hurts their max Health.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Shyvana:MonkeyKing:4",
+          "text": "Do not fight Wukong in a long, drawn-out trade. He gets sturdier with every hit.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 13, "end": 19 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "07b9489fb1024f8bdb146ff121402320b99169344af2158b9b8fbdac8d387687",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Naafiri:0",
+          "text": "Cast Molten Burst at Naafiri when she backs off or jumps in; it slows her, and in Dragon Form it pierces through her packmates to reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Shyvana:Naafiri:1",
+          "text": "Use Inferno Aegis when Naafiri commits to you; the shield soaks her burst and the blast hurts her and her packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Shyvana:Naafiri:2",
+          "text": "Fight Naafiri with Emberstrike ready and keep attacking; each hit shortens its cooldown and the extra casts add damage.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Shyvana:Naafiri:3",
+          "text": "Hold Dragon's Descent until Naafiri jumps on you or tries to escape; it makes enemies flee and you can fly past her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7985ccd27ed8f648566bd64b5064a5875f1526a7a8b2c22f6d419e993fb84ace",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Nidalee:0",
+          "text": "Stay close to Nidalee and keep attacking. Emberstrike gets your attacks going and she is weak in melee range.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shyvana:Nidalee:1",
+          "text": "Walk around brush carefully, because Nidalee can hide traps there. A Bushwhack trap deals damage over time and lets her find you.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Shyvana:Nidalee:2",
+          "text": "Use Inferno Aegis when you walk toward her; the shield soaks up a Javelin Toss and you move faster toward enemy champions.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Shyvana:Nidalee:3",
+          "text": "Aim Molten Burst at her when she is Hunted or running away; it slows her. In dragon form it passes through enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Nidalee:4",
+          "text": "Save Dragon's Descent to close the gap when she is hurt or has used her traps. It makes you unstoppable on the way in.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "39b2ef3212b8c801b71725ebb23a43bfd5f4b4b186f9b2b171f8c5c3ccf93551",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Nocturne:0",
+          "text": "Save Inferno Aegis to meet Nocturne when he jumps in; the shield absorbs his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Nocturne", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Shyvana:Nocturne:1",
+          "text": "Do not throw Molten Burst into Shroud of Darkness; wait until his shield is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 13, "end": 25 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Shyvana:Nocturne:2",
+          "text": "Move away from Nocturne when Unspeakable Horror starts; the tether breaks with distance and the fear never lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Nocturne:3",
+          "text": "Stay near your allies when Paranoia goes off; his jump needs you to be alone.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 27, "end": 35 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abd40089f90f2475d5bd107b47cbba1992b7ac83b4207cf37fa28fc5e3cc57cb",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Nunu:0",
+          "text": "Stay out of Biggest Snowball Ever!'s path and turn sharply when it comes at you. It is fast but turns slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 12, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:Nunu:1",
+          "text": "Use Inferno Aegis when Nunu and Willump get close; the shield and speed help you stay in the fight. Recast it to damage them.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Shyvana:Nunu:2",
+          "text": "Walk out of Snowball Barrage after the first volley hits, so you dodge the root that follows.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Shyvana:Nunu:3",
+          "text": "Fly out with Dragon's Descent before Absolute Zero grows strong, or step out of its area. Flash also escapes it.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Nunu-R", "start": 37, "end": 50 },
+            { "kind": "summoner-spell", "key": "4", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Shyvana:Nunu:4",
+          "text": "Chain attacks with Emberstrike in short fights; each hit lowers its cooldown, so you trade well against Nunu and Willump up close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac2eb869f0b48b8d873ecce718d3889a52dbbc0efd57fc0f1aa1bd7ff20b8a0c",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Pantheon:0",
+          "text": "Keep hitting Pantheon with attacks; Emberstrike is powered by your attacks and its cooldown shortens with every hit.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Shyvana:Pantheon:1",
+          "text": "Do not fight Pantheon face to face while Aegis Assault is up; walk around him or wait until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shyvana:Pantheon:2",
+          "text": "Use Inferno Aegis when Pantheon jumps in; the shield soaks his burst and the blast hurts him back.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Shyvana:Pantheon:3",
+          "text": "Stay healthy near Pantheon; a thrown Comet Spear hits very hard when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Shyvana:Pantheon:4",
+          "text": "Step out of the marked area when Grand Starfall starts; Pantheon takes a while to land, so move away.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 33, "end": 47 },
+            { "kind": "champion", "key": "Pantheon", "start": 56, "end": 64 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "86b9401d87d82c03558d948d81cb27747d512527ca695cdff9c50bf8dc9938c2",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Qiyana:0",
+          "text": "Use Molten Burst to slow Qiyana when she dashes in, then fight her with Emberstrike while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Qiyana", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 72, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Shyvana:Qiyana:1",
+          "text": "Cast Inferno Aegis before you trade with Qiyana. The shield soaks her burst, and the explosion hurts her if she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Qiyana", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:Shyvana:Qiyana:2",
+          "text": "Save Dragon's Descent for when Qiyana is close or about to dash in. Dragon Form makes you sturdier and your abilities hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Qiyana", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Shyvana:Qiyana:3",
+          "text": "Stay near Qiyana and keep hitting her. Shyvana gets stronger by attacking, and Qiyana wants to hit and leave.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 10, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 39, "end": 46 },
+            { "kind": "champion", "key": "Qiyana", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4dfaa6e65d35b6f29ae12a61f738a5de47b8e438b33264b6c98b80a7270c5dc9",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Rammus:0",
+          "text": "Don't attack Rammus while Defensive Ball Curl is up. It hurts you for each attack and he is very tanky; wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Rammus-W", "start": 26, "end": 45 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Shyvana:Rammus:1",
+          "text": "Keep your distance from Rammus when Frenzying Taunt is ready, or he can force you to attack him. Look for a moment when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Rammus-E", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Shyvana:Rammus:2",
+          "text": "Use Molten Burst from range to slow Rammus and hit him as he rolls at you. Rammus is weakest when Defensive Ball Curl is off.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Rammus", "start": 36, "end": 42 },
+            { "kind": "champion", "key": "Rammus", "start": 75, "end": 81 },
+            { "kind": "ability", "key": "Rammus-W", "start": 98, "end": 117 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Shyvana:Rammus:3",
+          "text": "Use Inferno Aegis when Rammus rolls in with Powerball. It gives you a shield and speed to take the hit and go.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rammus", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c3204a0c25d3926507cf4111cfee2213430eb2033b25293da10a44fc199a3b2",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:RekSai:0",
+          "text": "Stay close to Rek'Sai and keep hitting her; Shyvana is strongest when she is attacking, and Rek'Sai's Tunnel lets her slip away if you hang back.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 14, "end": 21 },
+            { "kind": "champion", "key": "Shyvana", "start": 44, "end": 51 },
+            { "kind": "champion", "key": "RekSai", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Shyvana:RekSai:1",
+          "text": "Use Inferno Aegis when you fight Rek'Sai. The shield and extra Move Speed help you close in and trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "RekSai", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Shyvana:RekSai:2",
+          "text": "Use Molten Burst on Rek'Sai as she backs away; it leaves her slowed and easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "RekSai", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Shyvana:RekSai:3",
+          "text": "Be careful when her Fury is full, because Furious Bite then deals true damage. Don't take a long trade with her at that point.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Shyvana:RekSai:4",
+          "text": "Keep Dragon's Descent for when you have full Fury. In Dragon Form you are Unstoppable, so you can dive in and fight her through crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9e160f59d85a418b935bc61d4d2826ddf751b6c87088a0263cf361e99055828b",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Rengar:0",
+          "text": "Cast Inferno Aegis when Rengar leaps in or jumps you; the shield grows with each nearby enemy champion and the burst hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Rengar", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Shyvana:Rengar:1",
+          "text": "Hold Molten Burst for when Rengar runs away or closes in; it leaves him slowed and he can't easily catch you or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Rengar", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Shyvana:Rengar:2",
+          "text": "Stay away from brush when you think Rengar is near, because he can leap out of it onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Shyvana:Rengar:3",
+          "text": "Fight him in Dragon Form; Dragon's Descent makes you sturdier and makes your abilities stronger, and its fear stops his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Shyvana:Rengar:4",
+          "text": "Use Emberstrike in every trade; the extra attacks hit hard and keep your Dragon Fury building.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9993de49f6d646f9156f4266c350b40632e6bb90b2b880e0982964f1974032e8",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Sejuani:0",
+          "text": "Keep Inferno Aegis up when Sejuani's team starts a fight; the shield grows with each nearby enemy champion and the burst hurts them all.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sejuani", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Shyvana:Sejuani:1",
+          "text": "Aim Molten Burst at Sejuani as she charges in; it slows her, but her Frost Armor can stop it from working while she is armored.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sejuani", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Shyvana:Sejuani:2",
+          "text": "Do not stand in a line with your team in dragon form's path of Glacial Prison; sidestep the bola, because a stun there loses you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-R", "start": 63, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 112 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Shyvana:Sejuani:3",
+          "text": "Use Dragon's Descent when you need to escape or finish a fight; you are unstoppable while you fly, so it can get you out of a stun setup.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5f7b177d7a353f9fa2fa46ef84fd2aa7af7df5a380a883bb859157545cf000a8",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Shaco:0",
+          "text": "Do not chase Shaco blindly into fog; Jack In The Box can hide anywhere and will fear and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Shaco-W", "start": 37, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Shyvana:Shaco:1",
+          "text": "Use Inferno Aegis when Shaco jumps on you; the shield soaks his burst and the move speed helps you catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Shaco", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Shyvana:Shaco:2",
+          "text": "Hit Shaco with Molten Burst to slow him when he is visible; he is fragile once caught.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Shyvana:Shaco:3",
+          "text": "Keep Shaco's Hallucinate clone in mind; when it dies it explodes and drops boxes, so kill it away from your team.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Shaco-R", "start": 13, "end": 24 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Shyvana:Shaco:4",
+          "text": "Face Shaco when he vanishes; his Deceive attack from behind is a critical strike, so do not give him your back.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "122577601187ef58ba4020b4b3e2c1c8c8f8884bf91b9f8dbe97d1948234b88e",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Skarner:0",
+          "text": "Do not cluster with allies when you fight Skarner. Keep your distance until you are ready to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Shyvana:Skarner:1",
+          "text": "Watch for Skarner charging with Ixtal's Impact. Stay away from walls, or he can stun you by slamming you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Skarner-E", "start": 32, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Skarner:2",
+          "text": "Save Dragon's Descent as an escape or a way to dodge Impale. You are unstoppable while you fly.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Skarner-R", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:Shyvana:Skarner:3",
+          "text": "Use Molten Burst to slow Skarner as he closes in, then hit him with Emberstrike.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Skarner", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shyvana:Skarner:4",
+          "text": "Inferno Aegis gives you a shield and speed when Skarner is near. Use it to take his hits and then trade back.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Skarner", "start": 48, "end": 55 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9d8b6b62b39746af77543371b702ff05518ad1955b6b0ac2c5c8b0fb095474a2",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Sylas:0",
+          "text": "Fight Sylas up close and keep attacking him; Emberstrike and your attacks do the most when you stay on him, and he is weaker if you stay out of his chains.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Shyvana:Sylas:1",
+          "text": "Cast Inferno Aegis as you close in on Sylas; the shield soaks his burst and the speed boost helps you catch him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Shyvana:Sylas:2",
+          "text": "Sidestep Abduct; if Sylas misses, he has no quick way onto you and you can go in on him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Shyvana:Sylas:3",
+          "text": "Aim Molten Burst at Sylas as he steps up; it slows him and his dashes stay shorter.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Shyvana:Sylas:4",
+          "text": "Do not trade into a Sylas with low health when he has Kingslayer ready; he heals back a lot from hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Sylas-W", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Shyvana:Sylas:5",
+          "text": "Use Dragon's Descent when Sylas is no longer able to run from you; he can steal it with Hijack, so go in when his ultimate is down.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sylas", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Sylas-R", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "75f0527ce91f5b4dd164fcb3055085e811cd6f5669582a5bd2ab0a155f0883f8",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Talon:0",
+          "text": "Keep Inferno Aegis for when Talon jumps on you. The shield soaks his burst, and the blast hurts him if he stays.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Shyvana:Talon:1",
+          "text": "Talon's damage is all physical, so Scalemail from takedowns helps you survive his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            {
+              "kind": "ability",
+              "key": "Shyvana-passive",
+              "start": 35,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Shyvana:Talon:2",
+          "text": "Hit Talon with Molten Burst when he lands to slow him. He has trouble escaping while slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Shyvana:Talon:3",
+          "text": "Use Dragon's Descent to catch Talon once Shadow Assault is spent. He is much easier to kill without his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Talon-R", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Shyvana:Talon:4",
+          "text": "Use Emberstrike on Talon the moment he commits to an attack. It adds damage in a fight you want to keep short.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "21283a1b155199dd5a8751135c8180d4ea4f30511cd967bbe3f132a4117505c6",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Trundle:0",
+          "text": "Do not chase Trundle into his Frozen Domain; he is far stronger there. Pull the fight outside it.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Trundle-W", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shyvana:Trundle:1",
+          "text": "Leave Pillar of Ice quickly; it slows you, and Trundle uses it to block your escape or your chase.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 },
+            { "kind": "champion", "key": "Trundle", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Shyvana:Trundle:2",
+          "text": "Use Inferno Aegis when Trundle commits to you; the shield and Move Speed help you fight back, and the blast hurts him.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Trundle", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Shyvana:Trundle:3",
+          "text": "Fire Molten Burst at Trundle as he walks up; it slows him and chips his health.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Trundle", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Shyvana:Trundle:4",
+          "text": "Trundle's Chomp lowers your Attack Damage, so avoid long trades after you take it; back off until it wears off.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4e6b8dadbbcddbcfca3a770fe528f9a16fdf41f2a041687a71a78e84215c7fce",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Udyr:0",
+          "text": "Do not stand still when Udyr is near; his Blazing Stampede attack dashes onto you and stuns. Use Inferno Aegis for its shield and speed.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Udyr-E", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 97, "end": 110 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Shyvana:Udyr:1",
+          "text": "Fire Molten Burst at Udyr as he approaches; it slows him, and the fireball is bigger in dragon form.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Udyr", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shyvana:Udyr:2",
+          "text": "Use Dragon's Descent to escape or finish a fight; Shyvana is Unstoppable while flying, and the fear can break his chase.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "abb0a9c7196935bc76ae362db481096c1fa39ed12602c954f14532880349fafd",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Vi:0",
+          "text": "Cast Inferno Aegis when Vi starts her fight; the shield grows with each enemy champion nearby and you run faster toward them.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Shyvana:Vi:1",
+          "text": "Fire Molten Burst at Vi as she charges Vault Breaker; she is slowed while charging, so it is easy to land and slows her more.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Vi-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Shyvana:Vi:2",
+          "text": "Don't trade in a long brawl once Vi has hit you three times; she cuts your Armor and attacks faster. Break off or use Emberstrike to finish quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 118, "end": 129 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Shyvana:Vi:3",
+          "text": "Dragon's Descent makes you unstoppable as you fly, so use it to start a fight or escape when Vi tries to lock you down.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 0, "end": 16 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e6ada07fadd818886929f2424004f9495db3b776863d67770f4f920f2cc3f273",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Viego:0",
+          "text": "Start your fight with Inferno Aegis; the shield and speed let you close on Viego, and it grows with every enemy champion nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 22, "end": 35 },
+            { "kind": "champion", "key": "Viego", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Shyvana:Viego:1",
+          "text": "Hit Viego with Molten Burst before he gets away; it leaves him slowed so you can keep attacking.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 15, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Viego:2",
+          "text": "Chain your Emberstrike casts between attacks. They reset your attack timer and build your Dragon Fury quickly in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 11, "end": 22 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Shyvana:Viego:3",
+          "text": "Use Dragon's Descent once your Dragon Fury is full. Fight Viego in Dragon Form, where your abilities hit harder and have extra effects.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Viego", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Shyvana:Viego:4",
+          "text": "Stay close to Viego. His stun from Spectral Maw is blocked by the first unit it hits, so fight with minions or monsters between you only when it helps you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Viego-W", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7a5a55b5034064f26614d7c530ba9c3972ca3110eea1896af807622e70f2318",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Volibear:0",
+          "text": "Pull Volibear's Thundering Smash stun out of him by keeping your distance; if he cannot reach you, his burst is wasted.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Shyvana:Volibear:1",
+          "text": "Throw Molten Burst at Volibear as he runs in so he is slowed and you keep space.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Shyvana:Volibear:2",
+          "text": "Use Inferno Aegis when he jumps on you; the shield and detonation punish him for coming close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Shyvana:Volibear:3",
+          "text": "Fight him in dragon form: Emberstrike gets an extra bite and Molten Burst pierces, which helps against his healing from Frenzied Maul.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 26, "end": 37 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 61, "end": 73 },
+            { "kind": "ability", "key": "Volibear-W", "start": 120, "end": 133 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fad5031409a8620e95df1ddf2031fa47ada47a98a54edc56a40c4a26ef954fd1",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Warwick:0",
+          "text": "Stay out of Warwick's reach when he is hunting you; Jaws of the Beast can follow your dashes if he holds it.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Shyvana:Warwick:1",
+          "text": "Keep your health up; Warwick speeds toward you and attacks faster once you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Shyvana:Warwick:2",
+          "text": "Use Inferno Aegis when Warwick closes in; the shield and extra speed help you survive his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Warwick", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Shyvana:Warwick:3",
+          "text": "Aim Molten Burst at Warwick as he approaches; it slows him and gives you space.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Warwick", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Shyvana:Warwick:4",
+          "text": "Keep hitting Warwick with attacks to refill your Dragon's Descent fury, then transform to win the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "40a6548e8e759b9c51e3b5242680691324ef7299353a523a9866c514ce179912",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:XinZhao:0",
+          "text": "Stay out of Xin Zhao's reach. Audacious Charge goes farther on a Challenged target, so do not trade in his range.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Shyvana:XinZhao:1",
+          "text": "Use Inferno Aegis when Xin Zhao starts his Three Talon Strike combo. The shield and extra speed blunt his burst and help you reset the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 43, "end": 61 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Shyvana:XinZhao:2",
+          "text": "Aim Molten Burst at Xin Zhao as he closes in. It slows him, and in Dragon Form it passes through enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Shyvana:XinZhao:3",
+          "text": "Do not stand in the sweep range of Crescent Guard. He takes no damage from enemies outside it for a few seconds, so back off and wait out that window.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "43048208d52f9daf2618a332c031837c79b1308a19a5036c76fb2b05d13f3ee3",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Zac:0",
+          "text": "Stay away from Zac's goo chunks; step on them to destroy them so he cannot heal from them.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 15, "end": 18 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Shyvana:Zac:1",
+          "text": "Kill every bloblet when Zac splits apart, or he comes back. Use Inferno Aegis to hit several bloblets at once while in Dragon Form.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "Shyvana-W", "start": 64, "end": 77 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Shyvana:Zac:2",
+          "text": "Use Molten Burst on Zac when he charges Elastic Slingshot; being slowed makes his landing easier to avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zac", "start": 20, "end": 23 },
+            { "kind": "ability", "key": "Zac-E", "start": 40, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Shyvana:Zac:3",
+          "text": "Fight Zac when your Dragon Fury is full, so Dragon's Descent makes you Unstoppable and carries you through his crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Shyvana:Zac:4",
+          "text": "Keep attacking in a long fight; each hit shortens Emberstrike's cooldown, and its Dragon Form bite deals true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-Q", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ebf5a109ea0611de9872bda21435451a5a3c62b65b47ba51ec20776b35f08402",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Zed:0",
+          "text": "Use Inferno Aegis when Zed dives in; the shield grows with him nearby and the blast hurts him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Shyvana:Zed:1",
+          "text": "Hit Zed with Molten Burst as he closes in; it leaves him slowed so you can catch him or trade on your terms.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 13, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Shyvana:Zed:2",
+          "text": "Fight Zed in the first part of a duel with Emberstrike, since attacking keeps its cooldown short.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Shyvana:Zed:3",
+          "text": "Dragon's Descent makes you unstoppable as you fly in, so use it to chase Zed down after he swaps away.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 0, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 73, "end": 76 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Shyvana:Zed:4",
+          "text": "Gain Scalemail from kills on large monsters; the extra armor and magic resist makes Zed's damage weaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Shyvana-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Zed", "start": 84, "end": 87 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1d3983e9bcab5f986713e000e3f4867405874d981e2ddd52bcc9caa245fefb0b",
+      "tips": [
+        {
+          "id": "jungle:Shyvana:Zyra:0",
+          "text": "Fly in with Dragon's Descent when Zyra is out of position; it scatters her and gives you a quick way to close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-R", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Zyra", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Shyvana:Zyra:1",
+          "text": "Walk over Zyra's seeds before she grows them. Stepping on one destroys it, but it briefly reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Shyvana:Zyra:2",
+          "text": "Pop Inferno Aegis before Zyra's burst lands; the shield and extra speed help you reach her.",
+          "refs": [
+            { "kind": "ability", "key": "Shyvana-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Shyvana:Zyra:3",
+          "text": "Avoid fighting Zyra in areas thick with her plants. Take the fight somewhere she has no seeds.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Shyvana:Zyra:4",
+          "text": "Keep hitting Zyra with Emberstrike once you reach her; her squishy body takes a lot of damage from you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Shyvana-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

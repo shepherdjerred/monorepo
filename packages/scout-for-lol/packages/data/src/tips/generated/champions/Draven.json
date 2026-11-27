@@ -1,0 +1,666 @@
+{
+  "schemaVersion": 1,
+  "champion": "Draven",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "dd8c9d633038f2986c6d1022a2d7e952f859c5713b6bbed8f263772bdcc14818",
+      "tips": [
+        {
+          "id": "adc:Draven:general:0",
+          "text": "Move after each attack with Spinning Axe so it lands in your path, then walk into it to catch it. Every catch readies another axe and adds Adoration.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Draven:general:1",
+          "text": "Catch an axe to refresh Blood Rush right away. Use it freely to chase, to run away, or to reach a far axe.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-W", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Draven:general:2",
+          "text": "Keep two Spinning Axes ready before you trade. Your damage falls off sharply when you drop them.",
+          "refs": [],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Draven:general:3",
+          "text": "Use Stand Aside on an enemy who walks up to you. It knocks them away and leaves them slowed, which helps you escape or line up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Draven:general:4",
+          "text": "Last-hit minions and catch axes to build Adoration. Dying costs you some of it, so play safe once you have a lot.",
+          "refs": [],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Draven:general:5",
+          "text": "Use Whirling Death to finish a low-health enemy who is running away. It executes champions it leaves low enough, and you can recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Draven:general:6",
+          "text": "Stay out of fights near the enemy's skillshots while your axes are in the air. Their landing spot is visible to both teams.",
+          "refs": [],
+          "pWrong": 0.19
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Draven:combo:0",
+          "name": "Axe catch and Blood Rush reset",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Draven-Q" },
+            "attack",
+            { "kind": "ability", "key": "Draven-W" }
+          ],
+          "when": "Use it in lane while juggling axes to keep up your attack speed and movement speed.",
+          "whenRefs": [],
+          "text": "Catching an axe refreshes Blood Rush. Cast W for the speed boost, then catch the axe to reset it and use it again.",
+          "textRefs": [
+            { "kind": "ability", "key": "Draven-W", "start": 26, "end": 36 }
+          ]
+        },
+        {
+          "id": "adc:Draven:combo:1",
+          "name": "Axe steering",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Draven-Q" }, "attack"],
+          "when": "Use it when you want an axe to land somewhere safe or in a good spot.",
+          "whenRefs": [],
+          "text": "The axe lands where you are moving when it hits the target. Walk in the direction you want it to land so you can catch it and stay out of enemy skillshots.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "758ef1a643500d9ce37074afffb312af9cc05e5646360aa37d343b165692800d",
+      "tips": [
+        {
+          "id": "adc:Draven:Ashe:0",
+          "text": "Catch your Spinning Axe every time; Blood Rush resets on each catch, so you can chase or escape freely.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Draven-W", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Draven:Ashe:1",
+          "text": "Ashe has few escapes. Use Stand Aside to knock her away and slow her, then chase her down.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Draven-E", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Draven:Ashe:2",
+          "text": "Stay out of Ashe's Volley line when it comes up; her arrows slow you and make you drop your axes.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Draven:Ashe:3",
+          "text": "Stay wary of Enchanted Crystal Arrow when it is ready; a long-range stun in lane can get you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 13, "end": 36 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "63c0e8286f8b21db990ccab7d3ab1d19e97abf56ef35fd2ec846f370483c8170",
+      "tips": [
+        {
+          "id": "adc:Draven:Caitlyn:0",
+          "text": "Catch every Spinning Axe. Each catch readies another one and resets Blood Rush, and that is where your damage comes from.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Draven-W", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Draven:Caitlyn:1",
+          "text": "Do not walk onto ground you cannot see. A trap from Caitlyn roots you, and she will follow with a Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 65 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 98,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Draven:Caitlyn:2",
+          "text": "Use Stand Aside to knock Caitlyn away when she gets close. It also slows her, so you can trade on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Draven:Caitlyn:3",
+          "text": "Stay behind your minions when Caitlyn uses Piltover Peacemaker. It hits less hard on each target after the first.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 43, "end": 62 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Draven:Caitlyn:4",
+          "text": "Blood Rush lets you close the gap to Caitlyn quickly. Use it to get inside her range when her net is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Caitlyn", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Draven:Caitlyn:5",
+          "text": "Use Whirling Death to finish a weakened Caitlyn, especially after you have built up Adoration. It can execute her.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Caitlyn", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7443fb91dd141839eda74bd1f2e51ddb74f368a21150ee15476bfe537581e8dd",
+      "tips": [
+        {
+          "id": "adc:Draven:Ezreal:0",
+          "text": "Keep catching your Spinning Axe, because it refreshes Blood Rush and keeps your damage high. Trade when both axes are ready.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Draven-W", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Draven:Ezreal:1",
+          "text": "Use Stand Aside when Ezreal walks up to poke. The slow makes it easier to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Draven:Ezreal:2",
+          "text": "Stay behind minions so Mystic Shot hits them first, since it stops at the first enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Draven:Ezreal:3",
+          "text": "Be careful after Ezreal uses Arcane Shift, as he can blink away from you. Wait until it is on cooldown before going in.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Draven:Ezreal:4",
+          "text": "Ezreal is fragile, so Whirling Death can finish him when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Draven-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c0667ee26e7c107a5a2a38ca7c27b5705d3d122059fd8f9e862a22395502bfa0",
+      "tips": [
+        {
+          "id": "adc:Draven:Jhin:0",
+          "text": "Fight hard in the early levels, when Jhin's attacks are weakest and his reload leaves gaps. Catch your axes and trade whenever his gun is empty.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Draven:Jhin:1",
+          "text": "Once Jhin has fired his fourth shot, he cannot attack while he reloads. Step in and trade with Spinning Axe then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Draven-Q", "start": 95, "end": 107 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Draven:Jhin:2",
+          "text": "Watch for Jhin's Deadly Flourish after any damage lands on you. It can root you, so stay out of its line when an ally or Jhin has just hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-W", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 75 },
+            { "kind": "champion", "key": "Jhin", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Draven:Jhin:3",
+          "text": "Use Blood Rush to speed out of Jhin's line, and to run up on him after he wastes a trap or shot.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Jhin", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Draven:Jhin:4",
+          "text": "Watch the ground where you walk. Jhin's Captive Audience traps are invisible and slow you, so avoid stepping into brush or choke points he may have trapped.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-E", "start": 40, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Draven:Jhin:5",
+          "text": "Use Stand Aside to knock Jhin away when he walks up to hit minions. It also slows him, so you can follow with attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jhin", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Draven:Jhin:6",
+          "text": "Keep your health up when you hear Jhin start Curtain Call. Weakened targets take huge damage, so back out of its cone.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Jhin-R", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d3daff30fec8787c93580abbdb76466dc2912738df1f1c95f79b8ec7146171f0",
+      "tips": [
+        {
+          "id": "adc:Draven:Jinx:0",
+          "text": "Catch every Spinning Axe you can; each catch readies another axe and refreshes Blood Rush. Step into the landing marker before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Draven-W", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Draven:Jinx:1",
+          "text": "Jinx outranges you with rockets, so use Blood Rush to close the gap, then trade with axe-boosted attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Draven-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Draven:Jinx:2",
+          "text": "Use Stand Aside to knock Jinx away when she gets close, and keep fighting while she is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Draven:Jinx:3",
+          "text": "Stay out of the line of Flame Chompers, and do not walk onto them while chasing. Being rooted makes you drop axes.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Draven:Jinx:4",
+          "text": "Sidestep Jinx's Zap!, because it hits the first enemy in its path and leaves you slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Jinx-W", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Draven:Jinx:5",
+          "text": "Whirling Death can finish a weakened Jinx from far away, especially when you have built up Adoration.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Jinx", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "65db72bb9904d1e8f2c4cc2b5cb17aa691fe3ac651b3539933dc3591296943d4",
+      "tips": [
+        {
+          "id": "adc:Draven:Kaisa:0",
+          "text": "Trade early with Spinning Axe and catch every axe. Each catch refreshes Blood Rush and keeps your damage high before Kai'Sa has her items.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 17, "end": 29 },
+            { "kind": "ability", "key": "Draven-W", "start": 72, "end": 82 },
+            { "kind": "champion", "key": "Kaisa", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Draven:Kaisa:1",
+          "text": "Use Stand Aside when Kai'Sa walks up to trade. It knocks her back and slows her, so she can't stay in range to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Draven:Kaisa:2",
+          "text": "Stand Aside is blocked by terrain and stops at the first wall, so don't count on it to push her into a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "adc:Draven:Kaisa:3",
+          "text": "Stay out of a straight line from Kai'Sa. Her Void Seeker is a long-range shot that hits the first enemy and sets up her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Draven:Kaisa:4",
+          "text": "After Kai'Sa hits you with Void Seeker, leave. Her Killer Instinct lets her jump onto you once Plasma is on you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 27, "end": 38 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Draven:Kaisa:5",
+          "text": "Hold Whirling Death for a kill when Kai'Sa is low. Her Killer Instinct shield only lasts a short time, so wait for it to end before you fire.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bae46ed2b4519d50af6bbebf85ca674cb414c38ca9e61cabcd1cbb40e62aa15a",
+      "tips": [
+        {
+          "id": "adc:Draven:MissFortune:0",
+          "text": "Aim your Spinning Axe attacks so the axes land back near you, and keep catching them; missed axes cost you most of your damage.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Draven:MissFortune:1",
+          "text": "Stay out of Make It Rain when you can; it slows you and makes catching axes harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Draven:MissFortune:2",
+          "text": "Stay behind your own minions out of Double Up range, or it bounces through them to hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 36,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Draven:MissFortune:3",
+          "text": "Hit Miss Fortune with Stand Aside when she walks up for a last-hit; any damage you deal stops her speed bonus from Strut.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Draven-E", "start": 22, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 115,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Draven:MissFortune:4",
+          "text": "Move away from the cone when Miss Fortune begins Bullet Time; use Blood Rush to get out fast. She can be interrupted if you stun or knock her.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 49,
+              "end": 60
+            },
+            { "kind": "ability", "key": "Draven-W", "start": 66, "end": 76 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Draven:MissFortune:5",
+          "text": "Trade hard right after catching an axe; Blood Rush comes back instantly, giving you the speed to close in on her.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "92c713278bda13a42e8bf8627f30131dad6937e00046fb6d04e8a0b41934b43c",
+      "tips": [
+        {
+          "id": "adc:Draven:Smolder:0",
+          "text": "Fight Smolder early; he is weak before his Dragon Practice stacks build. Trade hard while he is still behind.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 43,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Draven:Smolder:1",
+          "text": "Keep catching Spinning Axe in lane; every catch refreshes Blood Rush and adds Adoration, so you can chase or dodge freely.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Draven-W", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Draven:Smolder:2",
+          "text": "Use Stand Aside when Smolder walks up to last-hit; it knocks him back and leaves him slowed, so you can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Draven:Smolder:3",
+          "text": "Step sideways out of Achooo!'s path rather than backing up, so you keep catching your axes.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Draven:Smolder:4",
+          "text": "Smolder's Flap, Flap, Flap ends if he is immobilized. Stand Aside's knockback can stop his escape.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-E", "start": 10, "end": 26 },
+            { "kind": "ability", "key": "Draven-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6601c765ebe0886a28cc8f95197a3c7393a882972f3410050507944ce2de9b3e",
+      "tips": [
+        {
+          "id": "adc:Draven:Yunara:0",
+          "text": "Hit Yunara with Stand Aside when she steps up to attack; it knocks her back and leaves her slowed, so you can trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Draven-E", "start": 16, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Draven:Yunara:1",
+          "text": "Keep catching Spinning Axe; each catch refreshes Blood Rush, so you can chase or dodge again right away.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-Q", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Draven-W", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Draven:Yunara:2",
+          "text": "Stay out of Yunara's slowing prayer bead; getting slowed makes your Spinning Axe hard to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Draven-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Draven:Yunara:3",
+          "text": "Look for kills when she is low, since Whirling Death executes weakened champions. It reaches across the whole map, so use it to finish a fleeing Yunara.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 38, "end": 52 },
+            { "kind": "champion", "key": "Yunara", "start": 145, "end": 151 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Draven:Yunara:4",
+          "text": "Play safer once Yunara uses Transcend One's Self: she gets a dash and a strong beam, and her attacks hit harder. Wait it out before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Yunara-R", "start": 28, "end": 48 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

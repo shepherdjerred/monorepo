@@ -1,0 +1,1990 @@
+{
+  "schemaVersion": 1,
+  "champion": "Vladimir",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "14f6c5611ce9101a1d8d691d6804e270b2edca6135de55ea2d3870c2847fa80c",
+      "tips": [
+        {
+          "id": "top:Vladimir:general:0",
+          "text": "Last-hit minions with Transfusion; it hits instantly and heals you, so you can farm while staying healthy.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vladimir:general:1",
+          "text": "Use Transfusion twice, then cast it again while you have the speed boost. The third cast hits much harder and heals more, which makes it your best trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Vladimir:general:2",
+          "text": "Use Sanguine Pool to dodge a stun or a dangerous spell. It pops incoming missiles and makes you untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Vladimir:general:3",
+          "text": "Cast Sanguine Pool on top of the enemy. They are slowed and take damage while you heal, but you cannot attack or cast abilities inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Vladimir:general:4",
+          "text": "Hold Tides of Blood for a moment before releasing it. A longer charge hits harder and slows the enemy, but it costs you health and slows you while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 86, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 131, "end": 136 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vladimir:general:5",
+          "text": "Tides of Blood is a ring of bolts, and minions in the way block them. Fight with it when the lane is clear of minions between you and the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Vladimir:general:6",
+          "text": "At level 6, cast Hemoplague where it catches the most enemies. Fight inside it, since they take extra damage and you heal when it bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5e2eb2af5601662b2bcd02fe03be5940c84fd224275e66878ba49cdad7ea4a7",
+      "tips": [
+        {
+          "id": "middle:Vladimir:general:0",
+          "text": "Last-hit minions with Transfusion; it hits instantly and heals you, so use it to farm safely while keeping your health up.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Vladimir:general:1",
+          "text": "Cast Transfusion twice, then cast it a third time quickly while you are sped up. That empowered cast hits much harder and heals more.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Vladimir:general:2",
+          "text": "Use Sanguine Pool to dodge an incoming disable or a big spell. You cannot be targeted in it, and enemies standing in it are slowed and take damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 124, "end": 130 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Vladimir:general:3",
+          "text": "You cannot attack or cast spells inside Sanguine Pool, so do not use it to farm or while you are waiting to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Vladimir:general:4",
+          "text": "Charge Tides of Blood for a second before releasing. It hits harder and slows enemies, but costs health and slows you while fully charged.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Vladimir:general:5",
+          "text": "Use Tides of Blood on a wave of minions as well as on champions. Enemies in front of the minions can block the blood bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Vladimir:general:6",
+          "text": "Cast Hemoplague where it catches the most enemy champions. You heal for each champion hit, and infected enemies take extra damage from everyone.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Vladimir:general:7",
+          "text": "Burst your team's damage into the enemies while Hemoplague is on them. It amplifies their damage taken before it bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Vladimir:combo:0",
+          "name": "Pool to dodge a key spell",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Vladimir-W" }],
+          "when": "When an enemy mid laner or jungler aims a dangerous skillshot or disable at you.",
+          "whenRefs": [],
+          "text": "Sanguine Pool makes you untargetable and pops incoming missiles. Press it just as the spell reaches you to waste it.",
+          "textRefs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 0, "end": 13 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "d3b462422a9913b230d9a348430c6ded8a676b6bbaf0a3c024c4e02bd0b6a790",
+      "tips": [
+        {
+          "id": "top:Vladimir:Aatrox:0",
+          "text": "Use Transfusion to last-hit and to trade when Aatrox walks up; it heals you back as you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aatrox", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Vladimir:Aatrox:1",
+          "text": "Step out of the zones of The Darkin Blade early; the hits are telegraphed, and the edge of each swing knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 25, "end": 41 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Vladimir:Aatrox:2",
+          "text": "Cast Sanguine Pool when Infernal Chains is about to pull you back; it makes you untargetable and slows Aatrox while you sit in it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 24, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 },
+            { "kind": "champion", "key": "Aatrox", "start": 103, "end": 109 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Vladimir:Aatrox:3",
+          "text": "Charge Tides of Blood a little before Aatrox closes in, so it hits hard and slows him when you release it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Vladimir:Aatrox:4",
+          "text": "Hit Aatrox with Hemoplague in a fight and keep him alive-trading until it bursts; it heals you and he takes extra damage meanwhile.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vladimir:Aatrox:5",
+          "text": "Do not trade into World Ender when Aatrox has just ended a kill; he is faster and heals more, so back off.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 18, "end": 29 },
+            { "kind": "champion", "key": "Aatrox", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07867c8bd2ce4da8d1f6e8715d28f715bdb81e7d5685028c4bdd168bf5c820bb",
+      "tips": [
+        {
+          "id": "top:Vladimir:Briar:0",
+          "text": "Save Sanguine Pool for when Briar leaps in with Head Rush or Blood Frenzy; you become untargetable and she wastes her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Briar-Q", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Vladimir:Briar:1",
+          "text": "Hit Briar with Transfusion early to last-hit and trade; the heal helps against her bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Vladimir:Briar:2",
+          "text": "Charge Tides of Blood before she reaches you; fully charged, it slows her, which makes her harder to chase you with.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Vladimir:Briar:3",
+          "text": "Stay away from walls when Briar is near. Her fully charged Chilling Scream throws you into them for big damage and a long stun.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 59, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 126 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Vladimir:Briar:4",
+          "text": "Use Hemoplague when Briar is committed on you; she takes extra damage, and you heal if it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2d090908a83b2ced77356b180f429499e528f311e759b73f605b42492d6737a4",
+      "tips": [
+        {
+          "id": "top:Vladimir:Darius:0",
+          "text": "Use Transfusion to poke Darius from long range when he walks up to the wave, and keep your distance from him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Darius", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Vladimir:Darius:1",
+          "text": "When Darius lands Apprehend, pop Sanguine Pool right away. You can't be targeted, and he takes damage while he stands in the pool.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Vladimir:Darius:2",
+          "text": "Charge Tides of Blood for a moment before you release it. A longer charge hits harder and slows Darius, so he can't close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 },
+            { "kind": "champion", "key": "Darius", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vladimir:Darius:3",
+          "text": "Don't trade in melee while Darius has Hemorrhage stacks on you. Back off and let them fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Vladimir:Darius:4",
+          "text": "Fight when Apprehend is on cooldown. Without it Darius can't pull you in, and you can poke him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vladimir:Darius:5",
+          "text": "Cast Hemoplague on Darius in a long fight. His Noxian Guillotine does more damage to you at low health, so don't wait around hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Darius", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Darius-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45f074c9fb192e87d26828eb2a659fb415760826d1f42632ec0c6bf7956c12ac",
+      "tips": [
+        {
+          "id": "top:Vladimir:Fiora:0",
+          "text": "Hold Sanguine Pool until Fiora commits to a Riposte or a Lunge; being untargetable lets you dodge her burst, and she is slowed inside the pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fiora", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Fiora-W", "start": 44, "end": 51 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 57, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 120, "end": 126 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vladimir:Fiora:1",
+          "text": "Do not throw a stun or other disable at Fiora while Riposte is ready; she will block it and stun you back.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 15, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Fiora-W", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vladimir:Fiora:2",
+          "text": "Poke her with Transfusion whenever it is ready; the damage and healing win the early trades while she is trying to get close.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Vladimir:Fiora:3",
+          "text": "Use Tides of Blood to slow Fiora when she dives on you, but charge it long enough for the slow to apply.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Fiora", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Vladimir:Fiora:4",
+          "text": "Cast Hemoplague on Fiora in a fight and keep fighting until it bursts; it heals you when it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Fiora", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "95782f4e1c9aec6a979e0de6dd68cfcb00f594be9ed7aa5188ac95dc5fe4fdba",
+      "tips": [
+        {
+          "id": "top:Vladimir:Gangplank:0",
+          "text": "Last-hit with Transfusion and trade with it when it is ready; the healing keeps you ahead of Gangplank's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Gangplank", "start": 93, "end": 102 },
+            { "kind": "keyword", "key": "poke", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Vladimir:Gangplank:1",
+          "text": "Use Sanguine Pool when Gangplank's Parrrley is coming at you; it also pops missiles. It makes you untargetable, so Gangplank cannot shoot a keg next to you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Gangplank", "start": 115, "end": 124 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Vladimir:Gangplank:2",
+          "text": "Stay out of Powder Keg blasts; the explosion slows you and hits hard. Charge Tides of Blood near kegs to hit Gangplank first.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 77, "end": 91 },
+            { "kind": "champion", "key": "Gangplank", "start": 109, "end": 118 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Vladimir:Gangplank:3",
+          "text": "Hold Hemoplague for when Gangplank is low; he can cleanse with Remove Scurvy, but the plague still bursts afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e03551606a32d911d081c2e5ad9a7237d1106e4b957dca7718b095100dee0a34",
+      "tips": [
+        {
+          "id": "top:Vladimir:Garen:0",
+          "text": "Use Transfusion to last-hit and to trade from range; it heals you each time and Garen has no ranged way to answer it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Garen", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vladimir:Garen:1",
+          "text": "Keep your distance when Garen's Decisive Strike is ready; if it lands you are silenced and cannot use your abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Garen-Q", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "silenced", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Vladimir:Garen:2",
+          "text": "Garen can shake off slows with Decisive Strike, so do not count on Tides of Blood to hold him in place.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 31, "end": 46 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 67, "end": 81 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Vladimir:Garen:3",
+          "text": "When Garen spins with Judgment, press Sanguine Pool. You cannot be targeted, and he is slowed and hurt while he spins on you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Garen-E", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 38, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Vladimir:Garen:4",
+          "text": "Take Garen's health down before Hemoplague ends, because Demacian Justice punishes low health. Hemoplague also makes him take more damage.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 32, "end": 42 },
+            { "kind": "ability", "key": "Garen-R", "start": 57, "end": 73 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Vladimir:Garen:5",
+          "text": "Garen heals fast if left alone, so poke him often to stop his Perseverance from regenerating his health.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 62,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5b81113a49b0c2790c4a9df9a1f1da301fc51325ea319525ce07dce6391a9f00",
+      "tips": [
+        {
+          "id": "top:Vladimir:Jayce:0",
+          "text": "Use Transfusion on Jayce whenever he walks up to trade; it heals you, and it hits hard when you use it right after the first two casts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Vladimir:Jayce:1",
+          "text": "Jayce's Thundering Blow in Hammer Stance is a close-range ability, so stay out of melee range unless Sanguine Pool is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 101, "end": 114 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vladimir:Jayce:2",
+          "text": "Jump into Sanguine Pool when Jayce dives on you with To the Skies!. You can't be targeted, and he is slowed while standing in the pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 107 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vladimir:Jayce:3",
+          "text": "Use Tides of Blood when Jayce is next to you in melee. Charge it for a bit longer so it slows him and he can't walk away or chase you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Vladimir:Jayce:4",
+          "text": "Fight Jayce after he has used his main abilities. Hemoplague at level 6 lets you win the trade and heal if you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f537de2c54091bbb550beb12f5c582acab457e0b35d5b245da3e2c1b21f0bc58",
+      "tips": [
+        {
+          "id": "top:Vladimir:KSante:0",
+          "text": "Use Transfusion to poke K'Sante and last-hit minions; it hits instantly and heals you, so trade with it freely early.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vladimir:KSante:1",
+          "text": "Stay out of the line of Ntofo Strikes; at two stacks it pulls you in and stuns you. Back off when he has a stack.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Vladimir:KSante:2",
+          "text": "Hold Sanguine Pool for when K'Sante charges Path Maker. Being untargetable should keep you from being stunned by the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "KSante-W", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Vladimir:KSante:3",
+          "text": "Charge Tides of Blood a little before you release it so it slows K'Sante. Its damage scales with your health, so it hurts a tanky enemy more than most spells.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Vladimir:KSante:4",
+          "text": "Fight K'Sante before he goes All Out, since he can't be easily pinned down once he is on you. Use Hemoplague when he commits so you heal from it.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "KSante-R", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 98, "end": 108 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f9b35822b0bd618d8fbfe64be2568b984d244d8297e16d59c5ef909cdd67e382",
+      "tips": [
+        {
+          "id": "top:Vladimir:Malphite:0",
+          "text": "Use Transfusion to last-hit minions and trade when Seismic Shard is on cooldown; the healing helps you win the early lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Vladimir:Malphite:1",
+          "text": "Save Sanguine Pool for when Malphite lands Unstoppable Force on you; you become untargetable and dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Malphite", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Malphite-R", "start": 43, "end": 60 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Vladimir:Malphite:2",
+          "text": "Do not spend Sanguine Pool first in a fight. It costs Health, and Malphite's shield and armor blunt the damage it deals.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Malphite", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Vladimir:Malphite:3",
+          "text": "Stay out of Thunderclap's short range while his empowered attacks are ready. They hit hard and add a cone of extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-W", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Vladimir:Malphite:4",
+          "text": "Release Tides of Blood once it is charged, so enemies hit are slowed. It also gives you room to walk away from his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 8, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Vladimir:Malphite:5",
+          "text": "Use Hemoplague on a fight where Malphite is committed, then step back. He takes extra damage while it ticks, then it bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Malphite", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0cde580b4c89c524b9d63e7d31b0cd9c8c351a38b0a2e40f352c76c6f6f2aad",
+      "tips": [
+        {
+          "id": "top:Vladimir:Mordekaiser:0",
+          "text": "Use Transfusion to last-hit and poke Mordekaiser early; it heals you, so you win the short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Vladimir:Mordekaiser:1",
+          "text": "Keep your distance from Mordekaiser once Darkness Rise is up, because its aura hurts anyone close to him.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 41,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Vladimir:Mordekaiser:2",
+          "text": "Save Sanguine Pool for when Death's Grasp is coming at you; the pool makes you untargetable, so you can dodge the pull and slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 28,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "slowed", "start": 123, "end": 127 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vladimir:Mordekaiser:3",
+          "text": "Hit Mordekaiser with Tides of Blood before he shields. Hold the charge a little longer so it slows him too.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 21, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Vladimir:Mordekaiser:4",
+          "text": "Once Realm of Death takes you in, you fight him alone with no help. Use Hemoplague to heal and burst him before that if you can.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Vladimir-R", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "341da114be357316171f01f2e48783ef10f76b3b95ddc9a22ea48f29a0fee686",
+      "tips": [
+        {
+          "id": "top:Vladimir:Rumble:0",
+          "text": "Use Sanguine Pool when Rumble walks into you or when his Equalizer lands on you; you can't be targeted, and he takes damage while he stands in the pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Vladimir:Rumble:1",
+          "text": "Trade with Transfusion when Rumble is overheating, since he can't cast spells. His basic attacks still hurt, so don't stay next to him long.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Rumble", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Vladimir:Rumble:2",
+          "text": "Last-hit with Transfusion and keep your health up. Flamespitter does extra damage to high-health targets, so Vladimir's big health pool costs him against it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 51, "end": 63 },
+            { "kind": "champion", "key": "Vladimir", "start": 109, "end": 117 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Vladimir:Rumble:3",
+          "text": "Don't try to dodge Electro Harpoon by stepping behind minions; it hits the first enemy in its path. Walk out of its line, or use Sanguine Pool to pop it.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 129, "end": 142 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Vladimir:Rumble:4",
+          "text": "Fire Hemoplague at level 6 when Rumble is committed to a trade, then stay alive until it bursts so you heal.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Rumble", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a22e851806ce9c24ed52fb713e683436cca04dbdac60eeb7c82b07395548ca6",
+      "tips": [
+        {
+          "id": "top:Vladimir:Sion:0",
+          "text": "Walk out of line when Sion starts charging Decimating Smash; a long charge ends in a stun, so stay out of its path.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Sion-Q", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Vladimir:Sion:1",
+          "text": "Use Sanguine Pool to dodge Sion's Unstoppable Onslaught or a late Decimating Smash. It makes you untargetable and hurts him if he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Sion-R", "start": 34, "end": 55 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Vladimir:Sion:2",
+          "text": "Trade with Transfusion early and last-hit with it; Sion has little poke to punish you for stepping up.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Sion", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Vladimir:Sion:3",
+          "text": "Hold Tides of Blood until it is fully charged when he walks into you; the slow lets you finish the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Vladimir:Sion:4",
+          "text": "When Sion dies and rises as a zombie, run away or use Sanguine Pool instead of fighting him.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "48bda0aafc50d1e17e2c652d00ca7a395323bf3b16dd408baa36afe5739c2c08",
+      "tips": [
+        {
+          "id": "top:Vladimir:Teemo:0",
+          "text": "Use Transfusion to last-hit minions; it hits instantly and heals you, so you can farm while staying out of Teemo's range.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Vladimir:Teemo:1",
+          "text": "Step into Sanguine Pool when Teemo trades with you; he can't target you and he is slowed while you damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Vladimir:Teemo:2",
+          "text": "Charge Tides of Blood before you walk up to Teemo; a full charge slows him so you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 44, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Vladimir:Teemo:3",
+          "text": "Teemo's Toxic Shot punishes you for trading and backing off, so commit fully or stay out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Teemo-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Vladimir:Teemo:4",
+          "text": "Cast Hemoplague on Teemo when you go all in, and kill him before it bursts to heal yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Teemo", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a177136616e85269c25ba86dc60a4f6e6e7d992b6cc3d0684133b58a0189c4f",
+      "tips": [
+        {
+          "id": "top:Vladimir:Vayne:0",
+          "text": "Use Transfusion on Vayne whenever it is ready; it hurts her and heals you in the early lane. She is fragile, so keep trading.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Vladimir:Vayne:1",
+          "text": "Keep Tides of Blood charging until it slows her, then hit her to cut off her escape or her chase.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Vladimir:Vayne:2",
+          "text": "Use Sanguine Pool when Vayne casts Condemn; it makes you untargetable and pops incoming missiles, so you avoid the knockback and the wall stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Vayne-E", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 138, "end": 142 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Vladimir:Vayne:3",
+          "text": "Stay away from walls when Condemn is ready, so a knockback can't pin you into terrain.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vladimir:Vayne:4",
+          "text": "Drop Sanguine Pool on top of Vayne when she tries to fight you up close; she gets slowed and you heal from the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Vladimir:Vayne:5",
+          "text": "At level 6, cast Hemoplague on Vayne when you commit to a trade. She takes extra damage, then a burst when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de1560fd57f3d486c97ba12c0229794bafe94f39f84ed742491f2e41c0568af8",
+      "tips": [
+        {
+          "id": "top:Vladimir:Yone:0",
+          "text": "Use Sanguine Pool when Yone dashes in with Fate Sealed or a knock up; it makes you untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Yone-R", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Vladimir:Yone:1",
+          "text": "Trade with Transfusion when Yone has no stacks up; it has long range and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Vladimir:Yone:2",
+          "text": "Charge Tides of Blood a moment before he walks in; a full charge slows him and punishes his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Vladimir:Yone:3",
+          "text": "Hit Yone with Hemoplague in a fight; he takes more damage while it lasts, and you heal when it bursts.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Vladimir:Yone:4",
+          "text": "Kill Yone, or force him to retreat, before Soul Unbound ends; his body drags him back and he repeats stored damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-E", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2bd90f998ccdf5a1089cf031f7a0441e4081abe056592dd863c9ec50f25310b7",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Ahri:0",
+          "text": "Stay behind minions when Ahri is in range; her Charm ends at the first unit it hits, so minions in the way soak it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Vladimir:Ahri:1",
+          "text": "If Ahri tries to Charm you, drop into Sanguine Pool; it pops incoming missiles and makes you untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ahri-E", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 38, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Vladimir:Ahri:2",
+          "text": "Use Transfusion on Ahri and on minions through the wave; it heals you back after her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "poke", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Vladimir:Ahri:3",
+          "text": "Hit Ahri with a fully charged Tides of Blood when she walks up; it slows her and her Orb of Deception is easier to step around.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Vladimir:Ahri:4",
+          "text": "Trade when Spirit Rush is on cooldown; Ahri is easiest to kill and has fewer ways to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Ahri", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Vladimir:Ahri:5",
+          "text": "Cast Hemoplague on Ahri once she is low and commit; she takes more damage while it ticks and you heal when it bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e03e2a45d45d5c333874c0fd8f1b7bcd8aac81b18070993a4172c96c98af0f16",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Akali:0",
+          "text": "Press Sanguine Pool when Akali dives in with Perfect Execution or Shuriken Flip; you can't be targeted and she gets slowed while she is in the pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Akali-R", "start": 45, "end": 62 },
+            { "kind": "ability", "key": "Akali-E", "start": 66, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Vladimir:Akali:1",
+          "text": "Use Tides of Blood when Akali is close. Charge it a moment longer if you can, so it hits harder and slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Akali", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Vladimir:Akali:2",
+          "text": "Trade with Transfusion when Akali is low on energy; she can't throw Five Point Strike back as often.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Akali-Q", "start": 68, "end": 85 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Vladimir:Akali:3",
+          "text": "Put Hemoplague on Akali when she commits so she takes more damage, and kill her before it bursts to heal from it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Akali", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Vladimir:Akali:4",
+          "text": "Throw Tides of Blood or Sanguine Pool at her smoke. Area damage still hits her inside Twilight Shroud and shows where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 6, "end": 20 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 24, "end": 37 },
+            { "kind": "ability", "key": "Akali-W", "start": 86, "end": 101 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c5aedc57a29ece67a3fc3094fba46403d9364c972152e11b37c4706ced5fdb24",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Anivia:0",
+          "text": "Use Transfusion to last-hit minions and to trade; it hits instantly, and you heal back what Anivia's Frostbite takes from you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 92, "end": 98 },
+            { "kind": "ability", "key": "Anivia-E", "start": 101, "end": 110 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Vladimir:Anivia:1",
+          "text": "Step out of the line of Flash Frost's ice. If it catches you, the stun hurts, and Frostbite then hits you for double.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Anivia-E", "start": 82, "end": 91 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Vladimir:Anivia:2",
+          "text": "Sanguine Pool makes you untargetable, so use it when Anivia casts Frostbite on you. Her ice also pops against it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Anivia", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Anivia-E", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Vladimir:Anivia:3",
+          "text": "Fight her once her egg is gone. Rebirth leaves her helpless for a few seconds, so use that time to finish her egg or take a free tower hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 32,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Vladimir:Anivia:4",
+          "text": "Cast Hemoplague on Anivia in a fight so she takes more damage. Stay on her until it bursts to heal you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Vladimir:Anivia:5",
+          "text": "Walk out of Glacial Storm instead of staying in it; it slows you and hurts more once fully formed. Use Tides of Blood to clear nearby minions.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 103, "end": 117 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d89874308ad244b6a9ab856700f7bfbabe110e5742fb4b79053d86caaf74e1ff",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Aurora:0",
+          "text": "Use Transfusion on Aurora whenever you can; it heals you back after her pokes and works well for last-hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Vladimir:Aurora:1",
+          "text": "Save Sanguine Pool for when Aurora commits, because it makes you untargetable and slows her. Her Twofold Hex can pop on it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Vladimir:Aurora:2",
+          "text": "Charge Tides of Blood a moment before releasing it when Aurora stands close. Fully charged, it also slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Aurora", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Vladimir:Aurora:3",
+          "text": "Aurora can vanish with Across the Veil, so cast Hemoplague on her when she has no easy escape and keep fighting until it bursts.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Vladimir:Aurora:4",
+          "text": "Do not chase Aurora inside her Between Worlds rift. She can jump across it and you get slowed at its edge.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aurora-R", "start": 31, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5d331db571810b806223196bc65a578d66bc396f505cf3dd9b9f7fc0cbed5865",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Cassiopeia:0",
+          "text": "Cassiopeia's Miasma slows you, but Sanguine Pool makes you untargetable. Use it to dodge her Petrifying Gaze or a burst of Twin Fang.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 0, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 13,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Vladimir-W", "start": 35, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 93,
+              "end": 108
+            },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 123,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Vladimir:Cassiopeia:1",
+          "text": "Use Transfusion to last-hit and trade. It heals you, so you can win the poke war against her Noxious Blast.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 72, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 93,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Vladimir:Cassiopeia:2",
+          "text": "Walk out of Noxious Blast's area after the cast. It lands after a short delay, so sidestep it instead of walking straight at her.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Vladimir:Cassiopeia:3",
+          "text": "Step in close and use Tides of Blood when she is in range. It slows her after a full charge, so you can chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 22, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Vladimir:Cassiopeia:4",
+          "text": "Use Hemoplague on her in a fight and keep hitting her. She takes extra damage, and you heal when it bursts.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cfd69d2798e9e51835b6725441d3498ef9ec6cf64e6c9d83ffc7f2c869f0da4a",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Fizz:0",
+          "text": "Hold Sanguine Pool for when Fizz commits with Urchin Strike or his Chum the Waters shark is about to land. You can't be targeted while in the pool.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 46, "end": 59 },
+            { "kind": "ability", "key": "Fizz-R", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Vladimir:Fizz:1",
+          "text": "Use Transfusion on Fizz to trade and heal when his Playful is on cooldown. He is hard to catch while it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Vladimir:Fizz:2",
+          "text": "Charge Tides of Blood when Fizz stands close to you. It slows him if it is charged long enough, which makes it harder for him to run in and out.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Vladimir:Fizz:3",
+          "text": "Keep your distance from Fizz once his Seastone Trident glows. His hits hurt more for a few seconds after it lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Fizz-W", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Vladimir:Fizz:4",
+          "text": "Stay out of a straight line from Fizz when you are low on health. Chum the Waters sticks to the first champion it hits, and he has to aim it.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Fizz-R", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1ac0dbf089f48b4434baf597e9d6f5bbb355dab1038325e450c26317b434ca6",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Malzahar:0",
+          "text": "Use Sanguine Pool to dodge Nether Grasp's start; it makes you untargetable, so Malzahar wastes his ultimate if you time it right.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Malzahar", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "middle:Vladimir:Malzahar:1",
+          "text": "Sidestep Call of the Void by moving out from between the two portals; it silences you if it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Vladimir:Malzahar:2",
+          "text": "Trade with Transfusion when Malzahar has just taken damage; his Void Shift is down and your hits land in full.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Malzahar", "start": 28, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 64,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Vladimir:Malzahar:3",
+          "text": "Do not fight while he has Void Shift up; it cuts almost all damage from you. Make him lose it with a cheap poke first.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 26,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "poke", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Vladimir:Malzahar:4",
+          "text": "Stay away from minions carrying Malefic Visions; if one dies, it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Vladimir:Malzahar:5",
+          "text": "Tides of Blood bolts stop at the first enemy hit, so use it when Voidlings are not in the way, and use Sanguine Pool to clear them when they swarm you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 103, "end": 116 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "54f42416acdcc1c55581f9cb35f1b333f1257021570150c6eefc2c6f3819fa99",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Orianna:0",
+          "text": "Use Transfusion to last-hit minions; it heals you and trades with Orianna when she steps up to farm.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Vladimir:Orianna:1",
+          "text": "Sidestep her Ball by watching where it lands. Orianna can only hit what is near it, so stay out of its reach.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Vladimir:Orianna:2",
+          "text": "Use Sanguine Pool when her Command: Shockwave is coming; you can't be targeted, and it pops incoming missiles.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Orianna-R", "start": 27, "end": 45 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Vladimir:Orianna:3",
+          "text": "Hold Tides of Blood charge only when she is close; the longer charge slows her and hits harder, but it costs you Health.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Vladimir:Orianna:4",
+          "text": "Cast Hemoplague on her and nearby allies in a fight, then keep pressure on so the burst lands and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2ced2ae8309c8bd16148830c0d639d9e580227ea1a5233062dfa486db7b06e06",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Ryze:0",
+          "text": "Use Sanguine Pool to dodge Rune Prison; it makes you untargetable, so the root or slow cannot land on you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Ryze-W", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Vladimir:Ryze:1",
+          "text": "Ryze needs to hit Overload in a line, and Transfusion cannot be dodged by walking, so trade with it when his Overload is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 42, "end": 53 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 109, "end": 117 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Vladimir:Ryze:2",
+          "text": "Use Transfusion on minions to heal back the damage Ryze pokes you for.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ryze", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Vladimir:Ryze:3",
+          "text": "Hit Ryze with Tides of Blood when he walks up to cast; it slows him if you charged it for a moment.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Vladimir-E", "start": 14, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Vladimir:Ryze:4",
+          "text": "Hold Hemoplague for a fight where Ryze is stuck near you, and kill him before it bursts if you can.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Ryze", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b0c2a84674b2d382dbb9f87be6d9990c9bbcd0ec3c37f6ea48541e48c8eaa53c",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Sylas:0",
+          "text": "Press Sanguine Pool when Sylas dashes in with Abduct; it makes you untargetable and the pull wastes.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Vladimir:Sylas:1",
+          "text": "Stay out of Sylas's Chain Lash range when you can; its blast lands after a short delay, so walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Vladimir:Sylas:2",
+          "text": "Last-hit with Transfusion to heal back any damage you take, and trade when your empowered cast is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Vladimir:Sylas:3",
+          "text": "Use Tides of Blood when Sylas is close; a longer charge hits harder and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Vladimir:Sylas:4",
+          "text": "Kill Sylas before Hemoplague bursts. If he steals your ultimate, expect him to use it against you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e221b7dd64eeccb27543389e392e0ed593efdbdad4707248e41d43adf6a12c73",
+      "tips": [
+        {
+          "id": "middle:Vladimir:TwistedFate:0",
+          "text": "Use Transfusion to last-hit and to poke Twisted Fate; the heal keeps you healthy in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "TwistedFate", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Vladimir:TwistedFate:1",
+          "text": "Respect the Gold Card of Pick a Card. Stay out of his reach while he shuffles, or you get stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 25,
+              "end": 36
+            },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Vladimir:TwistedFate:2",
+          "text": "Sidestep Wild Cards, or use Sanguine Pool to pop incoming cards and dodge them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 9,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Vladimir-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Vladimir:TwistedFate:3",
+          "text": "Fight him once he has used his cards and is close, with Tides of Blood charged to slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 56, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Vladimir:TwistedFate:4",
+          "text": "When Destiny shows his shuffle, expect a gank and back off.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1fb85d139ab552cb0c45dee3cb22fbdaa89dddb8837ea358395ff054247d9723",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Viktor:0",
+          "text": "Use Sanguine Pool to dodge Viktor's Gravity Field stun once it is on you; you can't be targeted while in the pool, and it slows him if he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Viktor", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Viktor-W", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Vladimir:Viktor:1",
+          "text": "Use Transfusion to last-hit and to trade back after Viktor uses Siphon Power; it heals you, and it is hard for him to match.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Vladimir:Viktor:2",
+          "text": "Step out of the line of Hextech Ray, then walk in and trade while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Vladimir:Viktor:3",
+          "text": "Charge Tides of Blood out of his reach, then release it as he walks up. It slows him if you charged it long enough.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Vladimir:Viktor:4",
+          "text": "Cast Hemoplague on Viktor when he is trapped close to you. Fight on until it bursts and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f58778b223ef5d99be3660ad9321ad9cc727565b1dd8b2a0a017d20561834d46",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Yasuo:0",
+          "text": "Use Sanguine Pool when Yasuo's whirlwind from Steel Tempest is coming; it pops incoming missiles and makes you untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Vladimir:Yasuo:1",
+          "text": "Don't stand in a Wind Wall when you cast Transfusion on a minion. Transfusion targets a unit, so a wall does not block it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 41, "end": 52 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Vladimir:Yasuo:2",
+          "text": "Tides of Blood bolts are projectiles, so Wind Wall destroys them. Wait for the wall to drop before you release it.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Vladimir:Yasuo:3",
+          "text": "Trade with Transfusion when Yasuo steps up to farm. Its heal wins the long trades.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Vladimir:Yasuo:4",
+          "text": "Watch for knock ups when you fight near Yasuo. Hold Sanguine Pool, because Yasuo can only use Last Breath on an airborne target.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 52, "end": 65 },
+            { "kind": "champion", "key": "Yasuo", "start": 75, "end": 80 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Vladimir:Yasuo:5",
+          "text": "Hit Yasuo with Hemoplague when he commits to an all-in. He takes more damage, and you heal when it bursts.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ba53df3f85a7f67fb63ed3b0a3770583b8d88ba3fdb8c1f972942915d45449a5",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Yone:0",
+          "text": "Last-hit with Transfusion and trade with it when Yone steps up; the heal makes short trades cost you little.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Vladimir:Yone:1",
+          "text": "Use Sanguine Pool when Yone dashes in with Mortal Steel or Fate Sealed; you can't be targeted and he gets slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Yone-Q", "start": 43, "end": 55 },
+            { "kind": "ability", "key": "Yone-R", "start": 59, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 112 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Vladimir:Yone:2",
+          "text": "Charge Tides of Blood when Yone is close; a full charge slows him and its bolts hit anyone around you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Vladimir:Yone:3",
+          "text": "Yone's Soul Unbound spirit form ends with a burst of stored damage, so back off while it runs and don't trade with him then.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Vladimir:Yone:4",
+          "text": "Cast Hemoplague on Yone once you are level 6 and he is in a fight; kill him before it bursts or you lose the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f16f3e2ca025b85cb378831ba85dff7a429533263ef7d3f3ed91ab01547d5e2b",
+      "tips": [
+        {
+          "id": "middle:Vladimir:Zed:0",
+          "text": "Press Sanguine Pool when Zed uses Death Mark on you. You can't be targeted while pooled, and the pool damages and slows him when he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Zed-R", "start": 34, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Vladimir:Zed:1",
+          "text": "Use Sanguine Pool to dodge Razor Shuriken. It pops incoming missiles, so save it for when Zed commits.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "Zed-Q", "start": 27, "end": 41 },
+            { "kind": "champion", "key": "Zed", "start": 90, "end": 93 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Vladimir:Zed:2",
+          "text": "Last-hit and poke with Transfusion to stay healthy. Its healing lets you win the early trades against Zed.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Zed", "start": 102, "end": 105 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Vladimir:Zed:3",
+          "text": "Keep your health up when Zed is nearby. His Contempt for the Weak hits harder once you are below half health.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Zed-passive", "start": 44, "end": 65 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Vladimir:Zed:4",
+          "text": "Charge Tides of Blood when Zed and his shadow stand close to you. It slows him if you charge it long enough.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-E", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

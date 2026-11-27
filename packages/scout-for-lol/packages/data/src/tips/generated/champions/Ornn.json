@@ -1,0 +1,984 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ornn",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "f5c7474ebc3466144f58abc2eb428aef5042c97e91d9ac985df18befff2f1c75",
+      "tips": [
+        {
+          "id": "top:Ornn:general:0",
+          "text": "Aim Volcanic Rupture so the pillar at the end of the fissure lands where the enemy wants to step. It zones them away from your minions.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Ornn:general:1",
+          "text": "Charge into a wall with Searing Charge when an enemy stands near it. The shockwave knocks them up.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Ornn:general:2",
+          "text": "Use Searing Charge to break your own Volcanic Rupture pillar. You can also use it on pillars the enemy made, which opens a path or an escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ornn:general:3",
+          "text": "Open a trade with Bellows Breath. It makes the enemy Brittle, so your next crowd control lasts longer and deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Ornn:general:4",
+          "text": "Follow Bellows Breath with Searing Charge into a wall. The enemy is Brittle, so the knock up lasts longer and hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 7, "end": 21 },
+            { "kind": "ability", "key": "Ornn-E", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Ornn:general:5",
+          "text": "Bellows Breath can't be stopped by crowd control once you start it. Use it to push through enemy crowd control, but you can't act until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Ornn:general:6",
+          "text": "Hit an enemy with Volcanic Rupture to slow them. That makes it easier to land Bellows Breath or reach them with Searing Charge.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 18, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Ornn-W", "start": 78, "end": 92 },
+            { "kind": "ability", "key": "Ornn-E", "start": 112, "end": 126 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Ornn:general:7",
+          "text": "At level 6, cast Call of the Forge God, then recast to headbutt the elemental into enemies. It knocks them up, and with a team fight it can win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-R", "start": 17, "end": 38 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Ornn:general:8",
+          "text": "Back off when the enemy attacks you while you forge. Damage from enemy champions or turrets interrupts it, so forge when you are safe.",
+          "refs": [],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Ornn:combo:0",
+          "name": "Double R headbutt",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Ornn-R" },
+            { "kind": "ability", "key": "Ornn-R" }
+          ],
+          "when": "In teamfights, when you want the elemental to knock enemies up.",
+          "whenRefs": [],
+          "text": "Cast R, then recast to headbutt into the elemental as it arrives. This redirects it and makes it knock up the enemies it hits.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "3c8b887fd67d369faffb5eee00029f6430006ef0340a2e1744c4861603a2c19b",
+      "tips": [
+        {
+          "id": "top:Ornn:Aatrox:0",
+          "text": "Aim Volcanic Rupture at Aatrox when he steps forward to last-hit. It slows him and the pillar at its end blocks his path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Ornn:Aatrox:1",
+          "text": "Fight near walls. Searing Charge into terrain knocks Aatrox up and stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 18, "end": 32 },
+            { "kind": "champion", "key": "Aatrox", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ornn:Aatrox:2",
+          "text": "Hit Aatrox with Bellows Breath first, then follow with a stun. Brittle makes the stun last longer and hurt more.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ornn-W", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ornn:Aatrox:3",
+          "text": "Walk sideways or toward Aatrox to leave Infernal Chains, and dodge The Darkin Blade, whose swings are easy to see coming.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 40, "end": 55 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 67, "end": 83 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Ornn:Aatrox:4",
+          "text": "Keep your distance when Aatrox uses World Ender. His damage and healing go up for the duration.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "134b3863ce64eed249df8ff977fd292f59b6b9cf05d4b795ecd6f5eeb07aad7a",
+      "tips": [
+        {
+          "id": "top:Ornn:Briar:0",
+          "text": "Fight Briar near walls. Searing Charge into terrain knocks her up and stuns her.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Ornn-E", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ornn:Briar:1",
+          "text": "Hit Briar with Bellows Breath before you trade. Brittle makes any stun or slow on her last longer.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ornn-W", "start": 15, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Ornn:Briar:2",
+          "text": "Aim Volcanic Rupture at Briar when she leaps in. It slows her, and she can't steer once Blood Frenzy starts.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Ornn:Briar:3",
+          "text": "Do not hold a fight when Briar has Chilling Scream ready. It heals her and reduces the damage she takes while charging.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Briar-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "941963b092a0bd1bc672cc4ab64ce4ec7c74127190a7fbd0bf5d98cf57454bc2",
+      "tips": [
+        {
+          "id": "top:Ornn:Darius:0",
+          "text": "Keep Searing Charge ready to get away when Darius pulls you. Use it away from walls if you only want to dash.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Darius", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Ornn:Darius:1",
+          "text": "Fire Volcanic Rupture at Darius to slow him as he walks up. Poke him while Apprehend is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Darius-E", "start": 75, "end": 84 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Ornn:Darius:2",
+          "text": "Don't trade for long. Darius's Hemorrhage stacks up fast, and he gets stronger at full stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 31,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Ornn:Darius:3",
+          "text": "Use Bellows Breath to walk through his pull attempt and trade. It leaves him Brittle, so your next crowd control lasts longer and hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Ornn:Darius:4",
+          "text": "Stay out of Decimate range. Hit him first from a distance, since he heals if the edge hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Ornn:Darius:5",
+          "text": "Stay healthy at level 6. Darius's Noxian Guillotine does true damage, so armor won't help.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Darius-R", "start": 34, "end": 51 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c3359f5c72642156780eae707f28c9b91a509af126d4e2064f91e510cb5054f7",
+      "tips": [
+        {
+          "id": "top:Ornn:Fiora:0",
+          "text": "Don't use Searing Charge on Fiora while Riposte is ready. She can turn the knock up into a stun on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Fiora", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Fiora-W", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "knocked-up", "start": 75, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Ornn:Fiora:1",
+          "text": "Bait out Riposte with Volcanic Rupture first, then use your crowd control once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 22, "end": 38 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Ornn:Fiora:2",
+          "text": "Hit Fiora with Bellows Breath so she turns Brittle. Your next crowd control lasts longer and deals extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ornn-W", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Ornn:Fiora:3",
+          "text": "Watch where Fiora's Vital is. Her Lunge comes from that direction, so be ready to punish her dash.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 34, "end": 39 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Ornn:Fiora:4",
+          "text": "Aim Volcanic Rupture so the pillar stands in Fiora's way. It blocks her path and cuts her trades short.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Fiora", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "45c9ef80305638906f5bdd7ec4b95c7ee57d0afe0872fdb69f4e99b05b01456f",
+      "tips": [
+        {
+          "id": "top:Ornn:Gangplank:0",
+          "text": "Slam Searing Charge into a wall or your own Volcanic Rupture pillar with Gangplank beside it to knock him up and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 44, "end": 60 },
+            { "kind": "champion", "key": "Gangplank", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Ornn:Gangplank:1",
+          "text": "Gangplank can cleanse your crowd control with Remove Scurvy, so bait it out before you commit your big stun.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Ornn:Gangplank:2",
+          "text": "Close the gap with Bellows Breath; it marches through slows and applies Brittle, so your next stun lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 19, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Ornn:Gangplank:3",
+          "text": "Slowed by a keg, don't chase. Step out of its blast area and wait for Gangplank to burn his kegs.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Gangplank", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ded62652fa1b14571219b3a3a74e3c8204b75d0383c3b11332070177fcfec64a",
+      "tips": [
+        {
+          "id": "top:Ornn:Garen:0",
+          "text": "Aim Volcanic Rupture so the pillar forms where Garen has to walk. It slows him and blocks his path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Garen", "start": 47, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Ornn:Garen:1",
+          "text": "Charge into a wall next to Garen with Searing Charge to knock him up and stun him, then follow with your attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Ornn-E", "start": 38, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Ornn:Garen:2",
+          "text": "Hit Garen with Bellows Breath for big damage against his health, then attack him while he is Brittle to knock him back.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ornn-W", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ornn:Garen:3",
+          "text": "Respect Decisive Strike: Garen cleanses slows and silences you with his next attack. Don't rely on slows to keep him off you.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "silenced", "start": 50, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Ornn:Garen:4",
+          "text": "Keep hitting Garen when you can. Damage stops his Perseverance healing, so he can't reset the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 50,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Ornn:Garen:5",
+          "text": "Walk away from Garen at low health; Demacian Justice deals more damage the lower you are.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-R", "start": 36, "end": 52 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d0a72927194c5260249e582b6d61222da80be0ab375521c0ac960d17e236c32",
+      "tips": [
+        {
+          "id": "top:Ornn:Jayce:0",
+          "text": "Aim Volcanic Rupture at Jayce as he walks up to last-hit. It slows him, and the pillar at the end of the fissure can block his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jayce", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Ornn:Jayce:1",
+          "text": "Fight with a wall behind Jayce. Searing Charge into terrain knocks him up and stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Ornn-E", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Ornn:Jayce:2",
+          "text": "Use Bellows Breath to walk through his poke without being pushed around. Follow it with attacks on Jayce, since he is Brittle.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "champion", "key": "Jayce", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Ornn:Jayce:3",
+          "text": "Jayce is strongest early, so play safe if he gets ahead and wait until you have forged your items.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Ornn:Jayce:4",
+          "text": "When Jayce drops his Acceleration Gate, a boosted Shock Blast is coming. Step out of the line.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "490a09ee4d3c9b32b5e5f53f20a39bd5664e1e15f36bc182dbba0cdb4f7940cb",
+      "tips": [
+        {
+          "id": "top:Ornn:KSante:0",
+          "text": "Aim Volcanic Rupture down the lane to slow K'Sante when he steps up to trade, and keep him from walking into you for free.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "KSante", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Ornn:KSante:1",
+          "text": "Hit K'Sante with Bellows Breath first, then follow with your stuns. Brittle makes them last longer and deal extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ornn-W", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ornn:KSante:2",
+          "text": "Bellows Breath deals damage based on max Health, so use it on K'Sante; he builds a lot of Health.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "KSante", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ornn:KSante:3",
+          "text": "When K'Sante goes All Out, he loses Health and resistances. Kill him then with Call of the Forge God and your stuns.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "Ornn-R", "start": 79, "end": 100 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "aa5d0d90f825a37d56159b09d2b406ab38735f44919d00cbaf3308b0898ec654",
+      "tips": [
+        {
+          "id": "top:Ornn:Malphite:0",
+          "text": "Charge with Searing Charge into a wall beside Malphite so he is knocked up and stunned. Then follow up with your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Malphite", "start": 46, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 64, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Ornn:Malphite:1",
+          "text": "Hit Malphite with Bellows Breath. It does more damage to a tank with lots of Health, and it leaves him Brittle for your next crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ornn-W", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Ornn:Malphite:2",
+          "text": "Hit Malphite's shield with a few attacks early. Granite Shield makes his armor much higher, so wait for it to break before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 48,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Ornn:Malphite:3",
+          "text": "Watch for Malphite's Seismic Shard, which slows you. Don't walk up for a trade when it is ready, and keep distance with Volcanic Rupture.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 120, "end": 136 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Ornn:Malphite:4",
+          "text": "Stay out of Unstoppable Force range at level 6 when you are near other enemies. Searing Charge can't stop it, so don't try to use it to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 12, "end": 29 },
+            { "kind": "ability", "key": "Ornn-E", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d6d13b1548648d43ea275b59d07c5414a72267b071220ae17937f4400dbb2a75",
+      "tips": [
+        {
+          "id": "top:Ornn:Mordekaiser:0",
+          "text": "Fight Mordekaiser away from your own walls and minions that matter; if he lands Death's Grasp, you are pulled toward him.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 6, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 80,
+              "end": 93
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Ornn:Mordekaiser:1",
+          "text": "Aim Volcanic Rupture at Mordekaiser to keep him slowed and out of range; the pillar can also block his path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Ornn:Mordekaiser:2",
+          "text": "Stay near minions so Obliterate does not hit you alone for extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 21,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Ornn:Mordekaiser:3",
+          "text": "Use Searing Charge into a wall near Mordekaiser to knock him up and stun him before his aura starts.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 4, "end": 18 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 36,
+              "end": 47
+            },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Ornn:Mordekaiser:4",
+          "text": "Do not fight in his Darkness Rise aura for long; back off once it is active and return after it ends.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 20,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9bcf32249d73d2237a55f0be097c3b0d613777173b31a05843e02b2fd66fe819",
+      "tips": [
+        {
+          "id": "top:Ornn:Rumble:0",
+          "text": "Aim Volcanic Rupture so the fissure ends near Rumble. It slows him, and the pillar that rises can block his path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 46, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Ornn:Rumble:1",
+          "text": "Fight Rumble beside a wall so Searing Charge can slam into it and knock him up.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Ornn-E", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Ornn:Rumble:2",
+          "text": "Walk through Rumble's Flamespitter with Bellows Breath. You cannot be pushed aside, and it leaves him Brittle.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Ornn-W", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Ornn:Rumble:3",
+          "text": "Go in when Rumble overheats. He cannot cast spells then, so he cannot shield or slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ornn:Rumble:4",
+          "text": "Step out of The Equalizer's fire quickly. Its burning trail slows you and keeps hurting you while you stay inside.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f204d9625666790b7b93b5dff0d461e0803650172c50f7cd4230af11c4ccab47",
+      "tips": [
+        {
+          "id": "top:Ornn:Sion:0",
+          "text": "Don't walk into Sion's Decimating Smash range while he is charging. Step aside, or stun him, before he releases it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Sion-Q", "start": 23, "end": 39 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Ornn:Sion:1",
+          "text": "Use Searing Charge into a wall near Sion to knock him up and stun him. Then follow with Volcanic Rupture.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Ornn-Q", "start": 88, "end": 104 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Ornn:Sion:2",
+          "text": "Bellows Breath hurts Sion more than most, since it deals damage based on his max Health. Use it before a trade to make him Brittle.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Ornn:Sion:3",
+          "text": "Don't finish Sion with nothing left to use. When he dies, Glory in Death brings him back, so step away and wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Sion-passive", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "606b8642fca3dfc4f4c88504f2fb55e91b9271c8cfcb26feebb97f18da381bb4",
+      "tips": [
+        {
+          "id": "top:Ornn:Teemo:0",
+          "text": "Walk at Teemo through the wave with Bellows Breath; you can't be pushed aside and it leaves him Brittle.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Ornn-W", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Ornn:Teemo:1",
+          "text": "Fight Teemo near walls. Searing Charge into terrain knocks him up and stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Ornn-E", "start": 24, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Ornn:Teemo:2",
+          "text": "Check brush before you walk in; Teemo can stay invisible there with Guerrilla Warfare and hit you with Blinding Dart.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 68,
+              "end": 85
+            },
+            { "kind": "ability", "key": "Teemo-Q", "start": 103, "end": 116 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Ornn:Teemo:3",
+          "text": "Avoid stepping on unseen mushrooms from Noxious Trap. Watch where Teemo stands and hit them to clear them.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 40, "end": 52 },
+            { "kind": "champion", "key": "Teemo", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Ornn:Teemo:4",
+          "text": "Don't trade and back out; Toxic Shot poison keeps hurting you. Commit fully or stay out of his range.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-E", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Ornn:Teemo:5",
+          "text": "Use Volcanic Rupture to slow Teemo and keep him away from the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07154e746b5e0ab42c3d1f76639971f9c281b2613b7ffa4f58158c36c498d9a1",
+      "tips": [
+        {
+          "id": "top:Ornn:Vayne:0",
+          "text": "Charge Vayne into a wall with Searing Charge when she stands near one; she is knocked up and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Ornn-E", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "knocked-up", "start": 78, "end": 88 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Ornn:Vayne:1",
+          "text": "Fire Volcanic Rupture at Vayne; she is slowed and the pillar can block her Tumble path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "top:Ornn:Vayne:2",
+          "text": "Open with Bellows Breath so Vayne turns Brittle, then follow with crowd control for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 10, "end": 24 },
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ornn:Vayne:3",
+          "text": "Stay out of Condemn range near walls; being pinned means a stun and heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Ornn:Vayne:4",
+          "text": "Hit Vayne often; she is fragile and plays cautiously under pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0646f5387a7e9ac792310e0c53568e25a79e29871dd02ce7ce11f167a196c4bf",
+      "tips": [
+        {
+          "id": "top:Ornn:Yone:0",
+          "text": "Aim Volcanic Rupture at Yone when he walks up to trade; he is slowed, and the pillar at the end of the fissure can block his path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Ornn:Yone:1",
+          "text": "Use Bellows Breath to make Yone Brittle, then follow with Searing Charge into a wall. The stun lasts longer on Brittle targets.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Ornn-E", "start": 58, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Ornn:Yone:2",
+          "text": "Fight near walls. Searing Charge only knocks Yone up if you hit terrain, so line up a wall behind him first.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-E", "start": 18, "end": 32 },
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Ornn:Yone:3",
+          "text": "Bellows Breath cannot be interrupted by crowd control, so use it to walk through Yone's trade and hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-W", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "top:Ornn:Yone:4",
+          "text": "Yone's Soul Unbound leaves his body behind. Don't chase him while he is in spirit form; he will snap back and deal extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Ornn:combo:0",
+          "note": "The double R knocks up enemies it hits, which can catch Yone in a teamfight if he gets in range.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 56, "end": 60 }
+          ]
+        }
+      ]
+    }
+  ]
+}

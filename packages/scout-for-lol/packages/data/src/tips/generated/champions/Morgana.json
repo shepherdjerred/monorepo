@@ -1,0 +1,970 @@
+{
+  "schemaVersion": 1,
+  "champion": "Morgana",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "40bfe42930794ea6df7073c88412e0f8f2caa1112dc569c0ea6f63de8cdd1ec4",
+      "tips": [
+        {
+          "id": "support:Morgana:general:0",
+          "text": "Aim Dark Binding down the lane at the enemy carry, but stand so a minion won't be the first target hit. It stops at the first enemy it touches.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Morgana:general:1",
+          "text": "Follow a landed Dark Binding with Tormented Shadow on the rooted enemy, since they can't step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Morgana-W", "start": 34, "end": 50 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Morgana:general:2",
+          "text": "Use Tormented Shadow on enemies who are low on Health; it hurts them more the lower they are, so it punishes anyone trying to stay in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Morgana:general:3",
+          "text": "Save Black Shield for the enemy's key disable on you or your carry. It blocks the disable, so don't spend it on poke.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Morgana:general:4",
+          "text": "Put Black Shield on yourself when you need to walk up and land Dark Binding without being stopped by a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Morgana:general:5",
+          "text": "At level 6, start Soul Shackles when several enemies are close. They are stunned if they stay chained, so they must run away.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Morgana:general:6",
+          "text": "Hit enemy champions with your abilities to heal through Soul Siphon, which also shortens Tormented Shadow's cooldown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Morgana-passive",
+              "start": 56,
+              "end": 67
+            },
+            { "kind": "ability", "key": "Morgana-W", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "be9dc0e4bc8c362660cd0b203e96218aeaf64749ae045342adcaad790bfdf74c",
+      "tips": [
+        {
+          "id": "support:Morgana:Bard:0",
+          "text": "Throw Dark Binding down the lane when Bard walks up to a chime or his minions. Rooted, he can't dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Bard", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Morgana:Bard:1",
+          "text": "Hold Black Shield for Cosmic Binding. It stops the slow and the stun, so your lane partner can keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Bard-Q", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Morgana:Bard:2",
+          "text": "Drop Tormented Shadow where Bard stands when he is low on health. It hurts more the lower he is.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Bard", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Morgana:Bard:3",
+          "text": "Stay out of line with your own minions and your ally when Bard aims Cosmic Binding. Standing against a wall makes the stun easier for him to land.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "Bard-Q", "start": 68, "end": 82 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Morgana:Bard:4",
+          "text": "Watch for Bard stepping into his Magical Journey portal to escape or flank. Don't chase him alone into the fog.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Bard-E", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Morgana:Bard:5",
+          "text": "Walk over his Caretaker's Shrine to destroy it before his ally can take the heal.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-W", "start": 14, "end": 32 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d745ecaf8e8fe69325d7ebaaea1680d44cd7901619acd4292dda9888e3a2421c",
+      "tips": [
+        {
+          "id": "support:Morgana:Karma:0",
+          "text": "Aim Dark Binding down the lane; it stops at the first enemy it hits, so a minion in the way takes it instead of Karma.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Karma", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Morgana:Karma:1",
+          "text": "Hold Black Shield for Focused Resolve; it blocks the root and keeps you free to move.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Karma-W", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Morgana:Karma:2",
+          "text": "Put Tormented Shadow where Karma stands to farm or force her back; it hurts more as her Health drops.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Karma", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Morgana:Karma:3",
+          "text": "Karma is rooted by Dark Binding with no easy escape, so follow up with your ally's damage right away.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "rooted", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Morgana:Karma:4",
+          "text": "Karma's Inner Flame is magic damage, so Black Shield on yourself or your carry soaks it and her poke.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Karma-Q", "start": 8, "end": 19 },
+            { "kind": "ability", "key": "Morgana-E", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "74c3b9c95ed44625958259dd55f8fc62d41f6225be75e60e72add1c247cccc77",
+      "tips": [
+        {
+          "id": "support:Morgana:Leona:0",
+          "text": "Put Black Shield on yourself or your carry just before Leona goes in; it blocks the stun and the root from Zenith Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 55, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 97, "end": 101 },
+            { "kind": "ability", "key": "Leona-E", "start": 107, "end": 119 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Morgana:Leona:1",
+          "text": "Hold Black Shield until Leona commits. Casting it early wastes the shield, and Leona's Shield of Daybreak stun is wasted if the shield is up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Leona", "start": 79, "end": 84 },
+            { "kind": "ability", "key": "Leona-Q", "start": 87, "end": 105 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Morgana:Leona:2",
+          "text": "Aim Dark Binding at Leona as she walks up. It has long range and she has no way to stop it except minions in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Leona", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Morgana:Leona:3",
+          "text": "Keep minions out of the line when you throw Dark Binding, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Morgana:Leona:4",
+          "text": "Drop Tormented Shadow where Leona will stand to fight. It keeps hurting her and heals you through Soul Siphon.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Leona", "start": 28, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Morgana-passive",
+              "start": 98,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Morgana:Leona:5",
+          "text": "Use Soul Shackles when Leona and her carry are both close. Back away so the chains hold, and the second hit stuns them.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Leona", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1a6197b2d01a5b0c8e8248b46300b37cd9c5b3ca3bae46a0e40a4a9222d5337c",
+      "tips": [
+        {
+          "id": "support:Morgana:Lulu:0",
+          "text": "Aim Dark Binding down the lane, not through minions; it roots the first enemy it hits, so a minion in the way soaks it.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Morgana:Lulu:1",
+          "text": "Save Black Shield for Whimsy or Wild Growth; it blocks the polymorph and the knock up if it is on you or your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Lulu-W", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Lulu-R", "start": 32, "end": 43 },
+            { "kind": "keyword", "key": "knocked-up", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Morgana:Lulu:2",
+          "text": "Land Dark Binding on Lulu, then follow with Tormented Shadow; she is rooted and can't leave it.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lulu", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Morgana-W", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Morgana:Lulu:3",
+          "text": "Stay behind minions when Lulu attacks, since Pix's bolts hit the first unit in their path.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Morgana:Lulu:4",
+          "text": "Step out of line when Glitterlance is cast; it slows you and your Dark Binding is easier to hit while you walk straight.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 22, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Morgana-Q", "start": 66, "end": 78 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d8b1add43d223d7e2be00d5a4a393ec954c1023f475e55369d0f4d9df7364f73",
+      "tips": [
+        {
+          "id": "support:Morgana:Lux:0",
+          "text": "Aim Dark Binding at Lux when she steps up to cast; the first enemy hit is rooted, so line it up where no minion stands in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 20, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Morgana:Lux:1",
+          "text": "Hold Black Shield for Lux's Light Binding; the shield stops the root and the stun-style effects it would set up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Lux-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Morgana:Lux:2",
+          "text": "Put Black Shield on your carry when Lux's Light Binding is the only thing that can catch them; she then has to waste it or hold back.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Lux", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Lux-Q", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Morgana:Lux:3",
+          "text": "Drop Tormented Shadow on Lux when she is low or stuck in place; it hurts more the lower her health is.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Lux", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Morgana:Lux:4",
+          "text": "Use Soul Shackles when Lux and her partner are both close; stay near them so the chains hold and the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Lux", "start": 23, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Morgana:Lux:5",
+          "text": "Stay out of a straight line with Lux and sidestep Final Spark when its red warning appears.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-R", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ddbfdbf387709343887780a8a03e3bdffb81e4b97fe8ee1f45b88557a2d2cad3",
+      "tips": [
+        {
+          "id": "support:Morgana:Milio:0",
+          "text": "Aim Dark Binding down the lane, since it stops at the first enemy it hits. Milio's minions can block it, so wait for a clear line.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Milio", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Morgana:Milio:1",
+          "text": "Look for Milio when he is alone; he has little mobility without allies near him. Rooting him then makes him an easy target.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "isolated", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Morgana:Milio:2",
+          "text": "Put Tormented Shadow where Milio and his partner must stand. It hurts them more as their health drops.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Milio", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Morgana:Milio:3",
+          "text": "Save Black Shield for his Ultra Mega Fire Kick; it stops the knockback and stun if it is on you before the fireball lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Milio-Q", "start": 26, "end": 46 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Morgana:Milio:4",
+          "text": "Use Soul Shackles when the fight is close. Milio's Breath of Life can clear the stun if he times it well, so cast when he has spent it.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Milio", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Milio-R", "start": 51, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4ff792b505e6724a4f3bbe26e3194997a5017695a6223e42ce3c43c9bcb1ee85",
+      "tips": [
+        {
+          "id": "support:Morgana:Nami:0",
+          "text": "Aim Dark Binding at Nami when she steps up to cast; the bubble stops at the first enemy it hits, so line it up where no minion stands in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Nami", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Morgana:Nami:1",
+          "text": "Hold Black Shield for Aqua Prison. It stops the stun, so Nami wastes her long cooldown on you or your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Nami-Q", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Nami", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Morgana:Nami:2",
+          "text": "Walk up and punish Nami once Aqua Prison misses. She has few safe ways to trade until it comes back.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Nami-Q", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Morgana:Nami:3",
+          "text": "Drop Tormented Shadow where Nami and her carry stand, or on the spot they retreat to. It keeps hurting them, and hurts more as their health drops.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Nami", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Morgana:Nami:4",
+          "text": "Step out of the path of Tidal Wave, which travels slowly. Black Shield also stops its knock up if you cast it in time.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "Morgana-E", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Morgana:Nami:5",
+          "text": "Use Soul Shackles at level 6 when Nami and her carry are bunched up near you. Fight them for the full duration so the chains hold.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Nami", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6017f73f384dca5db76c1ccf67b890bc684ff3a000c2c502bcffa5ace0210910",
+      "tips": [
+        {
+          "id": "support:Morgana:Nautilus:0",
+          "text": "Aim Dark Binding down the lane when minions are not in front of you; the first enemy it hits blocks it, so minions soak it up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Morgana:Nautilus:1",
+          "text": "Save Black Shield for when Nautilus throws Dredge Line at you or your carry; it stops the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Nautilus", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Morgana:Nautilus:2",
+          "text": "Black Shield also blocks the root from Staggering Blow, but not its bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 0, "end": 12 },
+            { "kind": "keyword", "key": "rooted", "start": 29, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 39,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Morgana:Nautilus:3",
+          "text": "Hold Soul Shackles for when Nautilus is committed on your side; he has little to break the tether with once he is close.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Nautilus", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Morgana:Nautilus:4",
+          "text": "Drop Tormented Shadow on Nautilus when he is low; it hurts more the less Health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Nautilus", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ec19d0997491136b39cefeb781da6232876e05767b8d521fc5d5ffd84cdad3e6",
+      "tips": [
+        {
+          "id": "support:Morgana:Pantheon:0",
+          "text": "Aim Dark Binding at Pantheon before he reaches you; he has to leap in to fight, so a root there leaves him stuck while you hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "support:Morgana:Pantheon:1",
+          "text": "Keep minions out of the line when you throw Dark Binding, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "support:Morgana:Pantheon:2",
+          "text": "Hold Black Shield for Pantheon's Shield Vault on you or your carry; it blocks the stun if it is up before he lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 33, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Morgana:Pantheon:3",
+          "text": "Don't waste Dark Binding while Pantheon braces with Aegis Assault; he takes no damage from the front, so wait or hit him from the side.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 12, "end": 24 },
+            { "kind": "champion", "key": "Pantheon", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Morgana:Pantheon:4",
+          "text": "Drop Tormented Shadow on Pantheon when he is low on health; it hurts him more the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Morgana:Pantheon:5",
+          "text": "Stay healthy against Pantheon's thrown Comet Spear; it hits much harder on low-health targets, so back off before you drop low.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d2fdd3d17625cb328fb566cd5ec993963ea194b60490c841703699142ed62d9f",
+      "tips": [
+        {
+          "id": "support:Morgana:Pyke:0",
+          "text": "Aim Dark Binding at Pyke when he winds up Bone Skewer or dashes in; a rooted Pyke can't escape and your team can burst him.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 42, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 76 },
+            { "kind": "champion", "key": "Pyke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Morgana:Pyke:1",
+          "text": "Keep minions between you and Pyke's harpoon; Bone Skewer stops at the first enemy it hits, so a minion in the way blocks the pull.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Morgana:Pyke:2",
+          "text": "Put Black Shield on yourself or your carry before Pyke dives in; it stops his stun from Phantom Undertow and his slow from Bone Skewer.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pyke", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 },
+            { "kind": "ability", "key": "Pyke-E", "start": 88, "end": 104 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 117 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 123, "end": 134 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Morgana:Pyke:3",
+          "text": "Hold Black Shield until Pyke commits to the pull. Casting it early wastes it, and his damage is physical, so it won't absorb his hits.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Pyke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "support:Morgana:Pyke:4",
+          "text": "Pyke heals back damage when enemies can't see him, so use Tormented Shadow to hurt him as he retreats, and watch for him hiding.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Morgana-W", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Morgana:Pyke:5",
+          "text": "Stay away from low-health allies when Pyke is near; Death From Below can execute them. Heal or shield them and he loses his kill.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Pyke-R", "start": 52, "end": 68 },
+            { "kind": "summoner-spell", "key": "7", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Morgana:Pyke:6",
+          "text": "At level 6, Soul Shackles hits Pyke if he dives on you. Step away from him so the chains hold and he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Pyke", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "06f179e4ac70d5539f763d2cdffc67e8ae122fd19078973774e410fd22ffa315",
+      "tips": [
+        {
+          "id": "support:Morgana:Senna:0",
+          "text": "Aim Dark Binding down the lane at Senna; she has to dodge it because her long range makes standing back and trading with her risky.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Morgana:Senna:1",
+          "text": "Land Dark Binding, then follow with Tormented Shadow on the rooted Senna so she can't step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Morgana-W", "start": 36, "end": 52 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "champion", "key": "Senna", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "support:Morgana:Senna:2",
+          "text": "Use Tormented Shadow on Senna and her ally when they stand together; it hits everyone in the area, and healing from it speeds up its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Senna", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "support:Morgana:Senna:3",
+          "text": "Put Black Shield on your ally when Senna's Last Embrace is coming; it stops the root before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Senna", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Senna-W", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Morgana:Senna:4",
+          "text": "Hold Black Shield for Senna's Last Embrace instead of spending it early; the root only lands after a short delay, so you can shield in time.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Senna-W", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Morgana:Senna:5",
+          "text": "At level 6, use Soul Shackles when Senna and her ally are both close; they must move away from you or they get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Senna", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 118 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1a8f55700b4bc1a1f38e2926b7a4cbe0284da0ae6739d4ae6a3d79cfbd182086",
+      "tips": [
+        {
+          "id": "support:Morgana:Seraphine:0",
+          "text": "Aim Dark Binding at Seraphine when she steps up to cast; it stops at the first enemy it hits, so keep minions out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Seraphine", "start": 20, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Morgana:Seraphine:1",
+          "text": "Save Black Shield for her Encore; it stops the charm if the shield is up when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Morgana:Seraphine:2",
+          "text": "Keep Black Shield for Beat Drop too; it blocks the slow, root or stun that follows.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 22, "end": 31 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "support:Morgana:Seraphine:3",
+          "text": "Put Tormented Shadow where she stands when she is low; it hurts more the less health she has.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Morgana:Seraphine:4",
+          "text": "Stay out of her High Note range when low on health, because it hits harder against hurt targets.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-Q", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4c49f53585fce7e834ef713c8239b38e4c083a18cb01adda0ab86b50d8f97962",
+      "tips": [
+        {
+          "id": "support:Morgana:Sona:0",
+          "text": "Aim Dark Binding at Sona when she steps up to use Hymn of Valor; she is fragile and a root usually means a kill with your team.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Sona-Q", "start": 50, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Morgana:Sona:1",
+          "text": "Stand behind your minions so Dark Binding is not blocked, but Sona's Hymn of Valor still hits the nearest enemies. Stay out of her range.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Sona", "start": 62, "end": 66 },
+            { "kind": "ability", "key": "Sona-Q", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "support:Morgana:Sona:2",
+          "text": "Keep Black Shield for Crescendo; it stops the stun if the shield is up when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Sona-R", "start": 22, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Morgana:Sona:3",
+          "text": "Cover your carry with Black Shield when Sona's Power Chord is ready, since Song of Celerity's slow is stopped by the shield.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Sona", "start": 40, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Sona-passive",
+              "start": 47,
+              "end": 58
+            },
+            { "kind": "ability", "key": "Sona-E", "start": 75, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "support:Morgana:Sona:4",
+          "text": "Put Tormented Shadow on Sona when she is low; it hurts more the lower she is, and she can't heal it away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Sona", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4b8fb3b611a4691e4bbffbb0a4504b6fa67b59c49a19f60fc39815304ffbf436",
+      "tips": [
+        {
+          "id": "support:Morgana:Thresh:0",
+          "text": "Throw Dark Binding down the lane when Thresh walks up for a minion. If he is rooted, he can't dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Thresh", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Morgana:Thresh:1",
+          "text": "Keep minions between you and Thresh. Death Sentence hits the first unit in its path, so a minion in the way soaks it up.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Morgana:Thresh:2",
+          "text": "Put Black Shield on yourself or your carry as soon as Thresh begins his Death Sentence cast. It stops the stun and the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Thresh", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Morgana:Thresh:3",
+          "text": "Hold Black Shield until Thresh commits. If you waste it early, Flay or Death Sentence can catch you with it on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-E", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Thresh", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Thresh-E", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Morgana:Thresh:4",
+          "text": "Drop Tormented Shadow where Thresh and his ally stand, especially when they are low on health. It hurts more the lower they are.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-W", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Thresh", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Morgana:Thresh:5",
+          "text": "Cast Soul Shackles when Thresh is on you. If he tries to Flay or pull you away, he can break the tether and avoid the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-R", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Thresh", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Thresh-E", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

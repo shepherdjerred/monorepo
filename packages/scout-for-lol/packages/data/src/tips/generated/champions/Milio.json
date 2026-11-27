@@ -1,0 +1,2055 @@
+{
+  "schemaVersion": 1,
+  "champion": "Milio",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "5f5e4c0583fa12d235174df61bfdb58e21d98fa7caf13fedd485e62d7832a641",
+      "tips": [
+        {
+          "id": "support:Milio:general:0",
+          "text": "Aim Ultra Mega Fire Kick at the first enemy in line; it knocks them back and the explosion slows them, so follow up with your carry's attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Milio:general:1",
+          "text": "Ultra Mega Fire Kick gives back some mana when it hits an enemy champion, so it is cheap to throw at enemies in lane.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 0, "end": 20 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Milio:general:2",
+          "text": "Do not plan other spells right after starting Ultra Mega Fire Kick; Milio cannot cast anything else during its short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 46, "end": 66 },
+            { "kind": "champion", "key": "Milio", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Milio:general:3",
+          "text": "Drop Cozy Campfire on your carry in trades; it adds attack range and heals, so they can hit from farther back.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Milio:general:4",
+          "text": "Recast Cozy Campfire to send the hearth to another ally when the fight shifts.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 7, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Milio:general:5",
+          "text": "Use Warm Hugs on your carry when enemies threaten them; the shield and speed help them escape or chase.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Milio:general:6",
+          "text": "Save Breath of Life from level 6 for when allies are rooted, stunned or low; it cleanses most crowd control and heals.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Milio:general:7",
+          "text": "Breath of Life does not cleanse airborne effects, so do not count on it against knock ups.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:general:8",
+          "text": "Stay near your allies; Milio's tools need them close, and he is easy to catch when alone.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "9f6cd73c3d1e2335d306318df0b148471090acee90c75975917541f62b751d24",
+      "tips": [
+        {
+          "id": "support:Milio:Alistar:0",
+          "text": "Keep Ultra Mega Fire Kick for Alistar when he commits. It knocks him back and breaks his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Alistar", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Milio:Alistar:1",
+          "text": "Stay close to your ally and keep Warm Hugs ready. The shield and speed help you survive Alistar's combo.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 33, "end": 42 },
+            { "kind": "champion", "key": "Alistar", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Milio:Alistar:2",
+          "text": "Stay away from Alistar's Pulverize range when you are alone. Headbutt can reach you from a long way off.",
+          "refs": [
+            { "kind": "champion", "key": "Alistar", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Alistar-Q", "start": 25, "end": 34 },
+            { "kind": "ability", "key": "Alistar-W", "start": 61, "end": 69 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "support:Milio:Alistar:3",
+          "text": "Use Breath of Life to cleanse your ally's stun after Alistar's combo. Airborne effects are not cleansed.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "champion", "key": "Alistar", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Alistar",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4b18e7a56563a582215a6f2da5c4896dcd8db9053dcce78f6b8dea64604e0cc1",
+      "tips": [
+        {
+          "id": "support:Milio:Anivia:0",
+          "text": "Kick Ultra Mega Fire Kick at Anivia when she steps up to cast; it knocks her back and stuns her, cutting off her combo.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Anivia", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Anivia:1",
+          "text": "Put Warm Hugs on your partner before Flash Frost lands; the shield and speed help them dodge Frostbite follow-ups.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 37, "end": 48 },
+            { "kind": "ability", "key": "Anivia-E", "start": 93, "end": 102 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Milio:Anivia:2",
+          "text": "Use Breath of Life to free allies caught by Flash Frost's stun.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Milio:Anivia:3",
+          "text": "Cozy Campfire gives extra attack range, so you can trade at range with Anivia and stay out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Anivia", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "36d4e45a87dd28a7cf938b85129095e74c62419d88875cd7dc4d0003fa36f36c",
+      "tips": [
+        {
+          "id": "support:Milio:Bard:0",
+          "text": "Stay out of line with Cosmic Binding and keep a minion or your ally off the same line, since a second hit makes it stun.",
+          "refs": [
+            { "kind": "ability", "key": "Bard-Q", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Milio:Bard:1",
+          "text": "Use Warm Hugs on your carry before Bard lands a bolt; the shield and speed help you get out.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Bard", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:Bard:2",
+          "text": "Land Ultra Mega Fire Kick on Bard when he walks up for chimes or a shrine; the knockback interrupts his approach.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Bard", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Milio:Bard:3",
+          "text": "Walk over Bard's shrines to destroy them, so his ally cannot take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Milio:Bard:4",
+          "text": "Save Breath of Life for when you are stunned or caught by Bard's bolt; it cleanses you and your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Bard", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f4efb78016534a26b510f3e7ca41c8c2a70b06ae1ec261fbb107679a02a45154",
+      "tips": [
+        {
+          "id": "support:Milio:Blitzcrank:0",
+          "text": "Stay behind minions so Rocket Grab hits them first, because it only pulls the first enemy it meets.",
+          "refs": [
+            { "kind": "ability", "key": "Blitzcrank-Q", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Milio:Blitzcrank:1",
+          "text": "Hit Blitzcrank with Ultra Mega Fire Kick when he comes forward; he is knocked back and then slowed by the explosion.",
+          "refs": [
+            { "kind": "champion", "key": "Blitzcrank", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Milio-Q", "start": 20, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Milio:Blitzcrank:2",
+          "text": "Hold Warm Hugs for your carry when Blitzcrank is near, but know Static Field destroys shields.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Blitzcrank", "start": 35, "end": 45 },
+            { "kind": "ability", "key": "Blitzcrank-R", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Milio:Blitzcrank:3",
+          "text": "Do not wander away from your allies; alone you are an easy grab and burst target.",
+          "refs": [],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Milio:Blitzcrank:4",
+          "text": "Save Breath of Life to clear a stun or pull-based follow-up on your ally, but not the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Blitzcrank",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e44c60d7f3f45735dfdcb437f43d216d7166ae338a178398484d9a3d02444ad3",
+      "tips": [
+        {
+          "id": "support:Milio:Brand:0",
+          "text": "Dodge Sear and Pillar of Flame; Brand needs one hit to start his combo, so stay out of his lines.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Brand-W", "start": 15, "end": 30 },
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "support:Milio:Brand:1",
+          "text": "Use Ultra Mega Fire Kick on Brand when he steps up to cast; it knocks him back and stuns him, and the blast slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Milio:Brand:2",
+          "text": "Spread out from your carry; Brand's Conflagration and Pyroclasm hit groups hardest.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Brand-E", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "Brand-R", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Milio:Brand:3",
+          "text": "Put Warm Hugs on whoever Brand targets with Sear; a shield soaks the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Brand", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Brand-Q", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Milio:Brand:4",
+          "text": "Save Breath of Life to cleanse Brand's Sear stun on your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Brand-Q", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "6af629469f7029162a430e920d8b52dbb3de49865ee6b94634ff9393414d9113",
+      "tips": [
+        {
+          "id": "support:Milio:Braum:0",
+          "text": "Stay out of a straight line with Braum when you cast Ultra Mega Fire Kick; his Unbreakable destroys it.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 53, "end": 73 },
+            { "kind": "ability", "key": "Braum-E", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Milio:Braum:1",
+          "text": "Use Warm Hugs on the ally Braum marks; the speed helps them leave before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Braum", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Milio:Braum:2",
+          "text": "Keep Breath of Life ready for Glacial Fissure; it cleanses the knock up and slows only if it is not airborne.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Braum-R", "start": 30, "end": 45 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Milio:Braum:3",
+          "text": "Stay near your carry; alone you are an easy Winter's Bite target.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cd8fd7946fe2b5e94167adc6f47fa14f42b981c20e1f60cdc3a95a8d83e36077",
+      "tips": [
+        {
+          "id": "support:Milio:Camille:0",
+          "text": "Stay close to your allies. Camille wants to catch you alone, and your abilities work best near teammates.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Milio:Camille:1",
+          "text": "Hit Camille with Ultra Mega Fire Kick when she dashes in. It knocks her back and stuns her, which breaks her dive.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Milio-Q", "start": 17, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Milio:Camille:2",
+          "text": "Put Warm Hugs on your carry before Camille jumps in. The shield and speed help them survive her stun.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Camille", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Milio:Camille:3",
+          "text": "Save Breath of Life for after she locks onto someone with The Hextech Ultimatum. It cleanses crowd control and heals.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Camille-R", "start": 58, "end": 79 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "747154ded71d95b370d9d82ba354b44ca0a680ada27ba8a8beceadfcf5821784",
+      "tips": [
+        {
+          "id": "support:Milio:Janna:0",
+          "text": "Stay out of a straight line with Janna and your carry, because Howling Gale charges quietly and knocks you up for longer the more she charges it.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Janna-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Milio:Janna:1",
+          "text": "Hit Janna with Ultra Mega Fire Kick when she is alone; it stuns her and slows her afterward, so she can't easily set up her Howling Gale.",
+          "refs": [
+            { "kind": "champion", "key": "Janna", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Milio-Q", "start": 15, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 },
+            { "kind": "ability", "key": "Janna-Q", "start": 124, "end": 136 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Milio:Janna:2",
+          "text": "Keep Cozy Campfire on your carry in a fight; the extra attack range lets them hit Janna and her partner from further away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Janna", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:Janna:3",
+          "text": "Save Breath of Life for when Janna's Howling Gale or Monsoon lands on your team; it cleanses the effects and the heal follows.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Janna", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Janna-Q", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Janna-R", "start": 53, "end": 60 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "support:Milio:Janna:4",
+          "text": "Put Warm Hugs on your carry before Zephyr lands so the shield and speed soften the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Janna-W", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Janna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cdd2e0441921e269264e6becfe9cfa52259a13585869a103dd3140def47ca61f",
+      "tips": [
+        {
+          "id": "support:Milio:Karma:0",
+          "text": "Stay out of a straight line with Karma so Inner Flame hits a minion instead of you; it stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Karma-Q", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Milio:Karma:1",
+          "text": "Break away from Karma's Focused Resolve tether by walking out of range before it ends, and you avoid the root.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Karma-W", "start": 24, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Milio:Karma:2",
+          "text": "Land Ultra Mega Fire Kick on Karma when she steps up; she has no escape of her own, and a hit refunds mana.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Karma", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Milio:Karma:3",
+          "text": "Save Breath of Life for when Karma roots your carry; it cleanses the root.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Milio:Karma:4",
+          "text": "Keep Cozy Campfire on your carry so they can trade from farther away and heal off Karma's poke.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Karma", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "aeff04e86e3c04716f07649f52b829e0708d49347b1d389ece1527f83a851d64",
+      "tips": [
+        {
+          "id": "support:Milio:Leona:0",
+          "text": "Keep Warm Hugs ready on yourself or your carry when Leona engages. The shield and extra speed help you break away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Leona", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Milio:Leona:1",
+          "text": "Hit Leona with Ultra Mega Fire Kick as she walks in. It stuns her and knocks her back, which stops her engage.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Milio-Q", "start": 15, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Milio:Leona:2",
+          "text": "Save Breath of Life for after Leona's stun or root lands. It cleanses the crowd control on you and your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Leona", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Milio:Leona:3",
+          "text": "Stay near your partner. Alone you are an easy target for Leona's Zenith Blade.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Leona-E", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Milio:Leona:4",
+          "text": "Step away from Leona when she raises Eclipse. Her damage comes only when the shield ends.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Leona-W", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a06b24ec9a528c94cd0d0332aa2a3f423ad4f1c3360407dcb28be7d9ef11487a",
+      "tips": [
+        {
+          "id": "support:Milio:Lulu:0",
+          "text": "Fire Ultra Mega Fire Kick at Lulu when she steps up to poke; the knockback and slow ruin her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Lulu", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Milio:Lulu:1",
+          "text": "Stay out of Glitterlance's long line; both bolts slow you, so step sideways early.",
+          "refs": [
+            { "kind": "ability", "key": "Lulu-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Milio:Lulu:2",
+          "text": "Keep Warm Hugs ready for your carry when Lulu goes for Whimsy; the shield and speed help them escape.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Lulu", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Lulu-W", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "support:Milio:Lulu:3",
+          "text": "Save Breath of Life for when Wild Growth knocks your team up; it won't cleanse that.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Lulu-R", "start": 29, "end": 40 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "8891c17d765ddfdaca8668f65353b9247de089fc62d84a5079ab9fc586fb1114",
+      "tips": [
+        {
+          "id": "support:Milio:Lux:0",
+          "text": "Stay behind your own minions or allies. Light Binding only roots the first two enemies it hits, so keep out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Milio:Lux:1",
+          "text": "Save Breath of Life for when you or your carry is rooted by Light Binding. It cleanses the root.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Lux-Q", "start": 60, "end": 73 },
+            { "kind": "keyword", "key": "rooted", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Milio:Lux:2",
+          "text": "Hit Lux with Ultra Mega Fire Kick when she walks up to cast. It knocks her back and slows her, and it refunds some mana if it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Milio-Q", "start": 13, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Lux:3",
+          "text": "Put Warm Hugs on your carry before a trade. The shield absorbs some of the damage from Lux's spells and the speed helps them dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Lux", "start": 87, "end": 90 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d93fa7cb4c6e4e1c0ef338da8ed6e719260bfebfe0e023da0ca4e1ae4ee0e5ba",
+      "tips": [
+        {
+          "id": "support:Milio:Maokai:0",
+          "text": "Stay close to your carry. Milio has few ways to move without allies, and Maokai can catch you alone with Twisted Advance.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 26, "end": 31 },
+            { "kind": "champion", "key": "Maokai", "start": 73, "end": 79 },
+            { "kind": "ability", "key": "Maokai-W", "start": 105, "end": 120 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Milio:Maokai:1",
+          "text": "Hit Maokai with Ultra Mega Fire Kick to stop him closing in; it knocks him back and stuns him.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Milio-Q", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Milio:Maokai:2",
+          "text": "Save Breath of Life for when Nature's Grasp or Twisted Advance catches your team; it cleanses the root.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Maokai-R", "start": 29, "end": 43 },
+            { "kind": "ability", "key": "Maokai-W", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "support:Milio:Maokai:3",
+          "text": "Do not spend spells on Maokai without reason; each hit shortens his Sap Magic cooldown so he heals sooner.",
+          "refs": [
+            { "kind": "champion", "key": "Maokai", "start": 23, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Maokai-passive",
+              "start": 68,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Milio:Maokai:4",
+          "text": "Stay out of brush near Sapling Toss; it chases you and deals more damage there.",
+          "refs": [
+            { "kind": "ability", "key": "Maokai-E", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Maokai",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f62f797aa3494be11711c356a39bd8ea5f260ff1be5449ef9b5b0ce19614a1d6",
+      "tips": [
+        {
+          "id": "support:Milio:Mel:0",
+          "text": "Kick Ultra Mega Fire Kick at Mel only after she has used Rebuttal. Otherwise she destroys the fireball.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Mel", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Mel-W", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Milio:Mel:1",
+          "text": "Stay close to your carry so your abilities have allies to work with. Mel's Solar Snare is much easier to land on you when you wander alone.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 69, "end": 72 },
+            { "kind": "ability", "key": "Mel-E", "start": 75, "end": 86 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Milio:Mel:2",
+          "text": "Save Breath of Life for when Mel roots your team. It cleanses the root and gives you tenacity.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Mel", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Milio:Mel:3",
+          "text": "Back off for a moment when Mel's hits pile up. Her Overwhelm stacks can execute you at low health, and they fall off if she stops hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "ddbfdbf387709343887780a8a03e3bdffb81e4b97fe8ee1f45b88557a2d2cad3",
+      "tips": [
+        {
+          "id": "support:Milio:Morgana:0",
+          "text": "Stay behind your minions so Dark Binding hits them first and stops there. Step out only when you want to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Morgana-Q", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Milio:Morgana:1",
+          "text": "Keep your ally close; alone, you are an easy target for Morgana's root.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 56, "end": 63 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Milio:Morgana:2",
+          "text": "Hold Breath of Life for when Morgana lands Soul Shackles; it cleanses the stun if you cast it before the chains break.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Morgana", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Morgana-R", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Milio:Morgana:3",
+          "text": "Hit Morgana with Ultra Mega Fire Kick when she shields herself. Black Shield only absorbs magic damage but blocks the knockback and stun.",
+          "refs": [
+            { "kind": "champion", "key": "Morgana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Milio-Q", "start": 17, "end": 37 },
+            { "kind": "ability", "key": "Morgana-E", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "support:Milio:Morgana:4",
+          "text": "Use Warm Hugs on an ally who is low on health; it gives a shield and speed to leave Tormented Shadow.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Morgana-W", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Morgana",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a54f97d2578661d811df963d9d4c902ca31c3da4884091cd0985e428a90a3f62",
+      "tips": [
+        {
+          "id": "support:Milio:Nami:0",
+          "text": "Walk out of the path of Tidal Wave. It is slow, so sidestep it and do not cast into it.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Nami:1",
+          "text": "Keep an eye on Nami's Aqua Prison. Once she misses it, it is on a long cooldown, so push up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Nami-Q", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Milio:Nami:2",
+          "text": "Use Ultra Mega Fire Kick on Nami when she walks forward. It knocks her back and slows her with the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Nami", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Milio:Nami:3",
+          "text": "Give your carry Warm Hugs before a trade. The shield and speed help them dodge Nami's bubble and stay in the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 16, "end": 25 },
+            { "kind": "champion", "key": "Nami", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Milio:Nami:4",
+          "text": "Avoid fighting a champion Nami has given Tidecaller's Blessing. It runs out quickly, so wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Nami-E", "start": 41, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Milio:Nami:5",
+          "text": "Stay near your ally; Cozy Campfire gives them extra range to poke Nami from further away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 21, "end": 34 },
+            { "kind": "champion", "key": "Nami", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0800f096dab85358aedd98cfbd29e3143a66ab8922ba49501cf761eedcd47700",
+      "tips": [
+        {
+          "id": "support:Milio:Nautilus:0",
+          "text": "Stay behind your ADC or minions so Nautilus cannot easily line up Dredge Line on you.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "support:Milio:Nautilus:1",
+          "text": "Use Ultra Mega Fire Kick on Nautilus when he walks up; it knocks him back and leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Nautilus", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Milio:Nautilus:2",
+          "text": "Save Breath of Life for when Nautilus lands Depth Charge on your carry; it clears the crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nautilus", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nautilus-R", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Milio:Nautilus:3",
+          "text": "Do not let Nautilus attack you first; Staggering Blow roots you in place.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 11, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Nautilus-passive",
+              "start": 38,
+              "end": 53
+            },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f0e7528e085da9a425802d52f188114405a7286b4730bb8753e19ac549af6376",
+      "tips": [
+        {
+          "id": "support:Milio:Neeko:0",
+          "text": "Keep your partner close, since Milio is slow and weak alone. Stay behind them so Neeko can't reach you with Tangle-Barbs.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 31, "end": 36 },
+            { "kind": "champion", "key": "Neeko", "start": 81, "end": 86 },
+            { "kind": "ability", "key": "Neeko-E", "start": 108, "end": 120 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Milio:Neeko:1",
+          "text": "Don't stand behind minions when Neeko is nearby; Tangle-Barbs grows stronger after it hits one.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Neeko-E", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Milio:Neeko:2",
+          "text": "Save Breath of Life for Neeko's Pop Blossom; it cleanses the stun and knock up from your team.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Neeko", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Neeko-R", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "support:Milio:Neeko:3",
+          "text": "Be wary of allies who look odd: Neeko can pose as a friend, and Pop Blossom shows no warning while she is disguised.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Neeko-R", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Milio:Neeko:4",
+          "text": "Hit Neeko with Ultra Mega Fire Kick when she walks up to trade. It stuns her and slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Neeko", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Milio-Q", "start": 15, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Neeko",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "d757fd46d812e3fd92345defcb660b338c285cbf1e21596e14dbb160485c8c1f",
+      "tips": [
+        {
+          "id": "support:Milio:Pantheon:0",
+          "text": "Aim Ultra Mega Fire Kick at Pantheon as he jumps in; it stuns him and slows him after.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Pantheon", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Milio:Pantheon:1",
+          "text": "Stay near your partner; alone you are easy for Pantheon to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Milio:Pantheon:2",
+          "text": "Put Warm Hugs on your partner before Pantheon jumps; the shield soaks the stun hit and the boost helps them escape.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "support:Milio:Pantheon:3",
+          "text": "Use Breath of Life after Pantheon's Shield Vault stuns your partner; it cleanses the stun and heals them.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 36, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "support:Milio:Pantheon:4",
+          "text": "Get away from the landing area when Pantheon starts Grand Starfall; it warns you before he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a417b00b5adf9b6a573072bbc3f67a049bd56f1e1c440bdaeefdede8a588e80b",
+      "tips": [
+        {
+          "id": "support:Milio:Poppy:0",
+          "text": "Aim Ultra Mega Fire Kick at Poppy when she walks up. It knocks her back and stuns her before she can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Poppy", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Milio:Poppy:1",
+          "text": "Stay away from walls. Poppy can use Heroic Charge to carry you into one and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Poppy-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Milio:Poppy:2",
+          "text": "Don't rely on dashes near Poppy when Steadfast Presence is up. It stops the dash and leaves you slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Poppy-W", "start": 37, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:Poppy:3",
+          "text": "When Poppy starts spinning her hammer for Keeper's Verdict, keep Breath of Life ready. It cleanses but won't free anyone already in the air.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Poppy-R", "start": 42, "end": 58 },
+            { "kind": "ability", "key": "Milio-R", "start": 65, "end": 79 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Milio:Poppy:4",
+          "text": "Step on Poppy's dropped buckler to destroy it and deny her shield.",
+          "refs": [
+            { "kind": "champion", "key": "Poppy", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Poppy",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c6ce50d4141d0d930999f699649656e596a6f5cf0faac61590949d6ce44afa8e",
+      "tips": [
+        {
+          "id": "support:Milio:Pyke:0",
+          "text": "Stay near your ally so Pyke cannot pull you alone with Bone Skewer.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Pyke-Q", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Milio:Pyke:1",
+          "text": "Put Warm Hugs on yourself or your ally when Pyke dives in; the shield absorbs part of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Pyke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Milio:Pyke:2",
+          "text": "Hit Pyke with Ultra Mega Fire Kick when he comes forward; it knocks him back and slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Milio-Q", "start": 14, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "support:Milio:Pyke:3",
+          "text": "Sharks under your feet mean Pyke is hiding nearby from Ghostwater Dive; keep your team close and be ready to shield.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Pyke-W", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "support:Milio:Pyke:4",
+          "text": "Keep low-health allies away from you; Death From Below can execute them and pull Pyke onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Pyke-R", "start": 38, "end": 54 },
+            { "kind": "champion", "key": "Pyke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "840db122f00c24c171c2ae226f316cf26331fae73186d44723ce5f0b80d35752",
+      "tips": [
+        {
+          "id": "support:Milio:Rakan:0",
+          "text": "Aim Ultra Mega Fire Kick at Rakan when he lands next to his partner; it stuns him and the blast slows everyone nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Rakan", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "support:Milio:Rakan:1",
+          "text": "Hold Breath of Life for when Rakan's Grand Entrance or The Quickness catches your team; it cleanses most crowd control, but not knock ups.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Rakan", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Rakan-W", "start": 37, "end": 51 },
+            { "kind": "ability", "key": "Rakan-R", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "support:Milio:Rakan:2",
+          "text": "Stay close to your carry so Rakan has a hard time diving you; Warm Hugs on yourself helps when he charges in.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Milio-E", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "support:Milio:Rakan:3",
+          "text": "Use Cozy Campfire on your carry in trades; the extra range lets them hit Rakan from further away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Rakan", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Rakan",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "762d8c0b3299b0ee8db4ec450a4486bc7079b06debc45d304fc4164bf399e4be",
+      "tips": [
+        {
+          "id": "support:Milio:Rell:0",
+          "text": "Stay close to your ally. Alone, you are easy for Rell to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Milio:Rell:1",
+          "text": "Put Warm Hugs on yourself or your ally before Rell's Shattering Strike lands. She wants to pop shields, so don't count on one shield to save you.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Rell", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Rell-Q", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Milio:Rell:2",
+          "text": "Hit Rell with Ultra Mega Fire Kick when she lands from Ferromancy: Crash Down or mounts up. The knockback stuns her and cuts the fight short.",
+          "refs": [
+            { "kind": "champion", "key": "Rell", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Milio-Q", "start": 14, "end": 34 },
+            { "kind": "ability", "key": "Rell-W", "start": 55, "end": 77 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "support:Milio:Rell:3",
+          "text": "Save Breath of Life for when Magnet Storm or a stun catches your team. It cleanses most crowd control and gives tenacity.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Rell-R", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Milio:Rell:4",
+          "text": "Keep Cozy Campfire on your carry and fight at long range. Rell has to cross that distance to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Rell", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Rell",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "866e55db9caeb4ba20ef5d49bd9725a54a6a9b8dd7f334365df63c0863b40570",
+      "tips": [
+        {
+          "id": "support:Milio:Senna:0",
+          "text": "Aim Ultra Mega Fire Kick at Senna when she walks up to attack. It stuns her, and the explosion slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Senna", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Milio:Senna:1",
+          "text": "Stay out of Last Embrace's path. Keep a minion in front of you, because it hits the first enemy in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "support:Milio:Senna:2",
+          "text": "Keep Warm Hugs ready for your carry when Senna goes for Last Embrace. The shield and speed help them walk out of the root.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Senna", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Senna-W", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "support:Milio:Senna:3",
+          "text": "Hold Breath of Life for the root or a Dawning Shadow. It cleanses crowd control and heals, and you can use it at the right moment.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Senna-R", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Milio:Senna:4",
+          "text": "Use Cozy Campfire on your carry so they can outrange Senna's poke. It also heals them.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Senna", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "fa11ba1f3cef87c81d5979c27164c8ee929490abea11a0cbd81cd7d151bbc01b",
+      "tips": [
+        {
+          "id": "support:Milio:Seraphine:0",
+          "text": "Use Ultra Mega Fire Kick on Seraphine when she steps up; it knocks her back and slows her, which makes her easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Seraphine", "start": 28, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "support:Milio:Seraphine:1",
+          "text": "Dodge Beat Drop sideways; it is a long line, so do not walk straight at Seraphine when she has it ready.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Seraphine", "start": 72, "end": 81 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Milio:Seraphine:2",
+          "text": "Save Breath of Life for Encore; it cleanses the charm and your team can move again.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Seraphine-R", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Seraphine:3",
+          "text": "Put Warm Hugs on your carry before Seraphine trades; the Shield absorbs her High Note poke.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Seraphine", "start": 35, "end": 44 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 76, "end": 85 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Seraphine:4",
+          "text": "Stay near your carry and use Cozy Campfire; extra attack range lets you answer her poke.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4fdd01e5a16f306adb1854c0ab9d5dda6ebd32c3b18d149f0d3425be854185d2",
+      "tips": [
+        {
+          "id": "support:Milio:Shen:0",
+          "text": "Aim Ultra Mega Fire Kick at Shen when he walks up; the stun gives your ally time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Shen", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "support:Milio:Shen:1",
+          "text": "Stay near your ally; Shen wants to catch you alone with Shadow Dash and taunt you.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Shen-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Milio:Shen:2",
+          "text": "Watch for Shen's Twilight Assault; his next attacks reach farther and hurt more, so back off from them.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Milio:Shen:3",
+          "text": "Hold Breath of Life for a Shen taunt on your carry; it cleanses most crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shen", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "bcff04186c96e0afeab562de1b906014402037fa02a5999477a5bb6647d26e76",
+      "tips": [
+        {
+          "id": "support:Milio:Sona:0",
+          "text": "Aim Ultra Mega Fire Kick at Sona when she walks forward to poke. It knocks her back and leaves her slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Sona", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "support:Milio:Sona:1",
+          "text": "Put Warm Hugs on your carry before Sona's poke lands. The shield soaks the damage and the move speed helps them dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sona", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Milio:Sona:2",
+          "text": "Keep Breath of Life for after Crescendo hits your team. It cleanses the stun, though it takes a moment to cast.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Sona-R", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Milio:Sona:3",
+          "text": "Use Cozy Campfire when you fight Sona. The extra attack range lets your carry hit back at her from farther away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sona", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e630610d0ca309cef30c8a7fc46ec115b867afcba79dbd3aefc79f9b056b46b0",
+      "tips": [
+        {
+          "id": "support:Milio:Soraka:0",
+          "text": "Aim Ultra Mega Fire Kick at Soraka when she steps forward to Starcall. The stun cancels her poke and sets up a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Soraka", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 61, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "support:Milio:Soraka:1",
+          "text": "Put Warm Hugs on your carry before Equinox lands. The shield soaks the damage and the speed helps them walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Soraka-E", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "support:Milio:Soraka:2",
+          "text": "Save Breath of Life for when Equinox roots your team. It cleanses the root and the silence.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Soraka-E", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 },
+            { "kind": "keyword", "key": "silenced", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Milio:Soraka:3",
+          "text": "Soraka pays health to heal with Astral Infusion unless Starcall has hit. Punish her when she is low.",
+          "refs": [
+            { "kind": "champion", "key": "Soraka", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Soraka-W", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Soraka-Q", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Soraka",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "5686de3594f22ff3e691bc56109b5bfae5fdffefaf29423410f25a60f0a8287d",
+      "tips": [
+        {
+          "id": "support:Milio:Swain:0",
+          "text": "Stay out of Nevermove's line when Swain is near your minions. If you get rooted, press Breath of Life to cleanse it.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Swain", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 79 },
+            { "kind": "ability", "key": "Milio-R", "start": 87, "end": 101 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "support:Milio:Swain:1",
+          "text": "Aim Ultra Mega Fire Kick at Swain when he comes in to cast. It knocks him back and slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Swain", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "support:Milio:Swain:2",
+          "text": "Put Warm Hugs on your partner before Swain's Death's Hand lands. The shield soaks up the poke.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Swain", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Swain-Q", "start": 45, "end": 57 },
+            { "kind": "keyword", "key": "poke", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Milio:Swain:3",
+          "text": "Move as soon as Vision of Empire shows up on the ground. It explodes after a long delay and is easy to walk out of.",
+          "refs": [
+            { "kind": "ability", "key": "Swain-W", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Milio:Swain:4",
+          "text": "Use Cozy Campfire in trades so your partner can hit Swain from farther away. It also heals while you fight.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Swain", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Swain",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "f8ab3c08317f5b4c133df2590a72dde0dcbd83794e215739e148d5768c739df6",
+      "tips": [
+        {
+          "id": "support:Milio:TahmKench:0",
+          "text": "Aim Ultra Mega Fire Kick at Tahm Kench when he walks up to trade. It knocks him back and stuns him, which ruins his engage.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "TahmKench", "start": 28, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "support:Milio:TahmKench:1",
+          "text": "Tahm Kench can pull you in and swallow you after three hits. Stay away from his Tongue Lash once he has stacked An Acquired Taste.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 80, "end": 91 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-passive",
+              "start": 112,
+              "end": 129
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "support:Milio:TahmKench:2",
+          "text": "Keep Breath of Life for when Tahm Kench stuns or knocks up your carry, since it cleanses them. It does not free anyone from Devour.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "TahmKench", "start": 29, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "knocked-up", "start": 49, "end": 58 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 124,
+              "end": 130
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Milio:TahmKench:3",
+          "text": "Stay away from your carry when Tahm Kench's Abyssal Dive is coming. Its target area shows up partway through the channel, so you can step out of it.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 31, "end": 41 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Milio:TahmKench:4",
+          "text": "Put Warm Hugs on yourself or your carry before a trade. Tahm Kench's damage turns into stored health, so a shield cuts his damage short.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "TahmKench", "start": 56, "end": 66 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "62f2701f5c84913bd20368fecfca057a1dec5d495087489ccd0133efd150383b",
+      "tips": [
+        {
+          "id": "support:Milio:Taric:0",
+          "text": "Hit Taric with Ultra Mega Fire Kick when he walks up to attack minions. He is slowed and knocked back, so he cannot use Bravado.",
+          "refs": [
+            { "kind": "champion", "key": "Taric", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Milio-Q", "start": 15, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 84 },
+            {
+              "kind": "ability",
+              "key": "Taric-passive",
+              "start": 120,
+              "end": 127
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "support:Milio:Taric:1",
+          "text": "Move as soon as you see Dazzle's wind-up. Its stun lands after a delay, so you can step out of the beam.",
+          "refs": [
+            { "kind": "ability", "key": "Taric-E", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "support:Milio:Taric:2",
+          "text": "Keep Breath of Life for when you or your partner is stunned. It cleanses the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Milio:Taric:3",
+          "text": "Use Cozy Campfire to give your partner extra attack range so they can poke Taric from farther away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 74 },
+            { "kind": "champion", "key": "Taric", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Taric",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "4ac7a94c397b4716583c39e7b6eac51c9bdd532706bf09d8ac8065c1bbad9f36",
+      "tips": [
+        {
+          "id": "support:Milio:Thresh:0",
+          "text": "Keep Ultra Mega Fire Kick for when Thresh walks up to hit a minion. The hit knocks him back and gives you room.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Thresh", "start": 35, "end": 41 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Milio:Thresh:1",
+          "text": "Hold Warm Hugs for when Death Sentence is thrown at your carry. Fast movement and a shield make the pull easier to avoid.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "support:Milio:Thresh:2",
+          "text": "Stay behind your minions, because Death Sentence stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:Thresh:3",
+          "text": "Keep Breath of Life ready in fights. It cleanses a stun from Death Sentence on your carry.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Milio:Thresh:4",
+          "text": "Stay close to your ally. Thresh will look for you alone, with no one to protect you or help you move.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "cdf789b4dc24a1373b24f341fc3f10eaea17261159888921628de310e3664f51",
+      "tips": [
+        {
+          "id": "support:Milio:Velkoz:0",
+          "text": "Stun Vel'Koz with Ultra Mega Fire Kick when he walks up; he has little mobility to escape it.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Velkoz", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Milio-Q", "start": 18, "end": 38 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Milio:Velkoz:1",
+          "text": "Put Warm Hugs on your carry before Vel'Koz fires; the shield soaks his poke and the speed helps dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Velkoz", "start": 35, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "support:Milio:Velkoz:2",
+          "text": "Save Breath of Life for when Vel'Koz stuns your team; it cleanses most stuns and slows, though not knock ups.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Velkoz", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "support:Milio:Velkoz:3",
+          "text": "Stay out of Plasma Fission's line, and stay close to your carry; Vel'Koz hits hard if left alone.",
+          "refs": [
+            { "kind": "ability", "key": "Velkoz-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Velkoz", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Velkoz",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "920734805b1db37fef4c7a2bdf9fe19c8435c5512ee8a62037629ec4549197e1",
+      "tips": [
+        {
+          "id": "support:Milio:Xerath:0",
+          "text": "Close the distance on Xerath; he is weak up close, and most champions that reach him trade well.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "support:Milio:Xerath:1",
+          "text": "Hit Xerath with Ultra Mega Fire Kick; it knocks him back and stuns him, which stops him casting while you close in.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Milio-Q", "start": 16, "end": 36 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "support:Milio:Xerath:2",
+          "text": "Put Warm Hugs on yourself or your ally for the move speed, and sidestep Shocking Orb, which flies in a straight line.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Xerath-E", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Milio:Xerath:3",
+          "text": "Keep Breath of Life for when Shocking Orb stuns you or your carry; it cleanses the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Xerath-E", "start": 29, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "support:Milio:Xerath:4",
+          "text": "Start dodging as soon as you see Xerath's Rite of the Arcane begin; the shots land after a delay, so keep moving.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Xerath-R", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "9201e9a79070ecd67ba5e0efb234c66e9f15088990ee6ec380b9353a1f41869e",
+      "tips": [
+        {
+          "id": "support:Milio:Yuumi:0",
+          "text": "Aim Ultra Mega Fire Kick at Yuumi's partner when she is attached, because you can't hit her. A stun on the partner stops their engage.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Yuumi", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 99 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "support:Milio:Yuumi:1",
+          "text": "Use Ultra Mega Fire Kick on Yuumi when she is loose, because a stun while she dashes with You and Me! knocks her down.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Yuumi", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 67 },
+            { "kind": "ability", "key": "Yuumi-W", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Milio:Yuumi:2",
+          "text": "Use Warm Hugs on your carry when Prowling Projectile is coming. The shield and extra speed help them trade and escape.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 33, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "support:Milio:Yuumi:3",
+          "text": "Save Breath of Life for when Final Chapter and Prowling Projectile slow your team. It cleanses the slows and heals everyone nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "ability", "key": "Yuumi-R", "start": 29, "end": 42 },
+            { "kind": "ability", "key": "Yuumi-Q", "start": 47, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Yuumi",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "07f973358f681c7b452762be636b9e777178e53fba86b7c3746b28a1ca27af3e",
+      "tips": [
+        {
+          "id": "support:Milio:Zilean:0",
+          "text": "Don't stand still where Zilean can reach you with Time Bomb. Step out of the area once it sticks, because it explodes after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 50, "end": 59 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Milio:Zilean:1",
+          "text": "Watch for Zilean using Rewind to cast Time Bomb twice. Move away from your carry so the stun doesn't catch you both.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Zilean-W", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Zilean-Q", "start": 38, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "support:Milio:Zilean:2",
+          "text": "Aim Ultra Mega Fire Kick at Zilean when he steps up to throw a bomb. It knocks him back and slows him, and you get some mana back if it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zilean", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Milio:Zilean:3",
+          "text": "Use Warm Hugs on yourself or your carry to get a shield and some speed away from Zilean's Time Warp slow.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Zilean", "start": 81, "end": 87 },
+            { "kind": "ability", "key": "Zilean-E", "start": 90, "end": 99 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Milio:Zilean:4",
+          "text": "Use Breath of Life when Zilean's bomb stun lands on you and your carry. It cleanses the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zilean", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Milio:Zilean:5",
+          "text": "Zilean is fragile, so focus him as a team. Wait for Chronoshift to end before you land the killing blow on his ally.",
+          "refs": [
+            { "kind": "champion", "key": "Zilean", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Zilean-R", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Zilean",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "e36d5962cc443295b8bee760272c5105ed4b7a63130654dbe810f091f008fa44",
+      "tips": [
+        {
+          "id": "support:Milio:Zyra:0",
+          "text": "Stay behind your minions when Zyra has a seed nearby, so Grasping Roots hits them first and not you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Zyra-E", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "support:Milio:Zyra:1",
+          "text": "Keep Breath of Life ready for when Zyra roots your team or uses Stranglethorns; it cleanses most disables but not a knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Zyra", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Zyra-R", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "support:Milio:Zyra:2",
+          "text": "Hit Zyra's plants with attacks and abilities; they have little health and expire fast, so kill them.",
+          "refs": [{ "kind": "champion", "key": "Zyra", "start": 4, "end": 8 }],
+          "pWrong": 0.42
+        },
+        {
+          "id": "support:Milio:Zyra:3",
+          "text": "Aim Ultra Mega Fire Kick at Zyra when she steps up to plant seeds; it stuns her and the explosion slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-Q", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Zyra", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Milio:Zyra:4",
+          "text": "Put Cozy Campfire on your carry for extra attack range so you can trade with Zyra from farther away.",
+          "refs": [
+            { "kind": "ability", "key": "Milio-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Zyra", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

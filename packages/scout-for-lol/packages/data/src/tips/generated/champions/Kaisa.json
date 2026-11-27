@@ -1,0 +1,1920 @@
+{
+  "schemaVersion": 1,
+  "champion": "Kaisa",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "e87f7aadd2469ed314882f6aae380979d3c5ef4b782fdb76aa584335feb22dec",
+      "tips": [
+        {
+          "id": "adc:Kaisa:general:0",
+          "text": "Cast Icathian Rain when an enemy champion stands near minions or other enemies; the missiles split among everyone close, so a lone target takes the most.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Kaisa:general:1",
+          "text": "Poke with Void Seeker from long range. It applies Plasma and shows you where the enemy is.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Kaisa:general:2",
+          "text": "Use Supercharge to walk into range or to run away. You can move while it charges, and you pass through units.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Kaisa:general:3",
+          "text": "Keep attacking with Supercharge active; every attack shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kaisa:general:4",
+          "text": "Ask your support to stun or root enemies. Their crowd control adds Plasma, so your next hits detonate it sooner.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:general:5",
+          "text": "Hit an enemy with Plasma, then use Killer Instinct to jump onto them. It also gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Kaisa:general:6",
+          "text": "Stay with your team. Kai'Sa is best at picking off carries who are caught alone, so look for those targets instead of diving the front line.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kaisa:general:7",
+          "text": "Build toward evolving your spells. Each evolution makes it stronger, so push to get at least one.",
+          "refs": [],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Kaisa:combo:0",
+          "name": "Dash-cast ult combo",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Kaisa-R" },
+            { "kind": "ability", "key": "Kaisa-Q" },
+            { "kind": "ability", "key": "Kaisa-W" }
+          ],
+          "when": "When you ult onto a Plasma-marked target and want to cast abilities during the dash.",
+          "whenRefs": [],
+          "text": "Killer Instinct lets Kai'Sa cast any ability mid-dash. Fire Icathian Rain or Void Seeker while dashing so you deal damage as you land.",
+          "textRefs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 60, "end": 73 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 77, "end": 88 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "185572c8ef8db5d9c19d334047378d33665f7b9f1e1aa6ad90b8f4b0c21fde0a",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Aphelios:0",
+          "text": "Stay out of Aphelios' Gravitum range when it is his main weapon; once he has slowed you, his Weapon Abilites can root you in place.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 },
+            { "kind": "ability", "key": "Aphelios-Q", "start": 93, "end": 108 },
+            { "kind": "keyword", "key": "rooted", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Kaisa:Aphelios:1",
+          "text": "Use Void Seeker to poke him from long range; it also reveals him and sets up Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Kaisa:Aphelios:2",
+          "text": "Wait until he has spent his abilities, then trade with Icathian Rain when he steps close to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 55, "end": 68 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Kaisa:Aphelios:3",
+          "text": "Use Supercharge to close the gap or leave a bad trade; you move fast while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Kaisa:Aphelios:4",
+          "text": "Look for a level 6 all-in with Killer Instinct when he is marked by Plasma and his support is away.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "82979a342873a4356038e3cc992a511cb1e35e46d5030f945c6637c606a0aa66",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Ashe:0",
+          "text": "Walk around Ashe's Volley, since its arrows fan out in a cone. Do not stand behind your own minions where it clips you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ashe-W", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Kaisa:Ashe:1",
+          "text": "Use Void Seeker from long range to poke Ashe. It stacks Plasma, so your next attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ashe", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Kaisa:Ashe:2",
+          "text": "Trade with Icathian Rain when Ashe is close and alone with you. Then follow up with attacks to pop Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Ashe", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Kaisa:Ashe:3",
+          "text": "Stay near your support and watch Ashe's Enchanted Crystal Arrow. When it is down, you can roam and fight freely.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Ashe-R", "start": 40, "end": 63 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Kaisa:Ashe:4",
+          "text": "Ashe has few escapes, so look for a gank or all-in. Use Supercharge to close the gap, then burst her.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "eae1f736f8365aea15d12c137eeae7f9f248c7d55e5fe1c5f34e6caf1f621161",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Brand:0",
+          "text": "Sidestep Sear; it stops at the first enemy it hits, so keep a minion between you and Brand.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 9, "end": 13 },
+            { "kind": "champion", "key": "Brand", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Kaisa:Brand:1",
+          "text": "Walk out of Pillar of Flame after its short delay; it lands on the spot, not on you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kaisa:Brand:2",
+          "text": "Use Void Seeker to poke Brand from long range, where his spells cannot reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:Kaisa:Brand:3",
+          "text": "Stay away from your support when Pyroclasm is cast; it is slow at first, so you have time to step away.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 33, "end": 42 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Kaisa:Brand:4",
+          "text": "Do not stand next to your minions when Brand is in range; Conflagration spreads from them onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Brand-E", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Kaisa:Brand:5",
+          "text": "Use Icathian Rain when Brand stands beside his minions or support; the missiles split among everything nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Brand", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9440c6981b2d62466b9b098282f9a88f607f0fb1254ee382b14ecb801c9334ce",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Caitlyn:0",
+          "text": "Stay out of Caitlyn's Piltover Peacemaker line; keep minions between you and her, since the shot weakens after hitting the first target.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Kaisa:Caitlyn:1",
+          "text": "Don't walk over bushes or into the fog without vision. A hidden Yordle Snap Trap roots you for a free Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 64, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 86 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 102,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Kaisa:Caitlyn:2",
+          "text": "Fire Void Seeker from long range to start Plasma and reveal Caitlyn, then fight with Icathian Rain once she's close.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Caitlyn", "start": 60, "end": 67 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Kaisa:Caitlyn:3",
+          "text": "Use Killer Instinct when Caitlyn is out of position, after Void Seeker or an auto has put Plasma on her. Her team is probably far away, so you can burst her.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Kaisa:Caitlyn:4",
+          "text": "Move out of the way of Ace in the Hole at level 6. Stand in its path to block it for an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5463c6a667ab64ae45eb03a1b942612865b55b7f29b2dd8f11feb8330edb5db4",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Cassiopeia:0",
+          "text": "Turn away from Cassiopeia as Petrifying Gaze goes off, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 29,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Kaisa:Cassiopeia:1",
+          "text": "Step sideways out of Noxious Blast; it explodes after a short delay, so don't stand still where it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 21, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Kaisa:Cassiopeia:2",
+          "text": "Stay out of Miasma clouds. They slow you and ground you, which blocks Killer Instinct's dash.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 12,
+              "end": 18
+            },
+            { "kind": "ability", "key": "Kaisa-R", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Kaisa:Cassiopeia:3",
+          "text": "Use Void Seeker's long range to poke Cassiopeia from beyond her reach, and stack Plasma while she is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c397a4b3b26aa3506ad0990a72c363d75e6b9509638ef46d903a54e63fc20708",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Corki:0",
+          "text": "Stay out of Corki's range when you can; Phosphorus Bomb pokes you from far away and reveals you in the brush.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Corki-Q", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Kaisa:Corki:1",
+          "text": "Use Void Seeker to hit Corki from far away, since your range is longer than his.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Corki", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:Kaisa:Corki:2",
+          "text": "Don't stand in front of Gatling Gun; it shreds your Armor and Magic Resist. Step out of the cone.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-E", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Kaisa:Corki:3",
+          "text": "Once Corki has used Valkyrie to engage, jump on him; he is easy to hit then. Use Killer Instinct after your Plasma is on him.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Corki-W", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Kaisa:Corki:4",
+          "text": "Hiding behind minions will not save you from Missile Barrage, as its splash hits you anyway. Stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "65db72bb9904d1e8f2c4cc2b5cb17aa691fe3ac651b3539933dc3591296943d4",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Draven:0",
+          "text": "Aim Icathian Rain at Draven when his axes are up. Hitting him in the early levels cuts his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Draven", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Kaisa:Draven:1",
+          "text": "Stay in lane and fire Void Seeker at him from range. It lands on the first enemy hit and starts stacking Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Kaisa:Draven:2",
+          "text": "Step out of the line of Stand Aside. If he knocks you back and slows you, he gets free axe hits.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Kaisa:Draven:3",
+          "text": "When Draven drops an axe, trade. He loses damage and his Blood Rush refresh.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Draven-W", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Kaisa:Draven:4",
+          "text": "Use Supercharge to run away from Draven when he turns on you. Save Killer Instinct for a dive on him after Plasma is on him.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Draven", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Kaisa:Draven:5",
+          "text": "Stay away from Whirling Death when you are low. It can execute you if your health is low enough.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ea3fcc585cc133778a8d19dc1b34caad6992811f515607a5fb277c8210b14951",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Ezreal:0",
+          "text": "Hit Ezreal with Void Seeker from long range. It sets up Plasma, and it reveals him for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Kaisa:Ezreal:1",
+          "text": "Stand behind minions so Mystic Shot hits them first and stops there.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Kaisa:Ezreal:2",
+          "text": "Wait for Ezreal to spend Arcane Shift, then go in with Killer Instinct. He has a harder time escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 25, "end": 37 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 55, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Kaisa:Ezreal:3",
+          "text": "Trade with Icathian Rain when Ezreal steps up to last-hit. It deals its full damage to a single target.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Ezreal", "start": 30, "end": 36 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Kaisa:Ezreal:4",
+          "text": "Ezreal's bolts are slow to dodge at range, so use Supercharge to move out of line and close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.88
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c4f9f51d7f2db3d992f1cb84a94c5a35f95717dbe915dbf8cf3b7da2666f53ef",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Hwei:0",
+          "text": "Stay out of a straight line with Hwei; Devastating Fire is fast and stops at the first enemy it hits, so keep a minion between you and him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Kaisa:Hwei:1",
+          "text": "Walk out of Severing Bolt's circle when you see it land. It is slow, and hits much harder if you are alone or can't move.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Kaisa:Hwei:2",
+          "text": "Rush Hwei right after he paints a Torment spell. He needs time to cast, and Supercharge helps you close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "adc:Kaisa:Hwei:3",
+          "text": "Use Void Seeker from long range to poke him; his Disaster and Torment spells take time to aim, and the blast reveals him.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Kaisa:Hwei:4",
+          "text": "Stand near your support. Hwei's stuns and roots, once they land, also stack your Plasma, and Killer Instinct then lets you jump on him.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 93, "end": 108 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "adc:Kaisa:Hwei:5",
+          "text": "Don't stand in the center of Crushing Maw; it pulls you in and slows you, so step away from the jaws before they snap.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": [
+        {
+          "comboId": "adc:Kaisa:combo:0",
+          "note": "Casting Q or W mid-dash lets Kai'Sa deal damage on landing, even if Hwei's Grim Visage makes her flee.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 29, "end": 35 },
+            { "kind": "champion", "key": "Hwei", "start": 68, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "58d66a4058104637a6589e97cd5ae27981c52ebc48f6bd5d11ecac92504d2921",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Jhin:0",
+          "text": "Stay out of Deadly Flourish's line when Jhin's support or minions have just hurt you; the shot roots you only if something hit you first.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Jhin", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "rooted", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Kaisa:Jhin:1",
+          "text": "Walk around bushes and choke points carefully; Jhin hides Captive Audience traps there, and stepping on one slows you and reveals you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Jhin-E", "start": 58, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Kaisa:Jhin:2",
+          "text": "Trade when Jhin fires his fourth shot or is reloading; he cannot basic attack then. Jump on him with Supercharge to close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Kaisa:Jhin:3",
+          "text": "Build Plasma with attacks, then add Void Seeker to finish the stacks and deal extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Kaisa:Jhin:4",
+          "text": "Use Icathian Rain when Jhin stands near minions or his support so the missiles spread; alone with him, they all hit him for more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Jhin", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Kaisa:Jhin:5",
+          "text": "At level 6, use Killer Instinct on a Jhin who has Plasma on him to land on him and get a shield. Do it when his shots are spent.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 16, "end": 31 },
+            { "kind": "champion", "key": "Jhin", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "573a7509beb557db8f7d7dc04f01c9602db917faf2a83608eb89af1d2a5fa58f",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Jinx:0",
+          "text": "Trade when Jinx is on her rocket launcher and has no Switcheroo! stacks; hit her with Void Seeker, then add basic attacks to stack Plasma.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 53, "end": 64 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Kaisa:Jinx:1",
+          "text": "Stay out of Flame Chompers! range when you walk up; if you get rooted, Jinx and her allies get a free window on you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 12, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 },
+            { "kind": "champion", "key": "Jinx", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "adc:Kaisa:Jinx:2",
+          "text": "Aim Void Seeker at Jinx from long range when she steps up for minions; it also shows you where she is.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jinx", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Kaisa:Jinx:3",
+          "text": "Use Supercharge to close the gap or leave a fight. You move fast and pass through units while it charges.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Kaisa:Jinx:4",
+          "text": "Once Jinx has used Flame Chompers!, look for Killer Instinct on her. She has little to stop you reaching her.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Jinx-E", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "adc:Kaisa:Jinx:5",
+          "text": "Jinx's Zap! slows you, so walk out of its line instead of fighting in it.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jinx-W", "start": 7, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e684e14b5913a9b56a584ee1a436ff26d1f8d7bf0f48785afd8908d3fca4b380",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Kalista:0",
+          "text": "Poke with Void Seeker from long range when Kalista steps up to last-hit; it also marks her with Plasma for your next trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Kalista", "start": 43, "end": 50 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Kaisa:Kalista:1",
+          "text": "Use Icathian Rain when Kalista and her support are both close; it needs a nearby enemy and hits hardest on one target.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kalista", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Kalista:2",
+          "text": "Hit Kalista while she is winding up an attack; she cannot cancel it, so she is easiest to hit then.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Kaisa:Kalista:3",
+          "text": "Do not stand where Kalista's allied Oathsworn can reach you; Fate's Call knocks nearby enemies into the air.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Kalista-R", "start": 61, "end": 72 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Kaisa:Kalista:4",
+          "text": "Break line of sight, such as behind a brush, to make her basic attacks miss.",
+          "refs": [],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "01aa5a86742286c9cb4b42fb7e53c49a2b6856b4a777fd01924bdd0121c7ea03",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Karthus:0",
+          "text": "Stay out of Lay Waste range when you can. Use Void Seeker to hit Karthus from far away, since it has very long range.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 46, "end": 57 },
+            { "kind": "champion", "key": "Karthus", "start": 65, "end": 72 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Kaisa:Karthus:1",
+          "text": "Stand near your support or a minion so Lay Waste doesn't hit you alone for its bigger damage.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 39, "end": 48 },
+            { "kind": "keyword", "key": "isolated", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Karthus:2",
+          "text": "Don't walk through Wall of Pain. If you must, use Supercharge to get away fast.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Kaisa:Karthus:3",
+          "text": "Move away from Karthus's corpse after you kill him. He can still cast while he is dead.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Kaisa:Karthus:4",
+          "text": "Keep your health high enough to survive Requiem. Its beam of light shows you the channel, so you can Flash to interrupt it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 40, "end": 47 },
+            { "kind": "summoner-spell", "key": "4", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "de356c8cdfce13c0f7b4f6681087a7466a09e585c69e7aae0f840912ac3b14be",
+      "tips": [
+        {
+          "id": "adc:Kaisa:KogMaw:0",
+          "text": "Stay out of Kog'Maw's range and wait for his Bio-Arcane Barrage to end; then walk up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "KogMaw-W", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Kaisa:KogMaw:1",
+          "text": "Fire Void Seeker at Kog'Maw from long range to poke him and stack Plasma without stepping into his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "KogMaw", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Kaisa:KogMaw:2",
+          "text": "Walk around the ooze from Void Ooze, because it slows you. Supercharge can get you out of trouble.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 26, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Kaisa:KogMaw:3",
+          "text": "Gank or dive Kog'Maw when he is caught out; he has no escape. Run from his explosion when he dies.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "baa95e17f6360b35fc3e10d1355bcce4a9b42cefe13b3f8d3b0ea600ec86610f",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Lucian:0",
+          "text": "Lucian wins short, bursty trades, so don't walk up to trade without a plan. Stay back from his range until Icathian Rain or Void Seeker is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 107, "end": 120 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 124, "end": 135 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Kaisa:Lucian:1",
+          "text": "Fire Void Seeker from long range when he steps up to last-hit. It hits the first enemy in its path and sets up your Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Kaisa:Lucian:2",
+          "text": "Use Icathian Rain when he is close to you, ideally with no minions near him. It needs a nearby enemy and splits its missiles among the targets around you.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Kaisa:Lucian:3",
+          "text": "Use Supercharge to move away from his dash-in trades. You become ghosted while it charges, which lets you reposition quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Lucian:4",
+          "text": "Once he has Plasma stacks on him, use Killer Instinct to jump onto him and finish the kill. The shield helps you survive the burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Kaisa:Lucian:5",
+          "text": "Don't stand still in a straight line when he casts The Culling. He can't change its angle, so step out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Lucian-R", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4991149dcd63c63f29c9bc95e6980bf97834cdf4986549cf5e597a19a03ab3ca",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Lux:0",
+          "text": "Stay out of Light Binding's line, and keep minions between you and Lux. It hits only the first two enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Lux", "start": 67, "end": 70 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Kaisa:Lux:1",
+          "text": "Outranging Lux is hard, so use Void Seeker from far away to poke her and apply Plasma.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "poke", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Kaisa:Lux:2",
+          "text": "Move out of Lucent Singularity right away, because it slows you. Don't stay in it when it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Kaisa:Lux:3",
+          "text": "Use Supercharge to close the gap once Lux has spent Light Binding, then burst her with Icathian Rain.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Lux", "start": 38, "end": 41 },
+            { "kind": "ability", "key": "Lux-Q", "start": 52, "end": 65 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 87, "end": 100 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Kaisa:Lux:4",
+          "text": "Sidestep Final Spark when low on health. Its red warning beam appears before the main beam fires.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-R", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "576ee80b699464b585d00c59ceb6b9dea229655f0b7afcdd7360479062bac6d2",
+      "tips": [
+        {
+          "id": "adc:Kaisa:MissFortune:0",
+          "text": "Look for the moment Miss Fortune takes damage; her Strut speed is lost, so she is easier to catch.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 20,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 51,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Kaisa:MissFortune:1",
+          "text": "Stay out of Make It Rain, because it slows you and you cannot cleanse the slow.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Kaisa:MissFortune:2",
+          "text": "Use Void Seeker from long range to poke Miss Fortune and build Plasma before you step in to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "MissFortune", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Kaisa:MissFortune:3",
+          "text": "Keep minions out of line behind you when Miss Fortune has Double Up ready, since the shot bounces onto you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 41,
+              "end": 53
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 58,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Kaisa:MissFortune:4",
+          "text": "Use Killer Instinct on Miss Fortune once Plasma is on her; she is fragile, so go for her first.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "MissFortune", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d86f92e9bc05e7e02cf50067ac338903dce414c68d7c386927fb6af635199b28",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Nilah:0",
+          "text": "Poke Nilah with Void Seeker from long range; it travels far and she has no way to block it from a distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nilah", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Kaisa:Nilah:1",
+          "text": "Don't rely on basic attacks while Jubilant Veil is up; she dodges them. Hit her with abilities instead, or wait it out.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Kaisa:Nilah:2",
+          "text": "Stay out of her reach. When Formless Blade lands, her attacks gain range, so back off right after she hits you with it.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-Q", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Kaisa:Nilah:3",
+          "text": "Use Supercharge to run away when Nilah commits, since it makes you faster and lets you pass through units.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nilah", "start": 33, "end": 38 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Kaisa:Nilah:4",
+          "text": "Don't stand next to your support when Apotheosis is coming; she pulls everyone nearby toward her and slows them.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-R", "start": 38, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Kaisa:Nilah:5",
+          "text": "Use Icathian Rain once she walks in close to trade; it needs a nearby enemy and hits hardest on one target.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ff29a5da989a0516adbd85cad26eacbd0546b69cf8dca3c9d88b62ae9bec12de",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Samira:0",
+          "text": "Stay at long range and poke Samira with Void Seeker; she has to dash in to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 23, "end": 27 },
+            { "kind": "champion", "key": "Samira", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Kaisa:Samira:1",
+          "text": "Don't fire Void Seeker when Samira is standing in Blade Whirl; it destroys enemy missiles that enter the area.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Samira", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Samira-W", "start": 50, "end": 61 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Kaisa:Samira:2",
+          "text": "Hold Supercharge for when Samira dashes in; the move speed and ghosting help you run away from her.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Samira", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Kaisa:Samira:3",
+          "text": "Stick near your support. Samira's burst is strongest on an isolated target, and any stun or knock up on you lets her dash onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "isolated", "start": 59, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Kaisa:Samira:4",
+          "text": "Samira can reset Wild Rush when she kills someone she just damaged, so don't trade at low health.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Samira-E", "start": 17, "end": 26 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1926f37b1e17d17dfc77afd917d4c74d27988ed273cfbb12d6606c7037d2964f",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Senna:0",
+          "text": "Stay out of Senna's Last Embrace line; walk behind a minion so the Black Mist hits it first, because it only sticks to the first enemy hit.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Senna-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Kaisa:Senna:1",
+          "text": "Senna's Piercing Darkness slows you and her attacks lower its cooldown, so back off after she trades with it instead of walking forward.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Senna-Q", "start": 8, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Kaisa:Senna:2",
+          "text": "Void Seeker has very long range, so poke Senna with it while she stands behind her minions. It also applies Plasma for your passive.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Senna", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Kaisa:Senna:3",
+          "text": "Use Supercharge to move away from danger or to close in for a trade. It gives you speed while charging, and the attack speed after it helps you win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Kaisa:Senna:4",
+          "text": "Once Senna is rooted by an ally or marked by Plasma, jump in with Killer Instinct to finish her, and don't use it while her Last Embrace is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "rooted", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 66, "end": 81 },
+            { "kind": "ability", "key": "Senna-W", "start": 124, "end": 136 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8abacc2a445839258e6295d9d49848c224dfadc5c43ffd182b014c42e5bc5220",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Sivir:0",
+          "text": "Aim Void Seeker when Sivir has just used Spell Shield; otherwise it gets blocked and you lose the Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sivir", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Sivir-E", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Kaisa:Sivir:1",
+          "text": "Sidestep Boomerang Blade on its way out and also on its way back, since it returns to Sivir and hits again.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Sivir", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kaisa:Sivir:2",
+          "text": "Use Icathian Rain when Sivir is close to you, because it needs a nearby enemy and all missiles hit her if she is alone.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sivir", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:Kaisa:Sivir:3",
+          "text": "Use Killer Instinct on Sivir only after Plasma is on her and her Spell Shield is down, then burst her.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sivir", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Sivir-E", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Kaisa:Sivir:4",
+          "text": "Shove back Sivir's wave quickly; she pushes hard and will take your turret if you ignore her.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 11, "end": 16 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "052c9cbdf4db0e025fddf66485fa25202ec07a75205777593292bbd1d9525035",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Smolder:0",
+          "text": "Punish Smolder's weak early game: trade with Icathian Rain when he steps up to last-hit, since he has few stacks to fight back with.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Kaisa:Smolder:1",
+          "text": "Use Void Seeker from long range to poke him. It also adds Plasma, so your next attacks hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Kaisa:Smolder:2",
+          "text": "Sidestep the glob and stay out of range of the slow and explosion from Achooo!",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Kaisa:Smolder:3",
+          "text": "Use Supercharge to dodge and close in. It lets you move through units while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Kaisa:Smolder:4",
+          "text": "When Smolder takes off with Flap, Flap, Flap, back away from him. He fires bolts at the enemy with the lowest health.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Smolder-E", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Kaisa:Smolder:5",
+          "text": "Use Killer Instinct on Smolder after Plasma is on him to jump in and kill. The shield helps you survive his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "64504efee04429bde47e77560ed87bdaf9477c2bf5419856d35472a0748936be",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Tristana:0",
+          "text": "Don't stand in front of Tristana early. She outranges you, so wait until you are stronger before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Tristana:1",
+          "text": "Use Void Seeker from long range to poke Tristana. Its long range lets you hit her without walking into her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Tristana", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Kaisa:Tristana:2",
+          "text": "Keep Killer Instinct for after Tristana has used Buster Shot. Dashing in while it is ready can get you stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Tristana", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Tristana-R", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Kaisa:Tristana:3",
+          "text": "Step away from Tristana when Explosive Charge sticks to you. It goes off after a short delay and grows with her hits.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Tristana-E", "start": 29, "end": 45 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Kaisa:Tristana:4",
+          "text": "Fight back when she has jumped away. Rocket Jump slows you on landing, so stay out of its landing spot.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 37, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2d8d86e3f0c013374fd29a781d7577eb57f7f220f31950f56d18436dd27783a5",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Twitch:0",
+          "text": "Walk out of Venom Cask's cloud right away. Standing in it keeps you slowed and adds Deadly Venom every second.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 84,
+              "end": 96
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Kaisa:Twitch:1",
+          "text": "Fire Void Seeker at Twitch when he is visible. It reveals him and applies Plasma, which sets up your Killer Instinct jump.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Twitch", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Kaisa:Twitch:2",
+          "text": "Twitch is fragile. When he attacks out of Ambush, trade back with Icathian Rain while he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Twitch-Q", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Twitch:3",
+          "text": "Back off when Twitch has many stacks on you; Contaminate hits hard from far away. Keep your distance, and do not walk into Venom Cask.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Twitch-E", "start": 45, "end": 56 },
+            { "kind": "ability", "key": "Twitch-W", "start": 123, "end": 133 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Kaisa:Twitch:4",
+          "text": "Use Supercharge to run away from a Twitch who has Spray and Pray active; it gives you Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Twitch", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Twitch-R", "start": 50, "end": 64 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "50c23612a3b89a271beb7ffc74ca1415b69429ef8997ac4933ebbbca5d12eb38",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Varus:0",
+          "text": "Stay out of Piercing Arrow's long line. Step sideways when Varus starts charging, and trade only once he has fired it.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Varus", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Kaisa:Varus:1",
+          "text": "Poke with Void Seeker from long range. It stacks Plasma and shows you where Varus is.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Varus", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Kaisa:Varus:2",
+          "text": "Stay out of Hail of Arrows' area. It slows you and cuts your healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Kaisa:Varus:3",
+          "text": "Hold Killer Instinct. Varus's Chain of Corruption roots the first champion it hits, and it can spread to others.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Varus", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Varus-R", "start": 30, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Kaisa:Varus:4",
+          "text": "Trade with Icathian Rain once Varus has spent his abilities, and kill minions to keep your pressure.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Varus", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "e46de7a6d38d9c5415b3d1ade0abec08b99f8b5fcb7f5cfbe55dd5f669516ebe",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Vayne:0",
+          "text": "Stay out of Vayne's range, because Tumble and Silver Bolts reward her for close trades. Poke her with Void Seeker from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Vayne-W", "start": 46, "end": 58 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 102, "end": 113 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Kaisa:Vayne:1",
+          "text": "Don't stand beside a wall when Vayne's Condemn is ready. Stay in open space so you can't be pinned.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Vayne-E", "start": 39, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Kaisa:Vayne:2",
+          "text": "Void Seeker reaches very far and applies Plasma. Use it to poke Vayne, who is fragile, then follow with Icathian Rain.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Vayne", "start": 64, "end": 69 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 104, "end": 117 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Kaisa:Vayne:3",
+          "text": "Hold Killer Instinct until Vayne's Condemn is used. Dashing in while it is ready is dangerous.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Vayne-E", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Kaisa:Vayne:4",
+          "text": "Vayne is weak early, so push the pressure on her. Use Supercharge to close in or get away.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14178a0fb993f45907f00a120762c0fc3f61c3eb9e747eef6ce07efb588d2b39",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Veigar:0",
+          "text": "Watch the dark matter circle that Veigar drops and step out of it. It lands after a delay.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Veigar", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Kaisa:Veigar:1",
+          "text": "Stay inside the Event Horizon cage, or stay clear of its edge. Only enemies crossing the edge get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Kaisa:Veigar:2",
+          "text": "Keep minions out of the straight line between you and Veigar, and don't line up with your partner. Baleful Strike hits the first two enemies.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 99, "end": 113 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Veigar:3",
+          "text": "Hit Veigar with Void Seeker from long range; he is fragile and has trouble dodging while he farms.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Kaisa-W", "start": 16, "end": 27 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "adc:Kaisa:Veigar:4",
+          "text": "Keep your health up once you reach level 6. Primordial Burst hurts more the lower you are.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 44, "end": 60 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "33bfefaeb5ca838784bfbe7438c1d0a9a602e8c0d647538841d712ec475e2622",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Xayah:0",
+          "text": "Stay out of the lane's middle when Xayah has Feathers planted behind you; Bladecaller can pull them back and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Xayah-E", "start": 74, "end": 85 },
+            { "kind": "keyword", "key": "rooted", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Kaisa:Xayah:1",
+          "text": "Fire Void Seeker from long range to poke Xayah and start stacking Plasma before she can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Xayah", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Kaisa:Xayah:2",
+          "text": "Use Icathian Rain when Xayah is close and no minions are near, so the missiles all pick her.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Xayah", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Kaisa:Xayah:3",
+          "text": "Don't use Killer Instinct to dive Xayah while Featherstorm is ready; she can become untargetable and punish you.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-R", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Xayah", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Xayah-R", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Xayah:4",
+          "text": "Use Supercharge to run in or out of a trade; the move speed helps you dodge her Double Daggers.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Xayah-Q", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "927ebac441556a6c2ed416413df0cde0cb17e04d3f8cb15cae8f40ba18054db6",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Yasuo:0",
+          "text": "Stay out of Steel Tempest's thin line and sidestep it sideways, especially when the whirlwind is coming, since it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:1",
+          "text": "Fire Void Seeker at Yasuo from long range. It reveals him and sets up Plasma without letting him close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:2",
+          "text": "Trade right after Yasuo launches his whirlwind; his Steel Tempest is then on cooldown and he is weakest.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:3",
+          "text": "Wait out his shield before you commit. It only lasts a moment, and Yasuo gets it by taking damage once it is full.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:4",
+          "text": "Do not rely on Void Seeker when Wind Wall is up; it blocks the shot. Wait for the wall to end, or step around it.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:5",
+          "text": "Use Supercharge to run away or to reposition when Yasuo dashes in; it makes you faster and lets you pass through units.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yasuo", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Kaisa:Yasuo:6",
+          "text": "Be wary of any ally knock up near you. Yasuo can jump to the airborne target with Last Breath, so keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 39, "end": 44 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5150848d3b476d25ca41ddec5115787fc5856eba51839719039674e16a2d9e17",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Yunara:0",
+          "text": "Walk up and trade when Yunara's prayer bead is on cooldown. Kai'Sa's Plasma builds fast when you get several attacks in.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Kaisa", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Kaisa:Yunara:1",
+          "text": "Sidestep Yunara's slowing bead; if it lands you are slowed and she gets free hits. Hold Supercharge to run out of trouble.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 9, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Kaisa:Yunara:2",
+          "text": "Use Void Seeker from long range to poke her and reveal her; it also adds Plasma for a quick Killer Instinct jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 92, "end": 107 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Kaisa:Yunara:3",
+          "text": "Back off when Yunara uses Transcend One's Self; her beam hits hard and her dash lets her slip away. Wait until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Yunara-R", "start": 26, "end": 46 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "02139ac4ae535fb412875fcc4a4f29e4bb3dc3c853b912d7fa701b9f7e544135",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Zeri:0",
+          "text": "Use Void Seeker from long range to poke Zeri; it hits the first enemy in its path, so keep minions out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zeri", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Kaisa:Zeri:1",
+          "text": "Trade with Icathian Rain when Zeri walks up next to you or the minions. It needs a nearby enemy, and its missiles hit hard on a single target.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Zeri", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Kaisa:Zeri:2",
+          "text": "Once Zeri has Plasma stacked on her, use Killer Instinct to jump onto her. The shield helps you survive the burst you take in return.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Kaisa:Zeri:3",
+          "text": "Zeri's Ultrashock Laser slows you, so keep your distance and stay out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-W", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Kaisa:Zeri:4",
+          "text": "Zeri can dash over walls with Spark Surge, so don't chase her through terrain. Use Supercharge to get away if she turns on you.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-E", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d0292d0d2d4d963778f45d61bf32adcc817a4d8c5bc9f80571569293766de0fd",
+      "tips": [
+        {
+          "id": "adc:Kaisa:Ziggs:0",
+          "text": "Stay out of Ziggs' mines. Walking into them slows you and sets up his other spells.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Kaisa:Ziggs:1",
+          "text": "Ziggs has long cooldowns. Trade with Icathian Rain right after he uses Bouncing Bomb or Satchel Charge.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 71, "end": 84 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 88, "end": 102 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Kaisa:Ziggs:2",
+          "text": "Use Void Seeker to hit Ziggs from long range, since he outranges you in a plain trade.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ziggs", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Kaisa:Ziggs:3",
+          "text": "Keep moving when Ziggs fires Mega Inferno Bomb. It lands slowly, so step out of the center and take less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Ziggs-R", "start": 29, "end": 46 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,3432 @@
+{
+  "schemaVersion": 1,
+  "champion": "Sion",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "367bf0bd30d20bb2fcc91f5f8cae747e8afd5c77e082fab39b1210363c3202ec",
+      "tips": [
+        {
+          "id": "top:Sion:general:0",
+          "text": "Hold Decimating Smash for over a second before you release it. Then the enemy is knocked up and stunned, and not just slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 81, "end": 91 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Sion:general:1",
+          "text": "Hit the enemy with Roar of the Slayer first, then charge Decimating Smash. The slow makes the long charge much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 19, "end": 37 },
+            { "kind": "ability", "key": "Sion-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sion:general:2",
+          "text": "Cast Soul Furnace before a trade to take less damage. Recast it once the shield has held a while to damage nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sion:general:3",
+          "text": "Watch the shield amount shown on the Soul Furnace buff. Recast it before the shield breaks so the explosion still goes off.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Sion:general:4",
+          "text": "Last-hit minions and take kills with Soul Furnace to grow your max Health. Large minions and champion takedowns give more.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sion:general:5",
+          "text": "Aim Unstoppable Onslaught down a straight path. You can barely turn, so line it up with the enemy before you start.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:general:6",
+          "text": "Run a long way with Unstoppable Onslaught before you hit someone. The farther you travel, the longer the stun and the bigger the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 20, "end": 41 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sion:general:7",
+          "text": "If you die in a fight, keep attacking. Glory in Death makes you hit very fast and heal, so go for the nearest enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-passive", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Sion:combo:0",
+          "name": "Minion bounce E",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Sion-E" }],
+          "when": "In lane when enemy minions stand between you and the enemy champion.",
+          "whenRefs": [],
+          "text": "Aim the shockwave at a minion. It is knocked back into the enemy behind it, who takes the same damage, slow and armor shred.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Sion:combo:1",
+          "name": "Slow into smash",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Sion-E" },
+            { "kind": "ability", "key": "Sion-Q" }
+          ],
+          "when": "When you want to land a fully charged stun on a laner who would otherwise walk out of it.",
+          "whenRefs": [],
+          "text": "Hit the shockwave first so the slow gives you time to charge the smash past one second. Release when the axe flashes for the stun.",
+          "textRefs": []
+        },
+        {
+          "id": "top:Sion:combo:2",
+          "name": "Shield pop",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Sion-W" },
+            { "kind": "ability", "key": "Sion-W" }
+          ],
+          "when": "When trading in melee range and the shield is still up after a few seconds.",
+          "whenRefs": [],
+          "text": "Cast the shield, then recast after three seconds while it still holds to detonate it. Check the shield amount on your buff icon to time the pop.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "6ab2c3b1566cb04b6e776063f9eef9f13df5d6a1ce27c0dd6fc9992100f4c550",
+      "tips": [
+        {
+          "id": "top:Sion:Aatrox:0",
+          "text": "Walk through Aatrox's Darkin Blade by moving sideways, then trade back with Roar of the Slayer while he is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Sion-E", "start": 76, "end": 94 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Sion:Aatrox:1",
+          "text": "Land Roar of the Slayer first so the enemy is slowed, then charge Decimating Smash to stun them.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Sion:Aatrox:2",
+          "text": "Break the chain from Infernal Chains by walking toward Aatrox or to the side. Use Soul Furnace's shield if you get caught.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Aatrox", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Sion-W", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sion:Aatrox:3",
+          "text": "Let Soul Furnace's shield hold a few seconds, then recast it when Aatrox is close to hit him for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aatrox", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "df8ccf72c1cd5ee3b61c4271709e4666255b75cb94c6a353691e9bfeac4456d9",
+      "tips": [
+        {
+          "id": "top:Sion:Akali:0",
+          "text": "Start charging Decimating Smash when Akali is boxed in or walking up to trade; hold it for a full stun, because she can run out of a quick swing.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Sion:Akali:1",
+          "text": "Fire Roar of the Slayer first so she is slowed, then land a charged Decimating Smash on her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Sion-Q", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Sion:Akali:2",
+          "text": "Cast Soul Furnace when Akali is about to burst you, and detonate it once the shield has held for a while to hit her back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Sion:Akali:3",
+          "text": "Save Unstoppable Onslaught for when Akali is out of Twilight Shroud and in a straight line from you, since it turns only slightly.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Akali", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Akali-W", "start": 52, "end": 67 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sion:Akali:4",
+          "text": "If you die in a fight, keep attacking whoever is closest with Glory in Death. Akali's low health makes her a good target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 62,
+              "end": 76
+            },
+            { "kind": "champion", "key": "Akali", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c3e2cf440dacdd23aaee4396db90c06eb074d65d0ab5582b6905c30ffc785b6",
+      "tips": [
+        {
+          "id": "top:Sion:Ambessa:0",
+          "text": "Start charging Decimating Smash when Ambessa is stuck in her own ability animations; if she dashes away with Drakehound's Step, release early to still slow her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Ambessa", "start": 37, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 109,
+              "end": 126
+            },
+            { "kind": "keyword", "key": "slowed", "start": 151, "end": 155 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Sion:Ambessa:1",
+          "text": "Fire Roar of the Slayer first so she is slowed, then land a fully charged Decimating Smash on her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Sion-Q", "start": 74, "end": 90 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Sion:Ambessa:2",
+          "text": "Cast Soul Furnace before she trades with you. Hold the shield for the recast and blow it up on her once it has held a while.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Sion:Ambessa:3",
+          "text": "Watch for her Repudiation shield. Her slam hits harder if she was hit during the brace, so back out of range after you hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Sion:Ambessa:4",
+          "text": "Step back when Lacerate comes out; she can spin a second time after her dash. Trade back while her Lacerate is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 99, "end": 107 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Sion:Ambessa:5",
+          "text": "If she kills you, use your frenzy from Glory in Death to hit her. Public Execution can still grab you, so stay close to her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 39,
+              "end": 53
+            },
+            { "kind": "ability", "key": "Ambessa-R", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6362930ad2572b2f91e2258ce5332570bd2c6045b139d636d4387cf8bd3ceab0",
+      "tips": [
+        {
+          "id": "top:Sion:Anivia:0",
+          "text": "Hold Decimating Smash charge for a full second or more when Anivia is near; she gets knocked up and stunned, and you can follow with Roar of the Slayer.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Anivia", "start": 60, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 },
+            { "kind": "ability", "key": "Sion-E", "start": 133, "end": 151 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Sion:Anivia:1",
+          "text": "Sidestep Flash Frost, then walk up and trade. Anivia has little to stop you once it is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "champion", "key": "Anivia", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Sion:Anivia:2",
+          "text": "Fight when Anivia's Flash Frost is on cooldown, because it is her main tool for slowing and stunning you.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Sion:Anivia:3",
+          "text": "Use Soul Furnace for a shield before trading with Anivia's spells, and recast it once the shield has held for a while to deal damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Sion:Anivia:4",
+          "text": "Don't chase Anivia through Glacial Storm. It slows you and hurts a lot once fully formed.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Anivia-R", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sion:Anivia:5",
+          "text": "If you kill Anivia, her egg comes back unless you also kill it. Hit it quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash for a full stun on Anivia, who has no listed dash to escape it.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 50, "end": 56 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Anivia behind it with the slow and armor shred while she waves minions.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 32, "end": 38 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "56a0bf8b728049b161e1d1bedc19c3502818ac79e6e0e4f3778b26c78e0cd968",
+      "tips": [
+        {
+          "id": "top:Sion:Aurora:0",
+          "text": "Aim Roar of the Slayer first so the enemy is slowed, then hold Decimating Smash for a long charge. A full charge stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Sion-Q", "start": 63, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 113, "end": 118 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sion:Aurora:1",
+          "text": "Be careful when you start charging Decimating Smash while Aurora is near. She can hop away with Across the Veil and vanish from your aim.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 35, "end": 51 },
+            { "kind": "champion", "key": "Aurora", "start": 58, "end": 64 },
+            { "kind": "ability", "key": "Aurora-W", "start": 96, "end": 111 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Aurora:2",
+          "text": "Use Soul Furnace to absorb her magic poke, and detonate it once the shield has held a while to hurt her if she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Aurora:3",
+          "text": "Do not run into her Between Worlds ring. Enemies who touch its edge are slowed, and she can hop across it.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 20, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sion:Aurora:4",
+          "text": "Save Unstoppable Onslaught for when she has used Across the Veil. Charge in a straight line, since you can barely turn.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 5, "end": 26 },
+            { "kind": "ability", "key": "Aurora-W", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fda415e28f6e2555e457ad897544840ed89e685032895124ca2a7deff93e1dc4",
+      "tips": [
+        {
+          "id": "top:Sion:Briar:0",
+          "text": "Charge Decimating Smash past the halfway point before you release it; a short charge only slows Briar and does not stun her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 },
+            { "kind": "champion", "key": "Briar", "start": 96, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Sion:Briar:1",
+          "text": "Hit Briar with Roar of the Slayer first; she is slowed and easier to catch with a full Decimating Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Sion-Q", "start": 87, "end": 103 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Briar:2",
+          "text": "Use Soul Furnace when Briar jumps on you, then let it blow up once the shield has held for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Sion:Briar:3",
+          "text": "Briar can still be stunned when she leaps in with Head Rush, so keep Decimating Smash ready to punish her landing.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Briar-Q", "start": 50, "end": 59 },
+            { "kind": "ability", "key": "Sion-Q", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Sion:Briar:4",
+          "text": "Do not die with Briar nearby in a fight; Glory in Death makes you fast and strong, but she can still outlast you if she heals up.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Sion-passive", "start": 41, "end": 55 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8ff50728de293554223f1d790a4e9a4d74a026a5232d86ff366b5e5203af1cf3",
+      "tips": [
+        {
+          "id": "top:Sion:Camille:0",
+          "text": "Charge Decimating Smash past its first second when Camille is stuck or slowed; a full charge stuns her for a long time. A quick tap only slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Camille", "start": 51, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 },
+            { "kind": "keyword", "key": "slowed", "start": 137, "end": 142 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Sion:Camille:1",
+          "text": "Hit Camille with Roar of the Slayer before you charge Decimating Smash. It slows her and cuts her Armor, so she can't easily step out of the slam.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Sion-E", "start": 17, "end": 35 },
+            { "kind": "ability", "key": "Sion-Q", "start": 54, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Camille:2",
+          "text": "Cast Soul Furnace when Camille starts a trade. Hold the shield for a while, then recast to detonate it on her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Camille", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Sion:Camille:3",
+          "text": "Camille's Hookshot dash and Hextech Ultimatum are her ways in. Stay away from walls and keep your shield ready when she has them.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Camille-E", "start": 10, "end": 18 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Sion:Camille:4",
+          "text": "Aim Unstoppable Onslaught in a straight line, because it barely turns. Camille's slow from Tactical Sweep won't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Camille", "start": 71, "end": 78 },
+            { "kind": "ability", "key": "Camille-W", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion shreds Camille's armor, which helps against her physical damage trades.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 34, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "df85e21ebb1e3fb5e321725d732ac5ceb2c1f32aeee2725457b31e7598254b48",
+      "tips": [
+        {
+          "id": "top:Sion:Chogath:0",
+          "text": "Step out of the Rupture area as soon as you see the smoke cloud; being knocked up there sets up Cho'Gath's next ability.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 71, "end": 81 },
+            { "kind": "champion", "key": "Chogath", "start": 96, "end": 104 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Sion:Chogath:1",
+          "text": "Stay out of Feral Scream range, which is short. Being silenced stops you from using your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "silenced", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Sion:Chogath:2",
+          "text": "Use Roar of the Slayer to slow Cho'Gath, then land Decimating Smash on him while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Chogath", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Sion-Q", "start": 51, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Sion:Chogath:3",
+          "text": "Use Soul Furnace for a shield before trading with Cho'Gath, and detonate it once it has held a while.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Chogath", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sion:Chogath:4",
+          "text": "Keep Cho'Gath from eating minions and growing; deny his Feast stacks by pushing the wave and fighting him early.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Chogath-R", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Cho'Gath behind them, shredding armor and slowing him during lane trades.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 28, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "292c573b6514dd2770a91cf3fdf3ff218204958fef2a9f9bd4fc032f6edb04a6",
+      "tips": [
+        {
+          "id": "top:Sion:Darius:0",
+          "text": "Hold Decimating Smash until Darius is close, and charge it behind a minion wave or after Roar of the Slayer slows him, so he can't just walk out.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Sion-E", "start": 89, "end": 107 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Sion:Darius:1",
+          "text": "Open the fight with Roar of the Slayer. It slows Darius and cuts his Armor, which sets up a full Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 20, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "champion", "key": "Darius", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Sion-Q", "start": 97, "end": 113 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Sion:Darius:2",
+          "text": "Cast Soul Furnace just before Darius gets on you, so the shield soaks his bleed damage. Recast it once the shield has held for a while to damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Sion:Darius:3",
+          "text": "Stay out of Apprehend's cone. If he pulls you in, you are knocked up and slowed, and you can't charge Decimating Smash while he trades.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 58, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 79 },
+            { "kind": "ability", "key": "Sion-Q", "start": 102, "end": 118 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Sion:Darius:4",
+          "text": "Don't stand and trade once Darius has stacked bleeds on you. Back off, because his Noxian Guillotine hurts more the more stacks you carry.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Darius-R", "start": 83, "end": 100 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Sion:Darius:5",
+          "text": "If you die, Glory in Death lets you keep fighting for a moment. Chase Darius while it lasts, since your attacks are very fast and heal you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 12,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Darius", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion slows Darius and shreds armor, which helps against his close-range trades.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "9d45dcc1b3c03d8fb503f60811b35ec0ffdfbb4962aafeae82b8482416e4e8d1",
+      "tips": [
+        {
+          "id": "top:Sion:DrMundo:0",
+          "text": "Charge Decimating Smash past its first second before you release it, so Dr. Mundo is knocked up and stunned for a real window. A quick tap only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "DrMundo", "start": 72, "end": 81 },
+            { "kind": "keyword", "key": "knocked-up", "start": 85, "end": 95 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 },
+            { "kind": "keyword", "key": "slowed", "start": 144, "end": 149 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sion:DrMundo:1",
+          "text": "Dr. Mundo resists the first immobilizing effect, so bait it with a cheap one. Land your full Decimating Smash after the passive is used up.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Sion-Q", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sion:DrMundo:2",
+          "text": "Hit Dr. Mundo with Roar of the Slayer before his bonesaw trades. He is slowed and loses Armor, and the shockwave passes through units, so it is easy to land.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Sion-E", "start": 19, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Sion:DrMundo:3",
+          "text": "Use Soul Furnace to soak his Infected Bonesaw and Heart Zapper damage. Detonate it when he is close, since it hits for a share of his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 29, "end": 45 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Sion:DrMundo:4",
+          "text": "Do not trade into Maximum Dosage; he heals through it. Back off and wait for the effect to wear off.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Mundo's passive resists the first immobilizing effect, so the Q stun would be wasted on it.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "383a567ad2825fc067e1bd0f67d6a2efe49f1e44b19c07c42edff67ba38872ce",
+      "tips": [
+        {
+          "id": "top:Sion:Fiora:0",
+          "text": "Don't start Decimating Smash while Fiora's Riposte is ready. She parries the stun and stabs you with it, so wait until she has used it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Fiora", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Fiora-W", "start": 43, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Sion:Fiora:1",
+          "text": "Hit Fiora with Roar of the Slayer first. It slows her and cuts her Armor, which sets up a Decimating Smash that lands.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Sion-Q", "start": 90, "end": 106 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Sion:Fiora:2",
+          "text": "Cast Soul Furnace when Fiora walks up to trade. Hold the shield, then recast to blast her if it is still up.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Fiora", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Sion:Fiora:3",
+          "text": "Don't chase Fiora with Unstoppable Onslaught. Her Riposte can answer it, and you can't steer the charge much.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Sion-R", "start": 23, "end": 44 },
+            { "kind": "ability", "key": "Fiora-W", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a3148ce7af54130a022528b7f98608963c68c1bd51c802ac6729a517b11c6fb",
+      "tips": [
+        {
+          "id": "top:Sion:Gangplank:0",
+          "text": "Hold Decimating Smash charging until Gangplank is stuck in place or walking into you; a full charge stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gangplank", "start": 37, "end": 46 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Sion:Gangplank:1",
+          "text": "Land Roar of the Slayer first so he is slowed, then follow with Decimating Smash while he cannot step out of the area.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Sion-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Sion:Gangplank:2",
+          "text": "Do not rely on stunning him when Remove Scurvy is ready; it removes crowd control. Bait it out, then commit.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Sion:Gangplank:3",
+          "text": "Use Soul Furnace as a shield before he trades with kegs, and recast it to hit him if the shield holds.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Gangplank:4",
+          "text": "Stay out of keg range when he has several stocked; fight when he has few, and step away from lit kegs.",
+          "refs": [],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Sion:Gangplank:5",
+          "text": "Walk up and attack his kegs to defuse them before he can blow them up.",
+          "refs": [],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Sion:Gangplank:6",
+          "text": "At level 6, Unstoppable Onslaught in a straight line lets you reach him through slows and stun him on arrival.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 12, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "18f94ce886ed6faa72f9e795e9622478b98151ca4d4e0219aba5085e1ae5fa1e",
+      "tips": [
+        {
+          "id": "top:Sion:Garen:0",
+          "text": "Charge Decimating Smash past the halfway point so Garen is knocked up and stunned. Hold it longer when he is walking into you.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Garen", "start": 50, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 59, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Sion:Garen:1",
+          "text": "Hit Garen with Roar of the Slayer first so he is slowed and loses Armor, then follow with a charged Decimating Smash.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Sion-Q", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sion:Garen:2",
+          "text": "Expect Garen to be silenced-proof against your slows: his Decisive Strike removes slows from him, so do not count on Roar of the Slayer to hold him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-Q", "start": 58, "end": 73 },
+            { "kind": "ability", "key": "Sion-E", "start": 117, "end": 135 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Sion:Garen:3",
+          "text": "Pop Soul Furnace when Garen steps in to trade. Hold the shield for a few seconds, then recast it to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Sion:Garen:4",
+          "text": "Do not fight him at low health. Demacian Justice finishes you quickly, though Glory in Death gives you one more chance to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 32, "end": 48 },
+            { "kind": "ability", "key": "Sion-passive", "start": 78, "end": 92 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2b6254bc62da0d5aa655c71f7f2cc261e27323aa3f99d23ddfee76b9af9b7990",
+      "tips": [
+        {
+          "id": "top:Sion:Gnar:0",
+          "text": "Hold Decimating Smash until Gnar is close, then release it after a short charge; a full charge is easy to see and step out of.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gnar", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Gnar:1",
+          "text": "Land Roar of the Slayer first so Gnar is slowed, then follow with a charged Decimating Smash that he can't walk out of.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Gnar", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Sion-Q", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sion:Gnar:2",
+          "text": "Gnar outranges you, so use Soul Furnace for the shield when he starts poking, then detonate it once he walks into you.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sion-W", "start": 27, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Sion:Gnar:3",
+          "text": "Fight Mega Gnar with care: Decimating Smash stuns him if you charge long enough, which can stop him from throwing you.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Sion-Q", "start": 27, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Gnar:4",
+          "text": "Stay away from walls when Gnar is Mega; his ultimate stuns you if it throws you into one.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Gnar:5",
+          "text": "When Gnar shrinks and is tired, he can't gain Rage for a while, so that is your window to push and trade.",
+          "refs": [{ "kind": "champion", "key": "Gnar", "start": 5, "end": 9 }],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Gnar's Hop gap-close lets him leave a stun, but Roar's slow gives time to charge Smash.",
+          "refs": [{ "kind": "champion", "key": "Gnar", "start": 0, "end": 4 }]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Gnar behind it with the same slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "398eebfc772f9ec075bbfbd46f244ff3b770c8831565019d10394607a6da093b",
+      "tips": [
+        {
+          "id": "top:Sion:Gragas:0",
+          "text": "Hold Decimating Smash for a full charge before releasing, because a long charge stuns for longer. Gragas can still dodge it, so aim it where he is walking.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gragas", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Gragas:1",
+          "text": "Land Roar of the Slayer first so Gragas is slowed, then follow with Decimating Smash. He will struggle to step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Gragas", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Sion-Q", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Gragas:2",
+          "text": "Cast Soul Furnace before Gragas trades with you, then recast it after the shield has held a while to hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gragas", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Sion:Gragas:3",
+          "text": "Do not chase Gragas after he uses Body Slam. It comes back quickly, so he can stun you when you overextend.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Gragas-E", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:Gragas:4",
+          "text": "Hit Gragas with Roar of the Slayer when he rolls Barrel Roll toward you. It slows him and reduces his Armor, so you win the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Sion-E", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off minions hits Gragas, who has no listed ability to block that poke.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 31, "end": 37 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "cfef8bd785f017da9f69a90450494e2c12f44db71fd251cf4a2c74fb16a58465",
+      "tips": [
+        {
+          "id": "top:Sion:Gwen:0",
+          "text": "Hold Decimating Smash for a full charge only when Gwen can't easily step out of it; a short charge only slows her and is easy to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Gwen", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:Sion:Gwen:1",
+          "text": "Hit Gwen with Roar of the Slayer first; it slows her so a charged Decimating Smash is much harder to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Sion-E", "start": 14, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sion:Gwen:2",
+          "text": "Don't waste abilities on Gwen while she stands in Hallowed Mist; she can't be targeted from outside it. Wait for it to end or fight her inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Gwen-W", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Sion:Gwen:3",
+          "text": "Use Soul Furnace as a shield before trading with Gwen, and detonate it once it has held a while to hit her with magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gwen", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sion:Gwen:4",
+          "text": "Gwen needs a few attacks to build her damage, so start the fight first and don't let her walk up freely.",
+          "refs": [{ "kind": "champion", "key": "Gwen", "start": 0, "end": 4 }],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion hits Gwen behind it with damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "381ed91f0e1e3051b8735f7412a8bf621c4cea3eb3615f3ebe8a4660c4f814db",
+      "tips": [
+        {
+          "id": "top:Sion:Heimerdinger:0",
+          "text": "Hit Heimerdinger with Roar of the Slayer before you charge Decimating Smash; it leaves him slowed so the stun is easier to land.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "Sion-E", "start": 22, "end": 40 },
+            { "kind": "ability", "key": "Sion-Q", "start": 59, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Sion:Heimerdinger:1",
+          "text": "Open Soul Furnace before you walk into his Hextech Micro-Rockets range; the shield soaks the poke and then explodes on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Heimerdinger-W",
+              "start": 43,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "poke", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Sion:Heimerdinger:2",
+          "text": "Do not stand still inside the circle of his turrets; fight him away from them or wait until they are gone.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Sion:Heimerdinger:3",
+          "text": "Use Unstoppable Onslaught to run him down once he has thrown his grenade; Sion keeps charging through slows.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Sion", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Heimerdinger behind his wave, slowing him and shredding his armor.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 28,
+              "end": 40
+            }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "E's slow helps Sion charge Q to a full stun on Heimerdinger, who otherwise walks out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 15, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 47,
+              "end": 59
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "fb101438626176c85dfd4e99e3d2c67ea9fdcef9d77b0418610bf5d99728cd99",
+      "tips": [
+        {
+          "id": "top:Sion:Illaoi:0",
+          "text": "Hold Decimating Smash for a longer charge; it stuns for longer. Fire Roar of the Slayer first so the enemy is slowed and easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "ability", "key": "Sion-E", "start": 69, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 110, "end": 116 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Sion:Illaoi:1",
+          "text": "Fight away from Illaoi's Tentacles. Hit the Tentacles when you can, since she is much weaker without them.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Sion:Illaoi:2",
+          "text": "Use Soul Furnace's shield when Illaoi's Tentacles or Harsh Lesson are about to land. Recast it once the shield has held, to hurt her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Illaoi", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Illaoi-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sion:Illaoi:3",
+          "text": "If Illaoi pulls out your spirit with Test of Spirit, hit her. Damaging her shortens the spirit's life.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sion:Illaoi:4",
+          "text": "Use Unstoppable Onslaught to chase her down or to close a fight, in a straight line, since you can barely turn.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps you charge Decimating Smash for the stun before Illaoi can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 29, "end": 45 },
+            { "kind": "champion", "key": "Illaoi", "start": 66, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5062ea067b6805e01ac7c462625c9148fd5ee2a8d88b1d8d8ac46607a19e0e86",
+      "tips": [
+        {
+          "id": "top:Sion:Irelia:0",
+          "text": "Hold Decimating Smash for a full charge only when Irelia can't reach you. She can dash in with Bladesurge before the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Irelia", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Sion:Irelia:1",
+          "text": "Land Roar of the Slayer first so she is slowed, then follow with a charged Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Sion-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Sion:Irelia:2",
+          "text": "Don't waste Decimating Smash on Defiant Dance. She takes less damage and can't be stopped while charging, so wait until she releases.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "ability", "key": "Irelia-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Sion:Irelia:3",
+          "text": "Fight her away from the minion wave. Without minions to dash through, Irelia is much easier to catch and punish.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Sion:Irelia:4",
+          "text": "Cast Soul Furnace when she is about to trade. Let the shield absorb her damage, then recast it to hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Sion:Irelia:5",
+          "text": "Use Unstoppable Onslaught from far away so she can't easily stop it. Steer in a straight line toward her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f698d3e6978a4ed5c2db948b6ce58c86c266f6d487c0f3b1668d5687c9c82e86",
+      "tips": [
+        {
+          "id": "top:Sion:Jax:0",
+          "text": "Walk out of melee range while Jax is in Counter Strike; it dodges your basic attacks and stuns you when it ends. Attack after it finishes.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 30, "end": 33 },
+            { "kind": "ability", "key": "Jax-E", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Sion:Jax:1",
+          "text": "Land Roar of the Slayer first; it leaves Jax slowed, which makes Decimating Smash much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 41, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Sion-Q", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Sion:Jax:2",
+          "text": "Hold the charge of Decimating Smash for a full hit only when Jax cannot easily jump out. A longer charge stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Jax", "start": 61, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sion:Jax:3",
+          "text": "Use Soul Furnace's shield before a trade. Pop it for damage once it has held a while.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Sion:Jax:4",
+          "text": "Do not fight long toe-to-toe with Jax. His attack speed keeps building, so trade in short bursts and step back.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 34, "end": 37 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Roar knocks a minion back into Jax, dealing the same damage plus slow and armor shred.",
+          "refs": [{ "kind": "champion", "key": "Jax", "start": 31, "end": 34 }]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "50f4f2f9e9cdf794909909f2fb7a38112a0647addbf36bf76a709a19b697ddfd",
+      "tips": [
+        {
+          "id": "top:Sion:Jayce:0",
+          "text": "Land Roar of the Slayer first so Jayce is slowed, then hold Decimating Smash for a full charge. The long stun is hard for him to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Sion-Q", "start": 60, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Sion:Jayce:1",
+          "text": "Jayce can hit you from range with Shock Blast. Cast Soul Furnace when you see it coming so the shield soaks the damage.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sion-W", "start": 52, "end": 64 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Sion:Jayce:2",
+          "text": "Don't start charging Decimating Smash when Jayce is in Hammer form next to you. Thundering Blow knocks you back and ruins the charge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 21, "end": 37 },
+            { "kind": "champion", "key": "Jayce", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Sion:Jayce:3",
+          "text": "Jayce is strongest early, so farm safely and trade only when your shield is up. Soul Furnace also grows your Health with every kill.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sion-W", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sion:Jayce:4",
+          "text": "Use Unstoppable Onslaught in a straight line toward Jayce once you have level 6. He is stunned if you reach him and slowed if you only get close.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Jayce", "start": 52, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash, so Jayce's leap and knockback have less room to escape the stun.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0eb6ea25114b97926ec9be9b2a9962de8ab944ec5372c54767185a6071ec722d",
+      "tips": [
+        {
+          "id": "top:Sion:KSante:0",
+          "text": "Charge Decimating Smash past the first second before you release it. A full charge stuns K'Sante for much longer than a quick tap.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 88 },
+            { "kind": "champion", "key": "KSante", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Sion:KSante:1",
+          "text": "Land Roar of the Slayer first to slow K'Sante, then follow with Decimating Smash. He will struggle to walk out of the swing.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 },
+            { "kind": "champion", "key": "KSante", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Sion-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sion:KSante:2",
+          "text": "Use Soul Furnace as a shield when K'Sante walks up to trade. Recast it once the shield has held a while to hit him for bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:KSante:3",
+          "text": "Do not start charging Decimating Smash when K'Sante can pull or stun you. A stun interrupts the charge and wastes the ability.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 22, "end": 38 },
+            { "kind": "champion", "key": "KSante", "start": 44, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Sion:KSante:4",
+          "text": "Hold Unstoppable Onslaught for a straight line to K'Sante. It turns poorly, and he can dodge it with a sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "KSante", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ae2aa8e2c80c73de84dde5455c75d7a451ca582316105576a4516b9174fa00fd",
+      "tips": [
+        {
+          "id": "top:Sion:Kayle:0",
+          "text": "Hit Kayle hard before level 6. She is a weak melee champion until Divine Ascent gives her range.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Kayle-passive",
+              "start": 66,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Sion:Kayle:1",
+          "text": "Open with Roar of the Slayer to slow Kayle, then land a charged Decimating Smash on her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Kayle", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Sion-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Kayle:2",
+          "text": "Kayle is fragile. Once she can shoot from range, use Unstoppable Onslaught in a straight line to reach her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sion-R", "start": 53, "end": 74 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:Kayle:3",
+          "text": "Use Soul Furnace's shield when you trade with Kayle's Radiant Blast. Recast it to damage her once the shield has held a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kayle", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Sion:Kayle:4",
+          "text": "Kayle's Divine Judgment only stops damage. You can still stun or slow her, so wait out the invulnerability and hit her afterwards.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kayle-R", "start": 8, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d0164abb03416a0f667fd39658ee25d8a66b9f1b357a6d582c421e7f359bb569",
+      "tips": [
+        {
+          "id": "top:Sion:Kennen:0",
+          "text": "Walk at Kennen with Roar of the Slayer first, then follow with Decimating Smash; the slow makes the charged hit much easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Sion-E", "start": 20, "end": 38 },
+            { "kind": "ability", "key": "Sion-Q", "start": 63, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Sion:Kennen:1",
+          "text": "Charge Decimating Smash for a full second or longer so the hit knocks Kennen up and stuns him. A quick tap only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Kennen", "start": 70, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Sion:Kennen:2",
+          "text": "Use Soul Furnace for a shield before Kennen starts a trade. Recast it once the shield has held for a while to hit him with the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Kennen", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Kennen:3",
+          "text": "Kennen is fragile. When he dashes in with Lightning Rush, turn and hit him instead of running.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Kennen-E", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sion:Kennen:4",
+          "text": "Stay out of a straight line from Thundering Shuriken. It stops at the first enemy it hits, so keep a minion between you and him.",
+          "refs": [
+            { "kind": "ability", "key": "Kennen-Q", "start": 33, "end": 52 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Sion:Kennen:5",
+          "text": "Hold Unstoppable Onslaught for a straight run at Kennen. He is a squishy target, and the stun and slow can set up a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 5, "end": 26 },
+            { "kind": "champion", "key": "Kennen", "start": 49, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Kennen with slow and armor shred when he stands behind his wave.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 28, "end": 34 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "7fc2b8e9b8de2c0b3fbe5749fd8635334242b3f86bb7e6b720688a92892676e3",
+      "tips": [
+        {
+          "id": "top:Sion:Kled:0",
+          "text": "Walk up and charge Decimating Smash when Kled is busy with minions; held for at least a second it knocks him up and stuns him, so use it for a kill or trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 19, "end": 35 },
+            { "kind": "champion", "key": "Kled", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Sion:Kled:1",
+          "text": "Open with Roar of the Slayer so he is slowed, then land a charged Decimating Smash on him as he tries to close in.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Kled:2",
+          "text": "Cast Soul Furnace before he jumps in with Violent Tendencies. The shield soaks his burst, and you can detonate it once it has held for a while.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Kled-W", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sion:Kled:3",
+          "text": "Kled's Skaarl soaks damage, so trade for a while and wait until he drops off his mount. Then he hits you less hard and is easier to finish.",
+          "refs": [{ "kind": "champion", "key": "Kled", "start": 0, "end": 4 }],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sion:Kled:4",
+          "text": "Stay out of the line of Bear Trap on a Rope, or stay far enough away that you can step out of the tether before he pulls you.",
+          "refs": [
+            { "kind": "ability", "key": "Kled-Q", "start": 24, "end": 43 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4bad6bdd51dbbae4f3a870c6c7ff18f2319169fb797bdd85883ec45b4f2bcf9d",
+      "tips": [
+        {
+          "id": "top:Sion:Malphite:0",
+          "text": "Start charging Decimating Smash when Malphite walks up, and let go after a full charge. Early release only slows him, so hold it for the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Malphite", "start": 37, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 },
+            { "kind": "keyword", "key": "stunned", "start": 137, "end": 141 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Sion:Malphite:1",
+          "text": "Land Roar of the Slayer first so Malphite is slowed, then follow with a charged Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Malphite", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Sion-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Sion:Malphite:2",
+          "text": "Use Soul Furnace for a shield when Malphite starts a trade, then recast it once the shield has held a while to hurt him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 35, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Sion:Malphite:3",
+          "text": "Malphite's Seismic Shard slows you and speeds him up, so don't chase him in a straight line. Wait for Roar of the Slayer to be ready first.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 11, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Sion-E", "start": 102, "end": 120 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Malphite:4",
+          "text": "Aim Unstoppable Onslaught in a straight line at Malphite; you can barely turn while charging. Unstoppable Force can't be stopped by your stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Malphite", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Malphite-R", "start": 94, "end": 111 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f66b283bee303f961906677b851e0b868824ffec4f7670b50ec985466642c9c3",
+      "tips": [
+        {
+          "id": "top:Sion:Mordekaiser:0",
+          "text": "Hold Roar of the Slayer until Mordekaiser steps in close, then follow with a full-charge Decimating Smash while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 30,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Sion-Q", "start": 89, "end": 105 },
+            { "kind": "keyword", "key": "slowed", "start": 118, "end": 124 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Mordekaiser:1",
+          "text": "Don't trade while Mordekaiser's Darkness Rise aura is on; back off until it fades, then fight.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 18,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 32,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Mordekaiser:2",
+          "text": "Sidestep Death's Grasp; it lands after a short delay, so move out of the claw before it closes.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-E", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Sion:Mordekaiser:3",
+          "text": "Pop Soul Furnace when Mordekaiser commits, then recast it once the shield has held a while to hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 22, "end": 33 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Sion:Mordekaiser:4",
+          "text": "Once Realm of Death takes you in, Glory in Death won't save you. You are cut off, so stay away from him at level 6.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "Sion-passive", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d8dc0a28e00323e42ea923044e9fab18f4070315dd17e1ca48cd5216dd2076c9",
+      "tips": [
+        {
+          "id": "top:Sion:Naafiri:0",
+          "text": "Hold Decimating Smash for a full charge when Naafiri is stuck or low on space; the stun is long. Release early if she is about to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Naafiri:1",
+          "text": "Open with Roar of the Slayer so she is slowed, then land Decimating Smash on her while she cannot get away.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Sion-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Naafiri:2",
+          "text": "Pop Soul Furnace when she dives in. The shield soaks her burst, and the blast hurts her if the shield survives.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Sion:Naafiri:3",
+          "text": "Do not waste Decimating Smash while she is untargetable from The Call of the Pack. Wait until she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 61, "end": 81 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Sion:Naafiri:4",
+          "text": "Aim Unstoppable Onslaught in a straight line at her. It is hard to turn, and you stop when you hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion hits Naafiri behind it with slow and armor shred, even with her packmates around.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 29, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6783f9f45cea3b175fb30975cc80c91ccdaf678c5e59a3f191b9df09e42ae140",
+      "tips": [
+        {
+          "id": "top:Sion:Nasus:0",
+          "text": "Charge Decimating Smash for at least a second when Nasus walks up to last-hit; the stun gives you a free trade, and a short charge only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Nasus", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 136, "end": 141 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Sion:Nasus:1",
+          "text": "Fire Roar of the Slayer first so he is slowed, then land a full Decimating Smash on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Sion-Q", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sion:Nasus:2",
+          "text": "Trade early and push him off last hits, before Siphoning Strike has grown strong from his farm.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-Q", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sion:Nasus:3",
+          "text": "Use Roar of the Slayer on minions to hit Nasus behind them; it keeps going after a hit and cuts his Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Nasus", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Sion:Nasus:4",
+          "text": "Cast Soul Furnace before he trades with you, then detonate it once the shield has held a while to hurt him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:Nasus:5",
+          "text": "Avoid fighting him while Fury of the Sands is active; use Unstoppable Onslaught to stun and slow him only when you can kill, or back off until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-R", "start": 25, "end": 42 },
+            { "kind": "ability", "key": "Sion-R", "start": 58, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5e03b9babf4b5347c134edf84dc9ced9da01e4d55bf0936fda2684e730efa840",
+      "tips": [
+        {
+          "id": "top:Sion:Olaf:0",
+          "text": "Stay out of Olaf's Undertow line and don't stand where his axe lands. Being slowed makes it easy for him to catch you.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Sion:Olaf:1",
+          "text": "Charge Decimating Smash for at least a moment before releasing. It then knocks Olaf up and stuns him, unless he has Ragnarok active.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Olaf", "start": 79, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 },
+            { "kind": "ability", "key": "Olaf-R", "start": 116, "end": 124 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Sion:Olaf:2",
+          "text": "Don't spend your stun or slow while Ragnarok is active. Olaf is immune to disables then, so wait for it to end.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Olaf-R", "start": 36, "end": 44 },
+            { "kind": "champion", "key": "Olaf", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sion:Olaf:3",
+          "text": "Use Roar of the Slayer to slow Olaf and cut his Armor, then follow up with a charged Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Olaf", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Sion-Q", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sion:Olaf:4",
+          "text": "Olaf grows stronger the lower his health gets. Don't chase him when he is low, and don't leave him alive at a sliver.",
+          "refs": [{ "kind": "champion", "key": "Olaf", "start": 0, "end": 4 }],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Sion:Olaf:5",
+          "text": "Pop Soul Furnace for a shield when Olaf starts a trade. Recast it once the shield has held for a while to damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Olaf", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f204d9625666790b7b93b5dff0d461e0803650172c50f7cd4230af11c4ccab47",
+      "tips": [
+        {
+          "id": "top:Sion:Ornn:0",
+          "text": "Stay away from walls when Ornn is near. Searing Charge only stuns you if he hits terrain, so fight in open space.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ornn-E", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Sion:Ornn:1",
+          "text": "Hold Decimating Smash for a full charge when Ornn stops to farm. He is stunned for longer the longer you charge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ornn", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Sion:Ornn:2",
+          "text": "Open with Roar of the Slayer, which slows him, then land a charged Decimating Smash while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Sion-Q", "start": 67, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Sion:Ornn:3",
+          "text": "Use Soul Furnace for a shield when Ornn walks up to trade. Recast it once the shield has held to hit him for bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ornn", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Sion:Ornn:4",
+          "text": "Step out of the way of Volcanic Rupture. Its pillar can block your path, so don't charge Decimating Smash where it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 23, "end": 39 },
+            { "kind": "ability", "key": "Sion-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "23f3c12bb0498dea5aa6657cac23a7ca47914fa3b82487a7851760cff0c9328a",
+      "tips": [
+        {
+          "id": "top:Sion:Pantheon:0",
+          "text": "Start charging Decimating Smash when Pantheon walks up to trade; held for a full charge it knocks him up and stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 15, "end": 31 },
+            { "kind": "champion", "key": "Pantheon", "start": 37, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Sion:Pantheon:1",
+          "text": "Hit Pantheon with Roar of the Slayer first so he is slowed, then follow with a charged Decimating Smash that is hard for him to dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Sion-E", "start": 18, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Sion-Q", "start": 87, "end": 103 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sion:Pantheon:2",
+          "text": "Do not hit Pantheon head-on while he braces with Aegis Assault; walk around behind him or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sion:Pantheon:3",
+          "text": "Use Soul Furnace before Pantheon jumps on you; the shield soaks his burst, then recast it to blast him if the shield survives.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 24, "end": 32 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Sion:Pantheon:4",
+          "text": "When Pantheon starts Grand Starfall, move out of the target area. It gives plenty of warning, and it is a good time to push the wave or shove him off.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5604ae9766c5cdde4d579bd67e0b17baa7287df48bbc89297cc8d7e9cc3cdb26",
+      "tips": [
+        {
+          "id": "top:Sion:Quinn:0",
+          "text": "Aim Roar of the Slayer first so the enemy is slowed, then charge Decimating Smash to land the stun. Quinn is hard to catch without that slow.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Sion-Q", "start": 65, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 },
+            { "kind": "champion", "key": "Quinn", "start": 100, "end": 105 },
+            { "kind": "keyword", "key": "slowed", "start": 136, "end": 140 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Sion:Quinn:1",
+          "text": "Hold the Decimating Smash charge past its first moment when you can. A long charge is what stuns, and Quinn will not stand still for it in the open.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 },
+            { "kind": "champion", "key": "Quinn", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Sion:Quinn:2",
+          "text": "Cast Soul Furnace when Quinn starts to trade. Hold the shield and detonate it once it has lasted long enough to hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Quinn", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Sion:Quinn:3",
+          "text": "When Quinn uses Behind Enemy Lines to roam, push the wave and follow with Unstoppable Onslaught, or take the tower.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Quinn-R", "start": 16, "end": 34 },
+            { "kind": "ability", "key": "Sion-R", "start": 74, "end": 95 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Sion:Quinn:4",
+          "text": "Her Blinding Assault shrinks your vision. Stay close to your minions, and don't charge Decimating Smash blind.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "ability", "key": "Sion-Q", "start": 87, "end": 103 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion hits Quinn for slow and armor shred when she stands behind minions.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 29, "end": 34 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0d5f7fcac747ca00af0f0326cb17b6528b9b667422690ff56b6a43f0b00a3352",
+      "tips": [
+        {
+          "id": "top:Sion:Renekton:0",
+          "text": "Stand just outside Renekton's reach and charge Decimating Smash; if it lands after a long charge, he is knocked up and stunned and you get a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "Sion-Q", "start": 47, "end": 63 },
+            {
+              "kind": "keyword",
+              "key": "knocked-up",
+              "start": 104,
+              "end": 114
+            },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Sion:Renekton:1",
+          "text": "Open with Roar of the Slayer to slow him, then follow with Decimating Smash so he cannot easily step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Sion-Q", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Sion:Renekton:2",
+          "text": "Cast Soul Furnace when Renekton walks up to trade; the shield soaks his hits, and you can recast it after a short wait to blow it up on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Renekton", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sion:Renekton:3",
+          "text": "Do not fight him inside his Fury window. When his Ruthless Predator is ready with full Fury, it destroys your shield and stuns you for longer.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 50, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Sion:Renekton:4",
+          "text": "Charging Decimating Smash locks you in place, so do not start one while Slice and Dice is ready; he can dash in and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 9, "end": 25 },
+            { "kind": "ability", "key": "Renekton-E", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Sion:Renekton:5",
+          "text": "If you die in a fight, run at Renekton during Glory in Death; your fast attacks heal you and hit hard against his max Health.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Sion-passive", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions reaches Renekton in lane, dealing damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 31, "end": 39 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "fba77e211248697bd897fff097069c2f9e4e8d0f219429167208eacef0d7fff2",
+      "tips": [
+        {
+          "id": "top:Sion:Riven:0",
+          "text": "Hold Decimating Smash charging until Riven is committed to a fight; a full charge stuns her for a long time, but she can dash out of the line first.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Riven", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Sion:Riven:1",
+          "text": "Hit Riven with Roar of the Slayer first; it leaves her slowed, which makes the following Decimating Smash much easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "ability", "key": "Sion-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Sion:Riven:2",
+          "text": "Cast Soul Furnace before Riven starts her combo; the shield soaks her burst and the detonation then hurts her if the shield survives.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Riven", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sion:Riven:3",
+          "text": "Riven's damage is all physical and she can't heal, so trade when your shield is up and punish her after she spends her dashes.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Sion:Riven:4",
+          "text": "If Riven kills you, run at her in Glory in Death; your fast attacks hit hard against her large health pool.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Sion-passive", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.89
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "88bf73a7eb2d049e239e50d9499c0f4bb18fd50083b3084848811b95224f414d",
+      "tips": [
+        {
+          "id": "top:Sion:Rumble:0",
+          "text": "Charge Decimating Smash past the first second when Rumble is stuck in a trade; a full charge stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Rumble", "start": 51, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sion:Rumble:1",
+          "text": "Open with Roar of the Slayer so Rumble is slowed, then land Decimating Smash on him while he can't easily step out.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "champion", "key": "Rumble", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Sion-Q", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Sion:Rumble:2",
+          "text": "Hit him once you see him Overheat. He can't cast spells then, so he can't stop your engage.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Rumble:3",
+          "text": "Use Soul Furnace when Rumble starts Flamespitter. The shield soaks his magic damage, and you can recast it to hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sion:Rumble:4",
+          "text": "Don't stand in the fire of The Equalizer. Walk out of it, or fight him somewhere else.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f6db8029c6ab92d7b6696d7d55a61a0cc96da1ea6dc1b52bbc10d53d42a79353",
+      "tips": [
+        {
+          "id": "top:Sion:Sett:0",
+          "text": "Charge Decimating Smash past the halfway mark when Sett walks up to trade; a full charge stuns him for a long time, so aim where he will step.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Sett", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Sion:Sett:1",
+          "text": "Hit Sett with Roar of the Slayer first; it slows him, so the charged Decimating Smash is easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Sion-E", "start": 14, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Sion-Q", "start": 69, "end": 85 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Sion:Sett:2",
+          "text": "Cast Soul Furnace when Sett starts to trade. Pop it once the shield has held for a while, so he takes the blast as he stays in melee.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Sion:Sett:3",
+          "text": "Don't let Sett pull you in with Facebreaker when he has enemies on both sides, such as a minion behind you. That lands a stun on you.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Sett-E", "start": 32, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 125 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Sion:Sett:4",
+          "text": "Sett stores damage as Grit for Haymaker, so a long trade lets him shield and hit back harder. Trade in short bursts and step out of the line.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Sett-W", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Sion:Sett:5",
+          "text": "Use Unstoppable Onslaught in a straight line toward Sett. You can't turn much, and it stops when you hit an enemy champion.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Sett", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6f5c76ecd7e9cba1ae567144ee33de3ca75fcc7bfa0b501a6009b4fb1f75bf4b",
+      "tips": [
+        {
+          "id": "top:Sion:Shen:0",
+          "text": "Hold Decimating Smash until Shen is boxed in; a full charge stuns him for a long time, but a quick release only slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Shen", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 112, "end": 117 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Sion:Shen:1",
+          "text": "Open with Roar of the Slayer to slow Shen, then land Decimating Smash on him while he can't get away.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Shen", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Sion-Q", "start": 53, "end": 69 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Sion:Shen:2",
+          "text": "Pop Soul Furnace once its shield has absorbed damage from Shen's trade, then recast it to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Shen", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Sion:Shen:3",
+          "text": "Step out of the way of Shadow Dash. If Shen misses, he is open, so trade back hard.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 23, "end": 34 },
+            { "kind": "champion", "key": "Shen", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Sion:Shen:4",
+          "text": "Watch for Stand United at level 6; Shen can arrive in a side lane fight, so keep your Unstoppable Onslaught ready.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-R", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Shen", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Sion-R", "start": 86, "end": 107 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Shen and shreds his armor while he stays behind the wave.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 39, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "5a565147a27becb85684942ccd7087837c6168f084eae3a23409946150440477",
+      "tips": [
+        {
+          "id": "top:Sion:Singed:0",
+          "text": "Hold Decimating Smash for a full charge when Singed is slowed or stuck in place. A short charge only slows him, and he can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Singed", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Sion:Singed:1",
+          "text": "Open with Roar of the Slayer to slow Singed, then land a charged Decimating Smash while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Singed", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Sion-Q", "start": 65, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Sion:Singed:2",
+          "text": "Don't chase Singed through his Poison Trail. Use Unstoppable Onslaught only when you can run in a straight line and hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Singed-Q", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Sion-R", "start": 49, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Sion:Singed:3",
+          "text": "Use Soul Furnace for a shield before you walk into his poison, and recast it to hit him once the shield has held.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Sion:Singed:4",
+          "text": "When Singed walks up to Fling you, hit him first with Roar of the Slayer. It slows him and lowers his Armor.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Singed-E", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Sion-E", "start": 54, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Singed often poisons from behind minions, so bouncing E off a minion still hits him with slow and shred.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 0, "end": 6 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "062f710ed6b759821dfb5878acb15838007ab48ad12ae9aa01face3429221647",
+      "tips": [
+        {
+          "id": "top:Sion:TahmKench:0",
+          "text": "Charge Decimating Smash past its first moment and release it when Tahm Kench steps in to trade; a full charge stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "TahmKench", "start": 66, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Sion:TahmKench:1",
+          "text": "Watch for Tahm Kench's Abyssal Dive channel. Smash him as he lands, or step away from the landing spot.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 10, "end": 20 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Sion:TahmKench:2",
+          "text": "Open with Roar of the Slayer so he is slowed, then land Decimating Smash on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Sion-Q", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Sion:TahmKench:3",
+          "text": "Trade when Tahm Kench has used his Thick Skin shield, since he skips the healing. Pile on damage while it is gone.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Sion:TahmKench:4",
+          "text": "Do not rely on one lone poke. Tahm Kench heals from Tongue Lash and Thick Skin, so wait for a Smash to land.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "TahmKench", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "TahmKench-Q", "start": 52, "end": 63 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "58165ba3da2058a2b38527330c59511f08bc573d63690369307db6e93e98fa4b",
+      "tips": [
+        {
+          "id": "top:Sion:Teemo:0",
+          "text": "Hold Decimating Smash charge until Teemo walks into range; a full charge stuns him for a long time and lets you hit him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Sion:Teemo:1",
+          "text": "Open with Roar of the Slayer so Teemo is slowed, then land Decimating Smash on him while he can't easily step away.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "champion", "key": "Teemo", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Sion-Q", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Sion:Teemo:2",
+          "text": "Use Soul Furnace for a shield before trading with Teemo, and recast it once the shield has held a while to damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Teemo", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Sion:Teemo:3",
+          "text": "Keep Soul Furnace shield up when you are poisoned and Teemo trades; it soaks his magic damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Sion:Teemo:4",
+          "text": "Last-hit minions with Soul Furnace ready; kills raise your max Health over time, which makes his poke weaker against you.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 22, "end": 34 },
+            { "kind": "keyword", "key": "poke", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Sion:Teemo:5",
+          "text": "Avoid walking into brush or unwatched ground where Teemo may be hidden; his mushrooms slow and reveal you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ef0b22e72d4eb84ec04d57d3696b854f961618c47f63531c44925858a3028c5",
+      "tips": [
+        {
+          "id": "top:Sion:Tryndamere:0",
+          "text": "Charge Decimating Smash past the halfway point before you release it. Tryndamere has to stay close to you, so the stun is easy to land when he walks in.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Tryndamere", "start": 70, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Sion:Tryndamere:1",
+          "text": "Hit Tryndamere with Roar of the Slayer first. He is slowed, which makes the full Decimating Smash much easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Sion-E", "start": 20, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 },
+            { "kind": "ability", "key": "Sion-Q", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Sion:Tryndamere:2",
+          "text": "Trade with Tryndamere while he is low on Fury. He heals back with Bloodlust once he has built it up.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 11, "end": 21 },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Sion:Tryndamere:3",
+          "text": "Use Soul Furnace for a shield when Tryndamere dashes in. Recast it once the shield is still up to deal damage to him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Tryndamere", "start": 35, "end": 45 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Sion:Tryndamere:4",
+          "text": "Don't spend everything on Tryndamere when Undying Rage is up. He cannot die for a few seconds, so back off and come back when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Tryndamere and shreds his armor from range.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 39, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6500fe36b4bc676bb55278b6ff3bddff8c962c14beeb4af2b2b273b2ffbbaf8a",
+      "tips": [
+        {
+          "id": "top:Sion:Urgot:0",
+          "text": "Charge Decimating Smash at Urgot only when he can't dodge. Fire Roar of the Slayer first so he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Urgot", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Sion-E", "start": 64, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Sion:Urgot:1",
+          "text": "Cast Soul Furnace before Urgot starts shooting, so its shield absorbs the damage. Detonate it when he is next to you.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Urgot", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Sion:Urgot:2",
+          "text": "Walk away when Urgot's Disdain is ready. It stuns you and throws you behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Urgot-E", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Sion:Urgot:3",
+          "text": "Stay above the low-health line if Fear Beyond Death hits you; below it, Urgot can drag you in and execute you.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-R", "start": 34, "end": 51 },
+            { "kind": "champion", "key": "Urgot", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "05dcf6d63544ad8c1cdf7fae451ab1b243a10b720e7957aa6c6620f87bf8778c",
+      "tips": [
+        {
+          "id": "top:Sion:Varus:0",
+          "text": "Hold Decimating Smash for a full charge when Varus is rooted, stuck in a fight or standing still. A fast tap only slows him and he can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Varus", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Sion:Varus:1",
+          "text": "Hit Varus with Roar of the Slayer first. It slows him and cuts his Armor, which makes a charged Decimating Smash much easier to land.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Sion-Q", "start": 96, "end": 112 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Sion:Varus:2",
+          "text": "Step in when Varus is charging Piercing Arrow. He moves slowly while charging and cannot cast Hail of Arrows or Chain of Corruption.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Varus-Q", "start": 31, "end": 45 },
+            { "kind": "ability", "key": "Varus-E", "start": 94, "end": 108 },
+            { "kind": "ability", "key": "Varus-R", "start": 112, "end": 131 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sion:Varus:3",
+          "text": "Cast Soul Furnace before you walk into his poke. The shield absorbs the damage, and you can recast it to hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Sion:Varus:4",
+          "text": "Do not trade when he has a Blight stack on you. His abilities will pop it for extra damage.",
+          "refs": [],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Sion:Varus:5",
+          "text": "Do not stand in the ground left by Hail of Arrows. It slows you and cuts your healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Varus lane minions can block Sion, so bouncing E off a minion still hits Varus with slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Varus", "start": 73, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "78facd86cc80e25334b936e074f4556cb404c1792911ba7f38bcdce49780eb48",
+      "tips": [
+        {
+          "id": "top:Sion:Vayne:0",
+          "text": "Charge Decimating Smash past its first second when Vayne is near a wall or trapped by minions; she is stunned for a long time and has no way to escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 7, "end": 23 },
+            { "kind": "champion", "key": "Vayne", "start": 51, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 109 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Sion:Vayne:1",
+          "text": "Land Roar of the Slayer first so Vayne is slowed, then follow with Decimating Smash; she can't easily Tumble out of the charge area.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 48 },
+            { "kind": "ability", "key": "Sion-Q", "start": 67, "end": 83 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Sion:Vayne:2",
+          "text": "Use Soul Furnace's shield before Vayne's third attack lands. It soaks the damage and then blasts her based on her max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Sion:Vayne:3",
+          "text": "At level 6, run her down with Unstoppable Onslaught when she is out of position. It stops on her and stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 30, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Sion:Vayne:4",
+          "text": "Stay away from walls when you fight her, or Condemn will pin you.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing Roar off a minion still slows Vayne and shreds her armor when minions block the lane.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 39, "end": 44 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a22e851806ce9c24ed52fb713e683436cca04dbdac60eeb7c82b07395548ca6",
+      "tips": [
+        {
+          "id": "top:Sion:Vladimir:0",
+          "text": "Release Decimating Smash after a long charge only when Vladimir cannot step aside. Land Roar of the Slayer first to slow him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 8, "end": 24 },
+            { "kind": "champion", "key": "Vladimir", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Sion-E", "start": 88, "end": 106 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Sion:Vladimir:1",
+          "text": "Wait for Vladimir to use Sanguine Pool before you commit Unstoppable Onslaught; it makes him untargetable.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 9, "end": 17 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 25, "end": 38 },
+            { "kind": "ability", "key": "Sion-R", "start": 57, "end": 78 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Sion:Vladimir:2",
+          "text": "Use Soul Furnace for a shield before his trades, then recast it once the shield has held for a while to damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sion:Vladimir:3",
+          "text": "Do not fight Vladimir after he lands Hemoplague; he heals when it bursts. Back off until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 13, "end": 21 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Slow from E gives time to charge Q for the stun if Vladimir tries to walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 51, "end": 59 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off a minion still hits Vladimir behind it for damage, slow and armor shred.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 35, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "a29cea71a9a7afab759f0667c8297df3ce0d74fe318afb71f2ed6ae35b7c90cc",
+      "tips": [
+        {
+          "id": "top:Sion:Volibear:0",
+          "text": "Hold Decimating Smash until you have charged past the first second, so it knocks up and stuns. Release early only if Volibear is about to leave range.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 },
+            { "kind": "champion", "key": "Volibear", "start": 117, "end": 125 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Sion:Volibear:1",
+          "text": "Open with Roar of the Slayer so Volibear is slowed, then land a charged Decimating Smash on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 10, "end": 28 },
+            { "kind": "champion", "key": "Volibear", "start": 32, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Sion-Q", "start": 72, "end": 88 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Sion:Volibear:2",
+          "text": "Use Soul Furnace as a shield when Volibear dives in, and recast it once the shield has held for a while to damage him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Volibear", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Volibear:3",
+          "text": "Do not charge Decimating Smash in the open when Volibear is close. If his Thundering Smash stuns you, you lose the charge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 14, "end": 30 },
+            { "kind": "champion", "key": "Volibear", "start": 48, "end": 56 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 74, "end": 90 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Sion:Volibear:4",
+          "text": "Fight in lane when The Relentless Storm is low; Volibear gets much stronger once he lands several hits in a row.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Volibear-passive",
+              "start": 19,
+              "end": 39
+            },
+            { "kind": "champion", "key": "Volibear", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "058eed8789e9ef24c59426529948af54d512e079745e6cb926540cfa47aa366f",
+      "tips": [
+        {
+          "id": "top:Sion:XinZhao:0",
+          "text": "Hold Decimating Smash until Xin Zhao is stuck in a fight or walks up to you; a long charge stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sion:XinZhao:1",
+          "text": "Use Roar of the Slayer first to slow Xin Zhao, then land Decimating Smash on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "XinZhao", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Sion-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Sion:XinZhao:2",
+          "text": "Cast Soul Furnace when Xin Zhao dashes in with Audacious Charge; the shield soaks his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Sion:XinZhao:3",
+          "text": "Watch Xin Zhao's third attack; Three Talon Strike knocks you up, so don't stand and trade when he's lined up for it.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:2",
+          "note": "Xin trades in melee with empowered attacks, so Sion's W shield and pop fit those short fights.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 47, "end": 51 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "55303f121249703fd77336f0b10b710fdc1d97969898f5f67d496e11cf4d66db",
+      "tips": [
+        {
+          "id": "top:Sion:Yasuo:0",
+          "text": "Aim Roar of the Slayer first to slow Yasuo, then hold Decimating Smash for the full charge so the stun lands.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Yasuo", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Sion-Q", "start": 54, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Sion:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks Roar of the Slayer. Wait until it fades before you throw it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Sion-E", "start": 25, "end": 43 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Sion:Yasuo:2",
+          "text": "Decimating Smash is not a projectile, so Wind Wall cannot stop it. Use it when Yasuo puts his wall up.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 0, "end": 16 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 41, "end": 50 },
+            { "kind": "champion", "key": "Yasuo", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Sion:Yasuo:3",
+          "text": "Yasuo can dash through minions with Sweeping Blade to dodge your charge. Wait until he has no minion or enemy nearby to dash through.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Sion:Yasuo:4",
+          "text": "Use Soul Furnace before Yasuo trades with you, then recast it once the shield has held for a while to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Sion:Yasuo:5",
+          "text": "Yasuo's knock-up from Steel Tempest lets him use Last Breath. Stay away from his allies' knock-ups when you fight near them.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Sion:Yasuo:6",
+          "text": "Charge Unstoppable Onslaught in a straight line at Yasuo. It cannot be stopped, but you only turn slightly.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 7, "end": 28 },
+            { "kind": "champion", "key": "Yasuo", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c69151a00cf22c799f5add214a373ba9d26fc237edfde1e60aa5b5b4823b5b48",
+      "tips": [
+        {
+          "id": "top:Sion:Yone:0",
+          "text": "Aim Roar of the Slayer first so Yone is slowed, then hold Decimating Smash for a full charge. A fully charged hit stuns him for a long time.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Yone", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Sion-Q", "start": 58, "end": 74 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 119 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Sion:Yone:1",
+          "text": "Cast Soul Furnace when Yone walks up to trade. Keep the shield up for a while, then recast to blast him for damage based on his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Sion:Yone:2",
+          "text": "Yone's Fate Sealed can pull you in and knock you down. Stay near your minions and tower so a kill on you costs him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-R", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:Sion:Yone:3",
+          "text": "Yone can dash back with Soul Unbound after trading. Don't chase him into a long fight; use Roar of the Slayer from range instead.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Sion-E", "start": 91, "end": 109 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Sion:Yone:4",
+          "text": "Use Unstoppable Onslaught in a straight line toward Yone. It stuns him if you charge a long way, and you can't be stopped on the way in.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 4, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 52, "end": 56 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "The E slow helps charge Q's stun against Yone, who has dashes that could otherwise carry him out.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 41, "end": 45 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "84aa5dca40a90addf475edbbd2747104277b0f75f47a9d0d0ac08fd275cb01b9",
+      "tips": [
+        {
+          "id": "top:Sion:Yorick:0",
+          "text": "Aim Decimating Smash at Yorick after he commits a Dark Procession or a Mist Walker push, and hold the charge for a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yorick", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Yorick-W", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Sion:Yorick:1",
+          "text": "Use Roar of the Slayer first to leave Yorick slowed, then follow with a charged Decimating Smash that is harder to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Yorick", "start": 38, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "ability", "key": "Sion-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Sion:Yorick:2",
+          "text": "Hit Yorick's Mist Walkers with Roar of the Slayer; the shockwave keeps going through them and it hurts every enemy it passes.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Sion-E", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Sion:Yorick:3",
+          "text": "Use Soul Furnace to absorb Yorick's trades, then recast it after the shield has held a while to hurt him and his Mist Walkers.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yorick", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Sion:Yorick:4",
+          "text": "Kill the Maiden of the Mist before you fight Yorick; she adds a lot to his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:1",
+          "note": "Roar's slow helps charge Smash for the stun, so Yorick can't easily walk out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 48, "end": 54 }
+          ]
+        },
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Roar bounced off a minion hits Yorick behind it, a way to poke him when his Mist Walkers or wave block.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 31, "end": 37 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "21c2d09254be30e38310edd2107497a97e8525d5f3c9e98400a534f296e2e252",
+      "tips": [
+        {
+          "id": "top:Sion:Zaahen:0",
+          "text": "Hold Decimating Smash for a full charge when Zaahen is stuck in a fight or walking up to trade; a long charge knocks him up and stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Zaahen", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 128, "end": 133 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Sion:Zaahen:1",
+          "text": "Fire Roar of the Slayer first so Zaahen is slowed, then land your Decimating Smash on him.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zaahen", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Sion:Zaahen:2",
+          "text": "Pop Soul Furnace before Zaahen's burst, then recast it once the shield has held a while to hit him back.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zaahen", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Sion:Zaahen:3",
+          "text": "Don't stand at long range in a straight line from Zaahen; Dreaded Return pulls you in. Keep a minion between you or sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 50, "end": 56 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Sion:Zaahen:4",
+          "text": "Zaahen can come back from death when his stacks are full, so back off and let them fade before you try to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": [
+        {
+          "comboId": "top:Sion:combo:0",
+          "note": "Bouncing E off minions hits Zaahen with slow and armor shred when he stands behind his wave.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 28, "end": 34 }
+          ]
+        }
+      ]
+    }
+  ]
+}

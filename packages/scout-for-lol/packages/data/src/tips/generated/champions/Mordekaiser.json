@@ -1,0 +1,4366 @@
+{
+  "schemaVersion": 1,
+  "champion": "Mordekaiser",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "cf6965628781caa750516f9d2fe78afdbff91c1e384550ac9257023b01669016",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:general:0",
+          "text": "Hit a lone enemy with Obliterate for extra damage. Aim it so only one champion is caught, and avoid hitting minions with it in a trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:general:1",
+          "text": "Land Obliterate and Death's Grasp on champions to build Darkness Rise quickly, then stay on top of them while the aura ticks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 20,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 56,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:general:2",
+          "text": "Trade first, then press Indestructible. It stores damage you deal and take, so a shield is bigger after fighting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 24,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:general:3",
+          "text": "Recast Indestructible while the shield is still up to turn what is left into health.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 7, "end": 21 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Mordekaiser:general:4",
+          "text": "Use Death's Grasp to drag enemies toward you, especially ones backing away from your aura. It also pulls several enemies at once.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Mordekaiser:general:5",
+          "text": "Use Realm of Death on a low-health enemy to secure the kill. Their teammates can't help them inside.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "c4812bc63e2a3be12fa022a81c5de931e6985af1ac7a7e2252e2d377f0d48289",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Aatrox:0",
+          "text": "Use Death's Grasp to pull Aatrox back to you when he backs away after a trade, then follow with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Aatrox", "start": 26, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 96,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Mordekaiser:Aatrox:1",
+          "text": "Hit Aatrox alone with Obliterate, away from minions, so it hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "keyword", "key": "isolated", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Mordekaiser:Aatrox:2",
+          "text": "Press Indestructible just before Aatrox's hits land, then recast it for health when the shield is mostly spent.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Aatrox", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Aatrox:3",
+          "text": "Fight Aatrox when Darkness Rise is active; stay close so its aura keeps burning him, since he can't easily out-trade it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 18,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Mordekaiser:Aatrox:4",
+          "text": "Save Realm of Death for Aatrox once you reach level 6; it cuts him off from his team and stops him from healing off others.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "top:Mordekaiser:Aatrox:5",
+          "text": "Step sideways out of Infernal Chains, or walk toward Aatrox, so you aren't pulled back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 21, "end": 36 },
+            { "kind": "champion", "key": "Aatrox", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "019e84b40ae5463e5c0bab2c3baead71733a1548a2ad41ddb8a800e2b7acfa09",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Akali:0",
+          "text": "Hold Death's Grasp for when Akali steps close to trade or flips in; it pulls her back into your reach and starts Darkness Rise.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Akali", "start": 28, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 113,
+              "end": 126
+            }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Mordekaiser:Akali:1",
+          "text": "Use Realm of Death on Akali when she is low or has used her escapes; nobody can help her in the Death Realm.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Akali", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Mordekaiser:Akali:2",
+          "text": "Press Indestructible during a trade to absorb her burst. Recast it to heal once her damage is done.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Akali:3",
+          "text": "Hit Akali with Obliterate when she is alone in front of you; it deals extra damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 15,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "isolated", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Akali:4",
+          "text": "Fight when Akali is low on energy. She cannot spam Five Point Strike, so you can walk up and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Akali-Q", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba7ca4587a84ea99386dcfa4d61accf6e0b966632ab5ff9f8b298e1eee5195bb",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Ambessa:0",
+          "text": "Hold Death's Grasp until Ambessa dashes in or walks up to trade; it pulls her into your Darkness Rise aura.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Ambessa", "start": 25, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 88,
+              "end": 101
+            }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Mordekaiser:Ambessa:1",
+          "text": "Press Indestructible when you start trading. It stores damage from both sides, so a long fight leaves you with a bigger shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Mordekaiser:Ambessa:2",
+          "text": "Hit Ambessa with Obliterate while she is alone. It deals more damage to a single target, so keep minions out of the hit.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 17,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "isolated", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Mordekaiser:Ambessa:3",
+          "text": "Land Obliterate and Death's Grasp on her to build Darkness Rise quickly. Then stay on her so the aura keeps burning.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 20,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 50,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Mordekaiser:Ambessa:4",
+          "text": "At level 6, use Realm of Death on Ambessa when she is low. It keeps her allies out, and she cannot escape the fight easily.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Ambessa", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a0d6f2b11cd74aaecc4f94efb5608c76f1fe3d003e2055e97b73afeb94d3f760",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Anivia:0",
+          "text": "Hit her with Death's Grasp to pull her into your aura. She has few ways to get away once you are on her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 13,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Mordekaiser:Anivia:1",
+          "text": "Hit her with Obliterate when she is alone; it deals more damage against a single enemy. Hitting her also builds Darkness Rise.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 13,
+              "end": 23
+            },
+            { "kind": "keyword", "key": "isolated", "start": 36, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 112,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Anivia:2",
+          "text": "Take the damage from her spells and fight back. Indestructible turns what you deal and take into a shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 48,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Mordekaiser:Anivia:3",
+          "text": "Walk around Crystallize or wait for it to melt. Do not run into it when you chase her.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-W", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Anivia:4",
+          "text": "Use Realm of Death on her at level 6 and fight her away from her egg. She cannot dodge once you are inside.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "22f0985ff1183f49f03fea3e6a2e97466cd72c1a66811dad25f4b641ad94147a",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Aurora:0",
+          "text": "Land Death's Grasp when Aurora steps up to trade; it pulls her toward you so you can hit her with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 98,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Mordekaiser:Aurora:1",
+          "text": "Use Realm of Death on Aurora after she spends Across the Veil; she has less to escape with and cannot get help from her team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aurora-W", "start": 46, "end": 61 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Mordekaiser:Aurora:2",
+          "text": "Hit Aurora with Obliterate when she is alone in the lane; it deals more damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 16,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "isolated", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Aurora:3",
+          "text": "Press Indestructible after you have traded for a while; a bigger shield comes from fighting, and recasting it heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Aurora:4",
+          "text": "Stay close once Darkness Rise is active; its aura hurts her if she is next to you, and she is slowed when she tries to back off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "47242ca0a1f8a3f8ba3d0177af6cff156cd489dbb8317e8f30f0b9d5c4f5bd24",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Briar:0",
+          "text": "Hold Realm of Death for Briar once she commits with Certain Death or Blood Frenzy; banishing her takes away her teammates and her healing from your fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-R", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Mordekaiser:Briar:1",
+          "text": "Use Death's Grasp to pull Briar back to you when she tries to leave, then follow up with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 89,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Mordekaiser:Briar:2",
+          "text": "Use Indestructible just before Briar lands Head Rush so the shield soaks her burst, then fight back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Briar", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Briar-Q", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Mordekaiser:Briar:3",
+          "text": "Hit Briar alone with Obliterate, away from minions, so it deals its bonus damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "keyword", "key": "isolated", "start": 10, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 21,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Briar:4",
+          "text": "Stay close to Briar once Darkness Rise is active; its aura keeps hurting her while she tries to heal.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 14, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 25,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7dacd841f0df9796b5ff2839906929a9d46966c3f179e036fd14109009039ead",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Camille:0",
+          "text": "Hit Camille with Death's Grasp when she dashes or sits still on a wall; it pulls her into your reach for a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Camille", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 17,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Mordekaiser:Camille:1",
+          "text": "Stay out of her Tactical Sweep outer edge; getting slowed there lets her hit hard and heal.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-W", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Mordekaiser:Camille:2",
+          "text": "Use Obliterate when only Camille is in range, so it hits harder on a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Camille", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Camille:3",
+          "text": "Press Indestructible just before she stuns you or trades, then recast it to heal back some damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Mordekaiser:Camille:4",
+          "text": "Use Realm of Death on Camille at level 6. She can't be helped, and her Hextech Ultimatum can't trap you in the Death Realm.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Camille", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5aacf56c8f2d07cd5b055e3b941fd5e0c6f99f42277b5d0fd45a8e5aad30f65",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Chogath:0",
+          "text": "Stay out of the smoke cloud Rupture leaves on the ground; step aside before it lands so you are not knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "knocked-up", "start": 100, "end": 110 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Chogath:1",
+          "text": "Pull Cho'Gath in with Death's Grasp when he steps up to last-hit, then hit him with Obliterate while he is alone.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 22,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 84,
+              "end": 94
+            },
+            { "kind": "keyword", "key": "isolated", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:Mordekaiser:Chogath:2",
+          "text": "Keep out of Feral Scream's short range, or you are silenced and cannot use your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "silenced", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Mordekaiser:Chogath:3",
+          "text": "Fight him in longer trades so your Indestructible shield grows, and recast it to heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 35,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Mordekaiser:Chogath:4",
+          "text": "Do not let him eat minions freely; deny his growth and look to hit him early.",
+          "refs": [],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d2172ae4e519b161d9b2d26e034d09758f330c35237176bf750df9f92af506d2",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Darius:0",
+          "text": "Stay out of Apprehend's cone, because being pulled in lets Darius hit you and stack Hemorrhage. Sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 59, "end": 65 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 84,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Darius:1",
+          "text": "Fight when Apprehend is on cooldown. Darius then has a hard time reaching you, so you can trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 11, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Mordekaiser:Darius:2",
+          "text": "Use Death's Grasp to pull Darius into your aura, then follow with Obliterate while he is alone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 66,
+              "end": 76
+            },
+            { "kind": "keyword", "key": "isolated", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Mordekaiser:Darius:3",
+          "text": "Press Indestructible when Darius starts a fight, then recast it to heal back some of the damage you took.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Darius:4",
+          "text": "Land three hits to switch on Darius's weakness: your Darkness Rise aura. It hurts him when he stays close.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 29, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 53,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Mordekaiser:Darius:5",
+          "text": "Walk out of Decimate's edge range, since the handle hits weaker. Hit him back while it winds up.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Mordekaiser:Darius:6",
+          "text": "Save Realm of Death for when Darius is low or his stacks are high. Inside, Noxian Guillotine cannot reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Darius", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Darius-R", "start": 75, "end": 92 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f29ac966430e01a797ed17f6e785204a89999679cc6ec83cd6a6641cfc411df2",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:DrMundo:0",
+          "text": "Hit Obliterate while Mundo is alone, away from minions, for extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "isolated", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:DrMundo:1",
+          "text": "Death's Grasp pulls Mundo in. Rooting him is wasted, since his passive resists the first immobilizing effect, so use it to start a fight after that is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-E", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Mordekaiser:DrMundo:2",
+          "text": "Step on the canister Mundo drops to destroy it, so he can't heal from it.",
+          "refs": [],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Mordekaiser:DrMundo:3",
+          "text": "Use Indestructible when Mundo's Heart Zapper starts, then trade so your shield absorbs his damage. Fight and build the shield before he recasts it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "ability", "key": "DrMundo-W", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Mordekaiser:DrMundo:4",
+          "text": "Keep Realm of Death for when Mundo is low. It cuts him off from help, and Mundo can't recast Maximum Dosage until it ends.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "ability", "key": "DrMundo-R", "start": 93, "end": 107 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Mordekaiser:DrMundo:5",
+          "text": "Dodge Infected Bonesaw, since being slowed lets him close the gap and trade.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d9046f7dafbdc5e208010cd9fb4b7c216a1c6ab8784fc6b198f364afca14b1b",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Fiora:0",
+          "text": "Bait Riposte before you use Death's Grasp. If it lands while she parries, she is not pulled and gets to stun you instead.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 28,
+              "end": 41
+            },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:Mordekaiser:Fiora:1",
+          "text": "Wait for Fiora to spend Riposte before you cast Realm of Death on her. Her parry will cancel it, and the ultimate goes on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 24, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 48,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:Mordekaiser:Fiora:2",
+          "text": "Hit Fiora and her minions with Obliterate to build Darkness Rise. Then stay on top of her, because the aura works best when she is close.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 31,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 51,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Mordekaiser:Fiora:3",
+          "text": "Use Indestructible as you trade, since the shield stores the damage you deal. Recast it to heal when the fight is nearly over.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f594b4d72f8b6afdddfd6b55c15409303316d8be9c56b6ec3554304fcc3ceb2a",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Gangplank:0",
+          "text": "Land Death's Grasp when Gangplank walks up to a keg or to hit a minion; it pulls him into your Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Gangplank", "start": 24, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 95,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Mordekaiser:Gangplank:1",
+          "text": "Hit Gangplank with abilities and attacks to get Darkness Rise running, then stay on him, since his poke is weaker against a fast aura.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 48,
+              "end": 61
+            },
+            { "kind": "keyword", "key": "poke", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Mordekaiser:Gangplank:2",
+          "text": "Use Obliterate when only Gangplank is in range; it hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Gangplank", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:Gangplank:3",
+          "text": "Press Indestructible when kegs are about to blow; the shield soaks the burst, and recasting heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Mordekaiser:Gangplank:4",
+          "text": "Gangplank can clear your Death's Grasp stun-free with Remove Scurvy, so look for the grab when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 25,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Gangplank-W", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Mordekaiser:Gangplank:5",
+          "text": "Use Realm of Death on Gangplank to cut him off from his kegs and his ship's help; he cannot Cannon Barrage you out of it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Gangplank", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 92, "end": 106 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c718f57bd3bb63ccdaf5045fd9343770473486693d6e5bf88a5fc4f5b534a52",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Garen:0",
+          "text": "Pull Garen in with Death's Grasp, then hit him with Obliterate while he is alone. A lone target takes extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 19,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 52,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Mordekaiser:Garen:1",
+          "text": "Fight when Garen has just taken damage. His healing from Perseverance stops for a while after you hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 57,
+              "end": 69
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:Garen:2",
+          "text": "Press Indestructible after trading so the damage you dealt turns into a shield. Recast it to heal.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Garen:3",
+          "text": "Hit Garen with two spells and an attack to switch on Darkness Rise. Then stay next to him so the aura keeps hurting him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 53,
+              "end": 66
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Mordekaiser:Garen:4",
+          "text": "Use Realm of Death on Garen when he is low. His Demacian Justice cannot reach you inside, and you can take his stats.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Garen-R", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Mordekaiser:Garen:5",
+          "text": "Do not let Garen spin on you in melee for long. Judgment hurts a lot and cuts your armor.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Garen-E", "start": 48, "end": 56 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3bcb6f62b7af7f84b52d1b82f4bbcf4f1850c900211e1e7e5b96b37e17a28992",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Gnar:0",
+          "text": "Hit Gnar with Death's Grasp when he hops in or stands at range; it pulls him to you so you can start Darkness Rise.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 14,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 101,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Mordekaiser:Gnar:1",
+          "text": "Hitting Gnar with a basic attack and two abilities quickly turns on Darkness Rise, so trade when he is close and keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 8, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 68,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Mordekaiser:Gnar:2",
+          "text": "Use Obliterate when only Gnar is in range, since it hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Gnar", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Gnar:3",
+          "text": "Press Indestructible after trading damage so the shield is bigger, then recast it to heal back some health.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Gnar:4",
+          "text": "Mega Gnar is slow and tough, so do not fight him alone. Back off until he turns small again.",
+          "refs": [{ "kind": "champion", "key": "Gnar", "start": 5, "end": 9 }],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Mordekaiser:Gnar:5",
+          "text": "Save Realm of Death for Gnar when he is Mega, or low on health, so you can finish him away from his team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Gnar", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4293604825957540785f923cb86c79cecd6d8b5b2ad0de003a6523d0bc4fb303",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Gragas:0",
+          "text": "Stay out of Barrel Roll when it goes off. It slows you more the longer it has waited.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Mordekaiser:Gragas:1",
+          "text": "Hit Gragas with Obliterate when he is alone near you. It hits harder against a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 16,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "isolated", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Gragas:2",
+          "text": "Use Indestructible when you trade with Gragas. Your shield grows from damage you deal, so keep fighting to build it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Gragas", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Gragas:3",
+          "text": "Don't chase Gragas far. Body Slam has a short cooldown and gets him out when he lands it.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Mordekaiser:Gragas:4",
+          "text": "Land three hits on Gragas to turn on Darkness Rise. Combine Death's Grasp and Obliterate to get there fast.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 19, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 37,
+              "end": 50
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 60,
+              "end": 73
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 78,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c253d17ee996e64747a6a94002cbedf6ec015bfd992ffd364e60457864fcb38",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Gwen:0",
+          "text": "Pull Gwen in with Death's Grasp when she steps up to hit minions, then follow with Obliterate while she is alone.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 18,
+              "end": 31
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 83,
+              "end": 93
+            },
+            { "kind": "keyword", "key": "isolated", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Mordekaiser:Gwen:1",
+          "text": "Hold Indestructible until Gwen commits to a trade, so the shield has stored damage and absorbs her burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Mordekaiser:Gwen:2",
+          "text": "Stay close and keep hitting her so Darkness Rise turns on. Its aura hurts her when she stands next to you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 35,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Gwen:3",
+          "text": "Do not waste Realm of Death while Hallowed Mist is up; wait until she is not protected, then use it to kill her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 13,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Gwen-W", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Mordekaiser:Gwen:4",
+          "text": "Hit Gwen with Death's Grasp after she uses Skip 'n Slash. She cannot dash away and is pulled back to you.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Gwen-E", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9ddb3e071f0028f94195d88e1738a0d5bf260c552751ef4753c8b2291a7f4e46",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Heimerdinger:0",
+          "text": "Land Death's Grasp to pull Heimerdinger away from his turrets, then fight him there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 27,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Mordekaiser:Heimerdinger:1",
+          "text": "Hit Heimerdinger with Obliterate when he is alone; it deals extra damage to a single target.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 22,
+              "end": 32
+            },
+            { "kind": "keyword", "key": "isolated", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Heimerdinger:2",
+          "text": "Walk up when his grenade is on cooldown; it is his main stun and escape.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Mordekaiser:Heimerdinger:3",
+          "text": "Use Realm of Death on Heimerdinger to cut him off from his turrets. Nothing outside can help him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 22,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Mordekaiser:Heimerdinger:4",
+          "text": "Hit him with abilities to get Darkness Rise running, then press on. Trading builds your Indestructible shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 30,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 88,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e2c534413eef2c26cb98f82376247ba8edb1820b30e366491728a850cb9713f1",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Illaoi:0",
+          "text": "Pull Illaoi out of her Tentacles with Death's Grasp, then fight her away from the terrain where they spawn.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 38,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:Mordekaiser:Illaoi:1",
+          "text": "Take your fights early and keep trading, so Indestructible has a big shield to absorb her burst.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 44,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:Mordekaiser:Illaoi:2",
+          "text": "If Illaoi pulls your spirit out with Test of Spirit, hit her. Damaging her cuts the spirit's time short.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Illaoi-E", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Illaoi:3",
+          "text": "Use Realm of Death on Illaoi to fight her alone, away from every Tentacle.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Illaoi", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Mordekaiser:Illaoi:4",
+          "text": "Land Obliterate on Illaoi alone, not on a minion wave, because it hits harder against a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Illaoi", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0f54dad273e75861a0568460efffdf049e1edb2b804a7bc5b3e1c97068591237",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Irelia:0",
+          "text": "Hit Irelia with Death's Grasp when she dashes in or lines up behind a minion. Pulling her to you sets up your Obliterate.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 16,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 110,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:1",
+          "text": "Fight Irelia when no minions are near. Without them Bladesurge has nothing to dash to, so she has trouble getting in and out.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:2",
+          "text": "Land Obliterate on Irelia when she is alone, with no minions beside her. It deals more damage to a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Irelia", "start": 19, "end": 25 },
+            { "kind": "keyword", "key": "isolated", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:3",
+          "text": "Hold your big damage while Irelia charges Defiant Dance. Wait until it ends, then hit her.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Irelia-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:4",
+          "text": "Move out of the way of her Flawless Duet blades, because being stunned by it lets her kill you. Keep your distance from the blades.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 27, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:5",
+          "text": "Save Realm of Death for Irelia once she is low or has used her dashes. Nobody can help her in there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Irelia", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Mordekaiser:Irelia:6",
+          "text": "Trade with Irelia while Indestructible has built up a shield from your hits. Use it when she goes all in on you.",
+          "refs": [
+            { "kind": "champion", "key": "Irelia", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 24,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6ba0ae7dece974e66956cc8c36fb44356590e02a96ff5a4980c6a03cea7811f6",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Jax:0",
+          "text": "Do not auto-attack Jax while Counter Strike is up; wait it out, then fight when he is stunned or out of his stance.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Jax-E", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Mordekaiser:Jax:1",
+          "text": "Pull Jax in with Death's Grasp after he commits his dash, then hit him with Obliterate while he is alone.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 5, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 17,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 76,
+              "end": 86
+            },
+            { "kind": "keyword", "key": "isolated", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Mordekaiser:Jax:2",
+          "text": "Build up Indestructible by trading, and use it when Jax jumps on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 9,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Jax", "start": 52, "end": 55 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Jax:3",
+          "text": "Jax gets stronger the longer he keeps hitting you, so use Realm of Death to cut off his Relentless Assault fight and take him alone.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 0, "end": 3 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 58,
+              "end": 72
+            },
+            { "kind": "ability", "key": "Jax-passive", "start": 88, "end": 106 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0644d59955edcdd4c4e62ea586517dd0f61ab1440679353550bfe4765b7eddb2",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Jayce:0",
+          "text": "Hit Death's Grasp on Jayce when he swaps to hammer and steps in; it pulls him straight into your reach.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Jayce", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Mordekaiser:Jayce:1",
+          "text": "Trade with Obliterate when only Jayce is near, since it hits harder against a lone target. Keep minions out of the line.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Jayce", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Mordekaiser:Jayce:2",
+          "text": "Hit Jayce with two attacks or spells and a minion or other champion for Darkness Rise. Then stay on him so the aura hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 72,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Mordekaiser:Jayce:3",
+          "text": "Press Indestructible after you have taken poke or traded, then recast it to heal back some of the shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Mordekaiser:Jayce:4",
+          "text": "At level 6, use Realm of Death on Jayce to cut him off from help. His Shock Blast and Thundering Blow are of little use to him inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Jayce", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b14f02fde9b4eaf803cf2f30d2e7812e457d21912e4d1cc357c03be51248d5f6",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:KSante:0",
+          "text": "Hit K'Sante with Obliterate when he is alone in front of you; it hits harder against a single enemy.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 17,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "isolated", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:KSante:1",
+          "text": "Use Indestructible when you trade; the damage you deal and take builds the shield, so fight first and cast it mid-trade.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:KSante:2",
+          "text": "Pull K'Sante in with Death's Grasp when he walks up to trade, then follow with Obliterate.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 21,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 79,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:KSante:3",
+          "text": "Land three hits to switch on Darkness Rise, then stay close. Its aura keeps hurting him while he is near you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 29,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Mordekaiser:KSante:4",
+          "text": "Realm of Death on K'Sante once he is low, or when he has used his stun. He cannot get help inside, and you keep his stats if he dies.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 0,
+              "end": 14
+            },
+            { "kind": "champion", "key": "KSante", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1acf5d14db03c5b90689df4dcf3591cf44f7aa3f47a50612253dfebc6ec83e04",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Kayle:0",
+          "text": "Fight Kayle early and hard, before she reaches level 6 and gets her range.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Mordekaiser:Kayle:1",
+          "text": "Land Death's Grasp to pull Kayle into you, then hit her with Obliterate while she is alone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Kayle", "start": 27, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 61,
+              "end": 71
+            },
+            { "kind": "keyword", "key": "isolated", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Mordekaiser:Kayle:2",
+          "text": "Use Indestructible when you trade with Kayle to absorb her poke. Damage you deal also feeds the shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Kayle", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Mordekaiser:Kayle:3",
+          "text": "Use Realm of Death on Kayle when she is low or after she has used her escape. Nobody can save her inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Kayle", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Mordekaiser:Kayle:4",
+          "text": "Kayle's Divine Judgment makes her or an ally immune for a short time. Hold your damage until it ends, but stay close so you can still chase her.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Kayle-R", "start": 8, "end": 23 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fea66ef2c0066e784160806a8401a8736ae6e479b62438b373ed13434ed47af5",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Kennen:0",
+          "text": "Hit Kennen with Death's Grasp when he steps up to poke; it drags him to you so you can fight him up close.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Mordekaiser:Kennen:1",
+          "text": "Hit Kennen with Obliterate when he is alone in the lane; it hits harder against a single enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 16,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Mordekaiser:Kennen:2",
+          "text": "Press Indestructible when Kennen is about to land his third Mark of the Storm, or in the middle of a trade, to soak up his damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Kennen", "start": 26, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Kennen-passive",
+              "start": 60,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Mordekaiser:Kennen:3",
+          "text": "Use Realm of Death on Kennen at level 6 when he is low. He is flimsy, and in there he cannot escape you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Kennen", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Mordekaiser:Kennen:4",
+          "text": "Stay close to Kennen once Darkness Rise is active; its aura keeps hurting him while he tries to run.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 14, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 26,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c8c6190c7fca7e188d35474d314856f6b07cc7202fd0f42aeabaabd272918bb1",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Kled:0",
+          "text": "Hit Death's Grasp when Kled walks up to the wave; it pulls him into your Darkness Rise aura and Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Kled", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 73,
+              "end": 86
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 96,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Mordekaiser:Kled:1",
+          "text": "Hit Kled with Obliterate when no minions are near him; it deals bonus damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 14,
+              "end": 24
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Mordekaiser:Kled:2",
+          "text": "Press Indestructible after a trade to turn the damage you dealt into a shield. Recast it to heal when you are hurt.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Mordekaiser:Kled:3",
+          "text": "Once Kled is off his mount, he cannot use Jousting, so push in and fight him then.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Kled-E", "start": 42, "end": 50 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Mordekaiser:Kled:4",
+          "text": "Use Realm of Death on Kled when he is low or when you are alone with him. His teammates cannot help him inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Kled", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bc71e5a1156eeeed3e726565499416dff3741451d8eb4853327faa4c1fd349d7",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Malphite:0",
+          "text": "Walk out of Seismic Shard range when you can; the slow ruins your chase and gives Malphite speed.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Malphite", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Malphite:1",
+          "text": "Land Death's Grasp to pull Malphite into your Obliterate, then hit him by himself for the bonus damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Malphite", "start": 27, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 46,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Mordekaiser:Malphite:2",
+          "text": "Hit Malphite with abilities to build Darkness Rise fast, then stay on him; the aura beats his tankiness over time.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 37,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Mordekaiser:Malphite:3",
+          "text": "Hold Indestructible for when Malphite goes for his Thunderclap trade; the shield soaks it, and recast to heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Malphite", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Malphite-W", "start": 51, "end": 62 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Mordekaiser:Malphite:4",
+          "text": "Malphite's Unstoppable Force knocks you up and cannot be stopped; stay spread from allies and keep Indestructible ready at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Malphite-R", "start": 11, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 99,
+              "end": 113
+            }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a43a2cdb10b175bec374d6a0fa06a88906da1e1e1b055d16b6066de743a33002",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Naafiri:0",
+          "text": "Aim Death's Grasp at Naafiri when she dashes in or backs away; it pulls her back to you into your damage aura.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Mordekaiser:Naafiri:1",
+          "text": "Use Obliterate when only Naafiri is in range, away from her Packmates; it hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Mordekaiser:Naafiri:2",
+          "text": "Press Indestructible when you see her commit to a trade; the shield grows from the damage you deal and take, and the recast heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Naafiri:3",
+          "text": "Use Realm of Death on Naafiri at level 6. Her Packmates cannot follow, so you fight her alone and she can't be saved by her team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Mordekaiser:Naafiri:4",
+          "text": "Land a few hits on her to start Darkness Rise, then stay close and fight; she has to trade into your aura.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 32,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "13c9a2b440bb7d032fb2b8d03f199206d1af3a99567cc3f188c6c7a888f4b4a1",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Nasus:0",
+          "text": "Hit Nasus with Obliterate when he is alone near a minion wave; it hits harder against a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 15,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "isolated", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:Nasus:1",
+          "text": "Hit him with Death's Grasp to pull him into your Darkness Rise aura and Obliterate, then fight while the aura is active.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 13,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 49,
+              "end": 62
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 72,
+              "end": 82
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Mordekaiser:Nasus:2",
+          "text": "Do not let Nasus farm for free. Harass him when he goes for a Siphoning Strike last hit so his stacks stay low.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 62, "end": 78 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Mordekaiser:Nasus:3",
+          "text": "Trade when Wither is on cooldown. Once it is on you, its slow grows over time, so fight early or back off.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 11, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Mordekaiser:Nasus:4",
+          "text": "Take fights with Indestructible ready; its shield grows with the damage you deal and take, and recasting it heals you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 17,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Nasus:5",
+          "text": "Save Realm of Death for when Nasus has used Fury of the Sands or is low on Health; it takes him away from his team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Nasus", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Nasus-R", "start": 44, "end": 61 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "890f9293e091e7b7c3992932ed07677b7f6fccda1358f8a2cf81aa00bf3569a6",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Olaf:0",
+          "text": "Land Death's Grasp to pull Olaf in, then hit him with Obliterate while he is alone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Olaf", "start": 27, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 54,
+              "end": 64
+            },
+            { "kind": "keyword", "key": "isolated", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Mordekaiser:Olaf:1",
+          "text": "Do not use Realm of Death on Olaf while Ragnarok is active, since he is immune to disables then. Wait until it ends.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Olaf", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Olaf-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Mordekaiser:Olaf:2",
+          "text": "Stay away from Olaf's axe on the ground, since he uses it to throw Undertow again quickly and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Olaf-Q", "start": 67, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:Mordekaiser:Olaf:3",
+          "text": "Trade with Indestructible ready; the shield soaks his damage and the recast heals you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 11,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Olaf:4",
+          "text": "Do not leave Olaf at low health; he hits harder and heals more. Finish him quickly or back off.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d6d13b1548648d43ea275b59d07c5414a72267b071220ae17937f4400dbb2a75",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Ornn:0",
+          "text": "Stay out of wall range when Ornn has Searing Charge ready; hitting terrain next to you gets you knocked up and stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ornn-E", "start": 37, "end": 51 },
+            { "kind": "keyword", "key": "knocked-up", "start": 96, "end": 106 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 118 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Mordekaiser:Ornn:1",
+          "text": "Hit Ornn with Obliterate when he is alone with no minions near him; it hits harder against a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 14,
+              "end": 24
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Mordekaiser:Ornn:2",
+          "text": "Use Death's Grasp to pull Ornn out of position, then follow with Obliterate and attacks to start Darkness Rise.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 65,
+              "end": 75
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 97,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Ornn:3",
+          "text": "Trade with Indestructible up so you can soak his poke and then break his hits with the shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "poke", "start": 49, "end": 53 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Mordekaiser:Ornn:4",
+          "text": "Realm of Death on Ornn cuts him off from his team, so his crowd control combos with allies cannot reach you inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 0,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Ornn", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "29ecbcc79215158fbb930c0653b35a3c071fa308869a88ae7f398ffae6cbc62b",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Pantheon:0",
+          "text": "Hit Pantheon with Obliterate when he is alone in front of you; it does extra damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 18,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Pantheon:1",
+          "text": "Pull Pantheon in with Death's Grasp when he tries to leave, then fight him while he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 22,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Mordekaiser:Pantheon:2",
+          "text": "Don't swing at Pantheon while he braces Aegis Assault facing you; step around to his side or wait it out.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 40, "end": 53 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Mordekaiser:Pantheon:3",
+          "text": "Press Indestructible after taking Pantheon's stun and trade; the shield soaks his follow-up hits.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Pantheon", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Pantheon:4",
+          "text": "Use Realm of Death on Pantheon in a fight; no one can help him and he can't jump to allies.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Pantheon", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fabbfce722b1c149c88e3d35fd6b472992525d883f87528f6b6b5023c2c81f3b",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Quinn:0",
+          "text": "Pull Quinn in with Death's Grasp when she walks up to farm, then follow with Obliterate while she is alone with you.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 19,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 77,
+              "end": 87
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Mordekaiser:Quinn:1",
+          "text": "Hit Quinn with Obliterate when no minions are near her; it hurts more against a single enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 15,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Mordekaiser:Quinn:2",
+          "text": "Trade when Quinn has used Vault; she has fewer ways to get away. Build Darkness Rise by hitting her with abilities and attacks, then stay on her.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Quinn-E", "start": 26, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 71,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Quinn:3",
+          "text": "Use Indestructible when Quinn's Blinding Assault or Vault is about to land, then recast it to heal after the trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Quinn", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 32, "end": 48 },
+            { "kind": "ability", "key": "Quinn-E", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:Mordekaiser:Quinn:4",
+          "text": "At level 6, use Realm of Death on Quinn to take her away from her team. She cannot dodge it with Vault once it has begun.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Quinn", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Quinn-E", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c1f54d140da195f72993e53ece53a6ae44d32e4f92d34d22d63efd046ad14bf",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Renekton:0",
+          "text": "Stay out of melee range of Renekton when his Fury is high; Ruthless Predator will stun you for longer.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Renekton-W", "start": 59, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Mordekaiser:Renekton:1",
+          "text": "Use Death's Grasp to pull Renekton back after he dashes in, so he can't escape.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Renekton", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Mordekaiser:Renekton:2",
+          "text": "Hit Renekton with Obliterate when he is alone; it deals more damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Renekton", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 18,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Renekton:3",
+          "text": "Fight back to build Indestructible, then activate it when Renekton trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 20,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Renekton", "start": 58, "end": 66 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Renekton:4",
+          "text": "Use Realm of Death on Renekton at level 6 to cut him off from his Fury and his team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Renekton", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "46c15a0860604bb779a46aa06a15e33296903c5aa467713b348d001471682f19",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Riven:0",
+          "text": "Hold Indestructible for when Riven jumps in with Ki Burst; the shield soaks her burst and the recast heals you back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Riven", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Riven-W", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Mordekaiser:Riven:1",
+          "text": "Use Death's Grasp to yank Riven back when she dashes away, then follow with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Riven", "start": 26, "end": 31 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 76,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Mordekaiser:Riven:2",
+          "text": "Hit Riven with Obliterate while she is alone with you; it deals more damage against a single enemy.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 15,
+              "end": 25
+            },
+            { "kind": "keyword", "key": "isolated", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Riven:3",
+          "text": "Take Riven into Realm of Death at level 6 when she is low; her teammates cannot help her and her Valor dashes stay inside the arena.",
+          "refs": [
+            { "kind": "champion", "key": "Riven", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Riven-E", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Mordekaiser:Riven:4",
+          "text": "Stay in close once Darkness Rise is active; its aura keeps hurting Riven while she tries to dance in and out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 19,
+              "end": 32
+            },
+            { "kind": "champion", "key": "Riven", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "025767a919dcdc38f50c566f044603981761f9fc94954e8b6f4a8e2fdc869a68",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Rumble:0",
+          "text": "Aim Obliterate so it hits only Rumble, not minions beside him, for extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Rumble", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Rumble:1",
+          "text": "Use Death's Grasp to pull Rumble into your reach, then fight with your passive up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Rumble", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Mordekaiser:Rumble:2",
+          "text": "Trade hard before using Indestructible so the shield is big. Use it when Rumble's spells are about to land.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 24,
+              "end": 38
+            },
+            { "kind": "champion", "key": "Rumble", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Rumble:3",
+          "text": "Attack Rumble when he is Overheating. He can't cast spells, but his basic attacks still hit hard.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Rumble:4",
+          "text": "Fight in Rumble's burning trail from The Equalizer only if you must. It slows you and does steady damage, so step out of it.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Rumble-R", "start": 37, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8c84d8114b5608278ffb78afc534c1702fafe0c5c8f0c5d63451433e46e84e96",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Sett:0",
+          "text": "Hit Sett with Death's Grasp when he steps in to trade; it pulls him toward you into your Darkness Rise aura.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 14,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 89,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Mordekaiser:Sett:1",
+          "text": "Use Indestructible when Sett hits you hard in a trade. It turns the damage into a shield, and recasting it heals you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Sett", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Mordekaiser:Sett:2",
+          "text": "Land three hits on Sett to start Darkness Rise. Obliterate and Death's Grasp both count, so open with them.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 19, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 33,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 48,
+              "end": 58
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 63,
+              "end": 76
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Mordekaiser:Sett:3",
+          "text": "Use Obliterate when Sett is the only enemy it hits. It hits harder against a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Sett", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Mordekaiser:Sett:4",
+          "text": "Save Realm of Death for when Sett is low or you want a safe duel. No one can help him while he is cut off from his team.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Sett", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7bcfddb726580aa4fbd187cb0769206e1a08985b670a540b8d5b156984f2615e",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Shen:0",
+          "text": "Walk out of Shen's Shadow Dash line when he aims at you. If he misses, hit him with Obliterate while he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Shen-E", "start": 19, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 84,
+              "end": 94
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Shen:1",
+          "text": "Use Death's Grasp to pull Shen back toward you when he tries to walk away. Follow up with Obliterate while he is close.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Shen", "start": 26, "end": 30 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 90,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Mordekaiser:Shen:2",
+          "text": "Fight Shen when your allies are not near. Obliterate hits harder when Shen is the only enemy it hits, and he is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 6, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 42,
+              "end": 52
+            },
+            { "kind": "champion", "key": "Shen", "start": 70, "end": 74 },
+            { "kind": "keyword", "key": "isolated", "start": 112, "end": 120 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Mordekaiser:Shen:3",
+          "text": "Hit Shen with abilities and attacks to build up Darkness Rise, then stay close so its aura keeps hurting him.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 48,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Mordekaiser:Shen:4",
+          "text": "Trade first, then press Indestructible to turn the damage you dealt into a shield. Recast it to heal once Shen's damage runs out.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 24,
+              "end": 38
+            },
+            { "kind": "champion", "key": "Shen", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Mordekaiser:Shen:5",
+          "text": "Save Realm of Death for when Shen tries to teleport to an ally with Stand United. Inside the Death Realm he can't leave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Shen", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Shen-R", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "337203ed395fb71628b4fb5394facf56b44b6eb8f95b803f5a1b942d3e72bcfa",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Singed:0",
+          "text": "Dodge Singed's Mega Adhesive, or he can Fling you into it and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Singed-W", "start": 15, "end": 28 },
+            { "kind": "ability", "key": "Singed-E", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Singed:1",
+          "text": "Use Death's Grasp to pull Singed back when he runs away through his Poison Trail.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Singed", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Singed-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Mordekaiser:Singed:2",
+          "text": "Hit Singed with Obliterate while he is alone; it does more damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 16,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "isolated", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Singed:3",
+          "text": "Build up Indestructible by trading with Singed, then use it when his poison is ticking on you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 9,
+              "end": 23
+            },
+            { "kind": "champion", "key": "Singed", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:Singed:4",
+          "text": "At level 6, use Realm of Death on Singed so his allies and his trail cannot help him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Singed", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f66b283bee303f961906677b851e0b868824ffec4f7670b50ec985466642c9c3",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Sion:0",
+          "text": "Keep Obliterate aimed at Sion alone when you can; it hits harder against one isolated target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Sion", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "isolated", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "isolated", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Sion:1",
+          "text": "Stay out of Decimating Smash range while Sion charges. A long charge means a long stun, so step aside when you see it.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 41, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Mordekaiser:Sion:2",
+          "text": "Don't use Realm of Death on Sion while Glory in Death is active. It does nothing to him then.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 10,
+              "end": 24
+            },
+            { "kind": "champion", "key": "Sion", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Sion-passive", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Mordekaiser:Sion:3",
+          "text": "Use Indestructible when Sion's Soul Furnace is about to blow, so his burst hits your shield.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sion-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Mordekaiser:Sion:4",
+          "text": "Pull Sion in with Death's Grasp, then hit him with Obliterate to start Darkness Rise.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 18,
+              "end": 31
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 51,
+              "end": 61
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 71,
+              "end": 84
+            }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d927b7994ac9de177a78598dc7a88827f3d8acc24ab23e6d9653c8e9fdae67d",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:TahmKench:0",
+          "text": "Land Death's Grasp to pull Tahm Kench into your Obliterate and Darkness Rise; hitting both builds Darkness Rise fast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "TahmKench", "start": 27, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 48,
+              "end": 58
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 63,
+              "end": 76
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 98,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:1",
+          "text": "Use Obliterate when only Tahm Kench is in range, since it hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "TahmKench", "start": 25, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:2",
+          "text": "Press Indestructible after you trade, so the damage you dealt becomes a shield. Recast it to heal if you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:3",
+          "text": "Step out of the line of Tongue Lash. Taking a hit leaves you slowed, and a third stack makes it stun you.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:4",
+          "text": "When Tahm Kench channels Abyssal Dive, step away from the spot where he will land, or he will knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:5",
+          "text": "Tahm Kench can shield with Thick Skin. Trade while it is down, or hold your burst until the shield fades.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "TahmKench-E", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Mordekaiser:TahmKench:6",
+          "text": "Realm of Death on Tahm Kench removes the enemy's allies and the jungler, so you can fight him one on one.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 0,
+              "end": 14
+            },
+            { "kind": "champion", "key": "TahmKench", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2b2f47e78bc498f7d12de37f1984818a5caeb02067543da3bbe201a071d6fc09",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Teemo:0",
+          "text": "Close the gap right after you land Death's Grasp. It pulls Teemo toward you and gives you a chance to start Darkness Rise.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 35,
+              "end": 48
+            },
+            { "kind": "champion", "key": "Teemo", "start": 59, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 108,
+              "end": 121
+            }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Mordekaiser:Teemo:1",
+          "text": "Watch for Teemo hiding in brush. Walk around it, because Noxious Trap mushrooms are stealthed and he sets them there.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Teemo-R", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Mordekaiser:Teemo:2",
+          "text": "Use Indestructible in the middle of a trade, once your shield has stored damage from Teemo's poke. Recast it to heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Teemo", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Teemo:3",
+          "text": "Obliterate hits harder when only one enemy is hit, so use it on Teemo when no minions are in the way.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 0,
+              "end": 10
+            },
+            { "kind": "champion", "key": "Teemo", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Mordekaiser:Teemo:4",
+          "text": "Save Realm of Death for level 6 to cut Teemo off from his mushrooms and his escape. He can't use his mushrooms against you inside it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Teemo", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Mordekaiser:Teemo:5",
+          "text": "Blinding Dart makes your basic attacks miss, so back off while you're blinded and use Obliterate instead.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 0, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 86,
+              "end": 96
+            }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "acf50c8c16baeb60a9ae0c7bdaa8a49254e9dfdde06c9a43fdb25d183e1084b2",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Tryndamere:0",
+          "text": "Hit Tryndamere with several abilities to charge Darkness Rise quickly, then stay on him while the aura burns.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 4, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 48,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Mordekaiser:Tryndamere:1",
+          "text": "Use Obliterate on him when he is alone with no minions near him; it hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "isolated", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:Tryndamere:2",
+          "text": "Wait out Undying Rage before using Realm of Death; he can't be killed while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 9, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 35,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Mordekaiser:Tryndamere:3",
+          "text": "Pull Tryndamere with Death's Grasp when he stays close to your minions, so you get free hits on him.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 5, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 21,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Mordekaiser:Tryndamere:4",
+          "text": "Press Indestructible after trading to bank a shield, then recast it to heal if his Spinning Slash catches you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "46edce0e8cea8db5e9f3971c3c15b485aec4e5a154f5378a2b2c524a5d5f0bc0",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Urgot:0",
+          "text": "Hit Obliterate on Urgot when he is alone, without minions near him. It hits harder against a single enemy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Urgot", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "isolated", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:Mordekaiser:Urgot:1",
+          "text": "Pull Urgot in with Death's Grasp, then hit him with Obliterate.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 5, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 19,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 52,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Mordekaiser:Urgot:2",
+          "text": "Watch for Disdain; its stun hurts most when you are walking up to him. Hold Indestructible if you cannot dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 10, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 23, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 76,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Mordekaiser:Urgot:3",
+          "text": "Save Realm of Death for when Urgot is low on health. Alone in there he cannot use Fear Beyond Death.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 5,
+              "end": 19
+            },
+            { "kind": "champion", "key": "Urgot", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Urgot-R", "start": 82, "end": 99 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "780770e836a2b9c0030039752a3b3b58be2b76840b1d4ec785069c3e39c1f525",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Varus:0",
+          "text": "Walk up and land Death's Grasp to pull Varus into your range, then hit him with Obliterate. He is much weaker once you are on top of him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 17,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Varus", "start": 39, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 80,
+              "end": 90
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:Mordekaiser:Varus:1",
+          "text": "Stay out of a charged Piercing Arrow's line. Step sideways or stay near minions, because Varus can fire it from very long range.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 22, "end": 36 },
+            { "kind": "champion", "key": "Varus", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Mordekaiser:Varus:2",
+          "text": "Press Indestructible after trading some damage so the shield soaks his poke. Recast it to heal if the shield is not used up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "keyword", "key": "poke", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Varus:3",
+          "text": "Land Obliterate on Varus when he is alone, with no minions in the hit area. It hits harder against a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 5,
+              "end": 15
+            },
+            { "kind": "champion", "key": "Varus", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "isolated", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Varus:4",
+          "text": "Use Realm of Death on Varus at level 6 when he is low or has used his escapes. His ultimate and allies cannot help him inside.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Varus", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Mordekaiser:Varus:5",
+          "text": "Do not fight inside the ground patch from Hail of Arrows. It leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 42, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "552939d5802965fc45a21da4665daa38e2639c9a3ac23578d1a3603a301e145e",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Vayne:0",
+          "text": "Hit Vayne with Death's Grasp to pull her into your aura. She is fragile and cannot stay up for long once close.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 15,
+              "end": 28
+            }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Mordekaiser:Vayne:1",
+          "text": "Do not stand with your back to a wall when Vayne is near. Condemn will stun you if it knocks you into terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 43, "end": 48 },
+            { "kind": "ability", "key": "Vayne-E", "start": 58, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Mordekaiser:Vayne:2",
+          "text": "Use Obliterate on Vayne when she is alone near you for more damage. Hitting only her with it makes it hit harder.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Vayne", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Vayne:3",
+          "text": "Use Realm of Death on Vayne to cut her off from help. She has no one to peel her and cannot easily kite you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Vayne", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:Mordekaiser:Vayne:4",
+          "text": "Use Indestructible when Vayne is about to trade with you; it blunts her Silver Bolts and attacks.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Vayne-W", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0cde580b4c89c524b9d63e7d31b0cd9c8c351a38b0a2e40f352c76c6f6f2aad",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Vladimir:0",
+          "text": "Hit Vladimir with Obliterate when he is alone in the area; it hurts more against a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 18,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "isolated", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Mordekaiser:Vladimir:1",
+          "text": "Land Death's Grasp to pull Vladimir in, then fight him close so Darkness Rise starts working.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 5,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Vladimir", "start": 27, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 64,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Mordekaiser:Vladimir:2",
+          "text": "Press Indestructible after trading with Vladimir; the damage you dealt becomes a bigger shield. Recast it to heal.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "Vladimir", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Mordekaiser:Vladimir:3",
+          "text": "Wait out Sanguine Pool before you attack, because Vladimir cannot be targeted while in it. Do not stay inside the pool, as it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Vladimir", "start": 50, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 126, "end": 131 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Mordekaiser:Vladimir:4",
+          "text": "Use Realm of Death on Vladimir at level 6 when he is low. His allies and his Hemoplague cannot reach you in there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Vladimir", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 77, "end": 87 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4a53b5d0428270be532c22be3af47c27bf2d93e0f4a0370d5a51b2917178c5aa",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Volibear:0",
+          "text": "Pull Volibear back with Death's Grasp when he leaps in or tries to run off. It lands after a short delay, so aim where he is heading.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 24,
+              "end": 37
+            }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Mordekaiser:Volibear:1",
+          "text": "Use Obliterate when only Volibear is hit, such as with no minions in the way. It hits harder against an isolated target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Volibear", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "isolated", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Mordekaiser:Volibear:2",
+          "text": "Hit Volibear with three attacks or spells to switch on Darkness Rise, then stay next to him so the aura keeps burning.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 55,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Mordekaiser:Volibear:3",
+          "text": "Press Indestructible after trading, once you have stored a lot of damage. Recast it to heal when the shield is about to run out.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Mordekaiser:Volibear:4",
+          "text": "Use Realm of Death on Volibear at level 6. In the Death Realm he cannot use his teammates or turret dives, and you steal his stats.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Volibear", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f955dbfb6a5e642d3e9cd314faca4614182f5fc1138ff9be113f47e0327b8cf4",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:XinZhao:0",
+          "text": "Pull Xin Zhao back with Death's Grasp when he runs at you, then follow with Obliterate while he is alone.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 5, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 24,
+              "end": 37
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 76,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Mordekaiser:XinZhao:1",
+          "text": "Fight him until Darkness Rise is active, then stay close; the aura keeps hurting him while he trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 16,
+              "end": 29
+            }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Mordekaiser:XinZhao:2",
+          "text": "Press Indestructible when Xin Zhao starts his Three Talon Strike combo; the shield soaks it, and recast it to heal afterward.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 6,
+              "end": 20
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 46, "end": 64 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Mordekaiser:XinZhao:3",
+          "text": "Aim Obliterate at Xin Zhao when no minions are next to him; it does bonus damage to a lone target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:XinZhao:4",
+          "text": "Use Realm of Death on Xin Zhao once he is low. His Crescent Guard cannot save him there, as nobody else can reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 51, "end": 65 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5a73d31f3f7a3c82df5b28d924c045248a07fb6e2a18d8d386120e16bb8736e",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Yasuo:0",
+          "text": "Aim Death's Grasp at Yasuo when he dashes or stands in a line with minions; it pulls him to you so you can follow up with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 122,
+              "end": 132
+            }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:Mordekaiser:Yasuo:1",
+          "text": "Use Obliterate when only Yasuo is in its path, away from minions, so it hits harder as a single target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 4,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Mordekaiser:Yasuo:2",
+          "text": "Press Indestructible after you have traded for a while, not before; it stores damage you deal and take, so a fuller bar gives a bigger shield.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Yasuo:3",
+          "text": "Stay close and keep hitting him to turn on Darkness Rise; its aura hurts him every second he stands near you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 43,
+              "end": 56
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Mordekaiser:Yasuo:4",
+          "text": "Use Realm of Death on Yasuo at level 6 when you can fight him alone; his Wind Wall cannot help him there and he is slowed as you cast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 73, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 115, "end": 121 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:Mordekaiser:Yasuo:5",
+          "text": "Death's Grasp is a projectile, so wait until Wind Wall is on cooldown before you throw it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 0,
+              "end": 13
+            },
+            { "kind": "ability", "key": "Yasuo-W", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "76ebb69fac4c618d2190c58bc10a14c0a8dc89e1a09c832776d98866c95380af",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Yone:0",
+          "text": "Aim Death's Grasp at Yone when he steps in to trade; it pulls him toward you, so you can follow up with Obliterate.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 104,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Mordekaiser:Yone:1",
+          "text": "Hit Yone with Obliterate while no minions are next to him; it hits harder against a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 14,
+              "end": 24
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Mordekaiser:Yone:2",
+          "text": "Trade with Yone before using Indestructible, because the shield grows from the damage you deal and take. Press it when his big hits come.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 11, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 29,
+              "end": 43
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Mordekaiser:Yone:3",
+          "text": "Land three hits on Yone to turn on Darkness Rise, then stay on him. Its aura keeps hurting him while he stands close.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 35,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Mordekaiser:Yone:4",
+          "text": "Use Realm of Death on Yone to cut off his shield and escape tools. Fight him straight up inside; you keep his stolen stats if he dies there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d842be9633f774a925b8d32528bdcbd5a2d56c3df3ab9f6cb47361aa6287425f",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Yorick:0",
+          "text": "Hit Yorick with Obliterate when he is alone, with no Mist Walkers next to him. It deals more damage to a single target.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 4, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 16,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Mordekaiser:Yorick:1",
+          "text": "Use Death's Grasp to pull Yorick out of his Dark Procession wall or away from his Mist Walkers, then fight him while he is separated from them.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 4,
+              "end": 17
+            },
+            { "kind": "champion", "key": "Yorick", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Yorick-W", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Mordekaiser:Yorick:2",
+          "text": "Trade by hitting Yorick with several attacks and spells so Darkness Rise turns on. Then stay next to him, because its aura keeps damaging him.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 17, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 59,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Mordekaiser:Yorick:3",
+          "text": "Press Indestructible after you have traded to turn the damage you dealt into a shield. Recast it to heal when you are low.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Mordekaiser:Yorick:4",
+          "text": "Use Realm of Death on Yorick in a fight. His Maiden and Mist Walkers cannot reach you inside, so it is a fair one-on-one.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 4,
+              "end": 18
+            },
+            { "kind": "champion", "key": "Yorick", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0993fd416c4a51445fb9d91c53d2fce8f2acf20954a3b34982f533e264a50682",
+      "tips": [
+        {
+          "id": "top:Mordekaiser:Zaahen:0",
+          "text": "Pull Zaahen into your range with Death's Grasp, then follow with Obliterate while he is alone so it hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 5, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 33,
+              "end": 46
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 65,
+              "end": 75
+            },
+            { "kind": "keyword", "key": "isolated", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Mordekaiser:Zaahen:1",
+          "text": "Press Indestructible when he starts a trade, after you have dealt and taken some damage, so the shield is bigger.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Mordekaiser:Zaahen:2",
+          "text": "Do not use Realm of Death to finish him when he has just built up a full bar of stacks under his health bar. He can revive and the fight drags on.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 11,
+              "end": 25
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Mordekaiser:Zaahen:3",
+          "text": "Realm of Death gives you a private duel with him. Use it when he has no allies near and you are ahead, since he cannot flee easily.",
+          "refs": [
+            { "kind": "ability", "key": "Mordekaiser-R", "start": 0, "end": 14 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Mordekaiser:Zaahen:4",
+          "text": "Hit him with abilities and attacks quickly to turn on Darkness Rise. Its aura hurts him more the longer he stays next to you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 54,
+              "end": 67
+            }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": []
+    }
+  ]
+}

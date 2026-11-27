@@ -1,0 +1,761 @@
+{
+  "schemaVersion": 1,
+  "champion": "RekSai",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "62e4b12a1e66cdbcea175cb03a4179bebacb868cdd9d59c5d5d71e792ab9520d",
+      "tips": [
+        {
+          "id": "jungle:RekSai:general:0",
+          "text": "Cast Burrow before you travel the map; it gives extra Move Speed and Tremor Sense shows you moving enemies nearby, which helps when you enter enemy territory.",
+          "refs": [],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:RekSai:general:1",
+          "text": "Attack an enemy while Burrowed to Unburrow into them. It knocks them up, so open fights that way.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:RekSai:general:2",
+          "text": "Hold Furious Bite until your Fury is full. It then deals true damage and hits harder, so it is a great finisher.",
+          "refs": [],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:RekSai:general:3",
+          "text": "Spread tunnels around the map with Tunnel so you always have an entrance to escape through or to reach a target for Void Rush.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 116, "end": 125 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:RekSai:general:4",
+          "text": "Hit an enemy champion first, then use Void Rush. It only works on someone you damaged recently, and you can't be stopped while you dive.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 38, "end": 47 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:RekSai:general:5",
+          "text": "Burrow when you are hurt and have built up Fury. Burrowing turns Fury into healing.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:RekSai:general:6",
+          "text": "Use Prey Seeker on a champion to reveal them for a short time. It stops at the first enemy it hits, so aim at open lanes.",
+          "refs": [],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:RekSai:general:7",
+          "text": "Use Queen's Wrath before you auto-attack in a fight. It adds Attack Speed and extra damage to nearby enemies.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:RekSai:general:8",
+          "text": "Stay out of silenced status when you want to tunnel away. You can't enter a tunnel while silenced.",
+          "refs": [
+            { "kind": "keyword", "key": "silenced", "start": 12, "end": 20 },
+            { "kind": "keyword", "key": "silenced", "start": 89, "end": 97 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:RekSai:combo:0",
+          "name": "Tunnel knock-up",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "RekSai-E" }, "attack"],
+          "when": "When you want to engage and knock up a target while dashing through them with Tunnel.",
+          "whenRefs": [],
+          "text": "While burrowed, cast Tunnel and issue an attack command on an enemy as the dash passes them. Unburrow triggers and knocks them up, and the dash still finishes.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:RekSai:combo:1",
+          "name": "Attack-command Unburrow",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "RekSai-W" }, "attack"],
+          "when": "When engaging a champion or jungle monster while burrowed.",
+          "whenRefs": [],
+          "text": "Right-click the target while burrowed so Unburrow casts on its own once in range. This knocks them up with no separate cast.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "2abd0ae5e3954a60a4a2027e6dc974b43711418077209ef3e26097a51dd782c5",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Graves:0",
+          "text": "Use Unburrow by attacking Graves when he is in range; it knocks him up and gives you a free opening.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:RekSai:Graves:1",
+          "text": "Hit Graves with Prey Seeker first to mark him, then Void Rush onto him once he has spent Quickdraw.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "RekSai-R", "start": 52, "end": 61 },
+            { "kind": "ability", "key": "Graves-E", "start": 89, "end": 98 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:RekSai:Graves:2",
+          "text": "Build full Fury before Furious Bite on Graves; it then deals extra true damage that his armor stacks cannot reduce.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:RekSai:Graves:3",
+          "text": "Leave Smoke Screen quickly when Graves throws it; you are slowed inside and can only see a short way.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5efc1e196a8156069afc1ac3b3089f9292136d11a8a9ce088be54443ab512b7",
+      "tips": [
+        {
+          "id": "jungle:RekSai:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Stepping in it gets you knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:RekSai:JarvanIV:1",
+          "text": "Do not fight inside the Cataclysm ring. Her Tunnel can take her through terrain, but only if the wall is thin enough.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:RekSai:JarvanIV:2",
+          "text": "Mark Jarvan with an ability before Void Rush. It can only target someone you have damaged recently.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "RekSai-R", "start": 35, "end": 44 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:RekSai:JarvanIV:3",
+          "text": "Build Fury before you bite. At full Fury Furious Bite deals true damage, so save it for a trade with Jarvan.",
+          "refs": [],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3cd427975d91f1b57895fa79424b6c03f70890ba331b009f059fd060978a86c8",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Kayn:0",
+          "text": "Keep Furious Bite for when your Fury is full; it then deals true damage, which hurts Kayn.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:RekSai:Kayn:1",
+          "text": "Dodge Blade's Reach so Kayn can't use Umbral Trespass from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Kayn-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:RekSai:Kayn:2",
+          "text": "Burrow and watch for his moving steps; Tremor Sense shows Kayn when he is moving nearby, even if he is unseen.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:RekSai:Kayn:3",
+          "text": "Hit Kayn with Prey Seeker to reveal him for a short time, then fight while he can't hide.",
+          "refs": [{ "kind": "champion", "key": "Kayn", "start": 4, "end": 8 }],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f40db5c39e140c5e6e0c2c21e3982214854f3fb680aed2b1a6842b483ebb8a9d",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Khazix:0",
+          "text": "Burrow before you walk around; Tremor Sense shows you enemies who move nearby, including an unseen Kha'Zix.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:RekSai:Khazix:1",
+          "text": "Stay near your minions, allies or tower so Kha'Zix's Taste Their Fear doesn't hit you while you are isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 53, "end": 69 },
+            { "kind": "keyword", "key": "isolated", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:RekSai:Khazix:2",
+          "text": "Build up Fury before you fight him; a full Fury makes Furious Bite deal true damage.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:RekSai:Khazix:3",
+          "text": "Hit him with Prey Seeker when he tries to escape; it reveals him and sets up Void Rush.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 77, "end": 86 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:RekSai:Khazix:4",
+          "text": "Fight him when Leap is on cooldown; he can't easily get away without it.",
+          "refs": [
+            { "kind": "ability", "key": "Khazix-E", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "83fc05618f48869ab5e5f228c6b895c77ed2c4aea764367de2c0f0a947ea361f",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Kindred:0",
+          "text": "Kindred is fragile. Dive her with Void Rush once you have hit her, since you can't be stopped mid-leap.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "RekSai-R", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:RekSai:Kindred:1",
+          "text": "Wait out Lamb's Respite before you use Void Rush; no one inside it can die.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 9, "end": 23 },
+            { "kind": "ability", "key": "RekSai-R", "start": 39, "end": 48 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:RekSai:Kindred:2",
+          "text": "Burrow before you walk around; Tremor Sense warns you of Kindred moving nearby.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:RekSai:Kindred:3",
+          "text": "Hit Kindred with Prey Seeker or Furious Bite first, so she is marked and Void Rush can target her.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "RekSai-R", "start": 73, "end": 82 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6fb31fdc68dccfe866884a166d2bb3dcfb817b1bb969a57253abd32233650856",
+      "tips": [
+        {
+          "id": "jungle:RekSai:LeeSin:0",
+          "text": "Stay out of Lee Sin's line when you can. Sonic Wave stops at the first unit it hits, so keep minions or monsters between you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:RekSai:LeeSin:1",
+          "text": "Build Fury before you trade with Lee Sin. Furious Bite at full Fury deals true damage, which his defenses don't reduce.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:RekSai:LeeSin:2",
+          "text": "Void Rush out if Lee Sin sets up Dragon's Rage on you. You can't be targeted while you dive.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "LeeSin", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:RekSai:LeeSin:3",
+          "text": "Use Burrow to see Lee Sin coming. Moving enemies show up to you, so you can spot him early.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "60b5a6e0a69952b5238b420cd3ea31c00104d174586a60f8c073014881fba103",
+      "tips": [
+        {
+          "id": "jungle:RekSai:MasterYi:0",
+          "text": "Hold Void Rush until Master Yi commits to a fight; he can dodge it with Alpha Strike, so cast it after he uses that.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "MasterYi", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:RekSai:MasterYi:1",
+          "text": "Unburrow to knock Master Yi up when he runs in, then fight him; Highlander will not free him from it.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 18, "end": 27 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:RekSai:MasterYi:2",
+          "text": "Hit Master Yi several times so he has to spend mana on Meditate to heal.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:RekSai:MasterYi:3",
+          "text": "Use Burrow's Tremor Sense to spot him moving nearby, and avoid fighting him once Highlander is running.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7386e017abc8fbd2e74df371ba596f9ece3d1635a4a314dabe40049841fc40c7",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Naafiri:0",
+          "text": "Fight Naafiri when her packmates are gone, for example just after she uses The Call of the Pack or Eviscerate, because they leave and return.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 75, "end": 95 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:RekSai:Naafiri:1",
+          "text": "Hit Naafiri with Prey Seeker first so she is marked, then use Void Rush to jump onto her when she tries to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "RekSai-R", "start": 62, "end": 71 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:RekSai:Naafiri:2",
+          "text": "Void Rush still lands if she turns untargetable with The Call of the Pack mid-cast, but it does nothing if she is untargetable when you arrive.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 53, "end": 73 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:RekSai:Naafiri:3",
+          "text": "Unburrow knocks her up when she dashes in. Burrow near her path and attack to knock her up first.",
+          "refs": [],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:RekSai:Naafiri:4",
+          "text": "Keep Burrow on while you move around; Tremor Sense shows you Naafiri coming at you while she is moving.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f1823d52418e48cec11cc300bca911de9e61ec8682d9c769def2da06a273707f",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Nocturne:0",
+          "text": "Save Void Rush for when Nocturne has used Shroud of Darkness; the shield blocks it if it is up.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Nocturne", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 42, "end": 60 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:RekSai:Nocturne:1",
+          "text": "Hit Nocturne with Prey Seeker to reveal him. His Duskbringer trail also shows you where he has moved.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:RekSai:Nocturne:2",
+          "text": "Break away from Nocturne's Unspeakable Horror tether by getting out of its range before it ends. Then you are not feared.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 27, "end": 45 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:RekSai:Nocturne:3",
+          "text": "Stay near your allies once Nocturne's Paranoia goes off. You lose sight of them and he can dive on you.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c3204a0c25d3926507cf4111cfee2213430eb2033b25293da10a44fc199a3b2",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Shyvana:0",
+          "text": "Stay out of Shyvana's reach and use Prey Seeker to poke her. She is weak when she can't attack you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:RekSai:Shyvana:1",
+          "text": "Fight her when her Fury is low. She can't turn into a dragon then, and she is much easier to beat.",
+          "refs": [],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:RekSai:Shyvana:2",
+          "text": "Prey Seeker detonates on the first enemy it hits, so aim it at Shyvana, not through minions.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:RekSai:Shyvana:3",
+          "text": "Use Tunnel to get away when Shyvana closes in, and bring a second entrance with you. Her Molten Burst slows you, so leave early.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 89, "end": 101 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7fc180ae7c0daf0b9bd310f6ad3c0edbd2b236bbef4418cba4241b0c6f2ef0e",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Skarner:0",
+          "text": "Don't ignore Skarner's Quaking. Break away from him before the stacks fill.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:RekSai:Skarner:1",
+          "text": "Keep Unburrow ready. If you knock Skarner up as he charges with Ixtal's Impact, his charge stops.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Skarner-E", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:RekSai:Skarner:2",
+          "text": "Stay away from walls when Skarner is near. Ixtal's Impact can drag you into one for damage and a stun.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Skarner-E", "start": 43, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 97, "end": 101 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:RekSai:Skarner:3",
+          "text": "Use Void Rush to escape or finish a fight, but not while Impale is ready. Skarner can pull you out of it.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Skarner-R", "start": 57, "end": 63 },
+            { "kind": "champion", "key": "Skarner", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "843d47aaea4f2340d2f16b3ad10e72370ba2da433b12bb95902519b33aa89223",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Sylas:0",
+          "text": "Hit Sylas with Prey Seeker before you dive, so he is marked and Void Rush can target him. It also reveals him for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "RekSai-R", "start": 64, "end": 73 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:RekSai:Sylas:1",
+          "text": "Sylas heals with Kingslayer when he is low, so finish him with Void Rush rather than trusting his health bar.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "RekSai-R", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:RekSai:Sylas:2",
+          "text": "Be careful using Void Rush near Sylas. He can steal it with Hijack and use it on you.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 17, "end": 26 },
+            { "kind": "champion", "key": "Sylas", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Sylas-R", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:RekSai:Sylas:3",
+          "text": "Use Furious Bite when your Fury is full for true damage. Fight Sylas then, because his heal matters less against a big burst.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:RekSai:combo:1",
+          "note": "Right-click Unburrow knocks up Sylas without a separate cast, useful to engage him after his spells.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d61aaf1efcde033148e9e544282fda57f3249f60c0d74af87843d0c9adb9ba7b",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Talon:0",
+          "text": "Walk into Talon with Unburrow and knock him up before he can combo you. Do it as he moves toward you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:RekSai:Talon:1",
+          "text": "Stay Burrowed and watch Tremor Sense when moving around. It shows you Talon only when he is moving, so he can ambush you standing still.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:RekSai:Talon:2",
+          "text": "Use Prey Seeker to reveal Talon when he turns invisible with Shadow Assault. It marks where he is for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Talon-R", "start": 61, "end": 75 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:RekSai:Talon:3",
+          "text": "Chase Talon with Void Rush once he has used Shadow Assault. It cannot be stopped by crowd control and cannot be dodged by walking away.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "RekSai-R", "start": 17, "end": 26 },
+            { "kind": "ability", "key": "Talon-R", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "11b95d68e9a4823bef4e261d81e2f301dd7fe8018d22e83fa5332f152dc138d3",
+      "tips": [
+        {
+          "id": "jungle:RekSai:Viego:0",
+          "text": "Dodge Spectral Maw by staying out of its line. It stops at the first unit it hits, so keep a minion between you and Viego.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Viego", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:RekSai:Viego:1",
+          "text": "Look for Viego's Mist from Harrowed Path. He can hide in it, so don't chase into it blindly.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Viego-E", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:RekSai:Viego:2",
+          "text": "Use Burrow to see Viego move nearby with Tremor Sense, then Unburrow to knock him up when he comes close.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:RekSai:Viego:3",
+          "text": "Hit him first, then use Void Rush to finish a fight he is losing. It can't be stopped once it starts.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b477413d2ce65ac88c738923ff2069fdc015e724d1bd4b7162e88ed1d10bac60",
+      "tips": [
+        {
+          "id": "jungle:RekSai:XinZhao:0",
+          "text": "Fight Xin Zhao with a full Fury bar so Furious Bite deals true damage, then back off once your Fury is gone.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:RekSai:XinZhao:1",
+          "text": "Stay out of Audacious Charge range when he is Challenged; his charge reaches further against marked targets. Keep distance so he cannot start his combo.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-E", "start": 12, "end": 28 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:RekSai:XinZhao:2",
+          "text": "Burrow to escape after his Three Talon Strike combo ends, since he relies on finishing it for damage and cooldown cuts.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 27, "end": 45 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:RekSai:XinZhao:3",
+          "text": "Use Void Rush at level 6 on a target you already damaged; you are unstoppable while you dive, so his knock up cannot catch you.",
+          "refs": [
+            { "kind": "ability", "key": "RekSai-R", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,1843 @@
+{
+  "schemaVersion": 1,
+  "champion": "Veigar",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "2ab5c589f907f9a7393297fc5a2e5d2a5bb4f2a33e694c03ee06b50e2674e949",
+      "tips": [
+        {
+          "id": "middle:Veigar:general:0",
+          "text": "Use Baleful Strike to last-hit minions. It hits two targets, and each kill adds a stack of Phenomenal Evil.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Veigar:general:1",
+          "text": "Aim Baleful Strike so the enemy champion is the first or second target. Minions in the line can take the hit before it reaches them.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Veigar:general:2",
+          "text": "Large minions give three stacks when Baleful Strike kills them, so take those kills with it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 37, "end": 51 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Veigar:general:3",
+          "text": "Dark Matter lands after a short delay. Aim it where the enemy is walking to, or where they are stuck, instead of where they stand.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Veigar:general:4",
+          "text": "Cast Event Horizon on an enemy who is cornered or running at you. They are stunned only if they touch the edge, so place it where they have to cross it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Veigar:general:5",
+          "text": "Cast Event Horizon first, then follow with Dark Matter on the stunned enemy to make it land.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Veigar-W", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Veigar:general:6",
+          "text": "Hold Primordial Burst until the target is low on health, because it hurts more the less health they have. At level 6, use it to finish a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Veigar:general:7",
+          "text": "Veigar is fragile and mana-hungry. Don't spend mana on spells that can't hit anything, and stay out of range of the enemy's engage.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Veigar:general:8",
+          "text": "Hitting enemy champions with your spells grows Phenomenal Evil, so poke safely when you can. Takedowns give even more stacks.",
+          "refs": [],
+          "pWrong": 0.18
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Veigar:combo:0",
+          "name": "Defensive self-cage",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Veigar-E" }],
+          "when": "When a melee champion or assassin is diving you in lane.",
+          "whenRefs": [],
+          "text": "Put Event Horizon centered on yourself. The enemy has to cross the edge to reach you and gets stunned, which buys time to fire off spells.",
+          "textRefs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 4, "end": 17 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c47eb9a07adc789cf174f53def5b84fd85af7f16ed749e407bde2cb3baffb421",
+      "tips": [
+        {
+          "id": "adc:Veigar:general:0",
+          "text": "Aim Baleful Strike through a minion at the enemy behind it; it hits the first two enemies, so you can poke and last-hit with one cast.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Veigar:general:1",
+          "text": "Last-hit large minions with Baleful Strike; they give extra stacks of your passive.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 28, "end": 42 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Veigar:general:2",
+          "text": "Dark Matter lands after a delay, so aim where the enemy is walking to, not where they stand. Enemies who stand still or farm are easy targets.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Veigar:general:3",
+          "text": "Cast Event Horizon around an enemy who is cornered or locked in place, then follow with Dark Matter. The cage stuns only those who touch its edge.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Veigar-W", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Veigar:general:4",
+          "text": "Don't waste Event Horizon on an enemy already inside the cage; they can still move freely. Place it so they must cross the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Veigar:general:5",
+          "text": "Hit enemy champions with your spells whenever it is safe; each champion hit grows your Ability Power for good.",
+          "refs": [],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Veigar:general:6",
+          "text": "Save Primordial Burst for a hurt enemy; it hits hardest on low Health. Use it to finish a kill after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Veigar:general:7",
+          "text": "Keep Event Horizon ready for defense. Cast it at an enemy diving you so they get stunned when they run through the edge.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Veigar:combo:0",
+          "name": "Self-peel cage",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Veigar-E" }],
+          "when": "When a melee champion or assassin tries to jump on you in lane.",
+          "whenRefs": [],
+          "text": "Drop the cage centred on yourself. Enemies who run out through the edge get stunned, which gives you time to back off and fire spells.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "8b9b68229527ed6a944b6d9bb10067e98a4dece15de75792d598230d0ae5e391",
+      "tips": [
+        {
+          "id": "middle:Veigar:Ahri:0",
+          "text": "Put Event Horizon on the spot Ahri dashes toward, or where she stands to trade. She is stunned when she walks into the edge of the cage.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Veigar:Ahri:1",
+          "text": "Stay behind your minions so Charm hits them first and never reaches you. Charm stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Veigar:Ahri:2",
+          "text": "Aim Dark Matter where Ahri will land after her Fox-Fire speed burst or after Spirit Rush. It falls after a delay, so hit where she is going.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Ahri-W", "start": 47, "end": 55 },
+            { "kind": "ability", "key": "Ahri-R", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Veigar:Ahri:3",
+          "text": "Use Baleful Strike to last-hit minions. Each kill gives you permanent power, and it hits two targets in a line.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Veigar:Ahri:4",
+          "text": "Hold Primordial Burst until Ahri is low on health, when it hits hardest. Don't waste it while she is healthy.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ahri", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ff8b038839e27dcc1c4ec701c86348fc857542d0f75c6e76fe56bf88d66cc31e",
+      "tips": [
+        {
+          "id": "middle:Veigar:Akali:0",
+          "text": "Place Event Horizon on yourself when Akali is about to dash in; she gets stunned on the cage edge and can't finish you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Veigar:Akali:1",
+          "text": "Don't rely on Event Horizon alone; Akali can still dash over the cage with Perfect Execution.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 14, "end": 27 },
+            { "kind": "champion", "key": "Akali", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Akali-R", "start": 75, "end": 92 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Veigar:Akali:2",
+          "text": "Aim Dark Matter at her smoke from Twilight Shroud. Area spells hit her inside it and briefly reveal her.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Akali-W", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Veigar:Akali:3",
+          "text": "Poke her with Baleful Strike and last-hit minions with it to build ability power while she waits for energy.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Veigar:Akali:4",
+          "text": "Hold Primordial Burst for when she is hurt after her all-in; it hits harder the lower her health is.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Akali is a melee assassin who dives in, so a self-centered Event Horizon stuns her when she crosses its edge.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Veigar-E", "start": 59, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1979d3894dcedc0643fb755647c3359d69266308e3c887be7c54e0abb31e19cb",
+      "tips": [
+        {
+          "id": "middle:Veigar:Anivia:0",
+          "text": "Aim Dark Matter where Anivia is walking, not where she stands; it lands after a short delay.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Veigar:Anivia:1",
+          "text": "Sidestep Flash Frost; if it hits, Frostbite then hurts far more and you may get stunned at the end.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 9, "end": 20 },
+            { "kind": "ability", "key": "Anivia-E", "start": 34, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Veigar:Anivia:2",
+          "text": "Drop Event Horizon on Anivia when she commits to a spell, so the cage can catch her if she walks out.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Veigar:Anivia:3",
+          "text": "Use Baleful Strike on minions to last-hit and gain Ability Power, while staying away from Anivia's range.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Veigar:Anivia:4",
+          "text": "Look for the kill with Primordial Burst once Anivia is low on health; it hurts most then. Her egg can return her, so finish it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 23, "end": 39 },
+            { "kind": "champion", "key": "Anivia", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2724ebf4cabb10893c94c91db2ce58084f8aef325aed1e1b6ecefebcf0e1b168",
+      "tips": [
+        {
+          "id": "middle:Veigar:Aurora:0",
+          "text": "Cast Event Horizon on Aurora's landing spot after Across the Veil; she becomes invisible but still has to leave the cage.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Aurora-W", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "middle:Veigar:Aurora:1",
+          "text": "Aim Dark Matter where Aurora will walk, not where she stands. It lands after a delay and she can step out.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Aurora", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Veigar:Aurora:2",
+          "text": "Stay out of The Weirding's line. Your Baleful Strike can hit back at her when she pushes up.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Veigar:Aurora:3",
+          "text": "Hold Event Horizon for when Aurora jumps in with Between Worlds; the stun keeps her from fighting back.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Aurora", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Aurora-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Veigar:Aurora:4",
+          "text": "Finish Aurora with Primordial Burst when she is low. It hurts most then, and a kill resets her escape, so strike first.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Veigar-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0d3be2785e37ec40d34704796deff578483d8cc289f963ae7aaa048f43b19b91",
+      "tips": [
+        {
+          "id": "middle:Veigar:Cassiopeia:0",
+          "text": "Cast Event Horizon on Cassiopeia's path when she walks up to poke, then follow with Dark Matter while she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 22, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 61, "end": 65 },
+            { "kind": "ability", "key": "Veigar-W", "start": 84, "end": 95 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Veigar:Cassiopeia:1",
+          "text": "Stay out of Noxious Blast range and step aside from it; once poisoned, Twin Fang hurts a lot.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 12,
+              "end": 25
+            },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 71, "end": 80 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Veigar:Cassiopeia:2",
+          "text": "Aim Dark Matter where Cassiopeia is heading, not where she stands; she moves fast after Noxious Blast hits.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 22, "end": 32 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 88,
+              "end": 101
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Veigar:Cassiopeia:3",
+          "text": "Use Baleful Strike on minions in front of her to hit her too, and to farm stacks safely.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Veigar:Cassiopeia:4",
+          "text": "Finish her with Primordial Burst once she is low; it hits hardest on weak targets.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Event Horizon's stun can catch Cassiopeia if she walks in, but she is ranged and needn't cross it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 31, "end": 41 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a5f73571d83125eab57cd286b98ce5f52511c9a58f4da9cc5ec78501d6a47407",
+      "tips": [
+        {
+          "id": "middle:Veigar:Fizz:0",
+          "text": "Put Event Horizon on Fizz's landing spot after he dives. He has to leave the cage's edge or stay in it, and edge contact stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Veigar:Fizz:1",
+          "text": "Don't cast Dark Matter at Fizz while he can hop away. Wait until he has used Playful, or cast it where he must walk.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Fizz", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Veigar:Fizz:2",
+          "text": "Keep Event Horizon ready for when Fizz dives at you. Stunned, he can't dash away, so follow with Dark Matter.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 34, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 60 },
+            { "kind": "ability", "key": "Veigar-W", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Veigar:Fizz:3",
+          "text": "Hold Primordial Burst until Fizz is low on health. It hits hardest then, and it can finish him when he's trying to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Veigar:Fizz:4",
+          "text": "Use Baleful Strike on the minions in front of Fizz, so it hits him too. Poke him when his Urchin Strike is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 46, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 72, "end": 76 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Event Horizon on yourself stuns Fizz when he dives, though Playful can make him untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Fizz", "start": 32, "end": 36 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "860f31e127fcedcc34f02d727bcf24f5c65a2a97e9f45e95353fc5ccf5516d13",
+      "tips": [
+        {
+          "id": "middle:Veigar:Malzahar:0",
+          "text": "Wait until Void Shift is gone before you throw Dark Matter or Baleful Strike; Malzahar takes far less damage while it is up.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "ability", "key": "Veigar-W", "start": 47, "end": 58 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 62, "end": 76 },
+            { "kind": "champion", "key": "Malzahar", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Veigar:Malzahar:1",
+          "text": "Do not rely on Event Horizon to stun Malzahar while Void Shift is up, because he is immune to crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 15, "end": 28 },
+            { "kind": "champion", "key": "Malzahar", "start": 37, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 52,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Veigar:Malzahar:2",
+          "text": "Step out of the line between his two portals right away; Call of the Void lands after a short delay and silences you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 57, "end": 73 },
+            { "kind": "keyword", "key": "silenced", "start": 104, "end": 112 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Veigar:Malzahar:3",
+          "text": "Stay away from minions carrying Malefic Visions; when they die, it spreads to the nearest enemy, which could be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Veigar:Malzahar:4",
+          "text": "Keep Baleful Strike for last-hits on minions to build Phenomenal Evil; it hits two targets in a line.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Veigar:Malzahar:5",
+          "text": "Hold Primordial Burst until Malzahar is low on Health, when it hits hardest. Do not use it into Void Shift.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Malzahar", "start": 28, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 96,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ba80a77b38d442aeab0433ce0f30716044668cdf07521bca0f58bb82c3c5c17e",
+      "tips": [
+        {
+          "id": "middle:Veigar:Orianna:0",
+          "text": "Aim Dark Matter where Orianna will stand, not where she is; it lands after a short delay, so she can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Veigar:Orianna:1",
+          "text": "Cast Event Horizon around her when she is cornered, then follow with Dark Matter while she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "ability", "key": "Veigar-W", "start": 69, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Veigar:Orianna:2",
+          "text": "Use Baleful Strike to last-hit minions, and to hit Orianna when minions line up in front of her.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Orianna", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Veigar:Orianna:3",
+          "text": "Save Primordial Burst for when Orianna is low on health, because it hits hardest then.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Orianna", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Veigar:Orianna:4",
+          "text": "Stay out of the range of her Ball when you are not trading. Her Command: Attack pokes you from far away.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 64, "end": 79 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e4b981eec78bdd8b34f8a31128beff686ba36a96fdd2c25541dd10e20754201c",
+      "tips": [
+        {
+          "id": "middle:Veigar:Ryze:0",
+          "text": "Veigar has to come close, so poke Ryze with Baleful Strike from long range when his minions are not in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Ryze", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Veigar:Ryze:1",
+          "text": "Aim Dark Matter where Ryze will be after Rune Prison slows or roots him. He cannot easily step out.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Ryze-W", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Veigar:Ryze:2",
+          "text": "Place Event Horizon so Ryze has to cross its edge when he moves in on you. Do not cast it on top of him.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Veigar:Ryze:3",
+          "text": "Respect Ryze after he lands Spell Flux on you, because his next Overload and Rune Prison get stronger. Back away from the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Ryze-E", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 64, "end": 72 },
+            { "kind": "ability", "key": "Ryze-W", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Veigar:Ryze:4",
+          "text": "Finish a weakened Ryze with Primordial Burst, which hurts most when he is low on health.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Veigar-R", "start": 28, "end": 44 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Ryze is a ranged mage, not a diver, so a self-centered cage stun rarely triggers against him.",
+          "refs": [{ "kind": "champion", "key": "Ryze", "start": 0, "end": 4 }]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a190b7dee5c88544357818c7d2328c21b4ca89eb871bb1e46e099f14b4ae50bc",
+      "tips": [
+        {
+          "id": "middle:Veigar:Sylas:0",
+          "text": "Place Event Horizon on the spot where Sylas will dash with Abscond or Abduct; he gets stunned if he touches the edge of the cage.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Veigar:Sylas:1",
+          "text": "Throw Dark Matter where Sylas is walking or standing still. It lands after a delay, so aim at where he will be.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Veigar:Sylas:2",
+          "text": "Stay away from Sylas when his Abduct is ready. If he hits you, he pulls himself to you and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Veigar:Sylas:3",
+          "text": "Last-hit minions with Baleful Strike to build Phenomenal Evil Power. It can hit two enemies, so a Sylas standing behind a minion can be hit too.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 22, "end": 36 },
+            {
+              "kind": "ability",
+              "key": "Veigar-passive",
+              "start": 46,
+              "end": 67
+            },
+            { "kind": "champion", "key": "Sylas", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Veigar:Sylas:4",
+          "text": "Hold Primordial Burst for when Sylas is low on health, since it hits hardest then. Kingslayer heals him, so finish him quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Sylas", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Sylas-W", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b8e5fe7d37e17980f4530824dfb77b5447a834b8175de3bd2f32dcd4e045d2b8",
+      "tips": [
+        {
+          "id": "middle:Veigar:TwistedFate:0",
+          "text": "Place Event Horizon where Twisted Fate will stand to last-hit or walk in to trade. The edge stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 97 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Veigar:TwistedFate:1",
+          "text": "Follow a stun from Event Horizon with Dark Matter, since the stunned target cannot walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Veigar-W", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Veigar:TwistedFate:2",
+          "text": "Back away when Twisted Fate begins shuffling his cards. The Gold Card stuns, so stay out of his attack range.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Veigar:TwistedFate:3",
+          "text": "When Twisted Fate uses Destiny, expect a gank or a teleport and stay near your tower.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Veigar:TwistedFate:4",
+          "text": "Use Baleful Strike to last-hit minions and to hit Twisted Fate, so you pick up Phenomenal Evil Power stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 50,
+              "end": 62
+            },
+            {
+              "kind": "ability",
+              "key": "Veigar-passive",
+              "start": 79,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1d89c05e3088b4ec28b51bb5db2af0f18ffa1dac79c0ee1d63c3a64e681f5992",
+      "tips": [
+        {
+          "id": "middle:Veigar:Viktor:0",
+          "text": "Place Event Horizon where Viktor wants to stand to trade or farm; he is stunned only if he walks into its edge, so cast it on his path.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Viktor", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 79 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Veigar:Viktor:1",
+          "text": "Aim Dark Matter at where Viktor is walking, not where he stands. It lands after a delay, and he can dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Veigar:Viktor:2",
+          "text": "Stay out of Siphon Power range, because he can trade with it and shield himself. Poke him with Baleful Strike from long range instead.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 95, "end": 109 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Veigar:Viktor:3",
+          "text": "Hold Event Horizon for when Viktor tries to close in. Step out of Gravity Field so you are not slowed or stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Viktor-W", "start": 66, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Veigar:Viktor:4",
+          "text": "Use Primordial Burst once Viktor is low on health, because it hurts more the less health he has.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Viktor", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Veigar:Viktor:5",
+          "text": "Move out of Arcane Storm early, since it follows you. Do not stay in it to finish a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1a3b5ba157e211f404b3b7c0cbf866095a41142f86be77f0540b7928c74230f",
+      "tips": [
+        {
+          "id": "middle:Veigar:Yasuo:0",
+          "text": "Put Event Horizon on Yasuo when he dashes in or tries to close the gap; he is stunned if he touches the edge, and he is easy to hit with Dark Matter afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yasuo", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 },
+            { "kind": "ability", "key": "Veigar-W", "start": 137, "end": 148 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Veigar:Yasuo:1",
+          "text": "Yasuo's Wind Wall blocks Baleful Strike and Dark Matter's cast is a falling spell, so bait Wind Wall with Baleful Strike first, then use your key spells.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 25, "end": 39 },
+            { "kind": "ability", "key": "Veigar-W", "start": 44, "end": 55 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 91, "end": 100 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 106, "end": 120 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Veigar:Yasuo:2",
+          "text": "Use Baleful Strike on minions in front of Yasuo to hit him too; it hits two enemies and every kill makes you stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yasuo", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Veigar:Yasuo:3",
+          "text": "Hold Primordial Burst until Yasuo is low on health; it deals much more damage to weakened targets.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Veigar:Yasuo:4",
+          "text": "Stand behind your minions so Yasuo has fewer Sweeping Blade targets to dash through, and keep him at long range with Dark Matter.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "Veigar-W", "start": 117, "end": 128 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "628bc370ae266a96cd1138c62a8aea4d3f433bcdfe6f59401f20d4a0773d9944",
+      "tips": [
+        {
+          "id": "middle:Veigar:Yone:0",
+          "text": "Cast Event Horizon on Yone when he dashes in or when he is about to knock you up; he is stunned if he touches the edge of the cage.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Veigar:Yone:1",
+          "text": "Aim Dark Matter where Yone will step, not where he stands. It lands after a delay, and he can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Veigar:Yone:2",
+          "text": "Hit Yone with Dark Matter when he commits to a dash or a cast, because he cannot easily dodge then.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Veigar-W", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Veigar:Yone:3",
+          "text": "Use Baleful Strike to kill minions and grow your Ability Power. It also hits Yone and any minion standing behind him.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Veigar:Yone:4",
+          "text": "Hold Primordial Burst until Yone is low on Health, since it hurts more the less Health he has. It finishes him after a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Veigar:Yone:5",
+          "text": "Stay far back from Yone. He closes in fast and you are fragile, so keep your range and your Event Horizon ready.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Veigar-E", "start": 92, "end": 105 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Yone is a melee diver, so a self-centered Event Horizon stuns him as he crosses the edge to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Veigar-E", "start": 42, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "aec9c8441abfe963f6cff267945908c6a62f125d82aa7e3d35871e1a821fc0df",
+      "tips": [
+        {
+          "id": "middle:Veigar:Zed:0",
+          "text": "Place Event Horizon on yourself or where Zed will jump in; he is stunned if he touches the edge of the cage, and you can then hit him with Dark Matter.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 41, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 72 },
+            { "kind": "ability", "key": "Veigar-W", "start": 139, "end": 150 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Veigar:Zed:1",
+          "text": "Zed's Razor Shuriken goes through minions and keeps flying, so stay out of its line instead of hiding behind your wave.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Veigar:Zed:2",
+          "text": "Use Baleful Strike on the minions in front of you to last-hit; each kill gives you permanent Ability Power, and Zed has a hard time trading back.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 112, "end": 115 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Veigar:Zed:3",
+          "text": "Keep Event Horizon ready at level 6. Once Zed uses Death Mark, you are only safe if he can't reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 42, "end": 45 },
+            { "kind": "ability", "key": "Zed-R", "start": 51, "end": 61 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Veigar:Zed:4",
+          "text": "When Zed spends his Living Shadow, poke him with Dark Matter; his slow and his damage both depend on that shadow.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zed-W", "start": 20, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Veigar-W", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Veigar:Zed:5",
+          "text": "Use Primordial Burst on Zed once he is low on health; it deals much more damage then.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 24, "end": 27 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": [
+        {
+          "comboId": "middle:Veigar:combo:0",
+          "note": "Zed is a melee assassin who dives in, so a self-centered Event Horizon stuns him as he crosses the edge.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Veigar-E", "start": 57, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "92650faab3b11d75263d4595e9846fde46632cef40ad05257ac2006d8a5ac61a",
+      "tips": [
+        {
+          "id": "adc:Veigar:Ashe:0",
+          "text": "Cast Dark Matter where Ashe is walking, or where she is slowed. She has few ways to escape it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Veigar:Ashe:1",
+          "text": "Ashe has few defensive tools, so a stun from Event Horizon leaves her open to a deadly combo.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Veigar-E", "start": 45, "end": 58 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Veigar:Ashe:2",
+          "text": "Stay out of Volley range and do not stand in a line of minions. Her arrows hit you before you can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "adc:Veigar:Ashe:3",
+          "text": "Respect Enchanted Crystal Arrow once she reaches level 6. Do not wander alone while it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 8, "end": 31 },
+            { "kind": "keyword", "key": "isolated", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Veigar:Ashe:4",
+          "text": "Use Baleful Strike through minions to hit Ashe behind them; it passes through two targets.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ashe", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Ashe is ranged, not a jumper, so a self-centred Event Horizon cage has little to punish here.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Veigar-E", "start": 48, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ba233cee40d586616800073701b3d78ad5489491f4fdd8334ac2d6da087288c7",
+      "tips": [
+        {
+          "id": "adc:Veigar:Caitlyn:0",
+          "text": "Aim Dark Matter at Caitlyn when she stands still to shoot or sets a trap. The delay is long, so predict where she will be.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Caitlyn", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Veigar:Caitlyn:1",
+          "text": "Cast Event Horizon around her when she walks up, so she gets stunned if she touches the edge. She cannot easily back away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Veigar:Caitlyn:2",
+          "text": "Stay out of Caitlyn's long range. She out-pokes you, so trade only when her Piltover Peacemaker is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 76, "end": 95 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Veigar:Caitlyn:3",
+          "text": "Use Baleful Strike to kill minions. Standing behind them also stops her net and shots from reaching you.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "adc:Veigar:Caitlyn:4",
+          "text": "Watch the ground for Yordle Snap Trap and do not walk onto it. Being rooted lets her land a big Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 21, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 96,
+              "end": 104
+            }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Veigar:Caitlyn:5",
+          "text": "Once she is low on health, finish her with Primordial Burst, which hits harder the lower she is.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b217b064ced51593fd7a4784ac7358340071d71b659f98bdd804a659b64f9bcc",
+      "tips": [
+        {
+          "id": "adc:Veigar:Ezreal:0",
+          "text": "Place Event Horizon so Ezreal has to walk through the edge to reach you or his minions. He can only be stunned by the edge, so cast it where he is heading.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Veigar:Ezreal:1",
+          "text": "Land Dark Matter after he is stunned or when he stops to last-hit. It falls slowly and is easy to walk out of.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Veigar:Ezreal:2",
+          "text": "Use Baleful Strike to last-hit minions. Each kill adds permanent power, and it also hits a second target behind the first.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Veigar:Ezreal:3",
+          "text": "Stand behind your minions. Ezreal's Mystic Shot stops at the first enemy it hits, so minions in the way protect you.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Veigar:Ezreal:4",
+          "text": "Save Primordial Burst for when Ezreal is hurt. It hits hardest on low health, and he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Veigar:Ezreal:5",
+          "text": "Hold Event Horizon when Ezreal is ready to dodge, because Arcane Shift can carry him out of the cage. Cast it after he has used Arcane Shift.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 58, "end": 70 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 128, "end": 140 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5b58be8ac3054e00e794e24237a9f6e4efa5f3dead45b251f0677fe00d2610ae",
+      "tips": [
+        {
+          "id": "adc:Veigar:Jhin:0",
+          "text": "Throw Dark Matter where Jhin will stand, not where he is; it lands after a delay and he can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Jhin", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Veigar:Jhin:1",
+          "text": "Place Event Horizon around Jhin when he steps up to attack, then follow with Dark Matter on the stunned target.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Jhin", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Veigar-W", "start": 77, "end": 88 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Veigar:Jhin:2",
+          "text": "Stay out of a line with minions and Jhin's friends; Deadly Flourish roots anyone already hurt, and you are fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Jhin-W", "start": 52, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Veigar:Jhin:3",
+          "text": "Trade when Jhin is reloading after his fourth shot; he cannot attack then, so walk up and poke him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 11, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Veigar:Jhin:4",
+          "text": "Watch the bushes and choke points for Captive Audience traps. Walking onto one slows you and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-E", "start": 38, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Veigar:Jhin:5",
+          "text": "Hold Primordial Burst for when Jhin is low on health; it deals much more damage the lower he is.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jhin", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1e9cfe4a231d493ebab221b92428f1c222e6044d92c571135d52932fad9a3d20",
+      "tips": [
+        {
+          "id": "adc:Veigar:Jinx:0",
+          "text": "Place Event Horizon on Jinx when she steps up to attack. She is stunned if she touches the edge, and she cannot move out of Dark Matter's delay.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Jinx", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 71 },
+            { "kind": "ability", "key": "Veigar-W", "start": 124, "end": 135 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Veigar:Jinx:1",
+          "text": "Cast Dark Matter on Jinx right after she is stunned or rooted; it takes a moment to land and is easy to dodge otherwise.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jinx", "start": 20, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:Veigar:Jinx:2",
+          "text": "Use Baleful Strike on a minion in front of Jinx so it also hits her. It passes through two enemies, and killing minions with it builds your passive.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Veigar:Jinx:3",
+          "text": "Stay out of Zap! range when you can, since it slows you and shows where you are. Her rocket can hit you from far away, so don't walk up to her without Event Horizon ready.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Veigar-E", "start": 151, "end": 164 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Veigar:Jinx:4",
+          "text": "Save Primordial Burst for when Jinx is already low on health, because it hurts most then. Use it to finish her once she has taken some damage.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Jinx", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Jinx has no dash or jump listed, so a self-cage stuns her only if she walks out through its edge.",
+          "refs": [{ "kind": "champion", "key": "Jinx", "start": 0, "end": 4 }]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "14178a0fb993f45907f00a120762c0fc3f61c3eb9e747eef6ce07efb588d2b39",
+      "tips": [
+        {
+          "id": "adc:Veigar:Kaisa:0",
+          "text": "Aim Dark Matter where Kai'Sa is walking, not where she stands; it lands after a delay and she can step out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Veigar:Kaisa:1",
+          "text": "Cast Event Horizon around Kai'Sa when she dashes in or tries to leave. Only the edge stuns, so place it where she must cross it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Veigar:Kaisa:2",
+          "text": "Poke Kai'Sa with Baleful Strike from long range, and line it up so it also hits minions or her partner behind her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Veigar:Kaisa:3",
+          "text": "Use Baleful Strike to kill minions you would otherwise skip. Each kill gives permanent Ability Power.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Veigar:Kaisa:4",
+          "text": "Finish Kai'Sa with Primordial Burst once she is low on health, since it hits hardest then.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Veigar-R", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2092977c38c7131595a68043eba84059056ac2755e931111e87bfaac19fe5cdd",
+      "tips": [
+        {
+          "id": "adc:Veigar:MissFortune:0",
+          "text": "Hit Miss Fortune with Baleful Strike and Dark Matter. Each champion you hit gives you permanent Ability Power.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 22, "end": 36 },
+            { "kind": "ability", "key": "Veigar-W", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Veigar:MissFortune:1",
+          "text": "Hit Miss Fortune to cancel her Strut speed bonus, since damage removes it. Then she cannot easily dodge Dark Matter.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 31,
+              "end": 36
+            },
+            { "kind": "ability", "key": "Veigar-W", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Veigar:MissFortune:2",
+          "text": "Place Event Horizon where Miss Fortune will walk, such as between her and your lane, and follow with Dark Matter on the stunned target.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Veigar-W", "start": 101, "end": 112 },
+            { "kind": "keyword", "key": "stunned", "start": 120, "end": 127 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Veigar:MissFortune:3",
+          "text": "Stay away from minions that line you up behind them. Double Up can bounce from a minion to hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 53,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Veigar:MissFortune:4",
+          "text": "Do not stand in Make It Rain, since it slows you and hurts. Step out so you are not an easy target for her.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 16,
+              "end": 28
+            },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Veigar:MissFortune:5",
+          "text": "Keep your distance when Miss Fortune has Bullet Time, as it can kill you quickly in the open. Stay behind minions or terrain at level 6.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 24,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 41,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d0ae3a261952ef4ae38cfb1266e1cba82d3e2c6d68439ed3116eb75739d7bae0",
+      "tips": [
+        {
+          "id": "adc:Veigar:Sivir:0",
+          "text": "Bait out Spell Shield before using Event Horizon or Primordial Burst. Once it has been used, you can land your key spells.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-E", "start": 9, "end": 21 },
+            { "kind": "ability", "key": "Veigar-E", "start": 35, "end": 48 },
+            { "kind": "ability", "key": "Veigar-R", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Veigar:Sivir:1",
+          "text": "Use a cheap Baleful Strike to force Spell Shield, then follow with Dark Matter while the shield is down.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 12, "end": 26 },
+            { "kind": "ability", "key": "Sivir-E", "start": 36, "end": 48 },
+            { "kind": "ability", "key": "Veigar-W", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Veigar:Sivir:2",
+          "text": "Cast Event Horizon on the spot where Sivir is walking, so her path crosses the edge. She is stunned if she touches it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sivir", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Veigar:Sivir:3",
+          "text": "Dodge Boomerang Blade sideways. If it hits you on the way out, stay out of its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Veigar:Sivir:4",
+          "text": "Last-hit minions with Baleful Strike to gain Phenomenal Evil stacks, and use it to hit Sivir through a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 22, "end": 36 },
+            { "kind": "champion", "key": "Sivir", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Veigar:Sivir:5",
+          "text": "Do not stand still when Sivir has Ricochet up; it bounces to nearby enemies and makes her trades hit hard.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Sivir-W", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Sivir is ranged, not a jumper, so a self-centered cage is rarely the right answer to her.",
+          "refs": [{ "kind": "champion", "key": "Sivir", "start": 0, "end": 5 }]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3a6237ab7a063fa793c4521406144e6005b9dd854429877930c966943dad2155",
+      "tips": [
+        {
+          "id": "adc:Veigar:Smolder:0",
+          "text": "Hit Smolder early with Dark Matter and Baleful Strike while he is weak; he needs time to stack up, so punish him before he grows.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Veigar-W", "start": 23, "end": 34 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Veigar:Smolder:1",
+          "text": "Aim Dark Matter where Smolder will be standing, not where he is. It lands after a short delay, so cast it when he walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Veigar:Smolder:2",
+          "text": "Place Event Horizon on Smolder when he steps forward. If he walks into its edge he is stunned, and then Dark Matter is easy to land.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Smolder", "start": 23, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 93 },
+            { "kind": "ability", "key": "Veigar-W", "start": 104, "end": 115 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Veigar:Smolder:3",
+          "text": "Line up Baleful Strike through a minion into Smolder; it hits the first two enemies, so you can poke him and last-hit together.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 8, "end": 22 },
+            { "kind": "champion", "key": "Smolder", "start": 45, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Veigar:Smolder:4",
+          "text": "Stay out of a straight line from Smolder; Achooo! slows you and hurts, and Veigar is fragile.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 },
+            { "kind": "champion", "key": "Veigar", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Veigar:Smolder:5",
+          "text": "Save Primordial Burst for when Smolder is low on health, since it hits hardest then.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Smolder", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": [
+        {
+          "comboId": "adc:Veigar:combo:0",
+          "note": "Smolder is a ranged ADC, so the cage stops no jump-in; it only helps if he flies at you.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d541020f4f68c21bdbf654d2164c5a9517cc782a8fd535a15b56beddc40aebcc",
+      "tips": [
+        {
+          "id": "adc:Veigar:Yunara:0",
+          "text": "Aim Dark Matter where Yunara will be standing, not where she is. It lands after a short delay, and she can walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yunara", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Veigar:Yunara:1",
+          "text": "Cast Event Horizon around Yunara when she is slowed or stuck, so that walking out of it stuns her. Then follow with Dark Matter.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 },
+            { "kind": "ability", "key": "Veigar-W", "start": 116, "end": 127 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Veigar:Yunara:2",
+          "text": "Use Baleful Strike on minions you can kill and on any enemy in line with Yunara. It hits two targets and gives you permanent power when it kills.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Veigar:Yunara:3",
+          "text": "Do not place Event Horizon on top of Yunara. Only enemies on the edge are stunned, and she can still attack from inside.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 13, "end": 26 },
+            { "kind": "champion", "key": "Yunara", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Veigar:Yunara:4",
+          "text": "Save Primordial Burst for when Yunara is low on health, because it hits hardest then. Use it once she is hurt from a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Yunara", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Veigar:Yunara:5",
+          "text": "Yunara slows you with her bead, so stay out of her range. She is dangerous once her attack speed is up.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

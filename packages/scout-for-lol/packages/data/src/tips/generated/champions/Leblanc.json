@@ -1,0 +1,1077 @@
+{
+  "schemaVersion": 1,
+  "champion": "Leblanc",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "c39090c4fbefe8f10bcf45ce7354f6a9e5eac371bbabfebe782b957129743998",
+      "tips": [
+        {
+          "id": "middle:Leblanc:general:0",
+          "text": "Use Distortion to dash in, trade, then recast it to return to safety. Recast within its short window or you are stuck where you landed.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Leblanc:general:1",
+          "text": "Open a trade with Sigil of Malice, then hit the marked enemy with another ability to set off the mark for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Leblanc:general:2",
+          "text": "Aim Ethereal Chains at the first enemy in its path, since a minion in the way takes the chain instead. Keep the line clear of minions.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Leblanc:general:3",
+          "text": "After Ethereal Chains lands, stay close so the tether holds. If it lasts, the enemy is rooted and takes extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "middle:Leblanc:general:4",
+          "text": "Use Distortion to line up Ethereal Chains, since the dash changes your position.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Leblanc:general:5",
+          "text": "Use Sigil of Malice then Ethereal Chains on an enemy with a blink to stop them escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Leblanc:general:6",
+          "text": "Save Mimic for a kill. It copies your last ability with more damage, so use your best one right before it.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-R", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Leblanc:general:7",
+          "text": "Use Sigil of Malice on low-health enemies. A kill refunds its Mana and part of its cooldown, so you can chain it again.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Leblanc:general:8",
+          "text": "Do not fall back on Mirror Image to survive. It hides you only briefly, and attacking breaks it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Leblanc-passive",
+              "start": 20,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Leblanc:combo:0",
+          "name": "Slide-in Distortion return",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Leblanc-Q" },
+            { "kind": "ability", "key": "Leblanc-W" },
+            { "kind": "ability", "key": "Leblanc-W" }
+          ],
+          "when": "When you trade in lane and want to poke and then get back out of danger.",
+          "whenRefs": [],
+          "text": "Mark the target, dash in with W to detonate it, and recast W to return to your starting spot. The dash is aggressive and the return keeps you safe.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "32", "start": 0, "end": 4 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "15869169c9de7036ebf866c73bf1cf0f1621628dac55bacd377ae201c448c845",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Ahri:0",
+          "text": "Stay out of Charm's line, or keep a minion between you and Ahri. Charm ends at the first enemy it hits, so a minion in front of you takes it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Ahri-E", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Leblanc:Ahri:1",
+          "text": "Open with Sigil of Malice, then hit Ahri with another ability to detonate the mark for a big burst.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ahri", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Leblanc:Ahri:2",
+          "text": "Use Distortion to go in and trade, then recast it to return to your starting spot before Ahri can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ahri", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Leblanc:Ahri:3",
+          "text": "Land Ethereal Chains when Ahri uses her dash or turns to leave. She has to break away or be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Ahri", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Leblanc:Ahri:4",
+          "text": "Be careful when Distortion is on cooldown. Ahri's Charm can catch you with no way to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 16, "end": 26 },
+            { "kind": "champion", "key": "Ahri", "start": 43, "end": 47 },
+            { "kind": "ability", "key": "Ahri-E", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Leblanc:Ahri:5",
+          "text": "Push in and fight when Ahri's Spirit Rush is on cooldown. She is much easier to kill without it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ahri-R", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8ef6b4c0ec516ce31e6f5404c04f0dcf85884bc2e784ec83c28ec53be4475743",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Akali:0",
+          "text": "Hit Akali with Sigil of Malice, then follow with another ability to detonate the mark for full damage.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Leblanc:Akali:1",
+          "text": "Aim Ethereal Chains when Akali is walking in to trade; if she stays shackled she is rooted, and you can finish with your other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Leblanc:Akali:2",
+          "text": "Trade with Distortion and recast it to return to safety before Akali can jump on you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 11, "end": 21 },
+            { "kind": "champion", "key": "Akali", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Leblanc:Akali:3",
+          "text": "Fight Akali when she is low on energy; she cannot spam Five Point Strike then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Leblanc:Akali:4",
+          "text": "Be careful when Akali has Perfect Execution up; she dives onto you and finishes low-health targets. Back off when you are hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Akali-R", "start": 26, "end": 43 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Leblanc:Akali:5",
+          "text": "When Akali vanishes in Twilight Shroud, cast Distortion or Ethereal Chains into the smoke; area damage reveals her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 45, "end": 55 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 59, "end": 74 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "655868a9e96ca173d97f7e02beef589877775acc1b7febbbb66d2202a60391f8",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Anivia:0",
+          "text": "Stay out of Flash Frost's line, and use Distortion to dodge sideways if the ice comes at you. The detonation at the end of its range stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 12, "end": 23 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Leblanc:Anivia:1",
+          "text": "Hit Anivia with Ethereal Chains when she is busy or after she misses Flash Frost, then follow with Sigil of Malice while she is rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 16, "end": 31 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 69, "end": 80 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 99, "end": 114 },
+            { "kind": "keyword", "key": "rooted", "start": 128, "end": 134 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Leblanc:Anivia:2",
+          "text": "Do not trade while Anivia has Frostbite ready and you are slowed by her ice; it hurts much more against chilled targets.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Anivia-E", "start": 30, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Leblanc:Anivia:3",
+          "text": "Fight in the early levels, before Anivia has much mana for Glacial Storm.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Anivia-R", "start": 59, "end": 72 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Leblanc:Anivia:4",
+          "text": "Do not walk into a Glacial Storm. Burst her down from outside it and leave with Distortion.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 80, "end": 90 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Leblanc:Anivia:5",
+          "text": "Don't waste Mimic on her egg. Kill her first and save your burst for when Rebirth is back.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-R", "start": 12, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 74,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "871f595ce1cc9f9698e3890cbe7a4a87533425922a82f346a6225d1912a4e398",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Aurora:0",
+          "text": "Land Sigil of Malice first, then follow with Ethereal Chains or Distortion to detonate the mark for a quick burst.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 45, "end": 60 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Leblanc:Aurora:1",
+          "text": "Aim Ethereal Chains at Aurora before she can hop away. If it holds, she is rooted and takes heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Aurora", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Leblanc:Aurora:2",
+          "text": "Expect Aurora to vanish with Across the Veil. Do not waste spells into where she was; wait for her to appear.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 7, "end": 13 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Leblanc:Aurora:3",
+          "text": "Use Distortion to dodge back after trading, so The Weirding and Twofold Hex find nothing to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Aurora-E", "start": 47, "end": 59 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Leblanc:Aurora:4",
+          "text": "Stay out of the Between Worlds area when she uses it. Enemies crossing its edge are slowed, and it lets her escape.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 16, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "190dc7f7495271659d136f5e383e7d18c5c143fab52b90e929edd11f0395b439",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Cassiopeia:0",
+          "text": "Dash in with Distortion only when you mean to trade, because Miasma leaves you grounded and slowed. Keep out of her clouds.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 13, "end": 23 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 61,
+              "end": 67
+            },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Leblanc:Cassiopeia:1",
+          "text": "Trade with Sigil of Malice and your other spells, then use the Distortion recall to get out before she poisons you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 11, "end": 26 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Leblanc:Cassiopeia:2",
+          "text": "Hit Ethereal Chains when she walks forward to use Noxious Blast. She is rooted and cannot dodge your burst.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 50,
+              "end": 63
+            },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Leblanc:Cassiopeia:3",
+          "text": "Stay out of Petrifying Gaze at level 6. If she is about to cast it, turn away so you are only slowed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 12,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Leblanc:Cassiopeia:4",
+          "text": "Look for a kill when she is low. Mimic on a fresh Distortion or Ethereal Chains adds big burst.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-R", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 50, "end": 60 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 64, "end": 79 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d669acca4ab21b650c18227e07e873147d325d16c8974b3ce07e2660d24c50dc",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Fizz:0",
+          "text": "Hit Fizz with Sigil of Malice, then follow with Distortion or Ethereal Chains to detonate it. Do it before he can get close.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 48, "end": 58 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 62, "end": 77 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Leblanc:Fizz:1",
+          "text": "Aim Ethereal Chains just after Fizz lands from Playful. He is easy to hit then, and the root stops him from hopping away again.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Fizz", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Leblanc:Fizz:2",
+          "text": "Do not waste spells while Fizz is untargetable on his trident. Wait for him to land, then hit him.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Leblanc:Fizz:3",
+          "text": "Keep Distortion ready when Fizz has Urchin Strike up. Dash away or recast back to safety once he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Leblanc:Fizz:4",
+          "text": "Do not trade when Fizz's trident is glowing. Back off until his Seastone Trident attack is used.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Fizz-W", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Leblanc:Fizz:5",
+          "text": "Stay away from the lure of Chum the Waters. Move sideways when it flies at you, because it sticks to the first champion it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Fizz-R", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fbd7cf9bdfa1d66f66f5557df08dcc476c4a245831ad3d45561166a21082a2cf",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Malzahar:0",
+          "text": "Wait until Void Shift is gone before you commit. Hit Malzahar with a poke first; once he takes damage the damage reduction fades after a moment.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 11,
+              "end": 21
+            },
+            { "kind": "champion", "key": "Malzahar", "start": 53, "end": 61 },
+            { "kind": "keyword", "key": "poke", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Leblanc:Malzahar:1",
+          "text": "Do not walk into Call of the Void in a straight line. If you get silenced you cannot use Distortion to return.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 17, "end": 33 },
+            { "kind": "keyword", "key": "silenced", "start": 65, "end": 73 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 89, "end": 99 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Leblanc:Malzahar:2",
+          "text": "Avoid standing in minions that have Malefic Visions on them. When they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Leblanc:Malzahar:3",
+          "text": "Land Ethereal Chains and Sigil of Malice together to hold Malzahar in place for a burst. He cannot dodge once he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 25, "end": 40 },
+            { "kind": "champion", "key": "Malzahar", "start": 58, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 116, "end": 122 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Leblanc:Malzahar:4",
+          "text": "Stay out of his Nether Grasp range after level 6. Keep Distortion ready to escape, and kill him first if you can.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-R", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dcd4cfa135ae1647a8864c2cefc17afd2a9c9130d9580bb308cc2c233f583bd7",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Orianna:0",
+          "text": "Hit Orianna with Sigil of Malice, then follow with Ethereal Chains or Distortion to detonate the mark for a big burst.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 17, "end": 32 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 51, "end": 66 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Leblanc:Orianna:1",
+          "text": "Aim Ethereal Chains in a straight line at Orianna; if she stays tethered she gets rooted, so she must walk out of range or be punished.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Orianna", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Leblanc:Orianna:2",
+          "text": "Look for where her Ball is sitting. Her damage only reaches that area, so trade from the side the Ball is not on.",
+          "refs": [],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Leblanc:Orianna:3",
+          "text": "Do not stand in the field Command: Dissonance leaves behind, or you will be slowed and have a hard time running back.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-W", "start": 26, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Leblanc:Orianna:4",
+          "text": "Stay out of close range at level 6 when her ultimate is ready. Command: Shockwave stuns you, and you cannot return with Distortion while stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 63, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 120, "end": 130 },
+            { "kind": "keyword", "key": "stunned", "start": 137, "end": 144 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Leblanc:Orianna:5",
+          "text": "Use Distortion to dash in and out of a trade, so her answering damage lands on an empty spot.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Leblanc:combo:0",
+          "note": "The W return puts LeBlanc back out of range, so Orianna's Ball has less time to punish her trade.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "champion", "key": "Orianna", "start": 48, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "255b070b55f1ba17694cbc67af236ba19aed2582509b9f552d8dc6d907728aae",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Ryze:0",
+          "text": "Open with Sigil of Malice, then follow with another ability to pop the mark. Ryze has no escape, so you can trade freely when your abilities are ready.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Ryze", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Leblanc:Ryze:1",
+          "text": "Aim Ethereal Chains at Ryze when he steps up to cast. If he stays shackled, he gets rooted and takes heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Ryze", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Leblanc:Ryze:2",
+          "text": "Use Distortion to dodge back out after a trade; Ryze's Overload and Rune Prison need to be aimed or in range to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ryze", "start": 48, "end": 52 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Ryze-W", "start": 68, "end": 79 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Leblanc:Ryze:3",
+          "text": "Stay out of Spell Flux range when his abilities are ready. Flux makes Rune Prison root you and makes Overload hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-E", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Ryze-W", "start": 70, "end": 81 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 101, "end": 109 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Leblanc:Ryze:4",
+          "text": "Go all in once Ryze has used his abilities. His short cooldowns come back fast, so don't wait too long.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20712e0b8d5d0babfc68f8cdead0b10a73787da52a270424f5dcb20a3d0d92ce",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Sylas:0",
+          "text": "Hit Sylas with Sigil of Malice and then follow with another ability to pop the mark. Do it when he walks up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Leblanc:Sylas:1",
+          "text": "Aim Ethereal Chains in a straight line at Sylas, with minions out of the way, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Leblanc:Sylas:2",
+          "text": "Jump in with Distortion, then recast it to return to safety before Sylas can hit you back.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Sylas", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Leblanc:Sylas:3",
+          "text": "Do not trade in melee range with Sylas once he has spent abilities. His Petricite Burst attack hits hard, and Kingslayer heals him when he is low.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Sylas-passive",
+              "start": 72,
+              "end": 87
+            },
+            { "kind": "ability", "key": "Sylas-W", "start": 110, "end": 120 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Leblanc:Sylas:4",
+          "text": "Do not run in a straight line from Sylas, because Abscond into Abduct can pull him onto you and leave you knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 106, "end": 116 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Leblanc:Sylas:5",
+          "text": "Sylas can steal Mimic with Hijack at level 6. Do not use it carelessly when he is close.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Leblanc-R", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Sylas-R", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "201558fadc2021128a2ab3686412ef7f49e7f5aa23fbf480093748a9feabe7dd",
+      "tips": [
+        {
+          "id": "middle:Leblanc:TwistedFate:0",
+          "text": "Use Distortion to dodge back out after you trade; keep it ready to return before Twisted Fate's Gold Card lands.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "TwistedFate", "start": 81, "end": 93 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Leblanc:TwistedFate:1",
+          "text": "Stay away when Twisted Fate is shuffling cards; a stunned LeBlanc can't return with Distortion.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 57 },
+            { "kind": "champion", "key": "Leblanc", "start": 58, "end": 65 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 84, "end": 94 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Leblanc:TwistedFate:2",
+          "text": "Land Sigil of Malice, then follow with Ethereal Chains so the mark pops for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 5, "end": 20 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 39, "end": 54 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Leblanc:TwistedFate:3",
+          "text": "Dodge Wild Cards by stepping sideways; it is a fan, so sidestep early or stand behind minions.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Leblanc:TwistedFate:4",
+          "text": "When Destiny goes up, back off; Twisted Fate may be teleporting in to kill you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 5,
+              "end": 12
+            },
+            { "kind": "champion", "key": "TwistedFate", "start": 32, "end": 44 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5b8e2bee5807baff1ded2fd7c74a584540396cc392b52f3e35f6840c1c7f0531",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Viktor:0",
+          "text": "Use Ethereal Chains when Viktor is about to walk up for a last-hit. If he stays tethered, he gets rooted and takes a lot of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Viktor", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Leblanc:Viktor:1",
+          "text": "Start a trade with Sigil of Malice, then hit him with another ability to detonate the mark for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Leblanc:Viktor:2",
+          "text": "Do not stand still in Gravity Field. Dash out with Distortion before the stun lands, or you will be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 51, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 107 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Leblanc:Viktor:3",
+          "text": "Keep Distortion ready to return after you trade. It gets you away from Viktor's Hextech Ray follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Viktor", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "Viktor-E", "start": 80, "end": 91 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Leblanc:Viktor:4",
+          "text": "Look for kills before Viktor has upgraded his abilities. His shield and slows get much stronger as he collects Hex Fragments.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Leblanc:Viktor:5",
+          "text": "Leave the Arcane Storm area quickly. It follows the champion it hit, so dash away from it rather than walking.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 10, "end": 22 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d18363a28a3fe6327eb037f7062815bb8b5129ea86c78e692cd522d6ccca609c",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Yasuo:0",
+          "text": "Hit Yasuo with Sigil of Malice, then follow with another ability to pop the mark. Keep poking him this way while his dashes are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 15, "end": 30 },
+            { "kind": "keyword", "key": "poke", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Leblanc:Yasuo:1",
+          "text": "Don't throw Ethereal Chains while Wind Wall is up, because the wall destroys it. Wait for the wall to fade, then throw.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 12, "end": 27 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Leblanc:Yasuo:2",
+          "text": "Aim Ethereal Chains when no minion stands in front of Yasuo, since it hits the first enemy in its path. If it lands, he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 123, "end": 129 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Leblanc:Yasuo:3",
+          "text": "Use Distortion to dash in, deal damage, then recast it to return to safety before Yasuo can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yasuo", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Leblanc:Yasuo:4",
+          "text": "Stay out of his Steel Tempest range. When it becomes a whirlwind it knocks you up, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8870e4bb433559888907dbdbfc87af16e70bdf68aca93be0d007dca96d079c0c",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Yone:0",
+          "text": "Hit Yone with Sigil of Malice, then follow with Ethereal Chains; the mark pops for extra damage and you can start trades from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 14, "end": 29 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Leblanc:Yone:1",
+          "text": "Keep Yone at range. Once he has two stacks, Mortal Steel dashes him onto you, so step back instead of trading in melee.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Leblanc:Yone:2",
+          "text": "Aim Ethereal Chains where Yone will walk. If it connects and he stays tethered, he gets rooted and takes a lot of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Leblanc:Yone:3",
+          "text": "Jump in with Distortion to deal damage, then recast it to return to safety before Yone can hit you back.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 13, "end": 23 },
+            { "kind": "champion", "key": "Yone", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Leblanc:Yone:4",
+          "text": "Respect Yone when you are low. Fate Sealed reaches far and stuns, and Mimic is your only way to answer a trade then.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Yone-R", "start": 31, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 },
+            { "kind": "ability", "key": "Leblanc-R", "start": 70, "end": 75 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Leblanc:Yone:5",
+          "text": "Yone's Soul Unbound makes him fast and his body stays behind. Poke him less while he is in spirit form and expect him to snap back with extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Yone-E", "start": 7, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "middle:Leblanc:combo:0",
+          "note": "The W return lets LeBlanc poke with Q and escape before Yone can easily trade back in melee range.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 18, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 56, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5d23e95624f853a1e95321433cdf17f81b43c1f56e6def33a952b94db3c2aef6",
+      "tips": [
+        {
+          "id": "middle:Leblanc:Zed:0",
+          "text": "Stay out of Zed's reach and use Ethereal Chains when he walks up to last-hit; the root lets you land Sigil of Malice and Distortion safely.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 32, "end": 47 },
+            { "kind": "ability", "key": "Leblanc-Q", "start": 101, "end": 116 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 121, "end": 131 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Leblanc:Zed:1",
+          "text": "Put Sigil of Malice on Zed from long range, then hit him with another ability to pop the mark. You out-range him, so trade before he can get close.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 23, "end": 26 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Leblanc:Zed:2",
+          "text": "Keep Distortion ready when Zed has his ultimate. Recast it to return to safety once he marks you, or dash away from his shadows.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Leblanc:Zed:3",
+          "text": "Hit Zed right after he uses Living Shadow. His damage and slow depend on the shadow, so he is weakest then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Zed-W", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Leblanc:Zed:4",
+          "text": "Stay healthy: Zed's Contempt for the Weak deals bonus damage once you fall below half health.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Zed-passive", "start": 20, "end": 41 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "champion": "Aphelios",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "2cc9fcaf57b51176238da9d10926c4fa4ccdd523249f2f08e563152dd81d4426",
+      "tips": [
+        {
+          "id": "adc:Aphelios:general:0",
+          "text": "Check which weapons you hold before you trade. Each main weapon has a different ability, so pick the fight that fits your current gun.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Aphelios:general:1",
+          "text": "Use Moonshot to mark a target, then attack it from far away. The follow-up attack has very long range, so poke from outside their reach.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Aphelios:general:2",
+          "text": "Hit enemies with Gravitum attacks to slow them. Then use your weapon ability to root every slowed enemy, which sets up a kill or a safe escape.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 84 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Aphelios:general:3",
+          "text": "Swap weapons with Phase to get the gun you need. It has a short cooldown, but you can't cast it while a new weapon is being assembled.",
+          "refs": [
+            { "kind": "ability", "key": "Aphelios-W", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Aphelios:general:4",
+          "text": "Watch your ammo counter. When a weapon is nearly empty, using its ability burns all the rest, so swap before you waste a good weapon.",
+          "refs": [],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Aphelios:general:5",
+          "text": "Fire Moonlight Vigil at a champion in a clump of enemies. It explodes on the first champion hit and then attacks every enemy caught in the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Aphelios-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "adc:Aphelios:general:6",
+          "text": "Spend skill points on attack damage, attack speed or lethality, because Aphelios can't level his abilities. Choose what suits your lane.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "9a3a122308a3781491d08f19aa81991675c25c75489b17e0264c85117122a7df",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Ashe:0",
+          "text": "Stay out of Volley's cone, because its arrows are hard to dodge at close range and slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "adc:Aphelios:Ashe:1",
+          "text": "Ashe has few escapes, so look for trades when Volley is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ashe-W", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Aphelios:Ashe:2",
+          "text": "Stay near your team when Enchanted Crystal Arrow is ready, because it can hit you from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 25, "end": 48 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "18b332ff3183f711848d3f223a2ee38c4073baee17f12aff7295da40098bca4e",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Caitlyn:0",
+          "text": "Stay out of Caitlyn's range early. Her Piltover Peacemaker reaches far, so trade only when she is busy with minions.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 39, "end": 58 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Aphelios:Caitlyn:1",
+          "text": "Stand behind allied minions when Caitlyn uses Piltover Peacemaker. It hits less after the first target.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 46, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Aphelios:Caitlyn:2",
+          "text": "Watch where you walk near her. A Yordle Snap Trap roots you and sets up a big Headshot, so avoid stepping on bushes or choke points she may have trapped.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 33, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 50, "end": 55 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 78,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:Aphelios:Caitlyn:3",
+          "text": "Move out of her line when her net hits you, since her Headshot then reaches you from long range.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 54,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Aphelios:Caitlyn:4",
+          "text": "Stand in the path of Ace in the Hole to block it when she aims at an ally.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "293ba19b6b9ccf7faab9f2b15e2c6fce0555a96712c7c63c3831f59b13c12dca",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Ezreal:0",
+          "text": "Stay out of Mystic Shot lines by standing behind minions, since the bolt stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Aphelios:Ezreal:1",
+          "text": "Ezreal is fragile, so punish him after he wastes Arcane Shift; he has no blink for a while.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Aphelios:Ezreal:2",
+          "text": "Use Gravitum when you want to trap Ezreal; his slow followed by the root keeps him close enough to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 35, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:Aphelios:Ezreal:3",
+          "text": "Move away from an Essence Flux orb that sticks to you; it explodes when he hits you with an attack or ability.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-W", "start": 18, "end": 30 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Aphelios:Ezreal:4",
+          "text": "Do not stand in a line with your own wave at level 6, since Trueshot Barrage can hit you from across the map.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-R", "start": 60, "end": 76 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "bdd218e462dd9975bc227c30382248b28b4a87959c5a2241cccf50e82a1c9ab9",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Jhin:0",
+          "text": "Keep your distance from Jhin and watch for invisible traps when you step forward. Walking into one slows you and sets you up for a root.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Aphelios:Jhin:1",
+          "text": "Jhin's Deadly Flourish only roots you if he or an ally hit you in the last few seconds. Avoid trading basic attacks with him when he has it ready.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jhin-W", "start": 7, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Aphelios:Jhin:2",
+          "text": "Jump on Jhin while he reloads after his fourth shot; he cannot basic attack then.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Aphelios:Jhin:3",
+          "text": "Stay healthy when you leave a fight. Curtain Call hits hardest on low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-R", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8ca7fd5d6a644633ff1f4deb8a0b1a8c109a37e1001617a35deffb01d1d72f56",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Jinx:0",
+          "text": "Stay out of Jinx's Zap! line; a hit slows you and makes you easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jinx-W", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Aphelios:Jinx:1",
+          "text": "Go in after Flame Chompers! is used; if she misses, she has a hard time escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Aphelios:Jinx:2",
+          "text": "Jump on Jinx while she is poking with rockets. Her minigun takes time to ramp up, so close in fast.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 8, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Aphelios:Jinx:3",
+          "text": "Stay close to Jinx when you can. Her ultimate does less damage the nearer you are to her.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "185572c8ef8db5d9c19d334047378d33665f7b9f1e1aa6ad90b8f4b0c21fde0a",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Kaisa:0",
+          "text": "Make Kai'Sa walk into Gravitum slows, then use Weapon Abilites to root her before she can use Supercharge to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Aphelios-Q", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 70 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 94, "end": 105 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Aphelios:Kaisa:1",
+          "text": "Fight with Calibrum when you can; its long range lets you outrange Kai'Sa.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Aphelios:Kaisa:2",
+          "text": "Stay near your support. Kai'Sa is best at picking off isolated enemies, and Killer Instinct needs Plasma to reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "isolated", "start": 54, "end": 62 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Aphelios:Kaisa:3",
+          "text": "Step away from minions you are near when Kai'Sa casts Icathian Rain; its missiles split among nearby enemies and all aim at you if you are alone.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 41, "end": 47 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "dfd0caabd7e7b1734b1a524b5fc1ab277c3a2f4426bba8537c1840d71296df40",
+      "tips": [
+        {
+          "id": "adc:Aphelios:MissFortune:0",
+          "text": "Once the Gravitum slow lands on Miss Fortune, use its weapon ability to root her so you can finish her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 32,
+              "end": 44
+            },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Aphelios:MissFortune:1",
+          "text": "Hit Miss Fortune whenever you can; damage cancels her Strut speed boost.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 54,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Aphelios:MissFortune:2",
+          "text": "Step out of Make It Rain right away; it slows you and keeps damaging while you stand in it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Aphelios:MissFortune:3",
+          "text": "Don't stand directly behind a minion in front of you, because Double Up bounces through to hit you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 62,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Aphelios:MissFortune:4",
+          "text": "Stay out of her line when she reaches level 6; Bullet Time hurts a lot if you are caught in the cone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 47,
+              "end": 58
+            }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fcc965dc29ebe8ea197fdc5d7db835eb102a94e2169a57ef47fa86a87b90b2c9",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Smolder:0",
+          "text": "Smolder is weak early, so trade often with your long-range weapon and pressure his health before he stacks Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 107,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "adc:Aphelios:Smolder:1",
+          "text": "Hold Gravitum when Smolder flies in with Flap, Flap, Flap; a root when he lands keeps him from escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 19, "end": 26 },
+            { "kind": "ability", "key": "Smolder-E", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Aphelios:Smolder:2",
+          "text": "Smolder's Flap, Flap, Flap ends if he is immobilized, so root him with Gravitum while he flies.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Smolder-E", "start": 10, "end": 26 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Aphelios:Smolder:3",
+          "text": "Stay out of the line of Achooo!; getting hit slows you and the explosion hurts, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Aphelios:Smolder:4",
+          "text": "Stand away from your support when Smolder casts MMOOOMMMM!; it hits a wide area and hurts more in the center.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Smolder-R", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "00d66e6874d6ec00097d344d7ff9b04ba9cf282e5922624e8b93aaa511731516",
+      "tips": [
+        {
+          "id": "adc:Aphelios:Yunara:0",
+          "text": "Switch to Gravitum when you want to catch Yunara. Once her slowed, use the weapon's active to root her for a free trade.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 42, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Aphelios:Yunara:1",
+          "text": "Poke her with Calibrum from long range. Marked targets can be hit by a long follow-up attack from your off-hand weapon.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Aphelios:Yunara:2",
+          "text": "Stay out of her prayer bead's path when you trade. It slows heavily and the bead keeps hurting anyone near it.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Aphelios:Yunara:3",
+          "text": "Respect Yunara when she uses her ultimate; her laser and dash make her hard to pin down. Hold your root and fall back until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

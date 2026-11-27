@@ -1,0 +1,2541 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ahri",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "1d94d711218091f7a3e9e450f4c7f387d5767b7cd460392896b7e7e92c8633e1",
+      "tips": [
+        {
+          "id": "middle:Ahri:general:0",
+          "text": "Aim Orb of Deception so it hits the enemy on the way out and again on the way back; the return hit is true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Ahri:general:1",
+          "text": "Charm stops at the first enemy it hits, so line it up where minions are not in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:general:2",
+          "text": "Land Charm first, then follow with Fox-Fire and Orb of Deception; the fox-fires go for a charmed champion first.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ahri-W", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:general:3",
+          "text": "Cast Fox-Fire to clear minions that are low on health; it deals extra damage to them and gives you a burst of Move Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ahri:general:4",
+          "text": "Use Spirit Rush to reposition and fire bolts at the same time. Keep a recast ready to escape or to finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:general:5",
+          "text": "Take a kill on an enemy you just damaged to heal with Essence Theft, and that also extends your Spirit Rush recasts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ahri-passive",
+              "start": 54,
+              "end": 67
+            },
+            { "kind": "ability", "key": "Ahri-R", "start": 96, "end": 107 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Ahri:general:6",
+          "text": "Play safer while Spirit Rush is on cooldown, because Ahri has much less escape and survivability then.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "b2153e1d136e9ef78699845f8e888d4363a7f1526134922e2a523c1aaa22a019",
+      "tips": [
+        {
+          "id": "middle:Ahri:Akali:0",
+          "text": "Aim Charm through a gap with no minions in front of Akali. Once she is charmed, finish her with Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Akali", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Ahri-W", "start": 96, "end": 104 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 109, "end": 125 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ahri:Akali:1",
+          "text": "Stay away from Akali's Five Point Strike at its tip range. Fight her when her energy is low and she cannot spam it.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Akali-Q", "start": 23, "end": 40 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Ahri:Akali:2",
+          "text": "When Akali goes invisible in Twilight Shroud, hit the smoke with Orb of Deception. Area spells still reveal her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Akali-W", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ahri:Akali:3",
+          "text": "Save Spirit Rush for escaping Akali's Perfect Execution at level 6 and above. Your health is low once her second dash is coming.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Akali-R", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4e500d7b48d665d83f48fb00e7b8776b189d4ea4117fa087ff523e2421383891",
+      "tips": [
+        {
+          "id": "middle:Ahri:Akshan:0",
+          "text": "Aim Charm at Akshan when he swings in or walks up to trade; it stops him and sets up your Orb of Deception and Fox-Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Akshan", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 90, "end": 106 },
+            { "kind": "ability", "key": "Ahri-W", "start": 111, "end": 119 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Ahri:Akshan:1",
+          "text": "Stay behind minions so Akshan cannot easily hit you with Avengerang; Charm also stops at the first enemy it touches, so keep that in mind when you aim.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Akshan-Q", "start": 57, "end": 67 },
+            { "kind": "ability", "key": "Ahri-E", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Ahri:Akshan:2",
+          "text": "Hit Akshan with Orb of Deception both going out and coming back; the return pass does true damage.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Akshan:3",
+          "text": "Look for Akshan when he vanishes with Going Rogue; he cannot attack or cast without revealing himself, so keep your abilities ready.",
+          "refs": [
+            { "kind": "champion", "key": "Akshan", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Akshan-W", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ahri:Akshan:4",
+          "text": "Use Spirit Rush to dash away after a trade, or to finish a weakened Akshan.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Akshan", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8d2a55e11e29d65ee4fe09e37b1305d0b50786e51e1085a2fcc1492a9bcc921e",
+      "tips": [
+        {
+          "id": "middle:Ahri:Anivia:0",
+          "text": "Stay behind minions so Anivia's Flash Frost is harder to land; she needs it for her stun and her Frostbite damage.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 32, "end": 43 },
+            { "kind": "ability", "key": "Anivia-E", "start": 97, "end": 106 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Ahri:Anivia:1",
+          "text": "Use Orb of Deception to poke Anivia from range, but don't walk into her Glacial Storm.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Anivia", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Anivia-R", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ahri:Anivia:2",
+          "text": "Throw Charm when Anivia has used Crystallize badly, or wait until the wall melts; the wall can block the kiss.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Anivia", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Anivia-W", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ahri:Anivia:3",
+          "text": "Look for a kill when Anivia is low, but know her egg means a second life. Finish the egg quickly, or fight when it is already used.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "869c505807b55903724166932d568f806e19af5676550b30367fd61b635b079f",
+      "tips": [
+        {
+          "id": "middle:Ahri:Annie:0",
+          "text": "Hit Annie with Orb of Deception when she steps up to last-hit. It damages her on the way out and again on the way back.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Annie:1",
+          "text": "Check Annie's Pyromania counter. When it is full, stay out of her Disintegrate and Incinerate range, because her next spell stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 14,
+              "end": 23
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 66, "end": 78 },
+            { "kind": "ability", "key": "Annie-W", "start": 83, "end": 93 },
+            { "kind": "keyword", "key": "stunned", "start": 124, "end": 129 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Ahri:Annie:2",
+          "text": "Keep Spirit Rush ready for when Annie stuns you or Tibbers lands. It is your way to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Annie", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Ahri:Annie:3",
+          "text": "Land Charm on Annie when she is out of position. Then Fox-Fire chases her and hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Annie", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Ahri-W", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "614061ac1e1488b0813caaecefbc6f5bb37c7fe0877dd3bca5555ca5c9b09f0d",
+      "tips": [
+        {
+          "id": "middle:Ahri:AurelionSol:0",
+          "text": "Land Charm on Aurelion Sol before you commit; he is a slow caster and a charmed target cannot cast Singularity or Falling Star.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 14,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 99,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ahri:AurelionSol:1",
+          "text": "Walk out of the Falling Star area as soon as you see it land; it hits after a delay, so you can dodge it.",
+          "refs": [],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Ahri:AurelionSol:2",
+          "text": "Do not stand in the middle of Singularity; it drags you inward. Step out of the circle early.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 30,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Ahri:AurelionSol:3",
+          "text": "Use Orb of Deception to poke him while he waits for his abilities, and pull the orb back through him for a second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ahri:AurelionSol:4",
+          "text": "Use Spirit Rush to dash out of his Breath of Light beam or away from his Astral Flight chase.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 4, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 35,
+              "end": 50
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 73,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4a16420252cd748b0dbc9b4c49d3b9af036d1bd8988c7fcbfc031f6392943af3",
+      "tips": [
+        {
+          "id": "middle:Ahri:Aurora:0",
+          "text": "Aim Charm at Aurora when she hops back after The Weirding; it stops at the first enemy hit, so line it up so no minion stands in front.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aurora-E", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Ahri:Aurora:1",
+          "text": "Stay behind minions when Aurora has The Weirding ready, so it is harder for her to hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Aurora-E", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ahri:Aurora:2",
+          "text": "Once Charm lands, follow with Fox-Fire and Orb of Deception while Aurora cannot dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ahri-W", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 43, "end": 59 },
+            { "kind": "champion", "key": "Aurora", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Ahri:Aurora:3",
+          "text": "Do not chase Aurora after Across the Veil; she turns invisible. Wait for her to show again, then use Charm.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Aurora-W", "start": 26, "end": 41 },
+            { "kind": "ability", "key": "Ahri-E", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Ahri:Aurora:4",
+          "text": "Keep Spirit Rush ready for escaping, since you are much easier to kill without it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a6bb7a3ee3096d55af6268bde6033f4793023713d594820f3421a6462a23ab6f",
+      "tips": [
+        {
+          "id": "middle:Ahri:Azir:0",
+          "text": "Aim Charm at Azir whenever you can. Once he is charmed, follow up with Fox-Fire and Orb of Deception while he cannot act.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Azir", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ahri-W", "start": 71, "end": 79 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ahri:Azir:1",
+          "text": "Stay out of the range of his Sand Soldiers. They hurt a lot over a long fight, so trade quickly and step back.",
+          "refs": [],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ahri:Azir:2",
+          "text": "Charm stops at the first enemy it hits, so keep minions out of its path or Azir will be safe behind them.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Azir", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "middle:Ahri:Azir:3",
+          "text": "Use Orb of Deception to poke him when he steps up to last-hit. It passes through units, so minions do not block it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ahri:Azir:4",
+          "text": "Hold Spirit Rush as your escape. Azir's wall can block you, so dash away before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Azir", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "917595fdc4ca74e6aeb5cfc4cca80b81a165b872b72cca2c8b9838e0b2dbab68",
+      "tips": [
+        {
+          "id": "middle:Ahri:Brand:0",
+          "text": "Keep minions between you and Brand's Sear; it hits only the first enemy, and the stun needs you ablaze.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Brand-Q", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 },
+            { "kind": "keyword", "key": "ablaze", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Brand:1",
+          "text": "Charm Brand when he steps up to poke or farm; he is easy to hit once he commits to a cast.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Ahri:Brand:2",
+          "text": "Walk out of Pillar of Flame's area as soon as it appears; it has a short delay before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Brand:3",
+          "text": "Use Fox-Fire's speed boost to leave range after Brand lands a spell, before his combo can finish.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Brand", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "middle:Ahri:Brand:4",
+          "text": "Don't stand beside your minions when Brand has Conflagration; it spreads to them and further if you are ablaze.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Brand-E", "start": 47, "end": 60 },
+            { "kind": "keyword", "key": "ablaze", "start": 104, "end": 110 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ahri:Brand:5",
+          "text": "Hit Brand with Orb of Deception when he walks up for a trade; it hits him on the way out and the way back.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c0307fdcbf3805155e9f006591e2bde79c2a4680a24e8d4bcb6ad46faafe031a",
+      "tips": [
+        {
+          "id": "middle:Ahri:Briar:0",
+          "text": "Keep Charm for when Briar leaps in; it knocks her down and stops her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ahri:Briar:1",
+          "text": "Poke with Orb of Deception while Briar is out of her leap range, and throw it again as it returns.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Briar", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ahri:Briar:2",
+          "text": "Stay behind minions so Charm is hard for the enemy to land on you, and keep your distance from Briar.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Briar", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Ahri:Briar:3",
+          "text": "Use Spirit Rush to dash away when Briar locks onto you in her frenzy, then fire Fox-Fire as you retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Ahri-W", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5c874ad354929684b6003ae3f4401ac672ec35efa0daa3deb6d31b7f85aaf629",
+      "tips": [
+        {
+          "id": "middle:Ahri:Cassiopeia:0",
+          "text": "Aim Charm at Cassiopeia when no minions are in the line. Charmed, she can't dodge, and you can follow with Orb of Deception and Fox-Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 107, "end": 123 },
+            { "kind": "ability", "key": "Ahri-W", "start": 128, "end": 136 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Ahri:Cassiopeia:1",
+          "text": "Stay out of Cassiopeia's Miasma clouds. They slow you and ground you, so you can't dash out with Spirit Rush.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 25,
+              "end": 31
+            },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 },
+            { "kind": "ability", "key": "Ahri-R", "start": 97, "end": 108 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Ahri:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze. You get slowed and not stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Cassiopeia:3",
+          "text": "Orb of Deception has long range, so poke Cassiopeia with it. Both passes hit her if she stands at the end of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 0, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ahri:Cassiopeia:4",
+          "text": "Don't stand poisoned in front of Cassiopeia for long. Her Twin Fang hits much harder and heals her.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Cassiopeia-E", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4c4769ec6d0e1c37b46c62cc3ac05328b1def975ff906a4bf3884ee7f7d7d447",
+      "tips": [
+        {
+          "id": "middle:Ahri:Diana:0",
+          "text": "Aim Charm at Diana before she reaches you; it stops her dash-in and sets up Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Diana", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Ahri-W", "start": 76, "end": 84 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Ahri:Diana:1",
+          "text": "Stay behind your minions so Diana can't reach you easily, and Charm hits the first enemy it meets, so line it up with no minion in the way.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Ahri:Diana:2",
+          "text": "Keep Spirit Rush ready when Diana goes in on you; its dash gets you out of her reach and its bolts hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ahri:Diana:3",
+          "text": "Diana's Pale Cascade shield soaks your damage while the orbs spin; trade after it fades or after the orbs have gone off.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Diana-W", "start": 8, "end": 20 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Ahri:Diana:4",
+          "text": "When Diana is hit by Crescent Strike she is revealed and can dash again quickly, so back away from her when she is marked.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Diana-Q", "start": 21, "end": 36 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "55744370014cdbdf5b5e1f8249a155ecdf9e76377aa871df6b1eb1335b230e8b",
+      "tips": [
+        {
+          "id": "middle:Ahri:Ekko:0",
+          "text": "Throw Charm at Ekko when he dashes in or walks up to the wave; the stunned-free window is yours, so follow with Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Ekko", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ahri-W", "start": 112, "end": 120 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 125, "end": 141 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Ahri:Ekko:1",
+          "text": "Keep minions between you and Ekko's Timewinder trades? Better: stay out of its long line, since its return hit hurts more than the first.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Ahri:Ekko:2",
+          "text": "Charm stops at the first enemy it hits, so aim it on a clear line and not through minions.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ahri:Ekko:3",
+          "text": "Watch for the image Parallel Convergence leaves on cast and walk out of the area before it arms. Do not stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 20, "end": 40 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ahri:Ekko:4",
+          "text": "When Ekko's Chronobreak is down, he is much easier to trade with and kill, so look to go in then.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ekko-R", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ahri:Ekko:5",
+          "text": "Do not chase Ekko into a fight he can rewind out of; save Spirit Rush until Chronobreak is spent so you can finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ahri-R", "start": 58, "end": 69 },
+            { "kind": "ability", "key": "Ekko-R", "start": 76, "end": 87 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f31b7860fd92ce53116a6a8687d1f94a301932ba937e832cb2c69c526857b442",
+      "tips": [
+        {
+          "id": "middle:Ahri:Ezreal:0",
+          "text": "Land Charm first, then use Orb of Deception and Fox-Fire on the charmed Ezreal. Charm makes the rest of your combo much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 27, "end": 43 },
+            { "kind": "ability", "key": "Ahri-W", "start": 48, "end": 56 },
+            { "kind": "champion", "key": "Ezreal", "start": 72, "end": 78 },
+            { "kind": "ability", "key": "Ahri-E", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ahri:Ezreal:1",
+          "text": "Ezreal is fragile, so look for the all-in once you have Charm ready. Walk up with Fox-Fire for extra speed and to pressure him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ahri-E", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Ahri-W", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Ahri:Ezreal:2",
+          "text": "Keep minions between you and Ezreal so Mystic Shot hits them first instead of you. It stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ahri:Ezreal:3",
+          "text": "Ezreal can use Arcane Shift to dodge Charm. Bait it out first, then throw Charm when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 15, "end": 27 },
+            { "kind": "ability", "key": "Ahri-E", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Ahri-E", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "08737ee20864dfdeb60400c81a8266385894f12472aaffbaee163c96de6adbc4",
+      "tips": [
+        {
+          "id": "middle:Ahri:Fizz:0",
+          "text": "Aim Charm at Fizz when he walks up to trade or to dash in. He can't escape the Orb of Deception follow-up while he is charmed.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Fizz", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 79, "end": 95 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Ahri:Fizz:1",
+          "text": "Hold Charm until Fizz has used Playful. While he is untargetable he can't be hit, so wait for him to land.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Fizz", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ahri:Fizz:2",
+          "text": "Stay behind minions so Fizz can't walk up for free. Charm stops at the first enemy it hits, so use it only on a clear line.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ahri-E", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Ahri:Fizz:3",
+          "text": "Use Orb of Deception to poke Fizz when he walks up for minions. The damage on the way back can't be reduced by armor or magic resistance.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ahri:Fizz:4",
+          "text": "Keep Spirit Rush ready to escape Fizz at level 6. Dash away from his Chum the Waters once the fish is on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Fizz-R", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ahri:Fizz:5",
+          "text": "Move sideways when Fizz throws Chum the Waters. It attaches to the first champion it hits, and the shark comes up two seconds later.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Fizz-R", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "03ad27f201aa440d1894309cadac7379ec467676a88f3d997272a6047e522334",
+      "tips": [
+        {
+          "id": "middle:Ahri:Galio:0",
+          "text": "Use Charm from behind minions; it ends on the first unit it hits, so line it up on Galio with a clear path.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Galio", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ahri:Galio:1",
+          "text": "Do not fight Galio when his Shield of Durand is charging; his magic shield and damage cut blunt your magic damage. Poke when he isn't charging.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Galio-W", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 115, "end": 119 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Ahri:Galio:2",
+          "text": "Stay out of Justice Punch's long line when it is ready, and don't get stuck close to him; it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Galio-E", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ahri:Galio:3",
+          "text": "Hold Spirit Rush to get away from Galio's combos, since he cannot dash through walls.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Galio", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c6fc73051af684f196dbdca9092827f41a39bc25ae671e3d0ea43764e1e8adca",
+      "tips": [
+        {
+          "id": "middle:Ahri:Hwei:0",
+          "text": "Hit Hwei with Charm when he commits to a slow spell, then follow with Fox-Fire and Orb of Deception while he can't move away.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ahri-E", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Ahri-W", "start": 70, "end": 78 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Ahri:Hwei:1",
+          "text": "Keep moving and stay out of straight lines. Hwei has to guess where you will be, and most of his spells are slow to land.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ahri:Hwei:2",
+          "text": "Rush Hwei right after he casts a Torment spell. He is easy to catch then, so trade with Spirit Rush and Orb of Deception.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ahri-R", "start": 88, "end": 99 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 104, "end": 120 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Ahri:Hwei:3",
+          "text": "Stay out of long range from Hwei, because his lightning hurts most when you are alone or can't move. Don't stand still when you're hit by his roots or pulls.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "isolated", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Ahri:Hwei:4",
+          "text": "Step out of the explosion after Hwei hits you with two different spells. It goes off after a short delay and lands where you were hit.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d72ff06da9dfdeca8dc5912879742747b2bf5099abe05ef14b241da953d7d9f3",
+      "tips": [
+        {
+          "id": "middle:Ahri:Irelia:0",
+          "text": "Land Charm on Irelia as she dashes in. A Charmed Irelia can't use Bladesurge, and you can follow up with Orb of Deception and Fox-Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Irelia", "start": 14, "end": 20 },
+            { "kind": "champion", "key": "Irelia", "start": 49, "end": 55 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 66, "end": 76 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 105, "end": 121 },
+            { "kind": "ability", "key": "Ahri-W", "start": 126, "end": 134 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ahri:Irelia:1",
+          "text": "Don't spend Charm on Irelia while she charges Defiant Dance. She resists the damage and keeps her recast.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 12, "end": 17 },
+            { "kind": "champion", "key": "Irelia", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Irelia-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ahri:Irelia:2",
+          "text": "Poke Irelia with Orb of Deception while she has no minions to dash to. She has fewer ways to reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Irelia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Irelia:3",
+          "text": "Keep Spirit Rush ready to escape when Irelia dashes onto you. Dash away and fire Fox-Fire as you go.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Irelia", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Ahri-W", "start": 81, "end": 89 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Ahri:Irelia:4",
+          "text": "Stay out of the line between the blades of Flawless Duet. Being stunned there is the start of a deadly combo for you.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 43, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "75045e90456ffb0b3a4f47bb89e8dc14bb2c81f8300401378de4b31cfc797923",
+      "tips": [
+        {
+          "id": "middle:Ahri:Kassadin:0",
+          "text": "Throw Charm from behind minions' reach only when the line is clear. Kassadin ignores unit collision, so he can walk through minions to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Kassadin", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ahri:Kassadin:1",
+          "text": "Do not rely on Charm to trade early. Kassadin can use Null Sphere to shield himself, so poke with Orb of Deception instead.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Kassadin", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 54, "end": 65 },
+            { "kind": "keyword", "key": "poke", "start": 88, "end": 92 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 98, "end": 114 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Ahri:Kassadin:2",
+          "text": "Orb of Deception deals true damage on its way back, so it ignores his magic resistance. Use it to hurt him without trading.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 0, "end": 16 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ahri:Kassadin:3",
+          "text": "Keep Spirit Rush ready for when Kassadin jumps in with Riftwalk. Dash away after he has committed.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kassadin", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ahri:Kassadin:4",
+          "text": "Push the wave and punish him early, before he reaches level 6 and Riftwalk gets stronger.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-R", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ahri:Kassadin:5",
+          "text": "Stay out of Force Pulse range. It slows you, so you can't easily dodge his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Kassadin-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b13a53312c06d162f3a566a5e6119da7c8ea69f2abcb0d922d88b1655bb8d927",
+      "tips": [
+        {
+          "id": "middle:Ahri:Katarina:0",
+          "text": "Aim Charm when Katarina walks up to a Dagger, because Shunpo is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Katarina", "start": 15, "end": 23 },
+            { "kind": "item", "key": "1042", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Katarina-E", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Ahri:Katarina:1",
+          "text": "Keep Spirit Rush for when Katarina dives you. It lets you dash away from Death Lotus.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Katarina", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Katarina-R", "start": 73, "end": 84 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Ahri:Katarina:2",
+          "text": "Charm Katarina while she channels Death Lotus. It interrupts her.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Katarina", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Katarina-R", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Ahri:Katarina:3",
+          "text": "Keep Orb of Deception on her Daggers when they land; she often steps in to pick them up.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "15869169c9de7036ebf866c73bf1cf0f1621628dac55bacd377ae201c448c845",
+      "tips": [
+        {
+          "id": "middle:Ahri:Leblanc:0",
+          "text": "Hit LeBlanc with Charm to cancel her Distortion return. She is stuck where she dashed and takes your full combo.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ahri-E", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 37, "end": 47 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ahri:Leblanc:1",
+          "text": "Use Orb of Deception to poke LeBlanc whenever she walks up to last-hit. It hits her on the way out and again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Leblanc", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Ahri:Leblanc:2",
+          "text": "Stay behind minions so Sigil of Malice and Ethereal Chains are harder to land cleanly.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-Q", "start": 23, "end": 38 },
+            { "kind": "ability", "key": "Leblanc-E", "start": 43, "end": 58 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Ahri:Leblanc:3",
+          "text": "Once Ethereal Chains hits you, break the tether by walking out of range, or you will be rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ahri:Leblanc:4",
+          "text": "Keep Spirit Rush ready for when LeBlanc dives. It gets you out of her burst and your bolts hit back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Leblanc", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "ec33b5911734b5f62e04ed6e98afca8eb5c7daec8fc8f68d7781b14c008d9aed",
+      "tips": [
+        {
+          "id": "middle:Ahri:Lissandra:0",
+          "text": "Throw Charm from behind your minions or from max range. Lissandra's Ring of Frost is her best answer when you get close, so stay out of its reach.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Lissandra", "start": 56, "end": 65 },
+            { "kind": "ability", "key": "Lissandra-W", "start": 68, "end": 81 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Ahri:Lissandra:1",
+          "text": "Hit Lissandra with Orb of Deception on its way out and again on its way back. Both passes deal damage, and it is a safe poke from range.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "poke", "start": 120, "end": 124 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Ahri:Lissandra:2",
+          "text": "Watch for Glacial Path. Lissandra can jump to the claw, so Charm her when she recasts it, or hold Charm for when she lands.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-E", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Lissandra", "start": 24, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 59, "end": 64 },
+            { "kind": "ability", "key": "Ahri-E", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ahri:Lissandra:3",
+          "text": "Do not stand next to Lissandra in a fight once she reaches level 6. Frozen Tomb can stun you where you stand, so keep Spirit Rush ready to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Lissandra", "start": 21, "end": 30 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 68, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 },
+            { "kind": "ability", "key": "Ahri-R", "start": 118, "end": 129 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Ahri:Lissandra:4",
+          "text": "Trade when Ring of Frost is on cooldown. Lissandra has little to stop you from walking up with Fox-Fire and Charm.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Lissandra", "start": 41, "end": 50 },
+            { "kind": "ability", "key": "Ahri-W", "start": 95, "end": 103 },
+            { "kind": "ability", "key": "Ahri-E", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2642d180a634d49792773ea47717cea1236fe685c6c2c4c0322d12b17657fb57",
+      "tips": [
+        {
+          "id": "middle:Ahri:Lux:0",
+          "text": "Keep minions between you and Lux. Light Binding only roots the first two enemies it hits, so avoid lining up with a minion behind you.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 },
+            { "kind": "ability", "key": "Lux-Q", "start": 34, "end": 47 },
+            { "kind": "keyword", "key": "rooted", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Ahri:Lux:1",
+          "text": "Land Charm on Lux, then follow with Orb of Deception and Fox-Fire. She has no dash to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Lux", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 36, "end": 52 },
+            { "kind": "ability", "key": "Ahri-W", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Ahri:Lux:2",
+          "text": "Step out of Lucent Singularity before it bursts. Don't stand in it, or you get slowed and hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ahri:Lux:3",
+          "text": "Move sideways when Lux's Final Spark warning line appears at low health. It reaches very far.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Lux-R", "start": 25, "end": 36 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e6c21b370acafef50e8ce3ce4fcf7403c77fe76f5446cf6b714a685121da10f3",
+      "tips": [
+        {
+          "id": "middle:Ahri:Malzahar:0",
+          "text": "Aim Charm through the lane to hit Malzahar while his Void Shift is down, since it blocks crowd control. Once he is charmed, follow up with your other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Malzahar", "start": 34, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 53,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "middle:Ahri:Malzahar:1",
+          "text": "Stay out of Malzahar's Call of the Void line, because being silenced stops you from dashing out or casting.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malzahar-Q", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Ahri:Malzahar:2",
+          "text": "Do not stand near minions carrying Malefic Visions; when they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ahri:Malzahar:3",
+          "text": "Keep Spirit Rush ready when Malzahar is near, because it lets you escape his Nether Grasp range or position safely.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Malzahar", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Ahri:Malzahar:4",
+          "text": "Kill his Voidlings with Fox-Fire, and push the lane so Void Swarm gets less use.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malzahar-W", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "35b0a49efebc03fc65fdb442833f2a25b008d02d0beaa40879abf4637093d793",
+      "tips": [
+        {
+          "id": "middle:Ahri:Mel:0",
+          "text": "Wait until Mel has used Rebuttal before you throw Charm; her nova destroys enemy projectiles, so it can wipe out your key spell.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 11, "end": 14 },
+            { "kind": "ability", "key": "Mel-W", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Ahri-E", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Ahri:Mel:1",
+          "text": "Stay behind minions when Mel is ready to cast Solar Snare. It is a long-range shot that you can dodge by keeping out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 25, "end": 28 },
+            { "kind": "ability", "key": "Mel-E", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "middle:Ahri:Mel:2",
+          "text": "Do not fight when your health is low and Mel has been hitting you. Her Overwhelm stacks can execute you, so back off for a moment to let them fall off.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 41, "end": 44 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ahri:Mel:3",
+          "text": "Use Fox-Fire after Mel's nova has gone. Its flames home in on her and keep your trade going.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Mel", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Ahri:Mel:4",
+          "text": "Once Mel is stunned or tied up with no way to answer, hold Spirit Rush for the kill. Save it so you can escape afterward.",
+          "refs": [
+            { "kind": "champion", "key": "Mel", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Ahri-R", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8be9269bee5722f01166d67f04a7c72967e2ed69e7224608b89033d2dd5c4118",
+      "tips": [
+        {
+          "id": "middle:Ahri:Naafiri:0",
+          "text": "Land Charm on Naafiri when she commits to a dash, then follow with Fox-Fire and Orb of Deception while she cannot act.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Naafiri", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Ahri-W", "start": 67, "end": 75 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 80, "end": 96 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ahri:Naafiri:1",
+          "text": "Stand behind minions so Charm cannot be thrown back at you easily, and keep Naafiri from closing in; Charm stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 24, "end": 29 },
+            { "kind": "champion", "key": "Naafiri", "start": 76, "end": 83 },
+            { "kind": "ability", "key": "Ahri-E", "start": 101, "end": 106 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Ahri:Naafiri:2",
+          "text": "Use Orb of Deception from long range to hit Naafiri and her packmates on both passes.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Naafiri", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Ahri:Naafiri:3",
+          "text": "Keep Spirit Rush ready when Naafiri is near; she can burst you fast, and you need the dash to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Ahri:Naafiri:4",
+          "text": "Fox-Fire hits what is near you, so use it when Naafiri and her packmates jump on you; it also speeds you away.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Naafiri", "start": 47, "end": 54 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d1fdf5293252c0f89618955b4bcd66bfdf41cc8292b1980bb9d71d307d205f07",
+      "tips": [
+        {
+          "id": "middle:Ahri:Orianna:0",
+          "text": "Aim Charm from behind your own minions' sides or when none are between you. It stops at the first enemy it hits, minions included.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ahri:Orianna:1",
+          "text": "Hit Orianna with Orb of Deception on its way out and again on its way back. The return pass deals true damage.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "middle:Ahri:Orianna:2",
+          "text": "Stay out of Command: Shockwave range once Orianna reaches level 6, especially when the Ball is near you. It pulls you in and she wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 12, "end": 30 },
+            { "kind": "champion", "key": "Orianna", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ahri:Orianna:3",
+          "text": "Orianna's abilities only reach where her Ball is. Stand away from it and she has to spend a cast to move it.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ahri:Orianna:4",
+          "text": "Use Fox-Fire after landing Charm; the flames go for the charmed champion first.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ahri-E", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "581371de4f68aad2620ff7b9a9a8c5fdcea403971588c66d338c2c1f0bfa7e55",
+      "tips": [
+        {
+          "id": "middle:Ahri:Qiyana:0",
+          "text": "Aim Charm at Qiyana when she dashes toward you with Audacity or Terrashape; it stops at the first enemy it hits, so keep minions out of the line.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Qiyana", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 52, "end": 60 },
+            { "kind": "ability", "key": "Qiyana-W", "start": 64, "end": 74 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Ahri:Qiyana:1",
+          "text": "Once Charm lands, follow with Fox-Fire and Orb of Deception while she is stuck. Fox-Fire goes for charmed champions first.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ahri-W", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 43, "end": 59 },
+            { "kind": "ability", "key": "Ahri-W", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Ahri:Qiyana:2",
+          "text": "Use Orb of Deception to poke her when she walks up to farm. It hits twice, on the way out and on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Qiyana:3",
+          "text": "Keep Spirit Rush ready when Qiyana is near. It lets you escape her burst, and you are much easier to kill without it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Ahri:Qiyana:4",
+          "text": "Watch for Qiyana's ultimate near walls and brush. Stay away from terrain when she has Supreme Display of Talent, since it stuns you around its edges.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 86, "end": 111 },
+            { "kind": "keyword", "key": "stunned", "start": 122, "end": 127 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "57c260e6e5ab9431e0759f53988742aeb226e67e7a119b808d4d0f5ab6a33fbe",
+      "tips": [
+        {
+          "id": "middle:Ahri:Ryze:0",
+          "text": "Aim Charm when Ryze walks up to last-hit, with no minion between you. It hits the first enemy in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Ryze:1",
+          "text": "Stay away from Ryze while he has Flux on you. Rune Prison then roots you and Overload hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ryze-W", "start": 46, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 68 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Ahri:Ryze:2",
+          "text": "Poke with Orb of Deception from long range, since it hits on the way out and again on the way back. Ryze has to come close to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Ryze", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Ahri:Ryze:3",
+          "text": "Save Spirit Rush to escape or finish a fight. Without it you are far easier to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "87bbced86443e2578e735ea5dffbe9c7f4e29b92c8f0a61dd6a82df1883cf5c8",
+      "tips": [
+        {
+          "id": "middle:Ahri:Sylas:0",
+          "text": "Land Charm on Sylas before he lunges in; it stops his trade and sets up Orb of Deception and Fox-Fire.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 72, "end": 88 },
+            { "kind": "ability", "key": "Ahri-W", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Ahri:Sylas:1",
+          "text": "Stay behind minions so Sylas cannot easily land Abduct; his chains hit the first enemy they meet.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ahri:Sylas:2",
+          "text": "Do not stand where Chain Lash is aimed. Step sideways when the chains cross, because the blast comes a moment later.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ahri:Sylas:3",
+          "text": "Hold Spirit Rush when Sylas is low; his Kingslayer heals him, so finish him fast with Fox-Fire and the bolts.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Sylas-W", "start": 40, "end": 50 },
+            { "kind": "ability", "key": "Ahri-W", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Ahri:Sylas:4",
+          "text": "Be careful using Spirit Rush near Sylas at level 6. He can steal it with Hijack and use it against you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Sylas", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Sylas-R", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5152167179d31f23bce985383c828a13899a74b0a634cc511cb32c890cbab504",
+      "tips": [
+        {
+          "id": "middle:Ahri:Syndra:0",
+          "text": "Aim Charm at Syndra when she has just used Scatter the Weak; her long cooldown leaves her with no way to push you off.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Syndra", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Syndra-E", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Ahri:Syndra:1",
+          "text": "Stay behind minions so Syndra cannot hit you easily. Charm stops at the first unit it hits, so keep a clear line to her.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ahri-E", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Ahri:Syndra:2",
+          "text": "Walk around the Dark Spheres lying on the ground. If Syndra uses Scatter the Weak on one, it stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Syndra-E", "start": 65, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Ahri:Syndra:3",
+          "text": "Use Fox-Fire for the move speed when you step in or out of her range. It also hits her without any aiming.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ahri:Syndra:4",
+          "text": "Trade with Orb of Deception when she steps up to last-hit. It damages her on the way out and again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 11, "end": 27 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d288976d584087995005830595d0c5e23f332932813d4e4a3f8eabcdde5c285f",
+      "tips": [
+        {
+          "id": "middle:Ahri:Taliyah:0",
+          "text": "Stay out of Taliyah's Unraveled Earth field when you can; her Seismic Shove can knock you into the stones and stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 22, "end": 37 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 62, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 114 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Taliyah:1",
+          "text": "Taliyah's Threaded Volley flies in a straight line, so sidestep it rather than walking away along its path.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Taliyah-Q", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ahri:Taliyah:2",
+          "text": "Look for Charm when Taliyah has used Seismic Shove; it is slow to come back. Follow up with Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 9, "end": 14 },
+            { "kind": "champion", "key": "Taliyah", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "Ahri-W", "start": 92, "end": 100 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 105, "end": 121 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Ahri:Taliyah:3",
+          "text": "Use Orb of Deception to poke Taliyah from long range; it hits her on the way out and again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Taliyah", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ahri:Taliyah:4",
+          "text": "Keep Spirit Rush ready as your escape. Dash away if Taliyah's Unraveled Earth or Seismic Shove catches you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Taliyah", "start": 52, "end": 59 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 62, "end": 77 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 81, "end": 94 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cbd8620531a0c2fdc30292c250ab50c2e5ba8890eba5ed4bf468b6699943e01e",
+      "tips": [
+        {
+          "id": "middle:Ahri:Talon:0",
+          "text": "Aim Charm at Talon when he leaps in or walks up to you. Charm stops at the first enemy it hits, so line it up clear of minions.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Talon", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Ahri-E", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ahri:Talon:1",
+          "text": "Keep Charm ready for his dive. Once it lands, Fox-Fire and Orb of Deception hit him much more easily.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ahri-W", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Ahri:Talon:2",
+          "text": "Save Spirit Rush to get away after he commits. Without it you are easy for him to burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ahri:Talon:3",
+          "text": "Watch the map when Talon leaves lane, since he roams well. Push the wave first so he loses minions, then follow or warn your team.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Ahri:Talon:4",
+          "text": "Fox-Fire is a good way to harass him when he steps up to last-hit. Its speed boost also lets you retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 0, "end": 8 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ahri:Talon:5",
+          "text": "Talon is weaker when Shadow Assault is down, so trade harder then. He then has no easy escape from you.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "c44d69d6d9500c37add000cd92195c29f170818f6e5bbcabce9574cd0c021486",
+      "tips": [
+        {
+          "id": "middle:Ahri:TwistedFate:0",
+          "text": "Land Charm on Twisted Fate, then follow with Fox-Fire and Orb of Deception. He cannot answer once he is charmed.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 14,
+              "end": 26
+            },
+            { "kind": "ability", "key": "Ahri-W", "start": 45, "end": 53 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Ahri:TwistedFate:1",
+          "text": "Stay out of melee range when Twisted Fate is shuffling Pick a Card; the Gold Card stuns and the Red Card slows you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 29,
+              "end": 41
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 55,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "middle:Ahri:TwistedFate:2",
+          "text": "Watch for Twisted Fate's Destiny. When he uses it, expect him to teleport in, so keep Spirit Rush ready to escape.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 10,
+              "end": 22
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 25,
+              "end": 32
+            },
+            { "kind": "ability", "key": "Ahri-R", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ahri:TwistedFate:3",
+          "text": "Sidestep Wild Cards as it fans out; its cone is wide, so step out of the angle early.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Ahri:TwistedFate:4",
+          "text": "Use Fox-Fire to speed away or close in on Twisted Fate after he spends his cards.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "TwistedFate", "start": 42, "end": 54 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8b9b68229527ed6a944b6d9bb10067e98a4dece15de75792d598230d0ae5e391",
+      "tips": [
+        {
+          "id": "middle:Ahri:Veigar:0",
+          "text": "Charm Veigar when he steps forward, then follow up with Orb of Deception and Fox-Fire. He is fragile and dies fast once caught.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Veigar", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 56, "end": 72 },
+            { "kind": "ability", "key": "Ahri-W", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "middle:Ahri:Veigar:1",
+          "text": "Keep moving when Dark Matter is cast at you, because it lands after a delay. Sidestep it once you see where it will fall.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Veigar:2",
+          "text": "Never walk through the edge of Event Horizon. Stand inside the cage or stay outside it and you won't be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 31, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Ahri:Veigar:3",
+          "text": "Trade back once Veigar has spent Event Horizon or Dark Matter, and keep Spirit Rush ready to get out afterward.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Veigar-E", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Veigar-W", "start": 50, "end": 61 },
+            { "kind": "ability", "key": "Ahri-R", "start": 72, "end": 83 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "308b1f8a1fe07cc1d6b5d6ef55239be2274707c1b66cfbd3049dda63ebcd82ef",
+      "tips": [
+        {
+          "id": "middle:Ahri:Vex:0",
+          "text": "Don't dash at Vex while her Doom 'n Gloom is ready; her next ability will fear you and interrupt the dash. Wait until she has spent it.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Vex-passive", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ahri:Vex:1",
+          "text": "Land Charm on Vex when she steps forward to trade. It is a long-range shot that stops at the first enemy, so keep minions out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Vex", "start": 14, "end": 17 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Ahri:Vex:2",
+          "text": "Sidestep Mistral Bolt. It speeds up and narrows after a short distance, so move out of its path early.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 9, "end": 21 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ahri:Vex:3",
+          "text": "Use Orb of Deception to poke Vex from long range, and hit her on both the way out and the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "champion", "key": "Vex", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Vex:4",
+          "text": "Vex's Personal Space shield is short-lived. Hold your damage a moment until it fades.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Vex-W", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20a12bbe3824e507d28f2cf9196a707be5836d755a5881d6cb89d244689c3634",
+      "tips": [
+        {
+          "id": "middle:Ahri:Viktor:0",
+          "text": "Land Charm on Viktor before he can set up Gravity Field; a charmed Viktor can't cast anything back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Viktor", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Viktor-W", "start": 42, "end": 55 },
+            { "kind": "champion", "key": "Viktor", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Ahri:Viktor:1",
+          "text": "Stay out of Gravity Field. Staying inside it long enough stuns you, so walk out as soon as it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Ahri:Viktor:2",
+          "text": "Sidestep Hextech Ray; it is a thin line and slow to travel, so you can often walk out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 9, "end": 20 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ahri:Viktor:3",
+          "text": "Stay behind minions so Viktor's Siphon Power and Hextech Ray are harder to land on you while you farm.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 32, "end": 44 },
+            { "kind": "ability", "key": "Viktor-E", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Ahri:Viktor:4",
+          "text": "Use Orb of Deception to poke him when he steps up to last-hit, since it hits on the way out and back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Viktor:5",
+          "text": "Use Fox-Fire after a Charm, because the fox-fires go for a charmed champion first.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ahri-E", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Viktor:6",
+          "text": "Move out of Arcane Storm early; it follows you, so use Spirit Rush to get away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 },
+            { "kind": "ability", "key": "Ahri-R", "start": 55, "end": 66 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "2bd90f998ccdf5a1089cf031f7a0441e4081abe056592dd863c9ec50f25310b7",
+      "tips": [
+        {
+          "id": "middle:Ahri:Vladimir:0",
+          "text": "Land Charm on Vladimir while he's away from minions; it is your main way to start a trade, and then Fox-Fire follows up.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Vladimir", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Ahri-W", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Ahri:Vladimir:1",
+          "text": "Hold Charm until Vladimir uses Sanguine Pool; he can't be targeted in it, and waiting makes the pool cost him health.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Vladimir", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Ahri:Vladimir:2",
+          "text": "Don't stand in Sanguine Pool; it slows you and hurts. Step out or back off until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Vladimir-W", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 38 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Ahri:Vladimir:3",
+          "text": "Poke with Orb of Deception while Vladimir is last-hitting, but expect his Transfusion to heal him back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Vladimir", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Vladimir-Q", "start": 74, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ahri:Vladimir:4",
+          "text": "Kill Vladimir before Hemoplague bursts, or move out of its area; it heals him.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a86b07e7fa29c622e2ea15616e19186645af048edd259ab8f3f88f4aafb013bc",
+      "tips": [
+        {
+          "id": "middle:Ahri:Xerath:0",
+          "text": "Stay out of Xerath's line when Shocking Orb is ready; step sideways or hide behind minions. The orb keeps going past minions, so don't count on them.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Xerath-E", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Ahri:Xerath:1",
+          "text": "Close the gap on Xerath quickly with Fox-Fire's speed boost. He is weak up close.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Ahri-W", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Ahri:Xerath:2",
+          "text": "Land Charm on Xerath when he is charging Arcanopulse. He moves slowly then and can't dodge easily.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Xerath", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ahri:Xerath:3",
+          "text": "Use Orb of Deception to hit Xerath on the way out and back. Dodge his Eye of Destruction by walking out of the circle before it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Xerath", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Xerath-W", "start": 70, "end": 88 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Ahri:Xerath:4",
+          "text": "Use Spirit Rush to jump out of Rite of the Arcane's blasts, or to reach Xerath. Watch his cast animation and start dodging.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Xerath-R", "start": 31, "end": 49 },
+            { "kind": "champion", "key": "Xerath", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "58ddc455ec97a215a5559e70a84d12e15c5ffc6b72bb81b4ba2242e72c30cfc1",
+      "tips": [
+        {
+          "id": "middle:Ahri:XinZhao:0",
+          "text": "Keep Charm for when Xin Zhao dashes in or walks up. Stopping him before his combo finishes ruins his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "middle:Ahri:XinZhao:1",
+          "text": "Poke with Orb of Deception while he is far away; both passes hurt, so hit him on the way out and back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 10, "end": 26 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:XinZhao:2",
+          "text": "Hold Spirit Rush to escape his all-in. His Audacious Charge slows you, so dash away early.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Ahri:XinZhao:3",
+          "text": "Use Fox-Fire for burst of speed to step out of his Three Talon Strike hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 51, "end": 69 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a2b2d2cc2fa142210ed47d51b8ff06e27ca9f1cc2af5a82486fc92313e8ff1a",
+      "tips": [
+        {
+          "id": "middle:Ahri:Yasuo:0",
+          "text": "Aim Charm when Yasuo walks up to last-hit; the first enemy it hits is charmed, so keep minions out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ahri:Yasuo:1",
+          "text": "Hold Charm until Yasuo's Wind Wall is used or has faded, because the wall destroys projectiles that hit it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 25, "end": 34 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Ahri:Yasuo:2",
+          "text": "Yasuo's Wind Wall has a long cooldown, so after he spends it, go for your full combo.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ahri:Yasuo:3",
+          "text": "Throw Orb of Deception through Yasuo both ways; it hurts on the way out and on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Yasuo:4",
+          "text": "Stay away from minions when Yasuo has two Steel Tempest stacks; his next one is a whirlwind that knocks you up from range. Dodge it sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ahri:Yasuo:5",
+          "text": "Fox-Fire gives you a burst of speed, so use it to slip away after a trade or when Yasuo dashes at you.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Yasuo", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ahri:Yasuo:6",
+          "text": "Hold Spirit Rush for escaping when Yasuo threatens to dash onto you; you are much easier to kill without it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8940e039082ab0bc3fead5bffd252131833671c9a4c6a007760eddc73cf4912e",
+      "tips": [
+        {
+          "id": "middle:Ahri:Yone:0",
+          "text": "Throw Charm at Yone when he steps up to trade or farm; once he is charmed, follow with Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ahri-W", "start": 87, "end": 95 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 100, "end": 116 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ahri:Yone:1",
+          "text": "Charm stops at the first enemy it hits, so aim it along a lane clear of minions or it will be wasted on them.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ahri:Yone:2",
+          "text": "Poke with Orb of Deception from long range so Yone has to walk into it, and make him pay for last-hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Yone", "start": 46, "end": 50 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Ahri:Yone:3",
+          "text": "When Yone dashes in with his third Mortal Steel, use Fox-Fire for the move speed and to back away from him.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Yone-Q", "start": 35, "end": 47 },
+            { "kind": "ability", "key": "Ahri-W", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ahri:Yone:4",
+          "text": "Keep Spirit Rush ready to dodge out of his Fate Sealed or to chase after you charm him. Without it you are easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Yone-R", "start": 43, "end": 54 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ahri:Yone:5",
+          "text": "Use Charm on Yone's body or when he is in spirit form; he has to come back, so trade damage back at him before he returns.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "afeef505c862d8bf7e1f64167828df6e6c023aee1a65c3d8412f6222671cbc6f",
+      "tips": [
+        {
+          "id": "middle:Ahri:Zed:0",
+          "text": "Hit Zed with Charm when he steps up to trade or to place a shadow; he is stuck in place and you can follow with Fox-Fire and Orb of Deception.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Ahri-E", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "Ahri-W", "start": 112, "end": 120 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 125, "end": 141 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Ahri:Zed:1",
+          "text": "Charm stops at the first enemy it hits, so wait for a clear line to Zed; a minion in front of him will block it.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Zed", "start": 68, "end": 71 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Ahri:Zed:2",
+          "text": "Use Orb of Deception to poke Zed whenever he walks to last-hit; it hits on the way out and again on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Zed", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ahri:Zed:3",
+          "text": "Keep Spirit Rush ready for when Zed uses Death Mark on you. Use it to dash away from the shadow and the follow-up damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 32, "end": 35 },
+            { "kind": "ability", "key": "Zed-R", "start": 41, "end": 51 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Ahri:Zed:4",
+          "text": "Punish Zed right after he spends Living Shadow; his damage and mobility are low until it returns. Charm him then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zed-W", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Ahri-E", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "middle:Ahri:Zed:5",
+          "text": "Fox-Fire gives you a burst of Move Speed; use it to step out of his Shadow Slash range after he engages.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Zed-E", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e8dd7ae612071c753cf179fda2a42bb61be2797387609c486391d867b11fb016",
+      "tips": [
+        {
+          "id": "middle:Ahri:Zoe:0",
+          "text": "Stay out of Zoe's Sleepy Trouble Bubble range and sidestep it. If you fall asleep, any hit on you deals extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Zoe-E", "start": 18, "end": 39 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Ahri:Zoe:1",
+          "text": "Punish Zoe when she uses Portal Jump. She can't move while there and must return to her start, so hit her with Charm.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Zoe-R", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Ahri-E", "start": 111, "end": 116 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ahri:Zoe:2",
+          "text": "Aim Charm carefully, since it stops at the first enemy hit. Keep minions out of its path, and walk wide of them.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Ahri:Zoe:3",
+          "text": "Hit Zoe with Orb of Deception on the way out and again on the way back, especially when she steps up to poke.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 13, "end": 29 },
+            { "kind": "keyword", "key": "poke", "start": 104, "end": 108 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ahri:Zoe:4",
+          "text": "Once Zoe is charmed, follow up with Fox-Fire and Orb of Deception for a quick, strong trade.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Ahri-W", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 49, "end": 65 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

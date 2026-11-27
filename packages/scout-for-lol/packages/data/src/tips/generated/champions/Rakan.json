@@ -1,0 +1,925 @@
+{
+  "schemaVersion": 1,
+  "champion": "Rakan",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "support",
+      "inputHash": "fd2fa58fae9dee7f562acad4bacdb0acd97a127121354c8b8d9480347fc39d11",
+      "tips": [
+        {
+          "id": "support:Rakan:general:0",
+          "text": "Dash to an ally with Battle Dance to shield them and yourself into a fight. Recall it once within a short window to hop again and shield a second ally.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 21, "end": 33 },
+            { "kind": "item", "key": "2001", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "support:Rakan:general:1",
+          "text": "Land Gleaming Quill on an enemy champion, then walk next to your carry to heal both of you right away.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-Q", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Rakan:general:2",
+          "text": "Start trades with Grand Entrance when enemies are bunched up. It knocks them up, so your team gets a free window to hit them.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "support:Rakan:general:3",
+          "text": "Stay close to your allies, because Rakan needs them for Battle Dance. Alone he has very little mobility.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Rakan-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "support:Rakan:general:4",
+          "text": "Run into the enemy team with The Quickness at level 6 to charm everyone you touch, then let your team follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "support:Rakan:general:5",
+          "text": "Hit enemy champions with attacks and abilities to bring back Fey Feathers sooner, so you get your shield more often in a trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Rakan-passive",
+              "start": 61,
+              "end": 73
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Rakan:general:6",
+          "text": "Don't dash with Grand Entrance or Battle Dance near enemy crowd control. Getting stunned or rooted mid-dash knocks you down.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Rakan-E", "start": 34, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "combos": [
+        {
+          "id": "support:Rakan:combo:0",
+          "name": "Party starter",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Rakan-R" },
+            { "kind": "ability", "key": "Rakan-W" }
+          ],
+          "when": "Engaging a squishy target, or several enemies at once, when your team is ready to follow up.",
+          "whenRefs": [],
+          "text": "Start The Quickness, then buffer Grand Entrance during the cast time. The charm and the knock-up land close together on the enemies you touch.",
+          "textRefs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Rakan-W", "start": 33, "end": 47 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "support",
+      "inputHash": "8cb7841b060e1ff0557724dcfedad7d8d0fab2a0b2aee34a2226fd698442b842",
+      "tips": [
+        {
+          "id": "support:Rakan:Bard:0",
+          "text": "Rakan, stay close to your partner so Battle Dance is ready to shield and dash. Bard's bolt hurts most when you are lined up with a teammate.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Rakan-E", "start": 37, "end": 49 },
+            { "kind": "champion", "key": "Bard", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "support:Rakan:Bard:1",
+          "text": "Walk over Bard's shrines to destroy them before his ally can take the heal.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 10, "end": 14 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Rakan:Bard:2",
+          "text": "Use Grand Entrance to knock Bard up when he walks forward to use meeps or place a portal.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Bard", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Rakan:Bard:3",
+          "text": "Follow Bard through Magical Journey if it looks safe, or punish him when he comes out.",
+          "refs": [
+            { "kind": "champion", "key": "Bard", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Bard-E", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "support:Rakan:Bard:4",
+          "text": "Don't start The Quickness near Tempered Fate; the stasis will waste your charm.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Bard-R", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Bard",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0decf937fd2a4bd11602f7ad4350387d8e016bba5a0aa4f4c11a27a500387bab",
+      "tips": [
+        {
+          "id": "support:Rakan:Braum:0",
+          "text": "Don't throw Gleaming Quill at Braum while his shield is up; it is destroyed and does no damage.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-Q", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Braum", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "support:Rakan:Braum:1",
+          "text": "Look for Braum alone and away from his ally; Grand Entrance is easier to land when his Stand Behind Me has no target.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 9, "end": 14 },
+            { "kind": "keyword", "key": "isolated", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Rakan-W", "start": 45, "end": 59 },
+            { "kind": "ability", "key": "Braum-W", "start": 87, "end": 102 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Rakan:Braum:2",
+          "text": "Stay out of Braum's basic attacks when he is marking you; a few hits make Concussive Blows stun you.",
+          "refs": [
+            { "kind": "champion", "key": "Braum", "start": 12, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Braum-passive",
+              "start": 74,
+              "end": 90
+            },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "support:Rakan:Braum:3",
+          "text": "Dodge Winter's Bite before diving in; being slowed ruins your engage.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-Q", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Rakan:Braum:4",
+          "text": "Don't dash through Glacial Fissure's frozen ground; walk around it.",
+          "refs": [
+            { "kind": "ability", "key": "Braum-R", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Braum",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "27aeb40006dedcad906adbb7f140ba5eb6d11bb84001bff10a82a70c6f240f8a",
+      "tips": [
+        {
+          "id": "support:Rakan:Karma:0",
+          "text": "Dash with Battle Dance to a nearby ally to dodge Karma's Inner Flame; it stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Karma", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Karma-Q", "start": 57, "end": 68 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "support:Rakan:Karma:1",
+          "text": "Land Gleaming Quill on Karma, then stand beside an ally to heal quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Karma", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "support:Rakan:Karma:2",
+          "text": "Stay away from Karma's Focused Resolve tether. Break the link by getting out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Karma-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "support:Rakan:Karma:3",
+          "text": "Engage with Grand Entrance when Karma has spent her abilities, so the knock up lands.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Karma", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "knocked-up", "start": 70, "end": 78 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Rakan:Karma:4",
+          "text": "Leave the lane circle quickly when Karma uses Mantra on Inner Flame; it blows up for heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karma", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Karma-R", "start": 46, "end": 52 },
+            { "kind": "ability", "key": "Karma-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Karma",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "32f95e3c5c4f82f31d0dedd4d6e45290cee4165175043468d9d07e6186547245",
+      "tips": [
+        {
+          "id": "support:Rakan:Leona:0",
+          "text": "Do not stand still when Leona is near. Her Zenith Blade roots you and pulls her to you, so keep Battle Dance ready to dash to an ally.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Leona-E", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Rakan-E", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "support:Rakan:Leona:1",
+          "text": "Use Grand Entrance to knock Leona up when she dashes in, so you can stop her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Leona", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Rakan:Leona:2",
+          "text": "Hit Leona with Gleaming Quill from long range while her Zenith Blade is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Leona-E", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Rakan:Leona:3",
+          "text": "Leona's Eclipse gives her a lot of defense for a few seconds. Back off until it ends instead of trading into it.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Leona-W", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Leona",
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Leona is a melee engager, so Rakan's charm and knock-up from R then W can punish her for diving in.",
+          "refs": [
+            { "kind": "champion", "key": "Leona", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Rakan", "start": 29, "end": 34 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "60eb9c03ba3c866fde1baef64f610316cb26b48f3fb477c76da90d7ec8a01700",
+      "tips": [
+        {
+          "id": "support:Rakan:Lulu:0",
+          "text": "Keep Rakan back from Glitterlance's long line; stand behind minions or step sideways when Lulu aims at you.",
+          "refs": [
+            { "kind": "champion", "key": "Rakan", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Lulu-Q", "start": 21, "end": 33 },
+            { "kind": "champion", "key": "Lulu", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Rakan:Lulu:1",
+          "text": "Do not dash in with Grand Entrance while Whimsy is ready; Lulu can polymorph you mid-engage. Bait it out first.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 20, "end": 34 },
+            { "kind": "ability", "key": "Lulu-W", "start": 41, "end": 47 },
+            { "kind": "champion", "key": "Lulu", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "support:Rakan:Lulu:2",
+          "text": "Hit Lulu with Gleaming Quill to damage her and heal your team when you reach an ally.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Rakan:Lulu:3",
+          "text": "Engage with The Quickness when Lulu has spent her Whimsy; the charm gives your team a window to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Lulu", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "Lulu-W", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Rakan:Lulu:4",
+          "text": "Fight away from Lulu's carry when Wild Growth is ready, since it knocks your team up. Spread out to avoid it.",
+          "refs": [
+            { "kind": "champion", "key": "Lulu", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Lulu-R", "start": 34, "end": 45 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Lulu",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "a47251031409fe57338b5da3e4d73261519fd17e35a95b094d24f01c1eaaa2e7",
+      "tips": [
+        {
+          "id": "support:Rakan:Lux:0",
+          "text": "Stay out of a straight line with Lux, and poke her with Gleaming Quill when she has thrown Light Binding.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 56, "end": 70 },
+            { "kind": "ability", "key": "Lux-Q", "start": 91, "end": 104 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "support:Rakan:Lux:1",
+          "text": "Stay close to your ally so Battle Dance can pull you out of Lux's range. Dashing over to them is your escape once Lux has used Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Lux", "start": 60, "end": 63 },
+            { "kind": "champion", "key": "Lux", "start": 114, "end": 117 },
+            { "kind": "ability", "key": "Lux-Q", "start": 127, "end": 140 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Rakan:Lux:2",
+          "text": "Avoid landing in a Lucent Singularity; it slows you and then bursts. Dash with Grand Entrance from the side so you do not drop into it.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 19, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Rakan-W", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "support:Rakan:Lux:3",
+          "text": "Engage Lux with Grand Entrance once her Light Binding is on cooldown. Then follow up with The Quickness at level 6 to charm her.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 7, "end": 10 },
+            { "kind": "ability", "key": "Rakan-W", "start": 16, "end": 30 },
+            { "kind": "ability", "key": "Lux-Q", "start": 40, "end": 53 },
+            { "kind": "ability", "key": "Rakan-R", "start": 90, "end": 103 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "840db122f00c24c171c2ae226f316cf26331fae73186d44723ce5f0b80d35752",
+      "tips": [
+        {
+          "id": "support:Rakan:Milio:0",
+          "text": "Look for Milio when he is away from his carry; Grand Entrance knocks him up and Gleaming Quill pokes him while he is stuck.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Rakan-W", "start": 47, "end": 61 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "support:Rakan:Milio:1",
+          "text": "Wait for Milio to use Breath of Life before you start a big engage, because it cleanses your crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Milio", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Milio-R", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Rakan:Milio:2",
+          "text": "Dash to your partner with Battle Dance to get out of the way of Ultra Mega Fire Kick; it can be recast, so keep moving.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Milio-Q", "start": 64, "end": 84 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "support:Rakan:Milio:3",
+          "text": "Don't start Grand Entrance in a straight line toward Milio; any stun or knockback during the dash knocks Rakan down.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Milio", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 },
+            { "kind": "champion", "key": "Rakan", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Milio",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "7ec1b51c74dd3f6cd2cfb5d136847f66963186b82928e45a16b588855578b6e6",
+      "tips": [
+        {
+          "id": "support:Rakan:Nami:0",
+          "text": "Walk around Aqua Prison's bubble. Once Nami misses, she has a long wait, so dash in with Grand Entrance then.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Nami", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Rakan-W", "start": 89, "end": 103 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Rakan:Nami:1",
+          "text": "Keep moving when Nami's bubble is in the air; it lands after a delay, so sidestepping works.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 17, "end": 21 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Rakan:Nami:2",
+          "text": "Hit Nami with Gleaming Quill from range; it stops at the first enemy it meets, so line it up past minions.",
+          "refs": [
+            { "kind": "champion", "key": "Nami", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "support:Rakan:Nami:3",
+          "text": "Back off from a carry empowered by Tidecaller's Blessing and wait it out. It lasts a short time and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-E", "start": 35, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Rakan:Nami:4",
+          "text": "Step out of Tidal Wave's path sideways; it travels slowly across the map.",
+          "refs": [
+            { "kind": "ability", "key": "Nami-R", "start": 12, "end": 22 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Nami",
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Nami is a squishy target, so R then W charm and knock-up can start a fight on her.",
+          "refs": [{ "kind": "champion", "key": "Nami", "start": 0, "end": 4 }]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "891e6d67af18c6d4fd2d597c69ba8d5614799bbb3b02071fe9cf653bf6fee4a3",
+      "tips": [
+        {
+          "id": "support:Rakan:Nautilus:0",
+          "text": "Stay behind your minions and out of a straight line from Nautilus; Dredge Line stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 57, "end": 65 },
+            { "kind": "ability", "key": "Nautilus-Q", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "support:Rakan:Nautilus:1",
+          "text": "Keep your partner close so Battle Dance can dash you out when Nautilus hooks or charges at you.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Nautilus", "start": 62, "end": 70 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "support:Rakan:Nautilus:2",
+          "text": "Dashing with Grand Entrance or Battle Dance leaves you open to being stunned. Do not dash while the stun is coming at you.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 13, "end": 27 },
+            { "kind": "ability", "key": "Rakan-E", "start": 31, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "support:Rakan:Nautilus:3",
+          "text": "Poke Nautilus with Gleaming Quill from range; it heals you and your partner after a few seconds.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nautilus", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "support:Rakan:Nautilus:4",
+          "text": "Nautilus's Titan's Wrath shield makes his attacks hurt everyone near the target; avoid grouping up and trading while it is up.",
+          "refs": [
+            { "kind": "champion", "key": "Nautilus", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nautilus-W", "start": 11, "end": 24 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Nautilus",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "1bb9d38193e0a775bb018e4838d5a29f55b49181ecd6be685a9b7a6c4817bca6",
+      "tips": [
+        {
+          "id": "support:Rakan:Pantheon:0",
+          "text": "Stay near your partner. Alone you are an easy target for Pantheon's Shield Vault stun.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 57, "end": 65 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 68, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Rakan:Pantheon:1",
+          "text": "Use Battle Dance to dash to an ally when Pantheon jumps in; it shields them and moves you out of reach.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Pantheon", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "support:Rakan:Pantheon:2",
+          "text": "Hit Pantheon with Gleaming Quill while he lines up a throw; it heals you and your allies if you stay near them.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 18, "end": 32 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "support:Rakan:Pantheon:3",
+          "text": "Do not hit Aegis Assault from the front; Pantheon takes no damage from that side. Wait it out or go around behind him.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 11, "end": 24 },
+            { "kind": "champion", "key": "Pantheon", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "support:Rakan:Pantheon:4",
+          "text": "Keep your health up. Pantheon's thrown Comet Spear hits much harder on low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 21, "end": 29 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "0bb7414cb953bebab717d1b625ffd4a7b6f56857cdfc59a65aa9764b0e7a087d",
+      "tips": [
+        {
+          "id": "support:Rakan:Pyke:0",
+          "text": "Stay close to your carry with Battle Dance so you can hop back to them after a Pyke hook. Rakan is much weaker when alone.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 30, "end": 42 },
+            { "kind": "champion", "key": "Pyke", "start": 79, "end": 83 },
+            { "kind": "champion", "key": "Rakan", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Rakan:Pyke:1",
+          "text": "Aim Gleaming Quill at Pyke when he comes forward. It stops at the first enemy it hits, so hit him before a minion gets in the way.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-Q", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Pyke", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "support:Rakan:Pyke:2",
+          "text": "Hit Pyke with Gleaming Quill to heal yourself and your carry after a trade. Stand near your ally so the heal reaches both of you.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Rakan:Pyke:3",
+          "text": "Don't dash with Grand Entrance while Pyke's stun is ready. A stun during the dash knocks you down and cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 16, "end": 30 },
+            { "kind": "champion", "key": "Pyke", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "support:Rakan:Pyke:4",
+          "text": "Keep your carry out of low health after a trade, because Pyke's Death From Below can execute them.",
+          "refs": [
+            { "kind": "champion", "key": "Pyke", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Pyke-R", "start": 64, "end": 80 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Pyke",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "b4b429cd54ea96fb7747373fbd0d4e32109e9771a3f4c1286041da6d9e1b376f",
+      "tips": [
+        {
+          "id": "support:Rakan:Senna:0",
+          "text": "Look for the moment Senna is out of position, then hit her with Grand Entrance. Her damage is mostly range, so get close and knock her up.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Rakan-W", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "support:Rakan:Senna:1",
+          "text": "Stay near your ally so Battle Dance can carry you out of danger. Alone, you are easy for Senna to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 23, "end": 35 },
+            { "kind": "champion", "key": "Senna", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "support:Rakan:Senna:2",
+          "text": "Watch for Last Embrace. It travels in a line and hits the first enemy, so keep a minion between you and Senna when she aims.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 10, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "support:Rakan:Senna:3",
+          "text": "Land Gleaming Quill on Senna to deal damage and heal yourself and your ally afterward. It is your main way to win trades.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Senna", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "support:Rakan:Senna:4",
+          "text": "Do not dash with Battle Dance when Senna's Last Embrace is ready. Being rooted mid-fight is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 17, "end": 29 },
+            { "kind": "champion", "key": "Senna", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Senna-W", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "support",
+      "inputHash": "c5731de62342bb23ca472a52ccf1025bca9cc6f9d319d6aaf5cdaef1bc53268f",
+      "tips": [
+        {
+          "id": "support:Rakan:Seraphine:0",
+          "text": "Stay near your carry. Battle Dance and your shields need an ally close by, and Riot's tips say Rakan alone is easy to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Rakan", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "support:Rakan:Seraphine:1",
+          "text": "Do not stand in a line with your carry. Beat Drop slows everyone it passes through, and it stuns anyone already immobilized.",
+          "refs": [
+            { "kind": "ability", "key": "Seraphine-E", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "support:Rakan:Seraphine:2",
+          "text": "Save Grand Entrance for when Seraphine has used Beat Drop. Then you can knock her up without being slowed first.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Seraphine", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "Seraphine-E", "start": 48, "end": 57 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "support:Rakan:Seraphine:3",
+          "text": "Hit Seraphine with Gleaming Quill to heal your side in trades. Her High Note poke is strong, so use the heal to stay healthy.",
+          "refs": [
+            { "kind": "champion", "key": "Seraphine", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 19, "end": 33 },
+            { "kind": "ability", "key": "Seraphine-Q", "start": 67, "end": 76 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Seraphine",
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "The Quickness charm and Grand Entrance knock-up can lock down Seraphine, who is squishy.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-R", "start": 0, "end": 13 },
+            { "kind": "ability", "key": "Rakan-W", "start": 24, "end": 38 },
+            { "kind": "champion", "key": "Seraphine", "start": 62, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "7582a429133bcb5f5b1b169256efda0d3652a18f7817a721ebcd9e58b30a8b9f",
+      "tips": [
+        {
+          "id": "support:Rakan:Sona:0",
+          "text": "Dash in with Grand Entrance on Sona when she is out of position; she has no dash, so she is easy to knock up.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Sona", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "knocked-up", "start": 100, "end": 108 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "support:Rakan:Sona:1",
+          "text": "Hit Sona with Gleaming Quill from range; it also heals you and nearby allies if it lands on a champion.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "support:Rakan:Sona:2",
+          "text": "Use Battle Dance to shield your ally and close distance to Sona's poke; stay close to your ADC so you can use it.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sona", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "poke", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "support:Rakan:Sona:3",
+          "text": "Watch for Crescendo before you go in with The Quickness; being stunned in the middle of a dash can lose you the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Sona-R", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Rakan-R", "start": 42, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Sona",
+      "comboRefs": [
+        {
+          "comboId": "support:Rakan:combo:0",
+          "note": "Sona is squishy, so The Quickness into Grand Entrance can charm and knock her up before she reacts.",
+          "refs": [
+            { "kind": "champion", "key": "Sona", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Rakan-R", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Rakan-W", "start": 39, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "support",
+      "inputHash": "9a9b49a215bf757b1931e8c5c7893d1731ed1a6f69d1d496597ebf801b5d7694",
+      "tips": [
+        {
+          "id": "support:Rakan:Thresh:0",
+          "text": "Dodge Death Sentence by moving as soon as you see Thresh begin the cast, and stay behind minions so the hook hits them first.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-Q", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Thresh", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "support:Rakan:Thresh:1",
+          "text": "Stay close to your ally; Battle Dance is how you escape a hook or dive, and it needs an ally to dash to.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-E", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "support:Rakan:Thresh:2",
+          "text": "Use Grand Entrance when Thresh has used Flay and Death Sentence, since he can no longer push you away easily.",
+          "refs": [
+            { "kind": "ability", "key": "Rakan-W", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Thresh", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Thresh-E", "start": 40, "end": 44 },
+            { "kind": "ability", "key": "Thresh-Q", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "support:Rakan:Thresh:3",
+          "text": "Hit Thresh with Gleaming Quill when he walks up for a hook; it heals you and your ally after a short wait.",
+          "refs": [
+            { "kind": "champion", "key": "Thresh", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rakan-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "support:Rakan:Thresh:4",
+          "text": "Do not run into The Box with your ally; breaking one wall yourself can let them escape without the full slow.",
+          "refs": [
+            { "kind": "ability", "key": "Thresh-R", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Thresh",
+      "comboRefs": []
+    }
+  ]
+}

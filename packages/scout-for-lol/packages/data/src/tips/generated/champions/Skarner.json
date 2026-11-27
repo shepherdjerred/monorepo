@@ -1,0 +1,2830 @@
+{
+  "schemaVersion": 1,
+  "champion": "Skarner",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "4a90f01868b38d4f2638bce2adfce3c3c03d72b21ef399db4668c9115e7a2569",
+      "tips": [
+        {
+          "id": "jungle:Skarner:general:0",
+          "text": "Cast Shattered Earth before you engage, not after. The cast time is much safer to spend before the fight starts.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Skarner:general:1",
+          "text": "Stay on your target with basic attacks. They build Quaking, and a full stack deals extra damage based on the enemy's max Health.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Skarner:general:2",
+          "text": "Steer Ixtal's Impact so the enemy you grab hits a wall. That stuns them and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 6, "end": 20 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Skarner:general:3",
+          "text": "Skarner can't be slowed during Ixtal's Impact, so use it to chase or to cross terrain. A stun or knock-up on him will end it, so watch for those.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Skarner-E", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Skarner:general:4",
+          "text": "Use Impale to pull an enemy into your team, where your allies can hit them. It can hit up to three champions.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:general:5",
+          "text": "Cast Impale while Shattered Earth is active to throw the boulder at once with no cast time. It's a good way to finish a fleeing enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Skarner:general:6",
+          "text": "Use Seismic Bastion when you step into a fight. The shield and the slow help you stick to your target.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:general:7",
+          "text": "Capture Crystal Spires before you contest objectives or fight near them. Skarner is much stronger in those fights.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Skarner:combo:0",
+          "name": "Pre-cast Q before engage",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Skarner-Q" },
+            { "kind": "ability", "key": "Skarner-E" }
+          ],
+          "when": "Before charging into an enemy or a gank from fog or safety.",
+          "whenRefs": [],
+          "text": "Cast Shattered Earth first so its short cast time is already done. Then charge in and hit with the empowered attacks right away.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "af75a44b4618cb815ab1108c82d00551ed96033f72b134366ceadf0ea2baa958",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Aatrox:0",
+          "text": "Charge with Ixtal's Impact at Aatrox when a wall is behind him; hitting it stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Aatrox", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Aatrox:1",
+          "text": "Cast Shattered Earth before you engage, so you aren't waiting out its cast time in the fight.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Aatrox:2",
+          "text": "Hold Impale until Aatrox uses Umbral Dash, then pin him so he can't escape and your team can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Aatrox", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Skarner:Aatrox:3",
+          "text": "Stay on Aatrox with attacks to keep Quaking stacked. The damage over time adds up in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c5faa22a35060e856e0fa8932133e4659ab85e88045dd4f1a13a9c218fc29e1b",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Ambessa:0",
+          "text": "Cast Shattered Earth before you engage, not after; the cast time in the middle of a fight leaves you open.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Ambessa:1",
+          "text": "Aim Ixtal's Impact so Ambessa ends up against a wall; she is stunned and takes damage, and you get the cooldown back faster.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Ambessa", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Skarner:Ambessa:2",
+          "text": "Stay on Ambessa with attacks so Quaking stacks up; her dashes make her slippery, so use Seismic Bastion to slow her and keep close.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Skarner-W", "start": 88, "end": 103 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Skarner:Ambessa:3",
+          "text": "Use Impale on Ambessa when she commits to a dash, then drag her toward your team.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Ambessa", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q before engaging means Skarner's E charge lands with empowered hits right away.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 36, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7ef3838f09c75695c6ae9f78ea86cf7a8d1ccdb69cb2fd2b2a91f89866421a1f",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Amumu:0",
+          "text": "Stay out of a straight line with Amumu and keep minions between you, because Bandage Toss stops at the first unit it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 77, "end": 89 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Amumu:1",
+          "text": "Don't stand next to your allies when Amumu has Curse of the Sad Mummy ready.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Amumu-R", "start": 47, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Skarner:Amumu:2",
+          "text": "Use Shattered Earth before you commit to a fight; its attacks and Upheaval slow Amumu and stack Quaking.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 },
+            { "kind": "champion", "key": "Amumu", "start": 80, "end": 85 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Skarner:Amumu:3",
+          "text": "Impale pulls in several enemies, so use it to separate Amumu from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Amumu", "start": 55, "end": 60 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0374dab542295e8eddf22eeb5b07269641baf673ff880d1d8c1ba64afebbf98d",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Belveth:0",
+          "text": "Catch Bel'Veth with Ixtal's Impact and run her into a wall; she is stunned and takes damage, and she cannot attack or cast while you drag her.",
+          "refs": [
+            { "kind": "champion", "key": "Belveth", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "Skarner-E", "start": 20, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Skarner:Belveth:1",
+          "text": "Cast Shattered Earth before you engage, so your empowered attacks and slow are ready the moment you reach her.",
+          "refs": [],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Skarner:Belveth:2",
+          "text": "Save Impale for when Bel'Veth commits to a fight; she cannot dash away while suppressed, and your allies can then hit her freely.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Belveth", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Skarner:Belveth:3",
+          "text": "Keep hitting her to build Quaking; her attack speed makes short trades risky, so stay on her and finish with the full stack.",
+          "refs": [],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Skarner:Belveth:4",
+          "text": "Use Seismic Bastion when she dives on you; the shield and slow soften her attack-speed burst.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "beb0a32a48a007e20ccb276e21bcc5595241e2d574bd490900f9b29e419f4452",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Brand:0",
+          "text": "Close the gap with Shattered Earth ready, and stay on Brand so his poke can't keep you away.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Skarner:Brand:1",
+          "text": "Dodge Brand's Sear. Without a first hit, he can't set up his stun.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Brand-Q", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Skarner:Brand:2",
+          "text": "Use Ixtal's Impact to grab Brand and carry him into a wall. He has no escape from the stun.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 90 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Skarner:Brand:3",
+          "text": "Keep Seismic Bastion for when Brand's Pillar of Flame lands. The shield softens his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Brand", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Brand-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Skarner:Brand:4",
+          "text": "Stay away from your allies when Brand casts Pyroclasm. It bounces between enemies and starts slowly, so you have time to move.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Brand-R", "start": 44, "end": 53 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b21cbf78226198601a7137b516dde22e99db2c51e422e7b855ea7831ecb3dcbf",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Briar:0",
+          "text": "Use Ixtal's Impact to catch Briar and drag her into a wall. She gets stunned and takes heavy damage, and it also stops her from killing you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Skarner:Briar:1",
+          "text": "Save Impale for when Briar jumps in. Suppressing her cuts short her Blood Frenzy attacks and lets your team hit her.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Skarner:Briar:2",
+          "text": "Cast Shattered Earth before you fight her. Your attacks then hit harder and slow her, so she has a hard time running or chasing.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Skarner:Briar:3",
+          "text": "Hit Briar with Seismic Bastion when she jumps on you. The shield absorbs some of her burst and the slow makes it harder for her to stay on you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Skarner-W", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "10cf6df7c5c7f769686694cfbcac0ed04892f9f487c93aea74fe9ebd3ae2eda7",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Darius:0",
+          "text": "Aim Ixtal's Impact so Darius gets carried into a wall; the crash stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Darius:1",
+          "text": "Cast Shattered Earth before you charge in, so your boosted attacks are ready when you arrive.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:Darius:2",
+          "text": "Throw the boulder with Upheaval when Darius runs away; it slows him so you can catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Darius:3",
+          "text": "Use Impale to pull Darius away from your allies or hold him still for your team.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Darius", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Skarner:Darius:4",
+          "text": "Keep hitting Darius to stack Quaking; a long fight lets it deal heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 13, "end": 19 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c851723ab38cf925d1c944219c97f5f3b258a115f62411e571764300c14b74a",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Diana:0",
+          "text": "Hold Ixtal's Impact for when Diana jumps in. Steer her into a wall to stun her and punish her for diving.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Diana", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Skarner:Diana:1",
+          "text": "Cast Shattered Earth before you engage Diana. Her short, bursty fights punish you for waiting on its cast time mid-fight.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Skarner:Diana:2",
+          "text": "Use Impale to pin Diana when she dives in. She cannot act while Skarner drags her, so your allies can kill her.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Diana", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Skarner", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Skarner:Diana:3",
+          "text": "Skarner is sturdy, so stay on Diana with attacks and let Threads of Vibration build up. Her burst has to fight through that.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Diana", "start": 30, "end": 35 },
+            {
+              "kind": "ability",
+              "key": "Skarner-passive",
+              "start": 57,
+              "end": 77
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Skarner:Diana:4",
+          "text": "Diana's shield from Pale Cascade soaks your damage. Wait for the orbs to fade before you commit to a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Diana-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "343fbe8ace4250d86f1f12ca0afd91b2244d7fd99ff128a6e64ba93d03ce726e",
+      "tips": [
+        {
+          "id": "jungle:Skarner:DrMundo:0",
+          "text": "Charge with Ixtal's Impact into a wall to stun Mundo. His passive can resist the first stun-style effect, so expect it to be absorbed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 42, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Skarner:DrMundo:1",
+          "text": "Stay on Mundo with attacks to build Quaking; its health-based damage works well against his large health pool.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:DrMundo:2",
+          "text": "Step out of his Infected Bonesaw line; it is a thin shot that stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Skarner:DrMundo:3",
+          "text": "Burst Mundo right after he uses Maximum Dosage, or he will heal through your damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Skarner:DrMundo:4",
+          "text": "Use Seismic Bastion to slow Mundo while shielding yourself when he runs in with Heart Zapper.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q then charging with E is risky into Mundo, whose passive resists the first Immobilizing effect.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "303ea359710cd96b626fcee3923c9f1ad60f17cf8e519d1a3cd15334a5d0e577",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Ekko:0",
+          "text": "Start Ixtal's Impact when Ekko is near a wall; if you drag him into it, he is stunned and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Ekko", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Skarner:Ekko:1",
+          "text": "Hold Impale until Ekko uses Phase Dive or Chronobreak. Then he can't easily escape the suppression.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Ekko", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "Ekko-E", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Ekko-R", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Ekko:2",
+          "text": "Cast Shattered Earth before you dive on Ekko, so you don't wait out its cast time in the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Ekko:3",
+          "text": "Stay on Ekko with attacks to build Quaking. His Timewinder slow doesn't stop Ixtal's Impact, because you are immune to slows during it.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 48, "end": 58 },
+            { "kind": "ability", "key": "Skarner-E", "start": 77, "end": 91 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Skarner:Ekko:4",
+          "text": "Don't charge into Parallel Convergence when you see it placed. If Ekko enters it, you get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 18, "end": 38 },
+            { "kind": "champion", "key": "Ekko", "start": 66, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4c5f53dbe2ac2bbcebbabdc863aec1d5edd2a1cfe34339d579495749752723d6",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Evelynn:0",
+          "text": "Use Impale on Evelynn the moment she shows herself; suppressing her ends her ambush before it starts.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Evelynn", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Skarner:Evelynn:1",
+          "text": "When an arrow shows Allure is on you and it has matured, stay near allies and walk away from Evelynn; being charmed is how she kills you.",
+          "refs": [
+            { "kind": "ability", "key": "Evelynn-W", "start": 20, "end": 26 },
+            { "kind": "champion", "key": "Evelynn", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Skarner:Evelynn:2",
+          "text": "Evelynn is fragile, so stick to her with Shattered Earth attacks. Her Allure slow does not last long, so keep closing in.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Skarner:Evelynn:3",
+          "text": "Seismic Bastion gives you a shield and slows nearby enemies. Cast it when Evelynn jumps in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Evelynn", "start": 74, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Evelynn:4",
+          "text": "Do not chase Evelynn after Last Caress; she blinks backward and becomes untargetable first. Wait for her to come back.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1ae23a6eba4e86c4545db518138b7ec1a243a215e596d11a75e3e45adf072d42",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Fiddlesticks:0",
+          "text": "Do not walk into brush where Fiddlesticks may be hiding or posing as a scarecrow; a surprise fear leaves you open to his full combo.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 29,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Skarner:Fiddlesticks:1",
+          "text": "Look for the moment Fiddlesticks uses Reap or Terrify, then charge in with Ixtal's Impact before his cooldowns return.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 20,
+              "end": 32
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 38,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 46,
+              "end": 53
+            },
+            { "kind": "ability", "key": "Skarner-E", "start": 75, "end": 89 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Skarner:Fiddlesticks:2",
+          "text": "Cast Shattered Earth before you engage so your hits are empowered and you can stick to Fiddlesticks.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 87,
+              "end": 99
+            }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Skarner:Fiddlesticks:3",
+          "text": "Get out of Crowstorm's area early. Hitting Fiddlesticks with Impale during the channel drags him away from his target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-R",
+              "start": 11,
+              "end": 20
+            },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 43,
+              "end": 55
+            },
+            { "kind": "ability", "key": "Skarner-R", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "34e1123cae7175bd0d4488b36bf71d91fae65a0a3b4b767cdc278dc5e8de614e",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Graves:0",
+          "text": "Use Ixtal's Impact to grab Graves and run him into a wall; it stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Graves:1",
+          "text": "Hold Impale until Graves has used Quickdraw, then lash out at him so he cannot escape and your team can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Graves", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Graves-E", "start": 34, "end": 43 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:Graves:2",
+          "text": "Stay on Graves with attacks so Threads of Vibration reaches full stacks. He has little health to spare in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Skarner-passive",
+              "start": 31,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Skarner:Graves:3",
+          "text": "Cast Shattered Earth before you engage, so you are not waiting on its cast time while Graves shoots you.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Skarner:Graves:4",
+          "text": "Ixtal's Impact makes you immune to slows, so charge through Smoke Screen without worry.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Graves-W", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7074cf643156ee63555202b71feb5f163d3732a63d35442aa0724f36b753bcd7",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Gwen:0",
+          "text": "Hold Ixtal's Impact until Gwen steps out of her Hallowed Mist; she cannot be targeted while she stays inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gwen-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Skarner:Gwen:1",
+          "text": "Charge Gwen toward a wall with Ixtal's Impact; hitting it with her in tow stuns her and deals damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Skarner-E", "start": 31, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Skarner:Gwen:2",
+          "text": "Cast Shattered Earth before you engage, so you are not waiting on its cast time in the middle of the fight.",
+          "refs": [],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Gwen:3",
+          "text": "Throw Upheaval at Gwen when she tries to run; the boulder slows her.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Gwen:4",
+          "text": "Stay on Gwen with attacks; Quaking stacks and hurts her over time.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b99901f7c860ac2e78014b3438166266a0069f9c5a9c540ae93d2c9664747019",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Hecarim:0",
+          "text": "Hit Hecarim with Ixtal's Impact when he charges at you or your allies; it grabs him and stuns him if you run him into a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Skarner-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Skarner:Hecarim:1",
+          "text": "Dodge Onslaught of Shadows by moving out of the line of riders. The fear at the end only reaches enemies near where he stops.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Skarner:Hecarim:2",
+          "text": "Cast Shattered Earth before you engage, so the slow from its last hit lands while you chase him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Skarner:Hecarim:3",
+          "text": "Skarner holds up in a fight. Stay on Hecarim with attacks to keep Quaking stacked, since he lacks durability.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Hecarim", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Skarner:Hecarim:4",
+          "text": "Use Impale on Hecarim once he commits with Devastating Charge, so he is held and your team can hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Hecarim", "start": 14, "end": 21 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 43, "end": 61 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8977c5ebd6b49203f1f402bad29c0cff8885af07910f3c47164f87e0a0288015",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Ivern:0",
+          "text": "Catch Ivern with Ixtal's Impact and drag him into a wall; the wall hit stuns him and deals big damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Skarner-E", "start": 17, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Skarner:Ivern:1",
+          "text": "Cast Shattered Earth before you charge in, so you are not waiting on its cast time while fighting.",
+          "refs": [],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Skarner:Ivern:2",
+          "text": "Ixtal's Impact is stopped by a root, so Ivern's Rootcaller can end your charge. Wait for it to be used first.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 31, "end": 35 },
+            { "kind": "champion", "key": "Ivern", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Skarner:Ivern:3",
+          "text": "Impale Ivern when he is away from Daisy and his team. He has little escape once suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Ivern", "start": 7, "end": 12 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Skarner:Ivern:4",
+          "text": "Check Ivern's brush before you walk in; ambushes there are common.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q readies empowered attacks, so Skarner can hit at once after charging in on Ivern.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 44, "end": 51 },
+            { "kind": "champion", "key": "Ivern", "start": 89, "end": 94 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "672ec28840d9389f714a1e4bf658862f8fd6a3e281e3a97658b219c253195804",
+      "tips": [
+        {
+          "id": "jungle:Skarner:JarvanIV:0",
+          "text": "Keep Ixtal's Impact ready to drag Jarvan into a wall. It stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Skarner:JarvanIV:1",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or you get knocked up by Dragon Strike.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "keyword", "key": "knocked-up", "start": 74, "end": 84 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Skarner:JarvanIV:2",
+          "text": "Cast Shattered Earth before you start a fight with Jarvan. His Cataclysm walls trap you inside, so stick to him and keep hitting.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 63, "end": 72 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Skarner:JarvanIV:3",
+          "text": "Dodge Dragon Strike by moving sideways. Skarner's Seismic Bastion shield helps when you do get caught.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Skarner-W", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "53c17c1eebd9a2466da4da5465c5c018c05907ea65116a8282deb8a887b41063",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Jax:0",
+          "text": "Wait out Counter Strike before you hit Jax; his dodge ends in a stun, so do not attack into it.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "champion", "key": "Jax", "start": 39, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Skarner:Jax:1",
+          "text": "Use Impale from range to pull Jax away from his team; it can be dodged, so cast it when he has no easy escape.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Jax", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Skarner:Jax:2",
+          "text": "Do not ignore Jax's leap to wards; chasing him is hard, so save Ixtal's Impact to catch him and drag him into a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Skarner-E", "start": 64, "end": 78 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Skarner:Jax:3",
+          "text": "Use Seismic Bastion when Jax jumps in; the shield helps you, and the slow makes his chase worse.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Jax", "start": 25, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f5427383d4b12fddca3bd36ec49244bb96e111847069a5d9e8f45e74a2455c3",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Jayce:0",
+          "text": "Charge with Ixtal's Impact and run Jayce into a wall; he is stunned and takes damage. Jayce is a fragile target who cannot easily break out of it.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 },
+            { "kind": "champion", "key": "Jayce", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Skarner:Jayce:1",
+          "text": "Cast Shattered Earth before you engage so the empowered attacks are ready the moment you reach Jayce.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Jayce:2",
+          "text": "Stay on Jayce with attacks to build Quaking; it deals extra damage to him over time if he cannot get away.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Jayce:3",
+          "text": "Use Impale to pull Jayce away from his allies and hold him in place. He can't swap stances or cast while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Jayce", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner dive in fast, so Jayce's knockback Thundering Blow has less time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Jayce", "start": 44, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b1257c8c3ba719fe77170459ffb2a3cb3e7c9b8f1bb491f40e8e49357118317",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Karthus:0",
+          "text": "Charge with Ixtal's Impact at Karthus and drag him into a wall for a stun; he has little to escape with once caught.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Karthus", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Skarner:Karthus:1",
+          "text": "Cast Shattered Earth before you engage Karthus, so your first hits land fast and you can use Impale at once.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Skarner-R", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Skarner:Karthus:2",
+          "text": "Step away from Karthus's corpse after you kill him; he can still cast Lay Waste and Defile for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 70, "end": 79 },
+            { "kind": "ability", "key": "Karthus-E", "start": 84, "end": 90 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Skarner:Karthus:3",
+          "text": "Stay healthy enough to survive Requiem; Karthus's ultimate reaches you anywhere, and you cannot dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 31, "end": 38 },
+            { "kind": "champion", "key": "Karthus", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Skarner:Karthus:4",
+          "text": "Seismic Bastion's shield helps you survive Lay Waste poke when you must walk up to Karthus.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 0, "end": 15 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 43, "end": 52 },
+            { "kind": "keyword", "key": "poke", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Karthus", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c01df38bfff97422f7e6593e7da15f303538cf1e54b12e9b495f398a23fb71d0",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Kayn:0",
+          "text": "Cast Ixtal's Impact at Kayn and steer him into a wall to stun him. Kayn's Shadow Step doesn't stop you, because you ignore terrain too.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "champion", "key": "Kayn", "start": 67, "end": 71 },
+            { "kind": "ability", "key": "Kayn-E", "start": 74, "end": 85 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Skarner:Kayn:1",
+          "text": "Use Impale on Kayn when he commits to a fight. It suppresses him, and Umbral Trespass can't save him once he is caught.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Kayn", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Kayn-R", "start": 70, "end": 85 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Skarner:Kayn:2",
+          "text": "Cast Shattered Earth before you engage, and finish with Upheaval to slow Kayn when he tries to run.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 },
+            { "kind": "champion", "key": "Kayn", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Skarner:Kayn:3",
+          "text": "Stay on Kayn with attacks so Quaking reaches full stacks. It adds steady damage against his health.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Kayn:4",
+          "text": "Use Seismic Bastion when Kayn jumps in. The shield absorbs his burst, and the shockwave slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "70e85f403f1437a6b5a208142afa0029eac2c5910ba1ee458ac02d870675bf46",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Khazix:0",
+          "text": "Fight Kha'Zix near your allies or camps' minions; he does far more damage to a target who is isolated, so stay close to your team.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "keyword", "key": "isolated", "start": 93, "end": 101 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Skarner:Khazix:1",
+          "text": "Use Ixtal's Impact to grab Kha'Zix and carry him into a wall. The impact stuns him, and he can't leap away while he is held.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Khazix", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Skarner:Khazix:2",
+          "text": "Cast Shattered Earth before you commit to a fight, then finish with the throw to slow Kha'Zix when he tries to run.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 85 },
+            { "kind": "champion", "key": "Khazix", "start": 86, "end": 93 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Skarner:Khazix:3",
+          "text": "Look for the fight once Kha'Zix has used Leap; he is easier to catch with it on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Khazix-E", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:Khazix:4",
+          "text": "Keep hitting Kha'Zix with attacks to stack Quaking; sustained damage wears down a target who wants to dive and flee.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Skarner:Khazix:5",
+          "text": "Save Impale for when Kha'Zix jumps in on your carry; it holds him in place so your team can kill him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Khazix", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0c17322e1b87fc33855833b31897771c99593052438154271160e0c15ae7bad6",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Kindred:0",
+          "text": "Hit Kindred with Impale when she is far from her allies; she is fragile, and being dragged and suppressed lets you and your team burst her down.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Skarner-R", "start": 17, "end": 23 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Kindred:1",
+          "text": "Chase her with Ixtal's Impact when she dashes away; it ignores terrain and you cannot be slowed while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Kindred:2",
+          "text": "Steer Ixtal's Impact so Kindred hits a wall with you; she takes damage and is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Skarner:Kindred:3",
+          "text": "Cast Shattered Earth before you engage, then keep attacking her; the final hit slows her so she cannot kite you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Skarner:Kindred:4",
+          "text": "Do not commit into a fight while Lamb's Respite is up; nobody inside can die. Wait for it to end, then finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6dfeea7c888e55979b47a6cd15d81dc36af113029bd34b84e4050797e39f7636",
+      "tips": [
+        {
+          "id": "jungle:Skarner:LeeSin:0",
+          "text": "Cast Shattered Earth before you engage with Ixtal's Impact so your empowered attacks are ready when you reach Lee Sin.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 44, "end": 58 },
+            { "kind": "champion", "key": "LeeSin", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:LeeSin:1",
+          "text": "Stay on Lee Sin with attacks; Quaking stacks up and deals damage over time if he can't shake you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:LeeSin:2",
+          "text": "Lee Sin's Resonating Strike dash is cut short if you are out of reach, so keep your distance after he lands Sonic Wave.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Skarner:LeeSin:3",
+          "text": "Use Impale on Lee Sin when he dashes in, since he can dodge it only with a quick escape. Pull him toward your allies.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "LeeSin", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Shattered Earth lets Skarner charge with Ixtal's Impact and hit with empowered attacks at once.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8fccaec94a3c6e53eff3a6d45fd1bebe4714558fbb24b79a62da390600ae815b",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Lillia:0",
+          "text": "Cast Shattered Earth before you engage, not after. The cast time in the middle of a fight leaves you open.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Lillia:1",
+          "text": "Charge with Ixtal's Impact and drag Lillia into a wall. She is stunned and takes damage, so she cannot run away.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Lillia", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Skarner:Lillia:2",
+          "text": "Ixtal's Impact makes you immune to slows, so charge straight through her Swirlseed slow.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 },
+            { "kind": "ability", "key": "Lillia-E", "start": 73, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Skarner:Lillia:3",
+          "text": "Stay on Lillia with attacks to build Quaking. Her fast kiting is weak once you are stuck to her.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Skarner:Lillia:4",
+          "text": "Use Impale to pull Lillia out of position before she can use her speed to escape. Impale cannot be dodged once it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Lillia", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Skarner-R", "start": 82, "end": 88 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E and hit fast, giving Lillia less time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Lillia", "start": 65, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "83b0b37bec4a712c2700fc34301daffbbf89e528c400132d3997f09989463caa",
+      "tips": [
+        {
+          "id": "jungle:Skarner:MasterYi:0",
+          "text": "Hit Master Yi with Impale when he is not in Alpha Strike. He cannot be targeted during it, and suppression pulls him away from his team.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Skarner-R", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Skarner:MasterYi:1",
+          "text": "Slowing Master Yi is wasted once Highlander is active. Use Ixtal's Impact or Impale on him instead, since they are not slows.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Skarner-E", "start": 59, "end": 73 },
+            { "kind": "ability", "key": "Skarner-R", "start": 77, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 119, "end": 124 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Skarner:MasterYi:2",
+          "text": "Drag Master Yi into a wall with Ixtal's Impact. He is stunned and hurt, and has no escape until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Skarner-E", "start": 32, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Skarner:MasterYi:3",
+          "text": "Keep hitting Master Yi so Quaking stacks. Hurt him often so Meditate costs him mana to heal.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 13, "end": 22 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d892489cc2a0060a4bb5a069e116d3a44e0112d90440aa839d869fae1ed433bd",
+      "tips": [
+        {
+          "id": "jungle:Skarner:MonkeyKing:0",
+          "text": "Wukong often uses Warrior Trickster after he dashes in. Wait a moment before using your abilities so they hit the real Wukong.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 18,
+              "end": 35
+            },
+            {
+              "kind": "champion",
+              "key": "MonkeyKing",
+              "start": 119,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:MonkeyKing:1",
+          "text": "Cast Shattered Earth before you start a fight, because casting it mid-fight leaves you open.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Skarner:MonkeyKing:2",
+          "text": "Keep Impale for when Wukong uses Cyclone. Cyclone has a short windup, so catch him as he starts.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 21, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 33,
+              "end": 40
+            },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Skarner:MonkeyKing:3",
+          "text": "Wukong gets tougher the longer he fights, so burst him quickly. Use Seismic Bastion to shield yourself and slow him when he jumps on you.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Skarner-W", "start": 68, "end": 83 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 111 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "024a86feb7259a2bf208fdf1cfb8f5fa0462bcc39c4cf98d033cbf1a5e80d59b",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Naafiri:0",
+          "text": "Use Ixtal's Impact to catch Naafiri and drag her into a wall; she is stunned and takes damage. Do it when she has no Eviscerate ready to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 76 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 117, "end": 127 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:Skarner:Naafiri:1",
+          "text": "Cast Shattered Earth before you engage, so you do not wait out its cast time while Naafiri is already hitting you.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Skarner:Naafiri:2",
+          "text": "Throw Upheaval when she tries to run; it slows her so you can catch up and keep hitting.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Skarner:Naafiri:3",
+          "text": "Do not waste Impale while Naafiri is untargetable from The Call of the Pack; wait until she shows up again.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 13, "end": 19 },
+            { "kind": "champion", "key": "Naafiri", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 55, "end": 75 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Skarner:Naafiri:4",
+          "text": "Use Seismic Bastion when she dives in; the shield soaks her burst and the slow helps you stay on her.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c8c50da13fc2da7d1b9a0cf71338143d70d8f91d5f1d8c1989bf74ba1506df5a",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Nidalee:0",
+          "text": "Charge at Nidalee with Ixtal's Impact when she is near a wall; hitting terrain while she is dragged stuns her and deals damage.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Skarner-E", "start": 23, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Nidalee:1",
+          "text": "Cast Shattered Earth before you charge in, so you do not have to wait out its cast time in the middle of the fight.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Skarner:Nidalee:2",
+          "text": "Use Impale to pull Nidalee out of position when she is caught; she cannot act while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Nidalee", "start": 19, "end": 26 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Nidalee:3",
+          "text": "Stay on Nidalee with attacks so Quaking builds up; her fragile body takes steady damage from it.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Skarner:Nidalee:4",
+          "text": "Seismic Bastion gives you a shield and slows her when she pounces onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E at once, closing on Nidalee before she can kite.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Nidalee", "start": 64, "end": 71 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8185a7b1c1f366882b36c6478d6a2bf083009d0ec4d454f3484a192d884cae95",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Nocturne:0",
+          "text": "Save Ixtal's Impact for when Nocturne's Shroud of Darkness is on cooldown; the shield blocks the charge.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Skarner:Nocturne:1",
+          "text": "Bait Shroud of Darkness with a cheap ability before you cast Impale on Nocturne.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Skarner-R", "start": 61, "end": 67 },
+            { "kind": "champion", "key": "Nocturne", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Skarner:Nocturne:2",
+          "text": "Use Seismic Bastion when Nocturne dashes in; the shield and slow soften his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Skarner:Nocturne:3",
+          "text": "Stay close to your team when Nocturne casts Paranoia, since he can dash onto any of you.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 29, "end": 37 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Skarner:Nocturne:4",
+          "text": "Break away from Nocturne's tether with Ixtal's Impact before the fear lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 16, "end": 24 },
+            { "kind": "ability", "key": "Skarner-E", "start": 39, "end": 53 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "067871dd00d0c7d6c1ddbcaaf2447075eff52dcddfcf619b4419303e4a146400",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Nunu:0",
+          "text": "Hit Nunu with Impale to pull him out of position. Impale can be dodged, so cast it when he cannot easily Flash away.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Skarner-R", "start": 50, "end": 56 },
+            { "kind": "summoner-spell", "key": "4", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Skarner:Nunu:1",
+          "text": "Stay on Nunu with attacks to stack Quaking. Shattered Earth also slows him, so use it before you fight.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Skarner:Nunu:2",
+          "text": "Do not run in a straight line from Biggest Snowball Ever!. Make sharp turns, because the snowball turns slowly.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 35, "end": 57 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Nunu:3",
+          "text": "Leave Nunu's Absolute Zero as soon as it starts. Staying in it slows you more over time, and Flash gets you out for sure.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 },
+            { "kind": "summoner-spell", "key": "4", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.95
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3033e6789e3dc86bd90ca419c4035a50661894274988b72fe5d3bee6db1a8573",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Pantheon:0",
+          "text": "Cast Shattered Earth before you engage, not after; the cast time in the middle of a fight leaves you open.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Pantheon:1",
+          "text": "Pantheon's Shield Vault stuns, but Ixtal's Impact makes you immune to slows and he cannot easily run once you grab him.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Skarner-E", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Skarner:Pantheon:2",
+          "text": "Drag Pantheon into a wall with Ixtal's Impact to stun him and deal damage.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Skarner-E", "start": 31, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Pantheon:3",
+          "text": "Hit Pantheon from behind while he braces with Aegis Assault; it blocks damage from the front only.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Skarner:Pantheon:4",
+          "text": "Use Impale to catch Pantheon when he lands from Grand Starfall.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Pantheon", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8d8d7738bbd23d79b0f751fd82cc856db896f89afb8e8834e9ee9177f740b268",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Qiyana:0",
+          "text": "Charge with Ixtal's Impact toward a wall while you have Qiyana in tow; she is stunned and takes damage when she hits it.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Qiyana", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 85 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Qiyana:1",
+          "text": "Aim Impale at Qiyana when she dashes in or out of a fight. It holds her in place and drags her toward your team.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Qiyana", "start": 14, "end": 20 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Qiyana:2",
+          "text": "Cast Shattered Earth before you engage, not after, so you are not waiting on its cast time in the middle of the fight.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Qiyana:3",
+          "text": "Throw the boulder with Upheaval when Qiyana tries to leave. It slows her so you can keep hitting her.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Qiyana:4",
+          "text": "Use Seismic Bastion when Qiyana jumps on you. The shield soaks some of her burst and the shockwave slows her.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner's E charge in with empowered attacks ready, useful to catch a dashing Qiyana.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Qiyana", "start": 97, "end": 103 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6bfbc1abda02e6d2ba98baab570af1c32b7eea6b7b7e5335152563b0b8b4dfa0",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Rammus:0",
+          "text": "Do not attack Rammus while Defensive Ball Curl is up; it hurts you for every attack and he is very tough.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Rammus-W", "start": 27, "end": 46 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Skarner:Rammus:1",
+          "text": "Hit Rammus when his Defensive Ball Curl is off; he is much weaker then.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Rammus-W", "start": 20, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Skarner:Rammus:2",
+          "text": "Watch for Frenzying Taunt before charging with Ixtal's Impact; being taunted stops your charge.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Skarner-E", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Skarner:Rammus:3",
+          "text": "Skarner's Seismic Bastion deals magic damage, so use it on Rammus when his Defensive Ball Curl is off to get more from its damage.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-W", "start": 10, "end": 25 },
+            { "kind": "champion", "key": "Rammus", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Rammus-W", "start": 75, "end": 94 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e7fc180ae7c0daf0b9bd310f6ad3c0edbd2b236bbef4418cba4241b0c6f2ef0e",
+      "tips": [
+        {
+          "id": "jungle:Skarner:RekSai:0",
+          "text": "Cast Shattered Earth before you charge in with Ixtal's Impact, so you are not waiting on its cast time in the middle of a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 47, "end": 61 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:RekSai:1",
+          "text": "Grab Rek'Sai with Ixtal's Impact and run her into a wall. She takes damage and is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Skarner-E", "start": 18, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Skarner:RekSai:2",
+          "text": "Save Impale for when Rek'Sai is marked and about to dive on a target. Suppressing her cancels her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "RekSai", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Skarner:RekSai:3",
+          "text": "Stay on Rek'Sai with attacks so Quaking reaches full stacks. Her burrow healing does not stop the damage over time.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Skarner:RekSai:4",
+          "text": "Use Seismic Bastion when she pops up next to you. The shield and slow help you win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fd4ea4274d0605bb60215d03c4ab87e781a0cff55ca4696f6dcc40751be3e2dd",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Rengar:0",
+          "text": "Hit Rengar with Impale when he leaps in. It suppresses him, so he can't fight back or escape.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Skarner-R", "start": 16, "end": 22 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Skarner:Rengar:1",
+          "text": "Use Ixtal's Impact to drag Rengar into a wall. The collision stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Rengar", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Skarner:Rengar:2",
+          "text": "Cast Seismic Bastion when Rengar jumps on you. The shield absorbs some of his burst and the shockwave leaves him slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Rengar", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 119 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Skarner:Rengar:3",
+          "text": "Keep Shattered Earth ready before you walk near brush. If Rengar commits to you, start hitting him right away to stack Quaking.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q then charging in with E lets Skarner commit fast onto Rengar when he leaps from brush.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 43, "end": 50 },
+            { "kind": "champion", "key": "Rengar", "start": 68, "end": 74 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "199a14aa39b237e979131e19874d696c6d5e0b44ee219bbfe1a0aabf9017b9ca",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Sejuani:0",
+          "text": "Start Ixtal's Impact only when Sejuani is not close to stunning you. If you are stunned mid-charge, the charge ends and you lose the grab.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Sejuani", "start": 31, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Skarner:Sejuani:1",
+          "text": "Cast Shattered Earth before you engage with Ixtal's Impact, so you are not waiting out its cast time while already fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Sejuani:2",
+          "text": "Sejuani is rarely slowed while her Frost Armor is up, so do not count on Shattered Earth or Seismic Bastion to hold her.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Skarner-W", "start": 92, "end": 107 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Skarner:Sejuani:3",
+          "text": "Hit Sejuani with several attacks to stack Quaking, and keep sticking to her. She is tanky, so sustained damage is how you beat her.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Sejuani:4",
+          "text": "Slam a wall with Sejuani in tow using Ixtal's Impact for a stun and big damage. Then finish her while she is stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Skarner-E", "start": 38, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 116 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Sejuani:5",
+          "text": "Impale a squishy ally of Sejuani instead of her when you can. Her tankiness makes her a poor target.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 0, "end": 6 },
+            { "kind": "champion", "key": "Sejuani", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner charge in with E and hit fast, though Sejuani's Frost Armor makes slowing her harder.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Sejuani", "start": 65, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d657ce818c5d0eff433a50b486754fd5b8a5c5b27825eebc080c3a8df3039a42",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Shaco:0",
+          "text": "Walk carefully around your camps and objectives, because Shaco hides Jack In The Box traps there. Wards or a sweeper help reveal them.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Shaco-W", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Shaco:1",
+          "text": "Use Shattered Earth before you engage Shaco. The empowered attacks and the slow on the final hit make it hard for him to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Skarner:Shaco:2",
+          "text": "Use Ixtal's Impact to drag Shaco into a wall for a stun, since he is fragile once caught. Beware of his Deceive and traps.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Shaco", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 104, "end": 111 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Skarner:Shaco:3",
+          "text": "Seismic Bastion gives you a shield and slows Shaco when he jumps in to Backstab you. Cast it as he appears.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Shaco", "start": 45, "end": 50 },
+            {
+              "kind": "ability",
+              "key": "Shaco-passive",
+              "start": 71,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "122577601187ef58ba4020b4b3e2c1c8c8f8884bf91b9f8dbe97d1948234b88e",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Shyvana:0",
+          "text": "Hold Ixtal's Impact for when Shyvana is coming at you or running away. If you grab her and hit a wall, she is stunned and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 117 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Shyvana:1",
+          "text": "Cast Shattered Earth before you charge in, so you are not waiting on its cast time in the middle of the fight.",
+          "refs": [],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Skarner:Shyvana:2",
+          "text": "Stay on Shyvana with your attacks to build Quaking. Her fights are long, and the stacks add steady damage.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Shyvana:3",
+          "text": "Use Impale on Shyvana before she transforms, or to pull her away from her team. She is hard to catch in Dragon Form.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Shyvana", "start": 14, "end": 21 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:Skarner:Shyvana:4",
+          "text": "Seismic Bastion gives you a shield and slows nearby enemies. Use it when Shyvana jumps in.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 0, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 },
+            { "kind": "champion", "key": "Shyvana", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d0976065cffd46008fcabd710e8635101711819a77c6a0437a7dedb1bb48d153",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Sylas:0",
+          "text": "Use Ixtal's Impact to grab Sylas and run him into a wall; he is stunned and takes damage, and you can finish him while he is stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Sylas:1",
+          "text": "Cast Shattered Earth before you charge in. Casting it mid-fight leaves you exposed during the cast time.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Skarner:Sylas:2",
+          "text": "Aim Impale at Sylas when he is out of position. He can't use Kingslayer's heal while he is held, so it is a safe way to start a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Sylas", "start": 14, "end": 19 },
+            { "kind": "ability", "key": "Sylas-W", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Skarner:Sylas:3",
+          "text": "Stay on Sylas with basic attacks so Quaking reaches full stacks. Long fights favor your steady damage.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q means Skarner's engage isn't delayed, giving Sylas less time to react with Abscond.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 59, "end": 64 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c65ee8f9e8dd29a1a6b2682af24fc44872d292f52541f855b65f6ef01da1349b",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Talon:0",
+          "text": "Use Ixtal's Impact to catch Talon when he is out of position. If you run into a wall with him in tow, he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 115 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Talon:1",
+          "text": "Save Impale for when Talon jumps in on your carry. It pulls him away from the fight and he can't act while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Skarner:Talon:2",
+          "text": "Talon is fragile, so stick to him with Shattered Earth. Its final hit slows him and stops him from running off.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Skarner:Talon:3",
+          "text": "Use Seismic Bastion when Talon dives onto you. The shield soaks his burst and the shockwave slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Shattered Earth lets Skarner charge with Ixtal's Impact and hit instantly, giving Talon little time to react.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Skarner-E", "start": 53, "end": 67 },
+            { "kind": "champion", "key": "Talon", "start": 94, "end": 99 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ef288500d06b61be57e7f8d551da12dcccd57e51d544e35d22e8b5aa5b02c3b",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Trundle:0",
+          "text": "Cast Shattered Earth before you engage with Ixtal's Impact, so you are not waiting on its cast time in the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Skarner:Trundle:1",
+          "text": "Do not fight Trundle inside his Frozen Domain; he hits faster there and heals more.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Trundle-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Trundle:2",
+          "text": "Leave Trundle's Pillar of Ice quickly; it slows you, and it can block your charge.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "Trundle-E", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Skarner:Trundle:3",
+          "text": "Stick to Trundle with attacks to keep Quaking stacked; his Subjugate drains you, so trade before he reaches level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Trundle-R", "start": 59, "end": 68 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "20d3a53ab660b2b33519f4fdf66fc51ed8c041aa0bef9b751c5db18fa011b6eb",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Udyr:0",
+          "text": "Charge with Ixtal's Impact toward a wall while carrying Udyr; hitting the wall stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Udyr", "start": 56, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:Udyr:1",
+          "text": "Do not rely on Ixtal's Impact when Udyr has just Awakened Blazing Stampede; he becomes immune to crowd control and can break free.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Udyr", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Udyr-E", "start": 58, "end": 74 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Skarner:Udyr:2",
+          "text": "Cast Shattered Earth before you commit to a fight. Then finish with Upheaval to slow Udyr when he tries to run or close in.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 },
+            { "kind": "champion", "key": "Udyr", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Skarner:Udyr:3",
+          "text": "Stick to Udyr and keep hitting him, because stacked Quaking deals extra damage over time and Udyr has little ranged answer.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 9, "end": 13 },
+            { "kind": "champion", "key": "Udyr", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Skarner:Udyr:4",
+          "text": "Use Impale to pull Udyr away from his Iron Mantle shield and your team can kill him, since he cannot act while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Udyr", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Udyr-W", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Skarner:combo:0",
+          "note": "Pre-casting Q lets Skarner engage with E ready, though Udyr's Stampede stun can interrupt.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Udyr", "start": 55, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a6e62a59af02fbf07990573650b1b7bab153a567718475384e5c51e6fd1ff24",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Vi:0",
+          "text": "Cast Shattered Earth before you start a fight, not during it, so you are not stuck in the cast while Vi hits you.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Vi:1",
+          "text": "Do not run at Vi with Ixtal's Impact when she is ready to punch; if she knocks you back, the charge ends.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 22, "end": 36 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Skarner:Vi:2",
+          "text": "Steer Ixtal's Impact so Vi is carried into a wall; she is stunned and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 6, "end": 20 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:Vi:3",
+          "text": "Use Seismic Bastion when Vi dives in; the shield and slow soften her trade.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Skarner:Vi:4",
+          "text": "Keep hitting Vi to stack Quaking; three stacks deal extra damage over time.",
+          "refs": [],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e126f0d2314065355598e700c856e163f7e7277d367cce902fcbbc5687f6d2f9",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Viego:0",
+          "text": "Charge with Ixtal's Impact when Viego steps near a wall; slamming him into it stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 12, "end": 26 },
+            { "kind": "champion", "key": "Viego", "start": 32, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Skarner:Viego:1",
+          "text": "Cast Shattered Earth before you engage, not after. Winding it up in the middle of a fight leaves you open.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Skarner:Viego:2",
+          "text": "Use Impale to pull Viego away from his team when he tries to finish a fight. It also stops him from reaching a fallen enemy's body.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Viego", "start": 19, "end": 24 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Skarner:Viego:3",
+          "text": "Stay on Viego with attacks so Quaking reaches full stacks and his health drops steadily.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 8, "end": 13 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Skarner:Viego:4",
+          "text": "Skarner can't be slowed during Ixtal's Impact, so charge in even when Viego tries to slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 23 },
+            { "kind": "ability", "key": "Skarner-E", "start": 31, "end": 45 },
+            { "kind": "champion", "key": "Viego", "start": 70, "end": 75 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "524dae1de0c575597bec7d7473808d9700ed264429c7f9f9a1a60429c93a2598",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Volibear:0",
+          "text": "Save Ixtal's Impact to catch Volibear against a wall; it stuns him, and he can't use Thundering Smash while he is dragged.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Volibear", "start": 29, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Skarner:Volibear:1",
+          "text": "Stun from Thundering Smash is coming when Volibear runs at you. Fight back with Shattered Earth ready so you can slow him and keep trading.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-Q", "start": 10, "end": 26 },
+            { "kind": "champion", "key": "Volibear", "start": 42, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Skarner:Volibear:2",
+          "text": "Use Seismic Bastion when Volibear jumps on you; the shield and slow soften his trade.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Volibear", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Skarner:Volibear:3",
+          "text": "Keep attacking Volibear to stack Quaking; long fights favor your steady damage over his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Skarner:Volibear:4",
+          "text": "Aim Impale at Volibear when he is out of position. Dodge his Stormbringer leap, since it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Volibear", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Volibear-R", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6aaa22a940cb46a5e37f9d1492f0dde481924e22860e3ce6d393457a526534af",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Warwick:0",
+          "text": "Use Ixtal's Impact to drag Warwick into a wall; the stun gives you time to hit him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Warwick", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Skarner:Warwick:1",
+          "text": "Warwick heals when he is low, so stay on him with Shattered Earth and finish him with Impale instead of letting him escape.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-R", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Skarner:Warwick:2",
+          "text": "Do not fight Warwick when you are low on health; Blood Hunt makes him fast and hit quickly against you.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Warwick-W", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:Warwick:3",
+          "text": "Warwick's Infinite Duress will suppress you; keep your shield from Seismic Bastion for his dive.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Warwick-R", "start": 10, "end": 25 },
+            { "kind": "ability", "key": "Skarner-W", "start": 67, "end": 82 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "35181d9614855f624cdb630d8e0e59a3ae9ef113dc1160d69533feb50bef76fa",
+      "tips": [
+        {
+          "id": "jungle:Skarner:XinZhao:0",
+          "text": "Fight Xin Zhao with Shattered Earth ready; its final hit slows him, so he can't easily slip away.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:XinZhao:1",
+          "text": "Keep hitting Xin Zhao so Threads of Vibration builds up. Stay on him and the stacks do heavy damage over time.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 13, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Skarner-passive",
+              "start": 25,
+              "end": 45
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Skarner:XinZhao:2",
+          "text": "Use Seismic Bastion when Xin Zhao charges in; the shield absorbs damage and the earthquake slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Skarner:XinZhao:3",
+          "text": "Do not start Ixtal's Impact near Xin Zhao's Three Talon Strike; its knock up ends your charge.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 44, "end": 62 },
+            { "kind": "keyword", "key": "knocked-up", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "11042628ed316026864a6dcc6aa1f75c71cdbf19137d61bdc47eb688510a1eb4",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Zac:0",
+          "text": "Use Ixtal's Impact to catch Zac and carry him into a wall. The wall slam stuns him and deals damage.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zac", "start": 28, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Skarner:Zac:1",
+          "text": "Zac heals from his goo chunks. Walk over them to destroy them, especially after he trades with you.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 0, "end": 3 }],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Skarner:Zac:2",
+          "text": "When Zac revives as bloblets with Cell Division, hunt every bloblet. If they all die, he dies.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zac-passive", "start": 34, "end": 47 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Skarner:Zac:3",
+          "text": "Use Impale on Zac when he is split up from his team. It drags him to your allies, and it also hits other champions.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Zac", "start": 14, "end": 17 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Skarner:Zac:4",
+          "text": "Cast Shattered Earth before you engage, then stick to Zac with attacks. Quaking builds up and hurts a tanky target.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 54, "end": 57 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c86b6c0973af2564cf0a0c00102ff02fd330ce83bff2805a523fc7cbc7c68bd9",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Zed:0",
+          "text": "Use Ixtal's Impact to catch Zed when he steps up, then drag him into a wall to stun him. He has no easy way out once he is grabbed.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 28, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Skarner:Zed:1",
+          "text": "Cast Shattered Earth before you engage, so Zed gets slowed and takes the big hit as soon as you reach him.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 43, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Skarner:Zed:2",
+          "text": "Save Impale for when Zed is on you, and use it to pull him away from your carry. While it lasts he cannot cast Death Mark or his other abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 5, "end": 11 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Zed-R", "start": 111, "end": 121 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Skarner:Zed:3",
+          "text": "Stay on Zed with attacks. Stacks of Quaking build up, and a full stack deals damage based on his max Health, which works well against a fragile assassin.",
+          "refs": [{ "kind": "champion", "key": "Zed", "start": 8, "end": 11 }],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Skarner:Zed:4",
+          "text": "Use Seismic Bastion when Zed jumps in. The shield and slow blunt his burst and make it harder for him to stay on you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "91e26737485911f600a5e24c396cd7a33a9369f3da5bb0b376b73a2146b5e76e",
+      "tips": [
+        {
+          "id": "jungle:Skarner:Zyra:0",
+          "text": "Charge in with Ixtal's Impact when Zyra is caught out, then drag her into a wall for a stun and damage. She has little to stop you once you have her.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-E", "start": 15, "end": 29 },
+            { "kind": "champion", "key": "Zyra", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Skarner:Zyra:1",
+          "text": "Cast Shattered Earth before you engage, so you are not waiting out its cast time while Zyra and her plants hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Skarner:Zyra:2",
+          "text": "Use Impale to pull Zyra out of position when she is alone with her plants. Skarner is sturdy, so stay on her and keep attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 4, "end": 10 },
+            { "kind": "champion", "key": "Zyra", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Skarner", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Skarner:Zyra:3",
+          "text": "Avoid walking over her seeds while she is near. Zyra can grow them into plants that hit and slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Skarner:Zyra:4",
+          "text": "Use Seismic Bastion for the shield when you step into her range, and again when plants gather around you.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

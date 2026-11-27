@@ -1,0 +1,1043 @@
+{
+  "schemaVersion": 1,
+  "champion": "MonkeyKing",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "204ed2b703a28dee97664619202f0afe2ec0e8dff5d67b223bc15032a203d111",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:general:0",
+          "text": "Fight monsters and champions to build Stone Skin stacks; Wukong gets tougher and heals more the longer he keeps hitting things.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 38,
+              "end": 48
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:MonkeyKing:general:1",
+          "text": "Use Crushing Blow right before your next attack; the extra range lets you hit first and it strips the target's Armor.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:MonkeyKing:general:2",
+          "text": "Hit anything with attacks and abilities to bring Crushing Blow back sooner, so use it again and again in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:MonkeyKing:general:3",
+          "text": "Dash in with Nimbus Strike, then use Warrior Trickster to slip away or confuse the enemy about which one is the real Wukong.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 13,
+              "end": 26
+            },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-W",
+              "start": 37,
+              "end": 54
+            },
+            {
+              "kind": "champion",
+              "key": "MonkeyKing",
+              "start": 117,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MonkeyKing:general:4",
+          "text": "Cast Warrior Trickster near brush so the enemy reacts to the wrong Wukong.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:MonkeyKing:general:5",
+          "text": "Nimbus Strike hits up to two more enemies near your target, so start team fights by jumping onto a target with other enemies close to it.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 0, "end": 13 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:MonkeyKing:general:6",
+          "text": "Save Cyclone for a fight where several enemies are bunched up; it knocks them up and hurts high-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:MonkeyKing:general:7",
+          "text": "Your clone copies Cyclone when you cast it, so make a clone with Warrior Trickster first to add damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 18,
+              "end": 25
+            },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:MonkeyKing:combo:0",
+          "name": "Decoy after Nimbus",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "MonkeyKing-E" },
+            { "kind": "ability", "key": "MonkeyKing-W" }
+          ],
+          "when": "After dashing onto a target when you want to disengage or confuse the enemy about which Wukong is real.",
+          "whenRefs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 88, "end": 94 }
+          ],
+          "text": "Dash in with the E, then cast the W so the clone stays on the target while you turn invisible. Enemies often waste abilities on the clone.",
+          "textRefs": []
+        },
+        {
+          "id": "jungle:MonkeyKing:combo:1",
+          "name": "Decoy idle animation fake",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "MonkeyKing-W" }],
+          "when": "When you want the enemy to mistake you for your clone.",
+          "whenRefs": [],
+          "text": "After casting the W, press Stop or Hold. Wukong plays the same idle animation the clone has on spawning, so enemies can't tell which one is real.",
+          "textRefs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 41, "end": 47 }
+          ]
+        },
+        {
+          "id": "jungle:MonkeyKing:combo:2",
+          "name": "Nimbus into Crushing Blow",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "MonkeyKing-E" },
+            { "kind": "ability", "key": "MonkeyKing-Q" }
+          ],
+          "when": "When engaging a target with the dash.",
+          "whenRefs": [],
+          "text": "You can cast the Q while the E dash is still in progress. The empowered attack then lands as soon as you arrive.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "137d9c2acaa2185cf82e7bc41773bd0972ab08cba0106f1fdb778a92546ad1ea",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Graves:0",
+          "text": "Use Nimbus Strike to jump onto Graves, then follow with Crushing Blow. Graves has no easy way to get away from you once you are on him.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Graves", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-Q",
+              "start": 56,
+              "end": 69
+            },
+            { "kind": "champion", "key": "Graves", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:MonkeyKing:Graves:1",
+          "text": "Cast Warrior Trickster right after you dash in, so Graves wastes shots on the wrong target.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Graves", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:MonkeyKing:Graves:2",
+          "text": "Save Cyclone for when Graves is close, so you knock him up. Do not cast it from far away.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:MonkeyKing:Graves:3",
+          "text": "Stay out of Smoke Screen when you can. Step out of the cloud and you are no longer slowed or nearsighted.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MonkeyKing:Graves:4",
+          "text": "Fight Graves in short, close trades. Stone Skin builds up armor the longer you keep hitting him, which makes his physical shots weaker.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 37,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "48c925fa427deb4264eebaa3210b20f770de5fa2010ea938b1dee34748af74fc",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:JarvanIV:0",
+          "text": "Use Warrior Trickster after Nimbus Strike to leave a clone behind and get out. Jarvan will often waste his spells on the clone.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:MonkeyKing:JarvanIV:1",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 66, "end": 79 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:MonkeyKing:JarvanIV:2",
+          "text": "Cataclysm walls hold you in with Jarvan. Save Warrior Trickster to dash out, since movement abilities can pass through the terrain.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-R", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 46, "end": 63 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:MonkeyKing:JarvanIV:3",
+          "text": "Keep hitting Jarvan to build Stone Skin before you commit to a trade. The armor makes his physical damage weaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 29,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3b03641b09dfced690d5c607493348b593a0297631b72c696ad2b93d5e4cbc35",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Kayn:0",
+          "text": "Use Nimbus Strike to jump onto Kayn when he is far from terrain, then follow with Crushing Blow while he is still in reach.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Kayn", "start": 31, "end": 35 },
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 82, "end": 95 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MonkeyKing:Kayn:1",
+          "text": "Fight Kayn when his Shadow Step is on cooldown; he has far fewer ways to escape or reposition.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 6, "end": 10 },
+            { "kind": "ability", "key": "Kayn-E", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MonkeyKing:Kayn:2",
+          "text": "Save Cyclone for when Kayn commits; it knocks him up and the damage scales with his max Health.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:MonkeyKing:Kayn:3",
+          "text": "Step out of Blade's Reach so he cannot start Umbral Trespass from long range, and you avoid being slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "Kayn-R", "start": 45, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:MonkeyKing:Kayn:4",
+          "text": "Use Warrior Trickster to leave a clone that keeps hitting Kayn while you reposition, so he wastes his abilities on the wrong target.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Kayn", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac16e9afaf6c2f570087762a7fcd85035aeec6e13537f4183272a2a20d670b3b",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Khazix:0",
+          "text": "Stay near your allies or minions when Kha'Zix is around; he deals far more damage to anyone isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 92, "end": 100 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:MonkeyKing:Khazix:1",
+          "text": "Use Warrior Trickster after Nimbus Strike so Kha'Zix has to guess which Wukong is real.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 28,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Khazix", "start": 45, "end": 52 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:MonkeyKing:Khazix:2",
+          "text": "Save Cyclone for when Kha'Zix jumps on you; it knocks him up and hurts more the healthier he is.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Khazix", "start": 22, "end": 29 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:MonkeyKing:Khazix:3",
+          "text": "Fight when Kha'Zix has used Leap and Void Assault; he is easy to catch without them.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 11, "end": 18 },
+            { "kind": "ability", "key": "Khazix-E", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Khazix-R", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:MonkeyKing:Khazix:4",
+          "text": "Keep fighting once the trade starts; Stone Skin makes Wukong tougher with every hit you land.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 37,
+              "end": 47
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c71acacdc5c2b0f93114a3e6df252c8a54ce696f01532853848a12183c9382e6",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Kindred:0",
+          "text": "Dash onto Kindred with Nimbus Strike when she is alone; she is fragile and has little to stop you from reaching her.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 23, "end": 36 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:MonkeyKing:Kindred:1",
+          "text": "Use Warrior Trickster right after you dash in, so Kindred hits the clone instead of the real Wukong.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Kindred", "start": 50, "end": 57 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:MonkeyKing:Kindred:2",
+          "text": "Cast Cyclone on Kindred when she is close; she is knocked up and can't kite you.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Kindred", "start": 16, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:MonkeyKing:Kindred:3",
+          "text": "Step out of the zone of Lamb's Respite or hold your damage; nobody inside it can die, so a kill there will not happen.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 24, "end": 38 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:MonkeyKing:Kindred:4",
+          "text": "Kill the camp Wolf has marked on your side of the jungle before Kindred gets there, to slow her growth.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e0a126c7eefe088454755f3b831eeb30b2879e54dc4b443a63d8a834d447aa58",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:LeeSin:0",
+          "text": "Use Warrior Trickster after Nimbus Strike so Lee Sin may chase the clone. Hold your follow-up a moment to see which one he commits to.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 28,
+              "end": 41
+            },
+            { "kind": "champion", "key": "LeeSin", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:MonkeyKing:LeeSin:1",
+          "text": "Fight Lee Sin when his Energy is low. Each ability he casts costs Energy, and he has little left once he has spent a few.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:MonkeyKing:LeeSin:2",
+          "text": "Lee Sin takes magic damage badly, so Nimbus Strike is a good opener. Hit him with it before he can combo you.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 37, "end": 50 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:MonkeyKing:LeeSin:3",
+          "text": "Save Cyclone for when Lee Sin commits to a fight. Its knock up stops him from chaining his abilities.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "LeeSin", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "knocked-up", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:MonkeyKing:LeeSin:4",
+          "text": "Hit Lee Sin with Crushing Blow in a long fight. It cuts his Armor, and your Stone Skin stacks make you tougher the longer you trade.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-Q",
+              "start": 17,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 76,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MonkeyKing:combo:2",
+          "note": "Nimbus into Crushing Blow lets Wukong close on Lee Sin fast and land an empowered hit on arrival.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-Q",
+              "start": 12,
+              "end": 25
+            },
+            { "kind": "champion", "key": "MonkeyKing", "start": 31, "end": 37 },
+            { "kind": "champion", "key": "LeeSin", "start": 47, "end": 54 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ff4f6db2f28a2cecc249b89e705878904018be22aa77ff5c8423852cca1f7af9",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:MasterYi:0",
+          "text": "Cast Cyclone when Master Yi dives onto you. It knocks him up and stops his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "MasterYi", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:MonkeyKing:MasterYi:1",
+          "text": "Master Yi is untargetable during Alpha Strike, so hold your abilities until he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MonkeyKing:MasterYi:2",
+          "text": "Use Warrior Trickster to leave a clone behind, then fight from the side. His attacks may go to the clone.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MonkeyKing:MasterYi:3",
+          "text": "Master Yi's Highlander makes him immune to slows, so rely on Cyclone's knock up to stop him instead.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 12, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 61,
+              "end": 68
+            },
+            { "kind": "keyword", "key": "knocked-up", "start": 71, "end": 79 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:MonkeyKing:MasterYi:4",
+          "text": "Use Crushing Blow to cut his Armor before you trade. It can weaken him for your follow-up attacks.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ceae9e21ced7e83386d8283c2bbf0a1d8bffcfb3e3482d405b81f5864ca7bbdc",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Naafiri:0",
+          "text": "Hold Cyclone until Naafiri commits to a fight; the knock up and the damage based on her max Health punish her for diving in.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Naafiri", "start": 19, "end": 26 },
+            { "kind": "keyword", "key": "knocked-up", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:MonkeyKing:Naafiri:1",
+          "text": "Use Warrior Trickster to dodge her focus. The clone keeps fighting while you go invisible, and her packmates may chase the wrong target.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:MonkeyKing:Naafiri:2",
+          "text": "Use Nimbus Strike on her and her packmates, then fight with Crushing Blow ready. It strips her armor, so your follow-up hits do more damage.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 4, "end": 17 },
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 60, "end": 73 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:MonkeyKing:Naafiri:3",
+          "text": "Keep hitting her in a fight; Stone Skin stacks make you tougher against her physical burst the longer you trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 29,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MonkeyKing:combo:0",
+          "note": "The decoy can pull aggro from Naafiri and her packmates, who attack whatever she targets.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 30, "end": 37 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5cc32dbaa64ccc85b81a04ba1da4694606980731214feee6457931fa814634c9",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Nocturne:0",
+          "text": "Fight beside your team. Stone Skin gets stronger the more you hit, and Nocturne's Paranoia punishes you when you are alone.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 24,
+              "end": 34
+            },
+            { "kind": "champion", "key": "Nocturne", "start": 71, "end": 79 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 82, "end": 90 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:MonkeyKing:Nocturne:1",
+          "text": "Do not waste Cyclone or Nimbus Strike into Nocturne's Shroud of Darkness. Bait it first with a lesser ability.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-R",
+              "start": 13,
+              "end": 20
+            },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 24,
+              "end": 37
+            },
+            { "kind": "champion", "key": "Nocturne", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 54, "end": 72 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:MonkeyKing:Nocturne:2",
+          "text": "Back away from Nocturne's Unspeakable Horror before the tether finishes. If you move out of range, the fear never lands.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:MonkeyKing:Nocturne:3",
+          "text": "Use Warrior Trickster to dodge Duskbringer and leave a decoy behind.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 31, "end": 42 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a06407a6ca580fde1dd5cdf890fbfe898bd83951ba0b3eb4f04620c34bc8bd84",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Shyvana:0",
+          "text": "Use Warrior Trickster right after Nimbus Strike to leave a clone and slip away; Shyvana may hit the clone instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 34,
+              "end": 47
+            },
+            { "kind": "champion", "key": "Shyvana", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:MonkeyKing:Shyvana:1",
+          "text": "Fight when Shyvana is low on Dragon Fury. Without her dragon form she is much easier to burst down.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MonkeyKing:Shyvana:2",
+          "text": "Start trades with Crushing Blow; it lets you hit from farther away and cuts her Armor for the fight.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:MonkeyKing:Shyvana:3",
+          "text": "Save Cyclone for when she walks into you. Standing in it knocks her up and her max Health takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:MonkeyKing:Shyvana:4",
+          "text": "Keep stacking Stone Skin by hitting her during long fights; you get tougher the longer you keep hitting.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 14,
+              "end": 24
+            }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d892489cc2a0060a4bb5a069e116d3a44e0112d90440aa839d869fae1ed433bd",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Skarner:0",
+          "text": "Save Warrior Trickster for when Skarner commits to a fight; the clone draws his attacks while you hit back.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 5, "end": 22 },
+            { "kind": "champion", "key": "Skarner", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:MonkeyKing:Skarner:1",
+          "text": "Skarner's Ixtal's Impact ends when he is stunned, rooted or knocked up, so hold Cyclone for when he charges at you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-E", "start": 10, "end": 24 },
+            { "kind": "keyword", "key": "knocked-up", "start": 60, "end": 70 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:MonkeyKing:Skarner:2",
+          "text": "Skarner builds up Quaking by sticking to you. Use Nimbus Strike to dash away, or into a fight, before his stacks reach full.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "MonkeyKing-E", "start": 50, "end": 63 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:MonkeyKing:Skarner:3",
+          "text": "Fight beside your allies in the jungle, since Skarner's Impale can pull you away from them.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 46, "end": 53 },
+            { "kind": "ability", "key": "Skarner-R", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ac413803e538c659c38d725048a95c891ece048368590c7ec76e438e8d325b7e",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Sylas:0",
+          "text": "Use Warrior Trickster right after Nimbus Strike so Sylas wastes his abilities on the clone while you hit the real target.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 34,
+              "end": 47
+            },
+            { "kind": "champion", "key": "Sylas", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:MonkeyKing:Sylas:1",
+          "text": "Wait to start the fight until Sylas has spent Abduct, because he has no other way to pull himself onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:MonkeyKing:Sylas:2",
+          "text": "Keep fighting Sylas with Stone Skin stacking; each hit makes you tougher, so long trades favor you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 14, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 25,
+              "end": 35
+            }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:MonkeyKing:Sylas:3",
+          "text": "Hold Cyclone for when Sylas dives in; it knocks him up and hurts a lot of his health.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MonkeyKing:Sylas:4",
+          "text": "Hit Sylas with Crushing Blow before he heals with Kingslayer; it lowers his Armor so your follow-up hits do more.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-Q",
+              "start": 15,
+              "end": 28
+            },
+            { "kind": "ability", "key": "Sylas-W", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "04d5ccb4b76c6cc45dfc2f9627bf147a88da34fdccf75d78ec9f084ea6c42b5c",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Talon:0",
+          "text": "Cast Warrior Trickster right after Nimbus Strike to leave a clone and dodge Talon's follow-up; he may hit the clone instead of you.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 5, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 35,
+              "end": 48
+            },
+            { "kind": "champion", "key": "Talon", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:MonkeyKing:Talon:1",
+          "text": "Fight Talon near your own allies and monsters; you gain armor each time you hit, so a long fight favors you over his quick burst.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:MonkeyKing:Talon:2",
+          "text": "Use Cyclone when Talon dives on you; he is knocked up and takes damage based on his max health.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "knocked-up", "start": 43, "end": 53 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MonkeyKing:Talon:3",
+          "text": "Hit Talon with Crushing Blow to cut his armor before you trade; its cooldown drops with each hit.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 15, "end": 28 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b3269f2fc521b9eed54cf218a3f89afa48297f5eb895ea132e3715a27634933b",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:Viego:0",
+          "text": "Use Warrior Trickster before Viego attacks you. The clone draws his attacks and spells while you strike from a better spot.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            { "kind": "champion", "key": "Viego", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:MonkeyKing:Viego:1",
+          "text": "Dash in with Nimbus Strike when you fight Viego. Cast Crushing Blow during the dash so your first hit lands harder and cuts his Armor.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 13,
+              "end": 26
+            },
+            { "kind": "champion", "key": "Viego", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:MonkeyKing:Viego:2",
+          "text": "Hold Cyclone for when Viego dives in. It knocks him up and the damage scales with his max Health, so it works well against his Health.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Viego", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MonkeyKing:Viego:3",
+          "text": "Stay in the fight when Viego takes a kill. Attack the Mist Wraith at once, or he gets Possession and heals.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.78
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d76750534d31cf2344074a6aba515cf3ad0db59d87398f60a3a3249eb8d2a24d",
+      "tips": [
+        {
+          "id": "jungle:MonkeyKing:XinZhao:0",
+          "text": "Use Warrior Trickster right after Nimbus Strike to leave a clone and slip out while Xin Zhao hits the wrong target.",
+          "refs": [
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 4, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 34,
+              "end": 47
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 84, "end": 92 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:MonkeyKing:XinZhao:1",
+          "text": "Stay away from Xin Zhao's third Three Talon Strike hit; it knocks you up and sets up his follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:MonkeyKing:XinZhao:2",
+          "text": "Sidestep Wind Becomes Lightning; its thrust slows you and marks you as Challenged, letting Xin Zhao charge you from farther away.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-W", "start": 9, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 49 },
+            { "kind": "champion", "key": "XinZhao", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:MonkeyKing:XinZhao:3",
+          "text": "Fight in extended trades so Stone Skin stacks up; hitting Xin Zhao with Crushing Blow also lowers his Armor.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-passive",
+              "start": 28,
+              "end": 38
+            },
+            { "kind": "champion", "key": "XinZhao", "start": 58, "end": 66 },
+            { "kind": "ability", "key": "MonkeyKing-Q", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:MonkeyKing:XinZhao:4",
+          "text": "Spread out from allies before Xin Zhao reaches level 6; Crescent Guard hits everything near him, and you are knocked back and stunned unless Challenged.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 56, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 126, "end": 133 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

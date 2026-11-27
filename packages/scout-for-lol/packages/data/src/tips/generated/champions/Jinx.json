@@ -1,0 +1,1934 @@
+{
+  "schemaVersion": 1,
+  "champion": "Jinx",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "e3c72e8b5f36241aff1534dd68d8b46216b8ff880091580fb1d6b7d3a3e8a269",
+      "tips": [
+        {
+          "id": "adc:Jinx:general:0",
+          "text": "Switch to Pow-Pow when an enemy gets close; its attack speed ramps up the longer you keep hitting.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jinx:general:1",
+          "text": "Poke with Fishbones rockets on minions near the enemy. The splash hits champions without pulling minion aggro onto you.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:general:2",
+          "text": "Watch your mana. Every Fishbones rocket costs mana, so switch to Pow-Pow when you don't need the range.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:general:3",
+          "text": "Open trades from long range with Zap!, which leaves them slowed so you can follow up or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Jinx:general:4",
+          "text": "Line up clear of minions, since they take the hit instead when they are first in line for Zap!",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jinx:general:5",
+          "text": "Throw Flame Chompers! at your feet when someone dives you, rooting whoever steps on them.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:general:6",
+          "text": "Don't waste Flame Chompers! early, since it's your main escape on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jinx:general:7",
+          "text": "Fire Super Mega Death Rocket! from far away, since it hits harder the farther it travels and more against low-health enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:general:8",
+          "text": "Take the last hit on a kill to trigger Get Excited! The burst of speed lets you chase or run.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-passive", "start": 39, "end": 51 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Jinx:general:9",
+          "text": "Stay at the edge of a fight and poke until it is safe. Jinx is fragile, so don't run in and unload.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Jinx:combo:0",
+          "name": "Rev'd up rocket swap",
+          "category": "trick",
+          "sequence": [
+            "attack",
+            "attack",
+            "attack",
+            { "kind": "ability", "key": "Jinx-Q" },
+            "attack"
+          ],
+          "when": "When you want a strong opening rocket hit after ramping up the minigun in a trade or fight.",
+          "whenRefs": [],
+          "text": "Ramp up Pow-Pow with a few attacks, then swap to Fishbones. Only the first rocket attack after the swap keeps the Rev'd up attack speed.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "8ca7fd5d6a644633ff1f4deb8a0b1a8c109a37e1001617a35deffb01d1d72f56",
+      "tips": [
+        {
+          "id": "adc:Jinx:Aphelios:0",
+          "text": "Hit Aphelios with Zap! when he steps up to trade; it slows him and shows where he is so you can follow with rockets.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Jinx-W", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Aphelios:1",
+          "text": "Drop Flame Chompers! at your feet when he walks in; if he steps on one he is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jinx:Aphelios:2",
+          "text": "Switch to the rocket launcher with Switcheroo! to outrange him and poke while his weapons are still in the wrong order.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 35, "end": 46 },
+            { "kind": "keyword", "key": "poke", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Jinx:Aphelios:3",
+          "text": "Fire Super Mega Death Rocket! from far away at a hurt Aphelios; it hits harder the farther it flies.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Aphelios", "start": 54, "end": 62 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Ramping the minigun then swapping to rockets gives a strong opening hit in a trade against Aphelios.",
+          "refs": [
+            { "kind": "champion", "key": "Aphelios", "start": 91, "end": 99 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "548f0635a0853ef8b86dc28e30daed51d077d10a16b1df55399d60bdbfebabbd",
+      "tips": [
+        {
+          "id": "adc:Jinx:Ashe:0",
+          "text": "Poke Ashe with Fishbones rockets from long range. She has to walk into your range to trade back.",
+          "refs": [{ "kind": "champion", "key": "Ashe", "start": 5, "end": 9 }],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jinx:Ashe:1",
+          "text": "When Ashe closes in, root her by throwing down Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "rooted", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Jinx-E", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:Ashe:2",
+          "text": "Slow and reveal Ashe when she steps up to trade by firing Zap!",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ashe", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "Jinx-W", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jinx:Ashe:3",
+          "text": "Stay near your team and away from open lanes when Enchanted Crystal Arrow is ready. One hit from it can stun you and get you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-R", "start": 50, "end": 73 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Jinx:Ashe:4",
+          "text": "Watch for Volley and step out of the cone. It slows you and Ashe's team can chase you down.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 10, "end": 16 },
+            { "kind": "champion", "key": "Ashe", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9b627b396fb13de849b5798667e1d886d3961041fea402737ad20ebcb42f3f18",
+      "tips": [
+        {
+          "id": "adc:Jinx:Brand:0",
+          "text": "Dodge Sear; without a stun Brand's combo is hard to finish. Stay behind minions, since the fireball ends on the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jinx:Brand:1",
+          "text": "Walk sideways after Pillar of Flame is cast; it has a delay, so you can leave before it erupts.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jinx:Brand:2",
+          "text": "Poke Brand with rockets from long range and use Zap! to slow him when he steps up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 48, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Jinx:Brand:3",
+          "text": "Keep Flame Chompers! for when Brand steps in to hit you; the root leaves him stuck and easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Brand", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Jinx:Brand:4",
+          "text": "Don't stand next to your support or minions when Brand is near; Conflagration spreads between them and sets you ablaze.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 49, "end": 54 },
+            { "kind": "ability", "key": "Brand-E", "start": 64, "end": 77 },
+            { "kind": "keyword", "key": "ablaze", "start": 112, "end": 118 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "52416ac921f840dbc8f23ffe0d053dfb39da7b29be45d0e78102aae83b97a72b",
+      "tips": [
+        {
+          "id": "adc:Jinx:Caitlyn:0",
+          "text": "Stay out of Caitlyn's reach. Her range is long, so trade with Zap! only when she steps up to push, and then retreat.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Jinx-W", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Jinx:Caitlyn:1",
+          "text": "Use Fishbones to match Caitlyn's range, and switch to the minigun when she closes in.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Jinx:Caitlyn:2",
+          "text": "Look for Yordle Snap Trap before you step into brush or onto unwarded ground. Being rooted lets Caitlyn hit you hard.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 },
+            { "kind": "champion", "key": "Caitlyn", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jinx:Caitlyn:3",
+          "text": "Stay behind minions when Caitlyn uses Piltover Peacemaker, since it hits less hard on later targets.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 38, "end": 57 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jinx:Caitlyn:4",
+          "text": "Put Flame Chompers where Caitlyn will dash or stand when she uses 90 Caliber Net. It roots her if she steps on one.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Caitlyn-E", "start": 66, "end": 80 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jinx:Caitlyn:5",
+          "text": "Zap! slows Caitlyn when she tries to walk up and trap you, giving you time to move away.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Caitlyn", "start": 11, "end": 18 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0135bf69d2a33b9a385b41599bc7634885eb78ec5ef96e6faf604b512c14efd3",
+      "tips": [
+        {
+          "id": "adc:Jinx:Cassiopeia:0",
+          "text": "Stay out of Cassiopeia's Noxious Blast range. Sidestep it, because it lands after a short delay.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 25, "end": 38 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jinx:Cassiopeia:1",
+          "text": "Throw Flame Chompers at your feet when Cassiopeia walks in on you. They root her and she can't dodge.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 39, "end": 49 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Jinx:Cassiopeia:2",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze, so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Cassiopeia:3",
+          "text": "Use Zap! from long range to slow and poke Cassiopeia, since she has to come close to fight you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 4, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c0b535ac2a750f6f1728d8c69dce3023be4151f86b7d582344d92217527e22e6",
+      "tips": [
+        {
+          "id": "adc:Jinx:Corki:0",
+          "text": "Stay out of Phosphorus Bomb range and do not stand in brush; it reveals anyone it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-Q", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "adc:Jinx:Corki:1",
+          "text": "Hit Corki with Zap! when he walks up; the slow makes him easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jinx-W", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Corki:2",
+          "text": "Rockets from Switcheroo! outrange Corki's Gatling Gun, so poke him from afar and switch to the minigun if he closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 13, "end": 24 },
+            { "kind": "champion", "key": "Corki", "start": 34, "end": 39 },
+            { "kind": "ability", "key": "Corki-E", "start": 42, "end": 53 },
+            { "kind": "keyword", "key": "poke", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Jinx:Corki:3",
+          "text": "Place Flame Chompers where Corki lands after Valkyrie; he is exposed then, so jump on him.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Corki-W", "start": 45, "end": 53 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Jinx:Corki:4",
+          "text": "Hiding behind minions does not stop Missile Barrage, since it splashes. Stay out of its line.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d3daff30fec8787c93580abbdb76466dc2912738df1f1c95f79b8ec7146171f0",
+      "tips": [
+        {
+          "id": "adc:Jinx:Draven:0",
+          "text": "Make Draven drop his Spinning Axe by firing Zap! at its landing spot.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Draven-Q", "start": 21, "end": 33 },
+            { "kind": "ability", "key": "Jinx-W", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Jinx:Draven:1",
+          "text": "Poke Draven with rockets from long range while the minigun is not ramped up. Do not stand where he can reach you with Blood Rush.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Draven-W", "start": 118, "end": 128 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "adc:Jinx:Draven:2",
+          "text": "Place Flame Chompers on the path where Draven chases you or catches axes. He will be rooted if he steps on one.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 39, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Jinx:Draven:3",
+          "text": "Stand Aside knocks you back and slows you. Stay out of its line, because it is blocked by the first target it meets.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-E", "start": 0, "end": 11 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "adc:Jinx:Draven:4",
+          "text": "Stay out of Whirling Death's line when you are low on health, because it can execute you.",
+          "refs": [
+            { "kind": "ability", "key": "Draven-R", "start": 12, "end": 26 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d2828b5cbfe80d0b78fd6eab799c60d74e2d169fe10b00dc7a8f24c81a36fd56",
+      "tips": [
+        {
+          "id": "adc:Jinx:Ezreal:0",
+          "text": "Hit Ezreal with Zap! when he walks up to poke; it slows him and makes him easy to hit again.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Ezreal:1",
+          "text": "Keep minions between you and Ezreal; Mystic Shot stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 37, "end": 48 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jinx:Ezreal:2",
+          "text": "Place Flame Chompers! where Ezreal will jump or retreat, so he can't escape easily after using Arcane Shift.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 95, "end": 107 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jinx:Ezreal:3",
+          "text": "Ezreal is fragile, so use rockets from Switcheroo! to poke him and force him back.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jinx:Ezreal:4",
+          "text": "Ezreal's Trueshot Barrage can hit you from anywhere on the map, so stay near your team when he is at level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-R", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3dba0e796828906610f1252cf5ebb880e33f9e0fe476aeb3a2a317b6e5c5430f",
+      "tips": [
+        {
+          "id": "adc:Jinx:Hwei:0",
+          "text": "Keep Flame Chompers! ready for when Hwei or an ally dives you; the root gives you time to back away or finish the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Hwei", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jinx:Hwei:1",
+          "text": "Sidestep Hwei's slow lightning and fireball. Hwei has to guess where you will be, so keep moving between auto attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 9, "end": 13 },
+            { "kind": "champion", "key": "Hwei", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jinx:Hwei:2",
+          "text": "Poke Hwei with Zap! from long range; it hits the first enemy and slows him, which makes him easy to follow up on.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Jinx-W", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jinx:Hwei:3",
+          "text": "Rush Hwei right after he casts a Torment spell; he is open to being hit then.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jinx:Hwei:4",
+          "text": "Don't stand still alone in lane, because Severing Bolt from Hwei's Subject: Disaster hurts more against an isolated target.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 18, "end": 23 },
+            { "kind": "champion", "key": "Hwei", "start": 60, "end": 64 },
+            { "kind": "ability", "key": "Hwei-Q", "start": 67, "end": 84 },
+            { "kind": "keyword", "key": "isolated", "start": 107, "end": 115 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Ramped-up rocket opener gives Jinx burst to punish Hwei when he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 30, "end": 34 },
+            { "kind": "champion", "key": "Hwei", "start": 51, "end": 55 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7f3036e22c0293de7d1aaf104283b9dd826a57a424dc02859d6f5222f815fd72",
+      "tips": [
+        {
+          "id": "adc:Jinx:Jhin:0",
+          "text": "Stay out of Jhin's line when his Deadly Flourish is ready. Once your minions or ally have hit you, it roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 33, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Jinx:Jhin:1",
+          "text": "Keep Flame Chompers ready for when Jhin jumps on you. They root him if he steps on one, so you can punish him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jinx:Jhin:2",
+          "text": "Use Zap! on Jhin to slow him when he walks up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Jinx:Jhin:3",
+          "text": "Walk around bushes and choke points with care. Jhin hides traps there, and they slow you and reveal you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 47, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Jinx:Jhin:4",
+          "text": "Jump on Jhin when he is out of shots. He can't attack while he reloads.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "573a7509beb557db8f7d7dc04f01c9602db917faf2a83608eb89af1d2a5fa58f",
+      "tips": [
+        {
+          "id": "adc:Jinx:Kaisa:0",
+          "text": "Poke Kai'Sa with Fishbones rockets and Zap! from long range, since she has to walk up to you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Jinx-W", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Jinx:Kaisa:1",
+          "text": "Keep Flame Chompers! for when Kai'Sa dashes in with Killer Instinct; a root there can turn the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kaisa", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 52, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Jinx:Kaisa:2",
+          "text": "Zap! Kai'Sa when she uses Supercharge to close in; the slow cuts off her run at you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kaisa-E", "start": 26, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "adc:Jinx:Kaisa:3",
+          "text": "Stand away from your own minions' line of fire; Icathian Rain only needs a nearby enemy, so Kai'Sa can burst you if you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Kaisa-Q", "start": 48, "end": 61 },
+            { "kind": "champion", "key": "Kaisa", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Jinx:Kaisa:4",
+          "text": "Stay near your support. Kai'Sa's Plasma stacks faster with allies' stuns and roots, and she can pick you off alone.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c9db37eb0c7bbeba718f86a5d5b951ed7ee773f4e89c810934530ad6ca794f62",
+      "tips": [
+        {
+          "id": "adc:Jinx:Kalista:0",
+          "text": "Aim Zap! at Kalista when she lunges in to trade; it slows her, and her mobility depends on attacking.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 4, "end": 8 },
+            { "kind": "champion", "key": "Kalista", "start": 12, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jinx:Kalista:1",
+          "text": "Set Flame Chompers! between you and Kalista when she closes in, so she is rooted if she steps on one.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Kalista", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jinx:Kalista:2",
+          "text": "Use the rocket launcher from Switcheroo! to poke Kalista from long range, then switch to the minigun when she gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 29, "end": 40 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Kalista", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Jinx:Kalista:3",
+          "text": "Keep Flame Chompers! for when Kalista jumps on you, since it is your main way to get away.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Kalista", "start": 30, "end": 37 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Jinx:Kalista:4",
+          "text": "Fire Super Mega Death Rocket! from far away at a hurt Kalista, since it hits harder with distance and missing health.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Kalista", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "350fef35426e5f10126c799be2aa97e166d75e6e9f2f23677e5daef6eba3aa85",
+      "tips": [
+        {
+          "id": "adc:Jinx:Karthus:0",
+          "text": "Stay out of Lay Waste range and don't stand next to a minion that could hide you; being the only target makes it hit much harder.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Jinx:Karthus:1",
+          "text": "Walk around Wall of Pain rather than through it; crossing it slows you and lowers your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:Karthus:2",
+          "text": "Hit Karthus with Zap! from long range; it slows him and he has no dash to escape.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jinx-W", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Jinx:Karthus:3",
+          "text": "Drop Flame Chompers! on Karthus when he walks up with Defile; he is rooted and can't dodge Lay Waste.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Karthus", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Karthus-E", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Jinx:Karthus:4",
+          "text": "After you kill Karthus, step away from his body; he can still cast spells for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Karthus:5",
+          "text": "Keep your health high from level 6; Requiem hits you from anywhere on the map, so go back to heal before you get low.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-R", "start": 36, "end": 43 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f112475fb28e0bd973bd462a05107e0ea7ea3938cd786ab839288d00a032a915",
+      "tips": [
+        {
+          "id": "adc:Jinx:KogMaw:0",
+          "text": "Kog'Maw can't escape, so look for your team to gank him. Stay near your support to punish him when he steps up.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Jinx:KogMaw:1",
+          "text": "When Kog'Maw walks up to trade, step back from his Void Ooze after you hit him with Zap!",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 51, "end": 60 },
+            { "kind": "ability", "key": "Jinx-W", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Jinx:KogMaw:2",
+          "text": "Kog'Maw can't dodge your attacks once he is rooted, so throw down Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "rooted", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Jinx-E", "start": 66, "end": 81 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:Jinx:KogMaw:3",
+          "text": "Step out of the way of Living Artillery when it lands. Stay away from Void Ooze, because it makes the artillery easier to hit.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 23, "end": 39 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 70, "end": 79 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Jinx:KogMaw:4",
+          "text": "Kill Kog'Maw and then run away from his Icathian Surprise, since it explodes after he dies.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 5, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "KogMaw-passive",
+              "start": 40,
+              "end": 57
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Jinx:KogMaw:5",
+          "text": "While he lacks Bio-Arcane Barrage, poke him from long range with rockets, and switch to the minigun if he closes in using Switcheroo!",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 122, "end": 133 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "efe30f8c4f38ee7ff71f401ca9388006de2527c612cf7872efbce3cd559f1136",
+      "tips": [
+        {
+          "id": "adc:Jinx:Lucian:0",
+          "text": "Keep Flame Chompers! for when Lucian dashes in or you are caught; he is rooted in place and has to stop trading.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Lucian", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Jinx:Lucian:1",
+          "text": "Poke with Zap! when Lucian steps up to last-hit; it slows him and makes it hard for him to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Lucian", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Jinx:Lucian:2",
+          "text": "Use the long range of Fishbones to stay out of his reach and hit him with rockets before he can engage.",
+          "refs": [],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Jinx:Lucian:3",
+          "text": "Switch to Pow-Pow when Lucian gets close so you can ramp up attack speed during a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jinx:Lucian:4",
+          "text": "Lucian has strong burst but little sustained damage, so stay healthy and fight him once his abilities are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Jinx:Lucian:5",
+          "text": "When you fire Super Mega Death Rocket! from far away at a low-health Lucian, it hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 14, "end": 38 },
+            { "kind": "champion", "key": "Lucian", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "961148b37953795848fab8b299f94284d7e5417baccaf564be133868392ba98e",
+      "tips": [
+        {
+          "id": "adc:Jinx:Lux:0",
+          "text": "Stay out of Lux's Light Binding range. Keep minions in front of you so they absorb it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Lux-Q", "start": 18, "end": 31 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Jinx:Lux:1",
+          "text": "Hold Flame Chompers for when Lux walks up to trade or dives you. They root her and keep her away.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 29, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Jinx:Lux:2",
+          "text": "Poke Lux from long range with rocket attacks from Switcheroo! and Zap!, since she has little health early on.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 50, "end": 61 },
+            { "kind": "ability", "key": "Jinx-W", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "adc:Jinx:Lux:3",
+          "text": "Step out of Lucent Singularity before it detonates; if you stay in, you stay slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 12, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jinx:Lux:4",
+          "text": "When Lux fires Final Spark, a red line shows first; move sideways to dodge it.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Lux-R", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8f6464e12789b62136992134547cfaf8869093bc423947c8dbab140378ac5ee9",
+      "tips": [
+        {
+          "id": "adc:Jinx:MissFortune:0",
+          "text": "Poke Miss Fortune with rockets from Switcheroo! while she last-hits; your extra range lets you hit her first.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jinx:MissFortune:1",
+          "text": "Hit Miss Fortune with Zap! to break her Strut Move Speed and slow her so she can't close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Jinx-W", "start": 22, "end": 26 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 40,
+              "end": 45
+            },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Jinx:MissFortune:2",
+          "text": "Stay away from minions that line up with you, because Double Up bounces from a minion onto you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 54,
+              "end": 63
+            }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Jinx:MissFortune:3",
+          "text": "Place Flame Chompers! between you and Miss Fortune before she engages; if she steps on one she is rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 38,
+              "end": 50
+            },
+            { "kind": "keyword", "key": "rooted", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jinx:MissFortune:4",
+          "text": "Do not stand still near Miss Fortune at level 6, because Bullet Time hurts; keep Flame Chompers! ready.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 24,
+              "end": 36
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 57,
+              "end": 68
+            },
+            { "kind": "ability", "key": "Jinx-E", "start": 81, "end": 96 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "09d7e7a952f785b1fc62a6ae16e3ee231ba6c3fc9fd8abdad705bce19b0ae9bf",
+      "tips": [
+        {
+          "id": "adc:Jinx:Nilah:0",
+          "text": "Hit Nilah with Zap! as she closes in; it slows her and reveals her, which gives you room to back off.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Jinx-W", "start": 15, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Jinx:Nilah:1",
+          "text": "Throw Flame Chompers! in her path; if she steps on one she is rooted and can't dash away.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 62, "end": 68 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:Nilah:2",
+          "text": "Poke with rockets from long range, then switch to the minigun with Switcheroo! once she is on top of you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:Nilah:3",
+          "text": "Don't trade basic attacks while Jubilant Veil is up, since she dodges them.",
+          "refs": [
+            { "kind": "ability", "key": "Nilah-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jinx:Nilah:4",
+          "text": "Fire Super Mega Death Rocket! from far away at a hurt Nilah; it hits harder with distance and missing health.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Nilah", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9f8dc318c801170e8ecbb3a1e5b2bbf036dcd3055c71474581f2a2c697dfe576",
+      "tips": [
+        {
+          "id": "adc:Jinx:Samira:0",
+          "text": "Keep Zap! ready for when Samira dashes in; it slows her and can break up her approach.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Samira", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Jinx:Samira:1",
+          "text": "Place Flame Chompers! on her path before she jumps in, so that if she steps on one she is rooted and you get time to fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Jinx:Samira:2",
+          "text": "Stay at long range with the rocket launcher and poke her. Switch to the minigun once she reaches you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 52 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jinx:Samira:3",
+          "text": "Fire Super Mega Death Rocket! from far away at a low-health Samira, since it hits hardest after a long flight and adds damage for missing health.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Samira", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "74528b7e99f87b70632cbda5734c2afffa870ffda817dfaf0a9842a3a997ee3b",
+      "tips": [
+        {
+          "id": "adc:Jinx:Senna:0",
+          "text": "Stay out of Last Embrace's line; if the enemy hits you, you're rooted and can't dodge what follows. Stand behind minions to block it.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Jinx:Senna:1",
+          "text": "Poke Senna with Fishbones rockets from long range; she has to walk up to hit you, and the splash can hit her and her partner.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Jinx:Senna:2",
+          "text": "Slow Senna with Zap! when she steps forward to attack, then back off or trade while she can't close the gap.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 16, "end": 20 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jinx:Senna:3",
+          "text": "Throw Flame Chompers! at your feet or in the path where an enemy will step if they jump on you; it roots them.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Senna:4",
+          "text": "Switch to the minigun when the enemy gets close, since it ramps up attack speed in a fight.",
+          "refs": [],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5aca153175f0cc27634d44910063ded6a0592518236320d55dac8e834288d8e5",
+      "tips": [
+        {
+          "id": "adc:Jinx:Sivir:0",
+          "text": "Wait for Sivir to use Spell Shield, then land Zap! or Flame Chompers!; faking an ability can bait it.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Sivir-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "Jinx-W", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Jinx-E", "start": 54, "end": 69 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jinx:Sivir:1",
+          "text": "Dodge Boomerang Blade; it costs a lot of mana. If it hits you going out, step out of its path on the way back.",
+          "refs": [
+            { "kind": "ability", "key": "Sivir-Q", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Jinx:Sivir:2",
+          "text": "Use rocket attacks to poke from long range. Sivir pushes hard, so keep the wave from crashing into your turret.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "champion", "key": "Sivir", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Jinx:Sivir:3",
+          "text": "Place Flame Chompers! where Sivir will walk to dodge, so she is rooted when she misses her dash back.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Sivir", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "adc:Jinx:Sivir:4",
+          "text": "Zap! slows Sivir, so follow up with attacks; her Ricochet bounces hurt near minions.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Sivir", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Sivir-W", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8f3be1542818718865a673f682c16d44433a4a8e9e0ae4b96e5cbf3bea3db317",
+      "tips": [
+        {
+          "id": "adc:Jinx:Smolder:0",
+          "text": "Smolder is weak early, so poke him with Fishbones rockets off minions and punish him before he stacks up.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jinx:Smolder:1",
+          "text": "Hit Smolder with Zap! from long range; it slows him, so he has a hard time reaching you or escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Jinx-W", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jinx:Smolder:2",
+          "text": "Throw Flame Chompers! in his path when he dives; if one roots him, he cannot use Flap, Flap, Flap to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Smolder-E", "start": 81, "end": 97 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jinx:Smolder:3",
+          "text": "Stay spread from your support, since Super Scorcher Breath and Achooo! hit several enemies at once.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-Q", "start": 37, "end": 58 },
+            { "kind": "ability", "key": "Smolder-W", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Jinx:Smolder:4",
+          "text": "Switch to the minigun when he gets close. Rocket range is lost, but ramped-up attacks win a close fight.",
+          "refs": [],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": [
+        {
+          "comboId": "adc:Jinx:combo:0",
+          "note": "Opening rocket hit after minigun ramp-up can punish Smolder when he steps in to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 52, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b1ac5266d7e337aa2ab7adae08b2a220884d6e7469de5ce18d99938e48a8f5c5",
+      "tips": [
+        {
+          "id": "adc:Jinx:Tristana:0",
+          "text": "Switch to rockets to poke Tristana. Her range is shorter early, but it grows as she levels.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jinx:Tristana:1",
+          "text": "Once Tristana lands from Rocket Jump, throw down Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Tristana-W", "start": 25, "end": 36 },
+            { "kind": "ability", "key": "Jinx-E", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jinx:Tristana:2",
+          "text": "When Tristana jumps in, slow her with Zap!",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Jinx-W", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jinx:Tristana:3",
+          "text": "Stand away from your minions. Explosive Charge hurts everything around its target.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jinx:Tristana:4",
+          "text": "When Tristana turns on Rapid Fire, back away until it ends. Fight again once it runs out.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Tristana-Q", "start": 23, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:Jinx:Tristana:5",
+          "text": "Stay far from Tristana when she has Buster Shot. It stuns and knocks you back.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Tristana-R", "start": 36, "end": 47 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6cee9186280acff7f846d10c7a2a36c7aa9bb14025679c79a6bda2ba55d1a9c9",
+      "tips": [
+        {
+          "id": "adc:Jinx:Twitch:0",
+          "text": "Poke Twitch with Switcheroo! rockets from range, since he is fragile.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Twitch", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Jinx:Twitch:1",
+          "text": "When Twitch goes invisible with Ambush, step back from your support and keep Flame Chompers! ready for his approach.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Twitch-Q", "start": 32, "end": 38 },
+            { "kind": "ability", "key": "Jinx-E", "start": 77, "end": 92 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Jinx:Twitch:2",
+          "text": "Hit Twitch with Zap! when he is invisible; it reveals him and slows him so your team can focus him.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "adc:Jinx:Twitch:3",
+          "text": "Leave Venom Cask clouds quickly. Staying in them adds Deadly Venom stacks that Contaminate then uses to hit hard.",
+          "refs": [
+            { "kind": "ability", "key": "Twitch-W", "start": 6, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Twitch-passive",
+              "start": 54,
+              "end": 66
+            },
+            { "kind": "ability", "key": "Twitch-E", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Jinx:Twitch:4",
+          "text": "Switch to the minigun in Switcheroo! when Twitch closes in, so you get Attack Speed for the close fight.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 25, "end": 36 },
+            { "kind": "champion", "key": "Twitch", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "aa338c8e153c9b81d48c1aa422a805064519b6f92824b75520fe57b5d1cf9178",
+      "tips": [
+        {
+          "id": "adc:Jinx:Varus:0",
+          "text": "Varus is slowed while charging Piercing Arrow, so hit him with Zap!",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Varus-Q", "start": 31, "end": 45 },
+            { "kind": "ability", "key": "Jinx-W", "start": 63, "end": 67 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Jinx:Varus:1",
+          "text": "When Varus dives on you, throw down Flame Chompers! to root him and escape.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-E", "start": 36, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Jinx:Varus:2",
+          "text": "Stay out of the line of Chain of Corruption and keep away from your teammates. It spreads to any enemy champion who stays close to the rooted one.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 24, "end": 43 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Jinx:Varus:3",
+          "text": "Step out of Hail of Arrows quickly. It slows you and cuts your healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 12, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Varus:4",
+          "text": "Poke Varus with rockets while he stays back, swapping to them with Switcheroo!",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "754c31eb07207ffc6e08c88dd4988d7098af54bb403de7e6a816808deeccdf8c",
+      "tips": [
+        {
+          "id": "adc:Jinx:Vayne:0",
+          "text": "Keep your distance and poke Vayne with the rockets of Switcheroo! She needs to get close to trade well.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Jinx:Vayne:1",
+          "text": "Where Vayne will walk or Tumble in, a root lets you survive, so lay down Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Jinx-E", "start": 73, "end": 88 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Vayne:2",
+          "text": "Stay away from walls. Condemn into terrain stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Vayne:3",
+          "text": "When Vayne walks up, slow her with Zap! It is your best tool to stop her closing in.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Jinx-W", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "adc:Jinx:Vayne:4",
+          "text": "Use Super Mega Death Rocket! from far away on a low-health Vayne; it hits hardest after a long flight.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 4, "end": 28 },
+            { "kind": "champion", "key": "Vayne", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1e9cfe4a231d493ebab221b92428f1c222e6044d92c571135d52932fad9a3d20",
+      "tips": [
+        {
+          "id": "adc:Jinx:Veigar:0",
+          "text": "Keep your distance from Veigar's cage. If you walk into its edge you are stunned, so stay outside it or inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Jinx:Veigar:1",
+          "text": "Move as soon as you see Dark Matter's marker, because it lands after a short delay. Don't stand still while you attack.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Veigar:2",
+          "text": "Zap! Veigar to slow him and keep him away from you. Land it when he tries to place a cage on you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Jinx:Veigar:3",
+          "text": "Put Flame Chompers! between you and Veigar when he walks up. If he steps on one he is rooted, and you can hit him while he is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Veigar", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jinx:Veigar:4",
+          "text": "Use the rocket launcher from Switcheroo! to hit Veigar from long range. He is fragile, so poke him whenever his spells are on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 29, "end": 40 },
+            { "kind": "champion", "key": "Veigar", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "3d289cb93d38a0e37ff883927379848799834dc086b6fa748264a0dae0ee849c",
+      "tips": [
+        {
+          "id": "adc:Jinx:Xayah:0",
+          "text": "Fire Zap! at Xayah when she walks up to last-hit; it slows her and she has a hard time answering.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Xayah", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Jinx:Xayah:1",
+          "text": "Hold Flame Chompers! for when Xayah or her partner dives you; being rooted in place makes them easy to kill.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Xayah", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jinx:Xayah:2",
+          "text": "Poke Xayah with Switcheroo! rockets for the extra range, and stay out of her short Double Daggers range.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Xayah", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-Q", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Xayah-Q", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Jinx:Xayah:3",
+          "text": "Do not stand in the feathers she leaves on the ground; Bladecaller roots enemies hit by several of them.",
+          "refs": [
+            { "kind": "ability", "key": "Xayah-E", "start": 55, "end": 66 },
+            { "kind": "keyword", "key": "rooted", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Jinx:Xayah:4",
+          "text": "Wait until Xayah lands from Featherstorm before you fire Super Mega Death Rocket!",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Xayah-R", "start": 28, "end": 40 },
+            { "kind": "ability", "key": "Jinx-R", "start": 57, "end": 81 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "45bf775f1497ac2b6c36ad615f87e86443977877cbfb88c2dd6686b767669d8e",
+      "tips": [
+        {
+          "id": "adc:Jinx:Yasuo:0",
+          "text": "Hold Zap! until Yasuo drops Wind Wall, then fire it; the wall blocks your shots while it is up.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Yasuo", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 28, "end": 37 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Jinx:Yasuo:1",
+          "text": "Throw Flame Chompers! at your feet when Yasuo dashes in; if he is rooted, he cannot reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Yasuo", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Jinx:Yasuo:2",
+          "text": "Switch to the minigun when Yasuo gets close, and keep poking him with rockets while he is far away.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 60 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Jinx:Yasuo:3",
+          "text": "Stay back from your minions when Yasuo has dash targets. Sweeping Blade lets him close in quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Yasuo-E", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jinx:Yasuo:4",
+          "text": "Step aside when Yasuo's whirlwind from Steel Tempest comes at you; being knocked up lets him follow with Last Breath.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "knocked-up", "start": 73, "end": 83 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 105, "end": 116 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "81c999ad4af20cd9f28310be68152cf83000458d6f4bba6a4872437e3502e6f6",
+      "tips": [
+        {
+          "id": "adc:Jinx:Yunara:0",
+          "text": "Hold Flame Chompers! for when Yunara dashes or walks in on you; she is rooted and can't get away from your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yunara", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Jinx:Yunara:1",
+          "text": "Use rockets from Switcheroo! to poke Yunara from long range, then switch to the minigun if she closes in.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 17, "end": 28 },
+            { "kind": "keyword", "key": "poke", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Yunara", "start": 37, "end": 43 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Jinx:Yunara:2",
+          "text": "Zap! her when she steps up to trade; the slow stops her from reaching you and makes her easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Jinx:Yunara:3",
+          "text": "Stay back when Yunara casts Transcend One's Self. Her attacks spread to nearby enemies and her beam hurts.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Yunara-R", "start": 28, "end": 48 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jinx:Yunara:4",
+          "text": "Fire Super Mega Death Rocket! from far away at a weakened Yunara, since it hits harder the farther it flies.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Yunara", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "39238db4224c2f66285b235cce39f35b0d64cd9b20d2011f9db2a886d81ca24d",
+      "tips": [
+        {
+          "id": "adc:Jinx:Zeri:0",
+          "text": "Hit Zeri with Zap! when she dashes or walks up; it slows her and makes her easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Jinx-W", "start": 14, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Jinx:Zeri:1",
+          "text": "Place Flame Chompers! where Zeri will dash or step to trade; if she touches one she is rooted and takes damage.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 6, "end": 21 },
+            { "kind": "champion", "key": "Zeri", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Jinx:Zeri:2",
+          "text": "Switch to Switcheroo! rockets to outrange Zeri's pokes, and use minigun ramp-up only when she is close.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-Q", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Zeri", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Jinx:Zeri:3",
+          "text": "Save Super Mega Death Rocket! for a long shot after Zeri is slowed, since she is fragile and fast.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-R", "start": 5, "end": 29 },
+            { "kind": "champion", "key": "Zeri", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "dd4b544663b115d96662d3942e29812b052e423f1a46aafc4c3bb30e827d7c0d",
+      "tips": [
+        {
+          "id": "adc:Jinx:Ziggs:0",
+          "text": "Do not step on Ziggs' mines. Hexplosive Minefield slows you and sets up his other spells.",
+          "refs": [
+            { "kind": "ability", "key": "Ziggs-E", "start": 29, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Jinx:Ziggs:1",
+          "text": "When Ziggs walks up for a last-hit, hit him with Zap! to slow and reveal him.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Jinx-W", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Jinx:Ziggs:2",
+          "text": "Use Fishbones rockets to hit Ziggs from range. He has to stand close to use most of his spells.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:Jinx:Ziggs:3",
+          "text": "Go at Ziggs right after he uses Bouncing Bomb or Satchel Charge. Both have long cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:Jinx:Ziggs:4",
+          "text": "When Ziggs dives or runs at you, root him with Flame Chompers!",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jinx-E", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

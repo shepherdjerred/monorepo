@@ -1,0 +1,1856 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ekko",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "fca8039ad9b10299a2161de8ad370a056c7f5acab34e36f073b09447896bee42",
+      "tips": [
+        {
+          "id": "jungle:Ekko:general:0",
+          "text": "Land Timewinder on a champion to slow them, then keep the return pass on them too. Aim so the device comes back through them for the second hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Ekko:general:1",
+          "text": "Use Phase Dive to line up a double hit with Timewinder or to get into position for Parallel Convergence.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 44, "end": 54 },
+            { "kind": "ability", "key": "Ekko-W", "start": 83, "end": 103 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Ekko:general:2",
+          "text": "Cast Parallel Convergence on a target's path, then walk into the sphere yourself. Entering it stuns enemies inside and gives you a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 5, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ekko:general:3",
+          "text": "Cast Parallel Convergence early when you set up a gank. The enemy sees the marker after a short delay, so cast it where they will run.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 5, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ekko:general:4",
+          "text": "Trigger Z-Drive Resonance on an enemy champion before you leave a fight. It gives you a burst of speed to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-passive", "start": 8, "end": 25 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Ekko:general:5",
+          "text": "Chronobreak works as an escape or as a burst of damage. Use it to jump back to your afterimage and hit enemies around you while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Ekko:general:6",
+          "text": "Hit your attacks on a low-health enemy to finish them. Parallel Convergence adds damage to attacks against targets at low health.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 55, "end": 75 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Ekko:general:7",
+          "text": "Watch your Phase Dive attack when you are rooted, because you lose its bonus range.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 11, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Ekko:combo:0",
+          "name": "Phase Dive over walls",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Ekko-E" }],
+          "when": "When you want a quick escape or entry through jungle walls.",
+          "whenRefs": [],
+          "text": "Phase Dive gains extra range when aimed across a thin wall, so Ekko can dash through camp walls without a gap closer.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Ekko", "start": 63, "end": 67 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bd267e3ee3801ef8ad3c07a53b9e4b46522c9f36ab5e1625204b8c3f8a297d96",
+      "tips": [
+        {
+          "id": "middle:Ekko:general:0",
+          "text": "Throw Timewinder through the enemy so it hits twice: once going out and again when it returns. Aim it at the champion, not the minions in front of them.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Ekko:general:1",
+          "text": "Use Phase Dive to line up a second hit from Timewinder or to get into range of Parallel Convergence.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 44, "end": 54 },
+            { "kind": "ability", "key": "Ekko-W", "start": 79, "end": 99 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Ekko:general:2",
+          "text": "Walk into your Parallel Convergence sphere once it forms to stun the enemy and gain a shield. Stay out of it and it only slows.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 15, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 121, "end": 126 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ekko:general:3",
+          "text": "Place Parallel Convergence on where the enemy is walking. It takes a moment to form, so aim ahead of them.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ekko:general:4",
+          "text": "Take risks to hit a champion with the third attack or spell. Z-Drive Resonance adds bonus damage and gives you speed to run away.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-passive", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ekko:general:5",
+          "text": "Chronobreak works as an escape, but it also deals damage when you rewind into enemies. Use it to finish a fight as well as to survive one.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ekko:general:6",
+          "text": "Watch the afterimage that shows where Chronobreak will send you. Fight so that it lands you somewhere safe or on top of the enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 38, "end": 49 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Ekko:general:7",
+          "text": "Hold Phase Dive when you can. Its dash is short, and the empowered attack teleports you to the target, so use it to close in or to reposition.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "combos": [
+        {
+          "id": "middle:Ekko:combo:0",
+          "name": "Chronobreak stun trap",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Ekko-W" },
+            { "kind": "ability", "key": "Ekko-R" }
+          ],
+          "when": "When you are caught or low on health and a Parallel Convergence is placed between you and your afterimage.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 43, "end": 63 }
+          ],
+          "text": "Chronobreak's dash passes through the link to your afterimage. If that path crosses the sphere, it detonates and stuns enemies, even while Ekko is untargetable.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Ekko", "start": 139, "end": 143 }
+          ]
+        },
+        {
+          "id": "middle:Ekko:combo:1",
+          "name": "Stealth Chronobreak",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Ekko-R" }],
+          "when": "Once per match, right after learning Chronobreak at level 6.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 37, "end": 48 }
+          ],
+          "text": "The afterimage appears the moment you learn Chronobreak. Using it straight away lets Ekko go back to his earlier spot without the enemy seeing a trail.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 44, "end": 55 },
+            { "kind": "champion", "key": "Ekko", "start": 85, "end": 89 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "f66bfb5851fa3de359e446c75900cf932668b09b3f5c62c07abd2e8b37c7f9aa",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Graves:0",
+          "text": "Dodge Graves' End of the Line by moving sideways, and leave the trail it leaves behind before it blasts.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Ekko:Graves:1",
+          "text": "Hit Graves with Timewinder so he is slowed; the second hit as it returns hurts more.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 16, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ekko:Graves:2",
+          "text": "Stay close to Graves with Phase Dive. His shotgun does the most damage up close, so keep him busy by forcing a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Ekko-E", "start": 26, "end": 36 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Ekko:Graves:3",
+          "text": "Walk out of Smoke Screen quickly; leaving the cloud removes its slow and the vision loss.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Ekko:Graves:4",
+          "text": "Use Chronobreak to survive when Graves bursts you, then blast him as you rewind.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3e90f2dad136d00413c268cd01b3af572db96a9b9e0fea14871119fd44a63d49",
+      "tips": [
+        {
+          "id": "jungle:Ekko:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike knocks you up if you stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Ekko:JarvanIV:1",
+          "text": "Save Chronobreak for when Jarvan jumps on you with Cataclysm. It takes you out of the arena.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Ekko:JarvanIV:2",
+          "text": "Use Timewinder to slow Jarvan when he tries to close in. Aim so it hits twice.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Ekko:JarvanIV:3",
+          "text": "Fight Jarvan around Parallel Convergence. If he is stunned, you can win the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 20, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a9f669997234040f7ee7598ae3dffb40f859c6dbfea1debbfa41fd7e92dc7138",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Kayn:0",
+          "text": "Dodge Blade's Reach if you can. Without it, Kayn has a hard time reaching you with Umbral Trespass.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Kayn-R", "start": 83, "end": 98 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Ekko:Kayn:1",
+          "text": "Hold Chronobreak for when Kayn jumps on you with Umbral Trespass. Rewinding gets you out and punishes him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Kayn-R", "start": 49, "end": 64 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Ekko:Kayn:2",
+          "text": "Watch for a warning on the wall edge near you. It means Kayn is in the terrain using Shadow Step.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Kayn-E", "start": 85, "end": 96 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Ekko:Kayn:3",
+          "text": "Stun Kayn with Parallel Convergence while he is in a wall. Hard crowd control ends Shadow Step at once.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ekko-W", "start": 15, "end": 35 },
+            { "kind": "ability", "key": "Kayn-E", "start": 83, "end": 94 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:Ekko:Kayn:4",
+          "text": "Damage Kayn while he is inside a wall. That shortens Shadow Step, so he cannot stay hidden.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Kayn-E", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3c67e11e7986dbfd4200b8d0d06e5f7d5608c9187321302d33cd7d543c43786",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Khazix:0",
+          "text": "Stay near minions, allies or a turret; Kha'Zix's Taste Their Fear loses its big bonus damage when you are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 49, "end": 65 },
+            { "kind": "keyword", "key": "isolated", "start": 110, "end": 118 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Ekko:Khazix:1",
+          "text": "Hold Chronobreak for when Kha'Zix jumps on you; the rewind heals you and damages him as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Khazix", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ekko:Khazix:2",
+          "text": "Place Parallel Convergence where Kha'Zix will land after Leap, and step in to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Khazix", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Khazix-E", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Ekko:Khazix:3",
+          "text": "Hit Kha'Zix with Timewinder when he is out of Leap and Void Assault; he is vulnerable and slowed then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Khazix-E", "start": 46, "end": 50 },
+            { "kind": "ability", "key": "Khazix-R", "start": 55, "end": 67 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:Ekko:Khazix:4",
+          "text": "Use Phase Dive to hop out of range when Kha'Zix vanishes from view, since his next attack will slow you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Khazix", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9b8f86d56a54b1ed4d9adccc3dfbcab5ece46bf73cb30554adce0a43e4e42d2f",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Kindred:0",
+          "text": "Hit Kindred with Timewinder; she is fragile, and the slow field lets you follow up.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 17, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Ekko:Kindred:1",
+          "text": "Use Phase Dive to close the gap and attack Kindred before she can slow you with Mounting Dread.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Kindred", "start": 43, "end": 50 },
+            { "kind": "ability", "key": "Kindred-E", "start": 80, "end": 94 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:Ekko:Kindred:2",
+          "text": "Step away from Kindred's third attack so Wolf's pounce from Mounting Dread doesn't land. Dodge it rather than trade into it.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Kindred-E", "start": 60, "end": 74 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Ekko:Kindred:3",
+          "text": "Don't chase into Lamb's Respite; nobody inside can die, so wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Ekko:Kindred:4",
+          "text": "Save Chronobreak for a fight with Kindred; she can pounce and kite you, and it is your escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kindred", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "06852b2730aa6ed28cbce09802812b94789f22b17f212d8dfd8faa43c62babe0",
+      "tips": [
+        {
+          "id": "jungle:Ekko:LeeSin:0",
+          "text": "Use Phase Dive to get on top of Lee Sin or to get away, and weave in an attack to blink onto him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "LeeSin", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ekko:LeeSin:1",
+          "text": "Save Chronobreak for when Lee Sin kicks or dives you; it pulls you back to safety and damages him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Ekko:LeeSin:2",
+          "text": "Dodge Sonic Wave; without it Lee Sin has a hard time getting on you. Timewinder's slow helps you keep your distance.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 69, "end": 79 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Ekko:LeeSin:3",
+          "text": "Lure Lee Sin into Parallel Convergence and step in to detonate it; the stun gives you a free fight.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ekko-W", "start": 18, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Ekko:LeeSin:4",
+          "text": "Lee Sin is weaker to magic damage, so trade with Timewinder and the Z-Drive Resonance bonus when he is low on Energy.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Ekko-passive", "start": 68, "end": 85 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e721738411b6aa0994ef8474193bf1c10ec4d25c1082520aa6f4ef208b87b41",
+      "tips": [
+        {
+          "id": "jungle:Ekko:MasterYi:0",
+          "text": "Master Yi ignores slows while Highlander is active, so save Timewinder's slow for when it is down.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 30, "end": 40 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 60, "end": 70 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ekko:MasterYi:1",
+          "text": "Land Parallel Convergence and step into it to stun Master Yi. Stuns are what stop him while Highlander is on.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 5, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 },
+            { "kind": "champion", "key": "MasterYi", "start": 51, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ekko:MasterYi:2",
+          "text": "Keep Chronobreak ready for when Master Yi dives you. Rewinding takes you out of his reach and hits him as you arrive.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "MasterYi", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Ekko:MasterYi:3",
+          "text": "Master Yi vanishes during Alpha Strike, so don't waste Timewinder on him then. Hit him after he reappears.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Ekko:MasterYi:4",
+          "text": "Use Phase Dive to get away from Master Yi's chase, then place your other spells from a safe spot.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "MasterYi", "start": 32, "end": 41 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "45a710710dbf0cab63ae9c260960274af02ce6550145422d614a4012e1c0a9d1",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Naafiri:0",
+          "text": "Use Chronobreak to escape or to win a fight when Naafiri dives you. Its blast and heal punish her if she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Ekko:Naafiri:1",
+          "text": "Aim Timewinder at Naafiri when she closes in. The slow makes it hard for her to stay on you, and the return hit does extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Ekko:Naafiri:2",
+          "text": "Place Parallel Convergence where Naafiri is heading, then step into it. She is stunned and you get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Naafiri", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ekko:Naafiri:3",
+          "text": "Hit Naafiri with three attacks or spells in a row to trigger Z-Drive Resonance. The speed boost helps you chase her or get away.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ekko-passive", "start": 61, "end": 78 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e57bdf95ec66107ca5e903984f031c4692ebccc34fe14b556825ced0df40c2fc",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Nocturne:0",
+          "text": "Play around Nocturne's Shroud of Darkness: bait it with a cheap ability before you commit Parallel Convergence.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 23, "end": 41 },
+            { "kind": "ability", "key": "Ekko-W", "start": 90, "end": 110 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Ekko:Nocturne:1",
+          "text": "Stay near allies when Nocturne casts Paranoia. His dash cannot be stopped by crowd control, so do not fight alone.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 22, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Ekko:Nocturne:2",
+          "text": "Move away with Phase Dive when Nocturne uses Unspeakable Horror on you. Breaking the tether avoids the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "Nocturne", "start": 31, "end": 39 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Ekko:Nocturne:3",
+          "text": "Keep Chronobreak ready for when Nocturne dashes in. Rewinding heals you and hits him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "474e2801685d040c1cf9441094989bf249a2a0fb8ab733b1e5944d51ca0be294",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Shyvana:0",
+          "text": "Keep your distance from Shyvana and poke her with Timewinder. She is weak when she can't hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ekko:Shyvana:1",
+          "text": "Hit Shyvana while her Fury is low, before she can transform with Dragon's Descent.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 65, "end": 81 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ekko:Shyvana:2",
+          "text": "Hold Chronobreak for when Shyvana dives you. Rewinding heals you and the blast hurts her.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ekko:Shyvana:3",
+          "text": "Lure Shyvana into Parallel Convergence and step into it yourself to stun her and gain a shield.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ekko-W", "start": 18, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Ekko:Shyvana:4",
+          "text": "Use Phase Dive to leave once Shyvana is on you, since her Molten Burst slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Shyvana", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "303ea359710cd96b626fcee3923c9f1ad60f17cf8e519d1a3cd15334a5d0e577",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Skarner:0",
+          "text": "Stun Skarner with Parallel Convergence before he reaches you. Ixtal's Impact ends if he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ekko-W", "start": 18, "end": 38 },
+            { "kind": "ability", "key": "Skarner-E", "start": 62, "end": 76 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Ekko:Skarner:1",
+          "text": "When Skarner charges with Ixtal's Impact, stay away from walls. A wall hit stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Skarner-E", "start": 26, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Ekko:Skarner:2",
+          "text": "Keep Chronobreak ready when Skarner is close. Impale can be dodged, so step out of its reach.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Skarner", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Skarner-R", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Ekko:Skarner:3",
+          "text": "Use Timewinder to poke Skarner early, then fight on your terms. His sustained damage wins long trades.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "poke", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "45ea74cb791a00c68cdbe33faa5fdc17b28c7744697020010cecb40483e87b0e",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Sylas:0",
+          "text": "Keep Chronobreak ready when Sylas is near. He can pull you in with Abduct, and rewinding lets you escape and hit him with the blast.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Ekko:Sylas:1",
+          "text": "Chronobreak makes you immune to knock ups while it dashes, so use it to cancel Sylas's pull when he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Ekko:Sylas:2",
+          "text": "Fight Sylas when his Kingslayer healing is weak. Don't chase him once he is low, because the heal is strongest then.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 21, "end": 31 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Ekko:Sylas:3",
+          "text": "Hit Sylas with Timewinder when he walks into a fight. The slow stops him from closing in or escaping.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ekko:Sylas:4",
+          "text": "Place Parallel Convergence where Sylas must stand to fight you, then step in to stun him. He can't dodge it once it is armed.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5af6248ec191444991be80a7b5b6760843f7b3a866561ea39ab3455d606db44",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Talon:0",
+          "text": "Ekko should keep Chronobreak ready when Talon is near. It answers his burst by rewinding you and healing.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ekko-R", "start": 17, "end": 28 },
+            { "kind": "champion", "key": "Talon", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Ekko:Talon:1",
+          "text": "Hit Talon with Timewinder when he flees. It leaves him slowed, so you can catch him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 61 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ekko:Talon:2",
+          "text": "Place Parallel Convergence where Talon will land or escape. Step into it to stun him and gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Talon", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Ekko:Talon:3",
+          "text": "Talon is much weaker without Shadow Assault. Pick fights after he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a4b856e10f46944990dfe85165845108407f88a671d9981941cd631da067658",
+      "tips": [
+        {
+          "id": "jungle:Ekko:Viego:0",
+          "text": "Stay out of Viego's Spectral Maw line. Keep a minion between you and him, since it stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Viego-W", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Ekko:Viego:1",
+          "text": "Use Phase Dive to get out of reach once Viego commits to a charge, then hit him with Timewinder.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Viego", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 85, "end": 95 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Ekko:Viego:2",
+          "text": "Save Chronobreak for when Viego uses Heartbreaker or a fight turns against you. It heals you more the more health you lost.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Viego-R", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ekko:Viego:3",
+          "text": "Ward near where Viego's mist sits. He can hide there and ambush you.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 16, "end": 21 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "00f124b8e31c749b02645d65ead6f71b9b299da3b1b47ac6a21ceb9c15b55992",
+      "tips": [
+        {
+          "id": "jungle:Ekko:XinZhao:0",
+          "text": "Stay out of Xin Zhao's Audacious Charge range. It reaches farther against an enemy marked Challenged, and it slows you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 23, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 109, "end": 114 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Ekko:XinZhao:1",
+          "text": "Place Parallel Convergence where Xin Zhao will walk, then step in to stun him. It can also shield you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ekko:XinZhao:2",
+          "text": "Dash away with Phase Dive before Xin Zhao lands his third Three Talon Strike attack, since it knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 15, "end": 25 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 58, "end": 76 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Ekko:XinZhao:3",
+          "text": "Keep Chronobreak ready when Xin Zhao reaches level 6. Crescent Guard can burst you down, and rewinding gets you out.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Ekko:XinZhao:4",
+          "text": "Hit Xin Zhao with Timewinder from long range. He has no ranged attack, and the slow makes it hard for him to catch you.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 18, "end": 28 }
+          ],
+          "pWrong": 0.86
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "55744370014cdbdf5b5e1f8249a155ecdf9e76377aa871df6b1eb1335b230e8b",
+      "tips": [
+        {
+          "id": "middle:Ekko:Ahri:0",
+          "text": "Stay behind minions so Charm is hard to land; if Ahri hits you with it, you lose most of your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "Ahri", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Ekko:Ahri:1",
+          "text": "Use Timewinder on Ahri to slow her, and try to hit her with the return too, as it does more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ahri", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Ekko:Ahri:2",
+          "text": "Place Parallel Convergence where Ahri will end up after a trade, then step into it to stun her and gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Ahri", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ekko:Ahri:3",
+          "text": "Ahri is much weaker without Spirit Rush, so push for a fight when she has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ahri-R", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ekko:Ahri:4",
+          "text": "Keep Chronobreak ready for when Ahri charms you; it can undo the damage and rewind you out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ahri", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f2f919cd29a7ca80e1aa343a04358ceee62c232836b1cbbb2c9b2aa139be03c9",
+      "tips": [
+        {
+          "id": "middle:Ekko:Akali:0",
+          "text": "Keep Chronobreak ready in fights against Akali. It lets you rewind away from her combo and hit her when you land.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Ekko:Akali:1",
+          "text": "Place Parallel Convergence where Akali will land or stand. If you step in, she is stunned and you get a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Akali", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Ekko:Akali:2",
+          "text": "Use Timewinder to slow Akali when she dives in; the field makes her harder to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Akali", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Ekko:Akali:3",
+          "text": "Trade with Akali when she is low on energy, because Five Point Strike is weakest then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Akali-Q", "start": 52, "end": 69 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ekko:Akali:4",
+          "text": "Go back to base when you are low and Akali has Perfect Execution ready.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Akali-R", "start": 47, "end": 64 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ekko:Akali:5",
+          "text": "Aim Timewinder at Twilight Shroud, since area spells can hit her inside the smoke and briefly reveal her.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Akali-W", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through the sphere stuns Akali if she is caught chasing, even while Ekko is untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Akali", "start": 37, "end": 42 },
+            { "kind": "champion", "key": "Ekko", "start": 80, "end": 84 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a4a01968c2afdcfe59ee44492b0dfdffa04b6d2d88b3893b58f9ec97289814d9",
+      "tips": [
+        {
+          "id": "middle:Ekko:Anivia:0",
+          "text": "Dodge Flash Frost by sidestepping it. If it hits you, it slows you and your next Frostbite hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Anivia-E", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Ekko:Anivia:1",
+          "text": "Do not stand at the end of Flash Frost's range. It stuns you when it bursts there.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Ekko:Anivia:2",
+          "text": "Use Phase Dive to close the gap. Do it when Crystallize is on cooldown, since the wall can block your path.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Anivia-W", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Ekko:Anivia:3",
+          "text": "Get three hits on Anivia with Z-Drive Resonance to gain speed. It helps you reach her or get away.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Ekko-passive", "start": 30, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ekko:Anivia:4",
+          "text": "Killing Anivia is not enough. Her egg returns her to full health, so stay and finish the egg or fight elsewhere.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 8, "end": 14 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "b823f764032dd2f149a592334e66abe49974cc75eae16b9274782c5b5ee711b4",
+      "tips": [
+        {
+          "id": "middle:Ekko:Aurora:0",
+          "text": "Watch for Aurora's Across the Veil; she turns invisible after the hop, so hold your Timewinder until she shows up again instead of throwing it blind.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Aurora-W", "start": 19, "end": 34 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 84, "end": 94 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Ekko:Aurora:1",
+          "text": "Chronobreak can pull you out of Between Worlds or a bad fight. You are safe while it plays, so use it when Aurora commits her ultimate on you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Aurora-R", "start": 32, "end": 46 },
+            { "kind": "champion", "key": "Aurora", "start": 107, "end": 113 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Ekko:Aurora:2",
+          "text": "Trade when The Weirding is on cooldown; with no slow, Aurora struggles to stop Phase Dive from closing the gap.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-E", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Aurora", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Ekko-E", "start": 79, "end": 89 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "middle:Ekko:Aurora:3",
+          "text": "Place Parallel Convergence where Aurora will stand when she fights, then step into it to stun her. Her hop backwards after The Weirding can leave her inside.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Aurora", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Aurora-E", "start": 123, "end": 135 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6ecd6c2d1ccf4f74e997f5ab48272fa928627b7a9993ef92620dc44701baa903",
+      "tips": [
+        {
+          "id": "middle:Ekko:Cassiopeia:0",
+          "text": "Dodge Noxious Blast by moving; it lands after a short delay. Don't stand in the poison, since Twin Fang hits harder on you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 6, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-E",
+              "start": 94,
+              "end": 103
+            }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "middle:Ekko:Cassiopeia:1",
+          "text": "Don't dive in with Phase Dive while Petrifying Gaze is ready and she faces you. Approach from the side or behind.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Cassiopeia-R", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Ekko:Cassiopeia:2",
+          "text": "Turn away from her as Petrifying Gaze goes off, so you are slowed instead of stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 22,
+              "end": 37
+            },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ekko:Cassiopeia:3",
+          "text": "Hit her with Timewinder from long range; the slow field makes it harder for her to dodge your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 13, "end": 23 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Ekko:Cassiopeia:4",
+          "text": "Miasma grounds you, so don't count on a dash to escape. Use Chronobreak to get out if she catches you.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-W", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ekko-R", "start": 60, "end": 71 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a038713c49eec2b473f5cb2428d8863e0e4f09d9842265a907aef2efe0944de0",
+      "tips": [
+        {
+          "id": "middle:Ekko:Fizz:0",
+          "text": "Hold Timewinder for when Fizz uses Playful, then hit him as he lands; he cannot be hit while on his trident.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Fizz", "start": 25, "end": 29 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Ekko:Fizz:1",
+          "text": "Stay away from Fizz while his Seastone Trident glows; his attacks hurt more for a few seconds.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Fizz-W", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ekko:Fizz:2",
+          "text": "Chronobreak can rewind you out of Chum the Waters' fish, so save it for that moment.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Fizz-R", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Ekko:Fizz:3",
+          "text": "Make Fizz waste Playful first, then use Parallel Convergence and Phase Dive to trade while it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ekko-W", "start": 40, "end": 60 },
+            { "kind": "ability", "key": "Ekko-E", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through a Parallel Convergence stuns Fizz even if he dives in with Playful untargetability.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ekko-W", "start": 22, "end": 42 },
+            { "kind": "champion", "key": "Fizz", "start": 49, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "57b14ecbc503c385f08043ba5ac955bad737e48fc676d0cf3fd7ff7639f930c1",
+      "tips": [
+        {
+          "id": "middle:Ekko:Malzahar:0",
+          "text": "Dodge Call of the Void by stepping out from between the two portals. Its silence shuts off all your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 80 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Ekko:Malzahar:1",
+          "text": "Don't stand near minions carrying Malefic Visions. When they die it spreads to you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 34, "end": 49 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Ekko:Malzahar:2",
+          "text": "Hold Chronobreak for when Malzahar uses Nether Grasp on you. It can pull you out of the channel.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Malzahar", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Malzahar-R", "start": 40, "end": 52 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Ekko:Malzahar:3",
+          "text": "Hit Malzahar with Timewinder when his Void Shift is down, since it blocks most of the damage and crowd control while it's up.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 18, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.85,
+          "hidden": true
+        },
+        {
+          "id": "middle:Ekko:Malzahar:4",
+          "text": "Use Phase Dive to close in and burst Malzahar down. He is weak once you reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Malzahar", "start": 37, "end": 45 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a8844e8d639d747aecfc4f958b5c1df44ba4b7e2982a44f301786700dcdc0acf",
+      "tips": [
+        {
+          "id": "middle:Ekko:Orianna:0",
+          "text": "Stay out of line with Command: Attack. Its Ball passes through everything in its path and hurts you again when it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-Q", "start": 22, "end": 37 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Ekko:Orianna:1",
+          "text": "Hold Phase Dive until Orianna has used Command: Shockwave, or until the Ball is far from her. Her stun only reaches enemies near the Ball.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 22, "end": 29 },
+            { "kind": "ability", "key": "Orianna-R", "start": 39, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Ekko:Orianna:2",
+          "text": "Throw Timewinder from long range when the Ball is far away. It slows her and hits her again when it returns to you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 6, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ekko:Orianna:3",
+          "text": "Place Parallel Convergence where Orianna will be after she is slowed or cornered. Walk into it to stun her and gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Orianna", "start": 33, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Ekko:Orianna:4",
+          "text": "Keep Chronobreak ready for her level 6 all-in. It lets you escape the Shockwave stun, and the stun cannot stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak through a Parallel Convergence stuns Orianna and lets Ekko escape her Shockwave burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Ekko-W", "start": 22, "end": 42 },
+            { "kind": "champion", "key": "Orianna", "start": 49, "end": 56 },
+            { "kind": "champion", "key": "Ekko", "start": 66, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "252b6dddf6f165ceadb477b9182d3116347410edc71fc3986222c319f776a687",
+      "tips": [
+        {
+          "id": "middle:Ekko:Ryze:0",
+          "text": "Stay away from Ryze when Spell Flux is on you; his Overload and Rune Prison then hit much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 15, "end": 19 },
+            { "kind": "ability", "key": "Ryze-E", "start": 25, "end": 35 },
+            { "kind": "ability", "key": "Ryze-Q", "start": 51, "end": 59 },
+            { "kind": "ability", "key": "Ryze-W", "start": 64, "end": 75 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Ekko:Ryze:1",
+          "text": "Aim Timewinder so it hits Ryze on both passes. It slows him in the field, and the return deals extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Ekko:Ryze:2",
+          "text": "Place Parallel Convergence where Ryze will be stuck, then step into it to stun him and gain a shield.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Ryze", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 78 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Ekko:Ryze:3",
+          "text": "Keep Chronobreak for when Ryze commits his spells; it heals you and damages him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ekko:Ryze:4",
+          "text": "Stun or otherwise interrupt Ryze while Realm Warp charges to cancel the portal.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Ryze", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ryze-R", "start": 39, "end": 49 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "bb9edef9c9b00ce0d6a09055c33852a0fd45b654c1e692d9d81f1464abdc1220",
+      "tips": [
+        {
+          "id": "middle:Ekko:Sylas:0",
+          "text": "Keep Chronobreak ready in the fight. Sylas can lock you down with Abduct, and rewinding gets you out and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "middle:Ekko:Sylas:1",
+          "text": "Sylas heals with Kingslayer when he is low, so don't chase a low-health Sylas without enough damage to finish him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 },
+            { "kind": "champion", "key": "Sylas", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Ekko:Sylas:2",
+          "text": "Hit Sylas with Timewinder from long range. The return hit does extra damage, so line up shots where he can't easily step out of the field.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Ekko:Sylas:3",
+          "text": "Place Parallel Convergence where Sylas will dash or fight. Walk into it to stun him and shield yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Ekko:Sylas:4",
+          "text": "Sylas can steal your ultimate with Hijack. Use Chronobreak when it matters, not just to bait him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-R", "start": 35, "end": 41 },
+            { "kind": "ability", "key": "Ekko-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "middle:Ekko:combo:0",
+          "note": "Chronobreak's stun trap can stop Sylas if he dives in on you, since Ekko is untargetable during it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Sylas", "start": 33, "end": 38 },
+            { "kind": "champion", "key": "Ekko", "start": 68, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a657744208a101ce6aa0c0bf432e6fa09c4421a1457424aec5b84d2a318a819a",
+      "tips": [
+        {
+          "id": "middle:Ekko:TwistedFate:0",
+          "text": "Poke with Timewinder and let the grenade come back for a second hit. Aim it so both passes land on Twisted Fate.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 10, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 99,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Ekko:TwistedFate:1",
+          "text": "Dodge Wild Cards early, when you cannot afford to lose health. Stay out of its cone and away from his Gold Card.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 6, "end": 16 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Ekko:TwistedFate:2",
+          "text": "When Twisted Fate uses Destiny, expect a gank and back away. His Destiny recast lets him teleport across the map.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 65,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Ekko:TwistedFate:3",
+          "text": "Use Phase Dive to close in on Twisted Fate, then fight him before his Pick a Card is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 30,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-W",
+              "start": 70,
+              "end": 81
+            }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "91a9cabe2d6aaed1da9cbe0c115e64fb3fb3103590493ea6879e520a4802e880",
+      "tips": [
+        {
+          "id": "middle:Ekko:Viktor:0",
+          "text": "Do not stand inside Gravity Field for long; step out before it stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 20, "end": 33 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Ekko:Viktor:1",
+          "text": "Use Phase Dive to close in on Viktor after he spends his Siphon Power, since he fights best at range.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Viktor", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 57, "end": 69 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Ekko:Viktor:2",
+          "text": "Hit Viktor with both passes of Timewinder; the returning field also slows him.",
+          "refs": [
+            { "kind": "champion", "key": "Viktor", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 31, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Ekko:Viktor:3",
+          "text": "Hold Chronobreak when Arcane Storm comes down, so you can rewind out of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Viktor-R", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "23874289b151baf183e16b6623557c4832c3d4067239817777d1162a8228e8b1",
+      "tips": [
+        {
+          "id": "middle:Ekko:Yasuo:0",
+          "text": "Throw Timewinder at Yasuo to slow him. Hit him on the way out and again on the way back for full damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 6, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ekko:Yasuo:1",
+          "text": "Do not throw Timewinder or Parallel Convergence into Wind Wall; the projectile is destroyed. Wait for it to end.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Ekko-W", "start": 27, "end": 47 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 53, "end": 62 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Ekko:Yasuo:2",
+          "text": "Stay away from Yasuo once he has two stacks of Steel Tempest. The next one fires a whirlwind that knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Ekko:Yasuo:3",
+          "text": "Use Phase Dive to get out of Steel Tempest's narrow line. Moving sideways also dodges it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Yasuo-Q", "start": 29, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Ekko:Yasuo:4",
+          "text": "Hold Chronobreak when Yasuo has a knock up ready, since an ally's knock up lets Yasuo use Last Breath too. Rewind out if he dives you.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "knocked-up", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "knocked-up", "start": 66, "end": 74 },
+            { "kind": "champion", "key": "Yasuo", "start": 80, "end": 85 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fb95e67f4ba4cbb5859876bbeb01c7c5b1eb6b35f9d642d8e8e113b7d7db209a",
+      "tips": [
+        {
+          "id": "middle:Ekko:Yone:0",
+          "text": "Aim Timewinder so it hits Yone on the way out; the field slows him, and the returning device hits him again if he stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ekko:Yone:1",
+          "text": "Parallel Convergence takes time to arm, so cast it where Yone will be after a dash, then walk in to stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 0, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Ekko:Yone:2",
+          "text": "Hold Chronobreak for when Yone commits with Fate Sealed; it gets you out and damages him as you go.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Yone-R", "start": 44, "end": 55 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Ekko:Yone:3",
+          "text": "Use Phase Dive to close in, then attack to land the third hit of Z-Drive Resonance and gain speed to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-E", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Ekko-passive", "start": 65, "end": 82 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "36cf25c0ca9cc560cf00f37283dd9d1c9a7f21ce62870041eae1e02d406f93c8",
+      "tips": [
+        {
+          "id": "middle:Ekko:Zed:0",
+          "text": "Place Parallel Convergence where Zed will fight or escape, then step in to stun him. He can see it coming, so bait first.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 6, "end": 26 },
+            { "kind": "champion", "key": "Zed", "start": 33, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Ekko:Zed:1",
+          "text": "Save Chronobreak for Zed's Death Mark. Rewinding out of it, or past it, wastes his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Zed-R", "start": 27, "end": 37 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Ekko:Zed:2",
+          "text": "Land Timewinder on Zed right after he uses Living Shadow. He has less mobility and damage then.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-Q", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Zed-W", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Ekko:Zed:3",
+          "text": "Stay out of range of Zed's shadow. Shadow Slash only slows you if a shadow hits you with it.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "ability", "key": "Zed-E", "start": 35, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

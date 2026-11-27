@@ -1,0 +1,981 @@
+{
+  "schemaVersion": 1,
+  "champion": "Quinn",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "fc44eb62e010530a57437f81833a2161d2765a4abad9571b9de3b1353adf47f4",
+      "tips": [
+        {
+          "id": "top:Quinn:general:0",
+          "text": "Cast Blinding Assault at the first enemy in its path; it stops there. On a champion it shrinks their vision, so use it before you trade.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Quinn:general:1",
+          "text": "Aim Blinding Assault carefully when minions are in front. A minion takes the hit and the champion behind it is missed.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Quinn:general:2",
+          "text": "Open a trade with Vault on the enemy champion. It marks them and slows them, and you leap back out of melee range.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Quinn:general:3",
+          "text": "Hit a marked enemy with a basic attack right after Vault. Harrier adds bonus damage and Heightened Senses speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 51, "end": 56 },
+            {
+              "kind": "ability",
+              "key": "Quinn-passive",
+              "start": 58,
+              "end": 65
+            },
+            { "kind": "ability", "key": "Quinn-W", "start": 88, "end": 105 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Quinn:general:4",
+          "text": "Use Vault with your back to a wall to hop over thin terrain. This works when there is enough room to land on the other side.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Quinn:general:5",
+          "text": "Use Heightened Senses to reveal nearby bushes before a fight or a gank, so you know who is there.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-W", "start": 4, "end": 21 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Quinn:general:6",
+          "text": "Use Behind Enemy Lines to cross the map fast, to farm side waves or to chase a weak enemy. Cast it out of sight, because the channel takes a moment.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-R", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Quinn:general:7",
+          "text": "Avoid taking damage from champions while using Behind Enemy Lines, because it removes your speed bonus for a short time. Being stunned or silenced ends it.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-R", "start": 47, "end": 65 },
+            { "kind": "keyword", "key": "silenced", "start": 138, "end": 146 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Quinn:general:8",
+          "text": "Attack or cast Vault to finish Behind Enemy Lines with Skystrike. It deals area damage and marks enemies as you jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Quinn-R", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Quinn:combo:0",
+          "name": "Vault over thin walls",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Quinn-E" }],
+          "when": "Escaping or chasing when an enemy stands on the far side of a thin wall.",
+          "whenRefs": [],
+          "text": "Stand with your back to a thin wall and Vault the enemy. Quinn's backward leap can carry her over the wall if there is enough room to land on the other side.",
+          "textRefs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 40, "end": 45 },
+            { "kind": "champion", "key": "Quinn", "start": 57, "end": 62 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "4c6237e7e78d081c32ef7a1d738bf698621b41e5b2a829aa40fe5ae2ec1fe073",
+      "tips": [
+        {
+          "id": "top:Quinn:Aatrox:0",
+          "text": "Use Blinding Assault on Aatrox when he walks up to trade; his vision shrinks, so he has a harder time aiming The Darkin Blade.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 109, "end": 125 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Quinn:Aatrox:1",
+          "text": "Sidestep The Darkin Blade instead of walking back; the hit zones are telegraphed and each swing comes from where he stands.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 9, "end": 25 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Quinn:Aatrox:2",
+          "text": "Trade with Vault, then attack right away; you hop back out and he is slowed, so he struggles to follow.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 11, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Quinn:Aatrox:3",
+          "text": "Move sideways or toward Aatrox to leave Infernal Chains before it pulls you back and hits again.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Quinn:Aatrox:4",
+          "text": "Fight in short trades. When Aatrox hits you, his Deathbringer Stance heals him, so avoid long brawls.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 28, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Aatrox-passive",
+              "start": 49,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Quinn:Aatrox:5",
+          "text": "Keep away from Aatrox while World Ender is active; his healing and damage rise and a kill extends it.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 15, "end": 21 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 28, "end": 39 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "89f845bcbdf539a0d6cd89f6fbe9dceed4e8d09b5d4401a5b5b26b39c90d17ca",
+      "tips": [
+        {
+          "id": "top:Quinn:Briar:0",
+          "text": "Hit Briar with Blinding Assault when she charges in; it shrinks her sight, so she has a harder time seeing you and the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 15, "end": 31 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Quinn:Briar:1",
+          "text": "Use Vault to knock Briar back and slow her, then fight from range. Her sustain is strongest when she gets to trade up close.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 },
+            { "kind": "champion", "key": "Briar", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Quinn:Briar:2",
+          "text": "Hold Vault until Briar leaps in with Head Rush. Use it to get away after she stuns you, rather than before she commits.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Briar", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Briar-Q", "start": 37, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Quinn:Briar:3",
+          "text": "Back away from Briar and keep your distance after her Blood Frenzy starts. It lasts a short time and she can't control who she attacks.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Quinn:Briar:4",
+          "text": "Don't waste Behind Enemy Lines to roam while Briar is nearby. Use it to avoid fights, since taking damage cancels the speed.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-R", "start": 12, "end": 30 },
+            { "kind": "champion", "key": "Briar", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "510348e879f2fa2527f59c28a2e1fb57171500a843362780a1ab60c45aa90dfa",
+      "tips": [
+        {
+          "id": "top:Quinn:Darius:0",
+          "text": "Use Blinding Assault from long range when Darius walks up. It hurts him and shrinks his vision.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Quinn:Darius:1",
+          "text": "Stay out of Apprehend range. If you get pulled in, Darius fights you at close range, which is his best fight.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "champion", "key": "Darius", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Quinn:Darius:2",
+          "text": "Vault away from Darius after you trade. It slows him and knocks him back a little, so he cannot catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Darius", "start": 16, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Quinn:Darius:3",
+          "text": "Do not let Darius's Hemorrhage stack up on you. Back off, since Noxian Guillotine hits harder with more stacks.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 20,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 64, "end": 81 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "66179f1ed21aa47bcf80fe9633aac50ab148034928a3f56e7344e48309ad9475",
+      "tips": [
+        {
+          "id": "top:Quinn:Fiora:0",
+          "text": "Hold Vault until Fiora's Riposte is spent. If she parries it, you get stunned and she wins the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 5, "end": 10 },
+            { "kind": "champion", "key": "Fiora", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Fiora-W", "start": 25, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Quinn:Fiora:1",
+          "text": "Poke Fiora with Blinding Assault from long range and keep your distance. She wants to Lunge onto you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 16, "end": 32 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Quinn:Fiora:2",
+          "text": "Watch for the Vital marker around you. Step away from it so Fiora's Lunge doesn't heal and speed her up.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Quinn:Fiora:3",
+          "text": "Once Fiora has used Riposte, Vault in, hit her, and bounce away before she can close in.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Fiora-W", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Quinn-E", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ac2cae2b8d61a2f1e4b6683be8a518cca3a240768de0e1a748950f71249ff9b7",
+      "tips": [
+        {
+          "id": "top:Quinn:Gangplank:0",
+          "text": "Stay out of Gangplank's Powder Keg circles. Attack a keg yourself to defuse it before he can shoot it.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 24, "end": 34 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Quinn:Gangplank:1",
+          "text": "Use Blinding Assault on Gangplank before you trade; it shrinks his sight so he has a harder time aiming his kegs.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Gangplank", "start": 24, "end": 33 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Quinn:Gangplank:2",
+          "text": "Vault onto Gangplank, hit him, and bounce back out of keg range before he can set up a shot.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Gangplank", "start": 11, "end": 20 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:Quinn:Gangplank:3",
+          "text": "Do not count on a stun or slow to finish him. Remove Scurvy clears it and heals him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Quinn:Gangplank:4",
+          "text": "After Gangplank hits level 6, watch your health. His Cannon Barrage can finish you from anywhere on the map.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7db7a6796322b0cf1c8ca94b299fa216e28892fb1a107d56e33061c1009e337b",
+      "tips": [
+        {
+          "id": "top:Quinn:Garen:0",
+          "text": "Poke Garen with Blinding Assault from long range. It also shrinks his vision, so he has a harder time seeing you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Quinn:Garen:1",
+          "text": "Keep away from Garen when Decisive Strike is ready. He gains speed, and his hit silences you.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-Q", "start": 26, "end": 41 },
+            { "kind": "keyword", "key": "silenced", "start": 80, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Quinn:Garen:2",
+          "text": "Do not Vault in when Judgment is ready. His spin hits hard, and you land right next to him.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Garen-E", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Quinn:Garen:3",
+          "text": "Use Vault, hit the Harrier mark with an attack, then leap back out. You keep the damage and avoid his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Quinn-passive",
+              "start": 19,
+              "end": 26
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Quinn:Garen:4",
+          "text": "Run when you are low. Demacian Justice deals more damage the lower your health is.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 22, "end": 38 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Quinn:Garen:5",
+          "text": "Hit him often so Perseverance stays off. Constant poke stops his healing.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7338725a8951632135b600beb0ae59497ed2fc452a8393d509e4c74f9476f87a",
+      "tips": [
+        {
+          "id": "top:Quinn:Jayce:0",
+          "text": "Stay out of Jayce's Cannon Stance range; fight him when he has used Shock Blast and has to walk up to you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:Quinn:Jayce:1",
+          "text": "Jayce is strong early. Trade with Blinding Assault and Vault, and play safely if he gets ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 34, "end": 50 },
+            { "kind": "ability", "key": "Quinn-E", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Quinn:Jayce:2",
+          "text": "Vault onto Jayce, hit him, and jump back out. The slow makes it hard for him to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Jayce", "start": 11, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Quinn:Jayce:3",
+          "text": "Dodge Shock Blast by walking sideways; it is a bolt that stops on the first enemy it hits, so a minion in front of you absorbs it.",
+          "refs": [],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Quinn:Jayce:4",
+          "text": "Do not walk next to Jayce with Thundering Blow ready; it knocks you back.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1761e65814f4551a88832c2b4facbb22b8f45b4fa684e05f7126b6cbc286f901",
+      "tips": [
+        {
+          "id": "top:Quinn:KSante:0",
+          "text": "Hit Blinding Assault on K'Sante from long range; it cuts his vision to a short radius, so he struggles to see you and hit his own abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Quinn:KSante:1",
+          "text": "Fight him early while he has little health and armor. His tankiness grows with items, and you fall behind in a long, drawn-out lane.",
+          "refs": [],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Quinn:KSante:2",
+          "text": "Use Vault to dash in, hit, then leap back out. The slow it applies helps you step away from his follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Quinn:KSante:3",
+          "text": "Stay out of his Ntofo Strikes range once he has hit you with it once. The second cast stuns and pulls you in, so back off before he can land it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Quinn:KSante:4",
+          "text": "Watch for his Path Maker charge. When he starts raising his weapons, step sideways out of the line, because a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 14, "end": 24 },
+            { "kind": "keyword", "key": "stunned", "start": 139, "end": 143 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Quinn:KSante:5",
+          "text": "Stay away from walls when he has All Out ready. He can push you through terrain and strike you a second time.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Quinn:KSante:6",
+          "text": "Once he goes All Out he is much squishier, so fight back then and focus him down, but kite carefully because he hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": [
+        {
+          "comboId": "top:Quinn:combo:0",
+          "note": "Vaulting over a thin wall can break away from K'Sante's chase when he has no dash to follow.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 46, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "74bf3c7edbf7d4de8c0d131c0787fc4c6e79479fea4bc26b5d4903f5c067fed7",
+      "tips": [
+        {
+          "id": "top:Quinn:Malphite:0",
+          "text": "Stay out of Malphite's Seismic Shard range. Being slowed lets him catch you and trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 23, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:Quinn:Malphite:1",
+          "text": "Keep Blinding Assault for when he walks up; it hits him and reduces his vision.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Quinn:Malphite:2",
+          "text": "Use Vault to hit and leap away after his Ground Slam is spent; it slows him as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Malphite-E", "start": 41, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Quinn:Malphite:3",
+          "text": "Be careful at level 6; Unstoppable Force can't be stopped and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-R", "start": 23, "end": 40 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "fabbfce722b1c149c88e3d35fd6b472992525d883f87528f6b6b5023c2c81f3b",
+      "tips": [
+        {
+          "id": "top:Quinn:Mordekaiser:0",
+          "text": "Keep your distance from Mordekaiser; Death's Grasp pulls you in. Stay out of its line, especially when no minions are near you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 37,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Quinn:Mordekaiser:1",
+          "text": "Poke Mordekaiser with Blinding Assault from range, and move away before his Darkness Rise builds up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 22, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 76,
+              "end": 89
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:Quinn:Mordekaiser:2",
+          "text": "Do not trade into Indestructible. Wait for the shield to fade, then hit him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 18,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Quinn:Mordekaiser:3",
+          "text": "Stay near minions so Obliterate does not hit you alone for extra damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 21,
+              "end": 31
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Quinn:Mordekaiser:4",
+          "text": "Once Mordekaiser reaches level 6, keep Vault ready as an escape. Realm of Death cuts you off from your team.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Quinn-E", "start": 39, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 65,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "795ddd94888674af34a00515762b7a88b6590355e0225be90ad25aa733ea764c",
+      "tips": [
+        {
+          "id": "top:Quinn:Rumble:0",
+          "text": "Throw Blinding Assault at Rumble before he trades. It lowers his vision, so he has a harder time hitting you.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Rumble", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Quinn:Rumble:1",
+          "text": "Do not stay in front of Flamespitter. Use Vault to hop out of the cone, and hit him as you leave.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-Q", "start": 24, "end": 36 },
+            { "kind": "ability", "key": "Quinn-E", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Quinn:Rumble:2",
+          "text": "Attack Rumble while he is Overheated; he can't cast anything, so you can fight back freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 7, "end": 13 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Quinn:Rumble:3",
+          "text": "Step out of The Equalizer's fire quickly. Fighting in it keeps you slowed and burning.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5604ae9766c5cdde4d579bd67e0b17baa7287df48bbc89297cc8d7e9cc3cdb26",
+      "tips": [
+        {
+          "id": "top:Quinn:Sion:0",
+          "text": "Stay out of Sion's reach while he charges Decimating Smash. The stun only lands if you stand still in the area.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 68 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Quinn:Sion:1",
+          "text": "Poke him with Blinding Assault from long range. It hits at a distance, and his tank body makes close trades poor for you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Quinn:Sion:2",
+          "text": "Use Vault to jump away after he casts Roar of the Slayer, or Vault onto a minion to slip out of range. He needs the slow to catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Sion-E", "start": 38, "end": 56 },
+            { "kind": "ability", "key": "Quinn-E", "start": 61, "end": 66 },
+            { "kind": "keyword", "key": "slowed", "start": 116, "end": 120 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Quinn:Sion:3",
+          "text": "Don't fight him when he dies. Glory in Death makes him dangerous for a few seconds, so back away until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-passive", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Quinn:Sion:4",
+          "text": "Watch for Unstoppable Onslaught when you use Behind Enemy Lines. Taking damage removes your speed bonus, so stay away from his line.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-R", "start": 10, "end": 31 },
+            { "kind": "ability", "key": "Quinn-R", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ad248d79e70e1abce98b062df66812797608832583aff881aa31e8cb666009a",
+      "tips": [
+        {
+          "id": "top:Quinn:Teemo:0",
+          "text": "Avoid walking into Teemo's Blinding Dart range early; being blinded makes your trades far worse.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Quinn:Teemo:1",
+          "text": "Use Vault to close the gap, hit him, then jump back out; Toxic Shot punishes anyone who stays in his range.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Teemo-E", "start": 57, "end": 67 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Quinn:Teemo:2",
+          "text": "Use Blinding Assault from long range to hit Teemo; it marks him so your next attack deals bonus damage.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 44, "end": 49 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Quinn:Teemo:3",
+          "text": "Be careful where you walk in bushes and the lane; Teemo's Noxious Trap is hidden and will slow you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Teemo-R", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Quinn:Teemo:4",
+          "text": "Check for Teemo hiding in bushes with Heightened Senses; its active reveals him if he's invisible.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Quinn-W", "start": 38, "end": 55 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "82dcbf4a7383912730b24519fa087a49f0569d3bcbb37aae618b6fec97e6f85c",
+      "tips": [
+        {
+          "id": "top:Quinn:Vayne:0",
+          "text": "Don't stand next to a wall when Vayne is close; Condemn knocks you back and stuns you on impact.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Vayne-E", "start": 48, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Quinn:Vayne:1",
+          "text": "Use Blinding Assault to hit Vayne when she is trading, so her vision shrinks and she has trouble hitting back.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Quinn:Vayne:2",
+          "text": "Vault in, attack, and leap back. Mind where you land, as Vayne can Condemn you into walls.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Vayne", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Vayne-E", "start": 67, "end": 74 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Quinn:Vayne:3",
+          "text": "Trade when Vayne's Tumble is on cooldown; she is much easier to pin down then.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 19, "end": 25 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Quinn:Vayne:4",
+          "text": "Attack Harrier-marked Vayne first for the bonus damage and speed from Heightened Senses, then back off.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Quinn-passive",
+              "start": 7,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Vayne", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Quinn-W", "start": 70, "end": 87 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b0ab7c3a4f82b227969bd890a59b021122020ab03cd0c27f3bec3100be62b6ff",
+      "tips": [
+        {
+          "id": "top:Quinn:Yone:0",
+          "text": "Use Blinding Assault on Yone before you trade; it shrinks his vision, so he struggles to hit you back or follow you.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Quinn:Yone:1",
+          "text": "Vault onto Yone, then attack right away. Vault resets your attack timer and leaps you back out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-E", "start": 0, "end": 5 },
+            { "kind": "champion", "key": "Yone", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Quinn-E", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Quinn:Yone:2",
+          "text": "Aim Blinding Assault carefully. It stops at the first enemy it hits, so a minion in the way will absorb it.",
+          "refs": [
+            { "kind": "ability", "key": "Quinn-Q", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Quinn:Yone:3",
+          "text": "Stay out of Yone's Mortal Steel range when it has two stacks. The third cast dashes and knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Yone-Q", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Quinn:Yone:4",
+          "text": "Respect Yone at level 6. Fate Sealed stuns you and pulls you to him, so do not clump with allies in a line.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Yone-R", "start": 25, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    }
+  ]
+}

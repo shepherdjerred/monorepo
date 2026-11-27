@@ -1,0 +1,658 @@
+{
+  "schemaVersion": 1,
+  "champion": "KogMaw",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "3dccdf75261721ef7b15c9dd6f16020430c4c1068e2b620daf07f97311e8f9ea",
+      "tips": [
+        {
+          "id": "adc:KogMaw:general:0",
+          "text": "Turn on Bio-Arcane Barrage to hit enemies from outside their range. It also hurts tanky targets, since it deals damage based on their max Health.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:KogMaw:general:1",
+          "text": "Cast Void Ooze on enemies who walk toward you. They are slowed, which makes Living Artillery easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 5, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:KogMaw:general:2",
+          "text": "Fire Living Artillery at enemies who are low on Health. It hits much harder against them, and it works well to finish a fight.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 5, "end": 21 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:KogMaw:general:3",
+          "text": "Watch your Mana when you fire Living Artillery over and over. Each shot in a quick row costs more.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:KogMaw:general:4",
+          "text": "Open a trade with Caustic Spittle. It strips the target's Armor and Magic Resist, so your follow-up damage hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 18, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:KogMaw:general:5",
+          "text": "Stay behind your front line, because you have no escape. Enemies who get on top of you will kill you.",
+          "refs": [],
+          "pWrong": 0.49
+        },
+        {
+          "id": "adc:KogMaw:general:6",
+          "text": "If you die, walk your Icathian Surprise zombie toward enemies. It explodes after a few seconds and can kill careless enemies.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "KogMaw-passive",
+              "start": 22,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "27e4e57a4b0ebffcf36f935af0aed3e5e17dbf3becf53aa39b572cfc1a391648",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Ashe:0",
+          "text": "Dodge Volley by stepping out of the cone. Keep minions between you and Ashe so they absorb the arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Ashe-W", "start": 6, "end": 12 },
+            { "kind": "champion", "key": "Ashe", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:KogMaw:Ashe:1",
+          "text": "Use Void Ooze on Ashe when she walks up to trade, so she is slowed and cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ashe", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:KogMaw:Ashe:2",
+          "text": "Use Bio-Arcane Barrage to outrange Ashe and hit her without taking a trade back.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Ashe", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:KogMaw:Ashe:3",
+          "text": "Do not wander the map alone while Enchanted Crystal Arrow is ready. Stay close to your team and watch for Ashe's arrow.",
+          "refs": [
+            { "kind": "keyword", "key": "isolated", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "Ashe-R", "start": 34, "end": 57 },
+            { "kind": "champion", "key": "Ashe", "start": 106, "end": 110 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:KogMaw:Ashe:4",
+          "text": "Follow a Void Ooze with Living Artillery on a slowed Ashe. It hits hardest on low health.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 9, "end": 18 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 },
+            { "kind": "champion", "key": "Ashe", "start": 53, "end": 57 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a9a1254b95098e0fd603809c361bb04a512c823a56c5d730303014f452538309",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Caitlyn:0",
+          "text": "Stay out of Caitlyn's Piltover Peacemaker range and keep minions between you and her; it hits less hard through several targets.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:KogMaw:Caitlyn:1",
+          "text": "Watch the ground before you step forward; Yordle Snap Trap roots you and sets up a big Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 42, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 87,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:KogMaw:Caitlyn:2",
+          "text": "Hit Caitlyn with Void Ooze when she steps up to trade; the slow makes it hard for her to leave.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "adc:KogMaw:Caitlyn:3",
+          "text": "Use Bio-Arcane Barrage to fight Caitlyn at close to her range once you have levels and items.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Caitlyn", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:KogMaw:Caitlyn:4",
+          "text": "Use Caustic Spittle on Caitlyn before a trade; it lowers her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Caitlyn", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:KogMaw:Caitlyn:5",
+          "text": "Aim Living Artillery at Caitlyn when she is low; it hurts most against weakened targets.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Caitlyn", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5e3363cbb08e26eacf1a9c88a70482c9b14055b5f9758feb84e77105dee9cefc",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Ezreal:0",
+          "text": "Ezreal is fragile, so poke him with Caustic Spittle when he is close. It also cuts his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "poke", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:KogMaw:Ezreal:1",
+          "text": "Put Void Ooze where Ezreal wants to stand. It slows him, which makes Mystic Shot easier to hit back.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 69, "end": 80 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:KogMaw:Ezreal:2",
+          "text": "Stay behind minions. Mystic Shot stops at the first enemy it hits, so minions soak it up.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 21, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:KogMaw:Ezreal:3",
+          "text": "Ezreal can blink with Arcane Shift, so aim Living Artillery where he will land, not where he stands.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 22, "end": 34 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 43, "end": 59 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:KogMaw:Ezreal:4",
+          "text": "Turn on Bio-Arcane Barrage to outrange Ezreal in a trade and punish him for walking up.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Ezreal", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "090bd9472aa767d821f397cac921304dba7c38d1e7897bc1e8cf782a076d74f9",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Jhin:0",
+          "text": "Hit Jhin with Void Ooze when he walks up to trade; the ooze leaves him slowed and easier to hit with Caustic Spittle.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 14, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 101, "end": 116 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:KogMaw:Jhin:1",
+          "text": "Stay out of a straight line from Jhin. His Deadly Flourish roots you if you were just hit by his team, and Kog'Maw has no escape.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-W", "start": 43, "end": 58 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 64 },
+            { "kind": "champion", "key": "KogMaw", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:KogMaw:Jhin:2",
+          "text": "Use Bio-Arcane Barrage to hit Jhin from beyond his attack range, and step back while he reloads.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Jhin", "start": 30, "end": 34 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:KogMaw:Jhin:3",
+          "text": "Watch the bushes and choke points for Jhin's hidden Captive Audience traps before you walk or kite into them.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Jhin-E", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:KogMaw:Jhin:4",
+          "text": "Hit Jhin with Living Artillery once he is low on health; it does much more damage then, and it has a long range.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 14, "end": 30 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f112475fb28e0bd973bd462a05107e0ea7ea3938cd786ab839288d00a032a915",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Jinx:0",
+          "text": "Use Void Ooze to slow Jinx before you throw Living Artillery; the slow makes it much easier to land.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Jinx", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 44, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 70 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:KogMaw:Jinx:1",
+          "text": "Turn on Bio-Arcane Barrage to outrange Jinx's minigun, and hit her from a distance. Her rockets still reach almost as far, so stay out of her reach.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Jinx", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:KogMaw:Jinx:2",
+          "text": "Stay behind your minions and out of line of Zap!, which stops at the first enemy it hits, slows you and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 44, "end": 48 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:KogMaw:Jinx:3",
+          "text": "Don't walk over Flame Chompers!. They root you in place and she gets a free burst on you.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:KogMaw:Jinx:4",
+          "text": "Once Jinx has used Flame Chompers!, push in and trade, because she has little left to protect herself with.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Jinx-E", "start": 19, "end": 34 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:KogMaw:Jinx:5",
+          "text": "Hit Jinx with Caustic Spittle before you trade; it cuts her Armor and Magic Resist, so the rest of your damage hurts more.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 14, "end": 29 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:KogMaw:Jinx:6",
+          "text": "Use Living Artillery to finish Jinx when she is low on health. It hits hardest on low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jinx", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "de356c8cdfce13c0f7b4f6681087a7466a09e585c69e7aae0f840912ac3b14be",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Kaisa:0",
+          "text": "Turn on Bio-Arcane Barrage to outrange Kai'Sa in trades; her basic attacks have to walk up to you to stack Plasma.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Kaisa", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:KogMaw:Kaisa:1",
+          "text": "Hit Void Ooze on Kai'Sa when she steps in; she is slowed and cannot easily dash onto you.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Kaisa", "start": 17, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "adc:KogMaw:Kaisa:2",
+          "text": "Stay near your support and minions. Kai'Sa is strong against isolated targets, and Kog'Maw has no escape.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 36, "end": 42 },
+            { "kind": "keyword", "key": "isolated", "start": 61, "end": 69 },
+            { "kind": "champion", "key": "KogMaw", "start": 83, "end": 90 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:KogMaw:Kaisa:3",
+          "text": "Use Caustic Spittle on her before a trade; it cuts her Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:KogMaw:Kaisa:4",
+          "text": "Once she is low, Living Artillery from far away hits much harder, so finish her with it.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-R", "start": 17, "end": 33 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "117c802f3b4770ea1bc13932207fa824fb92282cd108e960f93a0a40ac479187",
+      "tips": [
+        {
+          "id": "adc:KogMaw:MissFortune:0",
+          "text": "Hold Bio-Arcane Barrage for when Miss Fortune walks in; its extra range lets you hit her first and keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "MissFortune", "start": 33, "end": 45 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:KogMaw:MissFortune:1",
+          "text": "Aim Caustic Spittle at Miss Fortune before she gets close; it hits the first enemy in line, so keep minions out of the way.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-Q", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "MissFortune", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:KogMaw:MissFortune:2",
+          "text": "Use Void Ooze on Miss Fortune when she runs at you, then follow with Living Artillery on her slowed body.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 4, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 17,
+              "end": 29
+            },
+            { "kind": "ability", "key": "KogMaw-R", "start": 69, "end": 85 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:KogMaw:MissFortune:3",
+          "text": "Stay behind your minions; Double Up bounces onto you from a minion, and Miss Fortune's Strut closes the gap quickly.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 26,
+              "end": 35
+            },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 72,
+              "end": 84
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 87,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "adc:KogMaw:MissFortune:4",
+          "text": "Getting hit stops Strut's speed bonus, so poke her as she walks up to take away her speed.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 18,
+              "end": 23
+            },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:KogMaw:MissFortune:5",
+          "text": "Keep away from Miss Fortune's Bullet Time; she channels in a cone and can't move, so get out of the cone or wait for it to end.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 15,
+              "end": 27
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 30,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "46af1ae9f342c71127b41ce37b690c6b78745d88c08c848f6fe558fa591f2a93",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Smolder:0",
+          "text": "Hit Smolder with Void Ooze when he steps up to last-hit; the slowed trail makes it hard for him to walk away or close the gap.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "KogMaw-E", "start": 17, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:KogMaw:Smolder:1",
+          "text": "Turn on Bio-Arcane Barrage to attack from beyond Smolder's reach, then back off before he can punish you.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Smolder", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:KogMaw:Smolder:2",
+          "text": "Hit Smolder with Caustic Spittle before you trade; it cuts his Armor and Magic Resist.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:KogMaw:Smolder:3",
+          "text": "Smolder is weak early, so press him hard now. Don't let him farm freely and stack up Dragon Practice.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 0, "end": 7 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 85,
+              "end": 100
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:KogMaw:Smolder:4",
+          "text": "Step sideways out of his Achooo! line; it slows you and hurts.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0946f449e5e3d33985f4014eb907177073c3f75705c570d7c5f0696b85be99f1",
+      "tips": [
+        {
+          "id": "adc:KogMaw:Yunara:0",
+          "text": "Poke with Caustic Spittle from long range; it cuts the enemy's Armor and Magic Resist, so follow with your attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "KogMaw-Q", "start": 10, "end": 25 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:KogMaw:Yunara:1",
+          "text": "Keep Void Ooze for when Yunara closes in; the ooze leaves her slowed and easier to hit with Living Artillery.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            { "kind": "ability", "key": "KogMaw-R", "start": 92, "end": 108 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:KogMaw:Yunara:2",
+          "text": "Turn on Bio-Arcane Barrage to outrange Yunara and hit her from a safe distance.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Yunara", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:KogMaw:Yunara:3",
+          "text": "Stay behind your minions and out of the line of Yunara's prayer bead; it slows you hard, and you have no escape.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:KogMaw:Yunara:4",
+          "text": "Be careful when Yunara uses Transcend One's Self. She hits harder and can dash onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Yunara-R", "start": 28, "end": 48 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

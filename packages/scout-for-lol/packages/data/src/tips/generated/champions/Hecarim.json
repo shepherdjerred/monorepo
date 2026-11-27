@@ -1,0 +1,843 @@
+{
+  "schemaVersion": 1,
+  "champion": "Hecarim",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "afe254fe6d5aa61487b0f4200c29fde4ab1f7f83a4e3be93dd9e80a88be9212e",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:general:0",
+          "text": "Use Devastating Charge from a long way off so the knock back and damage are bigger. Wait until you have run a good distance before you hit.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Hecarim:general:1",
+          "text": "Cast Rampage whenever enemies or camps are close. Each hit builds stacks that make it hit harder and come back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Hecarim:general:2",
+          "text": "Start Spirit of Dread when a fight begins, not after. Heal off the damage you and your allies deal to nearby enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 6, "end": 21 },
+            { "kind": "summoner-spell", "key": "7", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Hecarim:general:3",
+          "text": "Aim Onslaught of Shadows to catch several enemies at once. They are feared when you arrive, so charge in from far away for a longer fear.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Hecarim:general:4",
+          "text": "Charge into the enemy backline with Onslaught of Shadows, then use Rampage and Spirit of Dread while they are feared.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 36, "end": 56 },
+            { "kind": "ability", "key": "Hecarim-Q", "start": 67, "end": 74 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 79, "end": 94 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Hecarim:general:5",
+          "text": "Stay fast when you want to hit hard, because Warpath turns bonus Move Speed into Attack Damage.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Hecarim-passive",
+              "start": 45,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:Hecarim:combo:0",
+          "name": "Flash into Charge",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Hecarim-E" },
+            { "kind": "summoner-spell", "key": "2202" },
+            "attack"
+          ],
+          "when": "You want a long-range engage or a catch on a fleeing target.",
+          "whenRefs": [],
+          "text": "Run with Devastating Charge to build speed, then Flash toward the target and attack. The distance you travelled adds knockback and damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 9, "end": 27 },
+            { "kind": "summoner-spell", "key": "4", "start": 49, "end": 54 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "d3f88087e18710116b556eb64a8f094f81bed8f8c06eccd715daa93e1d1f6827",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Graves:0",
+          "text": "Hit Graves with Devastating Charge from a long run-up; the knockback and damage grow with distance travelled.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 16, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Hecarim:Graves:1",
+          "text": "Step out of Smoke Screen at once; leaving the cloud removes its harm. Do not fight inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Hecarim:Graves:2",
+          "text": "Start trading with Spirit of Dread once Graves is in range; you heal from the damage he takes. Stay close and keep hitting with Rampage.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 19, "end": 34 },
+            { "kind": "champion", "key": "Graves", "start": 40, "end": 46 },
+            { "kind": "ability", "key": "Hecarim-Q", "start": 128, "end": 135 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Hecarim:Graves:3",
+          "text": "Sidestep End of the Line; the shell explodes again after a moment, so do not stay in its trail.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Hecarim:Graves:4",
+          "text": "Use Onslaught of Shadows to reach Graves when Quickdraw is on cooldown; the fear leaves him open.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Graves", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Graves-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "42c37b9f8073b513107175728d77cb7d4e590f356d0d09febbee24d3dae8c2bb",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike knocks you up along that path.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Hecarim:JarvanIV:1",
+          "text": "Use Onslaught of Shadows to pass through Cataclysm's walls if Jarvan traps you.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Hecarim:JarvanIV:2",
+          "text": "Run up to build speed, then hit Jarvan with Devastating Charge for the knockback and extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 44, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Hecarim:JarvanIV:3",
+          "text": "Cast Spirit of Dread when you trade with Jarvan; it damages him and heals you. It also gives you extra Armor and Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Hecarim:JarvanIV:4",
+          "text": "Keep Rampage going on Jarvan to build stacks so its cooldown drops.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d0dee29b7ebbba75c0c756455ef5133880e78988984250bffec17f8dc1fe7884",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Kayn:0",
+          "text": "Stay close to Kayn and use Spirit of Dread when you fight; it hurts him and heals you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 27, "end": 42 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Hecarim:Kayn:1",
+          "text": "Charge in with Devastating Charge from a long way off; his Shadow Step won't help him escape the knockback.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 15, "end": 33 },
+            { "kind": "ability", "key": "Kayn-E", "start": 59, "end": 70 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:Hecarim:Kayn:2",
+          "text": "Hold Onslaught of Shadows to make Kayn flee when he commits, or to catch him after he emerges from a wall.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Kayn", "start": 34, "end": 38 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Hecarim:Kayn:3",
+          "text": "Keep hitting with Rampage in fights; each hit makes it come back faster and hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Hecarim:Kayn:4",
+          "text": "Hecarim is hard to pin down. Kayn's Blade's Reach slows you, so keep out of its line until you are ready to engage.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Kayn", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Kayn-W", "start": 36, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6ecdb07b4057360a76d3a7888b43d8a5248b30efe8930ace9b75f59549d049d1",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Khazix:0",
+          "text": "Stay near your allies or minions when Kha'Zix is around; alone, you take far more damage from Taste Their Fear.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 },
+            { "kind": "keyword", "key": "isolated", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 94, "end": 110 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Hecarim:Khazix:1",
+          "text": "Turn on Spirit of Dread when Kha'Zix jumps in; it hurts him and heals you while he stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 8, "end": 23 },
+            { "kind": "champion", "key": "Khazix", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Hecarim:Khazix:2",
+          "text": "Use Onslaught of Shadows to make Kha'Zix flee once he has spent Leap, because he is easy to catch then.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Khazix", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Khazix-E", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Hecarim:Khazix:3",
+          "text": "Build speed with Devastating Charge before you hit him; it knocks him back and cuts off his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "437194110be6eb029d416337e574fb4ed42b6870bdc1d0ea19bd0c611da8d071",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Kindred:0",
+          "text": "Kindred is fragile, so look for ganks and early fights. Run her down with Devastating Charge and knock her back with the first attack.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 74, "end": 92 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Hecarim:Kindred:1",
+          "text": "Start Devastating Charge from far away. The longer you run, the harder it hits and the farther it knocks her back.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Hecarim:Kindred:2",
+          "text": "Save Onslaught of Shadows for when Kindred is out of position. Its fear stops her from kiting you.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Kindred", "start": 35, "end": 42 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Hecarim:Kindred:3",
+          "text": "Stay on her with Spirit of Dread. It damages her over time and heals you for the damage she takes.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 17, "end": 32 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "jungle:Hecarim:Kindred:4",
+          "text": "Back off or hit her first when Lamb's Respite goes down. Nobody inside can die until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Hecarim:Kindred:5",
+          "text": "Kill the jungle camps Wolf has marked before she does. That slows her growth.",
+          "refs": [],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d1c2fbb9d6abf07b203089bc05350c711007e05d3400751a4240b5a5e17559c0",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:LeeSin:0",
+          "text": "Start Devastating Charge from far away and run a long way first, so the hit lands harder and knocks Lee Sin back further.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "LeeSin", "start": 100, "end": 107 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Hecarim:LeeSin:1",
+          "text": "Turn on Spirit of Dread when Lee Sin commits to a fight; you heal from damage he and your allies deal nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 8, "end": 23 },
+            { "kind": "champion", "key": "LeeSin", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Hecarim:LeeSin:2",
+          "text": "Lee Sin dashes in with Resonating Strike, so keep Rampage ready to hit him the moment he lands.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Hecarim-Q", "start": 50, "end": 57 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Hecarim:LeeSin:3",
+          "text": "Stay spread from your allies so one Dragon's Rage cannot knock several of you up at once.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Hecarim:LeeSin:4",
+          "text": "Fear Lee Sin with Onslaught of Shadows when he chains his abilities; it breaks up his combo.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 18, "end": 38 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": [
+        {
+          "comboId": "jungle:Hecarim:combo:0",
+          "note": "Flash into Charge closes the gap fast, but Lee's Safeguard can dash away from the follow-up.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "12872ae68390cf16b5828d606f91e905cb93565936da5f9141427dc7c0f325d8",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:MasterYi:0",
+          "text": "Cast Spirit of Dread when you fight Master Yi; you heal from the damage he takes, and your armor and magic resist go up.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "MasterYi", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Hecarim:MasterYi:1",
+          "text": "Master Yi can't be slowed during Highlander, so use Onslaught of Shadows for its fear, not for chasing him down.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 33, "end": 43 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 52, "end": 72 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Hecarim:MasterYi:2",
+          "text": "Wait until Alpha Strike is used before you commit Devastating Charge; he can't be hit while he vanishes.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 50, "end": 68 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Hecarim:MasterYi:3",
+          "text": "Hit Master Yi a few times early so he has to spend mana on Meditate; gank him with your team before he heals it back.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 59, "end": 67 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a829bb3d7d1a01c78cb7053b4c88c7e9667789c79a7c3d96851073f3c2c6dd5",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Naafiri:0",
+          "text": "Use Onslaught of Shadows to fear Naafiri when she dives on you or her team; it also reveals her and her packmates.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "Naafiri", "start": 33, "end": 40 }
+          ],
+          "pWrong": 0.94,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Hecarim:Naafiri:1",
+          "text": "Turn on Spirit of Dread when you fight her; the damage heals you, including damage your allies deal nearby.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 8, "end": 23 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Hecarim:Naafiri:2",
+          "text": "Run a long way before Devastating Charge when you chase her; the knock back and damage grow with distance.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 22, "end": 40 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Hecarim:Naafiri:3",
+          "text": "Expect her to dodge your combo with The Call of the Pack, as she cannot be targeted for a moment. Hold your damage until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-W", "start": 36, "end": 56 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:Hecarim:Naafiri:4",
+          "text": "Keep hitting her with Rampage in fights; the stacks make it come back sooner and hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 22, "end": 29 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6b40c25fc4a8f4110edbbead679504ac93ba8aa65aeaffa1f2125099e43abda6",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Nocturne:0",
+          "text": "Hold Spirit of Dread until Nocturne is on you; it deals damage and heals you while he fights.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Nocturne", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Hecarim:Nocturne:1",
+          "text": "Bait out Shroud of Darkness with a cheap ability before you commit Onslaught of Shadows, because it blocks the next enemy Ability.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 9, "end": 27 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 67, "end": 87 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Hecarim:Nocturne:2",
+          "text": "Stay near your team when Nocturne casts Paranoia; he can dash onto you from far away and you cannot see him coming.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Hecarim:Nocturne:3",
+          "text": "Use Devastating Charge to knock Nocturne back, and break his Unspeakable Horror tether by moving out of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Nocturne", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 61, "end": 79 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b1b84fcdb53bf27f529072a7dc6a38797224c321063691870f137aab8e3ab796",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Shyvana:0",
+          "text": "Save Onslaught of Shadows to fear Shyvana when she transforms and dives; it breaks up her fight.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 5, "end": 25 },
+            { "kind": "champion", "key": "Shyvana", "start": 34, "end": 41 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Hecarim:Shyvana:1",
+          "text": "Use Spirit of Dread when you trade with Shyvana; it heals you from damage she takes and gives you resistances.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Shyvana", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Hecarim:Shyvana:2",
+          "text": "Run a long way before Devastating Charge so the knockback and damage are bigger, then hit Shyvana with it.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 22, "end": 40 },
+            { "kind": "champion", "key": "Shyvana", "start": 90, "end": 97 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Hecarim:Shyvana:3",
+          "text": "Stay away from Shyvana when her Dragon Fury is full; she is much stronger in Dragon Form.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Hecarim:Shyvana:4",
+          "text": "Keep Rampage ready and hit her to build stacks; they shorten its cooldown and raise its damage in a longer fight.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b99901f7c860ac2e78014b3438166266a0069f9c5a9c540ae93d2c9664747019",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Skarner:0",
+          "text": "Keep Devastating Charge ready for when Skarner uses Ixtal's Impact. Ending the charge early on a stun can save you.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Skarner", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Skarner-E", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Hecarim:Skarner:1",
+          "text": "Use Spirit of Dread when Skarner is on you with allies nearby. It damages him and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Skarner", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Hecarim:Skarner:2",
+          "text": "Stay out of Impale range when you walk up to him. Keep moving sideways so he can't aim it easily.",
+          "refs": [
+            { "kind": "ability", "key": "Skarner-R", "start": 12, "end": 18 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Hecarim:Skarner:3",
+          "text": "Open with Onslaught of Shadows from far away to fear Skarner. A longer charge makes the fear last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 10, "end": 30 },
+            { "kind": "champion", "key": "Skarner", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0264cd6870d63fefc637358ccb3eb5d1f56d838a55ce874cf3ec1bf1434d822f",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Sylas:0",
+          "text": "Fight Sylas when Kingslayer is on cooldown; without it he can't lunge in and heal back, so he is easier to trade with.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Hecarim:Sylas:1",
+          "text": "Use Spirit of Dread when Sylas is on you; it hurts him over time and heals you from the damage he takes.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Sylas", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Hecarim:Sylas:2",
+          "text": "Run a long way with Devastating Charge before you hit Sylas, so the knock back and damage are bigger.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 20, "end": 38 },
+            { "kind": "champion", "key": "Sylas", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Hecarim:Sylas:3",
+          "text": "Sylas has little durability, so go in on him with Onslaught of Shadows and burst him before he can heal.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 50, "end": 70 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Hecarim:Sylas:4",
+          "text": "Keep hitting enemies with Rampage to build stacks; its cooldown drops, so you can keep cleaving in a long fight with Sylas.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 26, "end": 33 },
+            { "kind": "champion", "key": "Sylas", "start": 117, "end": 122 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6f42ed3e34b33a3d28ce907f4163c4195c55a7fe64ee933afdedf046e614a834",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Talon:0",
+          "text": "Pop Spirit of Dread when Talon jumps in. It heals you, adds armor and magic resist, and damages him.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Hecarim:Talon:1",
+          "text": "Use Rampage on Talon when he lands on you. Hit him early to build your stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Talon", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Hecarim:Talon:2",
+          "text": "Watch for Talon's Shadow Assault. When he turns invisible, hold your Onslaught of Shadows fear for when he returns.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Talon-R", "start": 18, "end": 32 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 69, "end": 89 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Hecarim:Talon:3",
+          "text": "Charge Talon with Devastating Charge from far away. The knock back hits harder from a distance and stops him from landing his combo.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 18, "end": 36 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "88bb7c2b923ba4f2992e65bf125af2c694313a283ca7297758400f6e5fb67c60",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:Viego:0",
+          "text": "Fight Viego early, before he has a kill. Once he possesses a fallen enemy he gets stronger and heals, so do not hand him an easy takedown.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Hecarim:Viego:1",
+          "text": "Cast Spirit of Dread when you fight him up close. You heal from the damage he takes, and the extra Armor and Magic Resist help against his attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Hecarim:Viego:2",
+          "text": "Use Onslaught of Shadows to catch him when he walks away from his team. The fear lets you finish the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:Hecarim:Viego:3",
+          "text": "Run a long way before Devastating Charge so the knock back and damage are bigger. It also gets you onto Viego quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 22, "end": 40 },
+            { "kind": "champion", "key": "Viego", "start": 104, "end": 109 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:Hecarim:Viego:4",
+          "text": "Hit him with Rampage over and over in a long fight. Each hit lowers its cooldown and adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 13, "end": 20 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8690ba3493c03b5ba3446649f106dcc0f24e165b6dc5707a00cb76252379afcf",
+      "tips": [
+        {
+          "id": "jungle:Hecarim:XinZhao:0",
+          "text": "Run up from far away before you use Devastating Charge. Both the damage and the knockback grow with the distance you travel.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-E", "start": 36, "end": 54 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Hecarim:XinZhao:1",
+          "text": "Use Spirit of Dread when Xin Zhao is on you. You heal from the damage he takes, and your armor and magic resist go up.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-W", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 25, "end": 33 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Hecarim:XinZhao:2",
+          "text": "Keep Rampage up in a longer fight. Each hit makes it stronger and shortens its cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-Q", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Hecarim:XinZhao:3",
+          "text": "Watch for the third Three Talon Strike attack. It knocks you up, so back away or fight before he lands it.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 20, "end": 38 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Hecarim:XinZhao:4",
+          "text": "Use Onslaught of Shadows to fear Xin Zhao when he jumps in. A long charge makes the fear last longer.",
+          "refs": [
+            { "kind": "ability", "key": "Hecarim-R", "start": 4, "end": 24 },
+            { "kind": "champion", "key": "XinZhao", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,2567 @@
+{
+  "schemaVersion": 1,
+  "champion": "Viktor",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "c878a20279b4b8ba86362496a4de191856596c23574238bf0dab517aa28dedd2",
+      "tips": [
+        {
+          "id": "middle:Viktor:general:0",
+          "text": "Use Siphon Power on the enemy, then hit them with your next attack. You get a shield and bonus damage, so it wins short trades.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Viktor:general:1",
+          "text": "Put Gravity Field on enemies who are walking into a fight or standing still. Staying inside it long enough gets them stunned, and until then they are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 150, "end": 156 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Viktor:general:2",
+          "text": "Poke with Hextech Ray down a lane full of minions. It goes through everything it touches, so it can hit enemies standing behind minions.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Viktor:general:3",
+          "text": "Cast Hextech Ray over a wall when you want sight of the area behind it. The beam gives vision where it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Viktor:general:4",
+          "text": "Last-hit minions as often as you can. Each kill gives Hex Fragments, which unlock your augments.",
+          "refs": [],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Viktor:general:5",
+          "text": "Start Arcane Storm on a group of enemies. It follows a champion it hit, and you can recast it to steer it onto someone else.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Viktor:general:6",
+          "text": "Use Arcane Storm on enemies who are channeling an ability. The first hit interrupts them.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Viktor:general:7",
+          "text": "Chain your abilities for a kill. Gravity Field first to hold them, then Hextech Ray and Siphon Power while they are stuck.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 33, "end": 46 },
+            { "kind": "ability", "key": "Viktor-E", "start": 72, "end": 83 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 88, "end": 100 }
+          ],
+          "pWrong": 0.54
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "20a12bbe3824e507d28f2cf9196a707be5836d755a5881d6cb89d244689c3634",
+      "tips": [
+        {
+          "id": "middle:Viktor:Ahri:0",
+          "text": "Keep minions between you and Ahri so Charm hits them first and stops there.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Ahri-E", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Viktor:Ahri:1",
+          "text": "Put Gravity Field where Ahri will dash or retreat; she is slowed there and can be stunned if she stays.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Viktor:Ahri:2",
+          "text": "Use Hextech Ray to poke Ahri while she walks up to farm; she has to give up wave position to dodge it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ahri", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Viktor:Ahri:3",
+          "text": "Trade with Siphon Power and follow with an attack; the shield makes Ahri's Orb of Deception poke weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Ahri", "start": 68, "end": 72 },
+            { "kind": "ability", "key": "Ahri-Q", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "middle:Viktor:Ahri:4",
+          "text": "Play carefully when Spirit Rush is ready; she can reposition and burst you. Push when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-R", "start": 20, "end": 31 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Viktor:Ahri:5",
+          "text": "Land Arcane Storm on Ahri after she commits; it follows her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ahri", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1685728f4fd4265801e23ac5ab269aa4762f44e535b4aff777540e6196bf5f9c",
+      "tips": [
+        {
+          "id": "middle:Viktor:Akali:0",
+          "text": "Place Gravity Field on yourself or where Akali will land when she dives; it slows her and stuns her if she stays.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Akali", "start": 41, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Viktor:Akali:1",
+          "text": "Use Siphon Power when she dashes in; the shield helps you survive her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Viktor:Akali:2",
+          "text": "Aim Hextech Ray at her smoke when she hides in Twilight Shroud; area spells reveal her briefly.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Akali-W", "start": 47, "end": 62 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Viktor:Akali:3",
+          "text": "Poke her when her energy is low, since Five Point Strike costs a lot and she cannot trade freely.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-Q", "start": 39, "end": 56 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Viktor:Akali:4",
+          "text": "Play safe at level 6 when your health is low; Perfect Execution can finish you.",
+          "refs": [
+            { "kind": "ability", "key": "Akali-R", "start": 46, "end": 63 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "dea5bd4f3d84f526b8bea2ea7a8d31eac469259a2720dc62997fda3096405020",
+      "tips": [
+        {
+          "id": "middle:Viktor:Akshan:0",
+          "text": "Drop Gravity Field on Akshan when he swings in or walks up to trade; staying inside leaves him slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Akshan", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 },
+            { "kind": "keyword", "key": "stunned", "start": 111, "end": 118 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "middle:Viktor:Akshan:1",
+          "text": "Use Siphon Power on Akshan before you trade. The shield soaks his poke, and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Akshan", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Viktor:Akshan:2",
+          "text": "Aim Hextech Ray along the path he walks, since the ray reaches far and keeps going through targets. Poke him when he steps up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Viktor:Akshan:3",
+          "text": "Arcane Storm follows Akshan once it hits him, so use it to chase him down. It also gives away where he is if he hides.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Akshan", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Akshan",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "62a5fd0ceaef3f77cfd62a95693271a1835e4092c8fc813e47827d7ccd061179",
+      "tips": [
+        {
+          "id": "middle:Viktor:Anivia:0",
+          "text": "Keep your distance from Flash Frost. Step out of its line, since a hit slows you and the ice stuns at the end of its range.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Viktor:Anivia:1",
+          "text": "Use Siphon Power on Anivia in trades. The shield softens her Frostbite.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Anivia", "start": 20, "end": 26 },
+            { "kind": "ability", "key": "Anivia-E", "start": 61, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Viktor:Anivia:2",
+          "text": "Drop Gravity Field on Anivia when she is pushed against your minions. If she stays inside, she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Viktor:Anivia:3",
+          "text": "Hextech Ray the lane to push her back. Her egg is hard to kill early, so save your all-in for when she has used Rebirth.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 0, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 112,
+              "end": 119
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Viktor:Anivia:4",
+          "text": "Arcane Storm follows Anivia once it hits her, so cast it on her when she walks away from a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Anivia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.27
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5adb1d82e4eed789c81e1d3b1238c80efa2a29355ec8fd7a8b50d137437e9b94",
+      "tips": [
+        {
+          "id": "middle:Viktor:Annie:0",
+          "text": "Poke Annie with Hextech Ray and Siphon Power when she steps up to last-hit; the shield from Siphon Power softens her return trade.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Annie", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Viktor-E", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 32, "end": 44 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 92, "end": 104 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Viktor:Annie:1",
+          "text": "Check Annie's Pyromania counter. When it is full, stay out of her range; her stun comes from Disintegrate or Incinerate.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 14,
+              "end": 23
+            },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 },
+            { "kind": "ability", "key": "Annie-Q", "start": 93, "end": 105 },
+            { "kind": "ability", "key": "Annie-W", "start": 109, "end": 119 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Viktor:Annie:2",
+          "text": "Put Gravity Field where Annie must stand to fight you; she is stunned if she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Annie", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Viktor:Annie:3",
+          "text": "After Annie summons Tibbers, back away from him and use Arcane Storm on her group to make her pull the bear back.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Viktor-R", "start": 56, "end": 68 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "middle:Viktor:Annie:4",
+          "text": "Do not let Annie shield herself and trade into you; her Molten Shield hurts you when you hit it.",
+          "refs": [
+            { "kind": "champion", "key": "Annie", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Annie-E", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Annie",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cfc933e22954e3163414d809fffb73cab8667a717cf37445cb157413d5891d14",
+      "tips": [
+        {
+          "id": "middle:Viktor:AurelionSol:0",
+          "text": "Put Gravity Field on Aurelion Sol when he channels Breath of Light; he has to stand still to keep the beam on you and gets stunned if he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            {
+              "kind": "champion",
+              "key": "AurelionSol",
+              "start": 21,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "AurelionSol-Q",
+              "start": 51,
+              "end": 66
+            },
+            { "kind": "keyword", "key": "stunned", "start": 123, "end": 130 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Viktor:AurelionSol:1",
+          "text": "Walk out of Singularity's edge early; it drags you toward the center, and low health there means instant death.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-E",
+              "start": 12,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Viktor:AurelionSol:2",
+          "text": "Stay out of the black hole's reach and poke with Hextech Ray from the side, where you can step away freely.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 39, "end": 43 },
+            { "kind": "ability", "key": "Viktor-E", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Viktor:AurelionSol:3",
+          "text": "Use Siphon Power on him before a trade; the shield soaks his beam and the empowered attack adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Viktor:AurelionSol:4",
+          "text": "Move away from where Falling Star will land as soon as you see it; it lands after a delay and stuns whoever is still there.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:AurelionSol:5",
+          "text": "Watch for his Astral Flight dash to close the gap; stun or slow him with Gravity Field when he lands near you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "AurelionSol-W",
+              "start": 14,
+              "end": 27
+            },
+            { "kind": "ability", "key": "Viktor-W", "start": 73, "end": 86 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "AurelionSol",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "728242fe3d7c4d18767b037182aae3cede0c72ad80d7145f4c41a1f2887772a3",
+      "tips": [
+        {
+          "id": "middle:Viktor:Aurora:0",
+          "text": "Put Gravity Field where Aurora lands after Across the Veil; she is invisible only briefly, and the field slows her and stuns her if she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aurora", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aurora-W", "start": 43, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 124 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "middle:Viktor:Aurora:1",
+          "text": "Use Siphon Power on Aurora when she steps up to trade; the shield softens her return hit and you get a stronger next attack.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Aurora", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Viktor:Aurora:2",
+          "text": "Fire Hextech Ray along the path she hops to when dodging; it is a line, so aim where she will be.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Viktor:Aurora:3",
+          "text": "Stay out of the circle from Between Worlds; enemies crossing its border are slowed, and Aurora can hop across it to chase you.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-R", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "champion", "key": "Aurora", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Viktor:Aurora:4",
+          "text": "Respect Aurora's The Weirding when you stand close; it slows you hard, so keep Gravity Field ready to answer if she follows up.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Aurora-E", "start": 17, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 },
+            { "kind": "ability", "key": "Viktor-W", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "40a295ad110ad4d1103cb5f6ad4079b635c2ab21de196d6ec2cb686ea40ecb35",
+      "tips": [
+        {
+          "id": "middle:Viktor:Azir:0",
+          "text": "Put Gravity Field where Azir's Sand Soldiers stand when he fights you; he is slowed inside it and stunned if he stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Azir", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Viktor:Azir:1",
+          "text": "Poke Azir with Hextech Ray from long range while he has no soldiers out, since he needs a soldier to dash or to attack with.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Azir", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Viktor-E", "start": 15, "end": 26 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Viktor:Azir:2",
+          "text": "Use Siphon Power when you trade; its shield soaks some of his soldier damage and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Azir:3",
+          "text": "Stay out of the line of Emperor's Divide at level 6. Save Gravity Field for after he commits so you can lock him down.",
+          "refs": [
+            { "kind": "ability", "key": "Azir-R", "start": 24, "end": 40 },
+            { "kind": "ability", "key": "Viktor-W", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "middle:Viktor:Azir:4",
+          "text": "Place Arcane Storm on Azir when he is trapped or dashing in; it follows him and keeps hitting.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Azir", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Azir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "936f9d984016a900eaf734e72a1501b32310cb008d0fc073b3c1737bf10329d4",
+      "tips": [
+        {
+          "id": "middle:Viktor:Brand:0",
+          "text": "Dodge Sear. Without a first hit from Brand, he cannot stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 6, "end": 10 },
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "middle:Viktor:Brand:1",
+          "text": "Place Gravity Field where Brand will step to dodge, then threaten him with Hextech Ray while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Brand", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Viktor-E", "start": 75, "end": 86 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Viktor:Brand:2",
+          "text": "Stay away from your own minions when Brand is looking to cast Conflagration, because it spreads to them and to you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Brand-E", "start": 62, "end": 75 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Viktor:Brand:3",
+          "text": "Move away from allies when Pyroclasm is cast. It starts slowly and bounces between enemies.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-R", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Brand:4",
+          "text": "Use Siphon Power to trade, and use its shield to absorb Brand's burst.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Brand", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Viktor:Brand:5",
+          "text": "Pillar of Flame has a delay, so keep moving after Brand casts it and you can step out.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-W", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Brand", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "77e8052cca5ebfe8ae1c55648f09d2ebce625bb8b7a2bca2ac680a084a0344cb",
+      "tips": [
+        {
+          "id": "middle:Viktor:Briar:0",
+          "text": "Keep Gravity Field ready for when Briar leaps in; she gets slowed and, if she stays inside, stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Viktor:Briar:1",
+          "text": "Stay far from Briar and poke with Hextech Ray; Viktor is much stronger when she cannot reach him.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 14, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Viktor-E", "start": 34, "end": 45 },
+            { "kind": "champion", "key": "Viktor", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Viktor:Briar:2",
+          "text": "Use Siphon Power when Briar jumps on you; its shield soaks the first hits.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Briar:3",
+          "text": "Put Arcane Storm on Briar when she is low or has used her jump; its damage keeps following her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Briar", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "d1724cbaf89173bfbff6aee776660bb86f3f836b45a5802ec0e8198cc424ecc9",
+      "tips": [
+        {
+          "id": "middle:Viktor:Cassiopeia:0",
+          "text": "Place Gravity Field where Cassiopeia stands to fight. She is slowed, and she is stunned if she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 26, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 80, "end": 87 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "middle:Viktor:Cassiopeia:1",
+          "text": "Use Hextech Ray to poke Cassiopeia when she lines up Noxious Blast. It punishes her for standing still.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 24, "end": 34 },
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 53, "end": 66 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "middle:Viktor:Cassiopeia:2",
+          "text": "Walk out of Noxious Blast's delay; it lands after a brief pause, so move before it explodes.",
+          "refs": [
+            { "kind": "ability", "key": "Cassiopeia-Q", "start": 12, "end": 25 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Cassiopeia:3",
+          "text": "Turn away from Cassiopeia as she casts Petrifying Gaze so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 15, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 39,
+              "end": 54
+            },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Viktor:Cassiopeia:4",
+          "text": "Use Siphon Power for its shield when you trade with Cassiopeia. Her poison damage hurts less.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.9
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "980f3830bbd9f931aa0d917ce1226e9d1f1296d18f62a89c661c6e2adfade671",
+      "tips": [
+        {
+          "id": "middle:Viktor:Diana:0",
+          "text": "Put Gravity Field under Diana when she dives onto you; if she stays inside she gets stunned, and it slows her either way.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Diana", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 91 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Viktor:Diana:1",
+          "text": "Use Siphon Power on Diana when she comes in; the shield soaks her burst and the empowered attack hurts if she stays close.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Viktor:Diana:2",
+          "text": "Poke with Hextech Ray from range while Diana has no Moonlight, and keep your distance so she cannot jump on you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 39, "end": 44 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Viktor:Diana:3",
+          "text": "Hold Gravity Field until Diana has used Lunar Rush; she has few ways to escape afterwards.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Diana", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Diana-E", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Viktor:Diana:4",
+          "text": "Cast Arcane Storm on Diana when she commits. It follows her once it hits, so she cannot easily run from it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Diana", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "91a9cabe2d6aaed1da9cbe0c115e64fb3fb3103590493ea6879e520a4802e880",
+      "tips": [
+        {
+          "id": "middle:Viktor:Ekko:0",
+          "text": "Put Gravity Field where Ekko wants to fight or stand; staying inside it long enough gets him stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 93, "end": 100 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Ekko:1",
+          "text": "Use Siphon Power on Ekko when he walks up to trade; the shield absorbs some of his damage and your empowered attack hits back.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ekko", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Viktor:Ekko:2",
+          "text": "Poke with Hextech Ray from a distance so Ekko must come to you, and keep away from his Timewinder line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Ekko", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 87, "end": 97 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Viktor:Ekko:3",
+          "text": "Save Arcane Storm for after Ekko has used Chronobreak, or he can rewind out of the damage.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Ekko-R", "start": 42, "end": 53 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1ae3732232374292c26a081fd9cf0cbf09cceb9714ef41a929ecead5a445b64e",
+      "tips": [
+        {
+          "id": "middle:Viktor:Ezreal:0",
+          "text": "Aim Hextech Ray through the minions at Ezreal. It passes through them, so it hits him in his poke range.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Viktor:Ezreal:1",
+          "text": "Place Gravity Field where Ezreal will walk or land. He is stunned if he stays in it, so cast it on his Arcane Shift landing spot.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Ezreal", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 103, "end": 115 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Viktor:Ezreal:2",
+          "text": "Use Siphon Power on Ezreal to get a shield before you trade. It absorbs his poke.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Viktor:Ezreal:3",
+          "text": "Stand behind minions so Mystic Shot hits them first. It stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Ezreal:4",
+          "text": "Cast Arcane Storm on Ezreal once he has used Arcane Shift. The storm keeps following him and he has no easy escape.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ezreal", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Viktor:Ezreal:5",
+          "text": "Ezreal is fragile, so trade when his abilities are on cooldown and close in on him.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e3090a54cac323599aab0708dd24863b3322befd3a95d8dd0072097ad09858a9",
+      "tips": [
+        {
+          "id": "middle:Viktor:Fizz:0",
+          "text": "Save Gravity Field for when Fizz commits. Place it where he lands and he is slowed, then stunned if he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Fizz", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Viktor:Fizz:1",
+          "text": "Don't spend Hextech Ray when Fizz can answer with Playful. Wait until he has used it, then fire.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "middle:Viktor:Fizz:2",
+          "text": "Use Siphon Power as Fizz dashes in; the shield cuts his burst. It also gives you a strong follow-up attack.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Fizz", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Viktor:Fizz:3",
+          "text": "Stay out of a long line from Fizz, since Chum the Waters hits harder the farther it flies. Keep minions in front of you so he can't get a clean throw.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Fizz-R", "start": 41, "end": 56 }
+          ],
+          "pWrong": 0.82
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6066f72626a4214ff4c94d647cbdbe919f3336b3cf2ef269178f4b06b7d4877b",
+      "tips": [
+        {
+          "id": "middle:Viktor:Galio:0",
+          "text": "Poke Galio with Hextech Ray from range; he is slower while charging Shield of Durand.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Galio", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Viktor-E", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Galio-W", "start": 68, "end": 84 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Viktor:Galio:1",
+          "text": "Stay out of Galio's reach when Shield of Durand is charging; a full charge taunts you for longer.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Galio-W", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Viktor:Galio:2",
+          "text": "Don't stand in a straight line from Galio; Justice Punch knocks you up and sets up his follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Galio-E", "start": 43, "end": 56 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Viktor:Galio:3",
+          "text": "Place Gravity Field where Galio must walk through to reach you, and keep him inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Galio", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Viktor:Galio:4",
+          "text": "Hit Galio with Hero's Entrance interrupts in mind: stun or disrupt him before he jumps into the air.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Galio-R", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "middle:Viktor:Galio:5",
+          "text": "Galio cannot cross walls with Justice Punch, so stand behind terrain to stay safe from his dash.",
+          "refs": [
+            { "kind": "champion", "key": "Galio", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Galio-E", "start": 30, "end": 43 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Galio",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "770a4f3ff92960b9931fe6bb04cbdd02ae7c93ed5bca2fc063a639e9a39d9e87",
+      "tips": [
+        {
+          "id": "middle:Viktor:Hwei:0",
+          "text": "Use Gravity Field on Hwei when he stands still to cast; the enemy is slowed, then stunned if they stay inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Hwei", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 75 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Viktor:Hwei:1",
+          "text": "Rush Hwei right after he casts a Torment spell; he is open to being run down then.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 5, "end": 9 }],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Viktor:Hwei:2",
+          "text": "Trade with Siphon Power; it hits from long range and the shield softens the damage you take back.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 11, "end": 23 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Viktor:Hwei:3",
+          "text": "Aim Hextech Ray where Hwei will step to dodge. His spells are slow to cast, so he cannot easily answer it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Hwei", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "286f873e990e13200565e32117e637f8f5a6304cee02b1f0252f0b0cc791abdc",
+      "tips": [
+        {
+          "id": "middle:Viktor:Irelia:0",
+          "text": "Keep Gravity Field for when Irelia dashes in. If she stays in it she is slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Irelia", "start": 28, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Viktor:Irelia:1",
+          "text": "Don't fire your big spells into Defiant Dance. She takes much less damage while charging, so wait for the swipe to end.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-W", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Viktor:Irelia:2",
+          "text": "Poke her with Hextech Ray while she waits for Bladesurge to come back. Stay away from minions she can dash through.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 14, "end": 25 },
+            { "kind": "ability", "key": "Irelia-Q", "start": 46, "end": 56 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Viktor:Irelia:3",
+          "text": "Her Flawless Duet stun is the thing to dodge. Step out of the line between the blades as they close.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Viktor:Irelia:4",
+          "text": "Use Siphon Power as she dashes onto you. Its shield absorbs her burst and the empowered attack punishes her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "90751edfc9bdfce09f6ac53e6171930eba8d00d7239f92370d4e880595820403",
+      "tips": [
+        {
+          "id": "middle:Viktor:Kassadin:0",
+          "text": "Keep Kassadin away with Hextech Ray and Siphon Power early; he is weak before level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Viktor-E", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "middle:Viktor:Kassadin:1",
+          "text": "Place Gravity Field where Kassadin will land after he uses Riftwalk; the slow and stun punish his dive.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kassadin", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 59, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Viktor:Kassadin:2",
+          "text": "Do not start Arcane Storm while Kassadin has Null Sphere ready; it can interrupt your cast.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 13, "end": 25 },
+            { "kind": "champion", "key": "Kassadin", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Kassadin-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Viktor:Kassadin:3",
+          "text": "Kassadin takes reduced magic damage, so use your Siphon Power empowered attack to add damage when you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 49, "end": 61 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Viktor:Kassadin:4",
+          "text": "Hold your slows for when Kassadin jumps in; Force Pulse and Riftwalk are his only ways to reach you quickly, so punish him right after.",
+          "refs": [
+            { "kind": "champion", "key": "Kassadin", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Kassadin-E", "start": 44, "end": 55 },
+            { "kind": "ability", "key": "Kassadin-R", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Kassadin",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "818fa7d66e05c4a114e077c421887659793bc1660a1d34a4804e20ec722406ad",
+      "tips": [
+        {
+          "id": "middle:Viktor:Katarina:0",
+          "text": "Put Gravity Field where Katarina wants to land, or on a Dagger she is about to pick up. Staying inside it gets her stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Katarina", "start": 24, "end": 32 },
+            { "kind": "item", "key": "1042", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 115, "end": 122 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "middle:Viktor:Katarina:1",
+          "text": "Use Hextech Ray to poke her when she walks up to last-hit; it is a long line she must sidestep.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "middle:Viktor:Katarina:2",
+          "text": "Keep Siphon Power ready for when she dives in; its shield soaks her burst.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Katarina:3",
+          "text": "Cast Arcane Storm on her when she uses Death Lotus; the first hit disrupts her channel.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Katarina-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Viktor:Katarina:4",
+          "text": "Do not trade when she has Daggers on the ground. Picking them up resets Shunpo quickly, so she can jump onto you again.",
+          "refs": [
+            { "kind": "ability", "key": "Katarina-E", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.75
+        }
+      ],
+      "opponent": "Katarina",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5b8e2bee5807baff1ded2fd7c74a584540396cc392b52f3e35f6840c1c7f0531",
+      "tips": [
+        {
+          "id": "middle:Viktor:Leblanc:0",
+          "text": "Stand where LeBlanc cannot easily reach you, and aim Hextech Ray at the spot she dashes into.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Viktor-E", "start": 53, "end": 64 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Viktor:Leblanc:1",
+          "text": "Put Gravity Field where LeBlanc will land, or on yourself when she comes in. It slows her and stuns her if she stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Leblanc", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Viktor:Leblanc:2",
+          "text": "Use Siphon Power when she starts a trade. The shield soaks part of her burst, and your empowered attack hits back.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Leblanc:3",
+          "text": "Do not chase LeBlanc after she uses Distortion. She can return to where she started.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Leblanc-W", "start": 36, "end": 46 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Viktor:Leblanc:4",
+          "text": "Dodge Ethereal Chains by stepping out of line before it connects, or it will root you.",
+          "refs": [
+            { "kind": "ability", "key": "Leblanc-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Viktor:Leblanc:5",
+          "text": "Be careful when LeBlanc has Mimic ready at level 6. Her combo hits much harder, so stay away from her at that point.",
+          "refs": [
+            { "kind": "champion", "key": "Leblanc", "start": 16, "end": 23 },
+            { "kind": "ability", "key": "Leblanc-R", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Leblanc",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "fc9735f5167da9bfa20e5c0fd9f85f35893fd5b151d5724b6a8532a6578c3d71",
+      "tips": [
+        {
+          "id": "middle:Viktor:Lissandra:0",
+          "text": "Stay out of Ring of Frost range and walk up only when it is on cooldown; if it roots you, Viktor has little way out.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "rooted", "start": 79, "end": 84 },
+            { "kind": "champion", "key": "Viktor", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "middle:Viktor:Lissandra:1",
+          "text": "Poke with Hextech Ray from long range, since Lissandra has to come close to hit you with most of her kit.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Lissandra", "start": 45, "end": 54 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Viktor:Lissandra:2",
+          "text": "Hold Gravity Field for when Lissandra uses Glacial Path to dive on you. Staying inside it long enough stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Lissandra", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "Lissandra-E", "start": 43, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Viktor:Lissandra:3",
+          "text": "Trade with Siphon Power and a basic attack. Its shield softens the return damage from Ice Shard.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Lissandra-Q", "start": 86, "end": 95 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Lissandra:4",
+          "text": "Dodge Ice Shard by standing behind your minions; it only slows the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Lissandra-Q", "start": 6, "end": 15 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Viktor:Lissandra:5",
+          "text": "Save your Arcane Storm for when she is committed. Her Frozen Tomb on you ends your trade, so keep your distance from her when it is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 10, "end": 22 },
+            { "kind": "ability", "key": "Lissandra-R", "start": 54, "end": 65 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Lissandra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7c2057fa485c1fd87f1a857e5517cb8a49d1a21f8964a5c012d4a236411046f9",
+      "tips": [
+        {
+          "id": "middle:Viktor:Lux:0",
+          "text": "Keep Gravity Field on Lux's landing spot after she steps up; she has to leave or get stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Viktor:Lux:1",
+          "text": "Stay out of Light Binding's line, and keep minions between you and Lux so it hits them first.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-Q", "start": 12, "end": 25 },
+            { "kind": "champion", "key": "Lux", "start": 67, "end": 70 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Viktor:Lux:2",
+          "text": "Siphon Power's shield helps you win trades; use it when Lux walks up to hit minions.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Lux", "start": 56, "end": 59 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Viktor:Lux:3",
+          "text": "Hextech Ray outranges Lux's approach and pokes her at the start of lane, so lead with it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Lux", "start": 22, "end": 25 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "middle:Viktor:Lux:4",
+          "text": "Move away from Lucent Singularity before it blows up; it slows you and sets up Light Binding.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 15, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "ability", "key": "Lux-Q", "start": 79, "end": 92 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Viktor:Lux:5",
+          "text": "Sidestep when Lux's red Final Spark warning shows; it can hit you from very far away.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "Lux-R", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cff7432bc44c2ff6bdf1398da445783ed8ef96cd06ee3917de7d059beade6dbc",
+      "tips": [
+        {
+          "id": "middle:Viktor:Malzahar:0",
+          "text": "Keep Gravity Field ready for when Malzahar walks forward, then step away from his Malefic Visions.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Malzahar", "start": 34, "end": 42 },
+            { "kind": "ability", "key": "Malzahar-E", "start": 82, "end": 97 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Viktor:Malzahar:1",
+          "text": "Step out of the portals of Call of the Void as they open. Getting silenced there stops your abilities.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 27, "end": 43 },
+            { "kind": "keyword", "key": "silenced", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Viktor:Malzahar:2",
+          "text": "Hit Malzahar with Hextech Ray from range, since Void Shift only blocks him from being stunned and not from a wave push. Wait until he has taken damage.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Viktor-E", "start": 18, "end": 29 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 48,
+              "end": 58
+            }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "middle:Viktor:Malzahar:3",
+          "text": "Stay clear of minions carrying Malefic Visions, because it spreads to you if they die.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Viktor:Malzahar:4",
+          "text": "Use Siphon Power on Malzahar to shield yourself against his damage before he starts his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malzahar", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0ab24ab47034ef18b7c63d65fce8a302c059d08b251c949430f02a37175352fb",
+      "tips": [
+        {
+          "id": "middle:Viktor:Mel:0",
+          "text": "Hold Hextech Ray and Siphon Power until Mel has used Rebuttal; it destroys projectiles that touch it, so baiting it out makes your next poke land.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 21, "end": 33 },
+            { "kind": "champion", "key": "Mel", "start": 40, "end": 43 },
+            { "kind": "ability", "key": "Mel-W", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Viktor:Mel:1",
+          "text": "Stay out of Solar Snare range, since being rooted far from her lasts longest. Sidestep the orb, or you eat her follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Mel-E", "start": 12, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 43, "end": 49 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Viktor:Mel:2",
+          "text": "Drop Gravity Field on her when she steps up to trade; she is slowed, and staying inside stuns her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "middle:Viktor:Mel:3",
+          "text": "Back off when you are low on health. Her hits build up Overwhelm, and once it adds up to enough, one more hit kills you.",
+          "refs": [],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Viktor:Mel:4",
+          "text": "Use Arcane Storm once she is hurt; it follows her around and keeps damaging her while she runs.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Mel",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "a423af91be08cae5180b12bdcc50a92ff9f0b694235f60c495d215838f4da53e",
+      "tips": [
+        {
+          "id": "middle:Viktor:Naafiri:0",
+          "text": "Put Gravity Field under Naafiri when she commits; staying inside it gets her stunned, and she has few ways to cut the fight short.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Naafiri", "start": 24, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Viktor:Naafiri:1",
+          "text": "Keep Siphon Power for when she jumps on you. Its shield soaks her burst, and the empowered attack hits back.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "middle:Viktor:Naafiri:2",
+          "text": "Hextech Ray her from long range while she is far away. She has to close the gap before she can hurt you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 0, "end": 11 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Viktor:Naafiri:3",
+          "text": "Be careful when her Hounds' Pursuit is ready. She can dash to you from far away, so stay near your team after level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-R", "start": 20, "end": 35 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "middle:Viktor:Naafiri:4",
+          "text": "Fight her when she has used Eviscerate. Her escape is on cooldown, so she cannot easily leave your Gravity Field.",
+          "refs": [
+            { "kind": "ability", "key": "Naafiri-E", "start": 28, "end": 38 },
+            { "kind": "ability", "key": "Viktor-W", "start": 99, "end": 112 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "middle:Viktor:Naafiri:5",
+          "text": "Her packmates add damage, so avoid trading in melee range with her.",
+          "refs": [],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "00dd2f5704ee9873121ee07b2af68f26de76d9f64c83752a37f1ab048a37581d",
+      "tips": [
+        {
+          "id": "middle:Viktor:Orianna:0",
+          "text": "Walk up and use Siphon Power on Orianna when the Ball is far from her. She cannot hit you back well without it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 16, "end": 28 },
+            { "kind": "champion", "key": "Orianna", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Viktor:Orianna:1",
+          "text": "Use Gravity Field on Orianna when she tries to fight you. She is slowed and then stunned if she stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Orianna", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Viktor:Orianna:2",
+          "text": "Stay spread out from the Ball when you are near it. Command: Shockwave pulls you in and stuns you, and it is dangerous at level 6.",
+          "refs": [
+            { "kind": "ability", "key": "Orianna-R", "start": 52, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Viktor:Orianna:3",
+          "text": "Use Hextech Ray to push Orianna away from her Ball. Her damage depends on where the Ball is.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Orianna", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "cc79ce56e256ff4d05838169bebfc4ee9e3db743ba2f5f0c4d688a8ab4008c10",
+      "tips": [
+        {
+          "id": "middle:Viktor:Qiyana:0",
+          "text": "Place Gravity Field where Qiyana will land after she dashes in; if she stays inside it she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Qiyana", "start": 26, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Viktor:Qiyana:1",
+          "text": "Use Siphon Power on Qiyana when she trades; the shield soaks her burst and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 20, "end": 26 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Viktor:Qiyana:2",
+          "text": "Keep Hextech Ray for when she walks up to a river or brush; it is a long line, so you can poke her before she gets close.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Viktor:Qiyana:3",
+          "text": "Stay away from walls and brush edges when her Supreme Display of Talent is ready; it stuns around terrain borders.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 46, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Viktor:Qiyana:4",
+          "text": "Hold Arcane Storm until she commits her dash; the storm follows her and is hard to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1a03f7d2db974ccce798fa131951ff3deba823bba7e9770f8589c124bc5b02e3",
+      "tips": [
+        {
+          "id": "middle:Viktor:Ryze:0",
+          "text": "Stay out of Ryze's Spell Flux range. Once he marks you, his other spells hit harder and Rune Prison roots you.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ryze-E", "start": 19, "end": 29 },
+            { "kind": "ability", "key": "Ryze-W", "start": 88, "end": 99 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "middle:Viktor:Ryze:1",
+          "text": "Drop Gravity Field on Ryze when he is rooting you or walking in. It slows him and stuns him if he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Viktor:Ryze:2",
+          "text": "Use Siphon Power on Ryze before he trades. The shield soaks some of his spells.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Viktor:Ryze:3",
+          "text": "Aim Hextech Ray where Ryze will stand, such as when he walks up to cast. Hold it until he commits, because it is easy to dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Ryze", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Viktor:Ryze:4",
+          "text": "Use Arcane Storm on Ryze when he is low on mana or health. He has no escape except walking, and the storm follows him.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "middle:Viktor:Ryze:5",
+          "text": "If Ryze starts Realm Warp, stun him with Gravity Field to cancel the portal.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 3, "end": 7 },
+            { "kind": "ability", "key": "Ryze-R", "start": 15, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "Viktor-W", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "0f5084c408699ab0a005ae16d1fb6e6f26f13615ee845b713e8b4a628104df14",
+      "tips": [
+        {
+          "id": "middle:Viktor:Sylas:0",
+          "text": "Aim Hextech Ray down the line Sylas will walk to dash in; it is a long beam, so he takes damage while closing in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Viktor:Sylas:1",
+          "text": "Put Gravity Field where Sylas will land after Abscond or Abduct. If he stays inside, he is slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 107, "end": 114 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Viktor:Sylas:2",
+          "text": "Use Siphon Power on Sylas before he trades. The shield soaks his burst and the next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "middle:Viktor:Sylas:3",
+          "text": "Stay out of his range and don't let him close the gap freely. Sylas wins short, close fights where Kingslayer heals him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 62, "end": 67 },
+            { "kind": "ability", "key": "Sylas-W", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "middle:Viktor:Sylas:4",
+          "text": "Save Arcane Storm for when Sylas is committed. The storm follows him after the first hit, which makes escaping hard.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Sylas", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "13c20605bdf3524b3d041cc41cc353a644412e07bb211bd8625554f6acb0a184",
+      "tips": [
+        {
+          "id": "middle:Viktor:Syndra:0",
+          "text": "Stay out of Scatter the Weak's line when a Dark Sphere is near you; a pushed sphere stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Syndra-E", "start": 12, "end": 28 },
+            { "kind": "ability", "key": "Syndra-Q", "start": 43, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Syndra:1",
+          "text": "Trade right after Syndra uses Scatter the Weak; its long cooldown leaves her with little to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Syndra", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Syndra-E", "start": 30, "end": 46 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "middle:Viktor:Syndra:2",
+          "text": "Use Siphon Power to shield yourself while trading, then hit with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "middle:Viktor:Syndra:3",
+          "text": "Aim Hextech Ray where Syndra stands to farm; it also pokes her.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Syndra", "start": 22, "end": 28 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Viktor:Syndra:4",
+          "text": "Put Gravity Field on Syndra when she commits to a fight; she is slowed and stunned if she stays in it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Syndra", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Viktor:Syndra:5",
+          "text": "Cast Arcane Storm on Syndra when she is low; it follows her once it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Syndra", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Syndra",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "42954b1e89bc406ebdb4c2a19ef22f4c5be04c0c3f26b3a072ade3e4391ded7e",
+      "tips": [
+        {
+          "id": "middle:Viktor:Taliyah:0",
+          "text": "Stay out of Taliyah's Seismic Shove range when Unraveled Earth is on the ground; being thrown into the stones gets you stunned and hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Taliyah", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Taliyah-W", "start": 22, "end": 35 },
+            { "kind": "ability", "key": "Taliyah-E", "start": 47, "end": 62 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Viktor:Taliyah:1",
+          "text": "Her Threaded Volley flies in a straight line, so step sideways when she aims at you instead of walking back.",
+          "refs": [
+            { "kind": "ability", "key": "Taliyah-Q", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Viktor:Taliyah:2",
+          "text": "Use Siphon Power to trade with Taliyah; the shield makes up for the damage her rocks deal back.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Taliyah", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Viktor:Taliyah:3",
+          "text": "Aim Hextech Ray along the path she walks to dodge, because it keeps travelling through anyone it hits and has long reach.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "middle:Viktor:Taliyah:4",
+          "text": "Put Gravity Field on her when she walks into it or is cornered; if she stays inside she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Viktor:Taliyah:5",
+          "text": "At level 6, Arcane Storm lets you chase her; it follows her even through terrain, and her wall does not stop it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        }
+      ],
+      "opponent": "Taliyah",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "92d62e92653d899b3c75d4b8f79d849ef734de669ae24f50d54da00cfc884440",
+      "tips": [
+        {
+          "id": "middle:Viktor:Talon:0",
+          "text": "Place Gravity Field where Talon lands or will run. Stay out of melee range, because the stun only works if he stays inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "middle:Viktor:Talon:1",
+          "text": "Use Siphon Power on Talon before he jumps in. Its shield absorbs part of his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Viktor:Talon:2",
+          "text": "Poke with Hextech Ray when Talon walks up to last-hit. Stay at range so his Noxian Diplomacy is not a surprise.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Talon", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Talon-Q", "start": 76, "end": 92 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Viktor:Talon:3",
+          "text": "Talon is far weaker once Shadow Assault is on cooldown. Trade more freely then, and fear him when it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Talon:4",
+          "text": "Hold Arcane Storm until Talon is committed. It follows him after he turns invisible, and the damage keeps ticking.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Viktor:Talon:5",
+          "text": "Watch the lane for Talon disappearing. He can vault walls with Assassin's Path to roam, so ping your team.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 19, "end": 24 },
+            { "kind": "ability", "key": "Talon-E", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7fb647c8d22a9bcd2583b19c6b925b9fcacbd52fce11df44c1472fc25e460024",
+      "tips": [
+        {
+          "id": "middle:Viktor:TwistedFate:0",
+          "text": "Combine Gravity Field with Hextech Ray: the slow makes the ray much easier to land on Twisted Fate.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 8, "end": 21 },
+            { "kind": "ability", "key": "Viktor-E", "start": 27, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "TwistedFate", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Viktor:TwistedFate:1",
+          "text": "Keep away when Twisted Fate is shuffling cards; a Gold Card attack stuns you. Stay out of his attack range or wait for the card to be used.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 15,
+              "end": 27
+            },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "middle:Viktor:TwistedFate:2",
+          "text": "Use Siphon Power to trade from range; the shield absorbs part of his Wild Cards return poke.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 69,
+              "end": 79
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Viktor:TwistedFate:3",
+          "text": "Watch for Destiny at level 6; when he reveals the map, expect a gank or a teleport and retreat early.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 10,
+              "end": 17
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Viktor:TwistedFate:4",
+          "text": "Wild Cards fan out in a cone; stand off to the side of his aim rather than directly in line, and dodge it early when your health is low.",
+          "refs": [
+            { "kind": "ability", "key": "TwistedFate-Q", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1d89c05e3088b4ec28b51bb5db2af0f18ffa1dac79c0ee1d63c3a64e681f5992",
+      "tips": [
+        {
+          "id": "middle:Viktor:Veigar:0",
+          "text": "Walk around the edge of Event Horizon, not through it. You only get stunned when you cross its edge.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 75 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Viktor:Veigar:1",
+          "text": "Veigar is fragile. Land Hextech Ray and Siphon Power on him when he steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Viktor-E", "start": 24, "end": 35 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 40, "end": 52 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Viktor:Veigar:2",
+          "text": "Watch the ground for Dark Matter and sidestep it once it appears. Dodging it costs Veigar a lot of mana.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 21, "end": 32 },
+            { "kind": "champion", "key": "Veigar", "start": 83, "end": 89 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Viktor:Veigar:3",
+          "text": "Put Gravity Field on Veigar when he is stuck in a trade. He is slowed and then stunned if he stays inside.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Veigar", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 69 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 86 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Viktor:Veigar:4",
+          "text": "Do not let Veigar hit you with Baleful Strike. Each champion he hits makes him permanently stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Veigar-Q", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "middle:Viktor:Veigar:5",
+          "text": "Keep your health up once you hit level 6. Primordial Burst deals far more damage to a low-health target.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-R", "start": 42, "end": 58 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "f1c143356db7b6c87eb8c3fcd9d3c7dd26cff116ec154adc4add604277342335",
+      "tips": [
+        {
+          "id": "middle:Viktor:Vex:0",
+          "text": "Keep Gravity Field on the spot Vex wants to stand in; she is slowed inside it, and if she stays she gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Vex", "start": 31, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Viktor:Vex:1",
+          "text": "Trade with Siphon Power when Vex steps up. The shield softens her return damage, and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 11, "end": 23 },
+            { "kind": "champion", "key": "Vex", "start": 29, "end": 32 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Viktor:Vex:2",
+          "text": "Stay out of Mistral Bolt's long range, and don't line up in a straight path from her.",
+          "refs": [
+            { "kind": "ability", "key": "Vex-Q", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "middle:Viktor:Vex:3",
+          "text": "Don't let Vex get close when her empowered ability is ready. Her fear can leave you open to her follow-up.",
+          "refs": [
+            { "kind": "champion", "key": "Vex", "start": 10, "end": 13 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Viktor:Vex:4",
+          "text": "Hold Arcane Storm for when Vex has used her Shadow Surge. The storm follows her wherever she goes.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vex", "start": 27, "end": 30 },
+            { "kind": "ability", "key": "Vex-R", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Viktor:Vex:5",
+          "text": "Use Hextech Ray to poke her while she walks up to last-hit.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Vex",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1fb85d139ab552cb0c45dee3cb22fbdaa89dddb8837ea358395ff054247d9723",
+      "tips": [
+        {
+          "id": "middle:Viktor:Vladimir:0",
+          "text": "Keep Vladimir at range with Hextech Ray and Siphon Power. He wins when he gets close and heals off his trades.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Viktor-E", "start": 28, "end": 39 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Viktor:Vladimir:1",
+          "text": "Place Gravity Field where Vladimir will walk to trade. Hold it back if he still has Sanguine Pool, since he can use the pool to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Vladimir", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 84, "end": 97 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "middle:Viktor:Vladimir:2",
+          "text": "Hit Vladimir with your abilities when he is low on Health, before Hemoplague can heal him. Hemoplague also makes him take extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 66, "end": 76 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "middle:Viktor:Vladimir:3",
+          "text": "Don't stand in the pool's area when Vladimir drops Sanguine Pool, because it slows you and damages you.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 36, "end": 44 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 51, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "4b14416fa253f886d8816c356ea607e33c7fb996050b19d2e4f5fad1264ba8b3",
+      "tips": [
+        {
+          "id": "middle:Viktor:Xerath:0",
+          "text": "Close the distance on Xerath. Without space to poke, he has to rely on landing Shocking Orb.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 22, "end": 28 },
+            { "kind": "ability", "key": "Xerath-E", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Viktor:Xerath:1",
+          "text": "Walk to the side of Shocking Orb's path. It flies in a straight line, so it is easy to dodge once you see him aim it.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-E", "start": 20, "end": 32 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "middle:Viktor:Xerath:2",
+          "text": "Hit Xerath with Siphon Power when he is charging Arcanopulse. The shield absorbs some of the return trade.",
+          "refs": [
+            { "kind": "champion", "key": "Xerath", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Viktor-Q", "start": 16, "end": 28 },
+            { "kind": "ability", "key": "Xerath-Q", "start": 49, "end": 60 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Viktor:Xerath:3",
+          "text": "Put Gravity Field on Xerath when he is close. If he stays inside it he gets stunned, and he has little to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Xerath", "start": 21, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "middle:Viktor:Xerath:4",
+          "text": "Move out of Rite of the Arcane's circles as soon as you see them. Each shot lands after a delay, so keep moving.",
+          "refs": [
+            { "kind": "ability", "key": "Xerath-R", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Xerath",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7f606194fcff0d6b1cc6519942c6dd1cd654c0be8c3f812f9bc9f638a2408ebc",
+      "tips": [
+        {
+          "id": "middle:Viktor:XinZhao:0",
+          "text": "Trade with Hextech Ray when Xin Zhao walks up to the wave, and keep your distance. He wants to stick to you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "XinZhao", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Viktor:XinZhao:1",
+          "text": "Place Gravity Field on top of Xin Zhao right after he charges in. If he stays inside, he gets stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 101 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Viktor:XinZhao:2",
+          "text": "Use Siphon Power for its shield when Xin Zhao's attacks are about to land. His third Three Talon Strike hit knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 85, "end": 103 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Viktor:XinZhao:3",
+          "text": "Spread your spells out, since Xin Zhao slows you with Wind Becomes Lightning. Stay away from his thrust line.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 30, "end": 38 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 54, "end": 76 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "middle:Viktor:XinZhao:4",
+          "text": "Drop Arcane Storm on Xin Zhao when he commits. It follows him and keeps hurting him if he chases you.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "XinZhao", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "7afe98e6dfe58c1c395b66602f6dcebe9bec3439f64a2b71f8223db098e6b920",
+      "tips": [
+        {
+          "id": "middle:Viktor:Yasuo:0",
+          "text": "Place Gravity Field where Yasuo will dash or stand; staying inside it gets him slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 102 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "middle:Viktor:Yasuo:1",
+          "text": "Don't count on Hextech Ray to hit through Wind Wall. Wait for the wall to drop, then fire.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 42, "end": 51 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Viktor:Yasuo:2",
+          "text": "Use Siphon Power on Yasuo when you trade; the shield softens his poke and the empowered attack adds damage.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Yasuo", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "poke", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Viktor:Yasuo:3",
+          "text": "Keep your distance from Yasuo, since his dash lets him close in fast. Stun him with Gravity Field when he commits.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 74 },
+            { "kind": "ability", "key": "Viktor-W", "start": 84, "end": 97 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Viktor:Yasuo:4",
+          "text": "Arcane Storm follows champions it has hit, so it punishes a Yasuo who is dashing around. Use it in a fight, not to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Yasuo", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "049ed7a62baa017b9bf6abcf39cd62b36fd8327f342a207f24f4328bdca228f1",
+      "tips": [
+        {
+          "id": "middle:Viktor:Yone:0",
+          "text": "Put Gravity Field on Yone when he dashes in; staying inside it gets him slowed and then stunned, so he can't just walk through.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 95 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "middle:Viktor:Yone:1",
+          "text": "Poke with Hextech Ray from long range while he has to walk up to you. Yone has no ranged attack, so you can punish him for stepping forward.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Viktor-E", "start": 10, "end": 21 },
+            { "kind": "champion", "key": "Yone", "start": 70, "end": 74 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "middle:Viktor:Yone:2",
+          "text": "Cast Siphon Power on him before he reaches you; the shield soaks his first trade, and your next attack hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Viktor:Yone:3",
+          "text": "Stay spread from your minions and wait for his Mortal Steel stacks to run out. Two hits make it dash and knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yone-Q", "start": 47, "end": 59 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Viktor:Yone:4",
+          "text": "Arcane Storm sticks to the champions it hits, so use it when he dashes in or after he commits with Fate Sealed. Re-aim it if he escapes.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Yone-R", "start": 99, "end": 110 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "800d096b95ecc1a131412b5c254795f5c7e6ca16dc0696d578b2756db9669b78",
+      "tips": [
+        {
+          "id": "middle:Viktor:Zed:0",
+          "text": "Keep Gravity Field under Zed when he dashes in; staying inside it leaves him slowed and then stunned, so he can't finish his combo.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 25, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 83 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "middle:Viktor:Zed:1",
+          "text": "Use Siphon Power as Zed starts a trade; the shield soaks his burst and Viktor's next attack hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zed", "start": 20, "end": 23 },
+            { "kind": "champion", "key": "Viktor", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Viktor:Zed:2",
+          "text": "Poke Zed with Hextech Ray from a distance when he is out of energy, and step back from his shurikens.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Viktor-E", "start": 14, "end": 25 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "middle:Viktor:Zed:3",
+          "text": "Once Zed uses Death Mark, run away from him and fight back with Arcane Storm so the storm keeps hitting him as he hits you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 5, "end": 8 },
+            { "kind": "ability", "key": "Zed-R", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Viktor-R", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Viktor:Zed:4",
+          "text": "Keep Gravity Field ready for after Zed uses Living Shadow, since he has less mobility while it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Zed-W", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "82cf698cd383dcf8bc9be5131eff6854ca6bd8fcb55b8d0d7de5cf339a7d37e8",
+      "tips": [
+        {
+          "id": "middle:Viktor:Zoe:0",
+          "text": "Stay out of Zoe's Sleepy Trouble Bubble range and watch her cooldown; once it is spent, step up and trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 12, "end": 15 },
+            { "kind": "ability", "key": "Zoe-E", "start": 18, "end": 39 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "middle:Viktor:Zoe:1",
+          "text": "Hit Zoe with Hextech Ray when she walks up to farm. It is a long line she has to dodge sideways.",
+          "refs": [
+            { "kind": "champion", "key": "Zoe", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "Viktor-E", "start": 13, "end": 24 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Viktor:Zoe:2",
+          "text": "Use Siphon Power on Zoe to trade; the shield absorbs some of her return poke.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zoe", "start": 20, "end": 23 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "middle:Viktor:Zoe:3",
+          "text": "Drop Gravity Field on Zoe after she jumps with Portal Jump. She cannot walk out of it while she is stuck waiting.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zoe", "start": 22, "end": 25 },
+            { "kind": "ability", "key": "Zoe-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Viktor:Zoe:4",
+          "text": "Use Arcane Storm on Zoe once she is committed. It follows her and punishes her for running.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-R", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zoe", "start": 20, "end": 23 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Zoe",
+      "comboRefs": []
+    }
+  ]
+}

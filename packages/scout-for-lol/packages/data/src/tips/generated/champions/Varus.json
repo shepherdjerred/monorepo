@@ -1,0 +1,1696 @@
+{
+  "schemaVersion": 1,
+  "champion": "Varus",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "8c1fd18c874a0d754031a861c346a6e41e6661afc310257d08050d6a8aafa7bd",
+      "tips": [
+        {
+          "id": "top:Varus:general:0",
+          "text": "Poke with Piercing Arrow from long range, and hold the charge a moment for more damage. Fire it quickly when the enemy is close.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Varus:general:1",
+          "text": "Auto the enemy to build Blight stacks, then hit them with an ability to detonate the stacks for extra damage and shorter cooldowns.",
+          "refs": [],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Varus:general:2",
+          "text": "Take an early point in Blighted Quiver to poke harder and finish off minions.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-W", "start": 23, "end": 38 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Varus:general:3",
+          "text": "Use Hail of Arrows on the spot where the enemy is trying to fight or run. The area leaves them slowed and weakens their healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 101 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Varus:general:4",
+          "text": "Varus is slowed while he charges Piercing Arrow, so don't charge it with an enemy right on top of you.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "Varus-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Varus:general:5",
+          "text": "Aim Chain of Corruption at the first enemy to leave them rooted. It spreads to nearby enemy champions, so it shines in team fights.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Varus:general:6",
+          "text": "Take kills and assists to power up Living Vengeance, then keep fighting while the bonus lasts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Varus-passive",
+              "start": 35,
+              "end": 51
+            }
+          ],
+          "pWrong": 0.93
+        }
+      ],
+      "combos": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "75cea3c1909a3e12f2ecb3cb9ae78b05af7ce953c5e9b3576094651e16b3ad37",
+      "tips": [
+        {
+          "id": "adc:Varus:general:0",
+          "text": "Auto-attack enemies between spells so Blighted Quiver stacks up, then use any ability to detonate it for extra damage and shorter cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Varus:general:1",
+          "text": "Hold Piercing Arrow a moment before firing when the enemy is far away; a longer charge means more damage and range.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 5, "end": 19 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Varus:general:2",
+          "text": "In close fights, release Piercing Arrow quickly instead of waiting for a full charge.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 25, "end": 39 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Varus:general:3",
+          "text": "Snipe with Piercing Arrow from far away, or when enemies run, since it has very long range.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 11, "end": 25 }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "adc:Varus:general:4",
+          "text": "You move slower while charging Piercing Arrow, so only charge when no enemy can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "adc:Varus:general:5",
+          "text": "Drop Hail of Arrows on a lane enemy who is trying to escape or walk up to you; it leaves them slowed and cuts their healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 100 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Varus:general:6",
+          "text": "Aim Chain of Corruption at the enemy you most want to catch. It roots the first champion hit and can spread to nearby enemy champions who stay close.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Varus:general:7",
+          "text": "Use Chain of Corruption to set up a kill: the root also adds Blight stacks, so follow with Piercing Arrow or Hail of Arrows to detonate them.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "ability", "key": "Varus-Q", "start": 91, "end": 105 },
+            { "kind": "ability", "key": "Varus-E", "start": 109, "end": 123 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Varus:general:8",
+          "text": "Take a kill or assist and keep fighting; Living Vengeance boosts Varus for a short time, especially after a champion takedown.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Varus-passive",
+              "start": 41,
+              "end": 57
+            },
+            { "kind": "champion", "key": "Varus", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "adc:Varus:general:9",
+          "text": "Level Blighted Quiver early to poke enemies and last-hit minions more easily.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-W", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Varus:combo:0",
+          "name": "Ult into Blight detonate",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "Varus-R" },
+            { "kind": "ability", "key": "Varus-Q" }
+          ],
+          "when": "When you land the root and want to burst a target, such as in a teamfight or a pick.",
+          "whenRefs": [],
+          "text": "Chain of Corruption puts max Blight stacks on the rooted target over the root. Fire a charged Piercing Arrow into the root to detonate them for big damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "ability", "key": "Varus-Q", "start": 94, "end": 108 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "f8e5231f0ae380b1bd7ca4812ef95b9a3b88af2dfb4502f8e742f6883d4d7dee",
+      "tips": [
+        {
+          "id": "top:Varus:Aatrox:0",
+          "text": "Charge Piercing Arrow from long range and fire it at Aatrox before he can close in. His short reach means you can poke him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Aatrox", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "poke", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Varus:Aatrox:1",
+          "text": "Put Hail of Arrows on the ground where Aatrox wants to fight. It slows him and cuts his healing, which hurts his sustain.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Aatrox", "start": 39, "end": 45 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Varus:Aatrox:2",
+          "text": "Step sideways or toward Aatrox when Infernal Chains lands so you leave the circle before the pull. Staying inside it drags you back to him.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 36, "end": 51 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Varus:Aatrox:3",
+          "text": "Don't stand still while his Darkin Blade swings are winding up. The hit zones are easy to see, so walk out of them.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Varus:Aatrox:4",
+          "text": "Hold Chain of Corruption until Aatrox commits to a fight. It roots him, and he cannot dash away with Umbral Dash.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Aatrox", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 101, "end": 112 }
+          ],
+          "pWrong": 0.6
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1f227f6d7444588930e1aa367369250b065c04a77561b2032bda00db00dc5599",
+      "tips": [
+        {
+          "id": "top:Varus:Briar:0",
+          "text": "Keep Hail of Arrows ready for when Briar leaps in; it slows her and cuts her healing, so she has a harder time sticking to you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Briar", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:Varus:Briar:1",
+          "text": "Snipe Briar with a fully charged Piercing Arrow from long range while she is far away and cannot reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Varus-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Varus:Briar:2",
+          "text": "Hold Chain of Corruption until Briar is on top of you or has used her leaps. The root stops her from chasing and keeps her in your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Briar", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "rooted", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Varus:Briar:3",
+          "text": "Don't stand still charging Piercing Arrow when Briar is close. Charging slows you, so fire it early or use Hail of Arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 27, "end": 41 },
+            { "kind": "champion", "key": "Briar", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Varus-E", "start": 107, "end": 121 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "35aed897f1758f2cc45c42a4da7198f2dc31adbaae4f7e7478188bbaf9fd2b74",
+      "tips": [
+        {
+          "id": "top:Varus:Darius:0",
+          "text": "Poke Darius with a fully charged Piercing Arrow from long range, before he can walk up to you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Varus-Q", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Varus:Darius:1",
+          "text": "Place Hail of Arrows on the ground in front of you when Darius walks in; it slows him and cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 56, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Varus:Darius:2",
+          "text": "Stay out of Apprehend range. When it is on cooldown, trade freely with your arrows.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Varus:Darius:3",
+          "text": "Keep your distance while charging Piercing Arrow, because it slows you. Darius can catch you if you stand still near him.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 34, "end": 48 },
+            { "kind": "champion", "key": "Darius", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Varus:Darius:4",
+          "text": "If Darius reaches you, use Chain of Corruption to keep him rooted and stop him from chasing you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Varus-R", "start": 27, "end": 46 },
+            { "kind": "keyword", "key": "rooted", "start": 59, "end": 65 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Varus:Darius:5",
+          "text": "Do not let Darius build up bleeds on you; at level 6 Noxian Guillotine finishes you off when you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Darius-R", "start": 53, "end": 70 }
+          ],
+          "pWrong": 0.84
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "090f799e9df96acf9416ec650c622ae5f20c783f601e7081a87847a86ff09f24",
+      "tips": [
+        {
+          "id": "top:Varus:Fiora:0",
+          "text": "Hold Chain of Corruption until Fiora's Riposte is spent; if she parries it, the root is turned against you and you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Fiora", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Fiora-W", "start": 39, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 119, "end": 126 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Varus:Fiora:1",
+          "text": "Fire Piercing Arrow from long range while Fiora walks up. She has no ranged way to answer it.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Varus:Fiora:2",
+          "text": "Drop Hail of Arrows where Fiora wants to engage. She is slowed, and her healing is reduced, so her Vital heals are weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Varus:Fiora:3",
+          "text": "Do not charge Piercing Arrow when Fiora is close. Fire it quickly, because you move slowly while charging.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Fiora", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Varus:Fiora:4",
+          "text": "Hit Fiora with Hail of Arrows or Piercing Arrow right after she wastes Riposte, so she cannot answer.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Varus-E", "start": 15, "end": 29 },
+            { "kind": "ability", "key": "Varus-Q", "start": 33, "end": 47 },
+            { "kind": "ability", "key": "Fiora-W", "start": 71, "end": 78 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "71b25e4f5513ad50e3e0618099cc037eadb75ab8cd51e34af613b7bbfe76dd88",
+      "tips": [
+        {
+          "id": "top:Varus:Gangplank:0",
+          "text": "Poke Gangplank with a charged Piercing Arrow from long range before he gets Powder Kegs set up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Gangplank", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Varus-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:Varus:Gangplank:1",
+          "text": "Keep Chain of Corruption for when Gangplank uses Remove Scurvy, or he will cleanse the root at once.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Gangplank", "start": 34, "end": 43 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 49, "end": 62 },
+            { "kind": "keyword", "key": "rooted", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:Varus:Gangplank:2",
+          "text": "Hail of Arrows slows Gangplank and cuts his healing; use it to stop him closing in.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "champion", "key": "Gangplank", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Varus:Gangplank:3",
+          "text": "Attack kegs that are placed near you. When an enemy destroys one, it is defused and does no damage.",
+          "refs": [],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "01d5e790221c358d684940ba2a8a31a8dd359bd12a78fd5fb485afc605024e91",
+      "tips": [
+        {
+          "id": "top:Varus:Garen:0",
+          "text": "Poke Garen with Piercing Arrow from far away; charge it fully when he cannot reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Varus-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Varus:Garen:1",
+          "text": "Do not let Garen hit you with Decisive Strike; he silences you, so keep distance when he speeds up.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Garen-Q", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "silenced", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Varus:Garen:2",
+          "text": "Put Hail of Arrows on the ground where Garen must walk; it slows him, but Decisive Strike can clear that slow.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 64 },
+            { "kind": "ability", "key": "Garen-Q", "start": 74, "end": 89 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Varus:Garen:3",
+          "text": "Root Garen with Chain of Corruption when he commits to you, then back away while he is stuck.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Garen", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Varus-R", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Varus:Garen:4",
+          "text": "Hitting Garen often keeps Perseverance off, so keep poking him to stop his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 8, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 26,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Varus:Garen:5",
+          "text": "Run when your health gets low; Demacian Justice hurts more the less health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "caaff7831145f435e8cdc9b3624025bfd59ada2679c737c960eac7b25c29676d",
+      "tips": [
+        {
+          "id": "top:Varus:Jayce:0",
+          "text": "Hold Piercing Arrow and release it from long range to poke Jayce before he can leap onto you with To the Skies!.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 5, "end": 19 },
+            { "kind": "keyword", "key": "poke", "start": 54, "end": 58 },
+            { "kind": "champion", "key": "Jayce", "start": 59, "end": 64 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Varus:Jayce:1",
+          "text": "Drop Hail of Arrows where Jayce is standing when he comes in. It slows him and cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Jayce", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Varus:Jayce:2",
+          "text": "Stay back from Jayce when Thundering Blow is ready. It roots you, hits hard and knocks you away.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Varus:Jayce:3",
+          "text": "Use Chain of Corruption at level 6 when Jayce commits to a jump. He is rooted and takes a lot of damage.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "rooted", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Varus:Jayce:4",
+          "text": "If Jayce drops an Acceleration Gate, a long-range blast is coming. Sidestep it instead of walking straight.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 3, "end": 8 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3d5f22dc2cb02dc19cf5ca2077ecf1fd174480f49ce5144d3631dc96158368cc",
+      "tips": [
+        {
+          "id": "top:Varus:KSante:0",
+          "text": "Poke with a charged Piercing Arrow from long range while K'Sante walks up to last-hit; he has no ranged answer to it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Varus-Q", "start": 20, "end": 34 },
+            { "kind": "champion", "key": "KSante", "start": 57, "end": 64 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Varus:KSante:1",
+          "text": "Stay out of Ntofo Strikes range. Two hits from it let him pull and stun you, so keep distance and never let him land the first one.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 67, "end": 71 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Varus:KSante:2",
+          "text": "Put Hail of Arrows on the ground when he closes in; it slows him and cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Varus:KSante:3",
+          "text": "When K'Sante starts charging Path Maker, step back out of its path. It can't be interrupted, and its stun grows the longer he charges.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-W", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Varus:KSante:4",
+          "text": "Save Chain of Corruption to root him when he commits. It also lets you kill him if he goes All Out and is fragile.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "keyword", "key": "rooted", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "KSante-R", "start": 91, "end": 98 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Varus:KSante:5",
+          "text": "Auto him between abilities to stack Blight, then fire Piercing Arrow to detonate it for extra damage and a shorter cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 54, "end": 68 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b60f72934c262334f5f62cd3275cd83b6328b510d48e9f0bd0248a0a06e9f6d8",
+      "tips": [
+        {
+          "id": "top:Varus:Malphite:0",
+          "text": "Poke Malphite from far away with a fully charged Piercing Arrow. He has no way to reach you from that distance.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Malphite", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Varus-Q", "start": 49, "end": 63 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Varus:Malphite:1",
+          "text": "Place Hail of Arrows where Malphite wants to walk. It slows him and cuts his healing, so he can't close the gap easily.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Malphite", "start": 27, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Varus:Malphite:2",
+          "text": "Keep your distance from Malphite once he reaches level 6. Unstoppable Force knocks you up, and you can't dodge it with crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Malphite-R", "start": 58, "end": 75 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Varus:Malphite:3",
+          "text": "Hit Malphite with basic attacks so Blight stacks build up, then detonate them with Piercing Arrow. This also lowers your ability cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Varus-Q", "start": 83, "end": 97 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Varus:Malphite:4",
+          "text": "Seismic Shard slows you and makes Malphite faster. Don't let him hit you with it while you charge an arrow in range.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 0, "end": 13 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 19 },
+            { "kind": "champion", "key": "Malphite", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "780770e836a2b9c0030039752a3b3b58be2b76840b1d4ec785069c3e39c1f525",
+      "tips": [
+        {
+          "id": "top:Varus:Mordekaiser:0",
+          "text": "Keep your distance from Mordekaiser. Poke with a charged Piercing Arrow from long range, and do not let him reach you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Varus-Q", "start": 57, "end": 71 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Varus:Mordekaiser:1",
+          "text": "Lay down Hail of Arrows when Mordekaiser walks up, so he is slowed. It also cuts his healing from Indestructible.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 9, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 29,
+              "end": 40
+            },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 98,
+              "end": 112
+            }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Varus:Mordekaiser:2",
+          "text": "Keep moving when Mordekaiser casts Death's Grasp. The claw lands after a short delay, so step out of the way.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 17,
+              "end": 28
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 35,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Varus:Mordekaiser:3",
+          "text": "Trade with Mordekaiser early, before he has a large Indestructible shield. Attacks with Blighted Quiver stack Blight for a bigger Piercing Arrow.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 11,
+              "end": 22
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 52,
+              "end": 66
+            },
+            { "kind": "ability", "key": "Varus-W", "start": 88, "end": 103 },
+            { "kind": "ability", "key": "Varus-Q", "start": 130, "end": 144 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Varus:Mordekaiser:4",
+          "text": "Do not stay near Mordekaiser after he hits three attacks or spells. His aura then burns you.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Varus:Mordekaiser:5",
+          "text": "When Mordekaiser reaches level 6, stay away from him. Realm of Death cuts you off from allies, and he wins that fight.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 5, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 54,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7c363a9a73448e9abcf51199700753f47bd7c82e565a6cd28e29fe6b28d63ce5",
+      "tips": [
+        {
+          "id": "top:Varus:Rumble:0",
+          "text": "Charge Piercing Arrow from long range and poke Rumble before he can reach you. He has to walk up through it.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "keyword", "key": "poke", "start": 42, "end": 46 },
+            { "kind": "champion", "key": "Rumble", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Varus:Rumble:1",
+          "text": "Watch Rumble's Heat. When he Overheats he cannot cast spells, so that is the time to trade or fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Varus:Rumble:2",
+          "text": "Place Hail of Arrows where Rumble must walk to reach you. It slows him and cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Varus:Rumble:3",
+          "text": "Do not stand in The Equalizer. Step out of the fire quickly, because it deals heavy damage over time.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Varus:Rumble:4",
+          "text": "Dodge Electro Harpoon when you can; each hit slows you and lowers your Magic Resist, so Rumble's next hits hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "champion", "key": "Rumble", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Varus:Rumble:5",
+          "text": "Use Chain of Corruption on Rumble when he dives in. A rooted Rumble cannot easily reach you or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Rumble", "start": 27, "end": 33 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "champion", "key": "Rumble", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "05dcf6d63544ad8c1cdf7fae451ab1b243a10b720e7957aa6c6620f87bf8778c",
+      "tips": [
+        {
+          "id": "top:Varus:Sion:0",
+          "text": "Stay out of Decimating Smash range, because a full charge stuns you for a long time. If you see Sion start to charge, walk out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 },
+            { "kind": "champion", "key": "Sion", "start": 96, "end": 100 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Varus:Sion:1",
+          "text": "Poke Sion with Piercing Arrow from long range, and charge it fully when he cannot reach you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Varus-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Varus:Sion:2",
+          "text": "Do not charge Piercing Arrow while Sion is next to you. You are slowed and cannot dodge.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 14, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 35, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Varus:Sion:3",
+          "text": "Save Chain of Corruption for when Sion walks up to you or charges Decimating Smash. The root keeps him in place.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Sion", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Sion-Q", "start": 66, "end": 82 },
+            { "kind": "keyword", "key": "rooted", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Varus:Sion:4",
+          "text": "Use Hail of Arrows to slow Sion on his way in. It also cuts his healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Varus:Sion:5",
+          "text": "Do not kill Sion carelessly. Glory in Death brings him back with fast, hard-hitting attacks, so stay away until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-passive", "start": 29, "end": 43 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bea871156c201039bca84434c709319b5571f359ff121911efb8d780d2baa2c9",
+      "tips": [
+        {
+          "id": "top:Varus:Teemo:0",
+          "text": "Walk up and hit Teemo to build Blighted Quiver stacks, then follow with Piercing Arrow to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 16, "end": 21 },
+            { "kind": "ability", "key": "Varus-W", "start": 31, "end": 46 },
+            { "kind": "ability", "key": "Varus-Q", "start": 72, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Varus:Teemo:1",
+          "text": "Charge Piercing Arrow from far away; Teemo has less range than you, so you can hit him without being poisoned.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Teemo", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Varus:Teemo:2",
+          "text": "Do not trade after Blinding Dart hits you; your attacks miss. Back off, or use Hail of Arrows to push him away.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Varus-E", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Varus:Teemo:3",
+          "text": "Do not chase Teemo through brush or unwarded ground; he can hide there and mushrooms slow and reveal you.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 13, "end": 18 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Varus:Teemo:4",
+          "text": "Use Chain of Corruption at level 6 to root Teemo so he cannot flee, then finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "keyword", "key": "rooted", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Teemo", "start": 43, "end": 48 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4e1ba3a37d217a305c88faafc1e88d9f76959923c08baa499c1ee12785262c50",
+      "tips": [
+        {
+          "id": "top:Varus:Vayne:0",
+          "text": "Poke Vayne with Piercing Arrow from long range. She is fragile and has to play carefully once she is hurt.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Varus-Q", "start": 16, "end": 30 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Varus:Vayne:1",
+          "text": "Don't stand with your back to a wall when Vayne can reach you. Condemn into terrain stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 42, "end": 47 },
+            { "kind": "ability", "key": "Vayne-E", "start": 63, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Varus:Vayne:2",
+          "text": "Put Hail of Arrows where Vayne wants to stand. She is slowed in it and cannot Tumble in to close the gap easily.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Vayne", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Varus:Vayne:3",
+          "text": "Attack Vayne with Blighted Quiver stacks, then fire Piercing Arrow. It sets off the Blight for extra damage and a shorter cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Varus-W", "start": 18, "end": 33 },
+            { "kind": "ability", "key": "Varus-Q", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Varus:Vayne:4",
+          "text": "Hit Vayne with Chain of Corruption when she dives in. Rooted, she cannot Tumble away and her short range makes her easy to kill.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Varus-R", "start": 15, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 54, "end": 60 },
+            { "kind": "ability", "key": "Vayne-Q", "start": 73, "end": 79 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d079cf911689825826fdec5231fda006eab78b430d5bd63bd64e6d77f567ceca",
+      "tips": [
+        {
+          "id": "top:Varus:Yone:0",
+          "text": "Keep Hail of Arrows for when Yone steps up to trade; it slows him and cuts his healing, so he can't close on you or sustain through the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "top:Varus:Yone:1",
+          "text": "Poke Yone with fully charged Piercing Arrow from long range, where his short-range Mortal Steel can't answer.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yone", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Varus-Q", "start": 29, "end": 43 },
+            { "kind": "ability", "key": "Yone-Q", "start": 83, "end": 95 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Varus:Yone:2",
+          "text": "Stay clear of Yone when Fate Sealed is ready. It stuns you and pulls you to him, so keep your distance after level 6.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 14, "end": 18 },
+            { "kind": "ability", "key": "Yone-R", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 54 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Varus:Yone:3",
+          "text": "Land Chain of Corruption on Yone when he dashes in. He is rooted and can't dash away or fight back well, so your follow-up attacks hit.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Yone", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Varus:Yone:4",
+          "text": "Don't stand still while charging Piercing Arrow near Yone. Charging slows you, and his Mortal Steel dash can knock you up.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 33, "end": 47 },
+            { "kind": "champion", "key": "Yone", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Yone-Q", "start": 87, "end": 99 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b64344ab110ff4df951e88ab47d758983f6e1dca6921fc352c2cdb99932feeaf",
+      "tips": [
+        {
+          "id": "adc:Varus:Ashe:0",
+          "text": "Poke Ashe with Piercing Arrow from far away; she has few ways to escape or dodge a charged shot.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Varus-Q", "start": 15, "end": 29 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "adc:Varus:Ashe:1",
+          "text": "Place Hail of Arrows on Ashe when she backs away; it slows her so she cannot kite you easily.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Varus:Ashe:2",
+          "text": "Respect Ashe's Volley when you walk up; stay behind minions so they absorb the arrows.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 8, "end": 12 },
+            { "kind": "ability", "key": "Ashe-W", "start": 15, "end": 21 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Varus:Ashe:3",
+          "text": "Stay near your team while Ashe's Enchanted Crystal Arrow is ready; a stun from far away leaves you open to a gank.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ashe-R", "start": 33, "end": 56 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Varus:Ashe:4",
+          "text": "Land Chain of Corruption on Ashe when she is out of position; she has little to get free.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Ashe", "start": 28, "end": 32 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "148d0b0bbdb62fc4c3e2f2e3d8cec6e3fc11be534415aa1eacb8838115b28558",
+      "tips": [
+        {
+          "id": "adc:Varus:Caitlyn:0",
+          "text": "Caitlyn outranges you. Charge Piercing Arrow out of her reach and fire it at her when she steps up to poke or last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Varus-Q", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Varus:Caitlyn:1",
+          "text": "Step around the Yordle Snap Trap spots she places, especially in bushes and on your approach. Getting rooted lets her land a big Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 16, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 129,
+              "end": 137
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Varus:Caitlyn:2",
+          "text": "Use Hail of Arrows on the ground where she stands to slow her and cut her healing, then trade with Blighted Quiver attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 57 },
+            { "kind": "ability", "key": "Varus-W", "start": 99, "end": 114 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Varus:Caitlyn:3",
+          "text": "Stay behind minions when she fires Piltover Peacemaker; it hits less hard after the first target.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 35, "end": 54 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Varus:Caitlyn:4",
+          "text": "Expect Caitlyn's net to slow you when you walk up, so keep your distance after she uses it.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 7, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Varus:Caitlyn:5",
+          "text": "Look for a Chain of Corruption on Caitlyn at level 6 when she is out of position; it roots her for a kill.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 11, "end": 30 },
+            { "kind": "champion", "key": "Caitlyn", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "rooted", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a3d0dec1fd1aac93fc9e5af326cf71e5b6633979a417f69265aadd4b6c65035",
+      "tips": [
+        {
+          "id": "adc:Varus:Ezreal:0",
+          "text": "Hit Ezreal with attacks from Blighted Quiver, then fire Piercing Arrow to burst the stacks. It is a strong trade against a fragile target.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Varus-W", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "Varus-Q", "start": 56, "end": 70 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Varus:Ezreal:1",
+          "text": "Charge Piercing Arrow behind your minions. Ezreal's Mystic Shot stops at the first unit it hits, so it can't reach you through them.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Ezreal", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 52, "end": 63 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "adc:Varus:Ezreal:2",
+          "text": "Throw Hail of Arrows where Ezreal will blink or walk. It slows him and makes his escapes harder.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 6, "end": 20 },
+            { "kind": "champion", "key": "Ezreal", "start": 27, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Varus:Ezreal:3",
+          "text": "Hold Chain of Corruption until Arcane Shift is used. Otherwise Ezreal can blink away from the shot.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 31, "end": 43 },
+            { "kind": "champion", "key": "Ezreal", "start": 63, "end": 69 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d73377054c6d89ba6ff7601926e73d6a0fc43c03b9048c4fc8d2dfbc0272f0d9",
+      "tips": [
+        {
+          "id": "adc:Varus:Jhin:0",
+          "text": "Charge Piercing Arrow from outside Jhin's attack range; its very long range lets you hit him before he can shoot back.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Jhin", "start": 35, "end": 39 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Varus:Jhin:1",
+          "text": "Put Hail of Arrows on Jhin when he steps up to last-hit; the slowed area makes him easy to follow up on.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jhin", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Varus:Jhin:2",
+          "text": "Jhin cannot attack while he reloads after his fourth shot. Step in and trade then.",
+          "refs": [{ "kind": "champion", "key": "Jhin", "start": 0, "end": 4 }],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Varus:Jhin:3",
+          "text": "Watch for Jhin's invisible traps from Captive Audience before you walk into bushes or chase him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Jhin-E", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Varus:Jhin:4",
+          "text": "Stay out of Jhin's line when you are hurt or a teammate has just hit you. Deadly Flourish can root you.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-W", "start": 74, "end": 89 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Varus:Jhin:5",
+          "text": "Hit Jhin with a few basic attacks first, then fire Piercing Arrow so Blighted Quiver stacks go off for extra damage.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Varus-Q", "start": 51, "end": 65 },
+            { "kind": "ability", "key": "Varus-W", "start": 69, "end": 84 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Jhin has no listed escape from the root, so Chain of Corruption into Piercing Arrow can burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Varus-R", "start": 44, "end": 63 },
+            { "kind": "ability", "key": "Varus-Q", "start": 69, "end": 83 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "aa338c8e153c9b81d48c1aa422a805064519b6f92824b75520fe57b5d1cf9178",
+      "tips": [
+        {
+          "id": "adc:Varus:Jinx:0",
+          "text": "Charge Piercing Arrow from outside her range and release it when she steps up to last-hit. Its very long range lets you poke her first.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Varus:Jinx:1",
+          "text": "Land an auto attack before Hail of Arrows so Blight stacks go off for extra damage. Her slowed, healing-cut body is easy to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 27, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Varus:Jinx:2",
+          "text": "Aim Chain of Corruption at Jinx when you can hit her. If she is rooted, she cannot get away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 4, "end": 23 },
+            { "kind": "champion", "key": "Jinx", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "rooted", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Varus:Jinx:3",
+          "text": "Jump on Jinx when she pokes with rockets, before her minigun ramps up. She is weakest then.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Varus:Jinx:4",
+          "text": "Don't charge Piercing Arrow where Jinx can line up Zap!",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Jinx", "start": 34, "end": 38 },
+            { "kind": "ability", "key": "Jinx-W", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.15
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Jinx's Flame Chompers root only after contact, so Varus can root her with Chain of Corruption and detonate with Q.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Varus", "start": 50, "end": 55 },
+            { "kind": "ability", "key": "Varus-R", "start": 74, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "50c23612a3b89a271beb7ffc74ca1415b69429ef8997ac4933ebbbca5d12eb38",
+      "tips": [
+        {
+          "id": "adc:Varus:Kaisa:0",
+          "text": "Charge Piercing Arrow from behind your minions and fire it from long range. Kai'Sa has to walk up to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Kaisa", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Varus:Kaisa:1",
+          "text": "Use Hail of Arrows when Kai'Sa walks up to trade. It slows her and cuts her healing.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Kaisa", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Varus:Kaisa:2",
+          "text": "Auto Kai'Sa to build Blight, then detonate it with Piercing Arrow or Hail of Arrows. That deals extra damage and shortens your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Varus-Q", "start": 51, "end": 65 },
+            { "kind": "ability", "key": "Varus-E", "start": 69, "end": 83 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "adc:Varus:Kaisa:3",
+          "text": "Save Chain of Corruption for when Kai'Sa dashes in with Killer Instinct. Root her to punish her and protect yourself.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Kaisa", "start": 34, "end": 40 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 56, "end": 71 },
+            { "kind": "keyword", "key": "rooted", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Varus:Kaisa:4",
+          "text": "You can't charge Piercing Arrow and cast Hail of Arrows at once. Don't start a long charge when Kai'Sa is already close.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 17, "end": 31 },
+            { "kind": "ability", "key": "Varus-E", "start": 41, "end": 55 },
+            { "kind": "champion", "key": "Kaisa", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Chain of Corruption roots Kai'Sa, and Piercing Arrow then detonates the Blight stacks for burst damage.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Varus-Q", "start": 38, "end": 52 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "8bc69c794efb46e7a24c2b7ecaa6d687353ef3c9e61a6e5743b24e80624883cc",
+      "tips": [
+        {
+          "id": "adc:Varus:MissFortune:0",
+          "text": "Charge Piercing Arrow from far away and fire it when Miss Fortune lines up with her minions or walks forward.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "MissFortune", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Varus:MissFortune:1",
+          "text": "Hit Miss Fortune to cancel her speed boost from Strut; then she is easier to catch.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 4, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 48,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Varus:MissFortune:2",
+          "text": "Trade with attacks first so Blight stacks build, then follow with Hail of Arrows for extra damage.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 66, "end": 80 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Varus:MissFortune:3",
+          "text": "Stay out of Make It Rain; being slowed in it lets Miss Fortune hit you with follow-up shots.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "champion", "key": "MissFortune", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Varus:MissFortune:4",
+          "text": "Step out of Miss Fortune's line when Bullet Time begins; run out of the cone instead of standing in it.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 12,
+              "end": 24
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 37,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Varus:MissFortune:5",
+          "text": "Keep minions out of line with Miss Fortune and you; Double Up bounces to a champion behind its first target.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 30,
+              "end": 42
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 52,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fe5a814b0f6e7f59379ae3bef40df98226925f9364adde07c711626f9298ace3",
+      "tips": [
+        {
+          "id": "adc:Varus:Smolder:0",
+          "text": "Hit Smolder with Hail of Arrows early; he is weak before he has stacks, so make him back off and miss last hits.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Varus-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Varus:Smolder:1",
+          "text": "Snipe with a fully charged Piercing Arrow from long range; Smolder has to walk up to cast Super Scorcher Breath.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 27, "end": 41 },
+            { "kind": "champion", "key": "Smolder", "start": 59, "end": 66 },
+            { "kind": "ability", "key": "Smolder-Q", "start": 90, "end": 111 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Varus:Smolder:2",
+          "text": "Auto Smolder to build Blight, then detonate it with an ability to trade and shorten your cooldowns.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Varus:Smolder:3",
+          "text": "Land Chain of Corruption on Smolder when his team is far away; he is rooted and can't fly out with Flap, Flap, Flap.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Smolder", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 },
+            { "kind": "ability", "key": "Smolder-E", "start": 99, "end": 115 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Varus:Smolder:4",
+          "text": "Stay out of a straight line from Smolder; Achooo! travels very far and slows you.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-W", "start": 42, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 76 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "83a9b905c2d792560b4110ee9967beea8e3ad00c8a58f34cd43345253389885a",
+      "tips": [
+        {
+          "id": "adc:Varus:Yunara:0",
+          "text": "Charge Piercing Arrow from long range while Yunara is last-hitting; her slow only matters once you are close, so poke her before she can reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-Q", "start": 7, "end": 21 },
+            { "kind": "champion", "key": "Yunara", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 113, "end": 117 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "adc:Varus:Yunara:1",
+          "text": "Hold Chain of Corruption for when Yunara has used her dash; rooting her then leaves her stuck in your team's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Yunara", "start": 34, "end": 40 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Varus:Yunara:2",
+          "text": "Put Hail of Arrows on Yunara when she walks up to trade. She is slowed and healing less, so her all-in is weaker.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Yunara", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Varus:Yunara:3",
+          "text": "Do not stand in a straight line with Yunara while charging Piercing Arrow. Her slowing bead leaves you crawling and you will be hit.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 37, "end": 43 },
+            { "kind": "ability", "key": "Varus-Q", "start": 59, "end": 73 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": [
+        {
+          "comboId": "adc:Varus:combo:0",
+          "note": "Chain of Corruption roots Yunara so the charged Piercing Arrow can burst her before she kites.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 0, "end": 19 },
+            { "kind": "champion", "key": "Yunara", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Varus-Q", "start": 48, "end": 62 }
+          ]
+        }
+      ]
+    }
+  ]
+}

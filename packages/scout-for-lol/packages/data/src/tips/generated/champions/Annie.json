@@ -1,0 +1,1087 @@
+{
+  "schemaVersion": 1,
+  "champion": "Annie",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "middle",
+      "inputHash": "c36e7136a8cd7b88300335eab2a725e6cacbd266a8a47e8431bfec2c75e4f92f",
+      "tips": [
+        {
+          "id": "middle:Annie:general:0",
+          "text": "Last-hit minions with Disintegrate; a kill refunds its mana and cuts its cooldown, so you can farm freely early.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "middle:Annie:general:1",
+          "text": "Watch your Pyromania counter. When it is full, open a trade with Disintegrate or Incinerate so the enemy is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 11,
+              "end": 20
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 65, "end": 77 },
+            { "kind": "ability", "key": "Annie-W", "start": 81, "end": 91 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Annie:general:2",
+          "text": "Cast Molten Shield on yourself to build toward your stun. It also gives a burst of speed and hurts enemies who hit you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Annie:general:3",
+          "text": "Aim Incinerate so it catches several minions and the enemy together. It is a cone, so stand where the enemy is in line.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "middle:Annie:general:4",
+          "text": "You start the game and respawn with your stun ready. Use it for an early trade or save it to set up Summon: Tibbers.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 100, "end": 115 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "middle:Annie:general:5",
+          "text": "At level 6, store your stun and land Summon: Tibbers on a group. Enemies hit are stunned, and Tibbers becomes enraged.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Annie:general:6",
+          "text": "After Summon: Tibbers lands, recast it to steer the bear toward targets. Enemies standing near him keep taking burn damage.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 6, "end": 21 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "middle",
+      "inputHash": "869c505807b55903724166932d568f806e19af5676550b30367fd61b635b079f",
+      "tips": [
+        {
+          "id": "middle:Annie:Ahri:0",
+          "text": "Last-hit minions with Disintegrate to farm safely; a kill refunds its mana and shortens its cooldown, so you can keep it up while Ahri has to come forward.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Ahri", "start": 130, "end": 134 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "middle:Annie:Ahri:1",
+          "text": "Stay behind minions so Charm hits one of them first. It stops at the first unit it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ahri-E", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Annie:Ahri:2",
+          "text": "Keep your stun ready when you walk up to Ahri. Pyromania makes your next Disintegrate or Incinerate stun her, which stops her escaping.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Ahri", "start": 41, "end": 45 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 47,
+              "end": 56
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 73, "end": 85 },
+            { "kind": "ability", "key": "Annie-W", "start": 89, "end": 99 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 104 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "middle:Annie:Ahri:3",
+          "text": "Trade harder while Ahri's Spirit Rush is on cooldown. She has no dash to escape or to follow up with.",
+          "refs": [
+            { "kind": "champion", "key": "Ahri", "start": 19, "end": 23 },
+            { "kind": "ability", "key": "Ahri-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "middle:Annie:Ahri:4",
+          "text": "Cast Molten Shield on yourself before you step into Ahri's range. It absorbs damage and gives you a burst of speed to dodge Charm.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Ahri", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Ahri-E", "start": 124, "end": 129 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Ahri",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "202a6923db36aa5d16d5421db97e4dae9367e69b03bd88d3c8420dec2393d2f2",
+      "tips": [
+        {
+          "id": "middle:Annie:Akali:0",
+          "text": "Keep Pyromania ready when Akali walks up; a stun from Disintegrate or Incinerate stops her from dashing away or trading freely.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Akali", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Annie-Q", "start": 54, "end": 66 },
+            { "kind": "ability", "key": "Annie-W", "start": 70, "end": 80 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "middle:Annie:Akali:1",
+          "text": "Use Disintegrate on minions to farm safely, and hold your spells when Akali has full energy and can trade hard.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Akali", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "middle:Annie:Akali:2",
+          "text": "Cast Molten Shield on yourself before she jumps in; it absorbs damage and hurts her for hitting it. It also builds toward your stun.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "middle:Annie:Akali:3",
+          "text": "Aim Incinerate at where she stands in her smoke; area spells can still hit her there and briefly reveal her.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-W", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "middle:Annie:Akali:4",
+          "text": "At level 6, save Summon: Tibbers with a stun ready for when Akali commits onto you; the stun and the bear's burst can finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 40, "end": 44 },
+            { "kind": "champion", "key": "Akali", "start": 60, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6d194ec8db747df869b7a0eaa6086f301ec1535c721caec19b7df3b2494a8158",
+      "tips": [
+        {
+          "id": "middle:Annie:Anivia:0",
+          "text": "Walk up and hit Anivia with Disintegrate while your stun is ready; the stun lands on the first spell that connects.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Annie-Q", "start": 28, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 71, "end": 75 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Annie:Anivia:1",
+          "text": "Stay out of Flash Frost's line. Sidestep it, because it is a straight shot and can hit you anywhere along its path.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 12, "end": 23 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Annie:Anivia:2",
+          "text": "Use Molten Shield on yourself before you walk into her range. It softens her poke and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Annie:Anivia:3",
+          "text": "When Anivia becomes an egg, burst it down with Summon: Tibbers and Incinerate before she is reborn.",
+          "refs": [
+            { "kind": "champion", "key": "Anivia", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Annie-R", "start": 47, "end": 62 },
+            { "kind": "ability", "key": "Annie-W", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "middle:Annie:Anivia:4",
+          "text": "Last-hit with Disintegrate to farm safely. A kill refunds the mana, so you can keep trading with her.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "279e4280ec0235d0267d7716562a0f13628bc818420e4dd7b2ecc92e9f78b769",
+      "tips": [
+        {
+          "id": "middle:Annie:Aurora:0",
+          "text": "Keep your Pyromania stun ready and cast Disintegrate or Incinerate when Aurora steps up to trade; stunned, she can't dash away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Annie-Q", "start": 40, "end": 52 },
+            { "kind": "ability", "key": "Annie-W", "start": 56, "end": 66 },
+            { "kind": "champion", "key": "Aurora", "start": 72, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 105 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Annie:Aurora:1",
+          "text": "Aurora turns invisible after Across the Veil. Don't chase blindly; hold your spells until she shows up again.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Aurora-W", "start": 29, "end": 44 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "middle:Annie:Aurora:2",
+          "text": "Last-hit with Disintegrate early; kills refund its mana, so you can farm freely and still keep your mana for trades.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Annie:Aurora:3",
+          "text": "Stay out of Aurora's Between Worlds ring when you can. Crossing its edge slows you, and she uses it to hop away or in.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Aurora-R", "start": 21, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "middle:Annie:Aurora:4",
+          "text": "Save Summon: Tibbers for when Aurora is caught in your stun or has used her escapes. Her escapes are on a long cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Aurora", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e9972d88dad8a6d74c675cd3fa4f266fdd13db00991a73b81a29ccbe5e49ba7a",
+      "tips": [
+        {
+          "id": "middle:Annie:Cassiopeia:0",
+          "text": "Keep Pyromania charged and open with Disintegrate or Incinerate on Cassiopeia to stun her before she can start poisoning you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Annie-W", "start": 53, "end": 63 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 67, "end": 77 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "middle:Annie:Cassiopeia:1",
+          "text": "Last-hit minions with Disintegrate to farm safely and get your mana and cooldown back.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Annie:Cassiopeia:2",
+          "text": "Step out of Miasma quickly. While you stand in it you are slowed and cannot use dashes.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 12,
+              "end": 18
+            },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 64 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "middle:Annie:Cassiopeia:3",
+          "text": "Do not walk straight at Cassiopeia when she has Petrifying Gaze. If it is coming, turn away so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 24, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 48,
+              "end": 63
+            },
+            { "kind": "keyword", "key": "slowed", "start": 103, "end": 109 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 128 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Annie:Cassiopeia:4",
+          "text": "Cast Molten Shield on yourself before she trades. It absorbs some poison damage and hurts her if she hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Annie:Cassiopeia:5",
+          "text": "At level 6, use a stored stun with Summon: Tibbers on Cassiopeia to stun her and burst her down.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Annie-R", "start": 35, "end": 50 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 54, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "86cdcedf6a58e3a8119e16643a9f6d42d7f2f8b6dcfaeb452e81513db9cb2b59",
+      "tips": [
+        {
+          "id": "middle:Annie:Fizz:0",
+          "text": "Keep Pyromania ready and spend the stun on Disintegrate or Incinerate when Fizz walks up to trade. A stunned Fizz can't hop away with Playful.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Annie-Q", "start": 43, "end": 55 },
+            { "kind": "ability", "key": "Annie-W", "start": 59, "end": 69 },
+            { "kind": "champion", "key": "Fizz", "start": 75, "end": 79 },
+            { "kind": "keyword", "key": "stunned", "start": 101, "end": 108 },
+            { "kind": "champion", "key": "Fizz", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "middle:Annie:Fizz:1",
+          "text": "Poke Fizz with Disintegrate while he last-hits. It is a targeted spell, so he can't sidestep it.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Fizz", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Annie-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "middle:Annie:Fizz:2",
+          "text": "Wait until Fizz has used Playful / Trickster before you step up and trade. He is much easier to catch without it.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 11, "end": 15 },
+            { "kind": "ability", "key": "Fizz-E", "start": 25, "end": 44 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Annie:Fizz:3",
+          "text": "Put Molten Shield on yourself when Fizz dives in with Urchin Strike. It softens his damage and hurts him when he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Fizz", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Fizz-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Annie:Fizz:4",
+          "text": "Hit Fizz with a stun-empowered Summon: Tibbers when he commits. It also enrages Tibbers, so you can kill him fast.",
+          "refs": [
+            { "kind": "champion", "key": "Fizz", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Annie-R", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "Fizz",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "14c24010ded9be153adef36757c61b9bc125eb0db1e14f6eb203b1564b78b2da",
+      "tips": [
+        {
+          "id": "middle:Annie:Malzahar:0",
+          "text": "Wait until Malzahar has taken damage before you commit; while Void Shift is up, he takes far less damage and can't be stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Malzahar", "start": 11, "end": 19 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 62,
+              "end": 72
+            }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "middle:Annie:Malzahar:1",
+          "text": "Poke him with Disintegrate and Incinerate to break Void Shift, then stun him with Pyromania once it is ready.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Annie-Q", "start": 14, "end": 26 },
+            { "kind": "ability", "key": "Annie-W", "start": 31, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 51,
+              "end": 61
+            },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 82,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "middle:Annie:Malzahar:2",
+          "text": "Stay out of the line between Call of the Void's two portals; if it hits you, you are silenced and can't cast.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 29, "end": 45 },
+            { "kind": "keyword", "key": "silenced", "start": 85, "end": 93 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "middle:Annie:Malzahar:3",
+          "text": "Walk sideways after the portals appear, because Call of the Void hits a moment later.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-Q", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "middle:Annie:Malzahar:4",
+          "text": "Cast Molten Shield on yourself before you walk into his range; it blocks some damage and hurts him when he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "middle:Annie:Malzahar:5",
+          "text": "Keep Summon: Tibbers for when Malzahar has used his Void Shift, or as a stun to catch him mid-fight.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Malzahar", "start": 30, "end": 38 },
+            {
+              "kind": "ability",
+              "key": "Malzahar-passive",
+              "start": 52,
+              "end": 62
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Annie:Malzahar:6",
+          "text": "Stay away from minions carrying Malefic Visions; when they die, it jumps to the nearest enemy, which could be you.",
+          "refs": [
+            { "kind": "ability", "key": "Malzahar-E", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Malzahar",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "24dff0a75231ac61b6c0729544f42561ffe8982e9db05240916e95181ac3ab28",
+      "tips": [
+        {
+          "id": "middle:Annie:Orianna:0",
+          "text": "Keep Pyromania ready and look for the stun on Orianna with Disintegrate or Incinerate, then follow up with your other spell while she is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Orianna", "start": 46, "end": 53 },
+            { "kind": "ability", "key": "Annie-Q", "start": 59, "end": 71 },
+            { "kind": "ability", "key": "Annie-W", "start": 75, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 137, "end": 144 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Annie:Orianna:1",
+          "text": "Last-hit minions with Disintegrate to farm safely; a kill refunds the mana and shortens the cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "middle:Annie:Orianna:2",
+          "text": "Disintegrate is a targeted shot, so use it on Orianna even when she places her Ball between you to block your aim.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Orianna", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Annie:Orianna:3",
+          "text": "Stay out of Orianna's Ball range when you can; her spells only hit around the Ball.",
+          "refs": [
+            { "kind": "champion", "key": "Orianna", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Annie:Orianna:4",
+          "text": "Cast Molten Shield on yourself before she pokes you, so you build a Pyromania stack and punish her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 68,
+              "end": 77
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Annie:Orianna:5",
+          "text": "At level 6, store your stun and open with Summon: Tibbers on Orianna so the stun lands with the bear's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 42, "end": 57 },
+            { "kind": "champion", "key": "Orianna", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Orianna",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "6f5c7a3a405cdbdc185a10d928ac0b9a2eb1e9f1f8d387de44d5b9630c72c9d4",
+      "tips": [
+        {
+          "id": "middle:Annie:Ryze:0",
+          "text": "Keep Pyromania ready and look for the stun with Disintegrate or Incinerate when Ryze steps up to farm. Then follow with your other spells while he is stunned.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Annie-Q", "start": 48, "end": 60 },
+            { "kind": "ability", "key": "Annie-W", "start": 64, "end": 74 },
+            { "kind": "champion", "key": "Ryze", "start": 80, "end": 84 },
+            { "kind": "keyword", "key": "stunned", "start": 150, "end": 157 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Annie:Ryze:1",
+          "text": "Use Disintegrate on minions to last-hit; you get the mana back on a kill. It lets you farm without falling behind Ryze's pokes.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Ryze", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Annie:Ryze:2",
+          "text": "Cast Molten Shield on yourself early to build toward your stun. It also cuts the cost of his pokes when he attacks you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "middle:Annie:Ryze:3",
+          "text": "Ryze needs Spell Flux to root you with Rune Prison. Stay out of his range while his Spell Flux is ready, and trade when it is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Ryze", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Ryze-E", "start": 11, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 25, "end": 29 },
+            { "kind": "ability", "key": "Ryze-W", "start": 39, "end": 50 },
+            { "kind": "ability", "key": "Ryze-E", "start": 84, "end": 94 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Annie:Ryze:4",
+          "text": "Interrupt his Realm Warp by stunning him while the portal charges; it cancels the teleport.",
+          "refs": [
+            { "kind": "ability", "key": "Ryze-R", "start": 14, "end": 24 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Ryze",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "8a713bb26cc8ef0c48ac3d09386236f07649188489341e024cf25c0b2ad52623",
+      "tips": [
+        {
+          "id": "middle:Annie:Sylas:0",
+          "text": "Keep your Pyromania stun ready when Sylas dives in; Disintegrate or Incinerate will stun him before he trades.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 10,
+              "end": 19
+            },
+            { "kind": "keyword", "key": "stunned", "start": 20, "end": 24 },
+            { "kind": "champion", "key": "Sylas", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Annie-Q", "start": 52, "end": 64 },
+            { "kind": "ability", "key": "Annie-W", "start": 68, "end": 78 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "middle:Annie:Sylas:1",
+          "text": "Stay out of Abduct range. If the chains hit you, Sylas gets pulled to you and you are knocked up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 49, "end": 54 },
+            { "kind": "keyword", "key": "knocked-up", "start": 86, "end": 96 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "middle:Annie:Sylas:2",
+          "text": "Use Disintegrate to farm and poke from range; it refunds its Mana when it kills a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 4, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "middle:Annie:Sylas:3",
+          "text": "Cast Molten Shield on yourself before he engages; he takes damage when he hits it.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Annie:Sylas:4",
+          "text": "Do not trade into a Sylas who is low on health; Kingslayer heals him more the lower he is.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Sylas-W", "start": 48, "end": 58 }
+          ],
+          "pWrong": 0.81
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "010fdb132320fb24f6b66f39c1d186885e94a9fd3e5dc1187d582da2cd1a69a9",
+      "tips": [
+        {
+          "id": "middle:Annie:TwistedFate:0",
+          "text": "Walk up and stun Twisted Fate with Pyromania when it is ready, then follow with Incinerate while he is stunned.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 12, "end": 16 },
+            {
+              "kind": "champion",
+              "key": "TwistedFate",
+              "start": 17,
+              "end": 29
+            },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 35,
+              "end": 44
+            },
+            { "kind": "ability", "key": "Annie-W", "start": 80, "end": 90 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 110 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "middle:Annie:TwistedFate:1",
+          "text": "Last-hit minions with Disintegrate; a kill refunds its mana and shortens its cooldown, so you can keep farming while he pokes you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "middle:Annie:TwistedFate:2",
+          "text": "Stay out of line with Wild Cards. Standing behind minions helps, since the cards are blocked by what they hit.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "TwistedFate-Q",
+              "start": 22,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "middle:Annie:TwistedFate:3",
+          "text": "Cast Molten Shield on yourself before he comes in with an empowered attack. It absorbs damage and speeds your retreat.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "middle:Annie:TwistedFate:4",
+          "text": "When Twisted Fate uses Destiny, expect a gank and back away from the sides of the lane.",
+          "refs": [
+            { "kind": "champion", "key": "TwistedFate", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "TwistedFate-R",
+              "start": 23,
+              "end": 30
+            }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "TwistedFate",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "5adb1d82e4eed789c81e1d3b1238c80efa2a29355ec8fd7a8b50d137437e9b94",
+      "tips": [
+        {
+          "id": "middle:Annie:Viktor:0",
+          "text": "Last-hit minions with Disintegrate; a kill refunds the mana and shortens its cooldown, so you can farm and keep pressure on Viktor.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 },
+            { "kind": "champion", "key": "Viktor", "start": 124, "end": 130 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "middle:Annie:Viktor:1",
+          "text": "Watch your Pyromania counter. When it is full, open with Disintegrate or Incinerate to stun Viktor and trade freely.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 11,
+              "end": 20
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 57, "end": 69 },
+            { "kind": "ability", "key": "Annie-W", "start": 73, "end": 83 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 },
+            { "kind": "champion", "key": "Viktor", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "middle:Annie:Viktor:2",
+          "text": "Cast Molten Shield on yourself before Viktor trades; it builds a Pyromania stack, absorbs damage and hurts him if he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Viktor", "start": 38, "end": 44 },
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 65,
+              "end": 74
+            }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "middle:Annie:Viktor:3",
+          "text": "Stay out of Gravity Field. Walk out of it quickly, or you will be slowed and then stunned.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-W", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "middle:Annie:Viktor:4",
+          "text": "Step sideways out of the line of Hextech Ray. It is a thin beam, so it is easy to dodge when you watch his cast.",
+          "refs": [
+            { "kind": "ability", "key": "Viktor-E", "start": 33, "end": 44 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "middle:Annie:Viktor:5",
+          "text": "Save a stun for Summon: Tibbers when you go for a kill, since it stuns everyone it lands on and the bear then attacks.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Annie-R", "start": 16, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Viktor",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "20803408a088f7ea8cb915821ff78bf7463d7f91ec2f94a239156b984f9545e0",
+      "tips": [
+        {
+          "id": "middle:Annie:Yasuo:0",
+          "text": "Keep Pyromania ready and use Disintegrate or Incinerate to stun him when he dashes in; a stunned Yasuo cannot reach you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 29, "end": 41 },
+            { "kind": "ability", "key": "Annie-W", "start": 45, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 },
+            { "kind": "champion", "key": "Yasuo", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "middle:Annie:Yasuo:1",
+          "text": "Hold your spells when Wind Wall is up. It destroys Disintegrate, so wait for it to fade or cast Incinerate once he has moved.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 22, "end": 31 },
+            { "kind": "ability", "key": "Annie-Q", "start": 51, "end": 63 },
+            { "kind": "ability", "key": "Annie-W", "start": 96, "end": 106 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "middle:Annie:Yasuo:2",
+          "text": "Put Molten Shield on yourself when he commits to a trade. It absorbs damage and hurts him when he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 4, "end": 17 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Annie:Yasuo:3",
+          "text": "Last-hit minions with Disintegrate to farm safely and keep your mana, rather than poking him every time.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 22, "end": 34 },
+            { "kind": "keyword", "key": "poke", "start": 82, "end": 88 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "middle:Annie:Yasuo:4",
+          "text": "Do not stun him just to get a stack of Summon: Tibbers. Save the stun for the moment he commits to a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 39, "end": 54 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "e1a43339b3da8191b2dec9fdc4975bccbca007fdac396303ed9109619125f078",
+      "tips": [
+        {
+          "id": "middle:Annie:Yone:0",
+          "text": "Keep Pyromania ready and use Disintegrate on Yone when it is up; the stun gives you a safe window to hit him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "ability", "key": "Annie-Q", "start": 29, "end": 41 },
+            { "kind": "champion", "key": "Yone", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "middle:Annie:Yone:1",
+          "text": "Stay at long range and use Disintegrate to hit Yone from afar; he has to close the gap to fight you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 27, "end": 39 },
+            { "kind": "champion", "key": "Yone", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "middle:Annie:Yone:2",
+          "text": "Cast Molten Shield on yourself when Yone walks up; it absorbs damage and hurts him when he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Annie:Yone:3",
+          "text": "Save your stun for when Yone dashes in with his knock up, or use Incinerate on him as he closes in.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Annie-W", "start": 65, "end": 75 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "middle:Annie:Yone:4",
+          "text": "Hold Summon: Tibbers for when Yone is in a fight; the stun, his burn and the bear's damage make it hard for him to flee.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 30, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": []
+    },
+    {
+      "lane": "middle",
+      "inputHash": "1da6d2cd8d74e93d0a39ad5bc246a89de2f9f678826bc2cc36fbfec0ed1fd8af",
+      "tips": [
+        {
+          "id": "middle:Annie:Zed:0",
+          "text": "Keep Pyromania stacked and ready. When Zed dashes in with Living Shadow or Death Mark, a stun from Disintegrate or Incinerate stops his combo.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Annie-passive",
+              "start": 5,
+              "end": 14
+            },
+            { "kind": "champion", "key": "Zed", "start": 39, "end": 42 },
+            { "kind": "ability", "key": "Zed-W", "start": 58, "end": 71 },
+            { "kind": "ability", "key": "Zed-R", "start": 75, "end": 85 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 },
+            { "kind": "ability", "key": "Annie-Q", "start": 99, "end": 111 },
+            { "kind": "ability", "key": "Annie-W", "start": 115, "end": 125 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "middle:Annie:Zed:1",
+          "text": "Cast Molten Shield on yourself when Zed's Death Mark lands. It absorbs some of his damage and hurts him when he hits you.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-E", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zed", "start": 36, "end": 39 },
+            { "kind": "ability", "key": "Zed-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "middle:Annie:Zed:2",
+          "text": "Farm with Disintegrate, and poke Zed with it when he steps up to last-hit. It targets him directly, so his shadows cannot block it.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-Q", "start": 10, "end": 22 },
+            { "kind": "keyword", "key": "poke", "start": 28, "end": 32 },
+            { "kind": "champion", "key": "Zed", "start": 33, "end": 36 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "middle:Annie:Zed:3",
+          "text": "Use Incinerate when Zed and his shadow line up in front of you. It hits everything in a wide cone.",
+          "refs": [
+            { "kind": "ability", "key": "Annie-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Zed", "start": 20, "end": 23 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    }
+  ]
+}

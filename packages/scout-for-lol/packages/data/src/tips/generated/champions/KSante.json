@@ -1,0 +1,3286 @@
+{
+  "schemaVersion": 1,
+  "champion": "KSante",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "ec741516900d397014e0819f0c96a84b4359163d4d47adcbe53192cc3803ef44",
+      "tips": [
+        {
+          "id": "top:KSante:general:0",
+          "text": "Land Ntofo Strikes twice in a row, then cast it a third time to stun and pull the enemy to you. Hit the first two on minions only if an enemy is in range.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:KSante:general:1",
+          "text": "Hold Path Maker a little longer before the dash lands, because a longer charge means a longer stun. You also take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:KSante:general:2",
+          "text": "Use Footwork to dash onto the enemy, then fire the empowered Ntofo Strikes to fling them behind you, even through a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "KSante-Q", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:KSante:general:3",
+          "text": "Hit an enemy with an ability first, then follow with a basic attack. The mark adds extra damage to that attack.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:KSante:general:4",
+          "text": "Use All Out on an enemy standing near a wall. They get knocked through it and take a second hit.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 4, "end": 11 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:KSante:general:5",
+          "text": "Only go All Out when you can win the fight. You lose health and most of your bonus defenses while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 8, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:KSante:general:6",
+          "text": "Path Maker no longer stuns or knocks back while you are All Out. Use it for extra damage and speed, and save the stun for before you go All Out.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "KSante-R", "start": 56, "end": 63 },
+            { "kind": "ability", "key": "KSante-R", "start": 136, "end": 143 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:KSante:combo:0",
+          "name": "Wall slam ultimate",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "KSante-R" }],
+          "when": "When an enemy is standing with a thin wall behind them, such as in the lane or the jungle.",
+          "whenRefs": [],
+          "text": "Cast it on an enemy with a wall behind them. They are knocked through the wall and take a second hit, and then they are stunned and knocked up.",
+          "textRefs": []
+        },
+        {
+          "id": "top:KSante:combo:1",
+          "name": "Footwork into empowered Q",
+          "category": "combo",
+          "sequence": [
+            { "kind": "ability", "key": "KSante-E" },
+            { "kind": "ability", "key": "KSante-Q" }
+          ],
+          "when": "When you have two Q stacks and the enemy is close to you.",
+          "whenRefs": [],
+          "text": "Dash onto or past the enemy, then cast the empowered Q. The pull flings them behind you, even through a wall.",
+          "textRefs": []
+        },
+        {
+          "id": "top:KSante:combo:2",
+          "name": "Charged W through the wave",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "KSante-W" },
+            { "kind": "ability", "key": "KSante-Q" },
+            { "kind": "ability", "key": "KSante-R" }
+          ],
+          "when": "When you are about to go All Out and want to refresh W.",
+          "whenRefs": [
+            { "kind": "ability", "key": "KSante-R", "start": 25, "end": 32 }
+          ],
+          "text": "Casting R refreshes W cooldown when you go All Out. Q and R can be cast during the W dash, so you can chain them for extra damage.",
+          "textRefs": [
+            { "kind": "ability", "key": "KSante-R", "start": 43, "end": 50 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "b48d098b839736a302f0a06f34ccb5b90ba9303516e0d3a0ddcf5e9e356a033d",
+      "tips": [
+        {
+          "id": "top:KSante:Aatrox:0",
+          "text": "Hit Aatrox with Ntofo Strikes twice to set up the stun and pull. Use it when he walks up to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:KSante:Aatrox:1",
+          "text": "Use Path Maker as he winds up The Darkin Blade. You take less damage while charging, and the dash stuns him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 30, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:KSante:Aatrox:2",
+          "text": "Dodge The Darkin Blade by moving sideways, away from the edge of each hit zone. The edge knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:KSante:Aatrox:3",
+          "text": "Use Footwork to dodge his Infernal Chains or to close the gap, and take the shield with you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:KSante:Aatrox:4",
+          "text": "Avoid long fights while Aatrox has his World Ender active. Kills extend it, so do not feed him.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-R", "start": 39, "end": 50 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork's dash and shield close the gap on Aatrox, then the empowered Q slows and pulls him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Aatrox", "start": 44, "end": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b8fdaeb9a102922c7bdf66964ccc63911d203d9bbaa5f94a066521185c18bb55",
+      "tips": [
+        {
+          "id": "top:KSante:Akali:0",
+          "text": "Hit Akali with Ntofo Strikes twice to pull her in and stun her; that is your best chance to catch her.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:KSante:Akali:1",
+          "text": "Charge Path Maker longer when Akali is close, so it stuns for longer, and aim where she will stand.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Akali", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Akali:2",
+          "text": "Use Footwork's shield before Akali bursts you, and dash toward your allies to stay safe.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Akali", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:KSante:Akali:3",
+          "text": "Think before using All Out near Akali. It lowers your health and resistances, so her burst can kill you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 19, "end": 26 },
+            { "kind": "champion", "key": "Akali", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Akali:4",
+          "text": "Fight Akali when she is low on energy, because her Five Point Strike is much weaker then.",
+          "refs": [
+            { "kind": "champion", "key": "Akali", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Akali-Q", "start": 51, "end": 68 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Akali",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable while he chains Q and All Out, so Akali's slow can't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "KSante-R", "start": 59, "end": 66 },
+            { "kind": "champion", "key": "Akali", "start": 71, "end": 76 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6be83d50b2476a3193123c098cefb2f9995510da5e185801520c7f834aae265b",
+      "tips": [
+        {
+          "id": "top:KSante:Ambessa:0",
+          "text": "Aim Ntofo Strikes at Ambessa to land two hits, then use the stunning pull to trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:KSante:Ambessa:1",
+          "text": "Charge Path Maker longer when Ambessa stands still; the stun lasts longer the longer you charge.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Ambessa", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:KSante:Ambessa:2",
+          "text": "Use Footwork to get your shield up before Ambessa trades.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ambessa", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Ambessa:3",
+          "text": "Respect Ambessa's Repudiation shield; wait it out before you start hitting her.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 8, "end": 15 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "top:KSante:Ambessa:4",
+          "text": "Expect Ambessa to dash in with Public Execution at level 6. Stay healthy and keep your shield ready before she can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Ambessa", "start": 7, "end": 14 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dashes onto Ambessa, then the empowered Q pulls her in when she is close.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Ambessa", "start": 21, "end": 28 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "9c35651ccda6a34512adf6c032205d9ea228f18fc2f38b69d1bf1fc64bc6774d",
+      "tips": [
+        {
+          "id": "top:KSante:Anivia:0",
+          "text": "Walk up in a curve, not a straight line, so Flash Frost misses. Its stun at the end of its range hurts, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-Q", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:KSante:Anivia:1",
+          "text": "Use Footwork to dash out of Flash Frost's path, and gain a shield while closing in on Anivia.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Anivia-Q", "start": 28, "end": 39 },
+            { "kind": "champion", "key": "Anivia", "start": 86, "end": 92 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Anivia:2",
+          "text": "Land Ntofo Strikes twice to pull Anivia to you. Then stun her with the empowered one and trade before she can wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Anivia", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:KSante:Anivia:3",
+          "text": "Path Maker can be recast through a wall's edge only if there is room; check where Crystallize sits before you charge.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Anivia-W", "start": 82, "end": 93 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:KSante:Anivia:4",
+          "text": "Kill her once and expect Rebirth; stay and finish the egg, or leave it if the tower is near.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Anivia-passive",
+              "start": 25,
+              "end": 32
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:KSante:Anivia:5",
+          "text": "Do not stand in Glacial Storm for long; step out of it as it grows, because it slows you harder once fully formed.",
+          "refs": [
+            { "kind": "ability", "key": "Anivia-R", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Anivia",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork closes the gap to Anivia, then Ntofo Strikes slows and pulls her in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Anivia", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "KSante-Q", "start": 40, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "7a0c2c7588cb698968d70aa796fd70941a0b17acb873642a34eeafd2b0d5cee1",
+      "tips": [
+        {
+          "id": "top:KSante:Aurora:0",
+          "text": "Wait until Aurora uses The Weirding, then close in. She hops backward and it has a real cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Aurora", "start": 11, "end": 17 },
+            { "kind": "ability", "key": "Aurora-E", "start": 23, "end": 35 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:KSante:Aurora:1",
+          "text": "Land Ntofo Strikes twice in a row to stun and pull her to you. Then follow up with Path Maker.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "KSante-W", "start": 83, "end": 93 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:KSante:Aurora:2",
+          "text": "Use Footwork to shield against her Twofold Hex, and walk out of the way of its return hit.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Aurora-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:KSante:Aurora:3",
+          "text": "Her Across the Veil makes her invisible only briefly. Don't chase her blindly; wait for her to come back.",
+          "refs": [
+            { "kind": "ability", "key": "Aurora-W", "start": 4, "end": 19 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Aurora:4",
+          "text": "All Out roots her and pulls her around, so she can't hop away with Across the Veil. Use it when she is close to terrain.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "rooted", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Aurora-W", "start": 67, "end": 82 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Aurora",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes him Unstoppable, so Aurora's Weirding slow won't stop the Q and R chain.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Aurora", "start": 37, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6c20292ecc219b558fc72b7c765c8650c12b7fe96c35dfec4df9d0f28dd3aaa0",
+      "tips": [
+        {
+          "id": "top:KSante:Briar:0",
+          "text": "Hit Briar with Ntofo Strikes twice to set up the pull and stun. It stops her Blood Frenzy attack run on you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "top:KSante:Briar:1",
+          "text": "Use Footwork to dodge away from Briar's leap. The shield also helps you survive her burst.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Briar", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:KSante:Briar:2",
+          "text": "Charge Path Maker early when Briar is about to jump in. You take less damage while charging and the charge can't be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:KSante:Briar:3",
+          "text": "Stay away from walls when Briar is charging Chilling Scream; a full charge there knocks you into the wall and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Briar-E", "start": 44, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 115 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork then empowered Q lets K'Sante close on Briar and fling her, even through a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "KSante", "start": 31, "end": 38 },
+            { "kind": "champion", "key": "Briar", "start": 48, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c79d1a5b9c95a639b453f1e7c5d52070622d231b9394bec0a9d72784b2784b34",
+      "tips": [
+        {
+          "id": "top:KSante:Camille:0",
+          "text": "Land Ntofo Strikes twice on Camille so the second one stuns and pulls her to you. Do it when she walks up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Camille", "start": 28, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:KSante:Camille:1",
+          "text": "Use Path Maker when Camille dashes in with Hookshot. Charge it a bit longer for a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Camille", "start": 20, "end": 27 },
+            { "kind": "ability", "key": "Camille-E", "start": 43, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:KSante:Camille:2",
+          "text": "Stay out of the outer edge of Tactical Sweep. It slows you and heals her.",
+          "refs": [
+            { "kind": "ability", "key": "Camille-W", "start": 30, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:KSante:Camille:3",
+          "text": "Use Footwork to get away from The Hextech Ultimatum before she lands, since once the zone is up you can't leave it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Camille-R", "start": 30, "end": 51 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:KSante:Camille:4",
+          "text": "Think twice before going All Out in lane. You lose health and defense, and Camille can hit you hard.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 25, "end": 32 },
+            { "kind": "champion", "key": "Camille", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Camille",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Camille back through a thin wall, which counters her Hookshot-based engages.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Camille", "start": 15, "end": 22 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "d3f6ba03d1f7daa0563864c6ba4c66cf35ad5b121acff2e709c7b83fa073ff5c",
+      "tips": [
+        {
+          "id": "top:KSante:Chogath:0",
+          "text": "Step sideways out of the smoke cloud when Rupture shows up; it takes a moment to land.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-Q", "start": 42, "end": 49 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:KSante:Chogath:1",
+          "text": "Stay out of Feral Scream's short range; being silenced stops your dashes and Path Maker.",
+          "refs": [
+            { "kind": "ability", "key": "Chogath-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "silenced", "start": 46, "end": 54 },
+            { "kind": "ability", "key": "KSante-W", "start": 77, "end": 87 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "top:KSante:Chogath:2",
+          "text": "Use Ntofo Strikes on minions to build stacks, then pull Cho'Gath in with the second one and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Chogath", "start": 56, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "top:KSante:Chogath:3",
+          "text": "Shut down Cho'Gath's growth by trading before he eats champions or many minions, since Feast makes him much bigger.",
+          "refs": [
+            { "kind": "champion", "key": "Chogath", "start": 10, "end": 18 },
+            { "kind": "ability", "key": "Chogath-R", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Chogath:4",
+          "text": "Dash with Footwork to gain a shield before Cho'Gath trades with you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 10, "end": 18 },
+            { "kind": "champion", "key": "Chogath", "start": 43, "end": 51 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Chogath",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0fe6b79d38a89d34131f797b2ba8f362c61165f9a4d1d1bd724445c80fec6463",
+      "tips": [
+        {
+          "id": "top:KSante:Darius:0",
+          "text": "Keep Ntofo Strikes landing on Darius to build two stacks. The second cast stuns him and pulls him in, so you pick the fight.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 30, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 74, "end": 79 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:KSante:Darius:1",
+          "text": "Stay out of Apprehend's cone. Footwork gives you a shield and a quick dash out of the pull.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "KSante-E", "start": 30, "end": 38 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:KSante:Darius:2",
+          "text": "Hold Path Maker until Darius is close. Charge it longer for a longer stun, then ram him back before he piles up Hemorrhage stacks.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Darius", "start": 22, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 112,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:KSante:Darius:3",
+          "text": "Don't let Darius stack Hemorrhage on you. When he is at full stacks, back off, because Noxian Guillotine hits much harder.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 10, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 23,
+              "end": 33
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 87, "end": 104 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dashes you onto Darius so empowered Ntofo Strikes can slow him and fling him behind you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Darius", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 45, "end": 58 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "16cf35027b6b37895edbb52c94b62fa1379d0dd91ba9c6c1a42ddb4dde6602cf",
+      "tips": [
+        {
+          "id": "top:KSante:DrMundo:0",
+          "text": "Dodge Infected Bonesaw when you can. It slows you, heals Mundo when it hits you, and hurts more the more health you have.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-Q", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 45 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:KSante:DrMundo:1",
+          "text": "Mundo resists the first stun on him. Hit him with Path Maker without expecting a stun, then use it again once the passive is spent.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "KSante-W", "start": 50, "end": 60 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:KSante:DrMundo:2",
+          "text": "Step on Mundo's dropped canister before he picks it up. It stops him healing and bringing his passive back sooner.",
+          "refs": [],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:KSante:DrMundo:3",
+          "text": "Hold back your damage while Heart Zapper is charging, because he heals back what he takes. Fight after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-W", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:KSante:DrMundo:4",
+          "text": "Be careful going All Out into Mundo. You lose a lot of health and defense, and Maximum Dosage lets him outlast you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 79, "end": 93 }
+          ],
+          "pWrong": 0.42
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the R stun and knock-up may be wasted.",
+          "refs": []
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Mundo's passive resists the first Immobilizing effect, so the Q pull may be absorbed.",
+          "refs": []
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "31065e5c99056b776c67f22a718bc370b7ac7aa50239a1d67c1688e3fe34ef36",
+      "tips": [
+        {
+          "id": "top:KSante:Fiora:0",
+          "text": "Don't cast Ntofo Strikes or Path Maker into Fiora while Riposte is ready; she can turn your stun back on you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "KSante-W", "start": 28, "end": 38 },
+            { "kind": "champion", "key": "Fiora", "start": 44, "end": 49 },
+            { "kind": "ability", "key": "Fiora-W", "start": 56, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:KSante:Fiora:1",
+          "text": "Bait Riposte with a cheap ability first, then use your stun or All Out once it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-W", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "KSante-R", "start": 63, "end": 70 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:KSante:Fiora:2",
+          "text": "Use Footwork's shield before she trades with Lunge, so her burst hits less.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Fiora-Q", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:KSante:Fiora:3",
+          "text": "Be careful going All Out near Fiora; you lose health and defenses, and her Grand Challenge can finish you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Fiora", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Fiora-R", "start": 75, "end": 90 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, so it is hard for Fiora to disrupt the chained Q and R.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Fiora", "start": 56, "end": 61 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "056ba4bb1aa2f622f281c00858ac35c539208956a3b115745d93c0af298e0e7f",
+      "tips": [
+        {
+          "id": "top:KSante:Gangplank:0",
+          "text": "Hit Ntofo Strikes twice, then use the shockwave to pull Gangplank in and stun him before he can place kegs.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 56, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:KSante:Gangplank:1",
+          "text": "Gangplank can cleanse your stun with Remove Scurvy. Bait it out before you commit with All Out.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 37, "end": 50 },
+            { "kind": "ability", "key": "KSante-R", "start": 87, "end": 94 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:KSante:Gangplank:2",
+          "text": "Use Footwork's shield before you walk into Parrrley range; it soaks his poke.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 43, "end": 51 },
+            { "kind": "keyword", "key": "poke", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:KSante:Gangplank:3",
+          "text": "Charge Path Maker longer when Gangplank can't dodge; it gives you damage reduction and a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:KSante:Gangplank:4",
+          "text": "Stay out of kegs' blast zones; explosions slow and deal bonus damage to you. Attacking a keg yourself defuses it.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 46 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:KSante:Gangplank:5",
+          "text": "Watch for Cannon Barrage at level 6, especially when you are low on health; it can land from anywhere on the map.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-R", "start": 10, "end": 24 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e66211970ecdb43b5d71b16d98b8034d1611662eaa4b6e2e7670e23b117a7432",
+      "tips": [
+        {
+          "id": "top:KSante:Garen:0",
+          "text": "Keep your distance from Garen and hit him with Ntofo Strikes; his Decisive Strike cleans the slow, so don't rely on it to hold him.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "KSante-Q", "start": 47, "end": 60 },
+            { "kind": "ability", "key": "Garen-Q", "start": 66, "end": 81 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:KSante:Garen:1",
+          "text": "Land the second Ntofo Strikes to pull Garen in and stun him, then trade while he can't act.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Garen", "start": 38, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:KSante:Garen:2",
+          "text": "Stay out of Garen's Judgment; use Footwork to dash away from its spin.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            { "kind": "ability", "key": "Garen-E", "start": 20, "end": 28 },
+            { "kind": "ability", "key": "KSante-E", "start": 34, "end": 42 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:KSante:Garen:3",
+          "text": "Back off when you're low; Demacian Justice deals more the less health you have.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-R", "start": 26, "end": 42 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:KSante:Garen:4",
+          "text": "Garen heals back quickly once he's left alone, so keep poking him to stop Perseverance.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "poke", "start": 55, "end": 61 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 74,
+              "end": 86
+            }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef37ff54078dded1a62ade21f981d87b43a7e978a40130383f3b91fa81846350",
+      "tips": [
+        {
+          "id": "top:KSante:Gnar:0",
+          "text": "Walk up and hit Gnar with Ntofo Strikes twice; the second cast pulls and stuns him. Do it when he is out of position.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 16, "end": 20 },
+            { "kind": "ability", "key": "KSante-Q", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:KSante:Gnar:1",
+          "text": "Gnar outranges you, so use Footwork to shield and close in. Spare the shield for when you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "KSante-E", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:KSante:Gnar:2",
+          "text": "Charge Path Maker longer for a longer stun, and aim it at Gnar after he spends Hop.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Gnar", "start": 58, "end": 62 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:KSante:Gnar:3",
+          "text": "When Gnar's Rage bar is nearly full, back off or stay out of his reach. Mega Gnar's Wallop stuns and his ultimate can knock you into walls.",
+          "refs": [
+            { "kind": "champion", "key": "Gnar", "start": 5, "end": 9 },
+            { "kind": "champion", "key": "Gnar", "start": 77, "end": 81 },
+            { "kind": "keyword", "key": "stunned", "start": 91, "end": 96 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:KSante:Gnar:4",
+          "text": "Go to All Out when you can trap Gnar against a wall. You will take more damage in it, so be sure the kill is there.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "Gnar", "start": 32, "end": 36 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Gnar",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Gnar back, and a thin wall behind him adds a second hit plus a stun and knock-up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Gnar", "start": 15, "end": 19 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0a87fe664316695247f6b6e1dbf657369a6214ba8bcc06fdc7ae084025c9a55",
+      "tips": [
+        {
+          "id": "top:KSante:Gragas:0",
+          "text": "Hit Gragas with Ntofo Strikes twice, then use the stunning pull when he walks up for Body Slam. It keeps him from starting the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Gragas", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "ability", "key": "Gragas-E", "start": 85, "end": 94 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:KSante:Gragas:1",
+          "text": "Charge Path Maker when Gragas is about to dash at you. It lets you take less damage and no knockback can move you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Gragas", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "top:KSante:Gragas:2",
+          "text": "Step out of the way of Barrel Roll when it is about to explode. Its slow gets stronger the longer it sits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 23, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:KSante:Gragas:3",
+          "text": "Be careful with All Out near Gragas, since you lose health and armor. His Explosive Cask can knock you away and leave you exposed.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 16, "end": 23 },
+            { "kind": "champion", "key": "Gragas", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Gragas-R", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Gragas",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Gragas back through a thin wall, then stuns him, which punishes his positioning in lane.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Gragas", "start": 15, "end": 21 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0007f46fa8f1b6c2cdd2c9204b98ad1cabadbaa73b419ecfb5963b7690fc94c0",
+      "tips": [
+        {
+          "id": "top:KSante:Gwen:0",
+          "text": "Hit Ntofo Strikes twice to stun and pull Gwen, then follow up. She is easy to burst when she cannot escape.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gwen", "start": 41, "end": 45 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:KSante:Gwen:1",
+          "text": "Don't chase Gwen into Hallowed Mist; you cannot target her from outside it. Wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Gwen-W", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:KSante:Gwen:2",
+          "text": "Hold Path Maker until Gwen uses Skip 'n Slash, then charge it for a longer stun when she is committed.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Gwen", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Gwen-E", "start": 32, "end": 45 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:KSante:Gwen:3",
+          "text": "Don't let Gwen attack you freely; she needs several attacks to power up Snip Snip!. Slow her with Ntofo Strikes when she walks in.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 72, "end": 82 },
+            { "kind": "keyword", "key": "slowed", "start": 84, "end": 88 },
+            { "kind": "ability", "key": "KSante-Q", "start": 98, "end": 111 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "top:KSante:Gwen:4",
+          "text": "Step out of the way between her Needlework casts; she needs to hit something to recast it.",
+          "refs": [
+            { "kind": "ability", "key": "Gwen-R", "start": 32, "end": 42 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "top:KSante:Gwen:5",
+          "text": "Use Footwork for a shield before a trade; it absorbs some of her damage.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "04e087412872115ab0735939c1d9367a8571b03a37b0b551799e7f7a0e9caf75",
+      "tips": [
+        {
+          "id": "top:KSante:Heimerdinger:0",
+          "text": "Hit Heimerdinger with Ntofo Strikes twice to pull and stun him, then hit him while he cannot place turrets.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "ability", "key": "KSante-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:KSante:Heimerdinger:1",
+          "text": "Charge Path Maker out of sight of his grenade, then dash in; a long charge gives a longer stun on him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:KSante:Heimerdinger:2",
+          "text": "Fight away from his turrets; they hurt, and he moves faster near them.",
+          "refs": [],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:KSante:Heimerdinger:3",
+          "text": "Use Footwork to dodge in and out of his range, and its shield soaks up his poke.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "poke", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:KSante:Heimerdinger:4",
+          "text": "Take All Out only when you can finish him; you lose health and resistances while it lasts, and his rockets hurt more then.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Heimerdinger",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork dash into the empowered Q closes distance on Heimerdinger and flings him away from his turrets.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            {
+              "kind": "champion",
+              "key": "Heimerdinger",
+              "start": 54,
+              "end": 66
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "9e05210aba8df5deef53708c5743584824e7c8b24fb80c4e8edaf7d4d3065130",
+      "tips": [
+        {
+          "id": "top:KSante:Illaoi:0",
+          "text": "Kill Illaoi's Tentacles when you can, because she is much weaker without them. Fight her away from terrain.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:KSante:Illaoi:1",
+          "text": "Hit Illaoi with Ntofo Strikes twice for the stun and pull. It drags her out of range of her Tentacles.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:KSante:Illaoi:2",
+          "text": "When Test of Spirit pulls your spirit out, hit Illaoi. Damaging her shortens the spirit's life.",
+          "refs": [
+            { "kind": "ability", "key": "Illaoi-E", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Illaoi", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:KSante:Illaoi:3",
+          "text": "Charge Path Maker before dashing into her. It reduces damage and cannot be interrupted, and a longer charge stuns longer.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 108, "end": 113 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:KSante:Illaoi:4",
+          "text": "Use Footwork to dodge her Tentacle Smash, since the cast is slow.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Illaoi-Q", "start": 26, "end": 40 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Illaoi",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Knocking Illaoi through a wall with All Out gives a second hit and a stun, which also interrupts her.",
+          "refs": [
+            { "kind": "champion", "key": "Illaoi", "start": 9, "end": 15 },
+            { "kind": "ability", "key": "KSante-R", "start": 36, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b695974efaf2953110e717f48d0f46cdf85bf6ca8b39ac80c964240dee2b207",
+      "tips": [
+        {
+          "id": "top:KSante:Irelia:0",
+          "text": "Hold Ntofo Strikes until it has two stacks; the shockwave pulls Irelia in and leaves her stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Irelia", "start": 64, "end": 70 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:KSante:Irelia:1",
+          "text": "Don't spend Path Maker when Irelia is charging Defiant Dance; she takes much less damage and can't be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 12, "end": 22 },
+            { "kind": "champion", "key": "Irelia", "start": 28, "end": 34 },
+            { "kind": "ability", "key": "Irelia-W", "start": 47, "end": 60 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:KSante:Irelia:2",
+          "text": "Fight her away from minions; Bladesurge needs them to chase you, so stay clear of low-health ones near you.",
+          "refs": [
+            { "kind": "ability", "key": "Irelia-Q", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:KSante:Irelia:3",
+          "text": "Use Footwork's shield before she dashes in, and watch for Flawless Duet, which stuns if both blades meet on you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Irelia-E", "start": 58, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:KSante:Irelia:4",
+          "text": "Hold All Out until Irelia's dashes are down; going All Out cuts your health, so she can burst you if she is ready.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Irelia", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "KSante-R", "start": 51, "end": 58 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Irelia",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "bd8516a22e36830850afdbd8933d76e312e89435732eb3dfa69f28935b104810",
+      "tips": [
+        {
+          "id": "top:KSante:Jax:0",
+          "text": "Hit Jax with Ntofo Strikes twice for the stun and pull; it ruins his attack chain and Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 4, "end": 7 },
+            { "kind": "ability", "key": "KSante-Q", "start": 13, "end": 26 },
+            { "kind": "keyword", "key": "stunned", "start": 41, "end": 45 },
+            { "kind": "ability", "key": "Jax-passive", "start": 86, "end": 104 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:KSante:Jax:1",
+          "text": "Wait out Counter Strike before you attack; it dodges your basic attacks and then stuns you.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 9, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:KSante:Jax:2",
+          "text": "Use Path Maker to stun Jax when his Leap Strike is down. Charge it longer for a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Jax", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Jax-Q", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "top:KSante:Jax:3",
+          "text": "Save All Out for a Jax who is low or near a wall, and expect a heavy trade because it lowers your health.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1b8677c3592219a93ac1dde1c98afc5081126de6ad939c59302eb86558e9ecc0",
+      "tips": [
+        {
+          "id": "top:KSante:Jayce:0",
+          "text": "Close the gap with Footwork, then land Ntofo Strikes twice so the second stuns and pulls Jayce in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "KSante-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 73, "end": 78 },
+            { "kind": "champion", "key": "Jayce", "start": 89, "end": 94 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:KSante:Jayce:1",
+          "text": "Charge Path Maker longer before you release it; a longer charge reaches farther and stuns for longer.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:KSante:Jayce:2",
+          "text": "Jayce's Shock Blast stops at the first unit it hits, so stand behind minions to block it.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:Jayce:3",
+          "text": "Watch for Jayce's Acceleration Gate; it means a stronger Shock Blast is coming, so sidestep it.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 10, "end": 15 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:KSante:Jayce:4",
+          "text": "Jayce is strong early and hits hard in his hammer form. Play safe if he gets ahead.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:KSante:Jayce:5",
+          "text": "Use All Out with a wall behind Jayce to knock him over it and hit him twice.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 4, "end": 11 },
+            { "kind": "champion", "key": "Jayce", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, so Jayce's To the Skies! slow won't stop the chained Q and R.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Jayce", "start": 41, "end": 46 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "b9311c686caecd8d6525151a230aa84deb79a2e64cebba2e6869c70cc26de692",
+      "tips": [
+        {
+          "id": "top:KSante:Kayle:0",
+          "text": "Fight Kayle before level 6, while she is stuck in melee. Put her behind early.",
+          "refs": [
+            { "kind": "champion", "key": "Kayle", "start": 6, "end": 11 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:KSante:Kayle:1",
+          "text": "Land Ntofo Strikes twice, then use the third to pull and stun her. She cannot kite you once she is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 99, "end": 106 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:KSante:Kayle:2",
+          "text": "Charge Path Maker longer to stun her for longer. It cannot be interrupted, so use it when she tries to back away.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:KSante:Kayle:3",
+          "text": "Do not use All Out when Kayle's Divine Judgment is ready. She can make herself invulnerable and wait you out while you are low on health.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 11, "end": 18 },
+            { "kind": "champion", "key": "Kayle", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Kayle-R", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:KSante:Kayle:4",
+          "text": "Use Footwork to dodge Radiant Blast; it stops at the first enemy it hits, so shield up before trading.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Kayle-Q", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Kayle",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "a1ef0a2b59aa4bf46d3973634ae7484702fdf7199b5f276b56f29956dd8478af",
+      "tips": [
+        {
+          "id": "top:KSante:Kennen:0",
+          "text": "Close the gap with Footwork, then land Ntofo Strikes twice to stun and pull Kennen onto you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "KSante-Q", "start": 39, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 66 },
+            { "kind": "champion", "key": "Kennen", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "top:KSante:Kennen:1",
+          "text": "Use Footwork's shield when Kennen throws Thundering Shuriken; it blocks some of the poke.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kennen", "start": 27, "end": 33 },
+            { "kind": "ability", "key": "Kennen-Q", "start": 41, "end": 60 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:KSante:Kennen:2",
+          "text": "Charge Path Maker longer before you dash at Kennen; a longer charge means a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Kennen", "start": 44, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:KSante:Kennen:3",
+          "text": "Count the Marks of the Storm on you. At the third mark you are stunned, so back off from Kennen's abilities.",
+          "refs": [
+            { "kind": "keyword", "key": "stunned", "start": 63, "end": 70 },
+            { "kind": "champion", "key": "Kennen", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:Kennen:4",
+          "text": "Hit Kennen with All Out when he is out of position. He is fragile, and it can knock him through a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Kennen", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "KSante-R", "start": 16, "end": 23 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Kennen",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable while charging, so Kennen's stun mark cannot stop that chain.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Kennen", "start": 56, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "62284d454076636ac0e3def924efa555aec7f8384c326642690c34d0eef8aeb6",
+      "tips": [
+        {
+          "id": "top:KSante:Kled:0",
+          "text": "Hit Ntofo Strikes twice, then use the third to pull and stun Kled. Follow up while he is stunned.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 56, "end": 60 },
+            { "kind": "champion", "key": "Kled", "start": 61, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:KSante:Kled:1",
+          "text": "Use Footwork to dodge Bear Trap on a Rope. If it hooks you, move away from Kled before the rope pulls you in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Kled-Q", "start": 22, "end": 41 },
+            { "kind": "champion", "key": "Kled", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "top:KSante:Kled:2",
+          "text": "Wear down Skaarl first. Once Kled is dismounted he loses his abilities, so fight him then, and stay away when his courage is nearly full.",
+          "refs": [
+            { "kind": "champion", "key": "Kled", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Kled",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Kled back, and a wall behind him adds a second hit, stun and knock up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Kled", "start": 15, "end": 19 }
+          ]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork gets K'Sante onto Kled so the empowered Ntofo Strikes can fling him behind.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "KSante", "start": 14, "end": 21 },
+            { "kind": "champion", "key": "Kled", "start": 27, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 49, "end": 62 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "2f7cb22a846820d8a2124de9ad21d5b31581fb2bd2b012e94f091a899f0afbcf",
+      "tips": [
+        {
+          "id": "top:KSante:Malphite:0",
+          "text": "Land Ntofo Strikes twice in a row to pull and stun Malphite. Use it to start your trades.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 46, "end": 50 },
+            { "kind": "champion", "key": "Malphite", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.88
+        },
+        {
+          "id": "top:KSante:Malphite:1",
+          "text": "Charge Path Maker longer before ramming Malphite; a longer charge stuns for longer. You take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Malphite", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:KSante:Malphite:2",
+          "text": "Use Footwork to dash out of Malphite's range and gain a shield. It also covers a trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Malphite", "start": 28, "end": 36 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:KSante:Malphite:3",
+          "text": "Stay out of Malphite's reach at level 6 when All Out is down. His Unstoppable Force can't be stopped by your crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 12, "end": 20 },
+            { "kind": "ability", "key": "KSante-R", "start": 45, "end": 52 },
+            { "kind": "ability", "key": "Malphite-R", "start": 66, "end": 83 }
+          ],
+          "pWrong": 0.44
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "b14f02fde9b4eaf803cf2f30d2e7812e457d21912e4d1cc357c03be51248d5f6",
+      "tips": [
+        {
+          "id": "top:KSante:Mordekaiser:0",
+          "text": "Stay out of reach when Mordekaiser has Darkness Rise running; its aura hurts anyone close to him.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 23,
+              "end": 34
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 39,
+              "end": 52
+            }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "top:KSante:Mordekaiser:1",
+          "text": "Step out of the way of Death's Grasp. It pulls you in, so don't line up in a straight path to him.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "top:KSante:Mordekaiser:2",
+          "text": "Use Ntofo Strikes twice to land the stun and pull, then trade. Mordekaiser's shield grows from the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 40 },
+            { "kind": "champion", "key": "Mordekaiser", "start": 63, "end": 74 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:KSante:Mordekaiser:3",
+          "text": "Save Footwork to dash away once Mordekaiser casts Realm of Death, since you are alone in there.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 5, "end": 13 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 32,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 50,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "R wall slam stuns and knocks up Mordekaiser, a strong punish when he is near a wall in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Mordekaiser", "start": 32, "end": 43 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ac7061993223832f26a1611f5c5d48fb988847af56d91401a5c89f2d53b85a5",
+      "tips": [
+        {
+          "id": "top:KSante:Naafiri:0",
+          "text": "Hit Ntofo Strikes twice, then use the third cast to stun and pull Naafiri in so you can trade on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 56 },
+            { "kind": "champion", "key": "Naafiri", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "top:KSante:Naafiri:1",
+          "text": "Hold Path Maker until you see her commit. Charging it gives you damage reduction, and the dash stuns anyone it hits.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "stunned", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:KSante:Naafiri:2",
+          "text": "Use Footwork to dash onto her, then follow with a ready Ntofo Strikes. The shield also softens her burst.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "KSante-Q", "start": 56, "end": 69 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:KSante:Naafiri:3",
+          "text": "Save All Out for when you can kill her. It makes you much squishier, and she has burst and Packmates to punish that.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:KSante:Naafiri:4",
+          "text": "Her Packmates add damage to every trade. Hit her with your abilities and auto attacks, not just the Packmates.",
+          "refs": [],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling with Q lets you reach Naafiri when she's close to you in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 53, "end": 60 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef2b3df1c8d67ac9dd3cbbb753ef410e70f32810f352e12b9ac6dfd9273f3ab9",
+      "tips": [
+        {
+          "id": "top:KSante:Nasus:0",
+          "text": "Hit Nasus with Ntofo Strikes twice to pull and stun him, then trade while he can't hit you back.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:KSante:Nasus:1",
+          "text": "Harass Nasus when he goes for a last hit with Siphoning Strike. Stopping those kills keeps his damage low.",
+          "refs": [
+            { "kind": "champion", "key": "Nasus", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Nasus-Q", "start": 46, "end": 62 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:KSante:Nasus:2",
+          "text": "Stay out of Wither range or fight it early. It slows you more each second and cuts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nasus-W", "start": 12, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 52 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:KSante:Nasus:3",
+          "text": "Use Path Maker for a long stun on Nasus. A longer charge gives a longer stun, so charge it when he can't easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Nasus", "start": 34, "end": 39 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:KSante:Nasus:4",
+          "text": "Use Footwork to dash away from Nasus, and the shield also cushions his Spirit Fire. Disengage when his Fury of the Sands is running.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nasus", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Nasus-E", "start": 71, "end": 82 },
+            { "kind": "ability", "key": "Nasus-R", "start": 103, "end": 120 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Nasus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "49b361d961b5d30023d0000e07a9181865dd026379670795d3fc22e2ef6e7d97",
+      "tips": [
+        {
+          "id": "top:KSante:Olaf:0",
+          "text": "Land Ntofo Strikes twice on Olaf, then the next one stuns and pulls him in so you can trade on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Olaf", "start": 28, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:KSante:Olaf:1",
+          "text": "Don't waste Path Maker or All Out on Olaf during Ragnarok; he is immune to disables then.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "KSante-R", "start": 26, "end": 33 },
+            { "kind": "champion", "key": "Olaf", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Olaf-R", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:KSante:Olaf:2",
+          "text": "Stay away from Undertow's axe path; if it hits you, you are slowed and lose Armor.",
+          "refs": [
+            { "kind": "ability", "key": "Olaf-Q", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 66 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:KSante:Olaf:3",
+          "text": "Keep Olaf from walking to his axe to cut down his poke in lane.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 5, "end": 9 },
+            { "kind": "keyword", "key": "poke", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:KSante:Olaf:4",
+          "text": "Finish Olaf before he gets low; Berserker Rage makes him hit harder and heal more the lower he is.",
+          "refs": [
+            { "kind": "champion", "key": "Olaf", "start": 7, "end": 11 },
+            { "kind": "ability", "key": "Olaf-passive", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Olaf",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "490a09ee4d3c9b32b5e5f53f20a39bd5664e1e15f36bc182dbba0cdb4f7940cb",
+      "tips": [
+        {
+          "id": "top:KSante:Ornn:0",
+          "text": "Stay away from walls when Ornn is near. Searing Charge into terrain knocks you up and stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Ornn", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ornn-E", "start": 40, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:KSante:Ornn:1",
+          "text": "Use Path Maker to stun Ornn. It makes you unstoppable while charging, so Bellows Breath will not stop it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "stunned", "start": 18, "end": 22 },
+            { "kind": "champion", "key": "Ornn", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Ornn-W", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:KSante:Ornn:2",
+          "text": "Land two Ntofo Strikes in a row, then the next one pulls Ornn in and stuns him. Use it when he is out of position.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Ornn", "start": 57, "end": 61 },
+            { "kind": "keyword", "key": "stunned", "start": 69, "end": 74 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:KSante:Ornn:3",
+          "text": "Sidestep Volcanic Rupture, because it slows you, and its pillar blocks your path.",
+          "refs": [
+            { "kind": "ability", "key": "Ornn-Q", "start": 9, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:KSante:Ornn:4",
+          "text": "Use Footwork to dash away from Ornn's stuns and get a shield while doing so.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ornn", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Ornn",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker makes K'Sante Unstoppable, and R refreshes it, which helps him chain through Ornn's slows.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "champion", "key": "Ornn", "start": 88, "end": 92 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "341de06f4d6a37180b75116dbfbc401d81f34f168bc7b6d516ff241e91d00039",
+      "tips": [
+        {
+          "id": "top:KSante:Pantheon:0",
+          "text": "Stay out of Comet Spear's line and don't stand low on health near Pantheon, because his thrown spear hits hard on weakened targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 12, "end": 23 },
+            { "kind": "champion", "key": "Pantheon", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:KSante:Pantheon:1",
+          "text": "Hit Pantheon with two Ntofo Strikes in a row, then pull and stun him away from his wave.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "KSante-Q", "start": 22, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:KSante:Pantheon:2",
+          "text": "Don't swing into Aegis Assault from the front; go around or wait it out, since he takes no damage from that side.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-E", "start": 17, "end": 30 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:KSante:Pantheon:3",
+          "text": "Charge Path Maker before he jumps; it makes you unstoppable, so Shield Vault can't stop you.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "1761e65814f4551a88832c2b4facbb22b8f45b4fa684e05f7126b6cbc286f901",
+      "tips": [
+        {
+          "id": "top:KSante:Quinn:0",
+          "text": "Walk up and use Ntofo Strikes twice on Quinn. The second cast stuns and pulls her to you, so she cannot kite away.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 16, "end": 29 },
+            { "kind": "champion", "key": "Quinn", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:KSante:Quinn:1",
+          "text": "Charge Path Maker longer when Quinn is cornered. It gives you damage reduction while you charge, and the stun lasts longer.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Quinn", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 109 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:KSante:Quinn:2",
+          "text": "Use Footwork to shield yourself as you step in on her. It makes her trades cost her more.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:KSante:Quinn:3",
+          "text": "Quinn is weaker up close. Her Vault knocks you back a little and slows you, so ignore it and chase her.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Quinn-E", "start": 30, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "top:KSante:Quinn:4",
+          "text": "When Quinn's Blinding Assault is up, expect your vision to shrink if she hits you. Stay beside minions, since the first enemy it hits stops it.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Quinn-Q", "start": 13, "end": 29 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "top:KSante:Quinn:5",
+          "text": "Look for All Out when she Vaults away near a wall. Pushing her through terrain adds a second hit and a stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 9, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:KSante:Quinn:6",
+          "text": "Hitting Quinn while she uses Behind Enemy Lines removes her speed bonus for a while, so punish her when she tries to roam.",
+          "refs": [
+            { "kind": "champion", "key": "Quinn", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "Quinn-R", "start": 29, "end": 47 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Quinn",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20aa7a9a6a7e94a700ef54b47ea203900a83b5551d46107bb41913139014a225",
+      "tips": [
+        {
+          "id": "top:KSante:Renekton:0",
+          "text": "Charge Path Maker longer when you can, since a longer charge stuns longer and goes farther. Aim it at Renekton when he is out of Fury.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Renekton", "start": 102, "end": 110 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:KSante:Renekton:1",
+          "text": "Watch his Fury. When it is high, his Ruthless Predator stuns for much longer, so keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Renekton-W", "start": 37, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:KSante:Renekton:2",
+          "text": "Land Ntofo Strikes twice to pull and stun Renekton. Then follow up while he can't act.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 37, "end": 41 },
+            { "kind": "champion", "key": "Renekton", "start": 42, "end": 50 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:KSante:Renekton:3",
+          "text": "Use Footwork's shield when Renekton dashes in. It softens his trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Renekton", "start": 27, "end": 35 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Renekton:4",
+          "text": "Poke him while he has little Fury, since fighting is how he gets strong.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Renekton",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out's wall slam stuns and knocks up Renekton, punishing him when he stands near a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Renekton", "start": 40, "end": 48 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4d102efff223a08afb17803cce53dda2427bc01844c56967a8269efee366b553",
+      "tips": [
+        {
+          "id": "top:KSante:Riven:0",
+          "text": "Land Ntofo Strikes twice on Riven for the pull and stun. Hit her while she dashes in, since the first hit slows her.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Riven", "start": 28, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:KSante:Riven:1",
+          "text": "Keep Footwork for after she uses Ki Burst or Broken Wings. The shield soaks her burst and you can dash out.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Riven-W", "start": 33, "end": 41 },
+            { "kind": "ability", "key": "Riven-Q", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:KSante:Riven:2",
+          "text": "Charge Path Maker longer for a longer stun. Cast it when she has used her dashes, since she cannot easily escape.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:KSante:Riven:3",
+          "text": "Be careful with All Out when Riven has her burst ready, because you lose a lot of health and resistances.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 16, "end": 23 },
+            { "kind": "champion", "key": "Riven", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Riven",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "88c12f9667131ebe805a43ee4d38410f7a1e034d0c8c44674c04f47e0a643acc",
+      "tips": [
+        {
+          "id": "top:KSante:Rumble:0",
+          "text": "Land Ntofo Strikes twice, then the next one pulls Rumble in and stuns him. Use that to start your fight.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Rumble", "start": 50, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:KSante:Rumble:1",
+          "text": "Charge Path Maker longer when Rumble is close; a longer charge gives a longer stun and more reach.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Rumble", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:KSante:Rumble:2",
+          "text": "Step out of The Equalizer fire quickly instead of fighting inside it, and use Footwork to leave.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 12, "end": 25 },
+            { "kind": "ability", "key": "KSante-E", "start": 78, "end": 86 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:Rumble:3",
+          "text": "Go in when Rumble is Overheating; he cannot cast spells then, so trade freely.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Rumble:4",
+          "text": "Rumble deals magic damage, which your bonus Magic Resist helps against. Do not go All Out early, because it removes that bonus.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "KSante-R", "start": 82, "end": 89 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Going All Out refreshes W, letting K'Sante chain Q and R during the dash to threaten Rumble.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 6, "end": 13 },
+            { "kind": "champion", "key": "KSante", "start": 35, "end": 42 },
+            { "kind": "champion", "key": "Rumble", "start": 85, "end": 91 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "d68dc3f770bd71ad07979e1a32b6df775d0c864f7eebfdfe39760aec7f31c85d",
+      "tips": [
+        {
+          "id": "top:KSante:Sett:0",
+          "text": "Keep Ntofo Strikes ready to land two hits on Sett; the stun and pull stops him from running you down.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Sett", "start": 45, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 55, "end": 59 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:KSante:Sett:1",
+          "text": "Don't stand between Sett and a minion; Facebreaker on both sides stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Sett-E", "start": 39, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:KSante:Sett:2",
+          "text": "Back off after a trade; Sett's Haymaker is strongest when he has soaked up damage from you.",
+          "refs": [
+            { "kind": "champion", "key": "Sett", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sett-W", "start": 31, "end": 39 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:KSante:Sett:3",
+          "text": "Step out of the middle of Haymaker; only the center deals true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Sett-W", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Sett:4",
+          "text": "Use Footwork to dodge Sett's burst and take a shield while you move.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Sett", "start": 22, "end": 26 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:KSante:Sett:5",
+          "text": "Hold All Out for when Sett lacks his grab. He can pull you in with The Show Stopper, and All Out lowers your health and armor.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Sett", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Sett-R", "start": 67, "end": 83 },
+            { "kind": "ability", "key": "KSante-R", "start": 89, "end": 96 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:KSante:Sett:6",
+          "text": "Charge Path Maker fully before ramming Sett; it stuns longer. You take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Sett", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Sett",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "c511424af9a2e1242a23e8e58f74d6c10cc8497f55a233502007e634a0abf841",
+      "tips": [
+        {
+          "id": "top:KSante:Shen:0",
+          "text": "Don't walk into Shadow Dash range for a casual trade; being taunted lets Shen hit you with his empowered attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-E", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Shen", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:KSante:Shen:1",
+          "text": "Hit Shen with two Ntofo Strikes in a row so the third stuns and pulls him in for a trade.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KSante-Q", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:KSante:Shen:2",
+          "text": "Wait out Spirit's Refuge before you attack; your basic attacks are blocked inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Shen-W", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:KSante:Shen:3",
+          "text": "Use Path Maker's charge to become Unstoppable, so Shen's taunt won't stop it.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Shen", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Shen:4",
+          "text": "Watch for Shen vanishing at level 6; his Stand United can bring him to a fight in another lane, so play safe if he's missing.",
+          "refs": [
+            { "kind": "champion", "key": "Shen", "start": 10, "end": 14 },
+            { "kind": "ability", "key": "Shen-R", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Shen",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker can be chained with Q and All Out, giving a strong burst window against Shen.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "KSante-R", "start": 37, "end": 44 },
+            { "kind": "champion", "key": "Shen", "start": 83, "end": 87 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "82a85b5d4468d6b2de469907984b99c2c2b0e26b7ac61947175a9462e9bf239c",
+      "tips": [
+        {
+          "id": "top:KSante:Singed:0",
+          "text": "Dodge the Mega Adhesive field; if Singed Flings you into it, you are rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Singed-W", "start": 10, "end": 23 },
+            { "kind": "champion", "key": "Singed", "start": 34, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 75 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:KSante:Singed:1",
+          "text": "Land two Ntofo Strikes hits, then fire the shockwave to pull Singed in and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Singed", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:KSante:Singed:2",
+          "text": "Don't chase Singed through his Poison Trail; he wants you to follow him.",
+          "refs": [
+            { "kind": "champion", "key": "Singed", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "Singed-Q", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Singed:3",
+          "text": "Use Footwork for its shield when you trade into Singed's trail, then step out.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Singed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:KSante:Singed:4",
+          "text": "Charge Path Maker longer to stun Singed for longer, but keep clear of Fling range.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Singed", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Singed-E", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Singed",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0eb6ea25114b97926ec9be9b2a9962de8ab944ec5372c54767185a6071ec722d",
+      "tips": [
+        {
+          "id": "top:KSante:Sion:0",
+          "text": "Hit Sion with Ntofo Strikes twice. The second cast pulls and stuns him, which interrupts his Decimating Smash charge.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KSante-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 },
+            { "kind": "ability", "key": "Sion-Q", "start": 93, "end": 109 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:KSante:Sion:1",
+          "text": "Use Path Maker as Sion starts charging his axe. You are Unstoppable while you charge, and you can knock him back and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Sion", "start": 18, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 117, "end": 121 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:KSante:Sion:2",
+          "text": "Sidestep Roar of the Slayer. It is a thin line, and Sion usually follows it with a big Decimating Smash.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-E", "start": 9, "end": 27 },
+            { "kind": "champion", "key": "Sion", "start": 52, "end": 56 },
+            { "kind": "ability", "key": "Sion-Q", "start": 87, "end": 103 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:KSante:Sion:3",
+          "text": "Dash away with Footwork when Sion charges Unstoppable Onslaught. Stay out of its path, since a late dodge means a stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 15, "end": 23 },
+            { "kind": "champion", "key": "Sion", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Sion-R", "start": 42, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 114, "end": 118 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:KSante:Sion:4",
+          "text": "Back off after you kill Sion. His Glory in Death makes him hit very fast for a short time, so do not stand and fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "Sion-passive", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "745e573a413c89fa12e2124bec039403156db809842e92793cc27af990af561e",
+      "tips": [
+        {
+          "id": "top:KSante:TahmKench:0",
+          "text": "Hit Tahm Kench with Ntofo Strikes twice to stun and pull him. This works well when he walks up to attack minions.",
+          "refs": [
+            { "kind": "champion", "key": "TahmKench", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "KSante-Q", "start": 20, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "top:KSante:TahmKench:1",
+          "text": "Stay out of his Tongue Lash line, and keep minions between you when he has stacks. Three stacks means a stun, and then Devour.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-Q", "start": 16, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "TahmKench-R",
+              "start": 119,
+              "end": 125
+            }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:KSante:TahmKench:2",
+          "text": "Charge Path Maker when you see Abyssal Dive start. It can't be interrupted, and it lowers the damage you take while you wait.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "TahmKench-W", "start": 31, "end": 43 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "top:KSante:TahmKench:3",
+          "text": "Hit him hard in short trades. Thick Skin stores damage and heals only when he goes unhit for a few seconds, so keep pressing.",
+          "refs": [
+            { "kind": "ability", "key": "TahmKench-E", "start": 30, "end": 40 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "TahmKench",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "18de78256f97298a5d6de6b5009872d49d93f46d8672790eff44eb7cf643bc03",
+      "tips": [
+        {
+          "id": "top:KSante:Teemo:0",
+          "text": "Close the gap with Footwork, then use Ntofo Strikes twice to pull Teemo in and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 19, "end": 27 },
+            { "kind": "ability", "key": "KSante-Q", "start": 38, "end": 51 },
+            { "kind": "champion", "key": "Teemo", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 79, "end": 83 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:KSante:Teemo:1",
+          "text": "Charge Path Maker longer when Teemo is stuck on you; the stun lasts longer the longer you charge.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:KSante:Teemo:2",
+          "text": "Walk around mushrooms and brush before fighting. Noxious Trap slows you and reveals you.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 49, "end": 61 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:Teemo:3",
+          "text": "Don't fight in a brush where Teemo may be hiding with Guerrilla Warfare. Wait for him to attack and give himself away.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 29, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Teemo-passive",
+              "start": 54,
+              "end": 71
+            }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:Teemo:4",
+          "text": "Don't linger after Blinding Dart. Back out before Toxic Shot's poison adds up.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 19, "end": 32 },
+            { "kind": "ability", "key": "Teemo-E", "start": 50, "end": 60 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork into Q closes on Teemo and pulls him, punishing a squishy champion who needs distance.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "86b26f7c9c3e004aad218a60433c264cc0c275f9fb4094179dcc72ac441cb1c2",
+      "tips": [
+        {
+          "id": "top:KSante:Tryndamere:0",
+          "text": "Land Ntofo Strikes twice, then fire the shockwave to stun and pull Tryndamere into your fight.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "stunned", "start": 53, "end": 57 },
+            { "kind": "champion", "key": "Tryndamere", "start": 67, "end": 77 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:KSante:Tryndamere:1",
+          "text": "Hold Path Maker for Tryndamere's dash in; its charge cannot be interrupted and it cuts damage while you charge.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Tryndamere", "start": 20, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:KSante:Tryndamere:2",
+          "text": "Keep Tryndamere from last-hitting by poking him early, so he builds little Fury to heal with Bloodlust.",
+          "refs": [
+            { "kind": "champion", "key": "Tryndamere", "start": 5, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 37, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-Q",
+              "start": 93,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "top:KSante:Tryndamere:3",
+          "text": "Do not spend All Out while Undying Rage is ready; he refuses to die and your lower health makes you easy to hurt.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Tryndamere-R", "start": 27, "end": 39 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "top:KSante:Tryndamere:4",
+          "text": "Use Footwork to dodge away from Spinning Slash and keep the shield up when Tryndamere trades.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 32,
+              "end": 46
+            },
+            { "kind": "champion", "key": "Tryndamere", "start": 75, "end": 85 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Tryndamere",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "550079edd80fc09c900245ab442833de05e22067919391167275cdb8c0c2af51",
+      "tips": [
+        {
+          "id": "top:KSante:Urgot:0",
+          "text": "Stay out of Corrosive Charge range, and do not stand still on a minion wave where it lands; it slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 95, "end": 100 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:KSante:Urgot:1",
+          "text": "Hit Urgot with two Ntofo Strikes in a row, then pull him in with the empowered one to trap him close.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:KSante:Urgot:2",
+          "text": "Sidestep Disdain's dash. It stops at the first champion it hits and stuns, so do not walk straight at Urgot.",
+          "refs": [
+            { "kind": "ability", "key": "Urgot-E", "start": 9, "end": 16 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 73 },
+            { "kind": "champion", "key": "Urgot", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:KSante:Urgot:3",
+          "text": "Use Path Maker through Purge's fire; K'Sante has damage reduction and cannot be interrupted while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Urgot-W", "start": 23, "end": 28 },
+            { "kind": "champion", "key": "KSante", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:KSante:Urgot:4",
+          "text": "Do not fall low near Urgot; Fear Beyond Death can drag you in and execute you under a quarter health.",
+          "refs": [
+            { "kind": "champion", "key": "Urgot", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Urgot-R", "start": 28, "end": 45 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Urgot",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:2",
+          "note": "Path Maker into Q and R chains dashes and damage, and R refreshes W, all usable against Urgot.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Urgot", "start": 88, "end": 93 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3d5f22dc2cb02dc19cf5ca2077ecf1fd174480f49ce5144d3631dc96158368cc",
+      "tips": [
+        {
+          "id": "top:KSante:Varus:0",
+          "text": "Hit Varus with Ntofo Strikes twice to pull and stun him, then walk onto him. He is weak up close.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:KSante:Varus:1",
+          "text": "Use Footwork to dodge a charged Piercing Arrow, and for a shield while you close the gap.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Varus-Q", "start": 32, "end": 46 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:KSante:Varus:2",
+          "text": "Charge Path Maker out of his sight and release it when he is close. Longer charge means a longer stun, and you take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:KSante:Varus:3",
+          "text": "Hail of Arrows slows you in the area; step out of it instead of fighting inside it.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:KSante:Varus:4",
+          "text": "Respect Chain of Corruption at level 6. Going All Out lowers your health, so don't use it while Varus has his root ready.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 8, "end": 27 },
+            { "kind": "ability", "key": "KSante-R", "start": 46, "end": 53 },
+            { "kind": "champion", "key": "Varus", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "93bd725b01842d31e24310aef23794842fe763987e98a4cc1532ce20b4fe3bc8",
+      "tips": [
+        {
+          "id": "top:KSante:Vayne:0",
+          "text": "Hit Ntofo Strikes twice on Vayne to pull and stun her. She is fragile and dies fast once caught.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 27, "end": 32 },
+            { "kind": "keyword", "key": "stunned", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:KSante:Vayne:1",
+          "text": "Stay away from walls when Vayne has Condemn ready. A wall hit stuns you and deals heavy damage.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:KSante:Vayne:2",
+          "text": "Charge Path Maker to be immune to displacement. That counters Condemn, and the wall stun can't happen.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "ability", "key": "Vayne-E", "start": 62, "end": 69 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:KSante:Vayne:3",
+          "text": "Use Footwork to close the gap on Vayne, then follow with Path Maker or Ntofo Strikes before she tumbles away.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Vayne", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "KSante-W", "start": 57, "end": 67 },
+            { "kind": "ability", "key": "KSante-Q", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:KSante:Vayne:4",
+          "text": "Trade early and often, because Vayne gets scary with Silver Bolts once she has more items. Do not let her hit three times in a row.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 },
+            { "kind": "ability", "key": "Vayne-W", "start": 53, "end": 65 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Vayne through a thin wall for a second hit, then stuns her, and she has no listed stun escape.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Vayne", "start": 15, "end": 20 }
+          ]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Footwork into empowered Q closes the gap on Vayne and flings her behind him, even through a wall.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Vayne", "start": 44, "end": 49 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f537de2c54091bbb550beb12f5c582acab457e0b35d5b245da3e2c1b21f0bc58",
+      "tips": [
+        {
+          "id": "top:KSante:Vladimir:0",
+          "text": "Hit Vladimir with Ntofo Strikes twice to pull and stun him, then follow with your attacks. Keep him close.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "KSante-Q", "start": 18, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:KSante:Vladimir:1",
+          "text": "Charge Path Maker long when Vladimir has just used Sanguine Pool. Wait for it to end, because you can't hit him while he is in the pool.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Vladimir", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Vladimir-W", "start": 51, "end": 64 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:KSante:Vladimir:2",
+          "text": "Don't stand in Vladimir's pool; it slows you and drains health. Walk out of it rather than fight inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Vladimir", "start": 15, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:KSante:Vladimir:3",
+          "text": "Use Footwork to dash away from Hemoplague's area, since its damage and healing land after it ends.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Vladimir-R", "start": 31, "end": 41 }
+          ],
+          "pWrong": 0.64
+        }
+      ],
+      "opponent": "Vladimir",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "72b00144a394bbbf4b86c0a242cb157346b15be424d2079cfdfda5d8fe4fdb70",
+      "tips": [
+        {
+          "id": "top:KSante:Volibear:0",
+          "text": "Land Ntofo Strikes twice in a row to get the shockwave. It pulls Volibear in and stuns him, so use it to start a trade on your terms.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Volibear", "start": 65, "end": 73 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:KSante:Volibear:1",
+          "text": "Use Path Maker the moment Volibear starts to dive. You take less damage while charging and cannot be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Volibear", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:KSante:Volibear:2",
+          "text": "Step out of the Sky Splitter area when you see him cast. If you get hit, you are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:KSante:Volibear:3",
+          "text": "Use Footwork for its shield when he commits to a trade, and keep your distance until his Thundering Smash runs out.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling with Q lets you reposition against Volibear's close-range all-in.",
+          "refs": [
+            { "kind": "champion", "key": "Volibear", "start": 66, "end": 74 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "3b11a81c8baec74f094de18ddd4177b43c256223b116a0c6c4cc062857103246",
+      "tips": [
+        {
+          "id": "top:KSante:XinZhao:0",
+          "text": "Hit Ntofo Strikes twice, then fire the shockwave to pull and stun Xin Zhao when he charges in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 },
+            { "kind": "champion", "key": "XinZhao", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:KSante:XinZhao:1",
+          "text": "Use Path Maker as Xin Zhao commits with Three Talon Strike. You cannot be interrupted, and you take less damage while charging.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "top:KSante:XinZhao:2",
+          "text": "Use Footwork to dash away from Audacious Charge and gain a shield. Do not waste it early.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 31, "end": 47 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:KSante:XinZhao:3",
+          "text": "Stay away when Xin Zhao has Wind Becomes Lightning ready. Being hit slows you and marks you, so he can charge from farther away.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 28, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "46037e35f64179c2cd4eb319c19954315b9ebfbd78030bde749cde376d6a5409",
+      "tips": [
+        {
+          "id": "top:KSante:Yasuo:0",
+          "text": "Hit Yasuo with Ntofo Strikes twice, then the shockwave pulls and stuns him. Aim it carefully, because Wind Wall will destroy it.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "KSante-Q", "start": 15, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 65, "end": 70 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 102, "end": 111 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:KSante:Yasuo:1",
+          "text": "Bait Wind Wall with a plain Ntofo Strikes first, then throw the shockwave once the wall is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-W", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "KSante-Q", "start": 28, "end": 41 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "top:KSante:Yasuo:2",
+          "text": "Use Path Maker through Yasuo's Wind Wall; it is a dash, not a projectile, so the wall does not stop it. Charge longer for a longer stun.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Yasuo", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 31, "end": 40 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:KSante:Yasuo:3",
+          "text": "Be careful of the whirlwind from Steel Tempest after two hits; it knocks you up. Step out of line when he has two stacks.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Yasuo:4",
+          "text": "Yasuo's Last Breath needs you airborne. Stay away from allies who can knock you up, and keep Yasuo off you when they can.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-R", "start": 8, "end": 19 },
+            { "kind": "champion", "key": "Yasuo", "start": 93, "end": 98 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:KSante:Yasuo:5",
+          "text": "Cast All Out when Yasuo stands near a wall; it carries him through the terrain and you strike twice.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 5, "end": 12 },
+            { "kind": "champion", "key": "Yasuo", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.4
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "6d43e10812cb284b6eb9d1c73e1fd1c93e73a5520ee85d358b8a1631b86b4647",
+      "tips": [
+        {
+          "id": "top:KSante:Yone:0",
+          "text": "Hit Yone with Ntofo Strikes twice in a row. The second cast pulls him in and stuns him, so follow up right away.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "KSante-Q", "start": 14, "end": 27 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "top:KSante:Yone:1",
+          "text": "Charge Path Maker longer for a longer stun. Cast it when Yone is committed to a trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "keyword", "key": "stunned", "start": 38, "end": 42 },
+            { "kind": "champion", "key": "Yone", "start": 57, "end": 61 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:KSante:Yone:2",
+          "text": "Use Footwork to dodge Yone's stacked Mortal Steel and get a shield for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Yone-Q", "start": 37, "end": 49 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:KSante:Yone:3",
+          "text": "Don't chase Yone when he uses Soul Unbound; he will snap back to his body and repeat the damage he dealt.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Yone-E", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "Slamming Yone through a wall with R stuns and knocks him up, so he can't use his dashes to escape.",
+          "refs": [{ "kind": "champion", "key": "Yone", "start": 9, "end": 13 }]
+        },
+        {
+          "comboId": "top:KSante:combo:1",
+          "note": "Dashing in with E then pulling Yone with Q lets you control close-range trades against his melee poke.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "ef46df2d838c21934546a028ab31bc38e0078f342ef2eb798e2d36a78b2a925c",
+      "tips": [
+        {
+          "id": "top:KSante:Yorick:0",
+          "text": "Don't charge Path Maker into a Dark Procession wall; it blocks your dash. Wait for it to fade or hit it down.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 13, "end": 23 },
+            { "kind": "ability", "key": "Yorick-W", "start": 31, "end": 46 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "top:KSante:Yorick:1",
+          "text": "Kill Mist Walkers quickly with a basic attack; they die easily. Then fight Yorick alone.",
+          "refs": [
+            { "kind": "champion", "key": "Yorick", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:KSante:Yorick:2",
+          "text": "Land two Ntofo Strikes in a row to pull Yorick in and stun him, then follow up with your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 9, "end": 22 },
+            { "kind": "champion", "key": "Yorick", "start": 40, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:KSante:Yorick:3",
+          "text": "Sidestep Mourning Mist; it slows you and marks you so Mist Walkers leap onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Yorick-E", "start": 9, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:KSante:Yorick:4",
+          "text": "Use Footwork to dodge Mourning Mist, and for a shield while you trade.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Yorick-E", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Yorick",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "All Out knocks Yorick back, and a thin wall behind him adds a second hit, stun and knock up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-R", "start": 0, "end": 7 },
+            { "kind": "champion", "key": "Yorick", "start": 15, "end": 21 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "0b787e36d27a933f45d1ecc2268f732cb22a0238ed728a4fb288b51fdea0b7a8",
+      "tips": [
+        {
+          "id": "top:KSante:Zaahen:0",
+          "text": "Use Footwork to dash away from Dreaded Return and gain a shield; leaving the line stops the stun and pull.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-E", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Zaahen-W", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:KSante:Zaahen:1",
+          "text": "Land Ntofo Strikes twice, then fire the shockwave to pull Zaahen in and stun him before Cultivation of War builds up.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 5, "end": 18 },
+            { "kind": "champion", "key": "Zaahen", "start": 58, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 72, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 88,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:KSante:Zaahen:2",
+          "text": "Trade with Ntofo Strikes and Path Maker while Zaahen has few stacks from Cultivation of War, and back off once he is full, because he hits much harder.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 11, "end": 24 },
+            { "kind": "ability", "key": "KSante-W", "start": 29, "end": 39 },
+            { "kind": "champion", "key": "Zaahen", "start": 46, "end": 52 },
+            {
+              "kind": "ability",
+              "key": "Zaahen-passive",
+              "start": 73,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:KSante:Zaahen:3",
+          "text": "Do not rely on killing a full-stack Zaahen in one go. He can revive from lethal damage, so hold All Out until the revive is gone.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "KSante-R", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:KSante:Zaahen:4",
+          "text": "Charge Path Maker when Zaahen commits to Grim Deliverance; it cuts damage you take while charging, and you can dash back out.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-W", "start": 7, "end": 17 },
+            { "kind": "champion", "key": "Zaahen", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Zaahen-R", "start": 41, "end": 57 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Zaahen",
+      "comboRefs": [
+        {
+          "comboId": "top:KSante:combo:0",
+          "note": "R wall slam stuns and knocks up Zaahen, helping punish his dash-ins near a lane wall.",
+          "refs": [
+            { "kind": "champion", "key": "Zaahen", "start": 32, "end": 38 }
+          ]
+        }
+      ]
+    }
+  ]
+}

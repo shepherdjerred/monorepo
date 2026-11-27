@@ -1,0 +1,1009 @@
+{
+  "schemaVersion": 1,
+  "champion": "Tryndamere",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "080e8cf2b57df10fe619e685e829c459c668c9eb452158a3cf45d3d980e7f997",
+      "tips": [
+        {
+          "id": "top:Tryndamere:general:0",
+          "text": "Use Spinning Slash to close the gap on a fleeing enemy or to dash away after a trade. It has no minimum range, so you can use it at point-blank range too.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Tryndamere:general:1",
+          "text": "Land critical strikes on champions to bring Spinning Slash back sooner, so you can chain dashes in a long fight.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 44, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Tryndamere:general:2",
+          "text": "Cast Mocking Shout when an enemy fighter starts hitting you. It cuts their Attack Damage, and it slows them if they are facing away, so use it to chase.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 5, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 102 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "top:Tryndamere:general:3",
+          "text": "Spend your Fury with Bloodlust when you are hurt, not when you are at full health. The heal grows with the Fury you have stored.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 21, "end": 30 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Tryndamere:general:4",
+          "text": "Keep hitting minions and enemies so your Fury stays up. It starts to fade after a while without dealing or taking damage.",
+          "refs": [],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Tryndamere:general:5",
+          "text": "Hold Undying Rage until you are nearly dead. Enemies who chase you will overcommit, and you can still fight on at low health.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Tryndamere:general:6",
+          "text": "Do not cast Mocking Shout just before you need Undying Rage. Mocking Shout stops you from using it while it casts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 12,
+              "end": 25
+            },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-R",
+              "start": 47,
+              "end": 59
+            },
+            { "kind": "ability", "key": "Tryndamere-W", "start": 61, "end": 74 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Tryndamere:combo:0",
+          "name": "Bloodlust during attack windup",
+          "category": "trick",
+          "sequence": ["attack", { "kind": "ability", "key": "Tryndamere-Q" }],
+          "when": "Trading or fighting in melee when you want Fury to start building right away.",
+          "whenRefs": [],
+          "text": "Bloodlust can be cast at any point of an attack. Cast it during the windup and the attack still gives its Fury, so you heal and keep building Fury.",
+          "textRefs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 0, "end": 9 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "78f5c71ebeb692bb66623ec7774a8352cb971b3b32930e2f6cad3b29d0a2378b",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Aatrox:0",
+          "text": "Use Mocking Shout when Aatrox swings at you; it cuts his Attack Damage, so his trade hurts less.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "top:Tryndamere:Aatrox:1",
+          "text": "Step out of the edge of The Darkin Blade's hit zone, and sidestep the sweetspot to avoid being knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 24, "end": 40 },
+            { "kind": "keyword", "key": "knocked-up", "start": 95, "end": 105 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Tryndamere:Aatrox:2",
+          "text": "Use Spinning Slash to dash out of the Infernal Chains zone before it pulls you back.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 4, "end": 18 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Tryndamere:Aatrox:3",
+          "text": "Hold Undying Rage until Aatrox commits to chasing you, then turn the fight around.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Tryndamere:Aatrox:4",
+          "text": "Spend Bloodlust to heal after trades, once you have built up Fury from hitting minions and Aatrox.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Aatrox", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "07257298182e4bda976c248a19f488463065dd527c8928c13c91ec1f7a2a999c",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Briar:0",
+          "text": "Use Mocking Shout when Briar is running at you or fighting you; it cuts her Attack Damage, and she is slowed whenever she faces away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "top:Tryndamere:Briar:1",
+          "text": "Save Undying Rage for when Briar is in Blood Frenzy or chasing you with Certain Death; she keeps hitting you while you stay up, then you turn the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "Briar-R", "start": 72, "end": 85 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Tryndamere:Briar:2",
+          "text": "Use Bloodlust to heal back after a trade. Briar's bleed heals her, so you need your own healing to keep up.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Briar", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Tryndamere:Briar:3",
+          "text": "Use Spinning Slash to get away or to close in after Briar's Head Rush stun ends; it also builds your Fury quickly when it hits her.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Briar-Q", "start": 60, "end": 69 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "90e4f1964e173641d89ea67fc0d7aae751b6df86f87ff1067310c4c033fc904a",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Darius:0",
+          "text": "Fight Darius when Apprehend is on cooldown; without the pull he has a hard time catching you or holding you in place.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Darius-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Tryndamere:Darius:1",
+          "text": "Use Mocking Shout when Darius walks in to trade; it cuts his Attack Damage, and it slows him if he is facing away.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Tryndamere:Darius:2",
+          "text": "Hold Undying Rage until Darius commits to Noxian Guillotine or a long trade; then he wastes his damage and you win the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Darius-R", "start": 42, "end": 59 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Tryndamere:Darius:3",
+          "text": "Use Bloodlust to heal after you have built Fury from trades and last-hits, and don't waste it with no Fury.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Tryndamere:Darius:4",
+          "text": "Spinning Slash out of Decimate's circle, or dash away to stay at its edge, so you avoid the strongest part of the swing.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 0, "end": 14 },
+            { "kind": "ability", "key": "Darius-Q", "start": 22, "end": 30 }
+          ],
+          "pWrong": 0.77
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8de282e01ef16c86fa186f8f9056b62515d655b5952c78e10b5b317edc88ef9e",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Fiora:0",
+          "text": "Don't use Mocking Shout or Spinning Slash into Fiora's Riposte while she can parry. Wait until she has used it, then go in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 10,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 27,
+              "end": 41
+            },
+            { "kind": "champion", "key": "Fiora", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Fiora-W", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Tryndamere:Fiora:1",
+          "text": "Mocking Shout lowers Fiora's Attack Damage, so use it when she commits to a trade. She is slowed if she is facing away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 0, "end": 13 },
+            { "kind": "champion", "key": "Fiora", "start": 21, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 96 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Tryndamere:Fiora:2",
+          "text": "Keep Undying Rage for her all-in. Delay it so she wastes her burst, then fight back while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Tryndamere:Fiora:3",
+          "text": "Use Bloodlust to heal once you have built Fury from hitting minions and her. Don't let Fury fade unused.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Tryndamere:Fiora:4",
+          "text": "Her Lunge closes distance quickly. Don't stand still at the edge of her range, and use Spinning Slash to leave or to reposition.",
+          "refs": [
+            { "kind": "ability", "key": "Fiora-Q", "start": 4, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 87,
+              "end": 101
+            }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "0a1cd47419b3afc503afa9dca11c2623c5c24b043721cbb6090b622aeedce14d",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Gangplank:0",
+          "text": "Use Mocking Shout when Gangplank walks up to trade; it cuts his damage and slows him whenever he faces away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 23, "end": 32 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "top:Tryndamere:Gangplank:1",
+          "text": "Close the gap with Spinning Slash, then keep hitting him. Each hit on a champion builds Fury.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Tryndamere:Gangplank:2",
+          "text": "Stay out of the area around Gangplank's Powder Keg. An explosion slows you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "Gangplank-E", "start": 40, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Tryndamere:Gangplank:3",
+          "text": "Attack a Powder Keg yourself when it sits near you. If an enemy destroys it, it is defused and does nothing.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 9, "end": 19 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Tryndamere:Gangplank:4",
+          "text": "Save Undying Rage for when Gangplank commits his burst. Wait until you are low, then fight through it.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Gangplank", "start": 27, "end": 36 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Tryndamere:Gangplank:5",
+          "text": "Use Bloodlust to heal once your Fury is high. Gangplank's Remove Scurvy heals him too, so go for kills when it is down.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Gangplank", "start": 46, "end": 55 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5d7913ecbc9bd9132879e71444423babcb71c45a24cbd3c05af56e63491c875f",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Garen:0",
+          "text": "Use Mocking Shout when Garen walks toward you; it cuts his damage. It also slows him if he turns away to run.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Garen", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "top:Tryndamere:Garen:1",
+          "text": "Keep your health up when Garen has Demacian Justice ready, because it hurts more the lower you are. Save Undying Rage for it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Garen-R", "start": 35, "end": 51 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-R",
+              "start": 105,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Tryndamere:Garen:2",
+          "text": "Trade early and keep hitting him, so Perseverance never starts healing him back.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 37,
+              "end": 49
+            }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "top:Tryndamere:Garen:3",
+          "text": "Build Fury on minions with Spinning Slash, then heal with Bloodlust before you fight.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 27,
+              "end": 41
+            },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 58, "end": 67 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Tryndamere:Garen:4",
+          "text": "Step back when Garen starts Judgment. Spinning Slash lets you leave quickly, and you can hit him as you go.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-E", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3f41225c21e4258b21138b4f2a27638b0c3dd4d2b01f0ba0890b4b415e053063",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Jayce:0",
+          "text": "Walk up and use Mocking Shout when Jayce is in Cannon Stance; it cuts his damage, and he is slowed if he is facing away.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-W",
+              "start": 16,
+              "end": 29
+            },
+            { "kind": "champion", "key": "Jayce", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Tryndamere:Jayce:1",
+          "text": "Close the gap with Spinning Slash when Jayce is poking from range, and hit him for Fury.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 19,
+              "end": 33
+            },
+            { "kind": "champion", "key": "Jayce", "start": 39, "end": 44 },
+            { "kind": "keyword", "key": "poke", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Tryndamere:Jayce:2",
+          "text": "Save Undying Rage for when Jayce commits his burst. Delaying it makes him waste his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Tryndamere:Jayce:3",
+          "text": "Use Bloodlust to heal back poke damage once your Fury is built up.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Tryndamere:combo:0",
+          "note": "Casting Bloodlust mid-windup heals and builds Fury while closing on Jayce, who can knock you back with Thundering Blow.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 8, "end": 17 },
+            { "kind": "champion", "key": "Jayce", "start": 68, "end": 73 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "86b26f7c9c3e004aad218a60433c264cc0c275f9fb4094179dcc72ac441cb1c2",
+      "tips": [
+        {
+          "id": "top:Tryndamere:KSante:0",
+          "text": "Walk up when Ntofo Strikes is on cooldown, since it is his main way to slow you and set up the stun and pull.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "top:Tryndamere:KSante:1",
+          "text": "Step out of range after K'Sante's first Ntofo Strikes lands, so he cannot get the second hit that stuns and pulls you.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "KSante-Q", "start": 40, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 103 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Tryndamere:KSante:2",
+          "text": "Use Mocking Shout when K'Sante charges Path Maker or fights you; it cuts his damage and slows him when he turns away.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "KSante", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "KSante-W", "start": 39, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Tryndamere:KSante:3",
+          "text": "Hit K'Sante with Spinning Slash to build Fury fast, then trade while the cooldown drops from critical strikes.",
+          "refs": [
+            { "kind": "champion", "key": "KSante", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Tryndamere:KSante:4",
+          "text": "Save Undying Rage for when K'Sante goes All Out and chases you; you survive his burst and keep fighting.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "ability", "key": "KSante-R", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Tryndamere:KSante:5",
+          "text": "Press Bloodlust to heal once your Fury is high, after a trade, before it decays.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 6, "end": 15 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "5fd502b63ee13a70b710aff9038d8fdfbdfac5f6d0292f7dcb40ddb0057c70df",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Malphite:0",
+          "text": "Don't fight when Malphite's Granite Shield is up; wait until it is broken or gone before you trade.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 17, "end": 25 },
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 28,
+              "end": 42
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "top:Tryndamere:Malphite:1",
+          "text": "Keep Undying Rage for when Malphite's Unstoppable Force is ready; you can use it even while knocked up.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Malphite", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Malphite-R", "start": 38, "end": 55 },
+            { "kind": "keyword", "key": "knocked-up", "start": 92, "end": 102 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "top:Tryndamere:Malphite:2",
+          "text": "Use Mocking Shout when Malphite runs away so he is slowed, and to cut the damage of his all-in.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 57 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Tryndamere:Malphite:3",
+          "text": "Build Fury on minions, then heal with Bloodlust after Malphite's poke so his harassment doesn't wear you down.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-Q",
+              "start": 38,
+              "end": 47
+            },
+            { "kind": "champion", "key": "Malphite", "start": 54, "end": 62 },
+            { "kind": "keyword", "key": "poke", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Tryndamere:Malphite:4",
+          "text": "Spinning Slash can close the gap fast when Malphite's Seismic Shard is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 0, "end": 14 },
+            { "kind": "champion", "key": "Malphite", "start": 43, "end": 51 },
+            { "kind": "ability", "key": "Malphite-Q", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "acf50c8c16baeb60a9ae0c7bdaa8a49254e9dfdde06c9a43fdb25d183e1084b2",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Mordekaiser:0",
+          "text": "Don't fight inside his Darkness Rise aura; once it is active, back off or finish the trade quickly so you aren't burned for staying close.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 23,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Tryndamere:Mordekaiser:1",
+          "text": "Use Mocking Shout when he turns to run; he is slowed while facing away, and his damage drops.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Tryndamere:Mordekaiser:2",
+          "text": "Sidestep Death's Grasp or dash out with Spinning Slash; it is slow to land, so don't stand still after he casts it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 9,
+              "end": 22
+            },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "top:Tryndamere:Mordekaiser:3",
+          "text": "Keep Undying Rage ready when he has Realm of Death; you can use it while pulled in, and it keeps you alive there.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-R",
+              "start": 36,
+              "end": 50
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Tryndamere:Mordekaiser:4",
+          "text": "Heal with Bloodlust after you build Fury from last-hits, so you can win trades that his Indestructible shield would otherwise win.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "7", "start": 0, "end": 4 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-Q",
+              "start": 10,
+              "end": 19
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 88,
+              "end": 102
+            }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d04f10ae41d9f36683b600b332fd40d184f185cf3b5584a4adb0e332555fab5a",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Rumble:0",
+          "text": "Walk up and use Spinning Slash when Rumble overheats; he cannot cast anything then, so you get a free trade.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Rumble", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Tryndamere:Rumble:1",
+          "text": "Use Mocking Shout when you fight him up close; it cuts his Attack Damage and slows him if he turns to run.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Tryndamere:Rumble:2",
+          "text": "Hold Undying Rage until he has spent his abilities, so he overcommits with his Equalizer and Flamespitter.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Tryndamere:Rumble:3",
+          "text": "Step out of the burning trail of The Equalizer instead of fighting in it; it slows you and hurts every moment you stay.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 33, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 82 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Tryndamere:Rumble:4",
+          "text": "Press Bloodlust to heal after you have built Fury from trades and minion kills, and do not let your Fury fade first.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 6, "end": 15 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "3ef0b22e72d4eb84ec04d57d3696b854f961618c47f63531c44925858a3028c5",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Sion:0",
+          "text": "Don't stand still in front of Sion when he starts charging Decimating Smash. Step out of the line, or use Spinning Slash to leave the area.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Sion-Q", "start": 59, "end": 75 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 106,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Tryndamere:Sion:1",
+          "text": "Use Mocking Shout when Sion walks in to trade. It lowers his Attack Damage and slows him if he turns away.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Sion", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 79, "end": 84 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Tryndamere:Sion:2",
+          "text": "Activate Bloodlust when you have built up Fury, and don't let it fade. Killing minions and hitting Sion builds Fury quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 9, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "top:Tryndamere:Sion:3",
+          "text": "Soul Furnace gives Sion a shield and a delayed blast. Wait it out, or hit him after the shield breaks.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-W", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Sion", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "top:Tryndamere:Sion:4",
+          "text": "Sion returns as a fast-hitting zombie when he dies. Back away until it wears off instead of trading with him.",
+          "refs": [{ "kind": "champion", "key": "Sion", "start": 0, "end": 4 }],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e55688a177e84a06e6c9f8bf8b8f9369fc87dfd1eee6a7ad40520e3e5015e534",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Teemo:0",
+          "text": "Dash onto Teemo with Spinning Slash to close the gap fast. Crits shorten its cooldown so you can dash again.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Tryndamere:Teemo:1",
+          "text": "Use Mocking Shout when Teemo is in range. It cuts his damage, and he is slowed if he turns to run away.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 78 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Tryndamere:Teemo:2",
+          "text": "Look out for mushrooms from Noxious Trap in brush and on your path. Attack them to destroy them before you walk in.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-R", "start": 28, "end": 40 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "top:Tryndamere:Teemo:3",
+          "text": "Use Bloodlust to heal off the poison that Toxic Shot leaves on you once your Fury is built up.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Teemo-E", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "top:Tryndamere:Teemo:4",
+          "text": "Don't walk up and attack Teemo's Blinding Dart blind head-on; your attacks will miss. Be ready to back off or dash in to burst him.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 33, "end": 46 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "7d9af9ff756a8c24a06437f195709b8097d46ac717c292eff2637d2e38f52005",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Vayne:0",
+          "text": "Use Mocking Shout when Vayne turns to run; she is slowed while facing away, and her damage drops.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 56 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Tryndamere:Vayne:1",
+          "text": "Close the gap with Spinning Slash when she tumbles away, then keep hitting her so Fury builds.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-E", "start": 19, "end": 33 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Tryndamere:Vayne:2",
+          "text": "Stay away from walls when Vayne has Condemn ready; a wall hit stuns you and hurts a lot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Tryndamere:Vayne:3",
+          "text": "Hold Undying Rage until Vayne commits to the kill, then fight back while she is still in range.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Tryndamere:Vayne:4",
+          "text": "Press Bloodlust to heal after you have built Fury from hitting minions and Vayne.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 6, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "879bfe371ab0ee38cf84d7312888710fda2d6b93a1370317f62c22586e47952a",
+      "tips": [
+        {
+          "id": "top:Tryndamere:Yone:0",
+          "text": "Use Mocking Shout when Yone dashes in or tries to run; it cuts his Attack Damage and slows him if he is facing away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-W", "start": 4, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Tryndamere:Yone:1",
+          "text": "Chase Yone with Spinning Slash when he is low; each hit on a champion builds Fury for a Bloodlust heal.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 6, "end": 10 },
+            {
+              "kind": "ability",
+              "key": "Tryndamere-E",
+              "start": 16,
+              "end": 30
+            },
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 88, "end": 97 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "top:Tryndamere:Yone:2",
+          "text": "Hold Undying Rage until Yone commits to a kill, then keep fighting through it.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-R", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Tryndamere:Yone:3",
+          "text": "Bloodlust heals more with more Fury, so spend it after a few attacks and Spinning Slash hits rather than right away.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Tryndamere-E", "start": 73, "end": 87 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Tryndamere:combo:0",
+          "note": "Weaving Bloodlust into attack windup keeps Fury and healing flowing in melee trades against Yone's attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Tryndamere-Q", "start": 8, "end": 17 },
+            { "kind": "champion", "key": "Yone", "start": 92, "end": 96 }
+          ]
+        }
+      ]
+    }
+  ]
+}

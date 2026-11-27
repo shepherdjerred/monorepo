@@ -1,0 +1,2151 @@
+{
+  "schemaVersion": 1,
+  "champion": "Caitlyn",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "37492daa428c78e4c0d2d7254cf611879b2071b56157551e7439b93cbe1a3bd7",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:general:0",
+          "text": "Place Yordle Snap Trap ahead of time on brush edges and where the enemy walks, so one is ready when a fight starts.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Caitlyn:general:1",
+          "text": "Attack an enemy who is rooted by a trap; Caitlyn's Headshot then reaches far and hits harder.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 23, "end": 29 },
+            { "kind": "champion", "key": "Caitlyn", "start": 41, "end": 48 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 51,
+              "end": 59
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Caitlyn:general:2",
+          "text": "Fire Piltover Peacemaker down a line of minions into the enemy; it hits for less after the first target, but a trapped enemy always takes full damage.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 5, "end": 24 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:general:3",
+          "text": "Fire the net away from the enemy to escape a gap closer. It also slows whoever it hits.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Caitlyn:general:4",
+          "text": "Hop over thin walls with the net, since the backward push can carry you through terrain.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Caitlyn:general:5",
+          "text": "Skip Ace in the Hole in a big team fight; another enemy champion can step into its path and block it. Use it on a lone, weakened target.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:general:6",
+          "text": "Stay out of danger while channeling Ace in the Hole, because Caitlyn can't move or act and being interrupted cancels it.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 36, "end": 51 },
+            { "kind": "champion", "key": "Caitlyn", "start": 61, "end": 68 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Caitlyn:general:7",
+          "text": "Chain the net onto an enemy for a free long-range Headshot, then follow up with Piltover Peacemaker.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 50,
+              "end": 58
+            },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 80, "end": 99 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "combos": [
+        {
+          "id": "adc:Caitlyn:combo:0",
+          "name": "Net hop over wall",
+          "category": "terrain",
+          "sequence": [{ "kind": "ability", "key": "Caitlyn-E" }],
+          "when": "When you need to escape or cross a thin wall.",
+          "whenRefs": [],
+          "text": "Fire the net in the direction away from where you want to go. The recoil carries Caitlyn backwards and can pass through thin terrain.",
+          "textRefs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 81, "end": 88 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "18b332ff3183f711848d3f223a2ee38c4073baee17f12aff7295da40098bca4e",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Aphelios:0",
+          "text": "Poke Aphelios with Piltover Peacemaker from long range when he steps up to last-hit; Caitlyn outranges him in the early levels.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Aphelios", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 19, "end": 38 },
+            { "kind": "champion", "key": "Caitlyn", "start": 85, "end": 92 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Caitlyn:Aphelios:1",
+          "text": "Drop a Yordle Snap Trap in front of you before he walks up, so one is ready when he trades.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 7, "end": 23 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Caitlyn:Aphelios:2",
+          "text": "Fire your net away from him when he closes in. It slows him and pushes you backwards.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Caitlyn:Aphelios:3",
+          "text": "Do not channel Ace in the Hole with enemies around. Another champion can step in front and take the shot, and you cannot move while channeling.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 15, "end": 30 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Caitlyn:Aphelios:4",
+          "text": "Step back from him when he holds the purple Gravity gun. Once he slows you, he can root you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 },
+            { "kind": "keyword", "key": "rooted", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.19
+        }
+      ],
+      "opponent": "Aphelios",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "689d37e56ceecdcaa01dd70c2ae5ca83fdb41a58b787425c873f4fbe677a6382",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Ashe:0",
+          "text": "Place Yordle Snap Trap ahead of time on the path Ashe walks. Keep a trap ready for when she steps up to fight.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ashe", "start": 49, "end": 53 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Caitlyn:Ashe:1",
+          "text": "Ashe has few escapes, so open with Piltover Peacemaker on a rooted Ashe and follow with a Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 35, "end": 54 },
+            { "kind": "keyword", "key": "rooted", "start": 60, "end": 66 },
+            { "kind": "champion", "key": "Ashe", "start": 67, "end": 71 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 90,
+              "end": 98
+            }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "adc:Caitlyn:Ashe:2",
+          "text": "Use your net to slow Ashe and back away when she closes in; the recoil pushes you away.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Ashe", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Ashe:3",
+          "text": "Stay out of long straight lines when Ashe has Enchanted Crystal Arrow ready; one hit means a long stun and a dead lane.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ashe-R", "start": 46, "end": 69 }
+          ],
+          "pWrong": 0.61
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7c3d3afd09e5ca9a2c09ef5120814bc710c4373fb921f2a7c3f77aed8986d5e6",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Brand:0",
+          "text": "Stay out of Brand's range and poke him with Piltover Peacemaker; its long range lets you hit him before he can reach you.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "poke", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 44, "end": 63 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Caitlyn:Brand:1",
+          "text": "Walk out of the way of Sear and Pillar of Flame. Brand has to land one of them before his combo can start.",
+          "refs": [
+            { "kind": "ability", "key": "Brand-Q", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Brand-W", "start": 32, "end": 47 },
+            { "kind": "champion", "key": "Brand", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "adc:Caitlyn:Brand:2",
+          "text": "Once Brand has set you ablaze, do not stand still. Sear will stun you, so keep moving until the burn wears off.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 5, "end": 10 },
+            { "kind": "keyword", "key": "ablaze", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Brand-Q", "start": 51, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "adc:Caitlyn:Brand:3",
+          "text": "Place Yordle Snap Trap on the ground where Brand stands to cast. If he steps on it, he is rooted, and you get a free Headshot and Piltover Peacemaker on him.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Brand", "start": 43, "end": 48 },
+            { "kind": "keyword", "key": "rooted", "start": 90, "end": 96 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 117,
+              "end": 125
+            },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 130, "end": 149 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Caitlyn:Brand:4",
+          "text": "If Brand gets close, fire your net at him to slow him and jump backward out of his range.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 3, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 49 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Caitlyn:Brand:5",
+          "text": "Stay away from your support when Brand is near. Conflagration spreads to nearby enemies, and an ablaze target makes it spread twice as far.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Brand-E", "start": 48, "end": 61 },
+            { "kind": "keyword", "key": "ablaze", "start": 96, "end": 102 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ac3846c3b15e4c95c4d2c47fc055c15b289d3bbcdf6eedecabbaaa9afb802ecd",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Cassiopeia:0",
+          "text": "Poke Cassiopeia with Piltover Peacemaker from long range; she has to walk up to hit you with Noxious Blast.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 5, "end": 15 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 21, "end": 40 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-Q",
+              "start": 93,
+              "end": 106
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "adc:Caitlyn:Cassiopeia:1",
+          "text": "Place Yordle Snap Trap where Cassiopeia stands to farm or fight, and keep one ready for when she walks up.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Cassiopeia", "start": 29, "end": 39 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Caitlyn:Cassiopeia:2",
+          "text": "Fire your net at her to slow her and recoil away when she closes in. Your own range then lets you keep hitting her.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Caitlyn:Cassiopeia:3",
+          "text": "Do not fight inside Miasma. It slows you and stops your dashes, so your net's recoil will not work there.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-W",
+              "start": 20,
+              "end": 26
+            },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Caitlyn:Cassiopeia:4",
+          "text": "Do not face Cassiopeia when she casts Petrifying Gaze at level 6. Walk away so you are slowed instead of stunned.",
+          "refs": [
+            { "kind": "champion", "key": "Cassiopeia", "start": 12, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Cassiopeia-R",
+              "start": 38,
+              "end": 53
+            },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 },
+            { "kind": "keyword", "key": "stunned", "start": 105, "end": 112 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Cassiopeia",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "4c23ce8484537be799b8bdbbbbdf8ac9b6f3a10e7a09f3b303b85b64e024c619",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Corki:0",
+          "text": "Poke Corki with Piltover Peacemaker from max range; he has to get close to trade well.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Corki", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Caitlyn:Corki:1",
+          "text": "Place Yordle Snap Trap on the path where Corki walks up to you, and ahead of fights so one is ready.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Corki", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Caitlyn:Corki:2",
+          "text": "Fire your net at Corki when he commits with Gatling Gun; it slows him and pushes you back out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Corki-E", "start": 44, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Caitlyn:Corki:3",
+          "text": "Don't stand behind minions against Missile Barrage; the splash hits you anyway. Stay out of its long range.",
+          "refs": [
+            { "kind": "ability", "key": "Corki-R", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Caitlyn:Corki:4",
+          "text": "Punish Corki right after he uses Valkyrie to enter a fight; he is vulnerable then.",
+          "refs": [
+            { "kind": "champion", "key": "Corki", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "Corki-W", "start": 33, "end": 41 }
+          ],
+          "pWrong": 0.22
+        }
+      ],
+      "opponent": "Corki",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "63c0e8286f8b21db990ccab7d3ab1d19e97abf56ef35fd2ec846f370483c8170",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Draven:0",
+          "text": "Poke Draven with Piltover Peacemaker when he steps up to catch a Spinning Axe. Her long range lets you hit him from well outside his reach.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 },
+            { "kind": "ability", "key": "Draven-Q", "start": 65, "end": 77 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Caitlyn:Draven:1",
+          "text": "Place Yordle Snap Trap in the spot where his Spinning Axe will land. He often walks there to catch it.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "ability", "key": "Draven-Q", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Caitlyn:Draven:2",
+          "text": "Once Draven is rooted by a trap, hit him with a Headshot from long range, then follow with Piltover Peacemaker.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 5, "end": 11 },
+            { "kind": "keyword", "key": "rooted", "start": 15, "end": 21 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 48,
+              "end": 56
+            },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 91, "end": 110 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Caitlyn:Draven:3",
+          "text": "Fire your net away from Draven when he runs at you. It slows him and moves you back out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 55, "end": 60 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Draven:4",
+          "text": "Draven's Stand Aside knocks you aside and slows you. Stay out of its line, and do not stand still in a straight line from him.",
+          "refs": [
+            { "kind": "champion", "key": "Draven", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Draven-E", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 42, "end": 47 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Caitlyn:Draven:5",
+          "text": "Use Ace in the Hole on a wounded Draven only when no minion or other champion is in its path.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 4, "end": 19 },
+            { "kind": "champion", "key": "Draven", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.08
+        }
+      ],
+      "opponent": "Draven",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "964c3fe817888ad9606806c8c7911394ecf0627399c92c42eef8c4216a86c128",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Ezreal:0",
+          "text": "Out-range Ezreal with Piltover Peacemaker from far away, and stay out of his Mystic Shot range while you do.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Caitlyn:Ezreal:1",
+          "text": "Fire Piltover Peacemaker through a minion at Ezreal; it passes through the first target and hits him too.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Ezreal", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Caitlyn:Ezreal:2",
+          "text": "Place Yordle Snap Trap where Ezreal stands to farm, so he is rooted when he steps in and you can follow up.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ezreal", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 61, "end": 67 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Ezreal:3",
+          "text": "If Ezreal blinks away with Arcane Shift, hit him with 90 Caliber Net to slow him, then land your Headshot from long range.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 3, "end": 9 },
+            { "kind": "ability", "key": "Ezreal-E", "start": 27, "end": 39 },
+            { "kind": "ability", "key": "Caitlyn-E", "start": 54, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 76 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 97,
+              "end": 105
+            }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Caitlyn:Ezreal:4",
+          "text": "Ace in the Hole can finish a low-health Ezreal from across the map, since he is fragile. Only his allies can step in front of the shot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 0, "end": 15 },
+            { "kind": "champion", "key": "Ezreal", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1f1453d5653babc40a48c8366ce4a85092b1bcbffe8aad53b54e0c4e17b0626c",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Hwei:0",
+          "text": "Stay out of Hwei's reach and poke him with Piltover Peacemaker; its long range lets you hit him before he can answer.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 12, "end": 16 },
+            { "kind": "keyword", "key": "poke", "start": 29, "end": 33 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 43, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Hwei:1",
+          "text": "Place Yordle Snap Trap where Hwei will stand to cast. A trapped Hwei is rooted, so follow up with a Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Hwei", "start": 29, "end": 33 },
+            { "kind": "champion", "key": "Hwei", "start": 64, "end": 68 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 100,
+              "end": 108
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Caitlyn:Hwei:2",
+          "text": "Hwei's Severing Bolt lands after a delay, so keep walking sideways and it will miss. Stand still and it hurts.",
+          "refs": [{ "kind": "champion", "key": "Hwei", "start": 0, "end": 4 }],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Caitlyn:Hwei:3",
+          "text": "Use your net to slow Hwei when he rushes you, and its recoil moves you away from him.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Hwei", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Caitlyn:Hwei:4",
+          "text": "Hwei is open to attack right after he casts a Torment spell, so jump on him with Piltover Peacemaker then.",
+          "refs": [
+            { "kind": "champion", "key": "Hwei", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 81, "end": 100 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Hwei",
+      "comboRefs": [
+        {
+          "comboId": "adc:Caitlyn:combo:0",
+          "note": "The E net hop gives Caitlyn a way to back out of Hwei's Grim Visage fear and slow pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Hwei", "start": 49, "end": 53 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a86e841e1443b1a7bad3ad7d7dc8e1e660aac27d20316e8e022e323c14accc6",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Jhin:0",
+          "text": "Poke Jhin with Piltover Peacemaker from long range; its range outreaches his basic attacks, so trade when he steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 15, "end": 34 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Caitlyn:Jhin:1",
+          "text": "Place Yordle Snap Trap in the brush and on the paths Jhin walks. Anyone who steps on one is rooted, so you get a free Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Jhin", "start": 53, "end": 57 },
+            { "kind": "keyword", "key": "rooted", "start": 92, "end": 98 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 118,
+              "end": 126
+            }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Caitlyn:Jhin:2",
+          "text": "Walk around Jhin's Captive Audience traps. They are invisible, so stay out of the spots he is likely to place them, like near your own position.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Jhin-E", "start": 19, "end": 35 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Caitlyn:Jhin:3",
+          "text": "Step in when Jhin has used his four shots and is reloading; he cannot attack then. Use Headshot to hit him from afar.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 13, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 87,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Caitlyn:Jhin:4",
+          "text": "Stay out of a straight line with Jhin when your support or minions are hurting you. Deadly Flourish roots anyone he has just damaged.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Jhin-W", "start": 84, "end": 99 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "52416ac921f840dbc8f23ffe0d053dfb39da7b29be45d0e78102aae83b97a72b",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Jinx:0",
+          "text": "Poke Jinx with Piltover Peacemaker from long range; its range is longer than Jinx's basic attack, even with her rockets.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Jinx", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 15, "end": 34 },
+            { "kind": "champion", "key": "Jinx", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Caitlyn:Jinx:1",
+          "text": "Place Yordle Snap Trap near your lane position and in brush before Jinx walks up. A trapped Jinx is rooted and takes extra Headshot damage.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Jinx", "start": 67, "end": 71 },
+            { "kind": "champion", "key": "Jinx", "start": 92, "end": 96 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 123,
+              "end": 131
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Caitlyn:Jinx:2",
+          "text": "Jinx's Flame Chompers is her main defense. Wait until she wastes it, then go in on her.",
+          "refs": [{ "kind": "champion", "key": "Jinx", "start": 0, "end": 4 }],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:Jinx:3",
+          "text": "Use 90 Caliber Net on Jinx when she gets close. It slows her and pushes you away, so you can then shoot her from safety.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-E", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Jinx", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Jinx:4",
+          "text": "Do not walk over Jinx's chompers when you back away. They go off on contact and root you.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 17, "end": 21 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 84 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "adc:Caitlyn:Jinx:5",
+          "text": "Take Ace in the Hole when Jinx is low, but watch for allies stepping in front of the shot, because other enemy champions can intercept it.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 5, "end": 20 },
+            { "kind": "champion", "key": "Jinx", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9440c6981b2d62466b9b098282f9a88f607f0fb1254ee382b14ecb801c9334ce",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Kaisa:0",
+          "text": "Poke Kai'Sa with Piltover Peacemaker from long range; her Icathian Rain only works with a nearby enemy, so she can't answer you from afar.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 },
+            { "kind": "ability", "key": "Kaisa-Q", "start": 58, "end": 71 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "adc:Caitlyn:Kaisa:1",
+          "text": "Place Yordle Snap Trap behind your minions and near your own side of lane. Kai'Sa has to come to you to trade, and a trapped target is easy to hit.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Kaisa", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Caitlyn:Kaisa:2",
+          "text": "When Kai'Sa dashes in with Killer Instinct, slow her with your net and recoil away, then shoot her.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 27, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Caitlyn:Kaisa:3",
+          "text": "Hit Kai'Sa with Piltover Peacemaker when she stands behind a minion wave. The shot passes through the first target and widens.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Caitlyn:Kaisa:4",
+          "text": "Stay away from allies being locked down near Kai'Sa. Their stuns and roots add Plasma, which lets her Killer Instinct jump onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Kaisa", "start": 45, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 59, "end": 64 },
+            { "kind": "keyword", "key": "rooted", "start": 69, "end": 74 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 102, "end": 117 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "0ec1d5e468e54ce62f143980a9390e049acd91be515be61fcbb6a6cfdd1aadf7",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Kalista:0",
+          "text": "Poke Kalista with Piltover Peacemaker from long range; her attacks must come close, so you can hit her before she can hit back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kalista", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 18, "end": 37 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Caitlyn:Kalista:1",
+          "text": "Put Yordle Snap Trap where Kalista hops in to fight. She dashes a lot, so a trap behind her own attack lunge can leave her rooted.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kalista", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 123, "end": 129 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "adc:Caitlyn:Kalista:2",
+          "text": "Fire your net at Kalista when she lunges at you. It slows her and pushes you back out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 17, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Caitlyn:Kalista:3",
+          "text": "Her basic attack windup can't be cancelled, so step out of range or cast a skillshot as soon as she starts attacking.",
+          "refs": [],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Caitlyn:Kalista:4",
+          "text": "Stand behind your minions so Kalista's Pierce stops at the first one. Keep your distance so she can't stack spears on you for Rend.",
+          "refs": [
+            { "kind": "champion", "key": "Kalista", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Kalista-Q", "start": 39, "end": 45 },
+            { "kind": "ability", "key": "Kalista-E", "start": 126, "end": 130 }
+          ],
+          "pWrong": 0.92,
+          "hidden": true
+        }
+      ],
+      "opponent": "Kalista",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "5cb46ea8662b19a967bb72ce3e49c4bbaa28d0fee4c28281cfb773afb0df0e6f",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Karthus:0",
+          "text": "Stay behind your minions when Karthus uses Lay Waste, so it hits more than one target and does less damage.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "adc:Caitlyn:Karthus:1",
+          "text": "Outrange Karthus with Piltover Peacemaker and shoot him whenever he steps forward to farm.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 9, "end": 16 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Caitlyn:Karthus:2",
+          "text": "Place Yordle Snap Trap behind you where Karthus walks to hit you, so you can punish him if he moves in.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Karthus", "start": 40, "end": 47 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Caitlyn:Karthus:3",
+          "text": "Do not stand on a dead Karthus; he keeps casting Defile for a few seconds after dying.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Karthus-E", "start": 49, "end": 55 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Caitlyn:Karthus:4",
+          "text": "Keep your health up once Karthus reaches level 6, because Requiem hits you from anywhere. Back off to heal when you're low.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Karthus-R", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Karthus:5",
+          "text": "Use your net to hop away from Wall of Pain, or to slow Karthus when he walks up to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-W", "start": 30, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 },
+            { "kind": "champion", "key": "Karthus", "start": 55, "end": 62 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a9a1254b95098e0fd603809c361bb04a512c823a56c5d730303014f452538309",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:KogMaw:0",
+          "text": "Early on, poke Kog'Maw with Piltover Peacemaker from long range; he has little reach before he gets Bio-Arcane Barrage up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 10, "end": 14 },
+            { "kind": "champion", "key": "KogMaw", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 28, "end": 47 },
+            { "kind": "ability", "key": "KogMaw-W", "start": 100, "end": 118 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Caitlyn:KogMaw:1",
+          "text": "Play aggressively when Bio-Arcane Barrage is on cooldown, because Kog'Maw has much less range then.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-W", "start": 23, "end": 41 },
+            { "kind": "champion", "key": "KogMaw", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "adc:Caitlyn:KogMaw:2",
+          "text": "Put Yordle Snap Trap where Kog'Maw stands to farm, so a step forward leaves him rooted and open to a Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "KogMaw", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 80, "end": 86 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 101,
+              "end": 109
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Caitlyn:KogMaw:3",
+          "text": "Kog'Maw has no escape, so when he is rooted or slowed, pile on damage and go for the kill.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "slowed", "start": 47, "end": 53 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "adc:Caitlyn:KogMaw:4",
+          "text": "Step out of Void Ooze trails; use 90 Caliber Net to back away if you are caught in one.",
+          "refs": [
+            { "kind": "ability", "key": "KogMaw-E", "start": 12, "end": 21 },
+            { "kind": "ability", "key": "Caitlyn-E", "start": 34, "end": 48 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:KogMaw:5",
+          "text": "Once Kog'Maw dies, run away from him; he explodes after a few seconds and hurts anyone close.",
+          "refs": [
+            { "kind": "champion", "key": "KogMaw", "start": 5, "end": 12 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "KogMaw",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "78b18f29e611f6d19f032aff03d7d7c14a7ccf6969a6deb7e276b8e74d218873",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Lucian:0",
+          "text": "Poke Lucian with Piltover Peacemaker from long range while he waits for minions; he has to close the gap to trade back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Lucian", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "adc:Caitlyn:Lucian:1",
+          "text": "Place Yordle Snap Trap behind you or on the lane edge before Lucian walks up. If he steps on it he is rooted, and your Headshot hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Lucian", "start": 61, "end": 67 },
+            { "kind": "keyword", "key": "rooted", "start": 102, "end": 108 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 119,
+              "end": 127
+            }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Caitlyn:Lucian:2",
+          "text": "Fire your net away from Lucian when he dashes in; it slows him and throws you backwards out of his burst.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Caitlyn:Lucian:3",
+          "text": "Lucian has strong burst but little sustained damage, so back off after his combo and punish him while his dash is on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Lucian", "start": 0, "end": 6 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "adc:Caitlyn:Lucian:4",
+          "text": "Line up Piltover Peacemaker so Lucian is the first enemy it hits; later targets take less damage, so a minion in front weakens it.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 8, "end": 27 },
+            { "kind": "champion", "key": "Lucian", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Lucian",
+      "comboRefs": [
+        {
+          "comboId": "adc:Caitlyn:combo:0",
+          "note": "The net recoil lets Caitlyn escape backwards from Lucian's close-range burst and dash pressure.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 20, "end": 27 },
+            { "kind": "champion", "key": "Lucian", "start": 50, "end": 56 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "adc",
+      "inputHash": "fc6ee84cb2e1c03188bbb1d6e45e89a97400a5c33c840a91a81427dde7f0e7a7",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Lux:0",
+          "text": "Lean on Piltover Peacemaker's long range to poke Lux from outside her reach, especially when she walks up to a minion.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 8, "end": 27 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 },
+            { "kind": "champion", "key": "Lux", "start": 49, "end": 52 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "adc:Caitlyn:Lux:1",
+          "text": "Stay out of a straight line with Lux and keep minions between you, because Light Binding only roots the first two enemies it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 33, "end": 36 },
+            { "kind": "ability", "key": "Lux-Q", "start": 75, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Lux:2",
+          "text": "Place Yordle Snap Trap in front of you before Lux can walk up. It punishes her for stepping forward to poke.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Lux", "start": 46, "end": 49 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Caitlyn:Lux:3",
+          "text": "If Lux roots you with Light Binding, do not expect your net to push you away. It will not push you while you are rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 3, "end": 6 },
+            { "kind": "ability", "key": "Lux-Q", "start": 22, "end": 35 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Caitlyn:Lux:4",
+          "text": "Do not stand still in Lucent Singularity. Step out before it blows up so you do not get slowed and hit.",
+          "refs": [
+            { "kind": "ability", "key": "Lux-E", "start": 22, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Caitlyn:Lux:5",
+          "text": "Lux has little health, so punish her when she misses Light Binding. Net her, then attack for the extra range Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Lux-Q", "start": 53, "end": 66 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 109,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "adc:Caitlyn:Lux:6",
+          "text": "Watch out when Lux reaches level 6. Final Spark has huge range, so move sideways when you see its red warning line.",
+          "refs": [
+            { "kind": "champion", "key": "Lux", "start": 15, "end": 18 },
+            { "kind": "ability", "key": "Lux-R", "start": 36, "end": 47 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Lux",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "be26ba139ee5f6d43436926723752e9df2ce891cbb1e85314bd341079c9e4bd7",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:MissFortune:0",
+          "text": "Poke Miss Fortune with Piltover Peacemaker and your long basic attacks while she stays back. You outrange her, so make her lose health for last-hitting.",
+          "refs": [
+            { "kind": "champion", "key": "MissFortune", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 23, "end": 42 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Caitlyn:MissFortune:1",
+          "text": "Put Yordle Snap Trap on the spots where Miss Fortune steps to hit minions or to dodge. If it roots her, you get a long-range Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 4, "end": 20 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 40,
+              "end": 52
+            },
+            { "kind": "keyword", "key": "rooted", "start": 93, "end": 98 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 125,
+              "end": 133
+            }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Caitlyn:MissFortune:2",
+          "text": "Stay out of Make It Rain, because its slow makes you easy to catch. Fire your net backwards to get away if she closes in.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Caitlyn:MissFortune:3",
+          "text": "Stand away from the minion that Double Up targets, so the bounce cannot hit you. A minion in front is no cover.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 32,
+              "end": 41
+            }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Caitlyn:MissFortune:4",
+          "text": "Never stand still in a line of enemies when Miss Fortune is about to cast Bullet Time. Move out of the cone or dash away with your net.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 44,
+              "end": 56
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 74,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.71
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "adc40a85a6f4bd68e991c85fbb1a1e5c87e781680a92552addc02b47a94046b5",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Nilah:0",
+          "text": "Place Yordle Snap Trap on the ground ahead of time where Nilah wants to step in, and keep one trap ready for when she dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Nilah", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:Nilah:1",
+          "text": "Use the net when Nilah dashes at you; it leaves her slowed and pushes you back out of her reach.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Caitlyn:Nilah:2",
+          "text": "Poke Nilah from long range with Piltover Peacemaker, and line it up through minions so it reaches her.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Nilah", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 32, "end": 51 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Caitlyn:Nilah:3",
+          "text": "Do not waste Ace in the Hole while Jubilant Veil is up; her mist reduces damage and she can run away.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 13, "end": 28 },
+            { "kind": "ability", "key": "Nilah-W", "start": 35, "end": 48 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "adc:Caitlyn:Nilah:4",
+          "text": "Stay at long range. Nilah's attacks gain range after Formless Blade, so back away once she has hit you with it.",
+          "refs": [
+            { "kind": "champion", "key": "Nilah", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Nilah-Q", "start": 53, "end": 67 }
+          ],
+          "pWrong": 0.72
+        }
+      ],
+      "opponent": "Nilah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "6dad80e381d2c875ebec77e0b6c56849f0b56362681295f13a64b023acf4ee17",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Samira:0",
+          "text": "Keep Samira at long range with Piltover Peacemaker; she has to dash in to fight, so poke her whenever she steps up to last-hit.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 31, "end": 50 },
+            { "kind": "keyword", "key": "poke", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "adc:Caitlyn:Samira:1",
+          "text": "Do not rely on Piltover Peacemaker landing when Samira is spinning Blade Whirl; it destroys enemy missiles in its area.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 15, "end": 34 },
+            { "kind": "champion", "key": "Samira", "start": 48, "end": 54 },
+            { "kind": "ability", "key": "Samira-W", "start": 67, "end": 78 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Caitlyn:Samira:2",
+          "text": "Samira dashes onto anyone who is rooted or stunned. Don't stand still near her; place Yordle Snap Trap behind you and lure her over it.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 0, "end": 6 },
+            { "kind": "keyword", "key": "rooted", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 86, "end": 102 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "adc:Caitlyn:Samira:3",
+          "text": "Use your net when Samira dashes in with Wild Rush. It slows her and knocks you back out of her reach.",
+          "refs": [
+            { "kind": "champion", "key": "Samira", "start": 18, "end": 24 },
+            { "kind": "ability", "key": "Samira-E", "start": 40, "end": 49 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Caitlyn:Samira:4",
+          "text": "Do not fire Ace in the Hole near other enemies; they can step in the way and take the shot. Save it for a clear line.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Samira",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2e845e0b26b94d60dc49be5966b98a7a90ef1f9cc5eab21a343d003a2d3cf8ef",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Senna:0",
+          "text": "Poke Senna with Piltover Peacemaker from long range; her basic attack range is short until she gathers Mist, so you out-range her early.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Caitlyn:Senna:1",
+          "text": "Shoot Piltover Peacemaker through minions toward Senna only when it reaches her first, because later targets take less damage.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 6, "end": 25 },
+            { "kind": "champion", "key": "Senna", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Caitlyn:Senna:2",
+          "text": "Place Yordle Snap Trap in front of you before Senna walks up. If she is rooted, you can hit her with a long-range Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Senna", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "rooted", "start": 72, "end": 78 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 114,
+              "end": 122
+            }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "adc:Caitlyn:Senna:3",
+          "text": "Keep your net ready for when Senna or her support closes in. It slows them and knocks you backward, out of range.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "adc:Caitlyn:Senna:4",
+          "text": "Stay out of Last Embrace's line. Her root can hold you in place, so keep minions between you and her.",
+          "refs": [
+            { "kind": "ability", "key": "Senna-W", "start": 12, "end": 24 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Caitlyn:Senna:5",
+          "text": "Kill the Mist Wraiths before Senna can free them. Do not let her gather Mist for free.",
+          "refs": [
+            { "kind": "champion", "key": "Senna", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Senna",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d990700bf50ae2df8791af7982189376f9af34fda1c767de0bf7cad25596b590",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Sivir:0",
+          "text": "Poke Sivir with Piltover Peacemaker, but wait for her Spell Shield to be used, since it blocks the shot.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 },
+            { "kind": "ability", "key": "Sivir-E", "start": 54, "end": 66 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "adc:Caitlyn:Sivir:1",
+          "text": "Do not throw Yordle Snap Trap or your net at Sivir while her Spell Shield is up; it blocks them and she heals.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Sivir", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Sivir-E", "start": 61, "end": 73 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Caitlyn:Sivir:2",
+          "text": "Stay at long range and fight Sivir's Boomerang Blade by sidestepping it; it comes back, so avoid its return path too.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Sivir-Q", "start": 37, "end": 52 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Sivir:3",
+          "text": "Sivir pushes hard with Ricochet, so keep clearing waves or she will push you under your tower.",
+          "refs": [
+            { "kind": "champion", "key": "Sivir", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sivir-W", "start": 23, "end": 31 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Sivir",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "f1f1c97691e8ad93a7705dbc6fc5f9cc2d8c6bb908cc536c818319ccc74b82d5",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Smolder:0",
+          "text": "Poke Smolder early with Piltover Peacemaker; he is weak before he stacks Dragon Practice, and your range is longer than his.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Smolder", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 24, "end": 43 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 73,
+              "end": 88
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Caitlyn:Smolder:1",
+          "text": "Place Yordle Snap Trap in front of your lane before he walks up to farm. A rooted Smolder is easy to hit with a Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 },
+            { "kind": "champion", "key": "Smolder", "start": 82, "end": 89 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 112,
+              "end": 120
+            }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Caitlyn:Smolder:2",
+          "text": "Stay out of his flight range. When Smolder uses Flap, Flap, Flap, hit him with your net to slow him and get away.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 35, "end": 42 },
+            { "kind": "ability", "key": "Smolder-E", "start": 48, "end": 64 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 95 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "adc:Caitlyn:Smolder:3",
+          "text": "Stay out of a straight line with him, since his long range slow comes from Achooo!",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 63 },
+            { "kind": "ability", "key": "Smolder-W", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "adc:Caitlyn:Smolder:4",
+          "text": "Keep Ace in the Hole for when he is low after a trade. Check that no other enemy stands in the line, or they will take the shot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 5, "end": 20 }
+          ],
+          "pWrong": 0.97
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7bde56466410f27180d9e9e2aa3cbc714a2b8a43f76de965ec01e29bcb07be45",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Tristana:0",
+          "text": "Poke Tristana with Piltover Peacemaker early while you have more range, and keep her away from your minions' line.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 19, "end": 38 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Caitlyn:Tristana:1",
+          "text": "Place Yordle Snap Trap in front of you before she jumps in; it roots her and sets up a Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 87,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Caitlyn:Tristana:2",
+          "text": "Fire your net at Tristana when she dives; it slows her and pushes you back out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Tristana:3",
+          "text": "Do not stand next to your minions when Tristana has Explosive Charge on you; the blast hurts nearby enemies too. Back away before it goes off.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 39, "end": 47 },
+            { "kind": "ability", "key": "Tristana-E", "start": 52, "end": 68 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Caitlyn:Tristana:4",
+          "text": "When Tristana has Buster Shot ready, do not stand where she can reach you; the knockback and stun leave you open.",
+          "refs": [
+            { "kind": "champion", "key": "Tristana", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Tristana-R", "start": 18, "end": 29 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Tristana",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "2e0efe02d7a97bf981af67c843da44f398911558e85a449fc42c42570039177e",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Twitch:0",
+          "text": "Place Yordle Snap Trap in front of you and in brush before trading; Twitch must walk through them to reach you.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Twitch", "start": 68, "end": 74 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "adc:Caitlyn:Twitch:1",
+          "text": "Poke Twitch with Piltover Peacemaker from max range; he has to close the gap to hit back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Twitch", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:Twitch:2",
+          "text": "Fire the net away from Twitch if he gets close; it slows him and pushes you back.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 23, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 51, "end": 56 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Caitlyn:Twitch:3",
+          "text": "Twitch is fragile and can sneak up with Ambush, so ward and keep a trap ready when he vanishes.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Twitch-Q", "start": 40, "end": 46 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "adc:Caitlyn:Twitch:4",
+          "text": "Respect Twitch after level 6; Spray and Pray extends his reach and bolts pass through minions.",
+          "refs": [
+            { "kind": "champion", "key": "Twitch", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Twitch-R", "start": 30, "end": 44 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Twitch",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "148d0b0bbdb62fc4c3e2f2e3d8cec6e3fc11be534415aa1eacb8838115b28558",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Varus:0",
+          "text": "Use your long range to poke Varus with Headshot when he steps up to last-hit; you outrange him in a normal trade.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 28, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 39,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Caitlyn:Varus:1",
+          "text": "Fire Piltover Peacemaker through minions toward Varus; it pierces and reaches far.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 5, "end": 24 },
+            { "kind": "champion", "key": "Varus", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "adc:Caitlyn:Varus:2",
+          "text": "Place Yordle Snap Trap on the spots Varus walks to when dodging, and in bushes where he wants to stand.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Varus", "start": 36, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Caitlyn:Varus:3",
+          "text": "Keep your net ready for when Varus runs in after Hail of Arrows; it slows him and throws you backward to safety.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Varus-E", "start": 49, "end": 63 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 73 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:Varus:4",
+          "text": "When Varus starts charging Piercing Arrow, sidestep it. He moves slowly while charging, so punish him with Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Varus", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Varus-Q", "start": 27, "end": 41 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 107,
+              "end": 115
+            }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "adc:Caitlyn:Varus:5",
+          "text": "Stay away from his Chain of Corruption in fights. If it roots you, you are an easy target; he can reach you from far.",
+          "refs": [
+            { "kind": "ability", "key": "Varus-R", "start": 19, "end": 38 },
+            { "kind": "keyword", "key": "rooted", "start": 56, "end": 61 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Varus",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "12f6d5f9ae0a5fdcd27073cb91684e2204bd13ba8bb2c5c681c8014d3cb90a70",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Vayne:0",
+          "text": "Poke Vayne early with Piltover Peacemaker from long range; she has to walk into your range to trade back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Vayne", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 22, "end": 41 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Caitlyn:Vayne:1",
+          "text": "Place Yordle Snap Trap near walls and behind you before Vayne walks up; if she steps on one, she is rooted and you get a strong headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Vayne", "start": 56, "end": 61 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Caitlyn:Vayne:2",
+          "text": "Stay away from walls when Vayne has Condemn ready. A wall hit stuns you, and she can kill you before you act.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Vayne-E", "start": 36, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Vayne:3",
+          "text": "If Vayne dives on you, fire 90 Caliber Net at her. It slows her and pushes you back, giving you space.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 3, "end": 8 },
+            { "kind": "ability", "key": "Caitlyn-E", "start": 28, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Vayne:4",
+          "text": "Vayne is fragile, so use Ace in the Hole to finish her when she is low. Other enemy champions can block the shot.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 25, "end": 40 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "ba233cee40d586616800073701b3d78ad5489491f4fdd8334ac2d6da087288c7",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Veigar:0",
+          "text": "Walk around the edge of Event Horizon instead of through it. Only the edge stuns, and being stunned next to Veigar is deadly.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-E", "start": 24, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 },
+            { "kind": "champion", "key": "Veigar", "start": 108, "end": 114 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "adc:Caitlyn:Veigar:1",
+          "text": "Keep moving when Dark Matter is falling on you. Its warning shows where it lands, so sidestep it.",
+          "refs": [
+            { "kind": "ability", "key": "Veigar-W", "start": 17, "end": 28 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Caitlyn:Veigar:2",
+          "text": "Poke Veigar with Piltover Peacemaker from long range. He is fragile and has to come close to fight you.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Caitlyn:Veigar:3",
+          "text": "Slow Veigar with the net if he steps up, then back away so he can't follow.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Veigar", "start": 5, "end": 11 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "adc:Caitlyn:Veigar:4",
+          "text": "Put Yordle Snap Trap near where you stand so Veigar cannot walk up to you freely.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Veigar", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "adc:Caitlyn:Veigar:5",
+          "text": "Do not let Veigar kill minions or hit you with spells. Each champion hit makes him permanently stronger.",
+          "refs": [
+            { "kind": "champion", "key": "Veigar", "start": 11, "end": 17 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Veigar",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "1510cda65c7fb2a7ddb27bac135d6ac017051fb21c6cf52f7c7d835c786bec92",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Xayah:0",
+          "text": "Poke Xayah with Piltover Peacemaker from long range; she has to walk into your range to trade back.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Xayah", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "adc:Caitlyn:Xayah:1",
+          "text": "Place Yordle Snap Trap behind you and in brush before Xayah can walk up. If she steps on one she is rooted, and you get a bonus Headshot on her.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Xayah", "start": 54, "end": 59 },
+            { "kind": "keyword", "key": "rooted", "start": 100, "end": 106 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 128,
+              "end": 136
+            }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "adc:Caitlyn:Xayah:2",
+          "text": "If Xayah dives onto you, fire the net away from her. You get distance and she is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 3, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Caitlyn:Xayah:3",
+          "text": "Don't fire Ace in the Hole while Xayah's Featherstorm is about to land. She can't be targeted while she is in the air.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 11, "end": 26 },
+            { "kind": "champion", "key": "Xayah", "start": 33, "end": 38 },
+            { "kind": "ability", "key": "Xayah-R", "start": 41, "end": 53 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Caitlyn:Xayah:4",
+          "text": "Move around when Xayah has fought in one spot for a while. Feathers left on the ground let Bladecaller root you.",
+          "refs": [
+            { "kind": "champion", "key": "Xayah", "start": 17, "end": 22 },
+            { "kind": "ability", "key": "Xayah-E", "start": 91, "end": 102 },
+            { "kind": "keyword", "key": "rooted", "start": 103, "end": 107 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Xayah",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "9a4bd023cf9bd736206b21b36ef220b0966312ffcc0e1c699e2d348a55947e3a",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Yasuo:0",
+          "text": "Poke Yasuo with Piltover Peacemaker from long range, and line it up so it hits him before it reaches minions.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yasuo", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 16, "end": 35 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Caitlyn:Yasuo:1",
+          "text": "Place Yordle Snap Trap where Yasuo wants to dash or stand. If he steps on it, he is rooted and takes a bonus Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Yasuo", "start": 29, "end": 34 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 109,
+              "end": 117
+            }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Caitlyn:Yasuo:2",
+          "text": "Fire your net at Yasuo when he dashes in. He is slowed and you are pushed back out of his reach.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "adc:Caitlyn:Yasuo:3",
+          "text": "Yasuo's Wind Wall blocks your shots. Wait until it fades before firing Piltover Peacemaker or Ace in the Hole.",
+          "refs": [
+            { "kind": "champion", "key": "Yasuo", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Yasuo-W", "start": 8, "end": 17 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 71, "end": 90 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 94, "end": 109 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "adc:Caitlyn:Yasuo:4",
+          "text": "Stay away from his Steel Tempest whirlwind. When he has two stacks, step sideways, or he knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "Yasuo-Q", "start": 19, "end": 32 }
+          ],
+          "pWrong": 0.37
+        }
+      ],
+      "opponent": "Yasuo",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a8e918bbc3ab4d1e135b9135a0a4a1bce0f5c2f6532df1824b0b5e0faf315607",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Yunara:0",
+          "text": "Poke Yunara with Piltover Peacemaker from long range; she has no long-range answer, so trade freely while she walks up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 17, "end": 36 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Caitlyn:Yunara:1",
+          "text": "Place Yordle Snap Trap where Yunara stands to last-hit or walks toward you; a rooted Yunara takes a bonus Headshot from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Yunara", "start": 29, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 78, "end": 84 },
+            { "kind": "champion", "key": "Yunara", "start": 85, "end": 91 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 106,
+              "end": 114
+            }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "adc:Caitlyn:Yunara:2",
+          "text": "Fire your net away from Yunara if she gets close; you slide back and she is slowed if it hits.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 82 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "adc:Caitlyn:Yunara:3",
+          "text": "Yunara hits much harder and faster once she uses Transcend One's Self. Keep your distance and your net ready then.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Yunara-R", "start": 49, "end": 69 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Caitlyn:Yunara:4",
+          "text": "Stay behind minions when Yunara throws her prayer bead; it slows you heavily and you will be easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.65
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "61e4fd2e88c9b4f24f6b1406216dd372850fe04e1376dcda2ae00dd13d39e05b",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Zeri:0",
+          "text": "Poke Zeri with Piltover Peacemaker from long range; her Burst Fire reaches much less far, so she cannot answer you.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zeri", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 15, "end": 34 },
+            { "kind": "ability", "key": "Zeri-Q", "start": 56, "end": 66 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "adc:Caitlyn:Zeri:1",
+          "text": "Place Yordle Snap Trap on the paths Zeri walks, and in the spots she dashes toward. A rooted Zeri takes extra damage from your Headshot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Zeri", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "rooted", "start": 86, "end": 92 },
+            { "kind": "champion", "key": "Zeri", "start": 93, "end": 97 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 127,
+              "end": 135
+            }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "adc:Caitlyn:Zeri:2",
+          "text": "Zeri's Spark Surge dash crosses walls and gets her away. Keep a trap down and your net ready for when she dashes in or out.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Zeri-E", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "adc:Caitlyn:Zeri:3",
+          "text": "Fire your net when Zeri closes in. It slows her, and the recoil pushes you back so you can keep your range.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Caitlyn:Zeri:4",
+          "text": "Hit Zeri with a net, then follow with an extended-range Headshot while she is still netted.",
+          "refs": [
+            { "kind": "champion", "key": "Zeri", "start": 4, "end": 8 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 56,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Caitlyn:Zeri:5",
+          "text": "At level 6, Ace in the Hole can finish Zeri from far away. Her allies can step in front and block the shot.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-R", "start": 12, "end": 27 },
+            { "kind": "champion", "key": "Zeri", "start": 39, "end": 43 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Zeri",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "a7b635ab376775a97fe6dd91cd6d7a8aabc7d62796ad3c9eb498069ea91461f4",
+      "tips": [
+        {
+          "id": "adc:Caitlyn:Ziggs:0",
+          "text": "Outrange Ziggs with Piltover Peacemaker and poke him whenever he steps up to hit a minion. Keep it up in the early levels.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 20, "end": 39 },
+            { "kind": "keyword", "key": "poke", "start": 44, "end": 48 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Caitlyn:Ziggs:1",
+          "text": "Place Yordle Snap Trap before you need it, in the brush or where Ziggs likes to stand, so one is ready when he comes at you.",
+          "refs": [
+            { "kind": "ability", "key": "Caitlyn-W", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Ziggs", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "adc:Caitlyn:Ziggs:2",
+          "text": "Ziggs's mines slow you and set up his other spells. Walk around them, or hit him first when he throws them.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 0, "end": 5 },
+            { "kind": "keyword", "key": "slowed", "start": 14, "end": 18 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "adc:Caitlyn:Ziggs:3",
+          "text": "Once Ziggs has used Bouncing Bomb and Satchel Charge, move up and trade. He has few ways to hit back while they recharge.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ziggs-Q", "start": 20, "end": 33 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 38, "end": 52 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Caitlyn:Ziggs:4",
+          "text": "Ziggs can use Satchel Charge to blast himself away from you. Keep a trap down on his escape path.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ziggs-W", "start": 14, "end": 28 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "adc:Caitlyn:Ziggs:5",
+          "text": "Fire your net at Ziggs to slow him if he dives on you. The recoil also moves you out of the way.",
+          "refs": [
+            { "kind": "champion", "key": "Ziggs", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Ziggs",
+      "comboRefs": []
+    }
+  ]
+}

@@ -1,0 +1,2860 @@
+{
+  "schemaVersion": 1,
+  "champion": "Nocturne",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "4fae9f8fefcc9f6bf6ada57d5b5804cc7374979e4fc110b0c3e512cbc6a676fc",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:general:0",
+          "text": "Throw Duskbringer down a lane or at a camp, then run along the trail for extra Move Speed and Attack Damage. It also closes distance out of combat.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:general:1",
+          "text": "Hit an enemy champion with Duskbringer so they leave a trail you can follow. The trail shows where they walk, even in fog.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 27, "end": 38 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Nocturne:general:2",
+          "text": "Keep attacking monsters and champions so Umbra Blades comes back quickly. Each empowered hit heals you and damages everything around the target.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 41,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Nocturne:general:3",
+          "text": "Stay close to your target with Unspeakable Horror. If they run out of range, the tether breaks and the fear never lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 31, "end": 49 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Nocturne:general:4",
+          "text": "Run straight at feared enemies. Unspeakable Horror gives you a big Move Speed boost toward them.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:general:5",
+          "text": "Hold Shroud of Darkness for the enemy's key stun or hook. Blocking an ability doubles your Attack Speed bonus for a few seconds.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:general:6",
+          "text": "Cast Shroud of Darkness just before you recast Paranoia. Enemies may waste a disable on the shield, and it keeps refreshing during the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 47, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:general:7",
+          "text": "Use Paranoia to gank across the map. The dash tracks its target until you arrive, and the enemies see less and lose sight of their allies.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nocturne:general:8",
+          "text": "Do not recast Paranoia while rooted. Cast it first, then dash once you are free.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "rooted", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "1f65910dd6d5711800dd5563751e44d848da558badea31676fed9935809eba25",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Aatrox:0",
+          "text": "Hold Shroud of Darkness for The Darkin Blade or Infernal Chains; blocking one gives you a big Attack Speed boost for the trade.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 48, "end": 63 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Nocturne:Aatrox:1",
+          "text": "Use Paranoia's dash from outside his sight, then fight him once you land; the shield from Shroud of Darkness can cover you when you arrive.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 90, "end": 108 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Nocturne:Aatrox:2",
+          "text": "Aim Duskbringer down a long line to catch him; the trail it leaves on him shows you where he is and speeds you up.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Nocturne:Aatrox:3",
+          "text": "Cast Unspeakable Horror and stay close so the tether is not broken; Aatrox's Umbral Dash can pull him out of range, so cast it when his dash is spent.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Aatrox", "start": 68, "end": 74 },
+            { "kind": "ability", "key": "Aatrox-E", "start": 77, "end": 88 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nocturne:Aatrox:4",
+          "text": "Avoid long fights when Aatrox has healing from his passive; burst him with Paranoia and leave before he sustains.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 75, "end": 83 }
+          ],
+          "pWrong": 0.94
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a192dbc58179812c85693e2f13552bd08d4cb1e7fed533891bb0c889ca7a457",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Ambessa:0",
+          "text": "Hold Shroud of Darkness for Ambessa's Public Execution; it is blocked by a spell shield, and she loses her big engage.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Ambessa", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 38, "end": 54 }
+          ],
+          "pWrong": 0.5
+        },
+        {
+          "id": "jungle:Nocturne:Ambessa:1",
+          "text": "Shroud of Darkness also blocks Cunning Sweep, so time it as she commits to her combo and gain Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 0, "end": 18 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Nocturne:Ambessa:2",
+          "text": "Use Unspeakable Horror on her and keep the tether unbroken; if she walks out of range, you lose the fear, so cut off her escape routes.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Nocturne:Ambessa:3",
+          "text": "Use Paranoia in a skirmish to dash onto Ambessa if she is alone, since the dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ambessa", "start": 40, "end": 47 },
+            { "kind": "keyword", "key": "isolated", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Nocturne:Ambessa:4",
+          "text": "Keep fighting inside the Dusk Trail from Duskbringer; you move faster and hit harder, which helps you win a short brawl.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 41, "end": 52 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dae55fabbfac4d404c283452a6be63ba580046d4a6b5c72a11c5f7e224291b2f",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Amumu:0",
+          "text": "Press Shroud of Darkness when Amumu is about to throw Bandage Toss; it blocks the stun and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Amumu", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 54, "end": 66 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Nocturne:Amumu:1",
+          "text": "Duskbringer can be blocked by a spell shield, so aim it so it hits Amumu before he can answer.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Amumu", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Nocturne:Amumu:2",
+          "text": "Don't clump with your team when Amumu has Curse of the Sad Mummy ready; one ultimate can stun everyone at once.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Amumu-R", "start": 42, "end": 64 },
+            { "kind": "keyword", "key": "stunned", "start": 89, "end": 93 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nocturne:Amumu:3",
+          "text": "Use Unspeakable Horror on Amumu only once his Bandage Toss is spent, so he can't easily stun you out of the tether.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Amumu", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 46, "end": 58 }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2e8783ca069253f2eb135a35bd9b2cb70fb9ca13d94e497cadf30d19d24d7813",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Belveth:0",
+          "text": "Hold Shroud of Darkness for Above and Below; blocking it denies the knock up and gives you extra Attack Speed for the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Belveth-W", "start": 28, "end": 43 },
+            { "kind": "keyword", "key": "knocked-up", "start": 68, "end": 76 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Nocturne:Belveth:1",
+          "text": "Use Unspeakable Horror on Bel'Veth and keep the tether unbroken. She can dash out in any direction that is off cooldown, so stay close to her.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Belveth", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Nocturne:Belveth:2",
+          "text": "Fight her when she has no Void Coral and few kills. Her attack speed and true damage grow each time she takes a champion down.",
+          "refs": [],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Nocturne:Belveth:3",
+          "text": "Use Paranoia to dash onto her when she has used her dashes. Her Royal Maelstrom cannot stop it, and her Above and Below cannot knock you away.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Belveth-E", "start": 64, "end": 79 },
+            { "kind": "ability", "key": "Belveth-W", "start": 104, "end": 119 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a64775a057afabbf7cf264cea144c871b6ab70540985b1f86fa54330dc8bc289",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Brand:0",
+          "text": "Hold Shroud of Darkness for Brand's Sear or Pillar of Flame; blocking one wastes the start of his combo and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Brand", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Brand-Q", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Brand-W", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nocturne:Brand:1",
+          "text": "Cast Paranoia, then use Shroud of Darkness during the dash. Brand's spells can't touch you when you land.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 24, "end": 42 },
+            { "kind": "champion", "key": "Brand", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Nocturne:Brand:2",
+          "text": "Brand is fragile and has no escape. Dash onto him with Paranoia once his key spells are on cooldown.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 55, "end": 63 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Nocturne:Brand:3",
+          "text": "Use Duskbringer to close distance in the fog. Its trail speeds you up and you can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:Brand:4",
+          "text": "Use Unspeakable Horror when you are on him. If you stay attached, he is feared and can't cast.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:Nocturne:Brand:5",
+          "text": "Avoid grouping with allies when Brand has burned someone. His Ablaze explosion and Conflagration hit nearby units.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Brand-E", "start": 83, "end": 96 }
+          ],
+          "pWrong": 0.58
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5852ed7c4bf13f109cd41369eab4717260b1651b4d690475e64d8df09f7c2d93",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Briar:0",
+          "text": "Hold Shroud of Darkness for Briar's Head Rush; it blocks the stun and the damage, and Nocturne attacks much faster afterward.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Briar-Q", "start": 36, "end": 45 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 65 },
+            { "kind": "champion", "key": "Nocturne", "start": 86, "end": 94 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Nocturne:Briar:1",
+          "text": "Block Certain Death's dash with Shroud of Darkness too, since the spell shield stops that ability.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-R", "start": 6, "end": 19 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Nocturne:Briar:2",
+          "text": "Stay close to your team when Briar kicks Certain Death; nearby enemies are feared on landing, so don't stand alone.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Briar-R", "start": 41, "end": 54 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:Nocturne:Briar:3",
+          "text": "Hit Briar with Unspeakable Horror and stay on her; if the tether holds, she is feared and you chase her fast.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 15, "end": 33 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Briar:4",
+          "text": "Throw Duskbringer at Briar to open a fight; the trail gives you speed and damage while you stay on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:Briar:5",
+          "text": "Her Chilling Scream is a projectile, so Shroud of Darkness can also block a fully charged scream and its wall stun.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-E", "start": 4, "end": 19 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "86a32adfe6f230224938fa5d25b748c95d97d2d4e4711bc801d9640d39de0cc4",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Darius:0",
+          "text": "Hold Shroud of Darkness for Darius' Apprehend; blocking the pull stops his combo and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Darius-E", "start": 36, "end": 45 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Nocturne:Darius:1",
+          "text": "Shroud of Darkness also blocks Noxian Guillotine, so time it when Darius is low on you and about to finish.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Darius-R", "start": 31, "end": 48 },
+            { "kind": "champion", "key": "Darius", "start": 66, "end": 72 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Darius:2",
+          "text": "Hit Darius with Duskbringer from long range; he has no way to close the gap quickly except Apprehend.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 16, "end": 27 },
+            { "kind": "ability", "key": "Darius-E", "start": 91, "end": 100 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Nocturne:Darius:3",
+          "text": "Use Unspeakable Horror and keep him tethered; if he is feared, chase him down at high speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nocturne:Darius:4",
+          "text": "Avoid long fights with Darius; his bleeds build up. Trade quickly and leave.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Darius:5",
+          "text": "Use Paranoia to dash onto Darius when you can finish him off.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Darius", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "de9bbf0d73c7da60520db416041d8531935463fa82c9073165d8d1cf9d51b154",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Diana:0",
+          "text": "Hold Shroud of Darkness for Diana's Crescent Strike or Lunar Rush; blocking one boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Diana", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Diana-Q", "start": 36, "end": 51 },
+            { "kind": "ability", "key": "Diana-E", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Nocturne:Diana:1",
+          "text": "Use Paranoia's dash on Diana after she spends her abilities; her dash cannot save her from it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Diana", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nocturne:Diana:2",
+          "text": "Cast Shroud of Darkness just before Diana's Moonfall pull lands; it blocks the pull and her beam.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Diana", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Diana-R", "start": 44, "end": 52 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Diana:3",
+          "text": "Fight Diana while she has no Pale Cascade shield, or wait until the orbs are gone.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Diana-W", "start": 29, "end": 41 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Nocturne:Diana:4",
+          "text": "Use Unspeakable Horror on Diana and stay close so the tether holds and she is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Diana", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.2
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d58112b39d7d225ca33bbfbee57cb5402445bb46146e747e10d8bef61a13da7",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:DrMundo:0",
+          "text": "Save Shroud of Darkness for Dr. Mundo's Infected Bonesaw; it blocks the hit, and you get faster attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "DrMundo", "start": 28, "end": 37 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 40, "end": 56 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Nocturne:DrMundo:1",
+          "text": "Don't rely on Unspeakable Horror to fear Dr. Mundo; his passive resists the first disable, so use it only after that is spent.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 14, "end": 32 },
+            { "kind": "champion", "key": "DrMundo", "start": 41, "end": 50 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Nocturne:DrMundo:2",
+          "text": "Burst him quickly; if the fight drags out, Maximum Dosage and Heart Zapper heal him through your damage.",
+          "refs": [
+            { "kind": "ability", "key": "DrMundo-R", "start": 43, "end": 57 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 62, "end": 74 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nocturne:DrMundo:3",
+          "text": "Use Duskbringer to dodge in and out of his range; his Infected Bonesaw is easy to sidestep, so keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e57bdf95ec66107ca5e903984f031c4692ebccc34fe14b556825ced0df40c2fc",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Ekko:0",
+          "text": "Cast Shroud of Darkness just as Ekko's Parallel Convergence or Timewinder lands; it blocks the next enemy ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Ekko", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Ekko-W", "start": 39, "end": 59 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 63, "end": 73 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Ekko:1",
+          "text": "Use Paranoia to dash onto Ekko when his Chronobreak is down. He has little left to escape with.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ekko", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Ekko-R", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Nocturne:Ekko:2",
+          "text": "Hit Ekko with Unspeakable Horror and stay on him so the tether holds. If it holds, he is feared and cannot fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 14, "end": 32 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Nocturne:Ekko:3",
+          "text": "Throw Duskbringer at Ekko to chase him. The trail gives you speed and attack damage while you follow.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Nocturne:Ekko:4",
+          "text": "Spend Shroud of Darkness before you dash with Paranoia, so a stun or burst cannot stop your attack.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 46, "end": 54 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56b9015ef6a7d8b670f3fc4a73519f9d726ee2db2a6cb4fbdb02baad417dca58",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Evelynn:0",
+          "text": "Walk away from Evelynn when her Allure mark shows on you, and stay near allies so she can't reach you alone.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 15, "end": 22 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 32, "end": 38 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Nocturne:Evelynn:1",
+          "text": "Cast Shroud of Darkness when Evelynn's mark is about to expunge. It blocks her ability and gives you extra Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Evelynn", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Evelynn:2",
+          "text": "Don't fight Evelynn at low health; Last Caress hits much harder on weak targets.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Evelynn:3",
+          "text": "Use Duskbringer to chase Evelynn and leave a trail that shows where she went, even in the fog.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Evelynn", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nocturne:Evelynn:4",
+          "text": "Use Paranoia to dash onto Evelynn when she is hurt, and finish her before Demon Shade heals her.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Evelynn", "start": 26, "end": 33 },
+            {
+              "kind": "ability",
+              "key": "Evelynn-passive",
+              "start": 74,
+              "end": 85
+            }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "bb8837e45cc7d2d776c898838a1d22cdc2564804c90d1bcfba23177b343edcdb",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Fiddlesticks:0",
+          "text": "Keep Shroud of Darkness up when Fiddlesticks may be hiding nearby; blocking his first ability spoils his fear.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 32,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Nocturne:Fiddlesticks:1",
+          "text": "Break away from Fiddlesticks' Bountiful Harvest early; he heals from the damage and hits hardest at the end.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 30,
+              "end": 47
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nocturne:Fiddlesticks:2",
+          "text": "Use Duskbringer to run out of range of Fiddlesticks when he lands Reap; the speed on the trail helps you escape.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 39,
+              "end": 51
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 66,
+              "end": 70
+            }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Nocturne:Fiddlesticks:3",
+          "text": "Use Paranoia to dive Fiddlesticks; his vision of you shrinks, and the dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 21,
+              "end": 33
+            }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0c3adba564d93e5917b2886a0947ad0f21ea78dd323e99895f0dcfa721ba2991",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Graves:0",
+          "text": "Cast Shroud of Darkness just before Graves fires End of the Line or Smoke Screen; the shield blocks the next enemy ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Graves", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Graves-Q", "start": 49, "end": 64 },
+            { "kind": "ability", "key": "Graves-W", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Nocturne:Graves:1",
+          "text": "Use Paranoia to dash onto Graves when he is away from allies. Cast Shroud of Darkness during the dash so a spell shield is up when you land.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 67, "end": 85 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Nocturne:Graves:2",
+          "text": "Graves' Collateral Damage and Quickdraw can break your Paranoia dash if he uses them mid-flight, so expect him to try. Use Unspeakable Horror once you land.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-R", "start": 8, "end": 25 },
+            { "kind": "ability", "key": "Graves-E", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 55, "end": 63 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 123, "end": 141 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:Nocturne:Graves:3",
+          "text": "Stay on Graves with Unspeakable Horror so the tether holds; if it breaks, he gets away before the fear lands. Use Duskbringer to close the gap first.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 8, "end": 14 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 20, "end": 38 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 114, "end": 125 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Nocturne:Graves:4",
+          "text": "Fight Graves in the smoke with care: leaving the cloud ends its effect right away, so step out instead of fighting blind.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.87
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1713c31f2de824c3aee2c3a4969695b38fe6dfa95dba85d99eec6c0ee637d0de",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Gwen:0",
+          "text": "Cast Shroud of Darkness just as Gwen's Needlework or Snip Snip! is about to land; blocking it speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Gwen", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Gwen-R", "start": 39, "end": 49 },
+            { "kind": "ability", "key": "Gwen-Q", "start": 53, "end": 63 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Nocturne:Gwen:1",
+          "text": "Do not throw Duskbringer or Unspeakable Horror at Gwen while she is in Hallowed Mist; she cannot be targeted from outside it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 13, "end": 24 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 28, "end": 46 },
+            { "kind": "champion", "key": "Gwen", "start": 50, "end": 54 },
+            { "kind": "ability", "key": "Gwen-W", "start": 71, "end": 84 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nocturne:Gwen:2",
+          "text": "Wait for Gwen to leave Hallowed Mist, since it follows her only once, then start the fight with Unspeakable Horror.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 9, "end": 13 },
+            { "kind": "ability", "key": "Gwen-W", "start": 23, "end": 36 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 96, "end": 114 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Nocturne:Gwen:3",
+          "text": "Stay in melee range while Unspeakable Horror ticks so the tether holds and she is feared, then chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:Nocturne:Gwen:4",
+          "text": "Fight Gwen before she has landed several attacks; she needs them to build up her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 6, "end": 10 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Gwen:5",
+          "text": "Use Paranoia to jump onto Gwen when she is out of position. Do not dash while she is in Hallowed Mist; it blocks the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Gwen", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Gwen-W", "start": 88, "end": 101 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6b40c25fc4a8f4110edbbead679504ac93ba8aa65aeaffa1f2125099e43abda6",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Hecarim:0",
+          "text": "Hold Shroud of Darkness for Hecarim's Onslaught of Shadows or Devastating Charge setup; it blocks the next enemy Ability and speeds your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Hecarim", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 38, "end": 58 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Nocturne:Hecarim:1",
+          "text": "Hecarim is sturdy when he fights near allies and enemies, so use Unspeakable Horror on him when he is alone and you can keep the tether unbroken.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 65, "end": 83 },
+            { "kind": "keyword", "key": "isolated", "start": 102, "end": 107 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:Nocturne:Hecarim:2",
+          "text": "Use Paranoia to find Hecarim in the jungle, then dash onto him when he is away from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Hecarim", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Nocturne:Hecarim:3",
+          "text": "Throw Duskbringer at Hecarim before you trade; the trail speeds you up and adds attack damage while you fight on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Hecarim", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "535885c2af0efdaff8cc7bd6e1fe74e16d5616cca9f7953e7f31fcfb98c57242",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Ivern:0",
+          "text": "Hold Shroud of Darkness for Rootcaller; it blocks the vine and the root, and your Attack Speed goes up.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 28, "end": 38 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nocturne:Ivern:1",
+          "text": "Use Paranoia when Ivern is away from his team, then dash to him. Daisy and his allies can't help if they can't see you coming.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ivern", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Nocturne:Ivern:2",
+          "text": "Don't chase Ivern alone when Daisy is out; her third hit on you knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 12, "end": 17 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:Nocturne:Ivern:3",
+          "text": "Hit Ivern with Unspeakable Horror and stay attached; if the tether holds, he is feared and you run at him faster.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 15, "end": 33 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Nocturne:Ivern:4",
+          "text": "Ivern's Triggerseed slows when it bursts. Step out of its area before it goes off.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ivern-E", "start": 8, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8611d69e8cd7fa4664cefef5fdf297e14210142443ff0d3a5349af3db503bac6",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:JarvanIV:0",
+          "text": "Press Shroud of Darkness when Jarvan IV goes for Dragon Strike or Cataclysm; the shield blocks it and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "JarvanIV", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 49, "end": 62 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 66, "end": 75 }
+          ],
+          "pWrong": 0.99,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:JarvanIV:1",
+          "text": "Keep out of the line between Jarvan IV and his Demacian Standard, or Dragon Strike will knock you up.",
+          "refs": [
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-E", "start": 47, "end": 64 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 69, "end": 82 }
+          ],
+          "pWrong": 0.91
+        },
+        {
+          "id": "jungle:Nocturne:JarvanIV:2",
+          "text": "Hold Unspeakable Horror until Jarvan IV has no easy way out, then stay on him so the tether holds and he is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "JarvanIV", "start": 30, "end": 39 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:Nocturne:JarvanIV:3",
+          "text": "Use Paranoia's dash to reach Jarvan IV from far away. Cataclysm's walls will not stop the dash.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "JarvanIV", "start": 29, "end": 38 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Nocturne:JarvanIV:4",
+          "text": "Use Duskbringer to chase or to escape when Jarvan IV is on you. Its trail gives you speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "JarvanIV", "start": 43, "end": 52 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "446023be61e7230461cef6872948f6d4c4a689c8f8ecaa0af2767e378c32632c",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Jax:0",
+          "text": "Do not auto-attack Jax while he is in Counter Strike. Your attacks are dodged and he stuns you when it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 19, "end": 22 },
+            { "kind": "ability", "key": "Jax-E", "start": 38, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 85, "end": 90 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Nocturne:Jax:1",
+          "text": "Use Shroud of Darkness when Jax jumps in; it blocks his Leap Strike and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Jax", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Jax-Q", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Nocturne:Jax:2",
+          "text": "Break the Unspeakable Horror tether only if you must. Make Jax stand still, and he is feared and slowed when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 10, "end": 28 },
+            { "kind": "champion", "key": "Jax", "start": 59, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 97, "end": 103 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:Nocturne:Jax:3",
+          "text": "Fight Jax in short bursts. Step away so he cannot keep attacking and build Relentless Assault.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 6, "end": 9 },
+            { "kind": "ability", "key": "Jax-passive", "start": 75, "end": 93 }
+          ],
+          "pWrong": 0.85
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "dbe5f488a77a5b4cc641e3ceaf28506176eb7058ff6afc0067699001d514afcd",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Jayce:0",
+          "text": "Keep Shroud of Darkness ready for Jayce's Thundering Blow or Shock Blast; blocking one also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 34, "end": 39 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Jayce:1",
+          "text": "Cast Unspeakable Horror on Jayce and stay close so the tether holds; he will be feared if it isn't broken.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Jayce", "start": 27, "end": 32 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "jungle:Nocturne:Jayce:2",
+          "text": "Use Duskbringer to land a hit and gain speed on its trail, so you can catch Jayce when he tries to kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 76, "end": 81 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:Jayce:3",
+          "text": "Cast Paranoia before a gank so Jayce sees less and has trouble spotting you, then dash onto him once you are close.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "652fb7898b78f9732bd4261831b4ffcf18ae7730afe72c3fd27fa01987544b54",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Karthus:0",
+          "text": "Dive Karthus with Paranoia when you can; he has no escape or stun, and it can't be stopped by crowd control.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nocturne:Karthus:1",
+          "text": "Hit Karthus with Unspeakable Horror and stay on him; if the tether holds, he is feared and cannot cast well.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nocturne:Karthus:2",
+          "text": "Turn on Shroud of Darkness as Karthus casts at you; it blocks his Lay Waste or Wall of Pain and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "Karthus", "start": 30, "end": 37 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 66, "end": 75 },
+            { "kind": "ability", "key": "Karthus-W", "start": 79, "end": 91 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nocturne:Karthus:3",
+          "text": "Move away from Karthus's corpse after you kill him; Death Defied lets him keep casting for a short time.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 15, "end": 22 },
+            {
+              "kind": "ability",
+              "key": "Karthus-passive",
+              "start": 52,
+              "end": 64
+            }
+          ],
+          "pWrong": 0
+        },
+        {
+          "id": "jungle:Nocturne:Karthus:4",
+          "text": "Lay Waste hits harder on a lone target, so stay near minions or allies when you are in his range.",
+          "refs": [
+            { "kind": "ability", "key": "Karthus-Q", "start": 0, "end": 9 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "10151412a9e32733474c54adae1f33aa60141fdbfdf01870a485febc8dd4b364",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Kayn:0",
+          "text": "Hold Shroud of Darkness for Kayn's Umbral Trespass. Cast on a spell shield, it fails and goes on full cooldown, so he wastes his big engage.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Kayn", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "Kayn-R", "start": 35, "end": 50 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:Nocturne:Kayn:1",
+          "text": "Raise Shroud of Darkness when Kayn swings Blade's Reach at you. A block also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Kayn", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Kayn-W", "start": 42, "end": 55 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Nocturne:Kayn:2",
+          "text": "Use Unspeakable Horror on Kayn and stay close so the tether holds. If it holds, he is feared and you run at him faster.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Kayn", "start": 26, "end": 30 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:Kayn:3",
+          "text": "Kayn can slip into walls with Shadow Step to escape. Hit him with Duskbringer first, since his trail shows where he runs.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Kayn-E", "start": 30, "end": 41 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Nocturne:Kayn:4",
+          "text": "Paranoia's dash tracks Kayn even if he escapes through terrain. Recast it to finish him when he is low.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a6cc935cce09384ed05fcbb968b58fc50eecdc4b699c0519d2f9891d7eda2e3b",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Khazix:0",
+          "text": "Hold Shroud of Darkness for Taste Their Fear or Void Spike when Kha'Zix goes for you; blocking one ability also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "Khazix-W", "start": 48, "end": 58 },
+            { "kind": "champion", "key": "Khazix", "start": 64, "end": 71 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Nocturne:Khazix:1",
+          "text": "Stay near your allies, minions or a turret when Kha'Zix is around. Taste Their Fear hurts far less against targets that are not isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 48, "end": 55 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 67, "end": 83 },
+            { "kind": "keyword", "key": "isolated", "start": 128, "end": 136 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:Nocturne:Khazix:2",
+          "text": "Use Paranoia in a fight to cut the enemy's vision, then dash onto Kha'Zix when he is exposed and without his Leap.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Khazix", "start": 66, "end": 73 },
+            { "kind": "ability", "key": "Khazix-E", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Nocturne:Khazix:3",
+          "text": "Land Unspeakable Horror and stay on him so the tether holds. He is feared if it is not broken, and a Leap will break it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Khazix-E", "start": 101, "end": 105 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Nocturne:Khazix:4",
+          "text": "Throw Duskbringer onto him to leave a trail you can follow. It shows where he went, even in fog.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "aa69402d06c2d738df2615c4824db30f8bc5534acd4b92eddf142e4f7e295cf1",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Kindred:0",
+          "text": "Use Paranoia when you are ready to dash onto Kindred; she is fragile and dies fast once you land on her.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kindred", "start": 45, "end": 52 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Kindred:1",
+          "text": "Turn on Shroud of Darkness as you dash in, so her Mounting Dread or Dance of Arrows is blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 8, "end": 26 },
+            { "kind": "ability", "key": "Kindred-E", "start": 50, "end": 64 },
+            { "kind": "ability", "key": "Kindred-Q", "start": 68, "end": 83 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Nocturne:Kindred:2",
+          "text": "Hold Unspeakable Horror until she has used her dash, then fear her and chase; she cannot easily get away.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Nocturne:Kindred:3",
+          "text": "Do not dive into Lamb's Respite; nobody inside can die. Wait for it to end, then attack.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 17, "end": 31 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Nocturne:Kindred:4",
+          "text": "Throw Duskbringer at her to catch up; her dusk trail speeds you and shows where she went.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.43
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ab82040bef6651757ddde019e3717176c2a09d37fbe6435f08d3f4f8443ad285",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:LeeSin:0",
+          "text": "Hold Shroud of Darkness for Sonic Wave; blocking it stops the dash too and gives you extra Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:LeeSin:1",
+          "text": "Lee Sin's Dragon's Rage is blocked by Shroud of Darkness, so time it as he starts the kick.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 10, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 38, "end": 56 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Nocturne:LeeSin:2",
+          "text": "Lee Sin is weak to magic damage, so use Unspeakable Horror on him in a fight; if the tether holds, he is feared and you can catch him.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 40, "end": 58 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Nocturne:LeeSin:3",
+          "text": "Use Paranoia to dive Lee Sin when he is low; Shroud of Darkness during the dash guards you from his answer.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "LeeSin", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 45, "end": 63 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nocturne:LeeSin:4",
+          "text": "Aim Duskbringer along his path in the jungle; the trail speeds you up and shows where he went.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "807cb3fc639464ff1a630fb71b60a69b2c307bc58c8b0d159621e54a58e970e8",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Lillia:0",
+          "text": "Cast Shroud of Darkness just before Lillia's Watch Out! Eep! or Swirlseed lands; it blocks the hit and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Lillia", "start": 36, "end": 42 },
+            { "kind": "ability", "key": "Lillia-W", "start": 45, "end": 60 },
+            { "kind": "ability", "key": "Lillia-E", "start": 64, "end": 73 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Lillia:1",
+          "text": "Hold Shroud of Darkness for Lilting Lullaby. The shield blocks the sleep warning, so Lillia loses her big fight tool.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Lillia-R", "start": 28, "end": 43 },
+            { "kind": "champion", "key": "Lillia", "start": 85, "end": 91 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Lillia:2",
+          "text": "Lillia is hard to catch, so use Unspeakable Horror on her and stay close until the tether finishes and she is feared.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 32, "end": 50 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Nocturne:Lillia:3",
+          "text": "Use Paranoia to dash onto Lillia when she is away from her team. The dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Lillia", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:Nocturne:Lillia:4",
+          "text": "Throw Duskbringer at Lillia as she runs; the trail gives you speed to chase her.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Lillia", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "323b742053c9090e09ad918bd567d1faf21ba1639c9945630f9b35fbffe19f05",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:MasterYi:0",
+          "text": "Cast Unspeakable Horror on Master Yi and stay close until the tether finishes, so he gets feared. His Highlander does not stop the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "MasterYi", "start": 27, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 102, "end": 112 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:Nocturne:MasterYi:1",
+          "text": "Turn on Shroud of Darkness when Master Yi is about to use Alpha Strike. It blocks the Ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 8, "end": 26 },
+            { "kind": "champion", "key": "MasterYi", "start": 32, "end": 41 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 58, "end": 70 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Nocturne:MasterYi:2",
+          "text": "Paranoia's dash cannot be stopped by crowd control. Use it to reach Master Yi when he is farming far from his team.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "MasterYi", "start": 68, "end": 77 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Nocturne:MasterYi:3",
+          "text": "Hit Master Yi hard while he is healing with Meditate, so he spends mana and gets no free recovery.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5cc32dbaa64ccc85b81a04ba1da4694606980731214feee6457931fa814634c9",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:MonkeyKing:0",
+          "text": "Hold Shroud of Darkness for Wukong's Nimbus Strike or Cyclone; the shield blocks it and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 28, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "MonkeyKing-E",
+              "start": 37,
+              "end": 50
+            },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 54, "end": 61 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:MonkeyKing:1",
+          "text": "Use Paranoia's dash to jump on Wukong when he is alone, then fight him before his stacking armor builds up.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Nocturne:MonkeyKing:2",
+          "text": "Land Unspeakable Horror and stay on Wukong so the tether holds. He is feared if it is not broken.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 36, "end": 42 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Nocturne:MonkeyKing:3",
+          "text": "Hit the real Wukong after he uses Warrior Trickster. Wait a moment before you commit your abilities.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 34, "end": 51 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Nocturne:MonkeyKing:4",
+          "text": "Use Duskbringer to chase Wukong or to escape his Cyclone. His trail lets you run faster.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 49, "end": 56 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7f5c90cb0b5a4a7715bc4da53952c5e5deb48ca63c239ebcec8f4c9420d58c9e",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Naafiri:0",
+          "text": "Keep Shroud of Darkness ready for Naafiri's Hounds' Pursuit; it blocks the dash damage and leaves her wasting her biggest ability.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Naafiri", "start": 34, "end": 41 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 44, "end": 59 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Naafiri:1",
+          "text": "Use Shroud of Darkness against Darkin Daggers too; the shield blocks the blades and the bleed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Naafiri-Q", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.88,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Naafiri:2",
+          "text": "Hit Naafiri with Unspeakable Horror and keep close so she cannot break the tether. Feared, she can't fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 17, "end": 35 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Nocturne:Naafiri:3",
+          "text": "Duskbringer is a long-range line. Use it to catch Naafiri after her Eviscerate, then chase on the trail.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Naafiri", "start": 50, "end": 57 },
+            { "kind": "ability", "key": "Naafiri-E", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Nocturne:Naafiri:4",
+          "text": "Use Umbra Blades on Naafiri and her packmates together; one swing hits everything around her and heals you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 4,
+              "end": 16
+            },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3b4222c8fc9c3843f7dd6bbdae8258cbc310617318103a9a625d402aafc92db7",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Nidalee:0",
+          "text": "Cast Shroud of Darkness when you see Nidalee aim Javelin Toss at you; it blocks the javelin and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Nidalee", "start": 37, "end": 44 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Nocturne:Nidalee:1",
+          "text": "Raise Shroud of Darkness before her Bushwhack or Pounce lands; the shield blocks one enemy ability, so don't waste it early.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Nocturne:Nidalee:2",
+          "text": "Walk up and use Unspeakable Horror when she is in cougar form. Stay on her until the tether ends and she is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 16, "end": 34 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:Nocturne:Nidalee:3",
+          "text": "Use Paranoia to dash onto Nidalee when she is out of position. Her Pounce is blocked by Shroud of Darkness if you time it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nidalee", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 88, "end": 106 }
+          ],
+          "pWrong": 0.89,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Nidalee:4",
+          "text": "Throw Duskbringer at her in a fight. It deals damage and leaves a trail that shows where she runs, even in the fog.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 }
+          ],
+          "pWrong": 0.07
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "46b155c4a149ded3b10f89dbf224aacd0f5171f1e56e878d2fb2f0d3772ba9e8",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Nunu:0",
+          "text": "Hold Shroud of Darkness for Biggest Snowball Ever! or Absolute Zero, since blocking either wastes their strongest ability.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Nunu-W", "start": 28, "end": 50 },
+            { "kind": "ability", "key": "Nunu-R", "start": 54, "end": 67 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:Nocturne:Nunu:1",
+          "text": "Use Paranoia to jump onto Nunu when he starts channeling Absolute Zero or the snowball. Both can be interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Nunu-R", "start": 57, "end": 70 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Nunu:2",
+          "text": "Turn sharply to dodge Biggest Snowball Ever!. It turns slowly, so running in a straight line will not save you.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 22, "end": 44 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:Nunu:3",
+          "text": "Fear Nunu with Unspeakable Horror and stay on the tether. If it breaks, you lose the fear.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 15, "end": 33 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5e85adf08c5f3a52b429256941c216504393c233a749d03df58b9bc5523264f1",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Pantheon:0",
+          "text": "Cast Shroud of Darkness just as Pantheon leaps in with Shield Vault; it blocks the stun and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Pantheon", "start": 32, "end": 40 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 55, "end": 67 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Nocturne:Pantheon:1",
+          "text": "Shroud of Darkness also blocks the Comet Spear thrown from range, so use it when you see him hold the spear.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Pantheon-Q", "start": 35, "end": 46 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:Nocturne:Pantheon:2",
+          "text": "Do not attack Pantheon from the front while Aegis Assault is up. Wait for it to end or hit him from the side or behind.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 44, "end": 57 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Nocturne:Pantheon:3",
+          "text": "Use Unspeakable Horror on Pantheon when his stun is spent, and stay on him so the tether holds and he is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Nocturne:Pantheon:4",
+          "text": "Paranoia's dash is blocked by spell shields, but Pantheon has none. Dash onto him when he is low and cannot stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Pantheon", "start": 49, "end": 57 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Nocturne:Pantheon:5",
+          "text": "Keep your distance from Pantheon when he is channeling Grand Starfall, and use Paranoia to hunt his team while he lands.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 55, "end": 69 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.53
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fa46e13d9cc0e903935745479e71b48243df5d8f2a876e5ae6955f4373e57905",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Qiyana:0",
+          "text": "Hold Shroud of Darkness for Supreme Display of Talent or Audacity; blocking it wastes her key ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Qiyana-R", "start": 28, "end": 53 },
+            { "kind": "ability", "key": "Qiyana-E", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Nocturne:Qiyana:1",
+          "text": "Start the fight with Unspeakable Horror and stay on her. Her escapes are short, and the fear only lands if the tether stays unbroken.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 21, "end": 39 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Nocturne:Qiyana:2",
+          "text": "Use Paranoia to dash onto her when she is out of position. The dash cannot be stopped by crowd control, so she cannot easily shake it off.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:Qiyana:3",
+          "text": "Hit her with Duskbringer to leave a trail on her. You get faster and hit harder while following it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 13, "end": 24 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4fbaba58b2658af17aec45f939e967fc8a11f1452f8d8bc90d02231a4f02203c",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Rammus:0",
+          "text": "Do not pick fights with Rammus while Defensive Ball Curl is up; your attacks hurt you. Wait until it ends.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Rammus-W", "start": 37, "end": 56 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nocturne:Rammus:1",
+          "text": "Use Shroud of Darkness to block Frenzying Taunt when Rammus walks up to you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 4, "end": 22 },
+            { "kind": "ability", "key": "Rammus-E", "start": 32, "end": 47 },
+            { "kind": "champion", "key": "Rammus", "start": 53, "end": 59 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Nocturne:Rammus:2",
+          "text": "Use Duskbringer to keep your distance from Rammus. Powerball is his main way to catch you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rammus", "start": 43, "end": 49 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 51, "end": 60 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Nocturne:Rammus:3",
+          "text": "Use Paranoia on his teammates rather than on Rammus; a tank takes your damage easily, and the recast is better spent on a squishy target.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Rammus", "start": 45, "end": 51 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f1823d52418e48cec11cc300bca911de9e61ec8682d9c769def2da06a273707f",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:RekSai:0",
+          "text": "Hold Shroud of Darkness for Rek'Sai's Void Rush or Furious Bite; the shield blocks either and your attack speed goes up.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "RekSai", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "RekSai-R", "start": 38, "end": 47 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:RekSai:1",
+          "text": "Throw Duskbringer at Rek'Sai to follow her; the trail speeds you up and lets you chase her down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "RekSai", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Nocturne:RekSai:2",
+          "text": "Cast Unspeakable Horror on Rek'Sai and stay close so the tether holds. If it holds, she is feared and slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "RekSai", "start": 27, "end": 34 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Nocturne:RekSai:3",
+          "text": "Fight Rek'Sai when her Fury is low; a full Fury makes her Furious Bite hit much harder.",
+          "refs": [
+            { "kind": "champion", "key": "RekSai", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9285d5dab15a864868898d768b92cc2d79af8a3f1df0f16d860e8d8c62cf14c5",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Rengar:0",
+          "text": "Press Shroud of Darkness just as Rengar throws Bola Strike or leaps in with his empowered ability; the shield blocks it and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Rengar", "start": 33, "end": 39 },
+            { "kind": "ability", "key": "Rengar-E", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.96,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Rengar:1",
+          "text": "Shroud of Darkness also blocks Rengar's Battle Roar, so use it when he is about to burst you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 0, "end": 18 },
+            { "kind": "champion", "key": "Rengar", "start": 31, "end": 37 },
+            { "kind": "ability", "key": "Rengar-W", "start": 40, "end": 51 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Nocturne:Rengar:2",
+          "text": "Use Unspeakable Horror on Rengar when he is stuck on you; if the tether holds he is feared and you chase him down fast.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Rengar", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Nocturne:Rengar:3",
+          "text": "Fight Rengar while his Ferocity is low, and play safe near brush where he can leap onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 6, "end": 12 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Nocturne:Rengar:4",
+          "text": "Cast Duskbringer through Rengar to leave a trail; it speeds you up and shows where he goes, even if he is camouflaged.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rengar", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Nocturne:Rengar:5",
+          "text": "Hold Paranoia's dash for Rengar when he is low or alone; it can't be stopped by crowd control and tracks him down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Rengar", "start": 25, "end": 31 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "54a4aacd5e9e8f8761dbab5a38a70110f0507fe01b176d1ad044dd7291ac8f09",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Sejuani:0",
+          "text": "Hold Shroud of Darkness for Glacial Prison or Arctic Assault; the shield blocks the next enemy ability, and a block gives you extra Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 28, "end": 42 },
+            { "kind": "ability", "key": "Sejuani-Q", "start": 46, "end": 60 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:Nocturne:Sejuani:1",
+          "text": "Use Unspeakable Horror on Sejuani only when you can stay on her. The fear only lands if the tether holds, so a charge or dash can break it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Sejuani", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Nocturne:Sejuani:2",
+          "text": "Fight Sejuani early, before she has allies and levels to build a tanky team around her. Her tank body makes long solo fights hard for you.",
+          "refs": [
+            { "kind": "champion", "key": "Sejuani", "start": 6, "end": 13 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:Nocturne:Sejuani:3",
+          "text": "Use Paranoia to dive her backline when she is away from her team. Cast Shroud of Darkness during the dash so a stun can't stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 71, "end": 89 }
+          ],
+          "pWrong": 0.5
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "427901a3a5ff51cd295c29672480027c86d6a8cef3205587b87ce3661b8ad923",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Shaco:0",
+          "text": "Save Shroud of Darkness for Shaco's engage. It blocks his next ability, so he may waste Two-Shiv Poison or Hallucinate.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Shaco", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Shaco-E", "start": 88, "end": 103 },
+            { "kind": "ability", "key": "Shaco-R", "start": 107, "end": 118 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Nocturne:Shaco:1",
+          "text": "Duskbringer's trail shows where Shaco went, even when he is invisible. Use it to find him after Deceive.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Shaco", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Shaco-Q", "start": 96, "end": 103 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Nocturne:Shaco:2",
+          "text": "Walk carefully into bushes and camp paths, since Shaco hides boxes there. Take a different route when you suspect one.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Nocturne:Shaco:3",
+          "text": "Feared enemies make you faster toward them. Use Unspeakable Horror and chase down a Shaco who is feared or fleeing.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 48, "end": 66 },
+            { "kind": "champion", "key": "Shaco", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Nocturne:Shaco:4",
+          "text": "Use Paranoia at level 6 to dash onto Shaco. Cast Shroud of Darkness first so his reply gets blocked.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Shaco", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 49, "end": 67 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "39b2ef3212b8c801b71725ebb23a43bfd5f4b4b186f9b2b171f8c5c3ccf93551",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Shyvana:0",
+          "text": "Hold Shroud of Darkness for Shyvana's Molten Burst or Dragon's Descent; blocking it also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Shyvana", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 38, "end": 50 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 54, "end": 70 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Nocturne:Shyvana:1",
+          "text": "Throw Duskbringer at Shyvana to chase her down or to run away; the trail gives you speed and follows her.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Shyvana", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:Nocturne:Shyvana:2",
+          "text": "Use Unspeakable Horror on Shyvana and keep close so the tether holds; she is feared when it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Shyvana", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Nocturne:Shyvana:3",
+          "text": "Gank when Shyvana is low on Dragon Fury, then use Paranoia to jump onto her before she can turn into a dragon.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8185a7b1c1f366882b36c6478d6a2bf083009d0ec4d454f3484a192d884cae95",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Skarner:0",
+          "text": "Hold Shroud of Darkness for Skarner's Impale or Ixtal's Impact; blocking either wastes his key cooldown and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Skarner", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Skarner-R", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "Skarner-E", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Skarner:1",
+          "text": "Throw Duskbringer at Skarner when he is chasing or fleeing; the trail gives you speed and bonus damage to stick to him.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Skarner", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:Nocturne:Skarner:2",
+          "text": "Use Unspeakable Horror and stay on him so the tether holds; once he is feared he can't fight back, so you can hit him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:Nocturne:Skarner:3",
+          "text": "Don't brawl for long against Skarner, because his attacks stack Quaking and hurt more over time. Burst him, then step away.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Nocturne:Skarner:4",
+          "text": "Use Paranoia to reach Skarner or his carries when he is out of position. The dash keeps going even if he slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Skarner", "start": 22, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 105, "end": 110 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9c16f61675d53b46406e3ba505f80b9c0ca4321bb57003bbc8d463ef1f7331ce",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Sylas:0",
+          "text": "Keep Shroud of Darkness ready for Abduct or Chain Lash; blocking it wastes his key ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Sylas-Q", "start": 44, "end": 54 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:Nocturne:Sylas:1",
+          "text": "Cast Shroud of Darkness before you dash in with Paranoia; Sylas may waste his Hijack or Abduct on the shield.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 48, "end": 56 },
+            { "kind": "champion", "key": "Sylas", "start": 58, "end": 63 },
+            { "kind": "ability", "key": "Sylas-R", "start": 78, "end": 84 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "jungle:Nocturne:Sylas:2",
+          "text": "Use Unspeakable Horror when he is low; if he stays tethered he is feared and cannot fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:Nocturne:Sylas:3",
+          "text": "Sylas can heal with Kingslayer, so finish him quickly once he is hurt, using Paranoia to reach him.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Nocturne:Sylas:4",
+          "text": "Paranoia is a strong ultimate to dive with, but Sylas can steal it with Hijack, so fight him when Hijack is down.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 0, "end": 8 },
+            { "kind": "champion", "key": "Sylas", "start": 48, "end": 53 },
+            { "kind": "ability", "key": "Sylas-R", "start": 72, "end": 78 },
+            { "kind": "ability", "key": "Sylas-R", "start": 98, "end": 104 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e792f9eb02ebadd49f22ca224dbc2e0b8e9906e4c45302bb21942aab614249ea",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Talon:0",
+          "text": "Hold Shroud of Darkness for Talon's Noxian Diplomacy or Rake when he comes at you; blocking it also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Talon", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Talon-Q", "start": 36, "end": 52 },
+            { "kind": "ability", "key": "Talon-W", "start": 56, "end": 60 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:Nocturne:Talon:1",
+          "text": "Use Unspeakable Horror on Talon when he is close and stay on him. If he can't break the tether, he is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Talon", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Nocturne:Talon:2",
+          "text": "Throw Duskbringer at Talon to leave a trail that shows where he went, even through fog or invisibility, then chase along it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Talon", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Nocturne:Talon:3",
+          "text": "Use Paranoia when Talon roams or ganks. It cuts his vision, and you can dash onto him once you find him.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Talon", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:Nocturne:Talon:4",
+          "text": "Fight Talon in the jungle when you have Umbra Blades ready; the heal helps you win a long trade.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 40,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "99fa4c6c5b75cdb534ac8faa1ade1c37efec7cd32fbe75390c1ac8b3055200e6",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Trundle:0",
+          "text": "Pull Trundle away from his Frozen Domain; he is far weaker outside it. Do not fight him inside it.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Trundle-W", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:Nocturne:Trundle:1",
+          "text": "Hold Shroud of Darkness for Subjugate; blocking it saves you from the drain and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Trundle-R", "start": 28, "end": 37 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Trundle:2",
+          "text": "Leave Pillar of Ice quickly; it slows you, so do not chase through it.",
+          "refs": [
+            { "kind": "ability", "key": "Trundle-E", "start": 6, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 37 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Nocturne:Trundle:3",
+          "text": "Use Duskbringer for your own speed when Trundle runs, and use Unspeakable Horror when he cannot easily break away from the tether.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Trundle", "start": 40, "end": 47 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 62, "end": 80 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "70cf33026c8c6b0e8a4c07ea94f9bc022517a3046f4dd7a5452584015e90b7b0",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Udyr:0",
+          "text": "Hold Shroud of Darkness for Blazing Stampede's attack. The shield blocks the stun when Udyr jumps on you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Udyr-E", "start": 28, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 77, "end": 81 },
+            { "kind": "champion", "key": "Udyr", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Nocturne:Udyr:1",
+          "text": "Use Unspeakable Horror on Udyr early in a fight. If he stays tethered, he is feared and slowed and you can hit him freely.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Udyr", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:Nocturne:Udyr:2",
+          "text": "Throw Duskbringer at Udyr's path when he runs, then chase on the trail. You move faster and hit harder while on it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Udyr", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Nocturne:Udyr:3",
+          "text": "Use Paranoia to dash onto Udyr once he is hurt. Dodging the dash is hard for him, but he can block it with Iron Mantle's shield.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Udyr", "start": 26, "end": 30 },
+            { "kind": "ability", "key": "Udyr-W", "start": 107, "end": 118 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f3d0c5cbdde49afc5a21fe2f529b561af9a3f7c22b2138940175a0b870caeb0c",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Vi:0",
+          "text": "Cast Shroud of Darkness just as Vi lands Cease and Desist on you; it blocks the dash and wastes her ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Vi-R", "start": 41, "end": 57 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Vi:1",
+          "text": "Raise Shroud of Darkness when Vi charges Vault Breaker at you; the shield blocks the punch and boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "ability", "key": "Vi-Q", "start": 41, "end": 54 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Vi:2",
+          "text": "Use Unspeakable Horror on Vi and keep her in range so the tether holds; she is feared when it finishes.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Nocturne:Vi:3",
+          "text": "Do not trade long auto-attack fights with Vi; her third hit cuts your Armor and speeds her up. Use Umbra Blades and leave.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Nocturne-passive",
+              "start": 99,
+              "end": 111
+            }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:Nocturne:Vi:4",
+          "text": "Use Duskbringer to chase Vi when she runs, or to get away when she is charging at you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5720f41cb50cf352e4da93db9ae173910938cf27ff258d6511ffac6e804586a0",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Viego:0",
+          "text": "Hold Shroud of Darkness for Viego's Spectral Maw; it blocks the stun and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Viego", "start": 28, "end": 33 },
+            { "kind": "ability", "key": "Viego-W", "start": 36, "end": 48 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Nocturne:Viego:1",
+          "text": "Use Shroud of Darkness before Viego's Heartbreaker lands; a spell shield blocks the spell, and it is his strongest burst.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Viego", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "Viego-R", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:Nocturne:Viego:2",
+          "text": "Hit Viego with Unspeakable Horror and stay on him so the tether holds. He is feared if it is not broken.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 15, "end": 33 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:Nocturne:Viego:3",
+          "text": "Use Duskbringer to chase Viego through the Mist trail and to leave a fight that is going badly.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 25, "end": 30 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Nocturne:Viego:4",
+          "text": "Cast Paranoia when Viego's team is spread out. The dash goes to the enemy you pick, and Viego loses sight of the map.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 19, "end": 24 },
+            { "kind": "champion", "key": "Viego", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.79
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0072d9a00f6b223d15fd4a7cc0edf07f9a546513d302183ba62401c8dedea3bb",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Volibear:0",
+          "text": "Hold Shroud of Darkness for Volibear's Thundering Smash; blocking it also stops the stun and leaves you with extra Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Volibear", "start": 28, "end": 36 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 39, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "jungle:Nocturne:Volibear:1",
+          "text": "Shroud of Darkness also blocks Sky Splitter and Frenzied Maul, so time it for his first big move in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 0, "end": 18 },
+            { "kind": "ability", "key": "Volibear-E", "start": 31, "end": 43 },
+            { "kind": "ability", "key": "Volibear-W", "start": 48, "end": 61 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Nocturne:Volibear:2",
+          "text": "Step out of the Sky Splitter circle while it lands; it is slow to arrive and only slows and hurts those inside.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-E", "start": 16, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 58, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Nocturne:Volibear:3",
+          "text": "Use Paranoia to dash onto Volibear when he is low or away from allies; the dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Volibear", "start": 26, "end": 34 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:Nocturne:Volibear:4",
+          "text": "Land Unspeakable Horror and stay close so the tether holds; if he walks out of range, the fear is lost.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "974a4a58ad92d0eb72b253d6d5c52bc8c826b2a0f7ccf9cdd7fb56b97198de5f",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Warwick:0",
+          "text": "Time Shroud of Darkness for Warwick's Infinite Duress; blocking the leap wastes his ultimate.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Warwick", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Warwick-R", "start": 38, "end": 53 }
+          ],
+          "pWrong": 0.91,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Warwick:1",
+          "text": "Do not let Warwick sit low on health in a long fight; Eternal Hunger heals him more the lower he gets. Burst him or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 11, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Warwick-passive",
+              "start": 54,
+              "end": 68
+            }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Nocturne:Warwick:2",
+          "text": "Stay healthy when you scout near Warwick; Blood Hunt makes him fast and attack faster against hurt champions.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Warwick-W", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "jungle:Nocturne:Warwick:3",
+          "text": "Use Unspeakable Horror and stay in range so the tether lasts; the fear pushes Warwick away, but he ends his own Primal Howl with a fear too.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Warwick", "start": 78, "end": 85 },
+            { "kind": "ability", "key": "Warwick-E", "start": 112, "end": 123 }
+          ],
+          "pWrong": 0.69
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a1a4c98c43c55de25b192931f45b5f9b01412175926e32ffa01b81094b85638b",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:XinZhao:0",
+          "text": "Time Shroud of Darkness for Audacious Charge or Wind Becomes Lightning; blocking one also boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-E", "start": 28, "end": 44 },
+            { "kind": "ability", "key": "XinZhao-W", "start": 48, "end": 70 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Nocturne:XinZhao:1",
+          "text": "Use Unspeakable Horror from the edge of its range and keep your distance, so Xin Zhao's charge can't easily break the tether.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "XinZhao", "start": 77, "end": 85 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:Nocturne:XinZhao:2",
+          "text": "Avoid fighting Xin Zhao when his Three Talon Strike is ready; the knock up and fast cooldowns beat you in a long trade.",
+          "refs": [
+            { "kind": "champion", "key": "XinZhao", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "XinZhao-Q", "start": 33, "end": 51 },
+            { "kind": "keyword", "key": "knocked-up", "start": 66, "end": 74 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:Nocturne:XinZhao:3",
+          "text": "Do not dash in with Paranoia while Xin Zhao has Crescent Guard ready; his sweep punishes you on arrival. Pick other targets, or bait it first.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 20, "end": 28 },
+            { "kind": "champion", "key": "XinZhao", "start": 35, "end": 43 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 48, "end": 62 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "73068490dab94f4527412f0aa74df3951809f7e3747817fda23a79ddd5760677",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Zac:0",
+          "text": "Hold Shroud of Darkness for Zac's Stretching Strikes or Elastic Slingshot; it blocks the next enemy ability and boosts your Attack Speed.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zac", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Zac-Q", "start": 34, "end": 52 },
+            { "kind": "ability", "key": "Zac-E", "start": 56, "end": 73 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Nocturne:Zac:1",
+          "text": "Step away from the goo chunks Zac sheds. Enemies who walk over a chunk destroy it, so crush them to deny his healing.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 30, "end": 33 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Nocturne:Zac:2",
+          "text": "Use Paranoia's dash to jump on Zac only when his Cell Division is down; otherwise you must kill all of his bloblets.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zac", "start": 31, "end": 34 },
+            { "kind": "ability", "key": "Zac-passive", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Nocturne:Zac:3",
+          "text": "Cast Unspeakable Horror on Zac and stay close so the tether does not break. Chase him once he is feared.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zac", "start": 27, "end": 30 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:Nocturne:Zac:4",
+          "text": "Dodge Stretching Strikes by moving sideways. Duskbringer lets you close the gap or run away quickly if it lands.",
+          "refs": [
+            { "kind": "ability", "key": "Zac-Q", "start": 6, "end": 24 },
+            { "kind": "ability", "key": "Nocturne-Q", "start": 45, "end": 56 }
+          ],
+          "pWrong": 0.39
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a61cd8ee7894de65f0ddc7b0ae5abb28cc62cdef2b973796019fe80b7357c153",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Zed:0",
+          "text": "Hold Shroud of Darkness for Zed's Death Mark; the shield blocks it, so he wastes his best spell and you get faster attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "champion", "key": "Zed", "start": 28, "end": 31 },
+            { "kind": "ability", "key": "Zed-R", "start": 34, "end": 44 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Zed:1",
+          "text": "Zed's Razor Shuriken is blocked by Shroud of Darkness, so use it when he throws one at you.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-Q", "start": 6, "end": 20 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 35, "end": 53 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Nocturne:Zed:2",
+          "text": "Use Paranoia to dash onto Zed when he is out of position, since crowd control cannot stop the dash. Cast Shroud of Darkness during the dash for safety.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 105, "end": 123 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:Nocturne:Zed:3",
+          "text": "Use Unspeakable Horror on Zed when he has spent his Living Shadow. He has little room to escape before the fear lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 4, "end": 22 },
+            { "kind": "champion", "key": "Zed", "start": 26, "end": 29 },
+            { "kind": "ability", "key": "Zed-W", "start": 52, "end": 65 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:Nocturne:Zed:4",
+          "text": "Aim Duskbringer at Zed to leave a trail on him. You get faster and hit harder while chasing him along it.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 19, "end": 22 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "0afb81877e6299050e8d5fb676cb256b8e3998c36a60c99ae269fd246102842b",
+      "tips": [
+        {
+          "id": "jungle:Nocturne:Zyra:0",
+          "text": "Raise Shroud of Darkness when Zyra aims Grasping Roots or Stranglethorns at you; it blocks the ability and speeds up your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 6, "end": 24 },
+            { "kind": "champion", "key": "Zyra", "start": 30, "end": 34 },
+            { "kind": "ability", "key": "Zyra-E", "start": 40, "end": 54 },
+            { "kind": "ability", "key": "Zyra-R", "start": 58, "end": 72 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:Nocturne:Zyra:1",
+          "text": "Dash in with Paranoia when Zyra is far from her allies. Her plants only matter near her seeds, and the dash cannot be stopped by crowd control.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 13, "end": 21 },
+            { "kind": "champion", "key": "Zyra", "start": 27, "end": 31 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Nocturne:Zyra:2",
+          "text": "Step over or around her seeds before they grow into plants. Hit Zyra when she has few seeds near her.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 64, "end": 68 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Nocturne:Zyra:3",
+          "text": "Close in with Unspeakable Horror once Zyra has used Grasping Roots. Her fear window is then safe and she has little left to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 14, "end": 32 },
+            { "kind": "champion", "key": "Zyra", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Zyra-E", "start": 52, "end": 66 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Nocturne:Zyra:4",
+          "text": "Use Duskbringer to cover ground quickly when you chase her or run away. Its trail gives you speed and attack damage.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}

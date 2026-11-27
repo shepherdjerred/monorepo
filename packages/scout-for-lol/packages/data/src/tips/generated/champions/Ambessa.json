@@ -1,0 +1,1810 @@
+{
+  "schemaVersion": 1,
+  "champion": "Ambessa",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "0528fa157c52b370879b6718dc8d35cc6c70282bc0e1f405a18dc4893f83db7a",
+      "tips": [
+        {
+          "id": "top:Ambessa:general:0",
+          "text": "Hit anything with Cunning Sweep to unlock Sundering Slam. Aim so the enemy is at the outer edge of the sweep for extra damage.",
+          "refs": [],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Ambessa:general:1",
+          "text": "Right-click toward your target while an ability is being cast. Drakehound's Step dashes you in afterward and powers up your next attack.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 63,
+              "end": 80
+            }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Ambessa:general:2",
+          "text": "Start Lacerate and queue a dash to chase. She spins a second time when she lands, and enemies hit are slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 6, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Ambessa:general:3",
+          "text": "Cast Repudiation just as an enemy champion is about to hit you. The shield soaks the hit and the slam that follows deals more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Ambessa:general:4",
+          "text": "Public Execution jumps to the farthest enemy champion in the line, so check who is behind the others before you cast it.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 0, "end": 16 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Ambessa:general:5",
+          "text": "Watch your energy. Every ability costs energy, but empowered attacks from Drakehound's Step give it back, so attack between casts.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 74,
+              "end": 91
+            }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Ambessa:combo:0",
+          "name": "Double Lacerate",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Ambessa-E" }, "attack"],
+          "when": "When you want extra damage and a slow from one Lacerate cast.",
+          "whenRefs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 47, "end": 55 }
+          ],
+          "text": "Queue a right-click during the Lacerate lockout. She dashes, then spins a second time on arrival for free, and the dash can chase or kite.",
+          "textRefs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 31, "end": 39 }
+          ]
+        },
+        {
+          "id": "top:Ambessa:combo:1",
+          "name": "Repudiation dash smash",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "Ambessa-W" }, "attack"],
+          "when": "When you brace through enemy damage and want the smash to land on a target that is out of range.",
+          "whenRefs": [],
+          "text": "Queue a dash toward the enemy during the brace. If the brace ends during the dash, the smash lands at the destination.",
+          "textRefs": []
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fde000f5877e9afdd074db88177b3ff1850ba45e5f8e6625d961334191dc0053",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:general:0",
+          "text": "Cast an ability, then right-click toward your target before the cast ends. Drakehound's Step dashes you in and your next attack hits harder and refunds energy.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 75,
+              "end": 92
+            }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Ambessa:general:1",
+          "text": "Hit an enemy with Cunning Sweep, then follow with Sundering Slam soon after. Aim the edge of the sweep at the target, since it hits hardest there.",
+          "refs": [],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:Ambessa:general:2",
+          "text": "Use Lacerate to leave an enemy slowed, then dash with Drakehound's Step. Lacerate spins a second time when you land, at no extra cost.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 37 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 54,
+              "end": 71
+            },
+            { "kind": "ability", "key": "Ambessa-E", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ambessa:general:3",
+          "text": "Cast Repudiation just before you take a hit from an enemy champion, a large monster or a tower. The shield absorbs it and the slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:Ambessa:general:4",
+          "text": "Cunning Sweep and Sundering Slam deal bonus damage to monsters. Use them to speed up camps, but watch your energy.",
+          "refs": [],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:Ambessa:general:5",
+          "text": "Public Execution blinks you to the farthest enemy champion in a line. You can't be pushed around while you hold them.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 0, "end": 16 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:Ambessa:general:6",
+          "text": "Don't cast Public Execution on an enemy who has a spell shield. The cast is blocked and you won't grab them.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 11, "end": 27 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "a0e2d19ca26c1cf0edd19ea01e36ab3620802e6588148ae451364b911005ac21",
+      "tips": [
+        {
+          "id": "top:Ambessa:Aatrox:0",
+          "text": "Dodge The Darkin Blade by moving to the side; the blades are telegraphed and the final cast is a circle.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 6, "end": 22 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Ambessa:Aatrox:1",
+          "text": "Walk sideways or toward Aatrox to leave Infernal Chains before the pull lands.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 40, "end": 55 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Ambessa:Aatrox:2",
+          "text": "Use Lacerate to slow Aatrox, then dash with Drakehound's Step for a second spin.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 44,
+              "end": 61
+            }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Ambessa:Aatrox:3",
+          "text": "Aim Cunning Sweep so the outer edge hits Aatrox for double damage, then follow with Sundering Slam.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Ambessa:Aatrox:4",
+          "text": "Stay out of range while World Ender is active; he is faster and can revive off kills.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-R", "start": 24, "end": 35 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "8d78e291c283e7de151429f4f12f14b46d86518153c7a4bc410d59f98bb8135a",
+      "tips": [
+        {
+          "id": "top:Ambessa:Briar:0",
+          "text": "Use Repudiation when Briar jumps on you; its shield and bigger slam hit harder if she hits you while you brace.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Ambessa:Briar:1",
+          "text": "Slow Briar with Lacerate when she charges in. Her Blood Frenzy forces her to chase one target, so you can pull her around.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Briar", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 16, "end": 24 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "top:Ambessa:Briar:2",
+          "text": "Chain Cunning Sweep into Sundering Slam; the edge of the sweep hits hardest, so aim to catch her there.",
+          "refs": [],
+          "pWrong": 0.48
+        },
+        {
+          "id": "top:Ambessa:Briar:3",
+          "text": "Don't stand still when Briar is charging Chilling Scream; the full charge knocks you back and stuns you if you hit a wall.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Briar-E", "start": 41, "end": 56 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Ambessa:Briar:4",
+          "text": "Her Head Rush stun is short and she can't heal while you are ahead. Trade right after it, then hold back until her bleed is gone.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 4, "end": 13 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's brace and shield let her hold through Briar's Blood Frenzy and still smash a target out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Briar", "start": 52, "end": 57 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f99a29f6b7e3053f6aca89da5dbf5901ffdbb69455d1077ac581f7f7293aeede",
+      "tips": [
+        {
+          "id": "top:Ambessa:Darius:0",
+          "text": "Keep away from Apprehend; once Darius pulls you in, trades go his way. Fight when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 15, "end": 24 },
+            { "kind": "champion", "key": "Darius", "start": 31, "end": 37 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "top:Ambessa:Darius:1",
+          "text": "Use Lacerate to slow Darius when he comes in, then dash away with Drakehound's Step so you are not caught.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 66,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Ambessa:Darius:2",
+          "text": "Poke with Cunning Sweep at the tip of its range, then follow with Sundering Slam; stay out of melee range.",
+          "refs": [{ "kind": "keyword", "key": "poke", "start": 0, "end": 4 }],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Ambessa:Darius:3",
+          "text": "Time Repudiation to land just as Darius hits you, so the shield holds and the slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 33, "end": 39 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ambessa:Darius:4",
+          "text": "Do not let Darius stack up Hemorrhage on you; when he is at full stacks, back off, since Noxian Guillotine can finish you.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 11, "end": 17 },
+            {
+              "kind": "ability",
+              "key": "Darius-passive",
+              "start": 27,
+              "end": 37
+            },
+            { "kind": "ability", "key": "Darius-R", "start": 89, "end": 106 }
+          ],
+          "pWrong": 0.46
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield and brace let her smash through Darius's damage, and the dash closes the gap to him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Darius", "start": 53, "end": 59 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "cbd5651c195634a173181a8dab2fb1090b05cda2e2d0c6b92d99ba546c1f34ce",
+      "tips": [
+        {
+          "id": "top:Ambessa:Fiora:0",
+          "text": "Don't cast Lacerate or Public Execution into a ready Riposte. Wait for the parry to end, or bait it first with a cheap ability.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 23, "end": 39 },
+            { "kind": "ability", "key": "Fiora-W", "start": 53, "end": 60 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Ambessa:Fiora:1",
+          "text": "Fiora wants Vital hits and quick trades. Move so the Vital isn't facing her, and punish her when she lunges in.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 0, "end": 5 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Ambessa:Fiora:2",
+          "text": "Chain Cunning Sweep into Sundering Slam to poke her. Hit with the edge for extra damage.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 43, "end": 47 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Ambessa:Fiora:3",
+          "text": "Lacerate slows Fiora. Use it to stop her escaping on her Vital Move Speed, then follow with your damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 14 },
+            { "kind": "champion", "key": "Fiora", "start": 15, "end": 20 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "e1aa2026b631fa55059e07fe391feda2eb3d846ba7649710a8adc214e6b7fe22",
+      "tips": [
+        {
+          "id": "top:Ambessa:Gangplank:0",
+          "text": "Close in with Cunning Sweep, then follow with Sundering Slam while it is ready. Aim so the edge of the sweep hits him for full damage.",
+          "refs": [],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Ambessa:Gangplank:1",
+          "text": "Hit Gangplank with Lacerate to slow him, then keep attacking. He cannot kite you easily once he is slowed.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 19, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 35 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 105 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "top:Ambessa:Gangplank:2",
+          "text": "Stay away from his Powder Keg when he can shoot it; the blast slows you and hurts. Walk around kegs or attack them yourself to defuse them.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-E", "start": 19, "end": 29 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Ambessa:Gangplank:3",
+          "text": "Wait for Remove Scurvy to be used before you try to lock him down, since it clears slows and stuns.",
+          "refs": [
+            { "kind": "ability", "key": "Gangplank-W", "start": 9, "end": 22 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Ambessa:Gangplank:4",
+          "text": "Use Public Execution to jump on him when he is low; you cannot be stopped during the cast and it ends the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 }
+          ],
+          "pWrong": 1,
+          "hidden": true
+        },
+        {
+          "id": "top:Ambessa:Gangplank:5",
+          "text": "Use Repudiation when he is shooting you; taking his damage while bracing makes the smash hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.24
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield and brace let her dash through damage and smash a target out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "08f6a0c2779fd4049c66a458485b7dc6a5595a073c6e0d15ba9e69db400d5827",
+      "tips": [
+        {
+          "id": "top:Ambessa:Garen:0",
+          "text": "Hit Garen with the edge of Cunning Sweep for extra damage, then follow with Sundering Slam while it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Ambessa:Garen:1",
+          "text": "Wait until Garen uses Decisive Strike before you trade. Its silence stops your abilities, so stay out of his reach while it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 11, "end": 16 },
+            { "kind": "ability", "key": "Garen-Q", "start": 22, "end": 37 },
+            { "kind": "keyword", "key": "silenced", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "top:Ambessa:Garen:2",
+          "text": "Lacerate slows Garen, but Decisive Strike removes it. Use it to set up the fight rather than to stop his charge.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 14 },
+            { "kind": "champion", "key": "Garen", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Garen-Q", "start": 26, "end": 41 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Ambessa:Garen:3",
+          "text": "Leave Judgment's range or put minions between you; it hurts most when you are the only target.",
+          "refs": [
+            { "kind": "ability", "key": "Garen-E", "start": 6, "end": 14 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Ambessa:Garen:4",
+          "text": "Keep hitting Garen so Perseverance stays off, and do not let him walk away to heal.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 13, "end": 18 },
+            {
+              "kind": "ability",
+              "key": "Garen-passive",
+              "start": 22,
+              "end": 34
+            }
+          ],
+          "pWrong": 0.76
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "46766c361f844d946fcdc55ecce864d68da9e3b68c76185a6a34c347fb5db668",
+      "tips": [
+        {
+          "id": "top:Ambessa:Jayce:0",
+          "text": "Dash in with Drakehound's Step right after an ability so Jayce has less time to hit you with Shock Blast.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 13,
+              "end": 30
+            },
+            { "kind": "champion", "key": "Jayce", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Ambessa:Jayce:1",
+          "text": "Use Lacerate to leave Jayce slowed when you close in; it spins a second time if you dash.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Jayce", "start": 22, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Ambessa:Jayce:2",
+          "text": "Cast Repudiation as Jayce hits you; the shield absorbs his damage and your slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Ambessa:Jayce:3",
+          "text": "Stay out of his line when Jayce is in Cannon form; Shock Blast hits the first enemy it meets, so keep minions between you.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Ambessa:Jayce:4",
+          "text": "Play safe once Jayce leads, as he is strong early; save Public Execution for when he is hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 56, "end": 72 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Queued dash during Repudiation's brace lets the smash reach Jayce even if his knockback or range separates you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 19, "end": 30 },
+            { "kind": "champion", "key": "Jayce", "start": 60, "end": 65 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "6be83d50b2476a3193123c098cefb2f9995510da5e185801520c7f834aae265b",
+      "tips": [
+        {
+          "id": "top:Ambessa:KSante:0",
+          "text": "Stay out of Ntofo Strikes range until you can dodge it; two hits make the next one stun and pull you in.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "top:Ambessa:KSante:1",
+          "text": "Use Lacerate to slow K'Sante when he walks up, then dash out with Drakehound's Step for a second spin.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "KSante", "start": 21, "end": 28 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 66,
+              "end": 83
+            }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "top:Ambessa:KSante:2",
+          "text": "Cast Repudiation as K'Sante hits you; the shield blocks his damage and your slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "KSante", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Ambessa:KSante:3",
+          "text": "Hit with Cunning Sweep, then follow with Sundering Slam while it is ready.",
+          "refs": [],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ambessa:KSante:4",
+          "text": "Hold Public Execution for when K'Sante goes All Out; he is much squishier then and you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "KSante", "start": 31, "end": 38 },
+            { "kind": "ability", "key": "KSante-R", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.7
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "eee10066184c8f19076b757cc6703e461cc064de0586a852728c3314e8848d8f",
+      "tips": [
+        {
+          "id": "top:Ambessa:Malphite:0",
+          "text": "Don't stand still in Seismic Shard range; if it lands you are slowed and Malphite speeds past you.",
+          "refs": [
+            { "kind": "ability", "key": "Malphite-Q", "start": 21, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            { "kind": "champion", "key": "Malphite", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Ambessa:Malphite:1",
+          "text": "Use Repudiation to take a poke from Malphite; the shield absorbs it and the slam hits harder if a champion damaged you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 26, "end": 30 },
+            { "kind": "champion", "key": "Malphite", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "top:Ambessa:Malphite:2",
+          "text": "Trade when Granite Shield is down, since Malphite's Armor is much lower without it.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Malphite-passive",
+              "start": 11,
+              "end": 25
+            },
+            { "kind": "champion", "key": "Malphite", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Ambessa:Malphite:3",
+          "text": "Keep Lacerate for when Malphite uses Unstoppable Force; the slow helps you get away from his allies.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Malphite", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "Malphite-R", "start": 37, "end": 54 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "ba7ca4587a84ea99386dcfa4d61accf6e0b966632ab5ff9f8b298e1eee5195bb",
+      "tips": [
+        {
+          "id": "top:Ambessa:Mordekaiser:0",
+          "text": "Stay out of Mordekaiser's Darkness Rise aura. Trade in short bursts and step back before it builds up.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 12,
+              "end": 23
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-passive",
+              "start": 26,
+              "end": 39
+            }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Ambessa:Mordekaiser:1",
+          "text": "Watch for Death's Grasp when you go in. Stay out of its line, or it pulls you into his aura.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 10,
+              "end": 23
+            }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "top:Ambessa:Mordekaiser:2",
+          "text": "Use Repudiation when his Obliterate or Death's Grasp is about to land. Taking a hit from a champion while you brace makes your slam hit harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 25,
+              "end": 35
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 39,
+              "end": 52
+            }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Ambessa:Mordekaiser:3",
+          "text": "Use Lacerate to leave if he pulls or catches you. It slows him, so you can get away.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "top:Ambessa:Mordekaiser:4",
+          "text": "Do not trade into a full Indestructible shield. Wait until it has been used or has faded.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-W",
+              "start": 25,
+              "end": 39
+            }
+          ],
+          "pWrong": 0.59
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "f12171b8ab76a172f0105312e2273e56734700388e48911e118ffad77ed0d74a",
+      "tips": [
+        {
+          "id": "top:Ambessa:Rumble:0",
+          "text": "Dodge or bait Electro Harpoon before you step in; it slows you and lowers your Magic Resist.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 14, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Ambessa:Rumble:1",
+          "text": "Use Lacerate to slow Rumble when he is close, then follow with Cunning Sweep.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Rumble", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Ambessa:Rumble:2",
+          "text": "Hit Rumble when he is Overheating; he cannot cast spells then, so go in for the trade.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Ambessa:Rumble:3",
+          "text": "Step out of the fire from The Equalizer fast; staying in it deals heavy damage and slows you.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 26, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 88 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Ambessa:Rumble:4",
+          "text": "Use Repudiation when you take Rumble's hits; the shield blocks damage, and her smash hits harder if it did.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Rumble", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's shield braces through Rumble's damage, and the queued dash lets the smash reach him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Rumble", "start": 36, "end": 42 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "4c3e2cf440dacdd23aaee4396db90c06eb074d65d0ab5582b6905c30ffc785b6",
+      "tips": [
+        {
+          "id": "top:Ambessa:Sion:0",
+          "text": "Stay out of Decimating Smash range when Sion starts charging. Move sideways, since the long charge makes the stun far worse.",
+          "refs": [
+            { "kind": "ability", "key": "Sion-Q", "start": 12, "end": 28 },
+            { "kind": "champion", "key": "Sion", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "stunned", "start": 109, "end": 113 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "top:Ambessa:Sion:1",
+          "text": "Use Cunning Sweep and then Sundering Slam so the edge of the strike hits Sion. Sion has a lot of Health, so your damage based on his Health hits hard.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 73, "end": 77 },
+            { "kind": "champion", "key": "Sion", "start": 79, "end": 83 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "top:Ambessa:Sion:2",
+          "text": "Hit Sion with Lacerate to slow him, then walk away from his follow-up. The slow gets weaker quickly, so trade right away.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 14, "end": 22 },
+            { "kind": "keyword", "key": "slowed", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Ambessa:Sion:3",
+          "text": "Use Repudiation when Sion commits to a Roar of the Slayer or his axe swing, so the shield soaks damage and your slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Sion", "start": 21, "end": 25 },
+            { "kind": "ability", "key": "Sion-E", "start": 39, "end": 57 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Ambessa:Sion:4",
+          "text": "When Sion's shield from Soul Furnace is up, wait for it to blow up or break before you step in to trade.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Sion-W", "start": 24, "end": 36 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Ambessa:Sion:5",
+          "text": "When Sion dies, back off from his frenzy from Glory in Death instead of finishing the fight. Use Public Execution on him only when it will kill.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 5, "end": 9 },
+            {
+              "kind": "ability",
+              "key": "Sion-passive",
+              "start": 46,
+              "end": 60
+            },
+            { "kind": "ability", "key": "Ambessa-R", "start": 97, "end": 113 }
+          ],
+          "pWrong": 0.73
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "44115b9f0b7bb287f2d4f721dd654aab77d05aed684483a76f7f7ec49d458938",
+      "tips": [
+        {
+          "id": "top:Ambessa:Teemo:0",
+          "text": "Walk up when Blinding Dart is on cooldown; being blinded makes your attacks miss and ruins your trade.",
+          "refs": [
+            { "kind": "ability", "key": "Teemo-Q", "start": 13, "end": 26 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "top:Ambessa:Teemo:1",
+          "text": "Use Lacerate to slow Teemo once you are close, so he can't back away from your follow-up.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Ambessa:Teemo:2",
+          "text": "Walk around likely mushroom spots rather than straight through them; a trap slows you and reveals you.",
+          "refs": [],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Ambessa:Teemo:3",
+          "text": "Hit Teemo with Cunning Sweep's outer edge for full damage, then follow with Sundering Slam.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Ambessa:Teemo:4",
+          "text": "Use Public Execution to reach Teemo once he is low or out of position; he is fragile and has little to stop you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Teemo", "start": 30, "end": 35 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "20021f021dce68f0d171d2e560832fd597a8380c7441c381195693c2ded77a9f",
+      "tips": [
+        {
+          "id": "top:Ambessa:Vayne:0",
+          "text": "Look for Public Execution when Vayne steps forward. It lets you blink to her, and she dies quickly once caught.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 9, "end": 25 },
+            { "kind": "champion", "key": "Vayne", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "top:Ambessa:Vayne:1",
+          "text": "Use Lacerate to slow Vayne when you go in. She cannot easily walk away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "champion", "key": "Vayne", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Ambessa:Vayne:2",
+          "text": "Do not fight beside walls. Condemn knocks you back into terrain for damage and a stun.",
+          "refs": [
+            { "kind": "ability", "key": "Vayne-E", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "top:Ambessa:Vayne:3",
+          "text": "Use Repudiation to shield yourself when Vayne attacks you. The shield also protects you from her Silver Bolts burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Vayne", "start": 40, "end": 45 },
+            { "kind": "ability", "key": "Vayne-W", "start": 97, "end": 109 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "095101fe73ea40c8205c13de9d9aacad84e79c79eb4987b7a19caf7cd23c6434",
+      "tips": [
+        {
+          "id": "top:Ambessa:Yone:0",
+          "text": "Start trades with Cunning Sweep, hitting with the edge of the strike for extra damage. Follow with Sundering Slam while it is ready.",
+          "refs": [],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Ambessa:Yone:1",
+          "text": "Use Repudiation when Yone is about to hit you. The shield absorbs his damage, and the slam then hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yone", "start": 21, "end": 25 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Ambessa:Yone:2",
+          "text": "Hit Yone with Lacerate when he dashes in with Mortal Steel. It slows him so you can trade or leave.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 14, "end": 22 },
+            { "kind": "ability", "key": "Yone-Q", "start": 46, "end": 58 },
+            { "kind": "keyword", "key": "slowed", "start": 63, "end": 68 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "top:Ambessa:Yone:3",
+          "text": "Do not chase Yone while he is in spirit form. When Soul Unbound ends he returns to his body and repeats part of his damage.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Yone-E", "start": 51, "end": 63 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "top:Ambessa:Yone:4",
+          "text": "Aim Public Execution at Yone after he has used his abilities. At level 6 you can blink to him and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yone", "start": 24, "end": 28 },
+            { "kind": "keyword", "key": "stunned", "start": 98, "end": 102 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Ambessa:combo:1",
+          "note": "Repudiation's brace lets her absorb Yone's damage, then dash-smash to hit him if he is out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 0, "end": 11 },
+            { "kind": "champion", "key": "Yone", "start": 36, "end": 40 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6f3930db5cf8520f388291654157ab738512e8ed263682558546ce79bcd4cfbd",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Graves:0",
+          "text": "Dash in with Public Execution to grab Graves; he is fragile and cannot escape while suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 13, "end": 29 },
+            { "kind": "champion", "key": "Graves", "start": 38, "end": 44 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:Ambessa:Graves:1",
+          "text": "Use Lacerate when you reach Graves so he cannot run, then follow with Cunning Sweep and Sundering Slam.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Graves", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:Ambessa:Graves:2",
+          "text": "Brace with Repudiation when Graves shoots you; the shield absorbs the hit and the slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Graves", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ambessa:Graves:3",
+          "text": "Step out of Smoke Screen quickly; leaving it ends the slow and restores your sight.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-W", "start": 12, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 58 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:Ambessa:Graves:4",
+          "text": "Sidestep End of the Line and do not stay in its trail, since it explodes along its path after a short time.",
+          "refs": [
+            { "kind": "ability", "key": "Graves-Q", "start": 9, "end": 24 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Ambessa:Graves:5",
+          "text": "Fight Graves when Quickdraw is on cooldown; without his dash he is easy to catch.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "Graves-E", "start": 18, "end": 27 }
+          ],
+          "pWrong": 0.38
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4d56008535e29768a975a589a5e8614b18a603db4c0b3fbaf57ff9dbcb1b314b",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard. Dragon Strike along that line knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:Ambessa:JarvanIV:1",
+          "text": "Use Lacerate to slow Jarvan when he dives in, then trade with Cunning Sweep while he is slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 16, "end": 20 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 94 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Ambessa:JarvanIV:2",
+          "text": "Use Repudiation to take Jarvan's burst. The shield absorbs damage and your slam hits harder if it blocks a champion's damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4f4da90ccbad96104f6c8713eca0bd640b03afcf6b94d83dc2b947acb6ec20ed",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Kayn:0",
+          "text": "Dodge Blade's Reach; if it misses, Kayn cannot use Umbral Trespass from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Kayn-W", "start": 6, "end": 19 },
+            { "kind": "champion", "key": "Kayn", "start": 35, "end": 39 },
+            { "kind": "ability", "key": "Kayn-R", "start": 51, "end": 66 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:Ambessa:Kayn:1",
+          "text": "Hit Kayn while he is in Shadow Step to cut it short, and stun him with Public Execution to end it at once.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "Kayn-E", "start": 24, "end": 35 },
+            { "kind": "keyword", "key": "stunned", "start": 57, "end": 61 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 71, "end": 87 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Ambessa:Kayn:2",
+          "text": "Cast Repudiation as Kayn dives in; the shield soaks his burst and the slam hits harder if he hit you during the brace.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kayn", "start": 20, "end": 24 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:Ambessa:Kayn:3",
+          "text": "Slow Kayn with Lacerate when he tries to leave, then chase him down.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Kayn", "start": 5, "end": 9 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 15, "end": 23 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Ambessa:Kayn:4",
+          "text": "Watch for the terrain warning near you; Kayn may be about to step out of a wall onto you.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 40, "end": 44 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c525365b03b161d6f0f7e40980487e59608e3e33fd4a963c4ba87a3b4190db20",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Khazix:0",
+          "text": "Stay close to your minions and allies. Kha'Zix does much more damage with Taste Their Fear to anyone who is isolated.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 74, "end": 90 },
+            { "kind": "keyword", "key": "isolated", "start": 108, "end": 116 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:Ambessa:Khazix:1",
+          "text": "Use Lacerate when he jumps on you. It slows him heavily, which gives you room to fight back or walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Ambessa:Khazix:2",
+          "text": "Cast Repudiation as he commits. The shield soaks his burst, and the slam hits harder if he hurt you while you braced.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:Ambessa:Khazix:3",
+          "text": "Hit him with Public Execution while Leap and Void Assault are on cooldown, because he has little way to escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 13, "end": 29 },
+            { "kind": "ability", "key": "Khazix-E", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Khazix-R", "start": 45, "end": 57 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7dcb3fb8b800fe32089c4cc0fb2f5b900058178c2bcaabfa454134e48c75f8da",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Kindred:0",
+          "text": "Hit Kindred with Lacerate when you reach her, so she is slowed and cannot kite you. Dash in and spin again.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 56, "end": 62 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:Ambessa:Kindred:1",
+          "text": "Use Public Execution on Kindred when she has no safe escape; she is fragile and it lifts her out of the fight.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Kindred", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:Ambessa:Kindred:2",
+          "text": "Wait for Lamb's Respite to end before you finish a target. Nobody inside can die while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-R", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:Ambessa:Kindred:3",
+          "text": "Use Repudiation when Kindred or Wolf is about to hit you, so the shield soaks it and your slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kindred", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.74
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b3ab9b9101fec807b2dbce86094b6798b6fdcfcfa39c546cd700da94dff23e12",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:LeeSin:0",
+          "text": "Cast Repudiation as Lee Sin dives in. If the shield soaks damage from him while you brace, the slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "LeeSin", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:Ambessa:LeeSin:1",
+          "text": "Use Lacerate when Lee Sin engages. It slows him, and you can dash after it to spin a second time.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "LeeSin", "start": 18, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:Ambessa:LeeSin:2",
+          "text": "Stay spread from your team so Dragon's Rage can't knock Ambessa into allies. Lee Sin relies on chaining abilities, so bait out Sonic Wave first.",
+          "refs": [
+            { "kind": "ability", "key": "LeeSin-R", "start": 30, "end": 43 },
+            { "kind": "champion", "key": "Ambessa", "start": 56, "end": 63 },
+            { "kind": "champion", "key": "LeeSin", "start": 77, "end": 84 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:Ambessa:LeeSin:3",
+          "text": "Hit Lee Sin with Cunning Sweep's outer edge, then follow with Sundering Slam. Both hit harder against a target with a lot of health.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 4, "end": 11 }
+          ],
+          "pWrong": 1
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56dc8dd5222d72706ed0366aded15e3a4e9449e9909f2677ed6c7289119eb792",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:MasterYi:0",
+          "text": "Do not count on Lacerate to slow Master Yi while Highlander is active. Use Public Execution to stop him instead.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 16, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 32 },
+            { "kind": "champion", "key": "MasterYi", "start": 33, "end": 42 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 75, "end": 91 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:Ambessa:MasterYi:1",
+          "text": "Hit Master Yi with Public Execution when he is on top of you. He is suppressed and cannot dodge with Alpha Strike.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 19, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Ambessa:MasterYi:2",
+          "text": "Take Master Yi's first hit with Repudiation up. The shield absorbs it and your slam hits harder.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "Ambessa-W", "start": 32, "end": 43 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:Ambessa:MasterYi:3",
+          "text": "Hit Master Yi a few times while he heals so Meditate costs him mana. Do not chase a healing Yi.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 4, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 44, "end": 52 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "MasterYi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f26d84b89990fa251d9ce98f6510ef5b62d84fc35019ac5caac88dfaacf564e",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Naafiri:0",
+          "text": "Hold Public Execution until Naafiri commits with Hounds' Pursuit; the cast makes Ambessa unstoppable, so you can punish her.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 5, "end": 21 },
+            { "kind": "champion", "key": "Naafiri", "start": 28, "end": 35 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 49, "end": 64 },
+            { "kind": "champion", "key": "Ambessa", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "jungle:Ambessa:Naafiri:1",
+          "text": "Lacerate slows Naafiri when she closes in, so use it to catch her or to peel her off you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 0, "end": 8 },
+            { "kind": "keyword", "key": "slowed", "start": 9, "end": 14 },
+            { "kind": "champion", "key": "Naafiri", "start": 15, "end": 22 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:Ambessa:Naafiri:2",
+          "text": "Cast Repudiation as Naafiri hits you; the shield soaks her damage and the slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:Ambessa:Naafiri:3",
+          "text": "Don't chase when Naafiri vanishes with The Call of the Pack; she can't be targeted for a moment, so hold your abilities until she reappears.",
+          "refs": [
+            { "kind": "champion", "key": "Naafiri", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "Naafiri-W", "start": 39, "end": 59 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5a192dbc58179812c85693e2f13552bd08d4cb1e7fed533891bb0c889ca7a457",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Nocturne:0",
+          "text": "Bait Shroud of Darkness before using Public Execution, since a spell shield stops it completely.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-W", "start": 5, "end": 23 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.87,
+          "hidden": true
+        },
+        {
+          "id": "jungle:Ambessa:Nocturne:1",
+          "text": "Use Lacerate when Nocturne dashes in so he is slowed, then dash out with her step and spin again.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nocturne", "start": 18, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 52 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:Ambessa:Nocturne:2",
+          "text": "Stay out of Unspeakable Horror's range; if you walk away while the tether holds, the fear never lands.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-E", "start": 12, "end": 30 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:Ambessa:Nocturne:3",
+          "text": "When Paranoia is cast, stay near your team; Nocturne's dash goes after whoever is alone.",
+          "refs": [
+            { "kind": "ability", "key": "Nocturne-R", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Nocturne", "start": 44, "end": 52 },
+            { "kind": "keyword", "key": "isolated", "start": 82, "end": 87 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:Ambessa:Nocturne:4",
+          "text": "Use Repudiation when Nocturne hits you; it shields you and hits harder if you braced against his damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Nocturne", "start": 21, "end": 29 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5ab0af8f3ba5e113fd970a12400127460dbce0f3d86ca1ae628b76a2396c1ee7",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Shyvana:0",
+          "text": "Hit Shyvana with Lacerate to slow her when she runs at you, then pull away from her fight.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 17, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:Ambessa:Shyvana:1",
+          "text": "Hold Repudiation until Shyvana attacks you; if the shield takes her hit, the slam hurts more.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Shyvana", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:Ambessa:Shyvana:2",
+          "text": "Harass Shyvana with Cunning Sweep, hitting with the outer edge, while her Dragon Fury is low. She is weak when kept at a distance.",
+          "refs": [
+            { "kind": "champion", "key": "Shyvana", "start": 7, "end": 14 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:Ambessa:Shyvana:3",
+          "text": "Use Public Execution on Shyvana when she is out of Dragon Form; she is unstoppable once transformed and the fight tilts against you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Shyvana", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "c5faa22a35060e856e0fa8932133e4659ab85e88045dd4f1a13a9c218fc29e1b",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Skarner:0",
+          "text": "Slow Skarner with Lacerate when he charges in; it gives you room to back off.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Skarner", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:Ambessa:Skarner:1",
+          "text": "Do not fight near walls when Skarner has Ixtal's Impact ready; a wall slam stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 29, "end": 36 },
+            { "kind": "ability", "key": "Skarner-E", "start": 41, "end": 55 },
+            { "kind": "keyword", "key": "stunned", "start": 75, "end": 80 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:Ambessa:Skarner:2",
+          "text": "Use Repudiation when Skarner hits you; the shield soaks his damage and your slam hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Skarner", "start": 21, "end": 28 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:Ambessa:Skarner:3",
+          "text": "Skarner's Impale can be dodged. Dash away with Drakehound's Step after a cast to stay out of reach.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-R", "start": 10, "end": 16 },
+            {
+              "kind": "ability",
+              "key": "Ambessa-passive",
+              "start": 47,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.8
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "072973036d49604e6ebfe6f92781b6f1ad2b832bc79893bd03c47670e463dc4f",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Sylas:0",
+          "text": "Hold Repudiation until Sylas commits to a lunge or chain pull; the shield and bigger slam punish him for hitting you.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:Ambessa:Sylas:1",
+          "text": "Stay out of Chain Lash range, then close in with Lacerate to slow him so he can't escape.",
+          "refs": [
+            { "kind": "ability", "key": "Sylas-Q", "start": 12, "end": 22 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 49, "end": 57 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 65 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "jungle:Ambessa:Sylas:2",
+          "text": "Sylas can steal Public Execution, so use it to finish a kill rather than to start a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 16, "end": 32 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ambessa:Sylas:3",
+          "text": "Sylas heals from Kingslayer, so keep hitting him with Cunning Sweep and Sundering Slam to finish him before he heals back up.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Sylas-W", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.55
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3f465f550c1eefc4cc8c616e453481eba31852e23c5fc62de04195b7acf1ca05",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Talon:0",
+          "text": "Use Lacerate when Talon jumps in. It slows him and cuts off his escape.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Talon", "start": 18, "end": 23 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Ambessa:Talon:1",
+          "text": "Cast Repudiation as Talon commits. If he hits you during the brace, the slam deals more damage.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Talon", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "jungle:Ambessa:Talon:2",
+          "text": "Use Public Execution on Talon once he is committed. He can't use Assassin's Path to get away while he is suppressed.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Talon", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Talon-E", "start": 65, "end": 80 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:Ambessa:Talon:3",
+          "text": "Stack up armor against Talon, because all of his damage is physical. He bursts you down quickly if you ignore this.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.31
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4b9b71f7b509848f14556df97ebfe3a61ad75a481bcf269a9777b08e1b0d5f27",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:Viego:0",
+          "text": "Cast Lacerate when Viego jumps in; it slows him, and the dash after it adds a second spin.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Viego", "start": 19, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 43 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:Ambessa:Viego:1",
+          "text": "Sidestep or block Spectral Maw; it stuns the first enemy it hits, and a longer charge stuns longer. Stay behind minions to soak it.",
+          "refs": [
+            { "kind": "ability", "key": "Viego-W", "start": 18, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 35, "end": 40 },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:Ambessa:Viego:2",
+          "text": "Watch for mist where Viego has cast Harrowed Path; he can sit hidden in it and then attack. Be careful near walls with mist.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "Viego-E", "start": 36, "end": 49 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:Ambessa:Viego:3",
+          "text": "Cast Repudiation as Viego commits to a trade; its shield soaks his hits and the slam hits harder if you were hit.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 20, "end": 25 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:Ambessa:Viego:4",
+          "text": "Hit Viego with Cunning Sweep's outer edge, then follow with Sundering Slam while it is ready.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 4, "end": 9 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:Ambessa:Viego:5",
+          "text": "Do not fight beside a fresh kill; if Viego takes one, he can possess the fallen champion and fight with their abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 37, "end": 42 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4e3e6d24863bc07016f2c896e525a0d10b4cfe66002e749838074050ad8ff66d",
+      "tips": [
+        {
+          "id": "jungle:Ambessa:XinZhao:0",
+          "text": "Keep Lacerate for when Xin Zhao jumps on you. It slows him, and its second spin after your dash hits him again.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-E", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "XinZhao", "start": 23, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:Ambessa:XinZhao:1",
+          "text": "Cast Repudiation as Xin Zhao dives in. The shield soaks his hits and the stronger slam punishes him for it.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "XinZhao", "start": 20, "end": 28 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:Ambessa:XinZhao:2",
+          "text": "Stay out of his Three Talon Strike combo. The third hit knocks you up, so trade away from him when you see him charge.",
+          "refs": [
+            { "kind": "ability", "key": "XinZhao-Q", "start": 16, "end": 34 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:Ambessa:XinZhao:3",
+          "text": "Use Public Execution on Xin Zhao after he spends Crescent Guard, because it can be blocked by his untouchable window. Do it when he has used his burst.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-R", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "XinZhao", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "XinZhao-R", "start": 49, "end": 63 }
+          ],
+          "pWrong": 0.67
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    }
+  ]
+}

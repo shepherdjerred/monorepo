@@ -1,0 +1,683 @@
+{
+  "schemaVersion": 1,
+  "champion": "Tristana",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "adc",
+      "inputHash": "1838a2e7a8aea7ff5e58eb157b7f24f461ac11727a503e0f9b5f1081b916b6f4",
+      "tips": [
+        {
+          "id": "adc:Tristana:general:0",
+          "text": "Put Explosive Charge on an enemy champion, then keep attacking them. Each attack or ability adds to the bomb, and a full bomb explodes at once.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 4, "end": 20 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Tristana:general:1",
+          "text": "Turn on Rapid Fire when you start trading. The extra Attack Speed stacks your bomb faster.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-Q", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Tristana:general:2",
+          "text": "Jump away with Rocket Jump when an enemy runs at you. It slows them when you land.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 15, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "adc:Tristana:general:3",
+          "text": "Look for a kill with a full bomb. A takedown or full-stack explosion on a champion resets Rocket Jump, so you can jump in again or escape.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 90, "end": 101 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "adc:Tristana:general:4",
+          "text": "Hit the enemy with Buster Shot when they get close. It knocks them away and stuns them, which protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 19, "end": 30 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "adc:Tristana:general:5",
+          "text": "Use your long range from Draw a Bead to attack from a distance. It grows as you level, so you can stay out of reach.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Tristana-passive",
+              "start": 25,
+              "end": 36
+            }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "adc:Tristana:general:6",
+          "text": "Last-hit minions with your attacks to make them explode. Explosive Charge then damages nearby enemies, which helps when you push the wave.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.36
+        }
+      ],
+      "combos": []
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "adc",
+      "inputHash": "10b4495cc8eb1572664ac815cc675ea3449f976ae757df25ea79b1cba02d63ed",
+      "tips": [
+        {
+          "id": "adc:Tristana:Ashe:0",
+          "text": "Ashe outranges you early and slows you with every auto. Trade only when she steps up to last-hit, and keep your Draw a Bead range growing by leveling.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 },
+            {
+              "kind": "ability",
+              "key": "Tristana-passive",
+              "start": 112,
+              "end": 123
+            }
+          ],
+          "pWrong": 0.57
+        },
+        {
+          "id": "adc:Tristana:Ashe:1",
+          "text": "Put Explosive Charge on Ashe, then auto her to build it up. A full bomb goes off at once and hurts a lot.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ashe", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "adc:Tristana:Ashe:2",
+          "text": "Use Rapid Fire when you trade so your autos stack the bomb quickly.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-Q", "start": 4, "end": 14 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Tristana:Ashe:3",
+          "text": "Ashe has few ways to get away. Finish her with Buster Shot, or use it to knock her away when she dives you.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Tristana-R", "start": 47, "end": 58 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "adc:Tristana:Ashe:4",
+          "text": "Hop away from her with Rocket Jump to escape. You can use it again right after a kill or a full bomb.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 23, "end": 34 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "adc:Tristana:Ashe:5",
+          "text": "Stay out of a straight line with Ashe at long range. Her Enchanted Crystal Arrow stuns for longer the farther it flies.",
+          "refs": [
+            { "kind": "champion", "key": "Ashe", "start": 33, "end": 37 },
+            { "kind": "ability", "key": "Ashe-R", "start": 57, "end": 80 },
+            { "kind": "keyword", "key": "stunned", "start": 81, "end": 86 }
+          ],
+          "pWrong": 0.06
+        }
+      ],
+      "opponent": "Ashe",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7bde56466410f27180d9e9e2aa3cbc714a2b8a43f76de965ec01e29bcb07be45",
+      "tips": [
+        {
+          "id": "adc:Tristana:Caitlyn:0",
+          "text": "Stay out of Caitlyn's range early; she outranges you at low levels, so trade only when her attacks are busy elsewhere or after you gain range.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Tristana:Caitlyn:1",
+          "text": "Watch where Caitlyn places Yordle Snap Trap and do not walk onto it; being rooted lets her land a big Headshot.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Caitlyn-W", "start": 27, "end": 43 },
+            { "kind": "keyword", "key": "rooted", "start": 75, "end": 81 },
+            {
+              "kind": "ability",
+              "key": "Caitlyn-passive",
+              "start": 102,
+              "end": 110
+            }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Tristana:Caitlyn:2",
+          "text": "Keep Rocket Jump for escaping or closing a fight. Use it to jump out after Caitlyn fires her net, or to dive onto her once she has spent it.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Caitlyn", "start": 75, "end": 82 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Tristana:Caitlyn:3",
+          "text": "Use Buster Shot to knock Caitlyn away when she gets close, or to cancel her Ace in the Hole channel by stunning her.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Caitlyn", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Caitlyn-R", "start": 76, "end": 91 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "adc:Tristana:Caitlyn:4",
+          "text": "Stack Explosive Charge on Caitlyn with attacks, then finish with Rocket Jump for burst. A full bomb pops at once and resets Rocket Jump.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Caitlyn", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Tristana-W", "start": 65, "end": 76 },
+            { "kind": "ability", "key": "Tristana-W", "start": 124, "end": 135 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "adc:Tristana:Caitlyn:5",
+          "text": "Stand beside your minions rather than behind them when Caitlyn fires Piltover Peacemaker; she hits the first target hardest.",
+          "refs": [
+            { "kind": "champion", "key": "Caitlyn", "start": 55, "end": 62 },
+            { "kind": "ability", "key": "Caitlyn-Q", "start": 69, "end": 88 }
+          ],
+          "pWrong": 0.63
+        }
+      ],
+      "opponent": "Caitlyn",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "d1b59a238d468385a8597dfbc3a5a064a491fdeffcb118aacd92be1b75a27fb7",
+      "tips": [
+        {
+          "id": "adc:Tristana:Ezreal:0",
+          "text": "Walk up and trade when Ezreal has just missed Mystic Shot. Your range grows as you level, so you can outrange him more and more.",
+          "refs": [
+            { "kind": "champion", "key": "Ezreal", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Ezreal-Q", "start": 46, "end": 57 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "adc:Tristana:Ezreal:1",
+          "text": "Put Explosive Charge on Ezreal and keep hitting him with attacks. At full stacks it blows up at once and hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Ezreal", "start": 24, "end": 30 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "adc:Tristana:Ezreal:2",
+          "text": "Turn on Rapid Fire when you trade so you stack Explosive Charge faster.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-Q", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Tristana-E", "start": 47, "end": 63 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "adc:Tristana:Ezreal:3",
+          "text": "At level 6, use Buster Shot on a low Ezreal; he is fragile, and it knocks him back and stuns him so you can finish him.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 16, "end": 27 },
+            { "kind": "champion", "key": "Ezreal", "start": 37, "end": 43 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 92 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Tristana:Ezreal:4",
+          "text": "Keep Rocket Jump to escape when Ezreal is close. It slows him, and a kill resets it.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Ezreal", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Tristana:Ezreal:5",
+          "text": "Stay out of line with Mystic Shot. Keep minions between you and Ezreal, since the bolt stops at the first enemy it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Ezreal-Q", "start": 22, "end": 33 },
+            { "kind": "champion", "key": "Ezreal", "start": 64, "end": 70 }
+          ],
+          "pWrong": 0.14
+        }
+      ],
+      "opponent": "Ezreal",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "694b6ca315250caacde676f5a96cbca94b9886caede03b1044497e6c835d6b61",
+      "tips": [
+        {
+          "id": "adc:Tristana:Jhin:0",
+          "text": "Jhin has to stop and reload after his fourth shot. Walk up and trade with Rapid Fire while he can't attack.",
+          "refs": [
+            { "kind": "champion", "key": "Jhin", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Tristana-Q", "start": 74, "end": 84 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "adc:Tristana:Jhin:1",
+          "text": "Stay out of his Deadly Flourish line when an ally has just hit you. Being hit first lets it root you.",
+          "refs": [
+            { "kind": "ability", "key": "Jhin-W", "start": 16, "end": 31 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "adc:Tristana:Jhin:2",
+          "text": "Watch the bushes and choke points for his invisible Lotus Trap before you step in. Walking in slows you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 94, "end": 99 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "adc:Tristana:Jhin:3",
+          "text": "Put Explosive Charge on Jhin, then keep hitting him to stack it. A full stack pops it at once.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Jhin", "start": 24, "end": 28 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "adc:Tristana:Jhin:4",
+          "text": "Save Buster Shot to knock Jhin away if he gets close. He is stunned and can't shoot back.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jhin", "start": 26, "end": 30 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 67 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "adc:Tristana:Jhin:5",
+          "text": "Use Rocket Jump to escape his Curtain Call lines, or to dodge a trap.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 4, "end": 15 },
+            { "kind": "ability", "key": "Jhin-R", "start": 30, "end": 42 }
+          ],
+          "pWrong": 0.48
+        }
+      ],
+      "opponent": "Jhin",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "b1ac5266d7e337aa2ab7adae08b2a220884d6e7469de5ce18d99938e48a8f5c5",
+      "tips": [
+        {
+          "id": "adc:Tristana:Jinx:0",
+          "text": "Use Rapid Fire to stack Explosive Charge on Jinx, then finish her with Rocket Jump for a burst.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-Q", "start": 4, "end": 14 },
+            { "kind": "ability", "key": "Tristana-E", "start": 24, "end": 40 },
+            { "kind": "champion", "key": "Jinx", "start": 44, "end": 48 },
+            { "kind": "ability", "key": "Tristana-W", "start": 71, "end": 82 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Tristana:Jinx:1",
+          "text": "Jump on Jinx while she pokes with rockets. She has little burst up close before her minigun ramps up.",
+          "refs": [
+            { "kind": "champion", "key": "Jinx", "start": 8, "end": 12 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "adc:Tristana:Jinx:2",
+          "text": "Hold Rocket Jump until Flame Chompers is on cooldown. Without it Jinx has a hard time escaping.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Jinx", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "adc:Tristana:Jinx:3",
+          "text": "Do not walk over Flame Chompers! You get rooted and she gets a free kill.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-E", "start": 17, "end": 32 },
+            { "kind": "keyword", "key": "rooted", "start": 41, "end": 47 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Tristana:Jinx:4",
+          "text": "Use Buster Shot to knock Jinx away when she gets close. The stun gives you time to back off.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jinx", "start": 25, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 64 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "adc:Tristana:Jinx:5",
+          "text": "Stay out of a straight line with Zap!, since it slows you from long range.",
+          "refs": [
+            { "kind": "ability", "key": "Jinx-W", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Jinx",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "64504efee04429bde47e77560ed87bdaf9477c2bf5419856d35472a0748936be",
+      "tips": [
+        {
+          "id": "adc:Tristana:Kaisa:0",
+          "text": "Use your longer range to poke Kai'Sa in lane. Her short-range attacks make her hesitate to trade with you early on.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 25, "end": 29 },
+            { "kind": "champion", "key": "Kaisa", "start": 30, "end": 36 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "adc:Tristana:Kaisa:1",
+          "text": "Hold Buster Shot for when Kai'Sa dashes in with Killer Instinct. It knocks her back and stuns her, and it protects you.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Kaisa-R", "start": 48, "end": 63 },
+            { "kind": "keyword", "key": "stunned", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.38
+        },
+        {
+          "id": "adc:Tristana:Kaisa:2",
+          "text": "Stack Explosive Charge on Kai'Sa with attacks. Turn on Rapid Fire to stack it faster.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Kaisa", "start": 26, "end": 32 },
+            { "kind": "ability", "key": "Tristana-Q", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "adc:Tristana:Kaisa:3",
+          "text": "Use Rocket Jump to escape when Kai'Sa closes in. It slows her on landing, so you can walk away.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Kaisa", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Kaisa",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "7a61f1c207e70c3baec9ffa31b0f5887e79a4f20cfc81bbe449a012274eb48fa",
+      "tips": [
+        {
+          "id": "adc:Tristana:MissFortune:0",
+          "text": "Walk up and hit Miss Fortune when she is out of Strut speed; any damage you deal strips her bonus Move Speed.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 16,
+              "end": 28
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-W",
+              "start": 48,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "adc:Tristana:MissFortune:1",
+          "text": "Stack Explosive Charge on Miss Fortune with attacks and Rapid Fire, then finish her with Rocket Jump once it detonates.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 6, "end": 22 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 26,
+              "end": 38
+            },
+            { "kind": "ability", "key": "Tristana-Q", "start": 56, "end": 66 },
+            { "kind": "ability", "key": "Tristana-W", "start": 89, "end": 100 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "adc:Tristana:MissFortune:2",
+          "text": "Use your longer range as you level to poke Miss Fortune, and stay out of reach of her Double Up.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 38, "end": 42 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 43,
+              "end": 55
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-Q",
+              "start": 86,
+              "end": 95
+            }
+          ],
+          "pWrong": 0.84
+        },
+        {
+          "id": "adc:Tristana:MissFortune:3",
+          "text": "Step out of Make It Rain quickly, since you get slowed inside it and she keeps hitting you.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MissFortune-E",
+              "start": 12,
+              "end": 24
+            },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 54 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "adc:Tristana:MissFortune:4",
+          "text": "At level 6, use Buster Shot on Miss Fortune if she starts Bullet Time next to you; it stuns and knocks her back, and her channel is interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 16, "end": 27 },
+            {
+              "kind": "champion",
+              "key": "MissFortune",
+              "start": 31,
+              "end": 43
+            },
+            {
+              "kind": "ability",
+              "key": "MissFortune-R",
+              "start": 58,
+              "end": 69
+            },
+            { "kind": "keyword", "key": "stunned", "start": 86, "end": 91 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "MissFortune",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "c6d395119a579738a57af012f167a2b5d37a7a2579a4936991ad86055f15ade9",
+      "tips": [
+        {
+          "id": "adc:Tristana:Smolder:0",
+          "text": "Fight Smolder early, while he has few Dragon Practice stacks; his damage is weakest before he has landed many abilities.",
+          "refs": [
+            { "kind": "champion", "key": "Smolder", "start": 6, "end": 13 },
+            {
+              "kind": "ability",
+              "key": "Smolder-passive",
+              "start": 38,
+              "end": 53
+            }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Tristana:Smolder:1",
+          "text": "Use Rocket Jump to get away when Smolder is flying at you, and to close in once his Flap, Flap, Flap is spent.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-W", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Smolder-E", "start": 84, "end": 100 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "adc:Tristana:Smolder:2",
+          "text": "Stack Explosive Charge on Smolder with attacks and abilities, then finish with Rocket Jump for a burst.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 6, "end": 22 },
+            { "kind": "champion", "key": "Smolder", "start": 26, "end": 33 },
+            { "kind": "ability", "key": "Tristana-W", "start": 79, "end": 90 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "adc:Tristana:Smolder:3",
+          "text": "Use Buster Shot to knock Smolder away when he dives in to fight you, and to break up his Flap, Flap, Flap.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Smolder", "start": 25, "end": 32 },
+            { "kind": "ability", "key": "Smolder-E", "start": 89, "end": 105 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "adc:Tristana:Smolder:4",
+          "text": "Keep your distance and sidestep Achooo!; it is a slow, long-range glob that leaves you slowed.",
+          "refs": [
+            { "kind": "ability", "key": "Smolder-W", "start": 32, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Smolder",
+      "comboRefs": []
+    },
+    {
+      "lane": "adc",
+      "inputHash": "30598ae9cb396813abbbf7e193e1439bed1878993eb62953c036ce22a04d1afe",
+      "tips": [
+        {
+          "id": "adc:Tristana:Yunara:0",
+          "text": "Trade when Yunara's prayer bead is on cooldown; Tristana outranges her early, so poke her with auto attacks and back off.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 11, "end": 17 },
+            { "kind": "champion", "key": "Tristana", "start": 48, "end": 56 },
+            { "kind": "keyword", "key": "poke", "start": 81, "end": 85 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "adc:Tristana:Yunara:1",
+          "text": "Stay out of a straight line with Yunara, because her prayer bead slows you heavily and leaves you easy to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 33, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.62
+        },
+        {
+          "id": "adc:Tristana:Yunara:2",
+          "text": "Put Explosive Charge on Yunara, then hit her and use Rocket Jump to reach full stacks. A kill or full detonation refreshes Rocket Jump.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-E", "start": 4, "end": 20 },
+            { "kind": "champion", "key": "Yunara", "start": 24, "end": 30 },
+            { "kind": "ability", "key": "Tristana-W", "start": 53, "end": 64 },
+            { "kind": "ability", "key": "Tristana-W", "start": 123, "end": 134 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "adc:Tristana:Yunara:3",
+          "text": "When Yunara uses Transcend One's Self, back off or save Buster Shot. She hits much harder and can dash away.",
+          "refs": [
+            { "kind": "champion", "key": "Yunara", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Yunara-R", "start": 17, "end": 37 },
+            { "kind": "ability", "key": "Tristana-R", "start": 56, "end": 67 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "adc:Tristana:Yunara:4",
+          "text": "Use Buster Shot to knock Yunara away when she gets close; it stuns her and lets you leave or finish her.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-R", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Yunara", "start": 25, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 61, "end": 66 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "adc:Tristana:Yunara:5",
+          "text": "Turn on Rapid Fire when you trade, since it helps stack Explosive Charge fast. Use it before Yunara's attack speed gets going.",
+          "refs": [
+            { "kind": "ability", "key": "Tristana-Q", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Tristana-E", "start": 56, "end": 72 },
+            { "kind": "champion", "key": "Yunara", "start": 93, "end": 99 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Yunara",
+      "comboRefs": []
+    }
+  ]
+}

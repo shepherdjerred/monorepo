@@ -1,0 +1,1059 @@
+{
+  "schemaVersion": 1,
+  "champion": "Gragas",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "top",
+      "inputHash": "f57e22340dfa9be058a49bf6b8e055c1500cb56a4636999e0c951e1e1d9dd321",
+      "tips": [
+        {
+          "id": "top:Gragas:general:0",
+          "text": "Use Drunken Rage the moment you see damage coming, since the damage reduction starts as you begin drinking. Your next attack then hits harder.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gragas:general:1",
+          "text": "Drunken Rage deals extra damage based on the target's max health, so use it on tanky top laners. Weave it into your trades.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gragas:general:2",
+          "text": "Drop Barrel Roll where the enemy will step and let it sit. It hits harder and slows more the longer it sits, so detonate it late when you can.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 83 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:general:3",
+          "text": "Recast Barrel Roll to blow it up early when the enemy is about to leave the area.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 7, "end": 18 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:general:4",
+          "text": "Body Slam stops on the first enemy it hits and knocks them up. Its cooldown is cut when it hits, so use it to start a trade.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 0, "end": 9 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "top:Gragas:general:5",
+          "text": "Cast Barrel Roll or Explosive Cask during the Body Slam dash to chain your damage together.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "ability", "key": "Gragas-R", "start": 20, "end": 34 },
+            { "kind": "ability", "key": "Gragas-E", "start": 46, "end": 55 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:general:6",
+          "text": "Knock enemies back toward your tower with Explosive Cask. Aim so they are pushed into your side, not away from it.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 42, "end": 56 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gragas:general:7",
+          "text": "Combo Body Slam into Explosive Cask at level 6 to set up kills for your team.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 6, "end": 15 },
+            { "kind": "ability", "key": "Gragas-R", "start": 21, "end": 35 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gragas:general:8",
+          "text": "Use abilities freely in trades, since Happy Hour heals you when you cast one.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "Gragas-passive",
+              "start": 38,
+              "end": 48
+            }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "combos": [
+        {
+          "id": "top:Gragas:combo:0",
+          "name": "Flash during Body Slam",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Gragas-E" },
+            { "kind": "summoner-spell", "key": "2202" }
+          ],
+          "when": "When the target is just out of reach or you want to change where the slam lands.",
+          "whenRefs": [],
+          "text": "Flash while charging to end the dash at once. The knock up lands on enemies at the Flash spot, which makes it hard to dodge.",
+          "textRefs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "summoner-spell", "key": "4", "start": 83, "end": 88 }
+          ]
+        },
+        {
+          "id": "top:Gragas:combo:1",
+          "name": "Barrel during the slam",
+          "category": "trick",
+          "sequence": [
+            { "kind": "ability", "key": "Gragas-E" },
+            { "kind": "ability", "key": "Gragas-Q" }
+          ],
+          "when": "When trading or chasing and you want the slow to start as soon as the stun does.",
+          "whenRefs": [],
+          "text": "Throw Barrel Roll while Body Slam is still moving so both go out in one motion. Recast the barrel to pop it when the target is stunned.",
+          "textRefs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 }
+          ]
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "top",
+      "inputHash": "0bfa7534c06bcedc4125b32a3cd9584929d5aaf74c44b7f0285d023a638c40e3",
+      "tips": [
+        {
+          "id": "top:Gragas:Aatrox:0",
+          "text": "Use Body Slam when Aatrox commits to The Darkin Blade; it stuns him and cancels the follow-up swings.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Aatrox", "start": 19, "end": 25 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 37, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 63 }
+          ],
+          "pWrong": 0.98,
+          "hidden": true
+        },
+        {
+          "id": "top:Gragas:Aatrox:1",
+          "text": "Keep Barrel Roll for when he is slowed or stuck in place; its slow makes it easy to walk out of his reach.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 38 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 66 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gragas:Aatrox:2",
+          "text": "Drink Drunken Rage just before he trades; it cuts the damage you take and your next attack hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "top:Gragas:Aatrox:3",
+          "text": "Use Explosive Cask to knock him away from you or into your tower when he dives.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "top:Gragas:Aatrox:4",
+          "text": "Walk out of Infernal Chains sideways before the pull lands, then fight back.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-W", "start": 12, "end": 27 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "57deee4a81ac902aaef23131370d3ef612fecaa2f9b94ac7cdf2547f6c5f31a8",
+      "tips": [
+        {
+          "id": "top:Gragas:Briar:0",
+          "text": "Wait for Briar to leap in with Blood Frenzy, then hit her with Body Slam. She can't walk away from the fight, and the stun gives you time to attack.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Gragas-E", "start": 63, "end": 72 },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 122 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "top:Gragas:Briar:1",
+          "text": "Use Drunken Rage as she closes in to cut the damage you take, then hit her with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gragas:Briar:2",
+          "text": "Leave Barrel Roll to ferment before you set it off. The longer it sits, the harder it hits and the more it slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "keyword", "key": "slowed", "start": 107, "end": 112 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "top:Gragas:Briar:3",
+          "text": "Use Explosive Cask to knock Briar away once she picks you as her prey. It breaks up her chase and can push her toward your tower.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Briar", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gragas:Briar:4",
+          "text": "Don't trade with her while she is low and healing. Her bleed heals her more the lower her health is, so burst her down in one combo.",
+          "refs": [],
+          "pWrong": 0.99
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Barrel Roll thrown with Body Slam adds a slow to the knock up when Briar leaps in with Blood Frenzy.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Gragas-E", "start": 24, "end": 33 },
+            { "kind": "champion", "key": "Briar", "start": 67, "end": 72 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "8d60ec34150246123cd67ec6dec1d89ddc81006c40a930975b4adc97502544d8",
+      "tips": [
+        {
+          "id": "top:Gragas:Darius:0",
+          "text": "Throw Barrel Roll at Darius's feet and let it sit before detonating; the longer it waits, the harder it hits and the more it slows him.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Darius", "start": 21, "end": 27 }
+          ],
+          "pWrong": 0.03
+        },
+        {
+          "id": "top:Gragas:Darius:1",
+          "text": "Poke Darius from range while Apprehend is on cooldown. He has little way to reach you then.",
+          "refs": [
+            { "kind": "keyword", "key": "poke", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Darius", "start": 5, "end": 11 },
+            { "kind": "ability", "key": "Darius-E", "start": 29, "end": 38 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "top:Gragas:Darius:2",
+          "text": "Use Drunken Rage just before Darius swings or trades. The damage reduction starts when you begin drinking.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Darius", "start": 29, "end": 35 }
+          ],
+          "pWrong": 0.59
+        },
+        {
+          "id": "top:Gragas:Darius:3",
+          "text": "Use Body Slam to start a fight or to leave one. Darius is stunned when he is hit, and the cooldown is shorter when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Darius", "start": 48, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 65 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "top:Gragas:Darius:4",
+          "text": "Use Explosive Cask to knock Darius away when he dives you, or into your tower side. Terrain stops the knockback.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Darius", "start": 28, "end": 34 }
+          ],
+          "pWrong": 0.3
+        },
+        {
+          "id": "top:Gragas:Darius:5",
+          "text": "Do not stand at the edge of Decimate range for long. Step out of the swing, then answer with your own poke.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 28, "end": 36 },
+            { "kind": "keyword", "key": "poke", "start": 102, "end": 106 }
+          ],
+          "pWrong": 0.33
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:0",
+          "note": "Flash during Body Slam lets the knock up land at a new spot, so Darius has a hard time dodging it.",
+          "refs": [
+            { "kind": "summoner-spell", "key": "4", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Gragas-E", "start": 13, "end": 22 },
+            { "kind": "champion", "key": "Darius", "start": 64, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "f5547822d7bd6cc6f81bd62df178695b94981736357977c557759bacad4fe675",
+      "tips": [
+        {
+          "id": "top:Gragas:Fiora:0",
+          "text": "Don't use Body Slam on Fiora when Riposte is ready; she can turn the knock up against you and stun you.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 10, "end": 19 },
+            { "kind": "champion", "key": "Fiora", "start": 23, "end": 28 },
+            { "kind": "ability", "key": "Fiora-W", "start": 34, "end": 41 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "top:Gragas:Fiora:1",
+          "text": "Wait for Fiora to spend Riposte, then follow up with Body Slam or Explosive Cask.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 9, "end": 14 },
+            { "kind": "ability", "key": "Fiora-W", "start": 24, "end": 31 },
+            { "kind": "ability", "key": "Gragas-E", "start": 53, "end": 62 },
+            { "kind": "ability", "key": "Gragas-R", "start": 66, "end": 80 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "top:Gragas:Fiora:2",
+          "text": "Drink Drunken Rage just before she lunges in to trade; it cuts the damage you take and your next attack hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Gragas:Fiora:3",
+          "text": "Roll Barrel Roll onto her when she walks up to the wave; the longer it sits, the harder it hits and slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "keyword", "key": "slowed", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "top:Gragas:Fiora:4",
+          "text": "Knock Fiora toward your tower with Explosive Cask when she dives in, so she is away from you and your wave.",
+          "refs": [
+            { "kind": "champion", "key": "Fiora", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Gragas-R", "start": 35, "end": 49 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Fiora",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2261d6a1df7a25186bd205ac58357b9a6feb34571b79384400e3859ab5230ad5",
+      "tips": [
+        {
+          "id": "top:Gragas:Gangplank:0",
+          "text": "Hold Body Slam for when Gangplank steps up to hit a keg or you. The stun gives you time to trade.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 5, "end": 14 },
+            { "kind": "champion", "key": "Gangplank", "start": 24, "end": 33 },
+            { "kind": "keyword", "key": "stunned", "start": 68, "end": 72 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "top:Gragas:Gangplank:1",
+          "text": "Gangplank can cleanse your stun and slow with Remove Scurvy. Bait it out before you commit your big combo.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 27, "end": 31 },
+            { "kind": "keyword", "key": "slowed", "start": 36, "end": 40 },
+            { "kind": "ability", "key": "Gangplank-W", "start": 46, "end": 59 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "top:Gragas:Gangplank:2",
+          "text": "Use Drunken Rage right before Gangplank trades with Parrrley or a keg; the damage cut starts as you drink.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Gangplank", "start": 30, "end": 39 },
+            { "kind": "ability", "key": "Gangplank-Q", "start": 52, "end": 60 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "top:Gragas:Gangplank:3",
+          "text": "Leave your Barrel Roll on the ground to ferment where Gangplank wants to stand and place kegs. It grants sight of the area while it waits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 11, "end": 22 },
+            { "kind": "champion", "key": "Gangplank", "start": 54, "end": 63 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gragas:Gangplank:4",
+          "text": "Watch for Gangplank's level 6. Cannon Barrage can land from anywhere on the map, so do not stay low in health near him.",
+          "refs": [
+            { "kind": "champion", "key": "Gangplank", "start": 10, "end": 19 },
+            { "kind": "ability", "key": "Gangplank-R", "start": 31, "end": 45 }
+          ],
+          "pWrong": 0.02
+        }
+      ],
+      "opponent": "Gangplank",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "afacc0c7d2667f70bd81fd395396c8a05dbe5b08fac0fd663d716df13982244e",
+      "tips": [
+        {
+          "id": "top:Gragas:Garen:0",
+          "text": "Use Barrel Roll from long range to poke Garen; let it sit a moment before detonating so it hurts more and slows him more.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 4, "end": 15 },
+            { "kind": "keyword", "key": "poke", "start": 35, "end": 39 },
+            { "kind": "champion", "key": "Garen", "start": 40, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:Garen:1",
+          "text": "Garen's Decisive Strike removes slows from him, so do not rely on Barrel Roll to hold him back once he has used it.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Garen-Q", "start": 8, "end": 23 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 66, "end": 77 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "top:Gragas:Garen:2",
+          "text": "Drink Drunken Rage just before Garen steps in to trade; it cuts the damage you take and your next attack hits hard.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 31, "end": 36 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "top:Gragas:Garen:3",
+          "text": "Use Body Slam to stun Garen and escape or reposition; its cooldown drops when it hits an enemy.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "keyword", "key": "stunned", "start": 17, "end": 21 },
+            { "kind": "champion", "key": "Garen", "start": 22, "end": 27 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "top:Gragas:Garen:4",
+          "text": "Stay out of Garen's reach when he is silenced-ready: his Decisive Strike silences you, so do not count on casting abilities in that moment.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "silenced", "start": 37, "end": 45 },
+            { "kind": "ability", "key": "Garen-Q", "start": 57, "end": 72 },
+            { "kind": "keyword", "key": "silenced", "start": 73, "end": 81 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "top:Gragas:Garen:5",
+          "text": "Use Explosive Cask to knock Garen away when he runs at you, or toward your tower in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Garen", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gragas:Garen:6",
+          "text": "Keep your health up when Garen reaches level 6; Demacian Justice finishes low-health targets.",
+          "refs": [
+            { "kind": "champion", "key": "Garen", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Garen-R", "start": 48, "end": 64 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Garen",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "de65d1bacb443e45cce90e1037a630f3769202c19c3b3c5ed607dd5aec13cbd0",
+      "tips": [
+        {
+          "id": "top:Gragas:Jayce:0",
+          "text": "Aim Body Slam at Jayce when he leaps in or stands close; it stuns him and its cooldown drops when it hits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 17, "end": 22 },
+            { "kind": "keyword", "key": "stunned", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "top:Gragas:Jayce:1",
+          "text": "Let Barrel Roll sit and ripen before blowing it up where Jayce will walk; the longer it waits, the harder it hits and slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 4, "end": 15 },
+            { "kind": "champion", "key": "Jayce", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gragas:Jayce:2",
+          "text": "Use Drunken Rage just before Jayce's burst lands, since the damage cut starts when you begin drinking.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Jayce", "start": 29, "end": 34 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "top:Gragas:Jayce:3",
+          "text": "Knock Jayce back toward your tower with Explosive Cask, then finish the fight there.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Gragas-R", "start": 40, "end": 54 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "top:Gragas:Jayce:4",
+          "text": "Jayce is strongest early, so play safe in the first levels and trade only when you can use Body Slam and Drunken Rage together.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Gragas-E", "start": 91, "end": 100 },
+            { "kind": "ability", "key": "Gragas-W", "start": 105, "end": 117 }
+          ],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Barrel Roll's slow goes out with Body Slam's knock up, which helps catch Jayce after his Hammer Form swaps.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 0, "end": 11 },
+            { "kind": "ability", "key": "Gragas-E", "start": 33, "end": 42 },
+            { "kind": "champion", "key": "Jayce", "start": 73, "end": 78 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "top",
+      "inputHash": "c0a87fe664316695247f6b6e1dbf657369a6214ba8bcc06fdc7ae084025c9a55",
+      "tips": [
+        {
+          "id": "top:Gragas:KSante:0",
+          "text": "Use Body Slam on K'Sante only when you can follow with an attack. He can shield himself with Footwork, and his Path Maker makes him hard to catch.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "KSante", "start": 17, "end": 24 },
+            { "kind": "ability", "key": "KSante-E", "start": 93, "end": 101 },
+            { "kind": "ability", "key": "KSante-W", "start": 111, "end": 121 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Gragas:KSante:1",
+          "text": "Drink Drunken Rage just before K'Sante trades with you, then hit him with the empowered attack. It cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 31, "end": 38 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Gragas:KSante:2",
+          "text": "Throw Barrel Roll at where K'Sante will stand to last-hit. Let it sit before you detonate it so he is slowed harder.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "KSante", "start": 27, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 102, "end": 108 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gragas:KSante:3",
+          "text": "Stay out of Ntofo Strikes range when it has two stacks, because it pulls you in and stuns you. Keep your distance.",
+          "refs": [
+            { "kind": "ability", "key": "KSante-Q", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 89 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "top:Gragas:KSante:4",
+          "text": "Use Explosive Cask to knock K'Sante back toward your tower, or to split him from his team in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "KSante", "start": 28, "end": 35 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "KSante",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "355f85d4ac333f5427d78519a42103787b15fe2337bd7be9abab266835a3b80c",
+      "tips": [
+        {
+          "id": "top:Gragas:Malphite:0",
+          "text": "Use Drunken Rage just before Malphite's spells land. It cuts the damage you take, but you can't attack while drinking.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 29, "end": 37 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "top:Gragas:Malphite:1",
+          "text": "Roll Barrel Roll at Malphite's feet and let it ferment before detonating. He is slowed, which makes it hard for him to close in on you.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Malphite", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 80, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gragas:Malphite:2",
+          "text": "Hold Body Slam to escape or to start a trade. Its short cooldown lets you use it again soon after a hit.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 5, "end": 14 }
+          ],
+          "pWrong": 0.09
+        },
+        {
+          "id": "top:Gragas:Malphite:3",
+          "text": "Stay away from Malphite at level 6 when you have no escape; Unstoppable Force can't be stopped. Use Explosive Cask to push him back from you.",
+          "refs": [
+            { "kind": "champion", "key": "Malphite", "start": 15, "end": 23 },
+            { "kind": "ability", "key": "Malphite-R", "start": 60, "end": 77 },
+            { "kind": "ability", "key": "Gragas-R", "start": 100, "end": 114 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Malphite",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "4293604825957540785f923cb86c79cecd6d8b5b2ad0de003a6523d0bc4fb303",
+      "tips": [
+        {
+          "id": "top:Gragas:Mordekaiser:0",
+          "text": "Keep your distance once Mordekaiser's damage aura is up; trading in melee range with him is a losing fight, so poke him with Barrel Roll instead.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 24,
+              "end": 35
+            },
+            { "kind": "keyword", "key": "poke", "start": 111, "end": 115 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 125, "end": 136 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "top:Gragas:Mordekaiser:1",
+          "text": "Let Barrel Roll sit a moment before you detonate it. The longer it waits, the harder it hits and the more it slows.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "top:Gragas:Mordekaiser:2",
+          "text": "Use Body Slam to hit him, then fall back. Its cooldown drops when it lands, so you can use it again to get out.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "top:Gragas:Mordekaiser:3",
+          "text": "Turn on Drunken Rage just before his Obliterate or Death's Grasp lands, to cut the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 8, "end": 20 },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-Q",
+              "start": 37,
+              "end": 47
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 51,
+              "end": 64
+            }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "top:Gragas:Mordekaiser:4",
+          "text": "Hold Body Slam as your way out when Mordekaiser pulls you in with Death's Grasp. Use it to knock him away and stun him.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 5, "end": 14 },
+            {
+              "kind": "champion",
+              "key": "Mordekaiser",
+              "start": 36,
+              "end": 47
+            },
+            {
+              "kind": "ability",
+              "key": "Mordekaiser-E",
+              "start": 66,
+              "end": 79
+            },
+            { "kind": "keyword", "key": "stunned", "start": 110, "end": 114 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "top:Gragas:Mordekaiser:5",
+          "text": "Fight near your own tower. Explosive Cask can knock him back into its range after he commits.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 27, "end": 41 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Mordekaiser",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "2cae19030fa72b82c9660145ba0c67e8c52a4db815e9e391d8852e2153eec1a1",
+      "tips": [
+        {
+          "id": "top:Gragas:Rumble:0",
+          "text": "Dodge Electro Harpoon; two hits slow you a lot and cut your Magic Resist, making Rumble's next spells hurt more.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-E", "start": 6, "end": 21 },
+            { "kind": "keyword", "key": "slowed", "start": 32, "end": 36 },
+            { "kind": "champion", "key": "Rumble", "start": 81, "end": 87 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "top:Gragas:Rumble:1",
+          "text": "Hit Rumble with Body Slam when he is Overheated; he cannot cast spells to answer.",
+          "refs": [
+            { "kind": "champion", "key": "Rumble", "start": 4, "end": 10 },
+            { "kind": "ability", "key": "Gragas-E", "start": 16, "end": 25 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "top:Gragas:Rumble:2",
+          "text": "Use Drunken Rage just before Rumble starts Flamespitter; it cuts the damage you take while you step out.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 29, "end": 35 },
+            { "kind": "ability", "key": "Rumble-Q", "start": 43, "end": 55 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Gragas:Rumble:3",
+          "text": "Leave the burning trail of The Equalizer quickly; staying in it costs a lot of health.",
+          "refs": [
+            { "kind": "ability", "key": "Rumble-R", "start": 27, "end": 40 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:Rumble:4",
+          "text": "Roll Barrel Roll onto Rumble's path when he trades, and detonate it late for a stronger slow.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Rumble", "start": 22, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 92 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Rumble",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "398eebfc772f9ec075bbfbd46f244ff3b770c8831565019d10394607a6da093b",
+      "tips": [
+        {
+          "id": "top:Gragas:Sion:0",
+          "text": "Stay out of Sion's line while he charges Decimating Smash. Step sideways before he releases it, since a full charge stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Sion", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Sion-Q", "start": 41, "end": 57 },
+            { "kind": "keyword", "key": "stunned", "start": 116, "end": 121 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "top:Gragas:Sion:1",
+          "text": "Use Body Slam on Sion while he is charging Decimating Smash. It stuns him and interrupts the charge.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Sion", "start": 17, "end": 21 },
+            { "kind": "ability", "key": "Sion-Q", "start": 43, "end": 59 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gragas:Sion:2",
+          "text": "Drink Drunken Rage just before Sion's attacks or abilities land. Then hit him with the empowered attack.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Sion", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "top:Gragas:Sion:3",
+          "text": "Roll Barrel Roll onto Sion where he stands to last-hit. It slows him and lets you poke him out of the lane.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Sion", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "poke", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "top:Gragas:Sion:4",
+          "text": "When Sion dies, back off and do not fight him. He returns with fast attacks and heals, so wait until it ends.",
+          "refs": [{ "kind": "champion", "key": "Sion", "start": 5, "end": 9 }],
+          "pWrong": 0.03
+        }
+      ],
+      "opponent": "Sion",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "9bf25420a49743cb8d3b80fe3a080976fbc454e845c50af98dba474e98ced8c6",
+      "tips": [
+        {
+          "id": "top:Gragas:Teemo:0",
+          "text": "Use Body Slam to close on Teemo when he is out of mushrooms or his Blinding Dart is on cooldown, then trade hard.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Teemo-Q", "start": 67, "end": 80 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "top:Gragas:Teemo:1",
+          "text": "Do not walk into brush or unlit spots without care; Teemo may be hidden there and have mushrooms placed.",
+          "refs": [
+            { "kind": "champion", "key": "Teemo", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "top:Gragas:Teemo:2",
+          "text": "Drink Drunken Rage before Teemo's poison and darts hit you; it cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 26, "end": 31 }
+          ],
+          "pWrong": 0.9
+        },
+        {
+          "id": "top:Gragas:Teemo:3",
+          "text": "Throw Barrel Roll at Teemo's hiding spot to catch him when he is invisible and hold still.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Teemo", "start": 21, "end": 26 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "top:Gragas:Teemo:4",
+          "text": "Use Explosive Cask to knock Teemo away when he is in your face or to push him out of a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 4, "end": 18 },
+            { "kind": "champion", "key": "Teemo", "start": 28, "end": 33 }
+          ],
+          "pWrong": 0.01
+        }
+      ],
+      "opponent": "Teemo",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d90fa9e30f8846f6726ff5bcd6904096b2831ec1ff0607016f56350ae30e10cc",
+      "tips": [
+        {
+          "id": "top:Gragas:Vayne:0",
+          "text": "Use Body Slam to close on Vayne. It stuns her when it hits, so follow up with Drunken Rage.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Vayne", "start": 26, "end": 31 },
+            { "kind": "keyword", "key": "stunned", "start": 36, "end": 41 },
+            { "kind": "ability", "key": "Gragas-W", "start": 78, "end": 90 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "top:Gragas:Vayne:1",
+          "text": "Throw Barrel Roll where Vayne will stand when she tumbles away. It slows her more the longer it ferments.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 6, "end": 17 },
+            { "kind": "champion", "key": "Vayne", "start": 24, "end": 29 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "top:Gragas:Vayne:2",
+          "text": "Stay off walls when Vayne has Condemn ready. A hit into terrain stuns you.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 20, "end": 25 },
+            { "kind": "ability", "key": "Vayne-E", "start": 30, "end": 37 },
+            { "kind": "keyword", "key": "stunned", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:Vayne:3",
+          "text": "Do not trade with Vayne for long. Her third Silver Bolts hit does true damage based on your max health.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 18, "end": 23 },
+            { "kind": "ability", "key": "Vayne-W", "start": 44, "end": 56 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "top:Gragas:Vayne:4",
+          "text": "Knock Vayne away from her team with Explosive Cask, or into your tower. She is fragile and dies quickly if caught.",
+          "refs": [
+            { "kind": "champion", "key": "Vayne", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Gragas-R", "start": 36, "end": 50 }
+          ],
+          "pWrong": 0.57
+        }
+      ],
+      "opponent": "Vayne",
+      "comboRefs": []
+    },
+    {
+      "lane": "top",
+      "inputHash": "d4f89c6969cda8f5a9c77dec49ee599413080b3ad299895be968f35c61ba8736",
+      "tips": [
+        {
+          "id": "top:Gragas:Yone:0",
+          "text": "Use Body Slam when Yone steps up to trade; the stun lets you follow with Drunken Rage and your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 4, "end": 13 },
+            { "kind": "champion", "key": "Yone", "start": 19, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 },
+            { "kind": "ability", "key": "Gragas-W", "start": 73, "end": 85 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "top:Gragas:Yone:1",
+          "text": "Drink Drunken Rage just before Yone's damage lands; the damage cut starts as soon as you start drinking.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-W", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Yone", "start": 31, "end": 35 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "top:Gragas:Yone:2",
+          "text": "Roll Barrel Roll onto Yone's side of the lane and let it sit; he gets slowed more the longer it ferments.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-Q", "start": 5, "end": 16 },
+            { "kind": "champion", "key": "Yone", "start": 22, "end": 26 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 76 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "top:Gragas:Yone:3",
+          "text": "Save Explosive Cask for when Yone dashes in or tries to flee; it knocks him away from you.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-R", "start": 5, "end": 19 },
+            { "kind": "champion", "key": "Yone", "start": 29, "end": 33 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "top:Gragas:Yone:4",
+          "text": "Do not chase Yone far when he uses Soul Unbound; he runs faster and snaps back to his body.",
+          "refs": [
+            { "kind": "champion", "key": "Yone", "start": 13, "end": 17 },
+            { "kind": "ability", "key": "Yone-E", "start": 35, "end": 47 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "top:Gragas:Yone:5",
+          "text": "Body Slam into Yone cuts its cooldown, so use it to start fights and not just to run away.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 0, "end": 9 },
+            { "kind": "champion", "key": "Yone", "start": 15, "end": 19 }
+          ],
+          "pWrong": 0.21
+        }
+      ],
+      "opponent": "Yone",
+      "comboRefs": [
+        {
+          "comboId": "top:Gragas:combo:1",
+          "note": "Body Slam and Barrel Roll go out together, so the stun and slow can catch Yone when he dashes in.",
+          "refs": [
+            { "kind": "ability", "key": "Gragas-E", "start": 0, "end": 9 },
+            { "kind": "ability", "key": "Gragas-Q", "start": 14, "end": 25 },
+            { "kind": "champion", "key": "Yone", "start": 74, "end": 78 }
+          ]
+        }
+      ]
+    }
+  ]
+}

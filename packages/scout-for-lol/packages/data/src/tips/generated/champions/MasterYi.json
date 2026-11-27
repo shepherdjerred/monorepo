@@ -1,0 +1,2901 @@
+{
+  "schemaVersion": 1,
+  "champion": "MasterYi",
+  "patch": "16.23.1",
+  "model": "claude-sonnet-5-5",
+  "promptVersion": "tips-4",
+  "general": [
+    {
+      "lane": "jungle",
+      "inputHash": "a58af2ab5fe4494193d9a8ffc34b35a410da0845bec54536233be7dae8089cf3",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:general:0",
+          "text": "Use Alpha Strike on monsters to clear camps faster; it deals bonus damage to them. Basic attacks between casts bring it back sooner.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MasterYi:general:1",
+          "text": "Cast Wuju Style before you start attacking a camp or an enemy, since it adds true damage to every attack while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 5, "end": 15 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:MasterYi:general:2",
+          "text": "Use Meditate to heal after a camp or a trade. It heals more the lower your health is, and you take less damage while channeling.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.01
+        },
+        {
+          "id": "jungle:MasterYi:general:3",
+          "text": "Do not use Meditate while Alpha Strike is in progress, because it is disabled then. Wuju Style and Highlander can still be cast.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 11, "end": 19 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 26, "end": 38 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 84, "end": 94 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 99, "end": 109 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MasterYi:general:4",
+          "text": "Save Alpha Strike for the fight itself. You can't be targeted while it runs, so it is a good way to jump in on a carry.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:MasterYi:general:5",
+          "text": "Activate Highlander when a fight starts. It removes slows, and each champion takedown makes it last longer and cuts your other cooldowns.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 9, "end": 19 },
+            { "kind": "keyword", "key": "slowed", "start": 52, "end": 57 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:MasterYi:general:6",
+          "text": "Stay away from enemies with stuns or roots, because Highlander does not protect you from them. Wait for them to use those skills before you dive in.",
+          "refs": [
+            { "kind": "keyword", "key": "rooted", "start": 37, "end": 42 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 52, "end": 62 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:MasterYi:general:7",
+          "text": "Keep hitting the same target to build up Double Strike. Every third attack strikes twice.",
+          "refs": [
+            {
+              "kind": "ability",
+              "key": "MasterYi-passive",
+              "start": 41,
+              "end": 54
+            }
+          ],
+          "pWrong": 0.52
+        }
+      ],
+      "combos": [
+        {
+          "id": "jungle:MasterYi:combo:0",
+          "name": "Alpha Strike exit direction",
+          "category": "trick",
+          "sequence": [{ "kind": "ability", "key": "MasterYi-Q" }],
+          "when": "Use it when you want to choose which side of the target you land on, such as to dodge a skillshot or step toward a wall.",
+          "whenRefs": [],
+          "text": "While you are vanished, click or right-click to pick the direction you reappear in from the target. Only your last command counts.",
+          "textRefs": []
+        }
+      ]
+    }
+  ],
+  "matchups": [
+    {
+      "lane": "jungle",
+      "inputHash": "e7755bcf6cda122550a964ddb14ac0b1c4f79249176af219079dad8f97e5960c",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Aatrox:0",
+          "text": "Cast Highlander when Aatrox's Infernal Chains is on cooldown; it clears any slow they put on you and you can't be slowed while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Aatrox", "start": 21, "end": 27 },
+            { "kind": "ability", "key": "Aatrox-W", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 76, "end": 80 },
+            { "kind": "keyword", "key": "slowed", "start": 114, "end": 120 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:MasterYi:Aatrox:1",
+          "text": "Use Alpha Strike as a dodge; you can't be targeted while it plays out, so cast it as The Darkin Blade comes down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Aatrox-Q", "start": 85, "end": 101 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:MasterYi:Aatrox:2",
+          "text": "Walk out of The Darkin Blade's edge or sideways; the knock up only comes from its sweetspot, so don't stand in it.",
+          "refs": [
+            { "kind": "ability", "key": "Aatrox-Q", "start": 12, "end": 28 },
+            { "kind": "keyword", "key": "knocked-up", "start": 53, "end": 61 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:MasterYi:Aatrox:3",
+          "text": "Fight Aatrox while Meditate is ready; it cuts the damage you take and heals you back up when he trades with you.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 6, "end": 12 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 19, "end": 27 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:MasterYi:Aatrox:4",
+          "text": "Aatrox heals when he hits you, so burst him with Wuju Style and Alpha Strike rather than trading slowly.",
+          "refs": [
+            { "kind": "champion", "key": "Aatrox", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 49, "end": 59 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 64, "end": 76 }
+          ],
+          "pWrong": 0.47
+        }
+      ],
+      "opponent": "Aatrox",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your Alpha Strike landing side lets you step away from Aatrox's Darkin Blade line.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 14, "end": 26 },
+            { "kind": "champion", "key": "Aatrox", "start": 64, "end": 70 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "56dc8dd5222d72706ed0366aded15e3a4e9449e9909f2677ed6c7289119eb792",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Ambessa:0",
+          "text": "Use Highlander when Ambessa tries to slow you with Lacerate; you cannot be slowed while it lasts and you can run her down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ambessa", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "ability", "key": "Ambessa-E", "start": 51, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 81 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:MasterYi:Ambessa:1",
+          "text": "Do not stand still in Meditate while Ambessa is close. Her Public Execution can still grab you from far away.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 22, "end": 30 },
+            { "kind": "champion", "key": "Ambessa", "start": 37, "end": 44 },
+            { "kind": "ability", "key": "Ambessa-R", "start": 59, "end": 75 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:MasterYi:Ambessa:2",
+          "text": "Jump away with Alpha Strike to dodge her big hits, since you cannot be targeted while you jump. Use a minion or another enemy as the target.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 15, "end": 27 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MasterYi:Ambessa:3",
+          "text": "Turn on Wuju Style just before you trade, so your attacks deal extra damage that armor cannot reduce.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:MasterYi:Ambessa:4",
+          "text": "Her Repudiation shield makes early trades poor, so wait until it is spent or on cooldown before you go in.",
+          "refs": [
+            { "kind": "ability", "key": "Ambessa-W", "start": 4, "end": 15 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Ambessa",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "02d1af632e644fa2330d70887e4b039a1a2364b68bcaf0f74d925f527f657ae0",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Amumu:0",
+          "text": "Stay away from Amumu while Curse of the Sad Mummy is ready; being stunned in his reach usually costs you the fight.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "Amumu-R", "start": 27, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 73 }
+          ],
+          "pWrong": 0.49
+        },
+        {
+          "id": "jungle:MasterYi:Amumu:1",
+          "text": "Highlander does not free you from a stun, so keep it for chasing, not for dodging Bandage Toss.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 0, "end": 10 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.33
+        },
+        {
+          "id": "jungle:MasterYi:Amumu:2",
+          "text": "Alpha Strike makes you untargetable, so use it to avoid Amumu's Bandage Toss or Curse of the Sad Mummy when you see it coming.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Amumu", "start": 56, "end": 61 },
+            { "kind": "ability", "key": "Amumu-Q", "start": 64, "end": 76 },
+            { "kind": "ability", "key": "Amumu-R", "start": 80, "end": 102 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:MasterYi:Amumu:3",
+          "text": "Amumu takes less physical damage from Tantrum, so do not expect easy trades. Pick on his allies and avoid a long fight with him.",
+          "refs": [
+            { "kind": "champion", "key": "Amumu", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Amumu-E", "start": 38, "end": 45 }
+          ],
+          "pWrong": 0.66
+        }
+      ],
+      "opponent": "Amumu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "33301643afbb7e8a191b7cc28d7947f83a7574e22a7bb5f56597fe9718c95c08",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Belveth:0",
+          "text": "Use Highlander when Bel'Veth tries to slow you down; you shrug off slows, so you can chase her or run away.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Belveth", "start": 20, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 72 }
+          ],
+          "pWrong": 0.06
+        },
+        {
+          "id": "jungle:MasterYi:Belveth:1",
+          "text": "Save Alpha Strike for after her Above and Below has been used; you vanish and can't be targeted while it plays out.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Belveth-W", "start": 32, "end": 47 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:MasterYi:Belveth:2",
+          "text": "Fight her before she gets Lavender stacks and her true form; her attack speed and damage grow the longer the game runs.",
+          "refs": [],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:MasterYi:Belveth:3",
+          "text": "Do not stand still in a long brawl with her; Royal Maelstrom gives her damage reduction and life steal, so burst her down instead.",
+          "refs": [
+            { "kind": "ability", "key": "Belveth-E", "start": 45, "end": 60 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Belveth",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "5b271e70c0be3aa013b414155b86f692204e70b6b8f57a521703ded6434370b7",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Brand:0",
+          "text": "Alpha Strike makes you untargetable while you dash, so use it to dodge Brand's Pyroclasm or Pillar of Flame once you see him commit.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Brand", "start": 71, "end": 76 },
+            { "kind": "ability", "key": "Brand-R", "start": 79, "end": 88 },
+            { "kind": "ability", "key": "Brand-W", "start": 92, "end": 107 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Brand:1",
+          "text": "Turn on Highlander before Brand casts Pyroclasm; you can't be slowed, so its slow does nothing to you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Brand", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Brand-R", "start": 38, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 62, "end": 68 },
+            { "kind": "keyword", "key": "slowed", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:MasterYi:Brand:2",
+          "text": "Brand's Sear stuns you if you are already ablaze, so don't stand in his line after he hits you with another spell. Step out of the fireball's path.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Brand-Q", "start": 8, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 13, "end": 18 },
+            { "kind": "keyword", "key": "ablaze", "start": 42, "end": 48 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:MasterYi:Brand:3",
+          "text": "Use Meditate to heal and cut damage when Brand's burn is ticking on you, but not while his stun is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Brand", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Brand:4",
+          "text": "Get on Brand fast and stay on him. He is squishy, and Wuju Style adds true damage to your attacks while you chase him down.",
+          "refs": [
+            { "kind": "champion", "key": "Brand", "start": 7, "end": 12 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 54, "end": 64 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Brand",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b4d7f2ab518c8b09459c8b4e0cb49b5270f412f88095efec18b26c3f8b29b30",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Briar:0",
+          "text": "Hold Alpha Strike until Briar has used Head Rush. While you vanish you can't be targeted, so you can dodge her stun and her forced attacks.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Briar", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Briar-Q", "start": 39, "end": 48 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:MasterYi:Briar:1",
+          "text": "Save Highlander for when Briar tries to slow you. It clears slows and keeps you free of them while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Briar", "start": 25, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 40, "end": 44 },
+            { "kind": "keyword", "key": "slowed", "start": 60, "end": 65 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:MasterYi:Briar:2",
+          "text": "Do not fight Briar while she is stunning you. Keep Meditate for when she is not close; it cuts the damage you take but she still heals from her bleed.",
+          "refs": [
+            { "kind": "champion", "key": "Briar", "start": 13, "end": 18 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 51, "end": 59 }
+          ],
+          "pWrong": 0.61
+        },
+        {
+          "id": "jungle:MasterYi:Briar:3",
+          "text": "Fight her when her Head Rush is on cooldown. Use Wuju Style at the start of the trade so your attacks deal extra true damage.",
+          "refs": [
+            { "kind": "ability", "key": "Briar-Q", "start": 19, "end": 28 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Briar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "fe265fe1acbbc66aa7e2a0a4035a74b2d5ecfdb6cfe01e3971d374703b4b4506",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Darius:0",
+          "text": "Do not fight Darius when he has stacked bleeds on you. Noxian Guillotine finishes you from far away, so back out of the fight before you are low.",
+          "refs": [
+            { "kind": "champion", "key": "Darius", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "Darius-R", "start": 55, "end": 72 }
+          ],
+          "pWrong": 0.96
+        },
+        {
+          "id": "jungle:MasterYi:Darius:1",
+          "text": "Highlander makes you immune to slows, so use it when Darius tries to chase you or slow you with Crippling Strike. It will not stop Apprehend from pulling you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 36 },
+            { "kind": "champion", "key": "Darius", "start": 53, "end": 59 },
+            { "kind": "keyword", "key": "slowed", "start": 82, "end": 86 },
+            { "kind": "ability", "key": "Darius-W", "start": 96, "end": 112 },
+            { "kind": "ability", "key": "Darius-E", "start": 131, "end": 140 }
+          ],
+          "pWrong": 0.77
+        },
+        {
+          "id": "jungle:MasterYi:Darius:2",
+          "text": "Wait until Apprehend is on cooldown before you jump in with Alpha Strike. Being pulled and knocked up in the middle of a fight will get you killed.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-E", "start": 11, "end": 20 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 60, "end": 72 },
+            { "kind": "keyword", "key": "knocked-up", "start": 91, "end": 101 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Darius:3",
+          "text": "Alpha Strike makes you untargetable, so use it to dodge Noxian Guillotine or to get out of Decimate's swing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Darius-R", "start": 56, "end": 73 },
+            { "kind": "ability", "key": "Darius-Q", "start": 91, "end": 99 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:MasterYi:Darius:4",
+          "text": "Stay out of Decimate's swing. Its heal is biggest when it hits several enemies, so do not stand next to your allies in a fight.",
+          "refs": [
+            { "kind": "ability", "key": "Darius-Q", "start": 12, "end": 20 }
+          ],
+          "pWrong": 0.3
+        }
+      ],
+      "opponent": "Darius",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "2427aa93cbc0c05f5eb6698621ff44287875356eb268acfb142c9965ce938338",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Diana:0",
+          "text": "Don't rely on Highlander to escape Moonfall. It stops Diana's slow, but she still pulls you in and the beam still lands on you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 14, "end": 24 },
+            { "kind": "ability", "key": "Diana-R", "start": 35, "end": 43 },
+            { "kind": "champion", "key": "Diana", "start": 54, "end": 59 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:MasterYi:Diana:1",
+          "text": "Use Alpha Strike to become untargetable when Diana dashes in with Lunar Rush, so you avoid her burst.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Diana", "start": 45, "end": 50 },
+            { "kind": "ability", "key": "Diana-E", "start": 66, "end": 76 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Diana:2",
+          "text": "Use Meditate when Diana commits her burst. It cuts the damage you take and heals you, but she can still reach you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Diana", "start": 18, "end": 23 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:MasterYi:Diana:3",
+          "text": "Hit Diana with Wuju Style attacks when she fights you, because it deals true damage that her shield doesn't absorb.",
+          "refs": [
+            { "kind": "champion", "key": "Diana", "start": 4, "end": 9 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 15, "end": 25 }
+          ],
+          "pWrong": 0.43
+        },
+        {
+          "id": "jungle:MasterYi:Diana:4",
+          "text": "Wait for Pale Cascade's shield to run out or be used up before you commit to a fight with Diana.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-W", "start": 9, "end": 21 },
+            { "kind": "champion", "key": "Diana", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MasterYi:Diana:5",
+          "text": "Sidestep Crescent Strike when you can. Being hit by it lets Diana reset Lunar Rush and chain onto you.",
+          "refs": [
+            { "kind": "ability", "key": "Diana-Q", "start": 9, "end": 24 },
+            { "kind": "champion", "key": "Diana", "start": 60, "end": 65 },
+            { "kind": "ability", "key": "Diana-E", "start": 72, "end": 82 }
+          ],
+          "pWrong": 0.1
+        }
+      ],
+      "opponent": "Diana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3a6b4b827154acea514a71090080ff93139b3ba387a737f066564c39e879f11a",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:DrMundo:0",
+          "text": "Cast Highlander before Dr. Mundo's Infected Bonesaw lands; with it active you can't be slowed, so you can still chase him.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "DrMundo", "start": 23, "end": 32 },
+            { "kind": "ability", "key": "DrMundo-Q", "start": 35, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 87, "end": 93 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:MasterYi:DrMundo:1",
+          "text": "Alpha Strike makes you untargetable as you jump, so use it to dodge the bonesaw's damage while closing in. Don't use it to run away from a fight you can't win.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:DrMundo:2",
+          "text": "Kill Dr. Mundo fast when you fight him, because if he gets time to use Maximum Dosage, he heals through your damage.",
+          "refs": [
+            { "kind": "champion", "key": "DrMundo", "start": 5, "end": 14 },
+            { "kind": "ability", "key": "DrMundo-R", "start": 71, "end": 85 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:MasterYi:DrMundo:3",
+          "text": "Wuju Style deals true damage, so turn it on before you hit him. It ignores his health and the sturdiness he gets from items.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 0, "end": 10 }
+          ],
+          "pWrong": 0.99
+        },
+        {
+          "id": "jungle:MasterYi:DrMundo:4",
+          "text": "Don't Meditate right next to him. His Heart Zapper hurts nearby enemies and heals him when he detonates it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 6, "end": 14 },
+            { "kind": "ability", "key": "DrMundo-W", "start": 38, "end": 50 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "DrMundo",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6e721738411b6aa0994ef8474193bf1c10ec4d25c1082520aa6f4ef208b87b41",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Ekko:0",
+          "text": "Use Highlander when Ekko's Timewinder or Parallel Convergence would slow you; you ignore slows, so you can still chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Ekko", "start": 20, "end": 24 },
+            { "kind": "ability", "key": "Ekko-Q", "start": 27, "end": 37 },
+            { "kind": "ability", "key": "Ekko-W", "start": 41, "end": 61 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:MasterYi:Ekko:1",
+          "text": "Don't chase Ekko once his Chronobreak is ready. He can rewind and undo your whole fight.",
+          "refs": [
+            { "kind": "champion", "key": "Ekko", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Ekko-R", "start": 26, "end": 37 }
+          ],
+          "pWrong": 0.74
+        },
+        {
+          "id": "jungle:MasterYi:Ekko:2",
+          "text": "Stay out of the Parallel Convergence circle when it lands. It stuns only if Ekko steps inside, so watch where he walks.",
+          "refs": [
+            { "kind": "ability", "key": "Ekko-W", "start": 16, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 62, "end": 67 },
+            { "kind": "champion", "key": "Ekko", "start": 76, "end": 80 }
+          ],
+          "pWrong": 1
+        },
+        {
+          "id": "jungle:MasterYi:Ekko:3",
+          "text": "Hold Alpha Strike until Ekko's stun zone is spent or you are clear of it. Alpha Strike disables movement for its whole cast.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Ekko", "start": 24, "end": 28 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 74, "end": 86 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:MasterYi:Ekko:4",
+          "text": "Use Meditate to cut damage when Ekko bursts you, but not while stunned or in range of Chronobreak's blast.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Ekko", "start": 32, "end": 36 },
+            { "kind": "ability", "key": "Ekko-R", "start": 86, "end": 97 }
+          ],
+          "pWrong": 0.68
+        }
+      ],
+      "opponent": "Ekko",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "560e5edb8f82933482c793730eb016108d73f5c5b42fb1d8005c69438cc17c9f",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Evelynn:0",
+          "text": "Cast Highlander when Evelynn's Allure lands on you; you cannot be slowed, so it removes the slow and speeds you up to run or chase.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Evelynn", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 31, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 72 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 96 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:MasterYi:Evelynn:1",
+          "text": "Evelynn's Allure shows an arrow toward her once the mark is fully formed, so look for it and move away before she gets the charm.",
+          "refs": [
+            { "kind": "champion", "key": "Evelynn", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Evelynn-W", "start": 10, "end": 16 }
+          ],
+          "pWrong": 0.89
+        },
+        {
+          "id": "jungle:MasterYi:Evelynn:2",
+          "text": "Stay near your minions or camps when you can; Alpha Strike can jump to them, and Evelynn is weak when she has to fight you head on.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 46, "end": 58 },
+            { "kind": "champion", "key": "Evelynn", "start": 81, "end": 88 }
+          ],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:MasterYi:Evelynn:3",
+          "text": "Save Alpha Strike for when she dives in with Last Caress or Whiplash; you cannot be targeted while it runs, so her single-target hits miss.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 45, "end": 56 },
+            { "kind": "ability", "key": "Evelynn-E", "start": 60, "end": 68 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:MasterYi:Evelynn:4",
+          "text": "Finish her off with Wuju Style attacks once she is low; Last Caress hits harder on low-health targets, so Evelynn will want to hit you before that.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 20, "end": 30 },
+            { "kind": "ability", "key": "Evelynn-R", "start": 56, "end": 67 },
+            { "kind": "champion", "key": "Evelynn", "start": 106, "end": 113 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Evelynn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3ee1bd56159398eabeaa380a64275116bfe91d5a1084ac8c4d070eb23f0690fd",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Fiddlesticks:0",
+          "text": "Wait for Fiddlesticks to use Reap or Terrify before you dive; without them he has little to stop you.",
+          "refs": [
+            {
+              "kind": "champion",
+              "key": "Fiddlesticks",
+              "start": 9,
+              "end": 21
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 29,
+              "end": 33
+            },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-Q",
+              "start": 37,
+              "end": 44
+            }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:MasterYi:Fiddlesticks:1",
+          "text": "Use Highlander when you engage so Reap can't slow you. Fear and silence can still stop you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-E",
+              "start": 34,
+              "end": 38
+            }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:MasterYi:Fiddlesticks:2",
+          "text": "Fiddlesticks can pretend to be an effigy; be wary of standing still in brush or near objectives where he may be hiding.",
+          "refs": [
+            { "kind": "champion", "key": "Fiddlesticks", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:MasterYi:Fiddlesticks:3",
+          "text": "Don't Meditate inside Bountiful Harvest range; he can interrupt you and heal off you. Alpha Strike out first if you need to escape.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 6, "end": 14 },
+            {
+              "kind": "ability",
+              "key": "Fiddlesticks-W",
+              "start": 22,
+              "end": 39
+            },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 86, "end": 98 }
+          ],
+          "pWrong": 0.97,
+          "hidden": true
+        }
+      ],
+      "opponent": "Fiddlesticks",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "49941cb1949d3b8e5f5a97834983c92e05e17c662943b8b57d99c165673e89cc",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Graves:0",
+          "text": "Cast Highlander before Graves can use Smoke Screen on you; while it is active you cannot be slowed, so the smoke will not catch you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Graves", "start": 23, "end": 29 },
+            { "kind": "ability", "key": "Graves-W", "start": 38, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:MasterYi:Graves:1",
+          "text": "Graves is strongest when you stand in front of him, so hit him with Alpha Strike and attack right away. Don't walk up in a straight line.",
+          "refs": [
+            { "kind": "champion", "key": "Graves", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:MasterYi:Graves:2",
+          "text": "Use Meditate once you are hurt and away from his shotgun, since it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:MasterYi:Graves:3",
+          "text": "Turn on Wuju Style before your first hit on Graves so your attacks deal extra true damage. His armor from Quickdraw will not reduce it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Graves", "start": 44, "end": 50 },
+            { "kind": "ability", "key": "Graves-E", "start": 106, "end": 115 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:MasterYi:Graves:4",
+          "text": "Alpha Strike makes you untargetable while you jump, so use it to dodge Collateral Damage when you see him aim it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Graves-R", "start": 71, "end": 88 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Graves",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6a846da21fdcb9c64a10703add2455dcd44baf984c921f8bb36962c411dc22b0",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Gwen:0",
+          "text": "Use Highlander before Gwen's Needlework lands; it clears slows from you and you can't be slowed while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Gwen", "start": 22, "end": 26 },
+            { "kind": "ability", "key": "Gwen-R", "start": 29, "end": 39 },
+            { "kind": "keyword", "key": "slowed", "start": 57, "end": 62 },
+            { "kind": "keyword", "key": "slowed", "start": 89, "end": 95 }
+          ],
+          "pWrong": 0.18
+        },
+        {
+          "id": "jungle:MasterYi:Gwen:1",
+          "text": "Don't chase Gwen when she is inside Hallowed Mist; she can't be targeted from outside it, so Alpha Strike has nothing to hit.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 12, "end": 16 },
+            { "kind": "ability", "key": "Gwen-W", "start": 36, "end": 49 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 93, "end": 105 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MasterYi:Gwen:2",
+          "text": "Wait out the Mist, which lasts only a short time, then jump in with Alpha Strike once she is targetable again.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 68, "end": 80 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:MasterYi:Gwen:3",
+          "text": "Turn on Wuju Style just before you fight her; the true damage ignores the armor she gains from Hallowed Mist.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Gwen-W", "start": 95, "end": 108 }
+          ],
+          "pWrong": 0.27
+        },
+        {
+          "id": "jungle:MasterYi:Gwen:4",
+          "text": "Take fights before Gwen has built up her attacks; she needs several hits to set up her damage.",
+          "refs": [
+            { "kind": "champion", "key": "Gwen", "start": 19, "end": 23 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Gwen",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "12872ae68390cf16b5828d606f91e905cb93565936da5f9141427dc7c0f325d8",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Hecarim:0",
+          "text": "Use Highlander when Hecarim fears or slows you; you shrug off slows, but his fear can still stop you, so save it for after the fear ends.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Hecarim", "start": 20, "end": 27 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:MasterYi:Hecarim:1",
+          "text": "Hold Meditate for when Hecarim's Spirit of Dread is on you; it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Hecarim", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Hecarim-W", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.71
+        },
+        {
+          "id": "jungle:MasterYi:Hecarim:2",
+          "text": "Use Alpha Strike to dodge Devastating Charge: you can't be targeted while you vanish, so cast it as he commits.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Hecarim-E", "start": 26, "end": 44 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:MasterYi:Hecarim:3",
+          "text": "Fight Hecarim before he builds speed; Wuju Style on, then focus him, because he is sturdy but you out-damage him in a long fight.",
+          "refs": [
+            { "kind": "champion", "key": "Hecarim", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 38, "end": 48 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:MasterYi:Hecarim:4",
+          "text": "Keep Alpha Strike ready for when Hecarim uses Onslaught of Shadows on your team, then jump to his squishy teammates away from the fear.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Hecarim", "start": 33, "end": 40 },
+            { "kind": "ability", "key": "Hecarim-R", "start": 46, "end": 66 }
+          ],
+          "pWrong": 0.83
+        }
+      ],
+      "opponent": "Hecarim",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "3370b4f658133594a9a8f40332da120c399944dcb89e08f4774b904f1ae15b9a",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Ivern:0",
+          "text": "Dodge nothing and trust Highlander: when Ivern's Triggerseed would slow you, activate it first, because you can't be slowed while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 24, "end": 34 },
+            { "kind": "champion", "key": "Ivern", "start": 41, "end": 46 },
+            { "kind": "ability", "key": "Ivern-E", "start": 49, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 71 },
+            { "kind": "keyword", "key": "slowed", "start": 117, "end": 123 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:MasterYi:Ivern:1",
+          "text": "Ivern's Rootcaller is his only way to hold you in place, so be ready to use Alpha Strike on a minion or monster to get away if you are rooted.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 76, "end": 88 },
+            { "kind": "keyword", "key": "rooted", "start": 135, "end": 141 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:MasterYi:Ivern:2",
+          "text": "Fight Ivern before Daisy is out. If she is on the field, go after Ivern or kill him fast, because her third hit on you knocks you up.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 6, "end": 11 },
+            { "kind": "champion", "key": "Ivern", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.7
+        },
+        {
+          "id": "jungle:MasterYi:Ivern:3",
+          "text": "Chase Ivern only when his Rootcaller is on cooldown. Dodge the vine and he has little left to stop Master Yi's damage.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "Ivern-Q", "start": 26, "end": 36 },
+            { "kind": "champion", "key": "MasterYi", "start": 99, "end": 108 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:MasterYi:Ivern:4",
+          "text": "Check brush before you walk in; Ivern's Brushmaker makes ambush spots and lets him and his allies hit harder from inside.",
+          "refs": [
+            { "kind": "champion", "key": "Ivern", "start": 32, "end": 37 },
+            { "kind": "ability", "key": "Ivern-W", "start": 40, "end": 50 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Ivern",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6de4a146949b7726f294b481a57d1c163885c8fb715ae82870bb4aed08a427ee",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:JarvanIV:0",
+          "text": "Stay out of the line between Jarvan and his Demacian Standard; Dragon Strike pulls him along it and knocks you up.",
+          "refs": [
+            { "kind": "ability", "key": "JarvanIV-E", "start": 44, "end": 61 },
+            { "kind": "ability", "key": "JarvanIV-Q", "start": 63, "end": 76 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:MasterYi:JarvanIV:1",
+          "text": "Use Highlander when Jarvan slows you with Golden Aegis; it clears slows and you ignore them while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 27, "end": 32 },
+            { "kind": "ability", "key": "JarvanIV-W", "start": 42, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.24
+        },
+        {
+          "id": "jungle:MasterYi:JarvanIV:2",
+          "text": "Do not rely on Highlander once Cataclysm lands; its walls still trap you, so save Alpha Strike to hop out onto a target outside.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 15, "end": 25 },
+            { "kind": "ability", "key": "JarvanIV-R", "start": 31, "end": 40 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 82, "end": 94 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:MasterYi:JarvanIV:3",
+          "text": "Use Meditate when Jarvan commits; it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.13
+        }
+      ],
+      "opponent": "JarvanIV",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d6b7759efec603662c744d0843d042b4f106965457f3edd028365a7c955d67ae",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Jax:0",
+          "text": "Wait until Counter Strike ends before you hit Jax; he dodges every basic attack during it, then stuns anyone close.",
+          "refs": [
+            { "kind": "ability", "key": "Jax-E", "start": 11, "end": 25 },
+            { "kind": "champion", "key": "Jax", "start": 46, "end": 49 },
+            { "kind": "keyword", "key": "stunned", "start": 96, "end": 101 }
+          ],
+          "pWrong": 0.56
+        },
+        {
+          "id": "jungle:MasterYi:Jax:1",
+          "text": "Do not rely on Alpha Strike to hit Jax while he is in Counter Strike; the strikes are dodged, though Alpha Strike still makes you untargetable.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Jax", "start": 35, "end": 38 },
+            { "kind": "ability", "key": "Jax-E", "start": 54, "end": 68 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 101, "end": 113 }
+          ],
+          "pWrong": 0.72
+        },
+        {
+          "id": "jungle:MasterYi:Jax:2",
+          "text": "Jax gets much stronger the longer he keeps hitting you. Use Alpha Strike to jump in and out in short bursts instead of trading blows.",
+          "refs": [
+            { "kind": "champion", "key": "Jax", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 60, "end": 72 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:MasterYi:Jax:3",
+          "text": "Turn on Highlander when Jax tries to slow or chase you; it clears slows and stops new ones, but not stuns.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Jax", "start": 24, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 },
+            { "kind": "keyword", "key": "stunned", "start": 100, "end": 105 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:MasterYi:Jax:4",
+          "text": "Use Meditate to reduce damage when Jax goes all in, but not if you are about to be stunned by Counter Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Jax", "start": 35, "end": 38 },
+            { "kind": "keyword", "key": "stunned", "start": 83, "end": 90 },
+            { "kind": "ability", "key": "Jax-E", "start": 94, "end": 108 }
+          ],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "Jax",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "61e421621c20174b1c6ec0c385c5d9b5d7ab0ff4a6781e5505d412dd035c14f9",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Jayce:0",
+          "text": "Use Highlander when Jayce knocks you back or slows you; you shrug off slows and can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Jayce", "start": 20, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 45, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 70, "end": 75 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:MasterYi:Jayce:1",
+          "text": "Jump on Jayce with Alpha Strike when he is in Cannon form and cannot swing back hard, then keep hitting him.",
+          "refs": [
+            { "kind": "champion", "key": "Jayce", "start": 8, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 19, "end": 31 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Jayce:2",
+          "text": "Turn on Wuju Style before you trade with Jayce; the true damage ignores the armor he gains in Hammer form.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Jayce", "start": 41, "end": 46 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:MasterYi:Jayce:3",
+          "text": "Save Meditate for when Jayce bursts you; it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Jayce", "start": 23, "end": 28 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Jayce",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "097a74780fb011abf0e3c3892526d84794d35430da88765bc133657a74b1b3d8",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Karthus:0",
+          "text": "Dive Karthus with Alpha Strike when he has no allies near; it makes you untargetable while you jump in, so his Lay Waste can't hit you mid-jump.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 18, "end": 30 },
+            { "kind": "ability", "key": "Karthus-Q", "start": 111, "end": 120 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:MasterYi:Karthus:1",
+          "text": "Turn on Highlander before you step into Wall of Pain; you can't be slowed, so the wall won't slow you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "ability", "key": "Karthus-W", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 67, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 93, "end": 97 }
+          ],
+          "pWrong": 0.37
+        },
+        {
+          "id": "jungle:MasterYi:Karthus:2",
+          "text": "Kill Karthus fully and walk away from his corpse. His spirit form keeps casting, and Defile hurts anyone standing close.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 5, "end": 12 },
+            { "kind": "ability", "key": "Karthus-E", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:MasterYi:Karthus:3",
+          "text": "Karthus is weak when caught by you up close. Hit him with Wuju Style active so your attacks deal extra true damage before he can fight back.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 58, "end": 68 }
+          ],
+          "pWrong": 0.76
+        },
+        {
+          "id": "jungle:MasterYi:Karthus:4",
+          "text": "Gank when Karthus is channeling Requiem; he can't move or cast other abilities while channeling.",
+          "refs": [
+            { "kind": "champion", "key": "Karthus", "start": 10, "end": 17 },
+            { "kind": "ability", "key": "Karthus-R", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.35
+        }
+      ],
+      "opponent": "Karthus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "76a1d0e593b5c50d75b436d1f46d0c24ae2560e09d65e3947abf3cfff31415bf",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Kayn:0",
+          "text": "Cast Highlander before Kayn can pin you down; you can't be slowed, so Blade's Reach no longer stops you from chasing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Kayn", "start": 23, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 59, "end": 65 },
+            { "kind": "ability", "key": "Kayn-W", "start": 70, "end": 83 }
+          ],
+          "pWrong": 0.86,
+          "hidden": true
+        },
+        {
+          "id": "jungle:MasterYi:Kayn:1",
+          "text": "Kayn's knock up from Blade's Reach still works on you in Darkin form, even during Highlander. Stay out of its line.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 0, "end": 4 },
+            { "kind": "keyword", "key": "knocked-up", "start": 7, "end": 15 },
+            { "kind": "ability", "key": "Kayn-W", "start": 21, "end": 34 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 82, "end": 92 }
+          ],
+          "pWrong": 0.55
+        },
+        {
+          "id": "jungle:MasterYi:Kayn:2",
+          "text": "Alpha Strike makes you untargetable, so use it to dodge Kayn's Umbral Trespass when he jumps onto you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 56, "end": 60 },
+            { "kind": "ability", "key": "Kayn-R", "start": 63, "end": 78 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MasterYi:Kayn:3",
+          "text": "Hit Kayn with Alpha Strike when he is in the open, then chase. He can only escape through walls for a short time once he is hurt.",
+          "refs": [
+            { "kind": "champion", "key": "Kayn", "start": 4, "end": 8 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 14, "end": 26 }
+          ],
+          "pWrong": 0.69
+        },
+        {
+          "id": "jungle:MasterYi:Kayn:4",
+          "text": "Use Meditate to heal and take less damage when Kayn commits to a fight. It is a good answer to his burst.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Kayn", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.17
+        }
+      ],
+      "opponent": "Kayn",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1cc056f0c260591dd5b144ea432c48b3b2dc17dd499a8defa23b551725fbd585",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Khazix:0",
+          "text": "Cast Highlander when Kha'Zix tries to slow you with Unseen Threat or an evolved Void Spike; you shrug off slows and run him down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Khazix", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            {
+              "kind": "ability",
+              "key": "Khazix-passive",
+              "start": 52,
+              "end": 65
+            },
+            { "kind": "ability", "key": "Khazix-W", "start": 80, "end": 90 },
+            { "kind": "keyword", "key": "slowed", "start": 106, "end": 111 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:MasterYi:Khazix:1",
+          "text": "Stay near your allies or minions when Kha'Zix is around. Taste Their Fear hits much harder on a lone target.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 38, "end": 45 },
+            { "kind": "ability", "key": "Khazix-Q", "start": 57, "end": 73 }
+          ],
+          "pWrong": 0.29
+        },
+        {
+          "id": "jungle:MasterYi:Khazix:2",
+          "text": "Use Meditate when Kha'Zix jumps on you; it cuts the damage you take and heals you, but do not start it while stunned or pinned in a kill.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Khazix", "start": 18, "end": 25 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:MasterYi:Khazix:3",
+          "text": "Chase Kha'Zix with Alpha Strike once Leap is on cooldown; he has no easy way out then.",
+          "refs": [
+            { "kind": "champion", "key": "Khazix", "start": 6, "end": 13 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 19, "end": 31 },
+            { "kind": "ability", "key": "Khazix-E", "start": 37, "end": 41 }
+          ],
+          "pWrong": 0.32
+        }
+      ],
+      "opponent": "Khazix",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c412dc87b1c3de66cd13d6b2cc9d0073eeb5a1316d0d9528ae737e44593101c",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Kindred:0",
+          "text": "Kindred is fragile, so jump on her with Alpha Strike and kill her before Wolf's Frenzy and Mounting Dread help her.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 40, "end": 52 },
+            { "kind": "ability", "key": "Kindred-W", "start": 73, "end": 86 },
+            { "kind": "ability", "key": "Kindred-E", "start": 91, "end": 105 }
+          ],
+          "pWrong": 0.86
+        },
+        {
+          "id": "jungle:MasterYi:Kindred:1",
+          "text": "Mounting Dread slows you, but Highlander removes slows and blocks new ones. Activate it when she tries to kite you.",
+          "refs": [
+            { "kind": "ability", "key": "Kindred-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "slowed", "start": 15, "end": 20 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 30, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 49, "end": 54 }
+          ],
+          "pWrong": 0.73
+        },
+        {
+          "id": "jungle:MasterYi:Kindred:2",
+          "text": "Stay in Meditate while Kindred's Lamb's Respite is up. Nobody inside can die, so save your burst until it ends.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 8, "end": 16 },
+            { "kind": "champion", "key": "Kindred", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Kindred-R", "start": 33, "end": 47 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:MasterYi:Kindred:3",
+          "text": "Don't chase Kindred inside the Wolf's Frenzy area. Wolf bites whoever she last attacked, so fight her when it is down.",
+          "refs": [
+            { "kind": "champion", "key": "Kindred", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Kindred-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.92
+        }
+      ],
+      "opponent": "Kindred",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "9fcdde40d4253fe6f8fc6ae45e4d4ba099e22ea5bdaa3a70653935a653c05b6b",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:LeeSin:0",
+          "text": "Hold Alpha Strike until Lee Sin has used Sonic Wave or Tempest, so you can dodge his kick setup and escape with the untargetable jump.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "LeeSin", "start": 24, "end": 31 }
+          ],
+          "pWrong": 0.85
+        },
+        {
+          "id": "jungle:MasterYi:LeeSin:1",
+          "text": "Turn on Highlander before Lee Sin's Tempest follow-up lands; you can't be slowed while it lasts, so Cripple won't stop your chase.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "LeeSin", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 74, "end": 80 }
+          ],
+          "pWrong": 0.93,
+          "hidden": true
+        },
+        {
+          "id": "jungle:MasterYi:LeeSin:2",
+          "text": "Lee Sin can still root you with Dragon's Rage, even in Highlander. Keep distance from him when his ultimate is ready.",
+          "refs": [
+            { "kind": "champion", "key": "LeeSin", "start": 0, "end": 7 },
+            { "kind": "keyword", "key": "rooted", "start": 18, "end": 22 },
+            { "kind": "ability", "key": "LeeSin-R", "start": 32, "end": 45 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 55, "end": 65 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MasterYi:LeeSin:3",
+          "text": "Use Meditate to cut damage when Lee Sin ganks or invades. It reduces damage and heals you, but you can't move while channeling.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "LeeSin", "start": 32, "end": 39 }
+          ],
+          "pWrong": 0.09
+        }
+      ],
+      "opponent": "LeeSin",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "7edffcaaf3267ffe51d0570019a729dfad8be49dce1befbeec078841a1c2f955",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Lillia:0",
+          "text": "Keep Highlander for when Lillia has used Swirlseed; it stops her slow, and her sleep is her best answer to you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Lillia", "start": 25, "end": 31 },
+            { "kind": "ability", "key": "Lillia-E", "start": 41, "end": 50 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 69 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:MasterYi:Lillia:1",
+          "text": "Do not run at Lillia while she is marked with her Lilting Lullaby ready; being put to sleep leaves you open to your whole enemy team.",
+          "refs": [
+            { "kind": "champion", "key": "Lillia", "start": 14, "end": 20 },
+            { "kind": "ability", "key": "Lillia-R", "start": 50, "end": 65 }
+          ],
+          "pWrong": 0.94
+        },
+        {
+          "id": "jungle:MasterYi:Lillia:2",
+          "text": "Use Alpha Strike on a minion to land at a safe distance when you expect Watch Out! Eep!",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Lillia-W", "start": 72, "end": 87 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Lillia",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "ff4f6db2f28a2cecc249b89e705878904018be22aa77ff5c8423852cca1f7af9",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:MonkeyKing:0",
+          "text": "Don't chase Wukong while Cyclone is spinning; it knocks you up. Wait for it to end, then start your fight.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 12, "end": 18 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 25, "end": 32 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MasterYi:MonkeyKing:1",
+          "text": "Use Alpha Strike on a minion or monster rather than Wukong if his clone is near. Strikes on the wrong target waste your damage.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 52, "end": 58 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:MasterYi:MonkeyKing:2",
+          "text": "Turn on Highlander when Wukong tries to run or to slow you down. It makes you immune to slows, so you can chase him.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 24, "end": 30 },
+            { "kind": "keyword", "key": "slowed", "start": 50, "end": 54 },
+            { "kind": "keyword", "key": "slowed", "start": 88, "end": 93 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MasterYi:MonkeyKing:3",
+          "text": "Use Meditate to take less damage when Wukong dives in. Don't start it while Cyclone is about to hit you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "MonkeyKing", "start": 38, "end": 44 },
+            { "kind": "ability", "key": "MonkeyKing-R", "start": 76, "end": 83 }
+          ],
+          "pWrong": 0.23
+        },
+        {
+          "id": "jungle:MasterYi:MonkeyKing:4",
+          "text": "Hit the real Wukong after Warrior Trickster. The clone deals reduced damage, so aim your attacks at the one that moved.",
+          "refs": [
+            { "kind": "champion", "key": "MonkeyKing", "start": 13, "end": 19 },
+            { "kind": "ability", "key": "MonkeyKing-W", "start": 26, "end": 43 }
+          ],
+          "pWrong": 0.56
+        }
+      ],
+      "opponent": "MonkeyKing",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a324396bf53bb938049578811ce2497dd0e2e43a1a5d3f56bd3897cac82579a8",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Naafiri:0",
+          "text": "Cast Highlander when Naafiri's Hounds' Pursuit hits you; you shake off the slow and can run her down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Naafiri", "start": 21, "end": 28 },
+            { "kind": "ability", "key": "Naafiri-R", "start": 31, "end": 46 },
+            { "kind": "keyword", "key": "slowed", "start": 75, "end": 79 }
+          ],
+          "pWrong": 0.64
+        },
+        {
+          "id": "jungle:MasterYi:Naafiri:1",
+          "text": "Use Alpha Strike on a Packmate or minion near Naafiri if you need to dodge her burst; you can't be targeted while it plays.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Naafiri", "start": 46, "end": 53 }
+          ],
+          "pWrong": 0.39
+        },
+        {
+          "id": "jungle:MasterYi:Naafiri:2",
+          "text": "Hold Meditate for when Naafiri bursts you; it cuts the damage you take and heals you while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 5, "end": 13 },
+            { "kind": "champion", "key": "Naafiri", "start": 23, "end": 30 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:MasterYi:Naafiri:3",
+          "text": "Switch on Wuju Style before you fight her; the extra true damage ignores her Armor.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 10, "end": 20 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Naafiri",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "b74c7e110fef37ea6621e2869e25a673d1523ea381814ed3c828bfdee2e718a7",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Nidalee:0",
+          "text": "Dodge Javelin Toss early; Nidalee's damage and her chase both start from that hit, and it hurts most from far away.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 26, "end": 33 }
+          ],
+          "pWrong": 0.26
+        },
+        {
+          "id": "jungle:MasterYi:Nidalee:1",
+          "text": "Use Highlander when Nidalee tries to slow or chase you; it clears slows and stops new ones.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Nidalee", "start": 20, "end": 27 },
+            { "kind": "keyword", "key": "slowed", "start": 37, "end": 41 },
+            { "kind": "keyword", "key": "slowed", "start": 66, "end": 71 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Nidalee:2",
+          "text": "Alpha Strike makes you untargetable, so use it to dodge her Pounce or Swipe when she jumps on you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:MasterYi:Nidalee:3",
+          "text": "Walk carefully through brush and near objectives; Bushwhack traps are invisible and hurt over time.",
+          "refs": [],
+          "pWrong": 0.03
+        },
+        {
+          "id": "jungle:MasterYi:Nidalee:4",
+          "text": "Hold Meditate for when she bursts you down. It cuts the damage you take and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 5, "end": 13 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Nidalee",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your landing side while vanished helps you step away from or past Nidalee's Javelin Toss.",
+          "refs": [
+            { "kind": "champion", "key": "Nidalee", "start": 75, "end": 82 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "323b742053c9090e09ad918bd567d1faf21ba1639c9945630f9b35fbffe19f05",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Nocturne:0",
+          "text": "Nocturne's Shroud of Darkness blocks the next enemy Ability. Bait it with a cheap spell first, and save Alpha Strike until it has run out.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Nocturne-W", "start": 11, "end": 29 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 104, "end": 116 }
+          ],
+          "pWrong": 0.25
+        },
+        {
+          "id": "jungle:MasterYi:Nocturne:1",
+          "text": "When Nocturne casts Unspeakable Horror on you, break the tether by getting out of range, or use Alpha Strike. Otherwise you are feared.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 20, "end": 38 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 96, "end": 108 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Nocturne:2",
+          "text": "Highlander stops Nocturne's slow from the end of Unspeakable Horror, but not the fear. Do not rely on it to save you from the tether.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 0, "end": 10 },
+            { "kind": "champion", "key": "Nocturne", "start": 17, "end": 25 },
+            { "kind": "ability", "key": "Nocturne-E", "start": 49, "end": 67 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MasterYi:Nocturne:3",
+          "text": "Stay near your team when Nocturne casts Paranoia. His dash cannot be stopped, so a lone Yi is an easy target.",
+          "refs": [
+            { "kind": "champion", "key": "Nocturne", "start": 25, "end": 33 },
+            { "kind": "ability", "key": "Nocturne-R", "start": 40, "end": 48 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:MasterYi:Nocturne:4",
+          "text": "Use Meditate to reduce Nocturne's burst when he jumps on you. You cannot cast it in the middle of Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Nocturne", "start": 23, "end": 31 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 98, "end": 110 }
+          ],
+          "pWrong": 0.29
+        }
+      ],
+      "opponent": "Nocturne",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "e2568fcfc498c9a6da6df056f87b9ce349ec58e57dc3f8e31da2aae9b07f13d3",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Nunu:0",
+          "text": "Stay out of Absolute Zero's slow if you can. Highlander cleanses slows and blocks new ones, so save it for when the blizzard starts.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-R", "start": 12, "end": 25 },
+            { "kind": "keyword", "key": "slowed", "start": 28, "end": 32 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 45, "end": 55 },
+            { "kind": "keyword", "key": "slowed", "start": 65, "end": 70 }
+          ],
+          "pWrong": 0.53
+        },
+        {
+          "id": "jungle:MasterYi:Nunu:1",
+          "text": "Do not run in a straight line from Biggest Snowball Ever!. Use Alpha Strike on a minion or monster to jump out of its path.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-W", "start": 35, "end": 57 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 63, "end": 75 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:MasterYi:Nunu:2",
+          "text": "Alpha Strike makes you untargetable, so use it to dodge Consume when you see Willump begin the bite.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Nunu-Q", "start": 56, "end": 63 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:MasterYi:Nunu:3",
+          "text": "Do not stand where Snowball Barrage can hit you. Being hit by all three slows you, and the delayed root can follow.",
+          "refs": [
+            { "kind": "ability", "key": "Nunu-E", "start": 19, "end": 35 },
+            { "kind": "keyword", "key": "rooted", "start": 99, "end": 103 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:MasterYi:Nunu:4",
+          "text": "Use Meditate to heal after a poke trade, not when you are about to be stunned. It is a channel that gets interrupted.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 70, "end": 77 }
+          ],
+          "pWrong": 0.11
+        }
+      ],
+      "opponent": "Nunu",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "6b4154244096438cd727b57ade47a1db6b2bec349d2bb0dd999839c2ca3c2a94",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Pantheon:0",
+          "text": "Don't stand in front of Pantheon while he braces Aegis Assault; he ignores damage from that side. Wait it out or step around behind him.",
+          "refs": [
+            { "kind": "champion", "key": "Pantheon", "start": 24, "end": 32 },
+            { "kind": "ability", "key": "Pantheon-E", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.13
+        },
+        {
+          "id": "jungle:MasterYi:Pantheon:1",
+          "text": "Turn on Highlander before Pantheon's Shield Vault lands so his Grand Starfall slow can't stop you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Pantheon", "start": 26, "end": 34 },
+            { "kind": "ability", "key": "Pantheon-W", "start": 37, "end": 49 },
+            { "kind": "ability", "key": "Pantheon-R", "start": 63, "end": 77 },
+            { "kind": "keyword", "key": "slowed", "start": 78, "end": 82 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:MasterYi:Pantheon:2",
+          "text": "Keep your health up. A thrown Comet Spear hits much harder on low-health targets.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-Q", "start": 30, "end": 41 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:MasterYi:Pantheon:3",
+          "text": "Use Meditate to take less damage when Pantheon jumps on you. Don't cast it into a stun and expect to move.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Pantheon", "start": 38, "end": 46 },
+            { "kind": "keyword", "key": "stunned", "start": 82, "end": 86 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:MasterYi:Pantheon:4",
+          "text": "When you see Grand Starfall start, move out of its area. Pantheon takes a while to land, so don't stay in it.",
+          "refs": [
+            { "kind": "ability", "key": "Pantheon-R", "start": 13, "end": 27 },
+            { "kind": "champion", "key": "Pantheon", "start": 57, "end": 65 }
+          ],
+          "pWrong": 0.05
+        }
+      ],
+      "opponent": "Pantheon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5f87494b1ab5f55d3931dc56ce1ab6600df1ffcf29b629c5d6e78d7fd5bf9e0",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Qiyana:0",
+          "text": "Use Alpha Strike on a minion or monster to close in when Qiyana is not alone; it also keeps you untargetable while you jump.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Qiyana", "start": 57, "end": 63 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:MasterYi:Qiyana:1",
+          "text": "Turn on Highlander before you fight her; you can't be slowed, so her river root-then-slow from Elemental Wrath / Edge of Ixtal only hurts if she lands it first.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "keyword", "key": "slowed", "start": 54, "end": 60 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 89 },
+            { "kind": "ability", "key": "Qiyana-Q", "start": 95, "end": 126 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Qiyana:2",
+          "text": "Her Supreme Display of Talent stuns, and Highlander does not stop stuns. Hold Alpha Strike to dodge it, since you are untargetable while jumping.",
+          "refs": [
+            { "kind": "ability", "key": "Qiyana-R", "start": 4, "end": 29 },
+            { "kind": "keyword", "key": "stunned", "start": 30, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 41, "end": 51 },
+            { "kind": "keyword", "key": "stunned", "start": 66, "end": 71 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 78, "end": 90 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:MasterYi:Qiyana:3",
+          "text": "Use Meditate to survive her burst when you are low; it heals more the lower you are and cuts the damage you take.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MasterYi:Qiyana:4",
+          "text": "Turn on Wuju Style before you start hitting her; the bonus true damage ignores her armor.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.18
+        }
+      ],
+      "opponent": "Qiyana",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your landing side while untargetable helps you avoid Qiyana's Edge of Ixtal slash or land away from her.",
+          "refs": [
+            { "kind": "champion", "key": "Qiyana", "start": 62, "end": 68 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "127cd725f31ce7ae0269024e1fd085e0d64554adf079933fea86f7dce1eb16d8",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Rammus:0",
+          "text": "Don't run in on Rammus when Defensive Ball Curl is up; attacking him hurts you. Look for other targets or wait for it to end.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 16, "end": 22 },
+            { "kind": "ability", "key": "Rammus-W", "start": 28, "end": 47 }
+          ],
+          "pWrong": 0.35
+        },
+        {
+          "id": "jungle:MasterYi:Rammus:1",
+          "text": "Keep your distance when Frenzying Taunt is ready. Being taunted stops you from picking your target and leaves you open to his team.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-E", "start": 24, "end": 39 }
+          ],
+          "pWrong": 0.46
+        },
+        {
+          "id": "jungle:MasterYi:Rammus:2",
+          "text": "Slows don't work on you during Highlander, so use it when Rammus's Powerball or Soaring Slam would otherwise catch you.",
+          "refs": [
+            { "kind": "keyword", "key": "slowed", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 31, "end": 41 },
+            { "kind": "champion", "key": "Rammus", "start": 58, "end": 64 },
+            { "kind": "ability", "key": "Rammus-Q", "start": 67, "end": 76 },
+            { "kind": "ability", "key": "Rammus-R", "start": 80, "end": 92 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:MasterYi:Rammus:3",
+          "text": "Rammus is a poor target for your damage, so use Alpha Strike on his squishier teammates instead.",
+          "refs": [
+            { "kind": "champion", "key": "Rammus", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 48, "end": 60 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:MasterYi:Rammus:4",
+          "text": "Powerball stuns and knocks back what it hits, so don't stand in his path while you're channeling Meditate.",
+          "refs": [
+            { "kind": "ability", "key": "Rammus-Q", "start": 0, "end": 9 },
+            { "kind": "keyword", "key": "stunned", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 97, "end": 105 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Rammus",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "60b5a6e0a69952b5238b420cd3ea31c00104d174586a60f8c073014881fba103",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:RekSai:0",
+          "text": "Cast Highlander when Rek'Sai's Unburrow knocks you up or she chases you; it clears slows, though it does not stop the knock up.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "RekSai", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "knocked-up", "start": 118, "end": 126 }
+          ],
+          "pWrong": 0.81
+        },
+        {
+          "id": "jungle:MasterYi:RekSai:1",
+          "text": "Use Alpha Strike to dodge Void Rush; it makes you untargetable, so time it for when she is about to land.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "RekSai-R", "start": 26, "end": 35 }
+          ],
+          "pWrong": 0.66
+        },
+        {
+          "id": "jungle:MasterYi:RekSai:2",
+          "text": "Use Meditate to survive her burst, but not while she is next to you with Furious Bite ready at full Fury.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:MasterYi:RekSai:3",
+          "text": "Her Prey Seeker lands on the first enemy it hits, so stay out of a straight line with her in the jungle.",
+          "refs": [],
+          "pWrong": 0.16
+        }
+      ],
+      "opponent": "RekSai",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "34240445be31829854a5996921ca81d35effc0ca92a70cdfaaa692e6b3aa1d60",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Rengar:0",
+          "text": "Stay out of brush when Rengar is near; he leaps from it, and he can leap on you while camouflaged.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 23, "end": 29 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Rengar:1",
+          "text": "Highlander makes you immune to slows, so use it when Rengar's Bola Strike would otherwise slow you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 0, "end": 10 },
+            { "kind": "keyword", "key": "slowed", "start": 31, "end": 36 },
+            { "kind": "champion", "key": "Rengar", "start": 53, "end": 59 },
+            { "kind": "ability", "key": "Rengar-E", "start": 62, "end": 73 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 94 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Rengar:2",
+          "text": "Rengar's Bola Strike roots instead of slowing when he has full Ferocity. Do not rely on Highlander then; fight when his Ferocity is low.",
+          "refs": [
+            { "kind": "champion", "key": "Rengar", "start": 0, "end": 6 },
+            { "kind": "ability", "key": "Rengar-E", "start": 9, "end": 20 },
+            { "kind": "keyword", "key": "rooted", "start": 21, "end": 26 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 88, "end": 98 }
+          ],
+          "pWrong": 0.34
+        },
+        {
+          "id": "jungle:MasterYi:Rengar:3",
+          "text": "Use Alpha Strike to dodge Rengar's leap or his burst; you cannot be targeted while it runs.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Rengar", "start": 26, "end": 32 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Rengar:4",
+          "text": "Use Meditate when Rengar jumps on you; the damage reduction cuts his burst. He can still cleanse or root you, so do not rely on it alone.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Rengar", "start": 18, "end": 24 }
+          ],
+          "pWrong": 0.51
+        }
+      ],
+      "opponent": "Rengar",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f7f03c19c278025bc09a3e6044ddf7df72847f628a1630001ca4bb70e7efb1f7",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Sejuani:0",
+          "text": "Cast Highlander before Sejuani's Glacial Prison or Winter's Wrath lands; it clears slows and stops new ones, though it won't save you from stuns.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Sejuani", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Sejuani-R", "start": 33, "end": 47 },
+            { "kind": "ability", "key": "Sejuani-W", "start": 51, "end": 65 },
+            { "kind": "keyword", "key": "stunned", "start": 139, "end": 144 }
+          ],
+          "pWrong": 0.95,
+          "hidden": true
+        },
+        {
+          "id": "jungle:MasterYi:Sejuani:1",
+          "text": "Alpha Strike makes you untargetable while you jump. Use it to dodge Permafrost when she has four stacks on you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 68, "end": 78 }
+          ],
+          "pWrong": 0.92
+        },
+        {
+          "id": "jungle:MasterYi:Sejuani:2",
+          "text": "Alpha Strike does not add Permafrost stacks to you. Do not chase her with melee allies beside her, because their attacks stack Permafrost.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 26, "end": 36 },
+            { "kind": "ability", "key": "Sejuani-E", "start": 127, "end": 137 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:MasterYi:Sejuani:3",
+          "text": "Sidestep Arctic Assault; it knocks you up and sets up her stun. Fight her when it is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "Sejuani-Q", "start": 9, "end": 23 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:MasterYi:Sejuani:4",
+          "text": "Use Meditate to heal and cut damage only when no stun is coming; it is useless once you are stunned.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "keyword", "key": "stunned", "start": 49, "end": 53 },
+            { "kind": "keyword", "key": "stunned", "start": 92, "end": 99 }
+          ],
+          "pWrong": 0.98
+        }
+      ],
+      "opponent": "Sejuani",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "17345b29bc189853eba30d65577f273c7f9f51c0a09d0568def0eaee8c1de29d",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Shaco:0",
+          "text": "Walk around Shaco's hidden boxes when you can. Stepping on one makes you feared and rooted, and Highlander won't stop that.",
+          "refs": [
+            { "kind": "champion", "key": "Shaco", "start": 12, "end": 17 },
+            { "kind": "keyword", "key": "rooted", "start": 84, "end": 90 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 96, "end": 106 }
+          ],
+          "pWrong": 0.19
+        },
+        {
+          "id": "jungle:MasterYi:Shaco:1",
+          "text": "Turn on Highlander when Shaco's Two-Shiv Poison slows you. It clears the slow and stops more from landing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Shaco", "start": 24, "end": 29 },
+            { "kind": "ability", "key": "Shaco-E", "start": 32, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 48, "end": 53 },
+            { "kind": "keyword", "key": "slowed", "start": 73, "end": 77 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Shaco:2",
+          "text": "Alpha Strike is a good answer when Shaco jumps in. You can't be targeted while it plays, and it lets you hit him and get away.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Shaco", "start": 35, "end": 40 }
+          ],
+          "pWrong": 0.83
+        },
+        {
+          "id": "jungle:MasterYi:Shaco:3",
+          "text": "Use Meditate to take less damage when Shaco bursts you. Start it before his damage lands, because you can't cast it during Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Shaco", "start": 38, "end": 43 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 123, "end": 135 }
+          ],
+          "pWrong": 0.05
+        },
+        {
+          "id": "jungle:MasterYi:Shaco:4",
+          "text": "Keep Wuju Style ready for a fight. Its true damage hurts Shaco no matter how much armor he has.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Shaco", "start": 57, "end": 62 }
+          ],
+          "pWrong": 0.34
+        }
+      ],
+      "opponent": "Shaco",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "359f66ec168c0dfbb8a317dcb9c6e2952e631d291be841fbdcee93805014503f",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Shyvana:0",
+          "text": "Cast Highlander when Shyvana slows you with Molten Burst; you shrug off slows and can run her down or escape.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Shyvana", "start": 21, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 29, "end": 34 },
+            { "kind": "ability", "key": "Shyvana-E", "start": 44, "end": 56 },
+            { "kind": "keyword", "key": "slowed", "start": 72, "end": 77 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:MasterYi:Shyvana:1",
+          "text": "Do not use Alpha Strike to dodge her Dragon's Descent. Hold it until she lands so you can jump on her afterward.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 11, "end": 23 },
+            { "kind": "ability", "key": "Shyvana-R", "start": 37, "end": 53 }
+          ],
+          "pWrong": 0.2
+        },
+        {
+          "id": "jungle:MasterYi:Shyvana:2",
+          "text": "Turn on Meditate when she bursts you down; it cuts the damage you take and heals you while you channel.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 8, "end": 16 }
+          ],
+          "pWrong": 0.07
+        },
+        {
+          "id": "jungle:MasterYi:Shyvana:3",
+          "text": "Fight her while she has little Dragon Fury. Without it she cannot transform, and Master Yi wins the early duel by hitting fast.",
+          "refs": [
+            { "kind": "champion", "key": "MasterYi", "start": 81, "end": 90 }
+          ],
+          "pWrong": 0.96
+        }
+      ],
+      "opponent": "Shyvana",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "83b0b37bec4a712c2700fc34301daffbbf89e528c400132d3997f09989463caa",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Skarner:0",
+          "text": "Cast Highlander before Skarner's Seismic Bastion or Shattered Earth lands; it clears slows and makes you immune to them while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Skarner", "start": 23, "end": 30 },
+            { "kind": "ability", "key": "Skarner-W", "start": 33, "end": 48 }
+          ],
+          "pWrong": 0.75
+        },
+        {
+          "id": "jungle:MasterYi:Skarner:1",
+          "text": "Skarner's Impale and Ixtal's Impact stop you cold, so keep Alpha Strike ready to dodge them. You cannot be targeted while it runs.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Skarner-R", "start": 10, "end": 16 },
+            { "kind": "ability", "key": "Skarner-E", "start": 21, "end": 35 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 59, "end": 71 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:MasterYi:Skarner:2",
+          "text": "Do not trade into Skarner for long. His attacks stack Quaking and hurt more the longer you stay, so burst him and leave, or heal with Meditate.",
+          "refs": [
+            { "kind": "champion", "key": "Skarner", "start": 18, "end": 25 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 134, "end": 142 }
+          ],
+          "pWrong": 0.98
+        },
+        {
+          "id": "jungle:MasterYi:Skarner:3",
+          "text": "Turn on Wuju Style before you start hitting Skarner. The bonus true damage ignores his tanky build.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Skarner", "start": 44, "end": 51 }
+          ],
+          "pWrong": 0.23
+        }
+      ],
+      "opponent": "Skarner",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "d5aee7021483634a3761ddec337f08473126c1c118b929062df7bda5aca4f345",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Sylas:0",
+          "text": "Cast Highlander before Sylas can slow you; it clears slows, though Abduct can still stun you, so keep Highlander for when his Abduct is on cooldown.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 23, "end": 28 },
+            { "kind": "keyword", "key": "slowed", "start": 33, "end": 37 },
+            { "kind": "keyword", "key": "slowed", "start": 53, "end": 58 },
+            { "kind": "keyword", "key": "stunned", "start": 84, "end": 88 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 102, "end": 112 }
+          ],
+          "pWrong": 0.79
+        },
+        {
+          "id": "jungle:MasterYi:Sylas:1",
+          "text": "Alpha Strike makes you untargetable while it runs, so use it to dodge Sylas's Kingslayer or Hijack if he commits to you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Sylas", "start": 70, "end": 75 },
+            { "kind": "ability", "key": "Sylas-W", "start": 78, "end": 88 },
+            { "kind": "ability", "key": "Sylas-R", "start": 92, "end": 98 }
+          ],
+          "pWrong": 0.51
+        },
+        {
+          "id": "jungle:MasterYi:Sylas:2",
+          "text": "Once Sylas has used Abduct, go in with Alpha Strike. He has no quick way to stop you.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 39, "end": 51 }
+          ],
+          "pWrong": 0.67
+        },
+        {
+          "id": "jungle:MasterYi:Sylas:3",
+          "text": "Do not meditate while Sylas has his spells ready; Meditate cuts damage and heals, but he can wait it out and burst you when it ends.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 7, "end": 15 },
+            { "kind": "champion", "key": "Sylas", "start": 22, "end": 27 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 50, "end": 58 }
+          ],
+          "pWrong": 0.54
+        },
+        {
+          "id": "jungle:MasterYi:Sylas:4",
+          "text": "Sylas can steal Highlander and use it himself, so do not hand him a free steal when you are far ahead and fighting him alone.",
+          "refs": [
+            { "kind": "champion", "key": "Sylas", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 16, "end": 26 }
+          ],
+          "pWrong": 0.25
+        }
+      ],
+      "opponent": "Sylas",
+      "comboRefs": [
+        {
+          "comboId": "jungle:MasterYi:combo:0",
+          "note": "Choosing your reappear side lets you step out of line of Abduct's thrown chains after Alpha Strike.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 86, "end": 98 }
+          ]
+        }
+      ]
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8c67a635421b8babfdc38e107dbcbe071fc2700b7acfb62d474d587a5def81ad",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Talon:0",
+          "text": "Save Highlander for when Talon uses Rake; it makes you immune to the slow, so you can keep chasing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Talon", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Talon-W", "start": 36, "end": 40 },
+            { "kind": "keyword", "key": "slowed", "start": 69, "end": 73 }
+          ],
+          "pWrong": 0.16
+        },
+        {
+          "id": "jungle:MasterYi:Talon:1",
+          "text": "Use Meditate to heal and take less damage when Talon bursts you, but only once his Noxian Diplomacy is spent.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Talon", "start": 47, "end": 52 },
+            { "kind": "ability", "key": "Talon-Q", "start": 83, "end": 99 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MasterYi:Talon:2",
+          "text": "Fight Talon with Wuju Style already active so your attacks add true damage the moment he engages.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 6, "end": 11 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 17, "end": 27 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:MasterYi:Talon:3",
+          "text": "Talon is fragile, so use Alpha Strike on him or a nearby target to dive in and hit him quickly.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 25, "end": 37 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:MasterYi:Talon:4",
+          "text": "Talon can vanish with Shadow Assault, so use Alpha Strike or Highlander's speed to stay on him.",
+          "refs": [
+            { "kind": "champion", "key": "Talon", "start": 0, "end": 5 },
+            { "kind": "ability", "key": "Talon-R", "start": 22, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 45, "end": 57 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 61, "end": 71 }
+          ],
+          "pWrong": 0.41
+        }
+      ],
+      "opponent": "Talon",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4dfb962eda832e66fd00c33c29bf9108e6d05c4f6d4edec380fd9c2bd1258402",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Trundle:0",
+          "text": "Don't fight Trundle inside his Frozen Domain; he hits much faster and runs faster there. Wait until he leaves it, or pull the fight elsewhere.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 12, "end": 19 },
+            { "kind": "ability", "key": "Trundle-W", "start": 31, "end": 44 }
+          ],
+          "pWrong": 0.1
+        },
+        {
+          "id": "jungle:MasterYi:Trundle:1",
+          "text": "Turn on Highlander before Trundle can slow you with Chomp or Pillar of Ice; it makes you immune to slows and clears any you already have.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Trundle", "start": 26, "end": 33 },
+            { "kind": "keyword", "key": "slowed", "start": 38, "end": 42 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 52, "end": 57 },
+            { "kind": "ability", "key": "Trundle-E", "start": 61, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 99, "end": 104 }
+          ],
+          "pWrong": 0.68
+        },
+        {
+          "id": "jungle:MasterYi:Trundle:2",
+          "text": "Don't Alpha Strike into a fight beside Trundle's Pillar of Ice without thinking. The pillar is terrain, so it can block your path and your escape.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 6, "end": 18 },
+            { "kind": "champion", "key": "Trundle", "start": 39, "end": 46 },
+            { "kind": "ability", "key": "Trundle-E", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.31
+        },
+        {
+          "id": "jungle:MasterYi:Trundle:3",
+          "text": "Trundle's Chomp lowers your Attack Damage, so don't trade for long. Use Meditate to heal and reduce damage once he has hit you.",
+          "refs": [
+            { "kind": "champion", "key": "Trundle", "start": 0, "end": 7 },
+            { "kind": "ability", "key": "Trundle-Q", "start": 10, "end": 15 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 72, "end": 80 }
+          ],
+          "pWrong": 0.36
+        },
+        {
+          "id": "jungle:MasterYi:Trundle:4",
+          "text": "Use Wuju Style right before you start hitting Trundle, since its bonus damage ignores his armor. His Subjugate adds armor to him, so true damage helps.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Trundle", "start": 46, "end": 53 },
+            { "kind": "ability", "key": "Trundle-R", "start": 101, "end": 110 }
+          ],
+          "pWrong": 0.62
+        }
+      ],
+      "opponent": "Trundle",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "f032ad35352cc24e6e49cd8eeda192b8d120823405bdcee3a7c8213c5e6b2cca",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Udyr:0",
+          "text": "Cast Highlander before Udyr's Wingborne Storm slows you; while it lasts you can't be slowed and you can run him down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Udyr", "start": 23, "end": 27 },
+            { "kind": "ability", "key": "Udyr-R", "start": 30, "end": 45 },
+            { "kind": "keyword", "key": "slowed", "start": 46, "end": 51 },
+            { "kind": "keyword", "key": "slowed", "start": 85, "end": 91 }
+          ],
+          "pWrong": 0.22
+        },
+        {
+          "id": "jungle:MasterYi:Udyr:1",
+          "text": "Udyr's Blazing Stampede attack stuns on contact, so don't stand in front of him when it is ready. Fight him when that stun has been used.",
+          "refs": [
+            { "kind": "champion", "key": "Udyr", "start": 0, "end": 4 },
+            { "kind": "ability", "key": "Udyr-E", "start": 7, "end": 23 },
+            { "kind": "keyword", "key": "stunned", "start": 31, "end": 36 },
+            { "kind": "keyword", "key": "stunned", "start": 118, "end": 122 }
+          ],
+          "pWrong": 0.15
+        },
+        {
+          "id": "jungle:MasterYi:Udyr:2",
+          "text": "Use Meditate when Udyr hits you hard; it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Udyr", "start": 18, "end": 22 }
+          ],
+          "pWrong": 0.08
+        },
+        {
+          "id": "jungle:MasterYi:Udyr:3",
+          "text": "Jump away with Alpha Strike when Udyr is closing in. You can't be targeted while you jump.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "Udyr", "start": 33, "end": 37 }
+          ],
+          "pWrong": 0.14
+        },
+        {
+          "id": "jungle:MasterYi:Udyr:4",
+          "text": "Turn on Wuju Style before you trade; the extra true damage ignores the Armor Udyr's shield-based build gives.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "Udyr", "start": 77, "end": 81 }
+          ],
+          "pWrong": 0.45
+        }
+      ],
+      "opponent": "Udyr",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "4516adbb422e92e229ad6b218895255cce9871372167f930cb7e0d0f1fb7d210",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Vi:0",
+          "text": "Keep Highlander ready for Vi's Cease and Desist; it cleanses slows but not the knock up, so don't count on it to save you once she has you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Vi", "start": 26, "end": 28 },
+            { "kind": "ability", "key": "Vi-R", "start": 31, "end": 47 },
+            { "kind": "keyword", "key": "knocked-up", "start": 79, "end": 87 }
+          ],
+          "pWrong": 0.47
+        },
+        {
+          "id": "jungle:MasterYi:Vi:1",
+          "text": "Alpha Strike makes you untargetable, so use it on a nearby minion or monster when Vi is about to dash at you with Vault Breaker.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "ability", "key": "Vi-Q", "start": 114, "end": 127 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:MasterYi:Vi:2",
+          "text": "Don't trade for long with Vi. Her third hit with Denting Blows cuts your Armor and speeds up her attacks.",
+          "refs": [
+            { "kind": "ability", "key": "Vi-W", "start": 49, "end": 62 }
+          ],
+          "pWrong": 0.04
+        },
+        {
+          "id": "jungle:MasterYi:Vi:3",
+          "text": "Use Meditate when Vi's burst is spent; it cuts the damage you take while you heal.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Vi", "start": 18, "end": 20 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Vi",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "1a4c66f5dcf711e5a8cb65cfccdcef962c514e942ff6fe765b4a91cd0a3259f9",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Viego:0",
+          "text": "Keep Highlander for when Viego has used Spectral Maw; the stun is the main thing that stops you, and Highlander does not remove it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Viego", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Viego-W", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "stunned", "start": 58, "end": 62 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 101, "end": 111 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:MasterYi:Viego:1",
+          "text": "Use Alpha Strike to dodge Viego's Heartbreaker or Spectral Maw; you cannot be targeted while you vanish.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Viego", "start": 26, "end": 31 },
+            { "kind": "ability", "key": "Viego-R", "start": 34, "end": 46 },
+            { "kind": "ability", "key": "Viego-W", "start": 50, "end": 62 }
+          ],
+          "pWrong": 0.48
+        },
+        {
+          "id": "jungle:MasterYi:Viego:2",
+          "text": "Kill Viego fast with Wuju Style on, since his Blade of the Ruined King heals him as he trades with you. Do not drag out a fight.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 21, "end": 31 },
+            { "kind": "ability", "key": "Viego-Q", "start": 46, "end": 70 }
+          ],
+          "pWrong": 0.4
+        },
+        {
+          "id": "jungle:MasterYi:Viego:3",
+          "text": "Hold Meditate for when he commits; it cuts the damage you take. Do not cast it while Spectral Maw is ready, as it can be stunned.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 5, "end": 13 },
+            { "kind": "ability", "key": "Viego-W", "start": 85, "end": 97 },
+            { "kind": "keyword", "key": "stunned", "start": 121, "end": 128 }
+          ],
+          "pWrong": 0.42
+        },
+        {
+          "id": "jungle:MasterYi:Viego:4",
+          "text": "When Viego kills someone, hit him before he consumes the wraith, since he is untargetable while winding up.",
+          "refs": [
+            { "kind": "champion", "key": "Viego", "start": 5, "end": 10 }
+          ],
+          "pWrong": 0.26
+        }
+      ],
+      "opponent": "Viego",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "03a79b6461b8711d36cba82f9421645578e9e90346808f6308cc5649a5c01b72",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Volibear:0",
+          "text": "Save Alpha Strike for when Volibear's Thundering Smash is spent; while it is up he can stun you the moment you land.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 5, "end": 17 },
+            { "kind": "champion", "key": "Volibear", "start": 27, "end": 35 },
+            { "kind": "ability", "key": "Volibear-Q", "start": 38, "end": 54 },
+            { "kind": "keyword", "key": "stunned", "start": 87, "end": 91 }
+          ],
+          "pWrong": 0.63
+        },
+        {
+          "id": "jungle:MasterYi:Volibear:1",
+          "text": "Do not count on Highlander to escape his Sky Splitter and Stormbringer. It stops you being slowed, but they still deal heavy damage.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 16, "end": 26 },
+            { "kind": "ability", "key": "Volibear-E", "start": 41, "end": 53 },
+            { "kind": "ability", "key": "Volibear-R", "start": 58, "end": 70 },
+            { "kind": "keyword", "key": "slowed", "start": 91, "end": 97 }
+          ],
+          "pWrong": 0.6
+        },
+        {
+          "id": "jungle:MasterYi:Volibear:2",
+          "text": "Use Meditate to cut the damage when Volibear jumps on you. Do not start it while he can stun you, because a stun interrupts it.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Volibear", "start": 36, "end": 44 }
+          ],
+          "pWrong": 0.44
+        },
+        {
+          "id": "jungle:MasterYi:Volibear:3",
+          "text": "Fight him away from his Frenzied Maul mark. Break off after he bites once, because the second hit heals him.",
+          "refs": [
+            { "kind": "ability", "key": "Volibear-W", "start": 24, "end": 37 }
+          ],
+          "pWrong": 0.93
+        },
+        {
+          "id": "jungle:MasterYi:Volibear:4",
+          "text": "Turn on Wuju Style before you trade, so your attacks deal true damage that his extra health does not reduce.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 }
+          ],
+          "pWrong": 0.49
+        }
+      ],
+      "opponent": "Volibear",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "05e22c50b7a0020809b6ef101ebc18f18799ea134f85cfd49590d67008a5cf9c",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Warwick:0",
+          "text": "Meditate won't save you once Infinite Duress lands, because you are suppressed. Stay out of his leap line while Alpha Strike is ready.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 0, "end": 8 },
+            { "kind": "ability", "key": "Warwick-R", "start": 29, "end": 44 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 112, "end": 124 }
+          ],
+          "pWrong": 0.82
+        },
+        {
+          "id": "jungle:MasterYi:Warwick:1",
+          "text": "Do not fight Warwick when you are low on health. Blood Hunt lets him sense you and chase you down fast.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 13, "end": 20 },
+            { "kind": "ability", "key": "Warwick-W", "start": 49, "end": 59 }
+          ],
+          "pWrong": 0.78
+        },
+        {
+          "id": "jungle:MasterYi:Warwick:2",
+          "text": "Use Alpha Strike on a nearby minion to dodge Jaws of the Beast; you cannot be targeted while you vanish.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "ability", "key": "Warwick-Q", "start": 45, "end": 62 }
+          ],
+          "pWrong": 0.45
+        },
+        {
+          "id": "jungle:MasterYi:Warwick:3",
+          "text": "Hit Warwick with Wuju Style attacks; true damage cuts through his damage reduction from Primal Howl.",
+          "refs": [
+            { "kind": "champion", "key": "Warwick", "start": 4, "end": 11 },
+            { "kind": "ability", "key": "MasterYi-E", "start": 17, "end": 27 },
+            { "kind": "ability", "key": "Warwick-E", "start": 88, "end": 99 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Warwick:4",
+          "text": "Back away when Primal Howl ends, because it makes you feared. Highlander does not stop fear, so stay out of range.",
+          "refs": [
+            { "kind": "ability", "key": "Warwick-E", "start": 15, "end": 26 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 62, "end": 72 }
+          ],
+          "pWrong": 0.28
+        }
+      ],
+      "opponent": "Warwick",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "16af7db5c26977817047456cf01b28b1d8819cb3557f68e4a2964ea962df90a3",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:XinZhao:0",
+          "text": "Do not rely on Alpha Strike to escape Xin Zhao; his charge and slow catch you quickly once you land.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 15, "end": 27 },
+            { "kind": "champion", "key": "XinZhao", "start": 38, "end": 46 }
+          ],
+          "pWrong": 0.52
+        },
+        {
+          "id": "jungle:MasterYi:XinZhao:1",
+          "text": "Use Meditate when Xin Zhao's attacks start landing; it cuts the damage you take and heals you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "XinZhao", "start": 18, "end": 26 }
+          ],
+          "pWrong": 0.02
+        },
+        {
+          "id": "jungle:MasterYi:XinZhao:2",
+          "text": "Keep Highlander for after Xin Zhao has used his knock up and slow; it makes you immune to slows.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "XinZhao", "start": 26, "end": 34 },
+            { "kind": "keyword", "key": "slowed", "start": 61, "end": 65 },
+            { "kind": "keyword", "key": "slowed", "start": 90, "end": 95 }
+          ],
+          "pWrong": 0.11
+        },
+        {
+          "id": "jungle:MasterYi:XinZhao:3",
+          "text": "Turn on Wuju Style before you trade with Xin Zhao; it adds true damage to your attacks.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-E", "start": 8, "end": 18 },
+            { "kind": "champion", "key": "XinZhao", "start": 41, "end": 49 }
+          ],
+          "pWrong": 0
+        }
+      ],
+      "opponent": "XinZhao",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "a5df1b3d8320d5a6b39f183114ca08d14dfe449c32fde2563e8c3d707f55aaec",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Zac:0",
+          "text": "Cast Highlander before Zac's Stretching Strikes lands; you can't be slowed, so his slow won't stop you from chasing.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zac", "start": 23, "end": 26 },
+            { "kind": "ability", "key": "Zac-Q", "start": 29, "end": 47 },
+            { "kind": "keyword", "key": "slowed", "start": 68, "end": 74 },
+            { "kind": "keyword", "key": "slowed", "start": 83, "end": 87 }
+          ],
+          "pWrong": 0.65
+        },
+        {
+          "id": "jungle:MasterYi:Zac:1",
+          "text": "Zac's Elastic Slingshot ends in a knock up and stun, so stay out of its landing zone once you see him charging.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zac-E", "start": 6, "end": 23 },
+            { "kind": "keyword", "key": "knocked-up", "start": 34, "end": 42 },
+            { "kind": "keyword", "key": "stunned", "start": 47, "end": 51 }
+          ],
+          "pWrong": 0.32
+        },
+        {
+          "id": "jungle:MasterYi:Zac:2",
+          "text": "Kill every bloblet when Zac splits apart; if any survive he comes back. Alpha Strike can hit several of them.",
+          "refs": [
+            { "kind": "champion", "key": "Zac", "start": 24, "end": 27 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 72, "end": 84 }
+          ],
+          "pWrong": 0.95
+        },
+        {
+          "id": "jungle:MasterYi:Zac:3",
+          "text": "Step on Zac's goo chunks so he can't heal from them, especially after he hits you with an ability.",
+          "refs": [{ "kind": "champion", "key": "Zac", "start": 8, "end": 11 }],
+          "pWrong": 0.97
+        },
+        {
+          "id": "jungle:MasterYi:Zac:4",
+          "text": "Use Alpha Strike to dodge Zac's Stretching Strikes or Elastic Slingshot; you can't be targeted while you jump.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 4, "end": 16 },
+            { "kind": "champion", "key": "Zac", "start": 26, "end": 29 },
+            { "kind": "ability", "key": "Zac-Q", "start": 32, "end": 50 },
+            { "kind": "ability", "key": "Zac-E", "start": 54, "end": 71 }
+          ],
+          "pWrong": 0.87
+        },
+        {
+          "id": "jungle:MasterYi:Zac:5",
+          "text": "Use Meditate to heal and take less damage when Zac's burst lands, but not while he's about to stun you.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zac", "start": 47, "end": 50 },
+            { "kind": "keyword", "key": "stunned", "start": 94, "end": 98 }
+          ],
+          "pWrong": 0.91
+        }
+      ],
+      "opponent": "Zac",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "15818a6d39c1381f06d8b3a3f7691244ea5080fe1bd7ad6501f5f939dfbbca1e",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Zed:0",
+          "text": "Cast Highlander when Zed slows you with Shadow Slash; it clears slows and stops new ones, so you can chase him down.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 5, "end": 15 },
+            { "kind": "champion", "key": "Zed", "start": 21, "end": 24 },
+            { "kind": "keyword", "key": "slowed", "start": 25, "end": 30 },
+            { "kind": "ability", "key": "Zed-E", "start": 40, "end": 52 },
+            { "kind": "keyword", "key": "slowed", "start": 64, "end": 69 }
+          ],
+          "pWrong": 0.9,
+          "hidden": true
+        },
+        {
+          "id": "jungle:MasterYi:Zed:1",
+          "text": "Zed's Death Mark makes him untargetable while he dives in. Use Meditate once the mark is on you to cut the damage when it triggers.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 0, "end": 3 },
+            { "kind": "ability", "key": "Zed-R", "start": 6, "end": 16 },
+            { "kind": "ability", "key": "MasterYi-W", "start": 63, "end": 71 }
+          ],
+          "pWrong": 0.8
+        },
+        {
+          "id": "jungle:MasterYi:Zed:2",
+          "text": "Stay close to Zed with Alpha Strike when his shadow is out. He is weaker right after Living Shadow, so jump on him then.",
+          "refs": [
+            { "kind": "champion", "key": "Zed", "start": 14, "end": 17 },
+            { "kind": "ability", "key": "MasterYi-Q", "start": 23, "end": 35 },
+            { "kind": "ability", "key": "Zed-W", "start": 85, "end": 98 }
+          ],
+          "pWrong": 0.58
+        },
+        {
+          "id": "jungle:MasterYi:Zed:3",
+          "text": "Alpha Strike makes you untargetable as you jump, so use it to dodge Zed's Razor Shuriken.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Zed", "start": 68, "end": 71 },
+            { "kind": "ability", "key": "Zed-Q", "start": 74, "end": 88 }
+          ],
+          "pWrong": 0.04
+        }
+      ],
+      "opponent": "Zed",
+      "comboRefs": []
+    },
+    {
+      "lane": "jungle",
+      "inputHash": "8b6b0000b446b4771a244db7f34b9eaf9c4741dce90feb94300cfdef6871708c",
+      "tips": [
+        {
+          "id": "jungle:MasterYi:Zyra:0",
+          "text": "Stepping on Zyra's seeds destroys them, so walk over them before she can turn them into plants.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 12, "end": 16 }
+          ],
+          "pWrong": 0.12
+        },
+        {
+          "id": "jungle:MasterYi:Zyra:1",
+          "text": "Use Highlander before you fight Zyra; her Vine Lashers can't leave you slowed while it lasts.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-R", "start": 4, "end": 14 },
+            { "kind": "champion", "key": "Zyra", "start": 32, "end": 36 },
+            { "kind": "keyword", "key": "slowed", "start": 71, "end": 77 }
+          ],
+          "pWrong": 0.21
+        },
+        {
+          "id": "jungle:MasterYi:Zyra:2",
+          "text": "Grasping Roots will leave you rooted, and Highlander doesn't stop that. Stay out of its line until it's used, then jump in.",
+          "refs": [
+            { "kind": "ability", "key": "Zyra-E", "start": 0, "end": 14 },
+            { "kind": "keyword", "key": "rooted", "start": 30, "end": 36 },
+            { "kind": "ability", "key": "MasterYi-R", "start": 42, "end": 52 }
+          ],
+          "pWrong": 0.17
+        },
+        {
+          "id": "jungle:MasterYi:Zyra:3",
+          "text": "Alpha Strike makes you untargetable while it plays out. Use it to get in on Zyra, and use it on a minion to land at a safe distance.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-Q", "start": 0, "end": 12 },
+            { "kind": "champion", "key": "Zyra", "start": 76, "end": 80 }
+          ],
+          "pWrong": 0.28
+        },
+        {
+          "id": "jungle:MasterYi:Zyra:4",
+          "text": "Zyra's plants are weak and expire quickly. Go for Zyra herself rather than chasing plants.",
+          "refs": [
+            { "kind": "champion", "key": "Zyra", "start": 0, "end": 4 },
+            { "kind": "champion", "key": "Zyra", "start": 50, "end": 54 }
+          ],
+          "pWrong": 0.41
+        },
+        {
+          "id": "jungle:MasterYi:Zyra:5",
+          "text": "Use Meditate to heal through Zyra's poke when you're hurt, but not while her root is ready.",
+          "refs": [
+            { "kind": "ability", "key": "MasterYi-W", "start": 4, "end": 12 },
+            { "kind": "champion", "key": "Zyra", "start": 29, "end": 33 },
+            { "kind": "keyword", "key": "poke", "start": 36, "end": 40 }
+          ],
+          "pWrong": 0.12
+        }
+      ],
+      "opponent": "Zyra",
+      "comboRefs": []
+    }
+  ]
+}
