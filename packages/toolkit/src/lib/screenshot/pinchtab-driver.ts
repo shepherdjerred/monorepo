@@ -24,21 +24,23 @@ import type { AuthFlow } from "./types.ts";
 const AGENT_ID = "toolkit-screenshot";
 
 /**
- * Login path per auth flow. Only one exists today; add entries here (not a
- * switch) when a second package needs its own dev-only login route.
+ * Login path per auth flow. Add entries here (not a switch) when another
+ * package needs its own local/fixture login route.
  */
 const AUTH_LOGIN_PATHS: Record<AuthFlow, string> = {
   "scout-dev-login": "/api/dev/login",
+  "streambot-preview-login": "/api/auth/discord/start",
 };
 
 /**
  * The path prefix each auth flow's post-login `returnTo` is constrained to.
  * Scout's `safeReturnTo` rewrites anything outside `/app/` back to `/app/`
- * (open-redirect guard), so a requested route outside this prefix can't
- * actually be reached through the login redirect.
+ * (open-redirect guard), while Streambot's preview OAuth permits any valid `/`
+ * route served by the web remote.
  */
 const AUTH_ROUTE_PREFIX: Record<AuthFlow, string> = {
   "scout-dev-login": "/app/",
+  "streambot-preview-login": "/",
 };
 
 /**

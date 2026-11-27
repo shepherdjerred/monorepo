@@ -2,6 +2,9 @@ import { z } from "zod/v4";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 import { validateRedditFeedPageUrl } from "./browser-reader.ts";
 
+const INITIAL_LOOKBACK_MS = 15 * 60_000;
+const RESCAN_HORIZON_MS = 30 * 60_000;
+
 const WindowSchema = z.strictObject({
   since: z.iso.datetime(),
   until: z.iso.datetime(),
@@ -35,18 +38,23 @@ export function redditCheckpointKey(subreddit: string, preview: boolean) {
 
 async function updateCheckpoint(
   input: RedditCheckpointInput,
-  change: (checkpoint: RedditScanCheckpoint) => RedditScanCheckpoint,
+  change: (
+    checkpoint: RedditScanCheckpoint,
+    existed: boolean,
+  ) => RedditScanCheckpoint,
 ) {
   const key = redditCheckpointKey(input.subreddit, input.preview);
   for (let attempt = 0; attempt < 5; attempt++) {
     const current = await input.store.read(key, RedditScanCheckpointSchema);
     const checkpoint: RedditScanCheckpoint = current?.value ?? {
       version: 1,
-      completedThrough: new Date(input.now - 15 * 60_000).toISOString(),
+      completedThrough: new Date(input.now - INITIAL_LOOKBACK_MS).toISOString(),
       pending: null,
       settled: {},
     };
-    const next = RedditScanCheckpointSchema.parse(change(checkpoint));
+    const next = RedditScanCheckpointSchema.parse(
+      change(checkpoint, current !== undefined),
+    );
     if (await input.store.put(key, next, current?.etag)) return next;
   }
   throw new Error("Concurrent Reddit scan checkpoint update did not settle");
@@ -55,7 +63,7 @@ async function updateCheckpoint(
 /** A pending sweep keeps its original end while older unread work expires at 24h. */
 export async function openRedditScanWindow(input: RedditCheckpointInput) {
   z.number().int().min(1).max(24).parse(input.maxAgeHours);
-  return await updateCheckpoint(input, (checkpoint) => {
+  return await updateCheckpoint(input, (checkpoint, existed) => {
     const cutoff = input.now - input.maxAgeHours * 3_600_000;
     const settled = Object.fromEntries(
       Object.entries(checkpoint.settled).filter(
@@ -77,7 +85,13 @@ export async function openRedditScanWindow(input: RedditCheckpointInput) {
         },
       };
     }
-    const since = Math.max(Date.parse(checkpoint.completedThrough), cutoff);
+    const completedThrough = Date.parse(checkpoint.completedThrough);
+    const since = Math.max(
+      cutoff,
+      existed
+        ? Math.min(completedThrough, input.now - RESCAN_HORIZON_MS)
+        : completedThrough,
+    );
     return {
       ...checkpoint,
       settled,

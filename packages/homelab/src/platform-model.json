@@ -334,11 +334,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "phoenix",
-      "namespace": "phoenix",
-      "exposure": "ingress"
-    },
-    {
       "host": "pinchtab",
       "namespace": "pinchtab",
       "exposure": "ingress"

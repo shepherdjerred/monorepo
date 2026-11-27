@@ -158,28 +158,3 @@ export function lakeSchemaFingerprintOf(tables: LakeTableColumns): string {
   }
   return hasher.digest("hex").slice(0, 16);
 }
-
-/**
- * The one schema this checkout migrates from: the lake before
- * `matches.participant_kind` and `matches.coverage` existed. A fold that
- * finds it published runs a full rebuild instead, so no fold mixes the two
- * physical layouts, and that rebuild accepts it as the build it replaces.
- *
- * This is a one-time allowance, not a bridge: no read names the columns the
- * predecessor lacks (`MATCH_MIGRATION_GATED_COLUMNS`) until Beta and Prod have
- * both published the rebuild. The follow-up deletes this constant and that
- * gate together.
- */
-export const LAKE_PREDECESSOR_SCHEMA_FINGERPRINT = "e086a72a1a8176aa";
-
-export type LakeSchemaStatus = "current" | "predecessor" | "unknown";
-
-/** How a published build's recorded fingerprint relates to this checkout. */
-export function lakeSchemaStatus(
-  fingerprint: string | undefined,
-): LakeSchemaStatus {
-  if (fingerprint === lakeSchemaFingerprint()) return "current";
-  return fingerprint === LAKE_PREDECESSOR_SCHEMA_FINGERPRINT
-    ? "predecessor"
-    : "unknown";
-}

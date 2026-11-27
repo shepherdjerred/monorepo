@@ -1,3 +1,24 @@
+import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
+
+export const NEVER_ABORT: AbortSignal = new AbortController().signal;
+
+/** Build a local integration test config honoring FFMPEG_PATH / FFPROBE_PATH overrides. */
+export function loadIntegrationConfig(): ReturnType<typeof loadConfig> {
+  const ffmpegPath = Bun.env["FFMPEG_PATH"];
+  const ffprobePath = Bun.env["FFPROBE_PATH"];
+  return loadConfig({
+    BOT_TOKEN: "bot-token",
+    USER_TOKENS: "user-token",
+    VIDEOS_DIR: "/tmp/videos",
+    ...(ffmpegPath === undefined || ffmpegPath === ""
+      ? {}
+      : { FFMPEG_PATH: ffmpegPath }),
+    ...(ffprobePath === undefined || ffprobePath === ""
+      ? {}
+      : { FFPROBE_PATH: ffprobePath }),
+  });
+}
+
 /**
  * Run a command to completion, failing loudly with its stderr.
  *

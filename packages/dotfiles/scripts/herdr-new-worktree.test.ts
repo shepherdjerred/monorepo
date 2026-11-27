@@ -276,12 +276,11 @@ test("when sendMessage is false, branch and tab are still named from description
     machine: "",
     focus: false,
     name: "Fix the cache",
-    tab: "Fix the cache",
     argv: ["brim", "--provider", "kimi", "--"],
   });
 });
 
-test("creates a fresh branch and opens the space on the right machine", async () => {
+test("creates a fresh branch and named space on the right machine with the default tab", async () => {
   const fake = fakeRuntime({}, ["fix-cache"]);
   const outcome = await createWorktree(
     { ...base, machine: "mac-mini" },
@@ -307,7 +306,6 @@ test("creates a fresh branch and opens the space on the right machine", async ()
       machine: "mac-mini",
       focus: false,
       name: "Fix the cache",
-      tab: "Fix the cache",
       argv: ["brim", "--provider", "codex", "--", "--"],
       task: "- fix the cache",
     },

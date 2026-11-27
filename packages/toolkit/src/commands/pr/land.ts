@@ -3,7 +3,7 @@ import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request
 import { GitHubClient, resolvePrNumber } from "#lib/ci/github.ts";
 import { RESUME_SPREAD_MS } from "#lib/ci/github/budget.ts";
 import { sleep } from "#lib/ci/wait/sleep.ts";
-import { githubToken, tryGithubToken } from "#lib/ci/process.ts";
+import { githubToken } from "#lib/ci/process.ts";
 import { loadWoodpeckerConfig } from "#lib/woodpecker/ci.ts";
 import { CiObserver } from "#lib/ci/observer.ts";
 import { EXIT_CODES, type Snapshot, type Verdict } from "#lib/ci/readiness.ts";
@@ -14,12 +14,15 @@ import {
   resultReport,
 } from "#lib/ci/output.ts";
 import { sanitizeText } from "#lib/ci/redaction.ts";
-import {
-  buildPassthroughInvocation,
-  lookupExecutable,
-} from "#lib/passthrough.ts";
-import { populateGitSpiceEnvironment } from "#lib/git-spice/env.ts";
 import { waitForPr, withCancellation } from "#commands/ci.ts";
+import {
+  formatMergeStderr,
+  preflightGitSpiceLand,
+  prepareGitSpiceMerge,
+  spawnGitSpiceMergeProcess,
+  type MergePreparation,
+  type MergeTarget,
+} from "./land-git-spice.ts";
 
 export type LandOptions = {
   json: boolean;
@@ -61,75 +64,22 @@ export function gitSpiceMergeArgs(branch: string): string[] {
   ];
 }
 
-async function teeStreamToStderr(
-  stream: ReadableStream<Uint8Array>,
-  captured?: string[],
-): Promise<void> {
-  const decoder = new TextDecoder();
-  for await (const chunk of stream) {
-    process.stderr.write(chunk);
-    captured?.push(decoder.decode(chunk, { stream: true }));
-  }
-  captured?.push(decoder.decode());
-}
-
 export function createGitSpiceMerge(
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): MergeBranch {
-  return async (branch, signal) => {
-    signal.throwIfAborted();
-    const existing = environment["GH_TOKEN"]?.trim();
-    const resolved =
-      existing !== undefined && existing.length > 0
-        ? existing
-        : await tryGithubToken({ ...environment });
-    const args = gitSpiceMergeArgs(branch);
-    const env = await populateGitSpiceEnvironment(args, {
-      ...environment,
-      ...(resolved === null ? {} : { GH_TOKEN: resolved }),
+  return (branch, signal) =>
+    spawnGitSpiceMergeProcess({
+      args: gitSpiceMergeArgs(branch),
+      signal,
+      environment,
     });
-    const invocation = buildPassthroughInvocation("git-spice", args, env);
-    if (invocation === null) {
-      throw new Error("git-spice passthrough is missing");
-    }
-    const executable = lookupExecutable(
-      invocation.executable,
-      invocation.env["PATH"],
-    );
-    if (executable === null) {
-      throw new Error(
-        `toolkit: required executable not found: ${invocation.executable}`,
-      );
-    }
-    signal.throwIfAborted();
-    const child = Bun.spawn([executable, ...invocation.args], {
-      env: invocation.env,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const abort = () => {
-      child.kill();
-    };
-    signal.addEventListener("abort", abort, { once: true });
-    try {
-      const stderrChunks: string[] = [];
-      const outcomes = await Promise.all([
-        teeStreamToStderr(child.stdout),
-        teeStreamToStderr(child.stderr, stderrChunks),
-        child.exited,
-      ]);
-      return { code: outcomes[2], stderr: stderrChunks.join("") };
-    } finally {
-      signal.removeEventListener("abort", abort);
-    }
-  };
 }
 
 export const mergeWithGitSpice: MergeBranch = createGitSpiceMerge();
 
 const HeadSchema = z.object({
   head: z.object({ ref: z.string(), sha: z.string() }),
+  base: z.object({ ref: z.string() }).optional(),
 });
 
 function landed(result: WaitResult, verdict: Verdict): WaitResult {
@@ -145,6 +95,12 @@ export const MERGE_GRAPHQL_RESERVE = 200;
 export type LandDependencies = {
   wait: typeof waitForPr;
   merge: MergeBranch;
+  /** Checks local git-spice bootstrap prerequisites before entering CI wait. */
+  preflight?: ((signal: AbortSignal) => Promise<void>) | undefined;
+  /** Validates local branch sync and retargets stale stack bases before merge. */
+  prepareMerge?:
+    | ((target: MergeTarget, signal: AbortSignal) => Promise<MergePreparation>)
+    | undefined;
   /**
    * Epoch ms to wait until before merging when the GraphQL bucket cannot
    * cover a merge, or null when it can. `fresh` skips recent observations.
@@ -273,12 +229,15 @@ function failedOutcome(
   number: number,
   result: WaitResult,
   code: number,
+  stderr = "",
 ): LandOutcome {
+  const detail = formatMergeStderr(stderr);
   return {
     result: landed(result, {
       outcome: "merge_failed",
       reasons: [
         `Toolkit reported PR #${String(number)} ready, but git-spice branch merge exited ${String(code)} and the PR is not merged. Its output is above on stderr.`,
+        ...(detail === null ? [] : [detail]),
       ],
       commands: [
         `toolkit pr health ${String(number)}`,
@@ -345,6 +304,29 @@ async function attemptMerge(
       },
     };
   }
+  if (context.dependencies.prepareMerge !== undefined) {
+    const preparation = await context.dependencies.prepareMerge(
+      {
+        number,
+        branch: current.head.ref,
+        headSha: ready.pr.head.sha,
+        baseRef: current.base?.ref ?? ready.pr.base.ref,
+      },
+      signal,
+    );
+    if (!preparation.ok) {
+      return {
+        done: {
+          result: landed(result, {
+            outcome: "merge_failed",
+            reasons: preparation.reasons,
+            commands: preparation.commands,
+          }),
+          mergeCommitSha: null,
+        },
+      };
+    }
+  }
   console.error(
     `PR #${String(number)} is ready; merging ${current.head.ref} with git-spice.`,
   );
@@ -360,7 +342,7 @@ async function attemptMerge(
       done: mergedOutcome(number, result, after.merge_commit_sha, code),
     };
   }
-  const failed = failedOutcome(number, result, code);
+  const failed = failedOutcome(number, result, code, stderr);
   if (
     canRetryTransportFailure({
       code,
@@ -445,6 +427,7 @@ export async function landPr(
   const pause = dependencies.pause ?? pauseForQuota;
   const mainPolicy = options.allowRedMain ? "ignore" : "require";
   const retryState: RetryState = { quotaRetried: false, transportRetries: 0 };
+  await dependencies.preflight?.(signal);
   let head = options.head;
   for (;;) {
     const timeoutMs =
@@ -504,13 +487,29 @@ export async function landCommand(
     ]);
     secrets.push(token, config.token);
     const observer = new CiObserver(GitHubClient.shared(token), config);
-    const merger =
-      merge ?? createGitSpiceMerge({ ...Bun.env, GH_TOKEN: token });
+    const mergeEnv = { ...Bun.env, GH_TOKEN: token };
+    const merger = merge ?? createGitSpiceMerge(mergeEnv);
     await withCancellation(async (signal) => {
       const { result, mergeCommitSha } = await landPr(
         { number, observer, signal },
         options,
-        { wait: waitForPr, merge: merger },
+        {
+          wait: waitForPr,
+          merge: merger,
+          ...(merge === undefined
+            ? {
+                preflight: (read) =>
+                  preflightGitSpiceLand({
+                    number,
+                    observer,
+                    signal: read,
+                    env: mergeEnv,
+                  }),
+                prepareMerge: (target, read) =>
+                  prepareGitSpiceMerge(target, read, { env: mergeEnv }),
+              }
+            : {}),
+        },
       );
       const report = {
         ...(await resultReport(result, observer, signal)),

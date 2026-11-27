@@ -21,7 +21,7 @@ import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/
  * apps to this set — all new clusters render `zfs-ssd-lz4` from creation.
  */
 export const GRANDFATHERED_ZFS_SSD_POSTGRES_APPS: ReadonlySet<string> = new Set(
-  ["bugsink", "delivery", "golink", "media", "phoenix", "tasknotes", "tracker"],
+  ["bugsink", "delivery", "golink", "media", "tasknotes", "tracker"],
 );
 
 type SingleAppPostgreSQLOptions = {
@@ -98,7 +98,7 @@ export function createSingleAppPostgreSQL(
         [database]: app,
       },
       resources: {
-        // Measured p95 working set (7d, 2026-10-31) across phoenix, bugsink,
+        // Measured p95 working set (7d, 2026-10-31) across bugsink,
         // delivery and tracker is 154-237Mi with 128MB shared_buffers.
         requests: {
           cpu: "50m",

@@ -43,6 +43,16 @@ region = us-east-1
 credential_process = {{ $toolkit }} aws credential agent-share
 {{- end }}
 
+[profile r2-archives]
+endpoint_url = https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com
+region = auto
+credential_process = {{ $toolkit }} aws credential r2-archives
+
+[profile r2]
+endpoint_url = https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com
+region = auto
+credential_process = {{ $toolkit }} aws credential r2-archives
+
 [profile aws]
 login_session = arn:aws:iam::926367030076:root
 region = us-east-1

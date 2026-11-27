@@ -50,6 +50,7 @@ export const V1_CATALOG_MIGRATION: CatalogMigration = {
     "turbo-cache/prod",
     "gradle-build-cache/prod",
     "freshrss/prod",
+    "phoenix/prod",
   ],
 };
 type Lifecycle = "active" | "retired" | "removed";

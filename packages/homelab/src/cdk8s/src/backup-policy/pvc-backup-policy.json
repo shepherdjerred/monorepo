@@ -228,12 +228,6 @@
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
-    "namespace": "phoenix",
-    "name": "pgdata-phoenix-postgresql-0",
-    "backup": "enabled",
-    "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
-  },
-  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",

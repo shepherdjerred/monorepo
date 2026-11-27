@@ -26,6 +26,7 @@ import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 import "#styles/engineering.css";
 import { Identifier } from "#client/visuals/identifier.tsx";
+import { MonorepoCodeReviewSection } from "./monorepo-code-review-section.tsx";
 
 function hitRatioSeverity(ratio: number | null): Severity {
   if (ratio === null || !Number.isFinite(ratio)) {
@@ -398,6 +399,13 @@ function MonorepoBody({
       </div>
 
       <AuditsStrip audits={monorepo.audits} />
+
+      {monorepo.codeReview === undefined ? null : (
+        <MonorepoCodeReviewSection
+          codeReview={monorepo.codeReview}
+          range={range}
+        />
+      )}
 
       <h2 className="block-heading">Expensive & cache-missing tasks</h2>
       <DataTable

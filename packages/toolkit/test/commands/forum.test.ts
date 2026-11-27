@@ -53,6 +53,7 @@ function createForumFixture() {
           data: {
             id: postUuid,
             identifier: "FM-12",
+            revision: 3,
             kind: "notice",
             state: "open",
             title: "Repairing main",
@@ -699,4 +700,250 @@ test("watchForum --timeout-sec rejects cleanly when no matching event arrives", 
   await expect(
     watchForum(context, [], parseForumArgs(["--until-resolved"]).values),
   ).rejects.toThrow("--until-resolved requires a post ID");
+});
+
+test("watchForum --until-resolved reconnects across SSE drops and transient 5xx rollout errors, deduplicates eventIds, and fails fast on 4xx (AI-830)", async () => {
+  let streamAttempts = 0;
+  let currentState: "open" | "resolved" = "open";
+  const byIdQueries: string[] = [];
+  const lines: string[] = [];
+  const encoder = new TextEncoder();
+
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/events/stream") {
+        streamAttempts += 1;
+        if (streamAttempts === 1) {
+          const firstStream = new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(
+                encoder.encode(
+                  'event: resync\ndata: {"type":"resync"}\nretry: 3000\n\n',
+                ),
+              );
+              controller.enqueue(
+                encoder.encode(
+                  sseChangeFrame({
+                    eventId: "ev-dup",
+                    entityType: "forum-reply",
+                    entityId: postUuid,
+                    action: "created",
+                    occurredAt: "2026-11-15T01:03:00.000Z",
+                  }),
+                ),
+              );
+              setTimeout(() => {
+                currentState = "resolved";
+                controller.close();
+              }, 20);
+            },
+          });
+          return new Response(firstStream, {
+            headers: { "Content-Type": "text/event-stream" },
+          });
+        }
+        return streamAttempts === 2
+          ? new Response("Bad Gateway", { status: 502 })
+          : createSseStreamResponse();
+      }
+      const received = await trackerRequest(request);
+      const input = ByIdInputSchema.parse(received.input);
+      byIdQueries.push(input.id);
+      return Response.json({
+        result: { data: buildWatchedPostData(input.id, currentState) },
+      });
+    },
+  });
+  servers.push(server);
+
+  await watchForum(
+    testForumContext(server).context,
+    ["fm-12"],
+    parseForumArgs(["--until-resolved", "--json"]).values,
+    {
+      writeLine: (line) => lines.push(line),
+      initialReconnectDelayMs: 10,
+      maxReconnectDelayMs: 40,
+    },
+  );
+
+  expect(streamAttempts).toBe(3);
+  expect(byIdQueries).toEqual(["FM-12", postUuid, "FM-12"]);
+  expect(lines).toHaveLength(2);
+  expect(JSON.parse(lines[0] ?? "{}")).toMatchObject({
+    event: { eventId: "ev-dup", action: "created" },
+    post: { state: "open" },
+  });
+  expect(JSON.parse(lines[1] ?? "{}")).toMatchObject({
+    event: { action: "already-resolved" },
+    post: { state: "resolved" },
+  });
+
+  // Subsequent mid-stream resync and duplicate eventId deduplication
+  const resyncLines: string[] = [];
+  let secondState: "open" | "resolved" = "open";
+  const resyncServer = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const url = new URL(request.url);
+      if (url.pathname === "/api/events/stream") {
+        return createSseStreamResponse((send) => {
+          setTimeout(() => {
+            const dup = sseChangeFrame({
+              eventId: "ev-same",
+              entityType: "forum-reply",
+              entityId: postUuid,
+              action: "created",
+            });
+            send(dup);
+            send(dup);
+            setTimeout(() => {
+              secondState = "resolved";
+              send('event: resync\ndata: {"type":"resync"}\n\n');
+            }, 20);
+          }, 15);
+        });
+      }
+      const received = await trackerRequest(request);
+      const input = ByIdInputSchema.parse(received.input);
+      return Response.json({
+        result: { data: buildWatchedPostData(input.id, secondState) },
+      });
+    },
+  });
+  servers.push(resyncServer);
+
+  await watchForum(
+    testForumContext(resyncServer).context,
+    ["FM-12"],
+    parseForumArgs(["--until-resolved", "--json"]).values,
+    { writeLine: (line) => resyncLines.push(line) },
+  );
+  expect(resyncLines).toHaveLength(2);
+  expect(JSON.parse(resyncLines[0] ?? "{}")).toMatchObject({
+    event: { eventId: "ev-same" },
+  });
+  expect(JSON.parse(resyncLines[1] ?? "{}")).toMatchObject({
+    event: { action: "already-resolved" },
+  });
+
+  // 404 fails fast without reconnect loop
+  const notFoundServer = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch() {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    },
+  });
+  servers.push(notFoundServer);
+  await expect(
+    watchForum(
+      testForumContext(notFoundServer).context,
+      ["FM-12"],
+      parseForumArgs(["--until-resolved"]).values,
+      { initialReconnectDelayMs: 10, maxReconnectDelayMs: 20 },
+    ),
+  ).rejects.toThrow("Forum event stream failed (HTTP 404)");
+
+  // AbortSignal during reconnect backoff exits cleanly without throwing
+  const abortController = new AbortController();
+  const transient503Server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch() {
+      setTimeout(() => {
+        abortController.abort();
+      }, 15);
+      return new Response("Unavailable", { status: 503 });
+    },
+  });
+  servers.push(transient503Server);
+  await watchForum(
+    testForumContext(transient503Server).context,
+    ["FM-12"],
+    parseForumArgs(["--until-resolved"]).values,
+    {
+      signal: abortController.signal,
+      initialReconnectDelayMs: 500,
+      maxReconnectDelayMs: 1000,
+    },
+  );
+});
+
+test("resolve, update and reopen require --expected-revision with current revision hint instead of raw ZodError (AI-786)", async () => {
+  const { context, requests } = createForumFixture();
+
+  await expect(
+    forumCommand(
+      context,
+      "resolve",
+      ["fm-12"],
+      parseForumArgs(["--note", "done"]).values,
+    ),
+  ).rejects.toThrow(
+    "--expected-revision <N> is required for forum resolve (inspect current revision with: toolkit forum view fm-12 --json)",
+  );
+  await expect(
+    forumCommand(
+      context,
+      "update",
+      ["FM-12"],
+      parseForumArgs(["--title", "Updated title"]).values,
+    ),
+  ).rejects.toThrow(
+    "--expected-revision <N> is required for forum update (inspect current revision with: toolkit forum view FM-12 --json)",
+  );
+  await expect(
+    forumCommand(context, "reopen", ["FM-12"], parseForumArgs([]).values),
+  ).rejects.toThrow(
+    "--expected-revision <N> is required for forum reopen (inspect current revision with: toolkit forum view FM-12 --json)",
+  );
+
+  for (const bad of ["0", "-2", "1.5", "abc"]) {
+    await expect(
+      forumCommand(
+        context,
+        "resolve",
+        ["FM-12"],
+        parseForumArgs([`--expected-revision=${bad}`, "--note", "done"]).values,
+      ),
+    ).rejects.toThrow(
+      `--expected-revision must be a positive integer for forum resolve (received: ${bad})`,
+    );
+  }
+
+  // Zero network requests were sent while rejecting invalid CLI flags.
+  expect(requests).toEqual([]);
+
+  // Valid --expected-revision succeeds on resolve, update, and reopen
+  await forumCommand(
+    context,
+    "update",
+    ["FM-12"],
+    parseForumArgs(["--expected-revision", "3", "--title", "Updated"]).values,
+  );
+  await forumCommand(
+    context,
+    "resolve",
+    ["FM-12"],
+    parseForumArgs(["--expected-revision", "3", "--note", "Resolved"]).values,
+  );
+  await forumCommand(
+    context,
+    "reopen",
+    ["FM-12"],
+    parseForumArgs(["--expected-revision", "4"]).values,
+  );
+  expect(requests.slice(-3)).toMatchObject([
+    { procedure: "forum.update", input: { id: "FM-12", expectedRevision: 3 } },
+    {
+      procedure: "forum.resolve",
+      input: { id: "FM-12", expectedRevision: 3, note: "Resolved" },
+    },
+    { procedure: "forum.reopen", input: { id: "FM-12", expectedRevision: 4 } },
+  ]);
 });

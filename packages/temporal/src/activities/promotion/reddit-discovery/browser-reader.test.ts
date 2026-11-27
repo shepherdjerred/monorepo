@@ -330,6 +330,37 @@ describe("scoped browser Reddit feed ingestion", () => {
     ).toEqual({ posts: [], next: null });
   });
 
+  it("detects a cursor redirected to the first page before reading listing rows", async () => {
+    const { browser, events } = fixture();
+    await expect(
+      readRedditFeedPage(browser, {
+        subreddit: community,
+        limit: 100,
+        account: "the_storm_mc",
+        after: `${feedUrl}?count=25&after=t3_abc123`,
+      }),
+    ).rejects.toMatchObject({
+      kind: "cursor",
+      message: "Reddit redirected away from the requested listing page",
+    });
+    expect(events).not.toContain("read:feed");
+  });
+
+  it("accepts a cursor URL with reordered query parameters", async () => {
+    const { browser } = fixture({
+      url: `${feedUrl}?after=t3_abc123&count=25`,
+      page: { posts: [], next: null },
+    });
+    await expect(
+      readRedditFeedPage(browser, {
+        subreddit: community,
+        limit: 100,
+        account: "the_storm_mc",
+        after: `${feedUrl}?count=25&after=t3_abc123`,
+      }),
+    ).resolves.toEqual({ posts: [], next: null });
+  });
+
   it("reads rules only from the exact observed community page after a scoped scan", async () => {
     const { browser, events } = fixture({
       url: `https://old.reddit.com/r/${community}/about/rules/`,

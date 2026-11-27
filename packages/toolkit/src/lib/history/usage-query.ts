@@ -2,7 +2,9 @@ import type { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
   MIRROR_HISTORY_SOURCE_NAMES,
+  UsageStoredColumnsSchema,
   parseHistorySourceName,
+  usageTokenCountsFromRow,
   type HistorySourceName,
   type UsageBySource,
   type UsageReport,
@@ -218,17 +220,8 @@ export function queryUsageFingerprints(
 }
 
 /** One event's own columns, shared by the export and block readers. */
-const UsageEventColumnsSchema = z.object({
+const UsageEventColumnsSchema = UsageStoredColumnsSchema.extend({
   occurred_at: z.string(),
-  model: z.string(),
-  input_tokens: z.number(),
-  output_tokens: z.number(),
-  cache_read_tokens: z.number(),
-  cache_creation_tokens: z.number(),
-  cached_input_tokens: z.number(),
-  reasoning_tokens: z.number(),
-  cost_usd: z.number().nullable(),
-  cost_complete: z.number(),
 });
 
 const USAGE_EVENT_COLUMNS = `u.occurred_at, u.model,
@@ -240,12 +233,7 @@ function usageEventFields(row: z.infer<typeof UsageEventColumnsSchema>) {
   return {
     occurredAt: row.occurred_at,
     model: row.model,
-    inputTokens: row.input_tokens,
-    outputTokens: row.output_tokens,
-    cacheReadTokens: row.cache_read_tokens,
-    cacheCreationTokens: row.cache_creation_tokens,
-    cachedInputTokens: row.cached_input_tokens,
-    reasoningTokens: row.reasoning_tokens,
+    ...usageTokenCountsFromRow(row),
     costUsd: row.cost_usd,
     costComplete: row.cost_complete === 1,
   };

@@ -383,6 +383,11 @@ function createCrawlActivities(): ScoutTemporalActivityGroups["crawl"] {
         }),
       );
     },
+    pruneCrawlFrontier: async () => {
+      const { runCrawlFrontierPruneActivity } =
+        await import("#src/league/crawl/crawl-frontier-prune-activity.ts");
+      return await runCrawlFrontierPruneActivity();
+    },
   };
 }
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {

@@ -279,8 +279,8 @@ public final class JooqStatsStore implements StatsStore {
                 pending.clientVersion(),
                 pending.clientBrand(),
                 pending.joinAddress(),
-                null,
-                null);
+                pending.countryCode(),
+                pending.countryName());
           }
         };
     insertOutbox(

@@ -7,17 +7,17 @@ publish = false
 
 [dependencies]
 axum = "0.8"
-base64 = "0.22"
+base64 = "0.23"
 bytes = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 hex = "0.4"
 http = "1"
 httpdate = "1"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
-rusqlite = { version = "0.32", features = ["bundled"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls", "stream"] }
+rusqlite = { version = "0.43", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 subtle = "2.6"
 tempfile = "3"
 thiserror = "2"
@@ -25,7 +25,7 @@ tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "rt-multi
 tokio-util = { version = "0.7", features = ["io"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt", "json", "std"] }
-uuid = { version = "1", features = ["v4"] }
+uuid = { version = "1.29", features = ["v4"] }
 
 [lints.rust]
 unsafe_code = "deny"
