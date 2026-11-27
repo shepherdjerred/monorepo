@@ -1436,13 +1436,15 @@ hard requirement. An applicable rule against bots, automated comments,
 promotional replies, or owner advertising blocks outreach. Silence or
 ambiguity about permission leaves an otherwise eligible request available for
 drafting. A useful partial fit can qualify when The Storm meets the main request
-and some of the preferences. The reply names concrete overlap and any meaningful
-differences. Adult-only requests can qualify based on The Storm's adult
-audience. The reply says that players of other ages can join. A separate model
-drafts the invite after the thread and account are checked. Requests already
-answered by `the_storm_mc` and threads whose comments cannot be fully inspected
-are excluded. Assessments are cached against the request, community rules and
-approved facts. Edits or rule changes require a fresh assessment.
+and misses optional preferences. Adult-only requests can qualify based on The
+Storm's adult audience. After the thread and account are checked, a separate
+model writes a brief invitation with up to one supported detail. The reply
+identifies The Storm as our server, followed by the invitation link. The
+publisher skips exact repeat replies in the same subreddit within 24 hours.
+Requests already answered by `the_storm_mc` and threads whose comments cannot
+be fully inspected are excluded. Assessments are cached against the request,
+community rules and approved facts. Edits or rule changes require a fresh
+assessment.
 
 `the-storm-reddit-outreach-enabled` and the typed JSON flag
 `the-storm-reddit-outreach-settings` control this schedule's publishing separately
