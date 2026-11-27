@@ -282,6 +282,7 @@ async function prepareMotion({
   teamVisionWorldActors,
   laneMinionCatalog,
   neutralObjectiveModels,
+  decodeNeutralCamps,
   terrainControllerGraph,
 }) {
   if (
@@ -302,6 +303,13 @@ async function prepareMotion({
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
   if (
+    decodeNeutralCamps !== undefined &&
+    (decodeNeutralCamps !== true || neutralObjectiveModels === undefined)
+  )
+    throw Error(
+      "Replay-derived camps require authored neutral model bindings.",
+    );
+  if (
     neutralObjectiveModels !== undefined &&
     (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
   )
@@ -311,7 +319,10 @@ async function prepareMotion({
   const neutralModelIds =
     neutralObjectiveModels === undefined
       ? undefined
-      : readCurrentNeutralObjectiveModelIds(neutralObjectiveModels);
+      : readCurrentNeutralObjectiveModelIds(
+          neutralObjectiveModels,
+          decodeNeutralCamps,
+        );
   if (
     laneMinionCatalog !== undefined &&
     (laneMinionCatalog === null ||
@@ -478,6 +489,8 @@ async function prepareMotion({
           codecs,
           readWaypoints,
           onBirth: teamVision?.addCandidate,
+          includeCamps: decodeNeutralCamps,
+          onCampBirth: teamVision?.addCandidate,
         });
   const terrain =
     terrainControllerGraph === undefined
@@ -568,6 +581,7 @@ async function prepareMotion({
           modelIds: neutralModelIds,
           waypointOrigin,
           durationSeconds: replay.duration,
+          includeCamps: decodeNeutralCamps,
         });
   const visibleDynamicContexts = dynamicActors
     ? new Set([

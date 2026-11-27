@@ -109,6 +109,7 @@ const SceneIdentitySchema = z.object({
       decodeChampionStats: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
+      decodeNeutralCamps: z.literal(true).optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
       terrainControllerGraph: z.object({}).optional(),
       laneMinionCatalog: z
@@ -263,6 +264,7 @@ function workerCapabilities({
     directTerrainVisibility,
     directLaneModels: workerMotion?.laneMinionCatalog?.models,
     directNeutralModels: workerMotion?.neutralObjectiveModels,
+    directNeutralCamps: workerMotion?.decodeNeutralCamps === true,
     directWorldObservations:
       directTerrainVisibility ||
       directTeamVision ||

@@ -9,6 +9,19 @@ import { createCurrentLaneMinionPacketReader } from "./recorded-lane-minion-pack
 const text = new TextDecoder("utf-8", { fatal: true });
 const dragonName =
   /^(sru_dragon_(?:air|water|earth|fire|chemtech|hextech))\.6\.1$/;
+const campNames = new Map([
+  ["SRU_Red", /^(8|17)\.1$/],
+  ["SRU_Blue", /^(10|16)\.1$/],
+  ["SRU_Razorbeak", /^(14|15)\.1$/],
+  ["SRU_RazorbeakMini", /^(14|15)\.[2-6]$/],
+  ["SRU_Murkwolf", /^(13|18)\.1$/],
+  ["SRU_MurkwolfMini", /^(13|18)\.[23]$/],
+  ["SRU_Gromp", /^(2|11)\.1$/],
+  ["SRU_Krug", /^(5|7)\.1$/],
+  ["SRU_KrugMini", /^(5|7)\.2$/],
+  ["Sru_Crab", /^(1|9)\.1$/],
+  ["SRU_Horde", /^12\.[1-3]$/],
+]);
 const footerKeys = {
   dragon: "DRAGON_KILLS",
   baron: "BARON_KILLS",
@@ -63,7 +76,20 @@ function objectiveIdentity(name) {
   if (dragon !== null) return { kind: "dragon", modelId: dragon[1] };
 }
 
-function readFooter(replay, binding) {
+function readCampIdentity(name) {
+  const separator = name.indexOf(".");
+  if (separator === -1) return;
+  const model = name.substring(0, separator);
+  const grammar = campNames.get(model);
+  if (grammar === undefined) return;
+  if (!grammar.test(name.substring(separator + 1))) return null;
+  return {
+    kind: model === "SRU_Horde" ? "horde" : "camp",
+    modelId: model.toLowerCase(),
+  };
+}
+
+function readFooter(replay, binding, includeCamps) {
   const rows = JSON.parse(readInventoryReplayFooter(replay.bytes).statsJson);
   if (
     !Array.isArray(rows) ||
@@ -101,7 +127,18 @@ function readFooter(replay, binding) {
       }),
     );
   });
-  return { owners, expected };
+  const horde = includeCamps
+    ? rows.map(({ HORDE_KILLS: value }) => {
+        if (
+          typeof value !== "string" ||
+          !/^\d+$/.test(value) ||
+          !Number.isSafeInteger(Number(value))
+        )
+          throw Error("Invalid current Horde footer count");
+        return Number(value);
+      })
+    : undefined;
+  return { owners, expected, horde };
 }
 
 function resolveEvent(actor, globals, owners, durationSeconds) {
@@ -165,11 +202,15 @@ export function createCurrentNeutralObjectiveCollector({
   codecs,
   readWaypoints,
   onBirth,
+  includeCamps = false,
+  onCampBirth,
 }) {
   const readPacket = createCurrentLaneMinionPacketReader(replay, codecs);
   const table = recoverTerrainByteSubstitution(codecs);
-  const { owners, expected } = readFooter(replay, binding);
+  const { owners, expected, horde } = readFooter(replay, binding, includeCamps);
   const actors = new Map();
+  const camps = new Map();
+  let unsupportedCampNames = 0;
   const globals = new Map();
   let opcode = null;
   let context = 0;
@@ -200,22 +241,34 @@ export function createCurrentNeutralObjectiveCollector({
       globals.set(secondTimeBits, rows);
     } else if (opcode === 392) {
       const objectName = readCurrentNeutralCreationName(payload, table);
-      const identity = objectiveIdentity(objectName);
+      const objective = objectiveIdentity(objectName);
+      const identity =
+        objective ?? (includeCamps ? readCampIdentity(objectName) : undefined);
+      if (identity === null) {
+        unsupportedCampNames++;
+        return;
+      }
       if (identity === undefined) return;
-      if (actors.has(context) || context === 0 || owners.has(context))
+      if (
+        actors.has(context) ||
+        camps.has(context) ||
+        context === 0 ||
+        owners.has(context)
+      )
         throw Error("Duplicate or invalid current objective context");
-      actors.set(context, {
+      (objective === undefined ? camps : actors).set(context, {
         context,
         objectName,
         ...identity,
         creationTimeSeconds: timeSeconds,
         observations: [],
       });
-      onBirth?.(context, timeSeconds);
+      if (objective === undefined) onCampBirth?.(context, timeSeconds);
+      else onBirth?.(context, timeSeconds);
     } else if (opcode === 96 || opcode === 1174) {
       const { records, syncId } = readWaypoints(opcode, payload);
       for (const { entityId, motion, speed, encodedWaypoints } of records) {
-        const actor = actors.get(entityId);
+        const actor = actors.get(entityId) ?? camps.get(entityId);
         if (
           actor &&
           (!actor.terminal || timeSeconds <= actor.terminal.timeSeconds)
@@ -230,22 +283,26 @@ export function createCurrentNeutralObjectiveCollector({
           });
       }
     } else if (opcode === 1197 || opcode === 117) {
-      const actor = actors.get(context);
+      const actor = actors.get(context) ?? camps.get(context);
       if (actor === undefined) return;
+      const result = readPacket(opcode, payload);
+      const field = opcode === 1197 ? "terminal" : "removal";
+      if (actor[field] !== undefined) {
+        if (actor.kind !== "camp")
+          throw Error(`Repeated current objective ${field} packet`);
+        actor.ambiguousLifecycle = true;
+        return;
+      }
       if (opcode === 1197) {
-        if (actor.terminal !== undefined)
-          throw Error("Repeated current objective terminal packet");
         actor.terminal = {
           timeSeconds,
           secondTimeBits,
-          actorContext: readPacket(opcode, payload).relatedEntity,
+          actorContext: result.relatedEntity,
         };
       } else {
-        if (actor.removal !== undefined)
-          throw Error("Repeated current objective removal packet");
         actor.removal = {
           timeSeconds,
-          entity: readPacket(opcode, payload).entity,
+          entity: result.entity,
         };
       }
     }
@@ -279,9 +336,87 @@ export function createCurrentNeutralObjectiveCollector({
       remaining.some((row) => Object.values(row).some((count) => count !== 0))
     )
       throw Error("Current objective credits differ from the replay footer");
-    return {
+    const major = {
       actors: rendered,
       events: events.toSorted((a, b) => a.timeSeconds - b.timeSeconds),
+    };
+    if (!includeCamps) return major;
+    const campActors = [];
+    const hordeEvents = [];
+    const campCoverage = {
+      births: camps.size + unsupportedCampNames,
+      closed: 0,
+      open: 0,
+      omissions: {
+        unsupportedCampNames,
+        incompleteLifecycle: 0,
+        missingRecordedMotion: 0,
+      },
+    };
+    const remainingHorde = [...horde];
+    for (const {
+      terminal,
+      removal,
+      observations,
+      ambiguousLifecycle,
+      ...identity
+    } of camps.values()) {
+      const { context, creationTimeSeconds, modelId, kind } = identity;
+      if (terminal === undefined && removal === undefined) campCoverage.open++;
+      else if (
+        !ambiguousLifecycle &&
+        terminal !== undefined &&
+        removal !== undefined &&
+        creationTimeSeconds < terminal.timeSeconds &&
+        terminal.timeSeconds < removal.timeSeconds &&
+        removal.timeSeconds <= replay.duration &&
+        removal.entity === context
+      )
+        campCoverage.closed++;
+      else {
+        campCoverage.omissions.incompleteLifecycle++;
+        continue;
+      }
+      if (kind === "horde" && terminal !== undefined) {
+        const footerRow = owners.get(terminal.actorContext);
+        if (footerRow === undefined || remainingHorde[footerRow - 1] <= 0)
+          throw Error(
+            "Current Horde terminal actor differs from the replay footer",
+          );
+        remainingHorde[footerRow - 1]--;
+        hordeEvents.push({
+          subjectContext: context,
+          actorContext: terminal.actorContext,
+          footerRow,
+          modelId,
+          kind,
+          timeSeconds: terminal.timeSeconds,
+          secondTimeBits: terminal.secondTimeBits,
+        });
+      }
+      const retained = observations.filter(
+        ({ timeSeconds, encodedWaypoints }) =>
+          encodedWaypoints.length > 0 &&
+          timeSeconds >= creationTimeSeconds &&
+          timeSeconds < (terminal?.timeSeconds ?? replay.duration),
+      );
+      if (retained.length === 0) campCoverage.omissions.missingRecordedMotion++;
+      campActors.push({
+        ...identity,
+        killTimeSeconds: terminal?.timeSeconds ?? null,
+        removalTimeSeconds: removal?.timeSeconds ?? null,
+        observations: retained,
+      });
+    }
+    if (remainingHorde.some((count) => count !== 0))
+      throw Error("Current Horde credits differ from the replay footer");
+    return {
+      ...major,
+      campActors,
+      hordeEvents: hordeEvents.toSorted(
+        (a, b) => a.timeSeconds - b.timeSeconds,
+      ),
+      campCoverage,
     };
   }
   return { observe, finish };

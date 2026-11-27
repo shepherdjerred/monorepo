@@ -105,6 +105,93 @@ async function verifyCurrentNeutralObjectives(
   );
 }
 
+async function verifyCurrentNeutralCamps(page: Page, testInfo: TestInfo) {
+  const objectives = page.getByRole("combobox", { name: "Jump to event" });
+  for (const clock of ["8:29", "8:44", "8:46"]) {
+    await expect(
+      objectives.getByRole("option", {
+        name: new RegExp(`^${clock} · .+ slays Void Grub$`),
+      }),
+    ).toHaveCount(1);
+  }
+
+  await page.goto(`${replayPath}?t=232&perspective=red`);
+  await expect(
+    page.getByRole("button", { name: "Play", exact: true }),
+  ).toBeVisible();
+  const vision = page.getByRole("combobox", { name: "Unit visibility" });
+  await expect(vision).toHaveValue("red");
+  const scuttleIndexCount = 12_654;
+  const opening = [10_943.7421, 5161.8778] as const;
+  const shared = [11_203.9506, 4794.5776] as const;
+  const beforeDeath = [10_913.2506, 4878.5549] as const;
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, opening))
+    .toBe(true);
+  await captureObjective(
+    page,
+    opening,
+    testInfo.outputPath("current-scuttle-red.png"),
+  );
+
+  await vision.selectOption("blue");
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, opening))
+    .toBe(false);
+  await seek(page, 235);
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, shared))
+    .toBe(true);
+  await vision.selectOption("red");
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, shared))
+    .toBe(true);
+  await vision.selectOption("all");
+  await seek(page, 235.9);
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, beforeDeath))
+    .toBe(true);
+  await seek(page, 236);
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, beforeDeath, 200))
+    .toBe(false);
+
+  await seek(page, 232);
+  await vision.selectOption("red");
+  await expect
+    .poll(() => drawsNear(page, scuttleIndexCount, opening))
+    .toBe(true);
+  await captureObjective(
+    page,
+    opening,
+    testInfo.outputPath("current-scuttle-rewound.png"),
+    0,
+  );
+}
+
+async function verifyAdditionalCampModels(page: Page, testInfo: TestInfo) {
+  await page.goto(`${replayPath}?t=85.6`);
+  const play = page.getByRole("button", { name: "Play", exact: true });
+  await expect(play).toBeVisible();
+  const gromp = [12_659.8058, 6440.5835] as const;
+  expect(await drawsNear(page, 17_172, gromp)).toBe(true);
+  await captureObjective(page, gromp, testInfo.outputPath("current-gromp.png"));
+
+  await page.goto(`${replayPath}?t=473.2950651855469`);
+  await expect(play).toBeVisible();
+  for (const point of [
+    [4842, 10_638],
+    [4790, 10_182],
+    [5210, 10_424],
+  ] as const)
+    expect(await drawsNear(page, 16_986, point)).toBe(true);
+  await captureObjective(
+    page,
+    [4842, 10_638],
+    testInfo.outputPath("current-void-grubs.png"),
+  );
+}
+
 export async function verifyRecordedNeutralObjectives(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -117,6 +204,11 @@ export async function verifyRecordedNeutralObjectives(
       testInfo,
       fixture.unitVisibility,
     );
+    if (fixture.directNeutralCamps) {
+      await verifyCurrentNeutralCamps(page, testInfo);
+      if (fixture.directNeutralModels.some(([name]) => name === "sru_gromp"))
+        await verifyAdditionalCampModels(page, testInfo);
+    }
     return;
   }
   const assets = [...fixture.paths.keys()].filter((url) =>

@@ -1,8 +1,13 @@
 const modelName =
   /^sru_(?:baron|riftherald|dragon_(?:air|water|earth|fire|chemtech|hextech))$/;
+const campModelName =
+  /^sru_(?:blue|crab|gromp|horde|krug(?:mini)?|murkwolf(?:mini)?|razorbeak(?:mini)?|red)$/;
 
-export function readCurrentNeutralObjectiveModelIds(models) {
-  if (!Array.isArray(models) || models.length > 8)
+export function readCurrentNeutralObjectiveModelIds(
+  models,
+  includeCamps = false,
+) {
+  if (!Array.isArray(models) || models.length > (includeCamps ? 19 : 8))
     throw Error("Invalid authored neutral objective model catalog");
   const result = new Map();
   const participants = new Set();
@@ -12,7 +17,10 @@ export function readCurrentNeutralObjectiveModelIds(models) {
     const [modelId, participantId] = row;
     if (
       typeof modelId !== "string" ||
-      !modelName.test(modelId) ||
+      !(
+        modelName.test(modelId) ||
+        (includeCamps && campModelName.test(modelId))
+      ) ||
       !Number.isSafeInteger(participantId) ||
       participantId <= 0 ||
       result.has(modelId) ||
@@ -63,6 +71,7 @@ export function prepareCurrentNeutralObjectiveScene({
   modelIds,
   waypointOrigin,
   durationSeconds,
+  includeCamps = false,
 }) {
   if (
     waypointOrigin.length !== 2 ||
@@ -82,7 +91,10 @@ export function prepareCurrentNeutralObjectiveScene({
       (neutralObjectiveOmissions[reason] ?? 0) + 1;
     return [];
   }
-  const neutralObjectiveInstances = evidence.actors.flatMap(
+  const actors = includeCamps
+    ? [...evidence.actors, ...evidence.campActors]
+    : evidence.actors;
+  const neutralObjectiveInstances = actors.flatMap(
     ({
       context,
       modelId,
@@ -116,7 +128,12 @@ export function prepareCurrentNeutralObjectiveScene({
       ];
     },
   );
-  const neutralObjectiveKills = evidence.events.map(
+  const events = includeCamps
+    ? [...evidence.events, ...evidence.hordeEvents].toSorted(
+        (left, right) => left.timeSeconds - right.timeSeconds,
+      )
+    : evidence.events;
+  const neutralObjectiveKills = events.map(
     ({
       subjectContext,
       actorContext,
@@ -137,5 +154,6 @@ export function prepareCurrentNeutralObjectiveScene({
     neutralObjectiveInstances,
     neutralObjectiveKills,
     neutralObjectiveOmissions,
+    ...(includeCamps ? { neutralCampCoverage: evidence.campCoverage } : {}),
   };
 }

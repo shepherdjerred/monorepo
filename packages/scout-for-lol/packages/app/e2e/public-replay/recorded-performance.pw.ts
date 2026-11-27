@@ -172,6 +172,9 @@ function reviewedSamplingWindows(
       ...((fixture.directNeutralModels?.length ?? 0) > 0
         ? [{ label: "Rift Herald movement", timeSeconds: 954.5 }]
         : []),
+      ...(fixture.directNeutralCamps
+        ? [{ label: "Scuttle movement and defeat", timeSeconds: 231 }]
+        : []),
       { label: "siege wave", timeSeconds: 1200 },
       ...(fixture.unitVisibility
         ? [

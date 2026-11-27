@@ -44,7 +44,9 @@ const canonicalMatchDirectory =
 const ownerPuuid = Bun.env["SCOUT_REPLAY_PROOF_OWNER_PUUID"];
 const ownerChampion = Bun.env["SCOUT_REPLAY_PROOF_OWNER_CHAMPION"];
 const handoffReleasePath = "/__replay_proof";
-const handoffWindowMs = 120_000;
+// The paired preview and each of its two sequential browser tests can take
+// up to three minutes. Normal completion releases the backend immediately.
+const handoffWindowMs = 10 * 60_000;
 const ReplayGamesSchema = z
   .array(
     z.object({

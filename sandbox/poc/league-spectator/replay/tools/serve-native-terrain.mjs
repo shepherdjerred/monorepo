@@ -98,6 +98,8 @@ const { positionals, values } = parseArgs({
     "neutral-unit-models-sha256": { type: "string" },
     "neutral-model-catalog": { type: "string" },
     "neutral-model-catalog-sha256": { type: "string" },
+    "neutral-camp-model-catalog": { type: "string" },
+    "neutral-camp-model-catalog-sha256": { type: "string" },
     "lane-minion-models": { type: "string" },
     "lane-minion-models-sha256": { type: "string" },
     "lane-minion-model-catalog": { type: "string" },
@@ -406,6 +408,16 @@ for (const option of [
 }
 
 const neutralModelCatalogPath = values["neutral-model-catalog"];
+const neutralCampCatalogPath = values["neutral-camp-model-catalog"];
+assert.equal(
+  neutralCampCatalogPath === undefined,
+  values["neutral-camp-model-catalog-sha256"] === undefined,
+  "--neutral-camp-model-catalog requires an explicit matching SHA-256 pin",
+);
+assert.ok(
+  neutralCampCatalogPath === undefined || neutralModelCatalogPath !== undefined,
+  "--neutral-camp-model-catalog requires --neutral-model-catalog",
+);
 assert.equal(
   neutralModelCatalogPath === undefined,
   values["neutral-model-catalog-sha256"] === undefined,
@@ -2110,6 +2122,7 @@ if (scoutScene) {
       binding: observations.binding,
       codecs: replayCodecs,
       readWaypoints: createWaypointReaderFromCodecs(replayCodecs),
+      includeCamps: neutralCampCatalogPath !== undefined,
     });
     for (const packet of replayTimedPacketEnvelopes(
       replayPacketEnvelopes(replay, decompress),
@@ -2121,6 +2134,23 @@ if (scoutScene) {
       values["neutral-model-catalog-sha256"],
       evidence.actors.map(({ modelId }) => modelId),
     );
+    if (neutralCampCatalogPath !== undefined) {
+      const { readCurrentCampModelCatalog } =
+        await import("./native-terrain-camp-model-catalog.mjs");
+      const camps = await readCurrentCampModelCatalog(
+        neutralCampCatalogPath,
+        values["neutral-camp-model-catalog-sha256"],
+        identity,
+      );
+      const requested = new Set(
+        evidence.campActors.map(({ modelId }) => modelId),
+      );
+      for (const [modelId, model] of camps.models) {
+        assert.ok(!models.has(modelId), "Duplicate authored neutral model");
+        if (requested.has(modelId)) models.set(modelId, model);
+      }
+      scene.workerMotion.decodeNeutralCamps = true;
+    }
     const existing = scene.worldUnitModels ?? { bindings: [], instances: [] };
     const modelIds = new Map();
     const bindings = [];
@@ -2140,6 +2170,7 @@ if (scoutScene) {
       modelIds,
       waypointOrigin: proof.navgrid.movementOrigin,
       durationSeconds: replay.duration,
+      includeCamps: neutralCampCatalogPath !== undefined,
     });
     const occupied = new Set(existing.instances.map(({ context }) => context));
     assert.ok(

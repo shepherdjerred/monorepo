@@ -11,12 +11,13 @@ import {
 } from "./recorded-current-neutral-objective-scene.mjs";
 import { createCurrentNeutralObjectiveCollector } from "./recorded-current-neutral-objectives.mjs";
 
-function replayWithFooter(baronKills = "0") {
+function replayWithFooter(baronKills = "0", hordeKills = "0") {
   const rows = Array.from({ length: 10 }, (_, index) => ({
     DRAGON_KILLS: "0",
     ELDER_DRAGON_KILLS: "0",
     BARON_KILLS: index === 0 ? baronKills : "0",
     RIFT_HERALD_KILLS: "0",
+    HORDE_KILLS: index === 0 ? hordeKills : "0",
   }));
   const footer = new TextEncoder().encode(
     JSON.stringify({ statsJson: JSON.stringify(rows) }),
@@ -111,11 +112,87 @@ test("keeps a live Baron with an exact bounded position and allows timeline-only
   });
 });
 
+test("keeps ordinary camp observations separate and counts unsupported variants", () => {
+  const observed = [];
+  const collector = createCurrentNeutralObjectiveCollector({
+    replay: replayWithFooter(),
+    includeCamps: true,
+    binding,
+    codecs,
+    readWaypoints: () => ({
+      syncId: 1,
+      records: [{ entityId: 120, encodedWaypoints: [[1, 2]], speed: 0 }],
+    }),
+    onCampBirth: (...row) => observed.push(row),
+    onBirth: () => assert.fail("Camp cannot enter the pit objective stream"),
+  });
+  collector.observe(packet(392, 1, creation("SRU_Red.8.1")));
+  collector.observe({
+    ...packet(392, 1, creation("SRU_Red.8.2")),
+    paramBits: 121,
+  });
+  collector.observe(packet(96, 3));
+  const evidence = collector.finish();
+  assert.deepEqual(evidence.actors, []);
+  assert.deepEqual(evidence.events, []);
+  assert.deepEqual(observed, [[120, 1]]);
+  assert.equal(evidence.campActors[0].modelId, "sru_red");
+  assert.equal(evidence.campActors[0].killTimeSeconds, null);
+  assert.equal(evidence.campActors[0].observations.length, 1);
+  assert.deepEqual(evidence.campCoverage, {
+    births: 2,
+    closed: 0,
+    open: 1,
+    omissions: {
+      unsupportedCampNames: 1,
+      incompleteLifecycle: 0,
+      missingRecordedMotion: 0,
+    },
+  });
+});
+
+test("omits ordinary camps with ambiguous endpoints and rejects malformed packets", () => {
+  const make = (name) => {
+    const collector = createCurrentNeutralObjectiveCollector({
+      replay: replayWithFooter(),
+      includeCamps: true,
+      binding,
+      codecs,
+    });
+    collector.observe(packet(392, 1, creation(name)));
+    return collector;
+  };
+  const terminal = (time) => packet(1197, time, Uint8Array.of(0x63, 0));
+  const camp = make("SRU_Red.8.1");
+  camp.observe(terminal(2));
+  camp.observe(terminal(3));
+  const evidence = camp.finish();
+  assert.deepEqual(evidence.campActors, []);
+  assert.equal(evidence.campCoverage.omissions.incompleteLifecycle, 1);
+
+  const horde = make("SRU_Horde.12.1");
+  horde.observe(terminal(2));
+  assert.throws(() => horde.observe(terminal(3)), /Repeated current objective/);
+  assert.throws(
+    () => make("SRU_Red.8.1").observe(packet(1197, 2)),
+    /Truncated lane death header/,
+  );
+});
+
 test("rejects mismatched footer, unrelated build, malformed name and model binding", () => {
   const options = { replay: replayWithFooter("1"), binding, codecs };
   assert.throws(
     () => createCurrentNeutralObjectiveCollector(options).finish(),
     /differ from the replay footer/,
+  );
+  assert.throws(
+    () =>
+      createCurrentNeutralObjectiveCollector({
+        ...options,
+        includeCamps: true,
+        replay: replayWithFooter("0", "1"),
+      }).finish(),
+    /Horde credits differ/,
   );
   assert.throws(
     () =>

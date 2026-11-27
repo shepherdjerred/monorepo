@@ -35,6 +35,8 @@ import {
   type ReplayInventoryPoints,
 } from "./scout-terrain-inventory.ts";
 import {
+  NeutralCampCoverageSchema,
+  NeutralCampModelIdSchema,
   NeutralObjectiveKillsSchema,
   NeutralObjectiveModelIdSchema,
   NeutralObjectiveWorkerKillsSchema,
@@ -471,7 +473,7 @@ const TerrainSceneFields = z.object({
     })
     .optional(),
   laneMinionModelBindings: z.array(modelBinding).length(8).optional(),
-  neutralObjectiveModelBindings: z.array(modelBinding).max(8).optional(),
+  neutralObjectiveModelBindings: z.array(modelBinding).max(19).optional(),
   workerMotion: z
     .object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
@@ -484,9 +486,15 @@ const TerrainSceneFields = z.object({
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
       neutralObjectiveModels: z
-        .array(z.tuple([NeutralObjectiveModelIdSchema, participantId]))
-        .max(8)
+        .array(
+          z.tuple([
+            z.union([NeutralObjectiveModelIdSchema, NeutralCampModelIdSchema]),
+            participantId,
+          ]),
+        )
+        .max(19)
         .optional(),
+      decodeNeutralCamps: z.literal(true).optional(),
       decodeTeamVision: z.literal(true).optional(),
     })
     .optional(),
@@ -663,9 +671,16 @@ export const SceneSchema = TerrainSceneFields.refine(
     (scene) => {
       const models = scene.workerMotion?.neutralObjectiveModels;
       const bindings = scene.neutralObjectiveModelBindings;
-      if (models === undefined) return bindings === undefined;
+      const decodeCamps = scene.workerMotion?.decodeNeutralCamps === true;
+      if (models === undefined) return bindings === undefined && !decodeCamps;
       return (
         bindings !== undefined &&
+        (decodeCamps ||
+          models.every(
+            ([name]) =>
+              name !== "sru_horde" &&
+              NeutralObjectiveModelIdSchema.safeParse(name).success,
+          )) &&
         scene.identity.build === currentTerrainPositionBuild &&
         scene.workerMotion?.allowCurrentBuild === true &&
         scene.motion === undefined &&
@@ -831,6 +846,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     neutralObjectiveInstances: NeutralObjectiveInstancesSchema.optional(),
     neutralObjectiveKills: NeutralObjectiveWorkerKillsSchema.optional(),
     neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
+    neutralCampCoverage: NeutralCampCoverageSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -961,7 +977,9 @@ async function loadWorkerMotion(
     if (
       (result.neutralObjectiveInstances !== undefined) !== decodeObjectives ||
       (result.neutralObjectiveKills !== undefined) !== decodeObjectives ||
-      (result.neutralObjectiveOmissions !== undefined) !== decodeObjectives
+      (result.neutralObjectiveOmissions !== undefined) !== decodeObjectives ||
+      (result.neutralCampCoverage !== undefined) !==
+        (workerMotion.decodeNeutralCamps === true)
     )
       throw Error(
         "Replay motion worker returned unexpected objective coverage.",
@@ -1252,12 +1270,14 @@ function loadNeutralObjectives(
     const model = models.get(actor.participantId);
     const death = bySubject.get(actor.context);
     const end = actor.killTimeSeconds ?? duration;
+    const ordinaryCamp = NeutralCampModelIdSchema.safeParse(model).success;
     if (
       model === undefined ||
       occupied.has(actor.context) ||
       actor.creationTimeSeconds >= end ||
       end > duration ||
-      (death?.timeSeconds ?? null) !== actor.killTimeSeconds ||
+      (!ordinaryCamp &&
+        (death?.timeSeconds ?? null) !== actor.killTimeSeconds) ||
       (death !== undefined && death.modelId !== model)
     )
       throw Error(

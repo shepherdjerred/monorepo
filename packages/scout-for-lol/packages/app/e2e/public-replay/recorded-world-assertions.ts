@@ -12,11 +12,10 @@ export async function drawsNear(
   page: Page,
   indexCount: number,
   target: readonly [number, number],
+  radius = 0.5,
 ) {
-  return (
-    actorOriginAt(await readRecordedDraw(page), indexCount, target) !==
-    undefined
-  );
+  const draw = await readRecordedDraw(page);
+  return actorOriginAt(draw, indexCount, target, radius) !== undefined;
 }
 
 function actorOriginAt(
@@ -26,11 +25,12 @@ function actorOriginAt(
   }: Awaited<ReturnType<typeof readRecordedDraw>>,
   indexCount: number,
   [targetX, targetZ]: readonly [number, number],
+  radius = 0.5,
 ) {
   return actorOrigins.find(
     ([drawX = Infinity, , drawZ = Infinity], index) =>
       actorIndexCounts[index] === indexCount &&
-      Math.hypot(drawX - targetX, drawZ - targetZ) < 0.5,
+      Math.hypot(drawX - targetX, drawZ - targetZ) < radius,
   );
 }
 

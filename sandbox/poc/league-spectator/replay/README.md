@@ -168,8 +168,24 @@ kills and bounded actor paths from the original replay. Kills can appear
 in the timeline when the catalog lacks a verified model. Use
 `--team-vision-from-replay` to derive masks for the actors that draw.
 Actors with isolated position observations draw only at those times.
-Animations, Void Grub lifecycles, and camp monsters remain unverified
-in this path.
+
+To include camp monsters and Void Grub kill navigation, prepare the camp catalog
+from the reviewed historical actor manifest and the exact current Map11
+archive. The tool verifies the original skin, mesh, rig, and texture bytes for
+each admitted model before reusing its prepared GLB.
+
+```powershell
+bun tools/native-terrain-camp-model-catalog.mjs $installation $historicalActorManifest $reviewedManifestSha256 $newPrivateCampCatalog
+```
+
+Add `--neutral-camp-model-catalog` and `--neutral-camp-model-catalog-sha256`
+to the private build alongside the neutral objective catalog. The worker
+derives recorded camp lifetimes and bounded movement and checks Void Grub kill
+credits against the footer. The catalog covers Scuttle, wolves, raptors, Gromp,
+and Void Grubs. Gromp and Void Grubs use the mesh scale from the archived
+constructor's default.
+Actors without verified models or recorded positions are omitted. Camp and
+objective animations remain unverified.
 
 Prepare the first lane-minion wave in the reviewed long replay with the
 archived native packet reader and the original Map11 melee and ranged skins.
@@ -360,6 +376,19 @@ Use the original replay filename. The builder checks the build, game ID,
 Map11 CLASSIC mode, duration, and all ten players against the original footer.
 The check includes per-player kills, deaths, assists, and ordered item slots.
 The result file stays local.
+
+For a new `.8428` Rift replay, check its opening against the pinned archived
+skin census before building a package. The preflight can also verify each
+opening model against an existing archive-scoped champion catalog.
+
+```powershell
+bun tools/research/inspect-current-rift-admission.mjs $replayPath $canonicalMatch $canonicalMatchSha256 $exactByteMaps $archivedSkinCensus $censusSha256 --catalog $championModels --catalog-sha256 $championCatalogSha256 --selection-output $newPrivateSkinSelection
+```
+
+The selection contains only build-scoped champion and skin keys. Exit code 2
+reports missing catalog models and still writes the requested selection. Supply
+that selection and its reported digest to `prepare-native-terrain-champions.mjs
+--prepare-archived-skins` to prepare the missing inputs.
 
 For a catalog-backed build, pass the catalog to `--champion-models` and its
 reviewed digest to `--champion-catalog-sha256`. The builder selects the
