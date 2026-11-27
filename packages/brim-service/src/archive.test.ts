@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { manifestKey } from "@shepherdjerred/toolkit/lib/brim/sync/manifest.ts";
 import { createMemoryObjectStore } from "@shepherdjerred/toolkit/lib/brim/sync/object-store.ts";
 import { defaultBrimSyncPaths } from "@shepherdjerred/toolkit/lib/brim/sync/paths.ts";
 import { pushArchive } from "@shepherdjerred/toolkit/lib/brim/sync/push.ts";
@@ -12,12 +13,24 @@ import { openBrimArchive } from "./archive.ts";
 
 const codec = (bytes: Uint8Array) => Promise.resolve(bytes);
 
-test("indexes multiple workstation archives across replay and preserves Cursor row links", async () => {
+test("checkpoints each workstation before indexing and preserves Cursor row links across replays", async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), "brim-archive-"));
   const store = createMemoryObjectStore();
+  const clusterHome = path.join(dir, "cluster");
   const archive = await openBrimArchive({
-    home: path.join(dir, "cluster"),
-    store,
+    home: clusterHome,
+    store: {
+      ...store,
+      get: async (key) => {
+        if (key === manifestKey("windows")) {
+          const state = Bun.file(defaultBrimSyncPaths(clusterHome).pullState);
+          expect(await state.json()).toMatchObject({
+            machines: { macbook: expect.any(Object) },
+          });
+        }
+        return store.get(key);
+      },
+    },
     open: codec,
     loadQuotaSnapshots: () => Promise.resolve(null),
   });

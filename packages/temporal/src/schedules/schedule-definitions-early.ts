@@ -10,7 +10,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     timing: { kind: "interval", every: "5 minutes" },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "45 minutes",
+    workflowExecutionTimeout: "195 minutes",
     memo: "Refresh Brim's private history index from the encrypted workstation archive",
     initialPauseNote:
       "Awaiting published Brim service, its read-only archive grant, and a compatible workflow worker",

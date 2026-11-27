@@ -60,9 +60,11 @@ and four distinct bearer credentials. Hub and the Temporal infra worker
 receive their own scoped bearer from their own 1Password items.
 
 After the Brim Application reconciles, check Hub’s Brim readiness and run
-the `brim-archive-refresh` schedule. Confirm an indexed session from each
-workstation, including a Windows session. Then compare the latest quota
-readings against MacBook and exercise a priority write from two Herdr clients.
+the `brim-archive-refresh` schedule. The first run mirrors the full archive
+and can span multiple five-minute ticks. Confirm an indexed session from
+each workstation, including a Windows session. Then compare the latest
+quota readings against MacBook and exercise a priority write from two Herdr
+clients.
 
 ## Local checks
 

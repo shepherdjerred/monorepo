@@ -4,8 +4,9 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshBrimArchive } = proxyActivities<typeof activities>({
   taskQueue: TASK_QUEUES.INFRA,
-  startToCloseTimeout: "30 minutes",
-  scheduleToCloseTimeout: "40 minutes",
+  // The first refresh downloads and verifies each workstation's full archive.
+  startToCloseTimeout: "2 hours",
+  scheduleToCloseTimeout: "3 hours",
   retry: { maximumAttempts: 3 },
 });
 
