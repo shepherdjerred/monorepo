@@ -63,16 +63,35 @@ function assertUniqueFlagKeys(
   }
 }
 
+/**
+ * Advisory label a machine caller sends so the Flags audit trail can tell
+ * callers sharing `FLAGS_MACHINE_TOKEN` apart. It is not a credential.
+ */
+export const FLAGS_ACTOR_HEADER = "X-Flags-Actor";
+const FLAGS_ACTOR_PATTERN = /^[a-z0-9][a-z0-9._@-]{0,63}$/u;
+
+export type FlagsMachineFetcherOptions = {
+  /** Stable caller label sent as `X-Flags-Actor` on every request. */
+  readonly actor?: string;
+};
+
 /** Machine credentials are scoped to the configured Flags origin. */
 export function createFlagsMachineFetcher(
   url: string,
   token: string | undefined,
   upstream: FlagsHttpFetcher = fetch,
+  options: FlagsMachineFetcherOptions = {},
 ): FlagsHttpFetcher {
   const base = normalizeFlagsBaseUrl(url);
   if (token === undefined || token.trim() === "") {
     throw new Error(
       "FLAGS_MACHINE_TOKEN is required for Flags management operations",
+    );
+  }
+  const { actor } = options;
+  if (actor !== undefined && !FLAGS_ACTOR_PATTERN.test(actor)) {
+    throw new Error(
+      `Invalid Flags actor label ${JSON.stringify(actor)}: expected ${FLAGS_ACTOR_PATTERN.source}`,
     );
   }
   const origin = new URL(base).origin;
@@ -93,6 +112,7 @@ export function createFlagsMachineFetcher(
       headers.set(key, value);
     });
     headers.set("Authorization", `Bearer ${token}`);
+    if (actor !== undefined) headers.set(FLAGS_ACTOR_HEADER, actor);
     return upstream(input, { ...init, headers, redirect: "error" });
   };
 }

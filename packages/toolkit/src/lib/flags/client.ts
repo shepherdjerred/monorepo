@@ -2,6 +2,13 @@ import { z } from "zod";
 
 export const DEFAULT_FLAGS_URL = "https://flags.tailnet-1a49.ts.net";
 
+/**
+ * Advisory audit label sent with machine-token requests so Flags can tell
+ * toolkit writes apart from other `FLAGS_MACHINE_TOKEN` callers.
+ */
+const FLAGS_ACTOR_HEADER = "X-Flags-Actor";
+const FLAGS_ACTOR = "toolkit";
+
 const DeploymentListSchema = z.object({
   deployments: z.array(
     z.object({
@@ -119,8 +126,10 @@ async function readJson(
   init: RequestInit = {},
 ): Promise<{ status: number; body: unknown }> {
   const headers = new Headers(init.headers);
-  if (io.token !== undefined)
+  if (io.token !== undefined) {
     headers.set("authorization", `Bearer ${io.token}`);
+    headers.set(FLAGS_ACTOR_HEADER, FLAGS_ACTOR);
+  }
   const response = await io.fetch(new URL(path, io.baseUrl), {
     ...init,
     headers,

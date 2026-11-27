@@ -340,8 +340,8 @@ command does not send a login header. `apply` sends the service origin so a
 human write passes the same-origin check. `--machine` resolves
 `FLAGS_MACHINE_TOKEN` through the credential broker (defaulting to the
 `flags-auth` item in the homelab 1Password vault unless set in the environment
-or `[credentials].FLAGS_MACHINE_TOKEN`), sends it as a bearer, and never prints
-that token. Evaluation stays credentialless; this command uses the management
+or `[credentials].FLAGS_MACHINE_TOKEN`), sends it as a bearer with the advisory
+audit label `X-Flags-Actor: toolkit`, and never prints that token. Evaluation stays credentialless; this command uses the management
 API.
 
 ```bash

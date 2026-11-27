@@ -27,6 +27,9 @@ import {
   type FlagDriftAlertInput,
 } from "#shared/alerts/flag-drift-alert.ts";
 
+/** Audit label for this activity's machine writes to Flags (`X-Flags-Actor`). */
+export const FLAGS_INVENTORY_SYNC_ACTOR = "temporal-flag-inventory-sync";
+
 export type FlagInventoryResult = FlagDriftAlertInput & {
   readonly revision: number;
   readonly observedAt: string;
@@ -66,6 +69,7 @@ export async function reconcileFlagsInventory(
     options.url,
     options.token,
     options.upstreamFetch,
+    { actor: FLAGS_INVENTORY_SYNC_ACTOR },
   );
   const observedTime = clock();
   const observedAt = observedTime.toISOString();
