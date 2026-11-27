@@ -307,8 +307,10 @@ a verified Map11 controller receipt to `--terrain-visibility` with its digest
 in `--terrain-visibility-sha256`. The browser harness checks the rendered
 draws at the recorded transition times and after rewinding.
 
-The private 16.23.841.8428 package requires the reviewed catalog for the
-actual replay build. To prepare its champion position decoder from the
+The private 16.23.841.8428 package requires a pinned catalog for the actual
+replay build. A catalog built from a pinned archive selection can serve replay
+openings with different actor IDs whenever it contains the exact selected
+skins. To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
 controller state remains unresolved. When only a transition is unresolved,
@@ -433,9 +435,12 @@ Pass the output and printed digest to `--champion-resources` and
 
 Add recorded levels, total XP, and progress toward the next level with
 [the champion experience extractor](tools/research/README.md#recorded-champion-experience).
-Pass its output and printed digest to `--champion-experience` and
-`--champion-experience-sha256`. Set `--experience-map-definition` to the
-original 16.23.840.6595 Map11 definition extracted from the same build's WAD.
+For 16.23.841.8428, pass `--champion-experience-from-replay` and set
+`--experience-map-definition` to the exact build's Map11 definition. The
+worker reads XP, levels, and individual cap changes from the ROFL and checks
+each final level against the footer. The package supplies the authored
+thresholds. For prepared playback, pass the track manifest and digest to
+`--champion-experience` and `--champion-experience-sha256` instead.
 
 Add the roster's seven playable item slots with the
 [recorded inventory tracks and icon catalog](tools/research/README.md#recorded-inventory).

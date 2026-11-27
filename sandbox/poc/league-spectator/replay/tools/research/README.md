@@ -90,6 +90,9 @@ bun sandbox/poc/league-spectator/replay/tools/research/recorded-champion-experie
 uv run --no-project --with unicorn python sandbox/poc/league-spectator/replay/tools/probe-exact-champion-resources.py $macGameExecutable $experienceGroups $experienceReceipt --progression
 ```
 
+Use `--current` as the first argument to both Bun extractors in this section
+for 16.23.841.8428 and use the matching macOS archive in the native probes.
+
 The private package builder checks the tracks against the original
 `data/maps/shipping/map11/map11.bin` WAD entry and follows the CLASSIC mode
 link to the authored thresholds. The roster samples the tracks at the replay
@@ -203,7 +206,7 @@ override propagates. It rounds modeled trigonometric results to Float32.
 
 ## Archived champion skin census
 
-Run from the repository root with the exact saved 16.23.840.6595 Windows
+Run from the repository root with the exact saved 16.23.840.6595 or 16.23.841.8428 Windows
 installation and a fresh directory under the private `.cache`.
 
 ```powershell
@@ -217,6 +220,14 @@ and material override references. It scans skin IDs 0 through 10,000. The
 archive includes mode-specific entries such as TFT and requires an independent
 selection legality inventory before use in public replay admission. Linked
 asset bytes and model conversion require their own verification.
+
+For a build-scoped 16.23.841.8428 catalog, supply a pinned selection JSON to
+`--prepare-archived-skins` with schema 1, kind
+`exact-native-terrain-skin-selection`, the exact build and protocol, and a
+`skins` array of `{ champion, skinId }` entries. The preparer resolves each
+entry against the pinned census. The `--archive-catalog` model converter checks
+the pinned inputs and installed archive indexes. The package builder binds
+models by the exact skin selectors in the replay's opening packets.
 
 ## Recorded Map11 announcements
 
@@ -737,6 +748,11 @@ Wukong, Warwick, and Galio, using 13 authored clips.
 The cue windows are for isolated authored-pose reconstruction. The native
 activation gate, the blend from the prior pose, and possible preemption by
 other actor events remain unverified.
+
+For 16.23.841.8428, the portable reader can reconstruct these windows from
+ordinary replay packets and a pinned untimed catalog of exact model and clip
+bindings. Compare the reader with the original packet receipt and timed cue
+artifact using `verify-current-animation-cues.mjs`.
 
 ## Recorded terrain fog provider packets
 

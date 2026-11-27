@@ -38,8 +38,16 @@ const hash64Class = 0xff9d3409;
 const hex = (value) => value.toString(16).padStart(8, "0");
 const exactItemDefinitionsSha256 =
   "838c2828b0f8ae9e2380611691553ba67c163c7810bc0898a73807e1dca4d33c";
-const exactMap11DefinitionSha256 =
-  "338a12c915c8fc2c38a7d5ac9e4ae1e15a1a4ccd0115f2e4f6050e15497ca0f6";
+const exactMap11DefinitionDigests = new Map([
+  [
+    "16.23.840.6595",
+    "338a12c915c8fc2c38a7d5ac9e4ae1e15a1a4ccd0115f2e4f6050e15497ca0f6",
+  ],
+  [
+    "16.23.841.8428",
+    "bf4b0fdfe1070103cad2d5f1e36a637f7c0d11a565f841acdbe3738fac6fe69d",
+  ],
+]);
 const exactGlobalsSha256 =
   "4a900161dc0f4b531e06e4ad0f241dae22ffc9366c9bc5069271f8f464ced763";
 
@@ -63,15 +71,15 @@ export function readExactItemDefinitions(bytes) {
   return readPropertyBin(bytes, "16.23.840.6595", false);
 }
 
-export function readExactMap11Definition(bytes) {
+export function readExactMap11Definition(bytes, build = "16.23.840.6595") {
   if (
     !(bytes instanceof Uint8Array) ||
     new Bun.CryptoHasher("sha256").update(bytes).digest("hex") !==
-      exactMap11DefinitionSha256
+      exactMap11DefinitionDigests.get(build)
   )
     throw Error("Exact 16.23 Map11 definition required");
   return {
-    ...readPropertyBin(bytes, "16.23.840.6595", false),
+    ...readPropertyBin(bytes, build, false),
     reader: "scout-exact-map11-prop-v3",
   };
 }

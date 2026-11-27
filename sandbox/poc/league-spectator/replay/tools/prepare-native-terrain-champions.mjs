@@ -288,10 +288,12 @@ async function writeSelectedArchivedSkins() {
   const executableHash = championArchiveExecutableHashes[build];
   assert.equal(source.installedExeSha256, executableHash);
   const selection = await readPinned(selectionPath, selectionSha256);
+  const buildScoped = selection.kind === "exact-native-terrain-skin-selection";
+  if (build === currentChampionBuild)
+    assert.equal(await readExecutableHash(), executableHash);
   let nativeOpening;
   let requestedSkins;
-  if (build === currentChampionBuild) {
-    assert.equal(await readExecutableHash(), executableHash);
+  if (build === currentChampionBuild && !buildScoped) {
     assert.equal(
       selection.kind,
       "recorded-opening-champion-skin-native-log-proof",
@@ -369,6 +371,9 @@ async function writeSelectedArchivedSkins() {
       installedExeSha256: executableHash,
       sourceCensusSha256: censusSha256,
       selectionSha256,
+      ...(build === currentChampionBuild && buildScoped
+        ? { selectionKind: "archive" }
+        : {}),
       ...(nativeOpening === undefined ? {} : { nativeOpening }),
       scope:
         "Private archived model inputs. Match legality, conversion and model admission are separate.",

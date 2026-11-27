@@ -6,11 +6,10 @@ import struct
 from hashlib import sha256
 from pathlib import Path
 
-from macho import MachImage
+from champion_replication_archive import SLICE_DIGESTS, read_replication_image
 from unicorn import UC_ARCH_X86, UC_HOOK_CODE, UC_MODE_64, Uc
 from unicorn import x86_const as r
 
-SLICE_SHA256 = "e4725bce602c14f5999ec83fae12eec239337caf77bdd5efacfe1b6299dec2aa"
 ARENA = 0x6000000
 ACTOR, PROFILE, SERVICE, PACKET, BODY, CURSOR, STACK, STOP = (
     ARENA + offset for offset in (0x1000, 0x7000, 0x8000, 0x9000, 0xA000, 0xB000, 0xE008, 0x10000)
@@ -18,14 +17,12 @@ ACTOR, PROFILE, SERVICE, PACKET, BODY, CURSOR, STACK, STOP = (
 
 
 def verify(archive, evidence):
-    image = MachImage(archive)
-    base = image.base
-    if sha256(image.binary).hexdigest() != SLICE_SHA256:
-        raise ValueError("Wrong archived champion level-cap decoder")
     identity = evidence["identity"]
+    build = identity["build"]
+    image = read_replication_image(archive, build)
+    base = image.base
     if (
-        identity["build"] != "16.23.840.6595"
-        or identity["protocol"] != "8bbfcd5af2bc92db"
+        identity["protocol"] != "8bbfcd5af2bc92db"
         or len(bytes.fromhex(identity["replaySha256"])) != 32
     ):
         raise ValueError("Wrong replay evidence identity")
@@ -116,7 +113,7 @@ def verify(archive, evidence):
         raise ValueError("Expected complete source stream counts")
     return {
         "identity": identity,
-        "sliceSha256": SLICE_SHA256,
+        "sliceSha256": SLICE_DIGESTS[build],
         "nativeDefaultCap": profile_cap,
         "controlCount": len(selectors),
         "controlSha256": control_sha,

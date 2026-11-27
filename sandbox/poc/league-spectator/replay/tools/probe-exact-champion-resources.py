@@ -31,8 +31,6 @@ PROGRESSION_FIELDS = {
 
 
 def verify(archive, groups, progression=False, experience_scene=None, build=ARCHIVED_BUILD):
-    if progression and build != ARCHIVED_BUILD:
-        raise ValueError("Unreviewed champion progression build")
     image = read_replication_image(archive, build)
     base = image.base
     vm = Uc(UC_ARCH_X86, UC_MODE_64)
@@ -203,16 +201,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     source = args.groups.read_bytes()
     payload = json.loads(source)
+    build = payload.get("build", ARCHIVED_BUILD)
     scene_bytes = args.experience_scene.read_bytes() if args.experience_scene else None
     scene = json.loads(scene_bytes) if scene_bytes is not None else None
     if scene is not None and (
         not args.progression
-        or scene["identity"]["build"] != "16.23.840.6595"
+        or scene["identity"]["build"] != build
         or scene["identity"]["protocol"] != "8bbfcd5af2bc92db"
         or scene["identity"]["replaySha256"] != payload["identity"]
     ):
         parser.error("--experience-scene requires --progression and the same exact replay")
-    build = payload.get("build", ARCHIVED_BUILD)
     result = verify(args.archive.read_bytes(), payload["groups"], args.progression, scene, build)
     if scene_bytes is not None:
         result["sceneSha256"] = sha256(scene_bytes).hexdigest()

@@ -26,6 +26,19 @@ const championStatsSchema = {
     gold: { group: 1, index: 0, type: "float" },
   },
 };
+// Current native registration and getters corroborate group 32 bits 11 and 28.
+const experienceFields = {
+  experience: { group: 32, index: 11, type: "float" },
+  level: { group: 32, index: 28, type: "uint32" },
+};
+const experienceOnlySchema = {
+  ...moveSpeedSchema,
+  fields: { ...moveSpeedSchema.fields, ...experienceFields },
+};
+const statsWithExperienceSchema = {
+  ...championStatsSchema,
+  fields: { ...championStatsSchema.fields, ...experienceFields },
+};
 
 function readReplicationVector(payload, decodeVectorByte, decodeTailByte) {
   if (!(payload instanceof Uint8Array) || payload.length < 2)
@@ -70,12 +83,19 @@ function readChampionReplication(
   vector,
   count,
   verifiedChampionIds,
-  includeChampionStats,
+  { includeChampionStats, includeChampionExperience },
 ) {
   const view = new DataView(vector.buffer);
   const updates = [];
   const statsWrites = includeChampionStats ? [] : null;
-  const schema = includeChampionStats ? championStatsSchema : moveSpeedSchema;
+  const experienceWrites = includeChampionExperience ? [] : null;
+  const schema = includeChampionExperience
+    ? includeChampionStats
+      ? statsWithExperienceSchema
+      : experienceOnlySchema
+    : includeChampionStats
+      ? championStatsSchema
+      : moveSpeedSchema;
   let cursor = 0;
   let recordIndex = 0;
   let championGroups = 0;
@@ -111,9 +131,15 @@ function readChampionReplication(
       );
       if (Object.hasOwn(values, "moveSpeed"))
         updates.push({ entityId, recordIndex, moveSpeed: values.moveSpeed });
-      if (statsWrites) {
-        const { moveSpeed, ...stats } = values;
-        if (Object.keys(stats).length > 0)
+      if (statsWrites || experienceWrites) {
+        const { moveSpeed, experience, level, ...stats } = values;
+        if (
+          experienceWrites &&
+          (experience !== undefined || level !== undefined)
+        ) {
+          experienceWrites.push({ entityId, experience, level });
+        }
+        if (statsWrites && Object.keys(stats).length > 0)
           statsWrites.push({ entityId, ...stats });
       }
     }
@@ -126,6 +152,7 @@ function readChampionReplication(
     championGroups,
     updates,
     ...(statsWrites && { statsWrites }),
+    ...(experienceWrites && { experienceWrites }),
   };
 }
 
@@ -134,11 +161,7 @@ export function createMoveSpeed309ReaderFromCodecs({
   decodeReplicationVectorByte,
   decodeReplicationTailByte,
 }) {
-  return (
-    payload,
-    verifiedChampionIds,
-    { includeChampionStats = false } = {},
-  ) => {
+  return (payload, verifiedChampionIds, options = {}) => {
     if (!(verifiedChampionIds instanceof Set))
       throw Error("A verified champion ID set is required");
     const { vector, count } = readReplicationVector(
@@ -146,11 +169,6 @@ export function createMoveSpeed309ReaderFromCodecs({
       decodeReplicationVectorByte,
       decodeReplicationTailByte,
     );
-    return readChampionReplication(
-      vector,
-      count,
-      verifiedChampionIds,
-      includeChampionStats,
-    );
+    return readChampionReplication(vector, count, verifiedChampionIds, options);
   };
 }

@@ -45,7 +45,7 @@ export function createChampionResourceTracksSchema(schema: typeof z) {
   );
 }
 
-function createChampionExperienceTracksSchema(schema: typeof z) {
+export function createChampionExperienceTracksSchema(schema: typeof z) {
   const nonnegative = schema.number().nonnegative();
   return schema.array(
     schema.object({
@@ -66,14 +66,18 @@ function createChampionExperienceTracksSchema(schema: typeof z) {
   );
 }
 
+export function championExperienceThresholdsSchema(schema: typeof z) {
+  return schema
+    .array(schema.number().positive())
+    .min(defaultChampionLevelCap - 1)
+    .refine((thresholds) =>
+      thresholds.every((xp, index) => xp > (thresholds[index - 1] ?? 0)),
+    );
+}
+
 export function championExperienceSceneSchema(schema: typeof z) {
   return schema.object({
-    thresholds: schema
-      .array(schema.number().positive())
-      .min(defaultChampionLevelCap - 1)
-      .refine((thresholds) =>
-        thresholds.every((xp, index) => xp > (thresholds[index - 1] ?? 0)),
-      ),
+    thresholds: championExperienceThresholdsSchema(schema),
     tracks: createChampionExperienceTracksSchema(schema),
   });
 }

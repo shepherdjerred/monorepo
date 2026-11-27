@@ -6,6 +6,7 @@ import {
 import { readNativeTerrainReturnPosition } from "./native-terrain-motion-return.mjs";
 import { sampleNativeTerrainMotion } from "./native-terrain-motion-sample.mjs";
 import { createRecordedChampionStatAccumulator } from "./recorded-champion-stat-accumulator.mjs";
+import { createRecordedChampionExperienceAccumulator } from "./recorded-champion-experience-tracks.mjs";
 
 function addSnapshots(actors, frames, durationSeconds) {
   let previousTime = -Infinity;
@@ -158,6 +159,7 @@ export function prepareNativeTerrainMotion(
     waypointOrigin,
     allowCurrentBuild = false,
     includeChampionStats = false,
+    includeChampionExperience = false,
   },
 ) {
   const { packetReader, observations } = prepared;
@@ -227,6 +229,13 @@ export function prepareNativeTerrainMotion(
       },
     });
   }
+  if (
+    includeChampionExperience &&
+    packetReader.build !== currentTerrainPositionBuild
+  )
+    throw Error(
+      "Champion experience requires the exact current terrain replay build",
+    );
   addSnapshots(actors, keyframes.frames, durationSeconds);
   collectLifecycle(actors, observations, durationSeconds);
 
@@ -234,9 +243,16 @@ export function prepareNativeTerrainMotion(
   const championStats = includeChampionStats
     ? createRecordedChampionStatAccumulator(ids, durationSeconds)
     : null;
-  const replicationOptions = championStats
-    ? { includeChampionStats: true }
-    : undefined;
+  const championExperience = includeChampionExperience
+    ? createRecordedChampionExperienceAccumulator(ids, durationSeconds)
+    : null;
+  const replicationOptions =
+    championStats || championExperience
+      ? {
+          ...(championStats && { includeChampionStats: true }),
+          ...(championExperience && { includeChampionExperience: true }),
+        }
+      : undefined;
   let opcode = null;
   let context = 0;
   let previousTime = -Infinity;
@@ -283,12 +299,15 @@ export function prepareNativeTerrainMotion(
       for (const { entityId, moveSpeed } of replication.updates)
         applyMoveSpeed(actors.get(entityId), moveSpeed, timeSeconds);
       championStats?.observe(timeSeconds, replication.statsWrites);
+      championExperience?.observe(timeSeconds, replication.experienceWrites);
     } else {
       const actor = actors.get(context);
       if (!actor) continue;
       if (opcode === 172 && packet.payload.length === 116)
         matchLifecycle(actor, packet, "champion-death");
       if (opcode === 1098) matchLifecycle(actor, packet, "champion-return");
+      if (opcode === 652)
+        championExperience?.observeCap(timeSeconds, context, packet.payload);
     }
   }
   const tracks = [];
@@ -325,6 +344,9 @@ export function prepareNativeTerrainMotion(
     motion,
     coverage,
     ...(championStats && { championStats: championStats.finish() }),
+    ...(championExperience && {
+      championExperienceTracks: championExperience.finish(),
+    }),
     sample: (time) => sampleNativeTerrainMotion(motion, time),
   };
 }

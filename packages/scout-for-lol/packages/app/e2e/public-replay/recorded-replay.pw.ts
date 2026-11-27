@@ -185,7 +185,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   const traffic = await observeRecordedReplayRequests(page, baseURL);
   await installRecordedDrawProbe(page);
   await observeRecordedItemBlobs(page);
-  if (fixture.directChampionStats || fixture.directChampionInventory)
+  if (fixture.directChampionObservations)
     await observeDirectChampionStatsWorker(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -231,7 +231,7 @@ test("signed-out recorded replay draws textured terrain, seeks, rewinds and rest
   await expect(score).toContainText(/Blue team\s*0\s*kills/);
   await expect(score).toContainText(/Red team\s*0\s*kills/);
   await expect(score.getByText(result.winner)).toHaveCount(0);
-  if (fixture.directChampionStats || fixture.directChampionInventory)
+  if (fixture.directChampionObservations)
     await verifyDirectChampionStatsWorker(page, fixture);
   await verifyRecordedRoster(page, fixture, testInfo);
   const opening = await readRecordedDraw(page);

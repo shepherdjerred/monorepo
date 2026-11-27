@@ -4,6 +4,10 @@ import { zstdDecompressSync } from "node:zlib";
 import { readClassicLevelCap } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-actor-levels.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
+import {
+  currentTerrainPositionBuild,
+  isExactTerrainReplay,
+} from "./native-terrain-byte-codecs.mjs";
 
 const classicLevelCap = 18;
 
@@ -11,6 +15,7 @@ export function extractRecordedChampionLevelCaps(
   rawReplay,
   participantIds,
   onPacket,
+  options,
 ) {
   const ids = [...participantIds];
   const participants = new Set(ids);
@@ -25,10 +30,7 @@ export function extractRecordedChampionLevelCaps(
       ? rawReplay
       : Uint8Array.from(rawReplay).buffer,
   );
-  if (
-    replay.build !== "16.23.840.6595" ||
-    replay.protocol !== "8bbfcd5af2bc92db"
-  )
+  if (!isExactTerrainReplay(replay, options))
     throw Error("Wrong archived champion level-cap protocol");
   const decompress = (bytes, output) =>
     zstdDecompressSync(bytes, { maxOutputLength: output.length });
@@ -75,16 +77,20 @@ export function extractRecordedChampionLevelCaps(
 }
 
 if (import.meta.main) {
-  const [replayFile, sceneFile, output] = process.argv.slice(2);
-  if (!replayFile || !sceneFile || !output || process.argv.length !== 5)
+  const args = process.argv.slice(2);
+  const current = args[0] === "--current";
+  const [replayFile, sceneFile, output, ...extra] = current
+    ? args.slice(1)
+    : args;
+  if (!replayFile || !sceneFile || !output || extra.length !== 0)
     throw Error(
-      "Usage: bun recorded-champion-level-cap.mjs <replay.rofl> <bound-scene.json> <packet-input.json>",
+      "Usage: bun recorded-champion-level-cap.mjs [--current] <replay.rofl> <bound-scene.json> <packet-input.json>",
     );
   const raw = readFileSync(replayFile);
   const scene = JSON.parse(readFileSync(sceneFile, "utf8"));
   const identity = {
     replaySha256: createHash("sha256").update(raw).digest("hex"),
-    build: "16.23.840.6595",
+    build: current ? currentTerrainPositionBuild : "16.23.840.6595",
     protocol: "8bbfcd5af2bc92db",
   };
   for (const key of Object.keys(identity)) {
@@ -96,12 +102,17 @@ if (import.meta.main) {
   );
   const streamCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
   const rows = [];
-  extractRecordedChampionLevelCaps(raw, participantIds, (row) => {
-    if (!(row.stream in streamCounts))
-      throw Error("Unexpected recorded level-cap stream");
-    streamCounts[row.stream]++;
-    if (row.champion) rows.push(row);
-  });
+  extractRecordedChampionLevelCaps(
+    raw,
+    participantIds,
+    (row) => {
+      if (!(row.stream in streamCounts))
+        throw Error("Unexpected recorded level-cap stream");
+      streamCounts[row.stream]++;
+      if (row.champion) rows.push(row);
+    },
+    { allowCurrentBuild: current },
+  );
   const controls = [];
   for (let selector = 0; selector < 8; selector++) {
     if (selector < 4) controls.push(readClassicLevelCap([selector]));

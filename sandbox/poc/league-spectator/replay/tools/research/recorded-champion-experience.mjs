@@ -4,8 +4,8 @@ import { readExactMap11Definition } from "../exact-map-bin.mjs";
 import { extractRecordedChampionLevelCaps } from "./recorded-champion-level-cap.mjs";
 import { recordedChampionReplication } from "./recorded-champion-replication.mjs";
 
-export function readRecordedExperienceThresholds(bytes) {
-  const { objects } = readExactMap11Definition(bytes);
+export function readRecordedExperienceThresholds(bytes, build) {
+  const { objects } = readExactMap11Definition(bytes, build);
   // Native GameMode::experienceCurve reads the object link registered at +0x110.
   const mode = objects.find(({ pathHash }) => pathHash === "0b03bf5a");
   const link = mode?.fields.fde22db7;
@@ -47,10 +47,12 @@ export function extractRecordedChampionExperience(
   rawReplay,
   scene,
   onGroup,
+  options,
 ) {
   const replication = recordedChampionReplication(binary, rawReplay, scene, {
     accepts: (group, mask) => group === 32 && (mask & 0x10000800) !== 0,
     includeSnapshots: onGroup !== undefined,
+    allowCurrentBuild: options?.allowCurrentBuild === true,
   });
   const participants = new Map(
     [...replication.participants].map((participantId) => [
@@ -96,7 +98,12 @@ export function extractRecordedChampionExperience(
     else if (previous?.[1] !== experience || previous?.[2] !== level)
       state.points.push([timeSeconds, experience, level]);
   }
-  const caps = extractRecordedChampionLevelCaps(rawReplay, participants.keys());
+  const caps = extractRecordedChampionLevelCaps(
+    rawReplay,
+    participants.keys(),
+    undefined,
+    options,
+  );
   const tracks = [...participants].map(([participantId, { points }]) => {
     if (points.length === 0)
       throw Error(`Missing recorded experience for champion ${participantId}`);
@@ -110,10 +117,14 @@ export function extractRecordedChampionExperience(
 }
 
 if (import.meta.main) {
-  const [archive, replay, scene, output, oracleInput] = process.argv.slice(2);
-  if (!archive || !replay || !scene || !output) {
+  const args = process.argv.slice(2);
+  const current = args[0] === "--current";
+  const [archive, replay, scene, output, oracleInput, ...extra] = current
+    ? args.slice(1)
+    : args;
+  if (!archive || !replay || !scene || !output || extra.length !== 0) {
     throw Error(
-      "Usage: bun recorded-champion-experience.mjs <archive> <replay> <bound-scene.json> <output.json> [oracle-groups.json]",
+      "Usage: bun recorded-champion-experience.mjs [--current] <archive> <replay> <bound-scene.json> <output.json> [oracle-groups.json]",
     );
   }
   const groups = [];
@@ -122,13 +133,18 @@ if (import.meta.main) {
     readFileSync(replay),
     JSON.parse(readFileSync(scene, "utf8")),
     oracleInput === undefined ? undefined : (group) => groups.push(group),
+    { allowCurrentBuild: current },
   );
   const bytes = JSON.stringify(artifact) + "\n";
   writeFileSync(output, bytes, { flag: "wx" });
   if (oracleInput !== undefined) {
     writeFileSync(
       oracleInput,
-      JSON.stringify({ identity: artifact.replaySha256, groups }),
+      JSON.stringify({
+        identity: artifact.replaySha256,
+        ...(current ? { build: artifact.build } : {}),
+        groups,
+      }),
       { flag: "wx" },
     );
   }

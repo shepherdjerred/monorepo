@@ -69,6 +69,7 @@ const { positionals, values } = parseArgs({
     "champion-stats-from-replay": { type: "boolean" },
     "champion-experience": { type: "string" },
     "champion-experience-sha256": { type: "string" },
+    "champion-experience-from-replay": { type: "boolean" },
     "experience-map-definition": { type: "string" },
     "champion-inventory": { type: "string" },
     "champion-inventory-sha256": { type: "string" },
@@ -185,10 +186,18 @@ if (decodeChampionStats) {
   );
 }
 const experienceMapPath = values["experience-map-definition"];
+const decodeChampionExperience =
+  values["champion-experience-from-replay"] === true;
 assert.equal(
-  experienceMapPath === undefined,
-  values["champion-experience"] === undefined,
+  experienceMapPath !== undefined,
+  decodeChampionExperience || values["champion-experience"] !== undefined,
   "Recorded experience requires the exact Map11 definition",
+);
+assert.ok(
+  !decodeChampionExperience ||
+    (privatePackageOutput !== undefined &&
+      values["champion-experience"] === undefined),
+  "Replay-decoded champion experience requires a private package without prepared experience tracks",
 );
 const visionPath = values["team-vision"];
 const visionDigest = values["team-vision-sha256"];
@@ -1160,6 +1169,10 @@ assert.ok(
   !decodeChampionInventory || currentBuild,
   "Replay-decoded champion inventory requires the verified current build",
 );
+assert.ok(
+  !decodeChampionExperience || currentBuild,
+  "Replay-decoded champion experience requires the verified current build",
+);
 if (currentBuild) {
   assert.ok(
     privatePackageOutput !== undefined &&
@@ -1620,6 +1633,7 @@ if (decoderBytes !== undefined) {
       ...(currentBuild ? decoderOptions : {}),
       ...(decodeChampionStats ? { decodeChampionStats: true } : {}),
       ...(decodeChampionInventory ? { decodeChampionInventory: true } : {}),
+      ...(decodeChampionExperience ? { decodeChampionExperience: true } : {}),
     };
   } else {
     const [
@@ -1837,10 +1851,15 @@ if (scoutScene) {
   }
 }
 const itemRoutes = new Map();
-if (championStatInputs.length > 0 || includeInventory) {
+if (
+  championStatInputs.length > 0 ||
+  includeInventory ||
+  decodeChampionExperience
+) {
   const {
     admitRecordedChampionStats,
     championExperienceSceneSchema,
+    championExperienceThresholdsSchema,
     readChampionExperienceTracks,
   } = await import("../scout-terrain-champion-stats.ts");
   const appRoot = fileURLToPath(
@@ -1851,6 +1870,19 @@ if (championStatInputs.length > 0 || includeInventory) {
   );
   const { z } = await import(Bun.resolveSync("zod", appRoot));
   const roster = scene.participants.map(({ participantId }) => participantId);
+  let experienceThresholds;
+  if (experienceMapPath !== undefined) {
+    const { readRecordedExperienceThresholds } =
+      await import("./research/recorded-champion-experience.mjs");
+    experienceThresholds = championExperienceThresholdsSchema(z).parse(
+      readRecordedExperienceThresholds(
+        await readFile(experienceMapPath),
+        identity.build,
+      ),
+    );
+    if (decodeChampionExperience)
+      scene.championExperienceThresholds = experienceThresholds;
+  }
   for (const { kind, field, path, digest } of championStatInputs) {
     const bytes = await readFile(path);
     assert.equal(
@@ -1866,13 +1898,8 @@ if (championStatInputs.length > 0 || includeInventory) {
       kind,
     );
     if (kind === "experience") {
-      const { readRecordedExperienceThresholds } =
-        await import("./research/recorded-champion-experience.mjs");
-      const thresholds = readRecordedExperienceThresholds(
-        await readFile(experienceMapPath),
-      );
       const experience = championExperienceSceneSchema(z).parse({
-        thresholds,
+        thresholds: experienceThresholds,
         tracks,
       });
       readChampionExperienceTracks(

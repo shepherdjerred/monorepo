@@ -72,6 +72,7 @@ const digestPattern = /^[a-f0-9]{64}$/;
 const inputSkins = archiveCatalog ? manifest.skins : manifest.actors;
 const currentArchive =
   archiveCatalog && manifest.build === currentChampionBuild;
+const buildScoped = currentArchive && manifest.selectionKind === "archive";
 const executableHash = championArchiveExecutableHashes[manifest.build];
 if (
   manifest.schema !== 1 ||
@@ -96,7 +97,11 @@ if (archiveCatalog) {
     ).size !== inputSkins.length
   )
     throw Error("Pinned canonical archive skin inputs required");
-  if (currentArchive) {
+  if (manifest.selectionKind !== undefined && !buildScoped)
+    throw Error("Unknown archive skin selection kind");
+  if (buildScoped && manifest.nativeOpening !== undefined)
+    throw Error("Build-scoped archive skins cannot contain a match opening");
+  if (currentArchive && !buildScoped) {
     const { nativeOpening } = manifest;
     verifyNativeCatalogOpening(
       nativeOpening,
@@ -552,7 +557,10 @@ const receipt = archiveCatalog
       sourceManifestSha256,
       sourceCensusSha256: manifest.sourceCensusSha256,
       selectionSha256: manifest.selectionSha256,
-      ...(currentArchive ? { nativeOpening: manifest.nativeOpening } : {}),
+      ...(buildScoped ? { selectionKind: "archive" } : {}),
+      ...(currentArchive && !buildScoped
+        ? { nativeOpening: manifest.nativeOpening }
+        : {}),
       toolchain: { assemblies: dlls, runtimeSha256 },
       scope:
         "Archived SKN, SKL and authored base-color images. Match legality, native shader passes and animation are separate.",

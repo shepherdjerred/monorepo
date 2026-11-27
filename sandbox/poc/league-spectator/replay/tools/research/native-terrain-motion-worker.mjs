@@ -12,6 +12,7 @@ import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
 import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
+import { verifyRecordedChampionExperienceFooter } from "./recorded-champion-experience-tracks.mjs";
 import { createRecordedInventoryCollector } from "./recorded-inventory-packets.mjs";
 
 function* observeMotionPackets(packets, observe) {
@@ -31,6 +32,7 @@ async function prepareMotion({
   allowCurrentBuild = false,
   decodeChampionStats,
   decodeChampionInventory,
+  decodeChampionExperience,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -70,6 +72,15 @@ async function prepareMotion({
     throw new Error(
       "Replay-derived champion inventory requires the reviewed current build.",
     );
+  if (
+    decodeChampionExperience !== undefined &&
+    (decodeChampionExperience !== true ||
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild)
+  )
+    throw Error(
+      "Replay-derived champion experience requires the reviewed current build.",
+    );
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
@@ -101,20 +112,24 @@ async function prepareMotion({
   const packets = replayTimedPacketEnvelopes(
     replayPacketEnvelopes(replay, decompress),
   );
-  const { motion, coverage, championStats } = prepareNativeTerrainMotion(
-    prepared,
-    keyframes,
-    inventory === undefined
-      ? packets
-      : observeMotionPackets(packets, inventory.observe),
-    {
-      readWaypoints: createWaypointReaderFromCodecs(codecs),
-      readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
-      waypointOrigin,
-      ...(decodeChampionStats === true ? { includeChampionStats: true } : {}),
-      ...options,
-    },
-  );
+  const { motion, coverage, championStats, championExperienceTracks } =
+    prepareNativeTerrainMotion(
+      prepared,
+      keyframes,
+      inventory === undefined
+        ? packets
+        : observeMotionPackets(packets, inventory.observe),
+      {
+        readWaypoints: createWaypointReaderFromCodecs(codecs),
+        readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
+        waypointOrigin,
+        ...(decodeChampionStats === true ? { includeChampionStats: true } : {}),
+        ...(decodeChampionExperience === true
+          ? { includeChampionExperience: true }
+          : {}),
+        ...options,
+      },
+    );
   if (decodeChampionStats === true && championStats === undefined)
     throw new Error(
       "Replay motion worker has no champion stats for this replay.",
@@ -122,6 +137,12 @@ async function prepareMotion({
   if (inventory !== undefined) {
     for (const packet of packets) inventory.observe(packet);
   }
+  if (championExperienceTracks !== undefined)
+    verifyRecordedChampionExperienceFooter(
+      replay.bytes,
+      binding,
+      championExperienceTracks,
+    );
   return {
     type: "ready",
     frames: keyframes.frames,
@@ -131,6 +152,9 @@ async function prepareMotion({
     ...(inventory === undefined
       ? {}
       : { championInventoryTracks: inventory.finish() }),
+    ...(championExperienceTracks === undefined
+      ? {}
+      : { championExperienceTracks }),
   };
 }
 

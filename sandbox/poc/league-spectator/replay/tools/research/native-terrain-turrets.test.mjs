@@ -110,30 +110,32 @@ test("binds forward and reversed packet names to unordered authored coordinates"
   );
 });
 
-test("retains the current disputed turret event while omitting its presentation", () => {
-  const { prepared, receipt, packets } = fixture();
-  const currentContext = 1073742154;
-  const lossTime = 2392.406078125;
-  const snapshotTime = 2400.68212890625;
+test("retains a disputed turret event while omitting its presentation", () => {
+  const { prepared, receipt } = fixture();
+  const currentContext = prepared.observations.turrets[0].context;
+  const lossTime = prepared.observations.turrets[0].timeSeconds;
+  const snapshotTime = 8;
   receipt.installedCompatibilityVersion = "16.23.8418428+branch";
-  receipt.records.at(-1).mapNameHash = 392430785;
-  packets[0].paramBits = currentContext;
-  packets[0].payload = namePacket(392430785, 0);
-  prepared.observations.turrets[0].context = currentContext;
-  prepared.observations.turrets[0].timeSeconds = lossTime;
   prepared.packetReader.build = "16.23.841.8428";
+  prepared.packetReader.keyframes = [
+    { timeSeconds: 0, chunkOffset: 1 },
+    { timeSeconds: lossTime, chunkOffset: 2 },
+    { timeSeconds: snapshotTime, chunkOffset: 3 },
+  ];
   const readOpening = prepared.packetReader.read;
   const payload = new Uint8Array(41);
-  payload[13] = 0xed;
+  payload[13] = 0x08;
   prepared.packetReader.read = (time) =>
     time === 0
       ? readOpening(time)
       : {
-          keyframe: { timeSeconds: snapshotTime, chunkOffset: 2 },
+          keyframe: prepared.packetReader.keyframes.find(
+            ({ timeSeconds }) => timeSeconds === time,
+          ),
           packets: [
             {
               stream: 2,
-              chunkOffset: 2,
+              chunkOffset: time === lossTime ? 2 : 3,
               explicitOpcode: 1012,
               paramBits: currentContext,
               payload,
@@ -150,6 +152,7 @@ test("retains the current disputed turret event while omitting its presentation"
     overlay.presentationOmissions[0].snapshotTimeSeconds,
     snapshotTime,
   );
+  assert.equal(overlay.presentationOmissions[0].snapshotStateByte, 0x08);
 });
 
 test("rejects missing or conflicting packet identities and unbound losses", () => {

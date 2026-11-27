@@ -147,17 +147,34 @@ export async function loadChampionModelCatalog(
     "Champion catalog protocol differs",
   );
   assert.ok(!Object.hasOwn(catalog, "replaySha256"));
+  const buildScoped =
+    identity.build === currentChampionBuild &&
+    catalog.selectionKind === "archive";
+  assert.ok(
+    catalog.selectionKind === undefined || buildScoped,
+    "Unknown champion catalog selection kind",
+  );
   if (identity.build === currentChampionBuild) {
     assert.equal(
       catalog.installedExeSha256,
       championArchiveExecutableHashes[currentChampionBuild],
     );
     assert.match(catalog.sourceCensusSha256, digestPattern);
-    verifyNativeCatalogOpening(
-      catalog.nativeOpening,
-      selections,
-      identity.replaySha256,
-    );
+    if (buildScoped) {
+      assert.equal(
+        catalog.nativeOpening,
+        undefined,
+        "Build-scoped champion catalog cannot contain a match opening",
+      );
+      assert.match(catalog.sourceManifestSha256, digestPattern);
+      assert.match(catalog.selectionSha256, digestPattern);
+    } else {
+      verifyNativeCatalogOpening(
+        catalog.nativeOpening,
+        selections,
+        identity.replaySha256,
+      );
+    }
   }
   assert.ok(
     catalog.assets &&

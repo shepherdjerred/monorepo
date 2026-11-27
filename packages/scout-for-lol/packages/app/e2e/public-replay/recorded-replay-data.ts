@@ -111,12 +111,17 @@ const SceneIdentitySchema = z.object({
     .object({
       decodeChampionStats: z.literal(true).optional(),
       decodeChampionInventory: z.literal(true).optional(),
+      decodeChampionExperience: z.literal(true).optional(),
     })
     .optional(),
   championInventory: z.object({ tracks: z.array(z.unknown()) }).optional(),
   championInventoryItems: z.array(z.unknown()).nonempty().optional(),
   championExperience: z
     .object({ thresholds: z.array(z.number()), tracks: z.array(z.unknown()) })
+    .optional(),
+  championExperienceThresholds: z
+    .array(z.number().positive())
+    .nonempty()
     .optional(),
   identity: z.object({
     replaySha256: z.string(),
@@ -161,10 +166,23 @@ function championCapabilities({
   championResourceTracks,
   championInventory,
   championInventoryItems,
+  championExperience,
+  championExperienceThresholds,
 }: z.infer<typeof SceneIdentitySchema>) {
   const directChampionStats = workerMotion?.decodeChampionStats === true;
   const directChampionInventory =
     workerMotion?.decodeChampionInventory === true;
+  const directChampionExperience =
+    workerMotion?.decodeChampionExperience === true;
+  if (
+    directChampionExperience
+      ? championExperience !== undefined ||
+        championExperienceThresholds === undefined
+      : championExperienceThresholds !== undefined
+  )
+    throw new Error(
+      "Recorded scene has inconsistent worker experience inputs.",
+    );
   if (
     directChampionInventory
       ? championInventory !== undefined || championInventoryItems === undefined
@@ -179,7 +197,14 @@ function championCapabilities({
       "Direct worker stats require a scene without baked champion stat tracks.",
     );
   return {
+    directChampionObservations:
+      directChampionStats ||
+      directChampionInventory ||
+      directChampionExperience,
     directChampionStats,
+    directChampionExperience,
+    championExperience:
+      directChampionExperience || championExperience !== undefined,
     championHealth: directChampionStats || championHealthTracks !== undefined,
     championResources:
       directChampionStats || championResourceTracks !== undefined,
@@ -212,7 +237,6 @@ export async function readRecordedReplay() {
     terrainVisibility,
     teamVision,
     championAnimationCues,
-    championExperience,
   } = scene;
   if (
     identity.replaySha256 !== digest ||
@@ -258,7 +282,6 @@ export async function readRecordedReplay() {
     unitVisibility: teamVision !== undefined,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
     ...capabilities,
-    championExperience: championExperience !== undefined,
     descriptor: {
       ...replayFixture,
       matchId: null,

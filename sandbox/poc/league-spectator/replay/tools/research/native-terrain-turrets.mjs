@@ -140,47 +140,52 @@ function readOpeningBindings(packetReader, placements) {
   return bindings;
 }
 
-function findCurrentPresentationOmission(packetReader, losses) {
-  const loss = losses.find(
-    ({ context, mapNameHash, timeSeconds }) =>
-      context === 1073742154 &&
-      mapNameHash === 392430785 &&
-      timeSeconds === 2392.406078125,
-  );
-  if (!loss) return [];
-  const { keyframe, packets } = packetReader.read(2400.68212890625);
-  if (keyframe.timeSeconds !== 2400.68212890625)
-    throw Error("Expected the indexed disputed turret snapshot");
-  const candidates = [];
-  let opcode;
-  let context = 0;
-  for (const packet of packets) {
-    if (packet.stream !== 2 || packet.chunkOffset !== keyframe.chunkOffset)
-      break;
-    opcode = packet.explicitOpcode ?? opcode;
-    context =
-      packet.marker & 32
-        ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
-        : packet.paramBits;
-    if (
-      context === loss.context &&
-      opcode === 1012 &&
-      packet.payload.length === 41
-    )
-      candidates.push(packet.payload[13]);
+function findCurrentPresentationOmissions(packetReader, losses) {
+  if (losses.length === 0) return [];
+  const lossByContext = new Map(losses.map((loss) => [loss.context, loss]));
+  const firstLoss = Math.min(...losses.map(({ timeSeconds }) => timeSeconds));
+  const omissions = new Map();
+  for (const { timeSeconds, chunkOffset } of packetReader.keyframes) {
+    if (timeSeconds <= firstLoss) continue;
+    const { packets } = packetReader.read(timeSeconds);
+    const states = new Map();
+    let opcode;
+    let context = 0;
+    for (const packet of packets) {
+      if (packet.stream !== 2 || packet.chunkOffset !== chunkOffset) break;
+      opcode = packet.explicitOpcode ?? opcode;
+      context =
+        packet.marker & 32
+          ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
+          : packet.paramBits;
+      if (opcode !== 1012 || packet.payload.length !== 41) continue;
+      const loss = lossByContext.get(context);
+      if (
+        loss === undefined ||
+        timeSeconds <= loss.timeSeconds ||
+        omissions.has(context)
+      )
+        continue;
+      const state = packet.payload[13];
+      const previous = states.get(context);
+      if (previous !== undefined && ((previous ^ state) & 8) !== 0)
+        throw Error("Conflicting turret bits in the indexed snapshot");
+      if (previous === undefined) states.set(context, state);
+    }
+    for (const [context, state] of states) {
+      if ((state & 8) === 0) continue;
+      const loss = lossByContext.get(context);
+      omissions.set(context, {
+        context,
+        mapNameHash: loss.mapNameHash,
+        reason: "Recorded turret snapshot indicates alive after verified loss",
+        lossTimeSeconds: loss.timeSeconds,
+        snapshotTimeSeconds: timeSeconds,
+        snapshotStateByte: state,
+      });
+    }
   }
-  if (candidates.length !== 1 || candidates[0] !== 0xed)
-    throw Error("Unexpected disputed turret snapshot evidence");
-  return [
-    {
-      context: loss.context,
-      mapNameHash: loss.mapNameHash,
-      reason: "Recorded turret snapshot indicates alive after verified loss",
-      lossTimeSeconds: loss.timeSeconds,
-      snapshotTimeSeconds: keyframe.timeSeconds,
-      snapshotStateByte: candidates[0],
-    },
-  ];
+  return Array.from(omissions.values());
 }
 
 /** Place only the corroborated turret losses and their seek-state cohort. */
@@ -209,7 +214,7 @@ export function prepareNativeTerrainTurrets(
   const losses = observations.turrets.map(withPlacement);
   const presentationOmissions =
     packetReader.build === currentTerrainPositionBuild
-      ? findCurrentPresentationOmission(packetReader, losses)
+      ? findCurrentPresentationOmissions(packetReader, losses)
       : [];
   const omittedContexts = new Set(
     presentationOmissions.map(({ context }) => context),

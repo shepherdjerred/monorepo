@@ -161,6 +161,21 @@ async function verifyRecordedRosterResources(page: Page, testInfo: TestInfo) {
 const longReplaySha256 =
   "cea604f9944cb8ca433a0655d742e0b741ae4477e0c7100b59a25b3221562668";
 const experienceSamples = {
+  a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1: {
+    participantId: 1_073_742_161,
+    samples: [
+      { time: 66.6, total: 0, level: 1, current: 0, max: 280 },
+      { time: 66.7, total: 62, level: 1, current: 62, max: 280 },
+      { time: 110.3, total: 558, level: 2, current: 278, max: 380 },
+      {
+        time: 1900.2,
+        total: 20_403.13671875,
+        level: 19,
+        current: 63.13671875,
+        max: 2080,
+      },
+    ],
+  },
   [longReplaySha256]: {
     participantId: 1_073_742_161,
     samples: [

@@ -177,6 +177,65 @@ test("loads pinned build-authored GLBs for the decoded skin selectors", async ()
         ...selections.slice(1),
       ]),
     ).rejects.toThrow("Opening selection disagrees with the native roster");
+
+    const archiveCatalog = {
+      ...currentCatalog,
+      selectionKind: "archive",
+      selectionSha256: "f".repeat(64),
+      sourceManifestSha256: "1".repeat(64),
+    };
+    const archive = JSON.stringify(archiveCatalog);
+    const archivePin = sha256(archive);
+    await writeFile(manifest, archive);
+    const otherMatch = { ...current, replaySha256: "e".repeat(64) };
+    const otherSelections = selections.map((selection) => ({
+      ...selection,
+      context: selection.context + 100,
+    }));
+    expect(
+      (
+        await loadChampionModelCatalog(
+          manifest,
+          archivePin,
+          current,
+          selections,
+        )
+      ).bindings,
+    ).toEqual(loaded.bindings);
+    expect(
+      (
+        await loadChampionModelCatalog(
+          manifest,
+          archivePin,
+          otherMatch,
+          otherSelections,
+        )
+      ).bindings,
+    ).toEqual(
+      loaded.bindings.map((entry) => ({
+        ...entry,
+        participantId: entry.participantId + 100,
+      })),
+    );
+    await expect(
+      loadChampionModelCatalog(manifest, archivePin, otherMatch, [
+        { ...otherSelections[0], skinId: 1 },
+        ...otherSelections.slice(1),
+      ]),
+    ).rejects.toThrow("Missing exact champion skin");
+    const mixed = JSON.stringify({
+      ...archiveCatalog,
+      nativeOpening: JSON.parse(corroborated).nativeOpening,
+    });
+    await writeFile(manifest, mixed);
+    await expect(
+      loadChampionModelCatalog(
+        manifest,
+        sha256(mixed),
+        otherMatch,
+        otherSelections,
+      ),
+    ).rejects.toThrow("cannot contain a match opening");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
