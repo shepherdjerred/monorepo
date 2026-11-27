@@ -129,6 +129,7 @@ const PlayerMatchHistoryRowSchema = z
     deaths: LakeIntSchema,
     assists: LakeIntSchema,
     creep_score: LakeIntSchema,
+    largest_multi_kill: LakeIntSchema,
     gold_earned: LakeIntSchema,
     total_damage_dealt_to_champions: LakeIntSchema,
     vision_score: LakeIntSchema,
@@ -212,7 +213,7 @@ export async function readPlayerMatchHistory(
       `SELECT match_id, puuid, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
       `game_duration_seconds, queue, queue_id, game_mode, placement, subteam_placement, player_subteam_id, ` +
       `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
-      `champion_id, champion_name, team_position, team_id, win, kills, deaths, assists, creep_score, ` +
+      `champion_id, champion_name, team_position, team_id, win, kills, deaths, assists, creep_score, largest_multi_kill, ` +
       `gold_earned, total_damage_dealt_to_champions, vision_score, ${PLAYED_SECONDS_SQL} AS time_played, ` +
       `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
       `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +

@@ -58,6 +58,8 @@ export type TestLakeMatchFact = {
   totalDamageDealtToChampions?: number;
   /** Override to make per-participant CS vary, e.g. for CS-per-minute tests. */
   creepScore?: number;
+  /** Riot's largestMultiKill (2 double .. 5 penta); defaults to a double. */
+  largestMultiKill?: number;
   teamId?: number;
   /** Team objective flags for the match_teams row this fact rolls up into. */
   firstDragon?: boolean;
@@ -213,6 +215,11 @@ function remakeFields(
   };
 }
 
+/** Riot's largestMultiKill; a double unless the fact says otherwise. */
+function multiKillFields(fact: TestLakeMatchFact) {
+  return { largest_multi_kill: fact.largestMultiKill ?? 2 };
+}
+
 function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
   const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
@@ -304,7 +311,7 @@ function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     triple_kills: 0,
     quadra_kills: 0,
     penta_kills: 0,
-    largest_multi_kill: 2,
+    ...multiKillFields(fact),
     killing_sprees: 1,
     first_blood_kill: false,
     champ_level: 16,

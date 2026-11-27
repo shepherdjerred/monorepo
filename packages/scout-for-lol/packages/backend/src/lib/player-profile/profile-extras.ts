@@ -34,6 +34,7 @@ type RecentGame = {
   kills: number;
   deaths: number;
   assists: number;
+  largestMultiKill: number;
   queue: string | null;
   queueId: number;
   gameCreationMs: number;
@@ -110,6 +111,7 @@ export function buildHighlights(input: {
             kills: latest.kills,
             deaths: latest.deaths,
             assists: latest.assists,
+            largestMultiKill: latest.largestMultiKill,
             queue: latest.queue,
             queueId: latest.queueId,
             gameCreationMs: latest.gameCreationMs,

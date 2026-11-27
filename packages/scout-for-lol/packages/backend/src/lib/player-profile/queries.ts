@@ -87,6 +87,8 @@ export type MatchHistoryEntry = {
   deaths: number;
   assists: number;
   creepScore: number;
+  /** Riot's `largestMultiKill`: 2 double, 3 triple, 4 quadra, 5 penta. */
+  largestMultiKill: number;
   csPerMinute: number;
   visionScore: number;
   goldEarned: number;
@@ -212,6 +214,7 @@ export async function decorateHistoryRows(
       deaths: row.deaths,
       assists: row.assists,
       creepScore: row.creep_score,
+      largestMultiKill: row.largest_multi_kill,
       csPerMinute: minutes > 0 ? row.creep_score / minutes : 0,
       visionScore: row.vision_score,
       goldEarned: row.gold_earned,

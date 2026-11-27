@@ -54,7 +54,9 @@ vi.mock("#src/report-lake/receipted-archive.ts", async () => {
 });
 
 // Discord membership is the one boundary the harness cannot make unavailable.
-const access = vi.hoisted(() => ({ unavailable: false }));
+// One named actor gets that answer; nothing is shared between tests, so a test
+// that outlives its timeout cannot change what the next one sees.
+const UNAVAILABLE_ACTOR = vi.hoisted(() => "300000000000000059");
 vi.mock("#src/consumer/access.ts", async () => {
   const actual: typeof AccessModule = await vi.importActual(
     "#src/consumer/access.ts",
@@ -64,7 +66,7 @@ vi.mock("#src/consumer/access.ts", async () => {
     resolveConsumerGuildAccess: (
       ...args: Parameters<typeof actual.resolveConsumerGuildAccess>
     ) =>
-      access.unavailable
+      args[0].discordId === UNAVAILABLE_ACTOR
         ? Promise.resolve({ kind: "unavailable" as const })
         : actual.resolveConsumerGuildAccess(...args),
   };
@@ -91,7 +93,6 @@ const DAY_MS = 24 * HOUR_MS;
 registerConsumerProfileFeatureTestLifecycle({
   feature: profileFeature,
   prepare: async () => {
-    access.unavailable = false;
     archivedSnapshots.clear();
     trpc.setMembership([
       { guildId, asAdmin: false },
@@ -166,6 +167,7 @@ function game(options: {
   championName?: string;
   queue?: string;
   matchId?: RiotMatchId;
+  largestMultiKill?: number;
 }): TestLakeMatchFact {
   return {
     playerId: options.player.id,
@@ -181,6 +183,9 @@ function game(options: {
     championId: options.championId ?? 103,
     championName: options.championName ?? "Ahri",
     gameCreationAt: options.at,
+    ...(options.largestMultiKill === undefined
+      ? {}
+      : { largestMultiKill: options.largestMultiKill }),
   };
 }
 
@@ -226,27 +231,29 @@ function rankJson(tier: string, division: number, lp: number) {
 }
 
 describe("page endpoints: access", () => {
+  // Neither answer reaches the lake, so these never wait on DuckDB.
   test.each(["profileSummary", "roster"] as const)(
-    "%s is forbidden when no shared server has the feature, and unavailable when Discord cannot be asked",
+    "%s is forbidden when no shared server has the feature",
     async (procedure) => {
-      const player = await seedPlayer({
-        serverId: guildId,
-        alias: "Access Player",
-        puuids: [testPuuid("access-main")],
-      });
       const call = () =>
         procedure === "roster"
           ? trpc.authedCaller().consumerPlayer.roster()
-          : trpc
-              .authedCaller()
-              .consumerPlayer.profileSummary({ playerId: player.id });
-
+          : trpc.authedCaller().consumerPlayer.profileSummary({ playerId: 1 });
       await expect(call()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    },
+  );
 
+  test.each(["profileSummary", "roster"] as const)(
+    "%s is unavailable, not forbidden, when Discord cannot be asked",
+    async (procedure) => {
       enableProfiles(guildId);
-      await expect(call()).resolves.toBeDefined();
-
-      access.unavailable = true;
+      const caller = trpc.authedCaller(
+        DiscordAccountIdSchema.parse(UNAVAILABLE_ACTOR),
+      );
+      const call = () =>
+        procedure === "roster"
+          ? caller.consumerPlayer.roster()
+          : caller.consumerPlayer.profileSummary({ playerId: 1 });
       await expect(call()).rejects.toMatchObject({
         code: "SERVICE_UNAVAILABLE",
       });
@@ -297,6 +304,8 @@ describe("consumerPlayer.profileSummary highlights", () => {
           championName,
           championId,
           at: new Date(now - (index + 1) * HOUR_MS),
+          // The newest game was a quadra kill.
+          ...(index === 0 ? { largestMultiKill: 4 } : {}),
         }),
       ),
     });
@@ -333,6 +342,7 @@ describe("consumerPlayer.profileSummary highlights", () => {
       kills: 5,
       deaths: 2,
       assists: 7,
+      largestMultiKill: 4,
       queue: "solo",
       leaguePointsDelta: null,
     });
