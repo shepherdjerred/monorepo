@@ -196,6 +196,31 @@ export class CaptureStore {
     return store;
   }
 
+  /** Archive snapshots contain projected read data and must never be migrated in place. */
+  static openArchived(dbPath: string): CaptureStore {
+    const database = new Database(dbPath, { readonly: true, strict: true });
+    try {
+      database.run("PRAGMA trusted_schema = OFF;");
+      database.run("PRAGMA query_only = ON;");
+      const { user_version: version } = z
+        .object({ user_version: z.number() })
+        .parse(database.query("PRAGMA user_version").get());
+      if (version !== CAPTURE_SCHEMA_VERSION) {
+        throw new Error(
+          "Brim capture archive uses an unsupported database version",
+        );
+      }
+      // Check the exact tables needed by the query API before replacing a last-good snapshot.
+      database.query("SELECT id FROM captures LIMIT 0").all();
+      database.query("SELECT capture_id FROM capture_blocks LIMIT 0").all();
+      database.query("SELECT hash FROM blobs LIMIT 0").all();
+      return new CaptureStore(database, dbPath);
+    } catch (error) {
+      database.close();
+      throw error;
+    }
+  }
+
   get path(): string {
     return this.#path;
   }

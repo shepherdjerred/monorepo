@@ -151,17 +151,12 @@ import {
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
-import {
-  runOpsDigest as _runOpsDigest,
-  runOpsSnapshot as _runOpsSnapshot,
-} from "./ops-snapshot.ts";
-import {
-  runLlmArchiveIndex as _runLlmArchiveIndex,
-  type LlmArchiveIndexWorkflowInput,
-} from "./ops/llm-archive-index.ts";
+import * as opsSnapshot from "./ops-snapshot.ts";
+import * as llmArchive from "./ops/llm-archive-index.ts";
 import type { SyncLlmArchiveIndexResult } from "#activities/ops/llm-archive/llm-archive-index.ts";
 import { runRenovateDeltaEnrichment as _runRenovateDeltaEnrichment } from "./ops/renovate-delta-enrichment.ts";
 import * as renovate from "./ops/renovate-automation.ts";
+import * as brim from "./ops/brim-archive.ts";
 import * as agentChat from "./agent-chat/entrypoints.ts";
 import type {
   BlueBubblesCursor,
@@ -397,19 +392,20 @@ export const runGlitterCorpusDaily = () =>
 
 export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
-export const runOpsSnapshot = () => _runOpsSnapshot();
+export const runBrimArchiveRefresh = () => brim.runBrimArchiveRefresh();
+export const runOpsSnapshot = () => opsSnapshot.runOpsSnapshot();
 export const runRenovateDeltaEnrichment = () => _runRenovateDeltaEnrichment();
 export const runDailyRenovateRanking = renovate.runDailyRenovateRanking;
 export const runRenovateBundleDispatch = renovate.runRenovateBundleDispatch;
 export async function runLlmArchiveIndex(
-  input: LlmArchiveIndexWorkflowInput = {},
+  input: llmArchive.LlmArchiveIndexWorkflowInput = {},
 ): Promise<SyncLlmArchiveIndexResult> {
-  return _runLlmArchiveIndex(input);
+  return llmArchive.runLlmArchiveIndex(input);
 }
 export async function runOpsDigest(
-  input: Parameters<typeof _runOpsDigest>[0],
-): ReturnType<typeof _runOpsDigest> {
-  return _runOpsDigest(input);
+  input: Parameters<typeof opsSnapshot.runOpsDigest>[0],
+): ReturnType<typeof opsSnapshot.runOpsDigest> {
+  return opsSnapshot.runOpsDigest(input);
 }
 export const agentChatWorkflow = agentChat.agentChatWorkflow;
 export const agentChatTurnReceiptWorkflow =

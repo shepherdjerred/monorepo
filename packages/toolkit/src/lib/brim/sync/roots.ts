@@ -250,7 +250,11 @@ function selectJsonl(relative: string): FileSelection | null {
   return relative.endsWith(".jsonl") ? { format: { kind: "jsonl" } } : null;
 }
 
-export function syncRoots(environment: Environment, home: string): SyncRoot[] {
+export function syncRoots(
+  environment: Environment,
+  home: string,
+  includeDesktopStores = false,
+): SyncRoot[] {
   const claudeDirs = configuredDirs(environment["CLAUDE_CONFIG_DIR"], home) ?? [
     path.join(home, ".claude"),
   ];
@@ -286,5 +290,73 @@ export function syncRoots(environment: Environment, home: string): SyncRoot[] {
     });
   }
   roots.push(...agentStoreRoots(home));
+  if (includeDesktopStores) {
+    const paths = defaultHistoryPaths(home);
+    roots.push(
+      {
+        tool: "cursor",
+        source: paths.cursorConversationDb,
+        kind: "file",
+        archivePrefix: "conversation-search.db",
+        select: () => ({
+          format: sqlite({
+            tables: [
+              {
+                table: "conversations",
+                columns: [
+                  "fts_rowid",
+                  "source",
+                  "scope",
+                  "id",
+                  "title",
+                  "updated_at",
+                ],
+              },
+              {
+                table: "conversation_fts",
+                columns: ["body"],
+                preserveRowId: true,
+              },
+            ],
+          }),
+        }),
+      },
+      {
+        tool: "conductor",
+        source: paths.conductorDb,
+        kind: "file",
+        archivePrefix: "conductor.db",
+        select: () => ({
+          format: sqlite({
+            tables: [
+              {
+                table: "sessions",
+                columns: [
+                  "id",
+                  "title",
+                  "created_at",
+                  "updated_at",
+                  "model",
+                  "agent_type",
+                  "workspace_id",
+                ],
+              },
+              {
+                table: "session_messages",
+                columns: [
+                  "id",
+                  "session_id",
+                  "role",
+                  "content",
+                  "full_message",
+                  "created_at",
+                ],
+              },
+            ],
+          }),
+        }),
+      },
+    );
+  }
   return roots;
 }

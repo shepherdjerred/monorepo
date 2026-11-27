@@ -114,7 +114,11 @@ const FALLBACK_SLACK_MS = 60_000;
 function sessionRows(
   store: CaptureStore,
   session: CaptureSessionTarget,
-  page: { readonly limit: number; readonly offset: number },
+  page: {
+    readonly limit: number;
+    readonly offset: number;
+    readonly since?: string;
+  },
 ): unknown[] {
   const clis = CAPTURE_CLIS.filter(
     (cli) => cli.historySource === session.source,
@@ -129,11 +133,13 @@ function sessionRows(
   return store.all(
     `SELECT * FROM captures
       WHERE cli IN (${clis.map(() => "?").join(", ")})
+        AND started_at >= ?
         AND (session_key = ?
              OR (session_key IS NULL AND started_at BETWEEN ? AND ?
                  AND (cwd IS NULL OR ? IS NULL OR cwd = ?)))
       ORDER BY started_at ASC, id ASC LIMIT ? OFFSET ?`,
     ...clis,
+    page.since ?? "",
     session.runtimeId,
     from,
     to,
@@ -156,12 +162,14 @@ export function listCaptures(
     readonly session: CaptureSessionTarget | null;
     readonly limit: number;
     readonly offset: number;
+    readonly since?: string;
   },
 ): { captures: HistoryApiCapture[]; hasMore: boolean } {
   const rows =
     options.session === null
       ? store.all(
-          "SELECT * FROM captures ORDER BY started_at DESC, id DESC LIMIT ? OFFSET ?",
+          "SELECT * FROM captures WHERE started_at >= ? ORDER BY started_at DESC, id DESC LIMIT ? OFFSET ?",
+          options.since ?? "",
           options.limit + 1,
           options.offset,
         )
@@ -244,8 +252,16 @@ function responseValue(
 }
 
 /** One capture with its rebuilt request, response, and new blocks. */
-export function captureDetail(store: CaptureStore, id: number): Detail | null {
-  const raw = store.get("SELECT * FROM captures WHERE id = ?", id);
+export function captureDetail(
+  store: CaptureStore,
+  id: number,
+  since = "",
+): Detail | null {
+  const raw = store.get(
+    "SELECT * FROM captures WHERE id = ? AND started_at >= ?",
+    id,
+    since,
+  );
   if (raw == null) return null;
   const row = CaptureRowSchema.parse(raw);
   const { blocks, sent } = detailBlocks(store, row);

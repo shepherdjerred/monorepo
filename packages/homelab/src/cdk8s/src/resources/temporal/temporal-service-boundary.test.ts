@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { App, Chart } from "cdk8s";
+import { Secret, ServiceAccount, Volume } from "cdk8s-plus-31";
 import { z } from "zod";
 import {
   findTemporalResource,
@@ -6,10 +8,105 @@ import {
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { createTemporalOperationsWorkers } from "./workers/operations-workers.ts";
+import { createTemporalWorkerNetworkPolicies } from "./workers/worker-network-policies.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-service-boundary");
 }
+
+test("only the Temporal infra worker gets Brim archive refresh access when enabled", () => {
+  const chart = new Chart(new App(), "temporal", {
+    namespace: "temporal",
+    disableResourceNameHashes: true,
+  });
+  const secret = Secret.fromSecretName(
+    chart,
+    "fixture-secret",
+    "fixture-secret",
+  );
+  const volume = (name: string) => Volume.fromEmptyDir(chart, name, name);
+  createTemporalOperationsWorkers(
+    chart,
+    {
+      serverServiceName: "temporal-fixture",
+      secret,
+      flagsAuthSecret: secret,
+      feedsAuthSecret: secret,
+      ciGithubSecret: secret,
+      infraServiceAccount: new ServiceAccount(chart, "fixture-service-account"),
+      homelabAuditEnvironment: {},
+      talosConfigVolume: volume("fixture-talos"),
+      ddnsApiTokenVolume: volume("fixture-ddns"),
+      gitBackupTokenVolume: volume("fixture-git-backup"),
+      gitMirrorCacheVolume: volume("fixture-mirror"),
+      billingSecret: secret,
+    },
+    true,
+  );
+  createTemporalWorkerNetworkPolicies(chart, true);
+  const manifests = chart.toJson();
+  const deployments = z
+    .array(
+      z.object({
+        metadata: z.object({ name: z.string() }),
+        spec: z.object({
+          template: z.object({
+            spec: z.object({
+              containers: z.array(z.object({ env: ContainerEnvSchema })),
+            }),
+          }),
+        }),
+      }),
+    )
+    .parse(manifests.filter((resource) => resource.kind === "Deployment"));
+  const consumers = deployments.filter(({ spec }) =>
+    spec.template.spec.containers.some(({ env }) =>
+      env.some(({ name }) => name.startsWith("BRIM_")),
+    ),
+  );
+  expect(consumers.map(({ metadata }) => metadata.name)).toEqual([
+    "temporal-temporal-infra-worker",
+  ]);
+  expect(consumers[0]?.spec.template.spec.containers[0]?.env).toEqual(
+    expect.arrayContaining([
+      {
+        name: "BRIM_API_URL",
+        value: "http://brim-service.brim-service.svc.cluster.local:7458",
+      },
+      {
+        name: "BRIM_SCHEDULER_TOKEN",
+        valueFrom: {
+          secretKeyRef: { name: "fixture-secret", key: "BRIM_SCHEDULER_TOKEN" },
+        },
+      },
+    ]),
+  );
+  expect(manifests).toContainEqual(
+    expect.objectContaining({
+      kind: "NetworkPolicy",
+      metadata: expect.objectContaining({ name: "temporal-infra-api-netpol" }),
+      spec: expect.objectContaining({
+        podSelector: { matchLabels: { component: "infra-worker" } },
+        egress: expect.arrayContaining([
+          {
+            to: [
+              {
+                namespaceSelector: {
+                  matchLabels: {
+                    "kubernetes.io/metadata.name": "brim-service",
+                  },
+                },
+                podSelector: { matchLabels: { app: "brim-service" } },
+              },
+            ],
+            ports: [{ port: 7458, protocol: "TCP" }],
+          },
+        ]),
+      }),
+    }),
+  );
+});
 
 describe("Temporal internal service boundary", () => {
   test("keeps the home worker on TLS through its permitted HTTPS egress", () => {

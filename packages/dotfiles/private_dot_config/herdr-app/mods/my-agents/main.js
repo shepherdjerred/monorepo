@@ -56,6 +56,7 @@ const PROVIDER_LABELS = {
   muse: "Meta Muse",
 };
 const atLimit = (a) =>
+  !a.address.includes("/") &&
   Boolean(limits()[a.provider ?? PROVIDER[a.app] ?? PROVIDER[a.program?.key]]);
 // The agent a terminal was started with, when the program table doesn't say (a Windows
 // codex runs as powershell, and a macOS login-shell command wraps `brim --provider` or
@@ -290,9 +291,13 @@ async function loadMachineAliases() {
   const r = await hc(["machine", "ls", "--json"]);
   if (r.code !== 0)
     throw new Error(r.stderr.trim() || `hc machine ls exited ${r.code}`);
+  const machines = JSON.parse(r.stdout).machines;
   machineAliases = Object.fromEntries(
-    JSON.parse(r.stdout).machines.map((m) => [m.name, [m.target, m.host]]),
+    machines.map((m) => [m.name, [m.target, m.host]]),
   );
+  const ids = Object.fromEntries(machines.map((m) => [m.name, m.id]));
+  if (JSON.stringify(ids) !== JSON.stringify(shared("herdr.core-ids")))
+    setShared("herdr.core-ids", ids);
 }
 function device(machine) {
   if (!machine) return window()?.platform === "windows" ? "windows" : "laptop";
@@ -355,6 +360,21 @@ function writePriority(address, level) {
   setShared("agents.priorities", marks);
 }
 
+async function brimMetadata(args) {
+  const r = await exec("brim", ["metadata", ...args]);
+  if (r.code !== 0)
+    throw new Error(r.stderr.trim() || "Brim metadata request failed");
+  return JSON.parse(r.stdout);
+}
+
+function terminalKey(address, localCore) {
+  const split = address.lastIndexOf("/");
+  const terminalId = address.slice(split + 1);
+  const coreId =
+    split < 0 ? localCore : shared("herdr.core-ids")?.[address.slice(0, split)];
+  return coreId && terminalId ? { coreId, terminalId } : null;
+}
+
 function agentTypeName(a) {
   if (a.program?.name) return a.program.name;
   const prov = a.provider ?? PROVIDER[a.app] ?? PROVIDER[a.program?.key];
@@ -381,7 +401,16 @@ export default class Agents extends View {
     this.pendingPins = JSON.parse(localStorage.getItem("pins") ?? "[]");
     if (!this.pendingPins.length) localStorage.removeItem("pins");
     this.migratingPins = new Set();
+    this.localCore = null;
+    this.priorityService = null;
+    this.priorityError = null;
+    this.priorityPoll = false;
+    this.legacyPriorities = JSON.parse(
+      localStorage.getItem("brim-priority-import") ??
+        JSON.stringify(priorityMarks()),
+    );
     if (checking()) return;
+    setShared("herdr.local-core", null);
     cx.spawn(async (cx) => {
       try {
         const r = await exec("hostname", []);
@@ -396,6 +425,8 @@ export default class Agents extends View {
     cx.timer.every(30000, (cx) => cx.notify());
     cx.timer.every(60000, (cx) => this.pollBrim(cx));
     this.pollBrim(cx);
+    cx.timer.every(5000, (cx) => this.pollPriorities(cx));
+    this.pollPriorities(cx);
     // Machines can be renamed or added while the app runs; their icons follow.
     const aliases = (cx) =>
       cx.spawn(async (cx) => {
@@ -436,6 +467,146 @@ export default class Agents extends View {
         cx.notify();
       }
     });
+  }
+
+  async updatePriorities() {
+    let list = await brimMetadata(["list"]);
+    if (this.priorityService === false)
+      this.legacyPriorities = { ...priorityMarks() };
+    this.priorityService = list.configured !== false;
+    if (this.priorityService !== shared("brim.priorities-configured"))
+      setShared("brim.priorities-configured", this.priorityService);
+    if (!this.priorityService) return;
+    let localCore = this.localCore;
+    if (!localCore) {
+      const status = await hc(["server", "status", "--json"]);
+      if (status.code !== 0) throw new Error("Herdr core identity unavailable");
+      localCore = JSON.parse(status.stdout).core.id;
+      this.localCore = localCore;
+      setShared("herdr.local-core", localCore);
+    }
+    const all = terminals();
+    const existing = new Map(
+      list.priorities.map((mark) => [
+        `${mark.coreId}/${mark.terminalId}`,
+        mark,
+      ]),
+    );
+    const imported = {};
+    const pending = [];
+    for (const terminal of all) {
+      const key = terminalKey(terminal.address, localCore);
+      if (!key) continue;
+      const mark = existing.get(`${key.coreId}/${key.terminalId}`);
+      if (mark && terminal.state === "finished") {
+        await brimMetadata([
+          "clear",
+          key.coreId,
+          key.terminalId,
+          JSON.stringify({ expectedRevision: mark.revision, ended: true }),
+        ]);
+        existing.delete(`${key.coreId}/${key.terminalId}`);
+      }
+      const priority = this.legacyPriorities[terminal.address];
+      if (
+        this.hostName &&
+        terminal.state === "live" &&
+        PRIORITIES.some((choice) => choice.id === priority)
+      ) {
+        imported[terminal.address] = priority;
+        pending.push({
+          ...key,
+          priority,
+          title: terminal.name?.trim().slice(0, 500) || "Herdr chat",
+          machineName: deviceTitle(
+            terminal.address.includes("/")
+              ? terminal.address.split("/")[0]
+              : null,
+            this.hostName,
+          ),
+        });
+      }
+    }
+    if (pending.length) {
+      await brimMetadata([
+        "import",
+        JSON.stringify({
+          source:
+            deviceTitle(null, this.hostName) === "MacBook"
+              ? "macbook"
+              : "other",
+          priorities: pending,
+        }),
+      ]);
+      for (const address of Object.keys(imported))
+        delete this.legacyPriorities[address];
+      list = await brimMetadata(["list"]);
+    } else {
+      list = { priorities: [...existing.values()] };
+    }
+    localStorage.setItem(
+      "brim-priority-import",
+      JSON.stringify(this.legacyPriorities),
+    );
+    const marks = new Map(
+      list.priorities.map((mark) => [
+        `${mark.coreId}/${mark.terminalId}`,
+        mark.priority,
+      ]),
+    );
+    const local = {};
+    for (const terminal of all) {
+      const key = terminalKey(terminal.address, localCore);
+      const priority = key && marks.get(`${key.coreId}/${key.terminalId}`);
+      if (priority) local[terminal.address] = priority;
+    }
+    if (JSON.stringify(local) !== JSON.stringify(priorityMarks()))
+      setShared("agents.priorities", local);
+  }
+
+  pollPriorities(cx) {
+    if (this.priorityPoll) return;
+    this.priorityPoll = true;
+    cx.spawn(async (cx) => {
+      try {
+        await this.updatePriorities();
+      } catch {
+        // Keep the previous marks across a service or workstation outage.
+      } finally {
+        this.priorityPoll = false;
+        cx.notify();
+      }
+    });
+  }
+
+  async savePriority(address, level) {
+    if (shared("brim.priorities-configured") === false) {
+      writePriority(address, level);
+      return;
+    }
+    const key = terminalKey(address, shared("herdr.local-core"));
+    if (!key) throw new Error("Herdr core identity unavailable");
+    const endpoint = [key.coreId, key.terminalId];
+    const { state } = await brimMetadata(["get", ...endpoint]);
+    const terminal = terminals().find((item) => item.address === address);
+    await brimMetadata([
+      level ? "set" : "clear",
+      ...endpoint,
+      JSON.stringify({
+        ...(level
+          ? {
+              priority: level,
+              title: terminal?.name?.trim().slice(0, 500) || "Herdr chat",
+              machineName: deviceTitle(
+                address.includes("/") ? address.split("/")[0] : null,
+                shared("herdr.local-host"),
+              ),
+            }
+          : {}),
+        expectedRevision: state.revision,
+      }),
+    ]);
+    writePriority(address, level);
   }
 
   // Published only when it changes; a failing brim hides nothing and shows nothing.
@@ -633,6 +804,15 @@ export default class Agents extends View {
           .text_color(t.dim)
           .child("Priority"),
       )
+      .when(Boolean(this.priorityError), (el) =>
+        el.child(
+          div()
+            .px(8)
+            .text_size(11)
+            .text_color(t.blocked)
+            .child(this.priorityError),
+        ),
+      )
       .children(
         choices.map((p) =>
           h_flex()
@@ -644,9 +824,22 @@ export default class Agents extends View {
             .items_center()
             .text_color(t[p.tone] ?? t.foreground)
             .hover((el) => el.bg(t.hover))
-            .on_click(() => {
-              writePriority(address, current === p.id ? null : p.id);
-              closeOverlay(props().overlay);
+            .on_click((_event, cx) => {
+              const overlay = props().overlay;
+              cx.spawn(async (cx) => {
+                try {
+                  await this.savePriority(
+                    address,
+                    current === p.id ? null : p.id,
+                  );
+                  this.priorityError = null;
+                  closeOverlay(overlay);
+                } catch {
+                  this.priorityError =
+                    "Brim couldn’t save the priority. Try again.";
+                }
+                cx.notify();
+              });
             })
             .child(div().flex_1().child(p.label))
             .when(current === p.id, (el) =>
@@ -911,7 +1104,7 @@ export default class Agents extends View {
     const now = Date.now();
     this.track(list, now);
     this.hold(list);
-    this.prunePriorities(all);
+    if (this.priorityService === false) this.prunePriorities(all);
     const hiddenPri = hiddenPriorities();
     const hadAgents = list.length > 0;
     const matched = hiddenPri.length

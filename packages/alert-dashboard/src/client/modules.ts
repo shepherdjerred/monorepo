@@ -1,3 +1,4 @@
+import { brimClientModule } from "../modules/brim/client.tsx";
 import { tracesClientModule } from "../modules/traces/client.tsx";
 import { coreModule } from "./core-module.ts";
 import { resolveModules } from "./platform/module.ts";
@@ -7,4 +8,8 @@ import { resolveModules } from "./platform/module.ts";
  * order. Adding a module means adding it here and, for its server half, in
  * `src/server/modules.ts`.
  */
-export const registry = resolveModules([coreModule, tracesClientModule]);
+export const registry = resolveModules([
+  coreModule,
+  tracesClientModule,
+  brimClientModule,
+]);

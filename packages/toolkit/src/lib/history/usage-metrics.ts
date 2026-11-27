@@ -20,6 +20,7 @@ export type UsageMetricsLog = (
 export type UsageMetricsExportOptions = {
   readonly ledgerPath: string;
   readonly snapshotsPath: string;
+  readonly readQuota?: () => Promise<QuotaMetrics | null>;
   readonly exporter: PushMetricExporter;
   readonly hostname: string;
   readonly log: UsageMetricsLog;
@@ -64,7 +65,8 @@ export async function startUsageMetricsExport(
   let reportedMissingQuota = false;
 
   const loadQuota = async (): Promise<QuotaMetrics> => {
-    const quota = await loadQuotaMetrics(options.snapshotsPath);
+    const quota = await (options.readQuota?.() ??
+      loadQuotaMetrics(options.snapshotsPath));
     if (quota !== null) {
       reportedMissingQuota = false;
       return quota;

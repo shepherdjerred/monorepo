@@ -199,7 +199,11 @@ const runHomeAssistantWorker = serializedWorker(async () => {
   }
 });
 
-const serverModules = createServerModules(config);
+const peers = new WeakMap<Request, string | null>();
+const serverModules = createServerModules(
+  config,
+  (request) => peers.get(request) ?? null,
+);
 const app = createApp({
   service,
   changes,
@@ -219,7 +223,10 @@ const server = Bun.serve({
   hostname: config.HOST,
   port: config.PORT,
   idleTimeout: 30,
-  fetch: app.fetch,
+  fetch(request, bunServer) {
+    peers.set(request, bunServer.requestIP(request)?.address ?? null);
+    return app.fetch(request);
+  },
 });
 console.warn(
   JSON.stringify({

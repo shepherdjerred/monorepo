@@ -523,6 +523,10 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
     },
   },
+  "brim-service": {
+    command: "cd /app/packages/brim-service && bun dist/smoke.js",
+    env: {},
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */

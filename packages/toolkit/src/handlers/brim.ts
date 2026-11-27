@@ -1,4 +1,9 @@
 export async function handleBrimCommand(args: string[]): Promise<void> {
+  if (args[0] === "metadata") {
+    const { handleBrimMetadata } = await import("#commands/brim/metadata.ts");
+    await handleBrimMetadata(args.slice(1));
+    return;
+  }
   if (args[0] === "sync") {
     const { handleSyncCommand } = await import("#commands/brim/sync.ts");
     process.exitCode = await handleSyncCommand(args.slice(1), ["brim"]);

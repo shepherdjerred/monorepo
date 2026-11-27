@@ -424,6 +424,7 @@ describe("brim sync S3 credentials", () => {
     profile: "brim-sync",
     recipient: "unused",
     pullSinceDays: 30,
+    includeDesktopStores: false,
   };
 
   test("profile mode leaves the keys to the AWS profile", async () => {

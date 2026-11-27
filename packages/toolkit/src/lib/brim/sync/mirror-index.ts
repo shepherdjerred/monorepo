@@ -39,6 +39,8 @@ export const MirrorMachineSchema = z
     kimiSessionsDirs: z.array(z.string().min(1)).optional(),
     museRoots: z.array(z.string().min(1)).optional(),
     antigravityRoots: z.array(z.string().min(1)).optional(),
+    cursorDatabases: z.array(z.string().min(1)).optional(),
+    conductorDatabases: z.array(z.string().min(1)).optional(),
   })
   .meta({ title: "BrimSyncMirrorMachine" });
 export type MirrorMachine = z.infer<typeof MirrorMachineSchema>;
@@ -83,7 +85,12 @@ export type MirrorRoots = Pick<
   Required<
     Pick<
       MirrorMachine,
-      "grokHomes" | "kimiSessionsDirs" | "museRoots" | "antigravityRoots"
+      | "grokHomes"
+      | "kimiSessionsDirs"
+      | "museRoots"
+      | "antigravityRoots"
+      | "cursorDatabases"
+      | "conductorDatabases"
     >
   >;
 
@@ -117,5 +124,7 @@ export function mirrorRoots(
     kimiSessionsDirs: pick("kimi", "sessions"),
     museRoots: toolDir("muse"),
     antigravityRoots: under("antigravity").map((root) => absolute(root)),
+    cursorDatabases: pick("cursor", "conversation-search.db"),
+    conductorDatabases: pick("conductor", "conductor.db"),
   };
 }

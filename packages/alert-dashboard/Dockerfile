@@ -45,6 +45,7 @@ COPY --parents \
   packages/s3-signed-request \
   packages/config \
   packages/feature-flags \
+  packages/flags \
   ./
 RUN cd packages/alert-dashboard && bun run generate && bun run build
 
@@ -76,6 +77,7 @@ COPY --parents \
   packages/s3-signed-request \
   packages/config \
   packages/feature-flags \
+  packages/flags \
   ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI would otherwise

@@ -4,7 +4,9 @@ import {
   runCaptureRedact,
 } from "#commands/brim/capture.ts";
 import { defaultBrimCapturePaths } from "#lib/brim/capture/paths.ts";
+import { loadBrimCaptureSettings } from "#lib/brim/capture/settings.ts";
 import { createSealer } from "#lib/brim/sync/crypto.ts";
+import { pushCaptureArchive } from "#lib/history/captures/archive-export.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import {
   HOMEBREW_JOB_PATH,
@@ -110,20 +112,35 @@ async function store(settings: BrimSyncSettings) {
 async function runPush(
   settings: BrimSyncSettings,
   paths: BrimSyncPaths,
-): Promise<PushReport> {
-  return pushArchive({
-    store: await store(settings),
-    seal: createSealer(settings.recipient),
+): Promise<PushReport & { readonly captureArchiveBytes: number }> {
+  const objectStore = await store(settings);
+  const seal = createSealer(settings.recipient);
+  const report = await pushArchive({
+    store: objectStore,
+    seal,
     open: lazyOpener(),
     paths,
     machineId: settings.machineId,
     displayName: settings.displayName,
     platform: settings.platform,
-    roots: syncRoots(Bun.env, paths.home),
+    roots: syncRoots(Bun.env, paths.home, settings.includeDesktopStores),
     log: (line) => {
       console.log(line);
     },
   });
+  if (process.platform !== "darwin")
+    return { ...report, captureArchiveBytes: 0 };
+  const capture = await loadBrimCaptureSettings();
+  const captureArchiveBytes = capture.enabled
+    ? await pushCaptureArchive({
+        store: objectStore,
+        seal,
+        machineId: settings.machineId,
+        sourcePath: defaultHistoryRuntimePaths(paths.home).capturesDb,
+        retentionDays: capture.retentionDays,
+      })
+    : 0;
+  return { ...report, captureArchiveBytes };
 }
 
 async function runPull(
@@ -179,12 +196,19 @@ function printRedact(report: RedactReport): void {
   }
 }
 
-function printPush(report: PushReport): void {
+function printPush(
+  report: PushReport & { readonly captureArchiveBytes: number },
+): void {
   console.log(
     `push: ${String(report.files)} files archived; ${String(report.changedFiles)} changed, ${String(report.rewrittenFiles)} rewritten, ${String(report.newlyDeletedFiles)} newly deleted locally; ${String(report.uploadedSegments)} segments (${formatBytes(report.uploadedBytes)}) in ${String(report.commits)} commits${report.redactedSecrets === 0 ? "" : `; ${String(report.redactedSecrets)} secrets redacted before upload`}`,
   );
   for (const error of report.errors) {
     console.error(`push: ${error.relPath}: ${error.message}`);
+  }
+  if (report.captureArchiveBytes > 0) {
+    console.log(
+      `push: encrypted capture snapshot (${formatBytes(report.captureArchiveBytes)})`,
+    );
   }
 }
 
@@ -361,7 +385,7 @@ async function dispatch(
     case "redact":
       return withLock(paths, async () => {
         const report = await redactSources({
-          roots: syncRoots(Bun.env, paths.home),
+          roots: syncRoots(Bun.env, paths.home, settings.includeDesktopStores),
           paths,
           dryRun: parsed.values["dry-run"],
         });

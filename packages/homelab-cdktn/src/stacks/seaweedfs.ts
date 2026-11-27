@@ -405,10 +405,14 @@ export class SeaweedfsStack extends HomelabStack {
     // Encrypted Claude Code and Codex transcript archive written by
     // `brim sync push` on each workstation
     // (packages/toolkit/src/lib/brim/sync). Objects are age-encrypted
-    // client-side; keys are opaque. No age-based lifecycle: the archive is
-    // the permanent backup of every machine's agent history. Access is the
-    // scoped `brim-sync` gateway identity only.
-    this.bucket("brim-sessions", { protected: true });
+    // client-side with opaque keys. Transcript history is permanent.
+    const brimSessions = this.bucket("brim-sessions", { protected: true });
+    this.expiry("brim_capture_lifecycle", {
+      bucket: brimSessions,
+      rules: [
+        { days: 30, rule: "expire-brim-captures", prefix: "captures/v1/" },
+      ],
+    });
 
     this.expiry("llm_archive_lifecycle", {
       bucket: llmArchive,

@@ -94,6 +94,14 @@ export const TRACKER_ENDPOINT = defineEndpoint({
   portName: "http",
 });
 
+/** Shared Brim API (`resources/brim-service`). */
+export const BRIM_ENDPOINT = defineEndpoint({
+  namespace: "brim-service",
+  app: "brim-service",
+  port: 7458,
+  portName: "http",
+});
+
 /** Golink's HTTP server (`resources/golink`). */
 export const GOLINK_ENDPOINT = defineEndpoint({
   namespace: "golink",

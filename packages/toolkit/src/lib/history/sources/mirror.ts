@@ -258,3 +258,23 @@ export function antigravityMirrorPaths(
   const antigravityRoots = machine.antigravityRoots ?? [];
   return antigravityRoots.length === 0 ? [] : [{ ...base, antigravityRoots }];
 }
+
+export function cursorMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  return (machine.cursorDatabases ?? []).map((cursorConversationDb) => ({
+    ...base,
+    cursorConversationDb,
+  }));
+}
+
+export function conductorMirrorPaths(
+  machine: MirrorMachine,
+  base: HistoryPaths,
+): HistoryPaths[] {
+  return (machine.conductorDatabases ?? []).map((conductorDb) => ({
+    ...base,
+    conductorDb,
+  }));
+}

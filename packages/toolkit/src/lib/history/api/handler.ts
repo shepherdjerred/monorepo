@@ -1,4 +1,5 @@
 import { captureDetail, listCaptures } from "#lib/history/captures/queries.ts";
+import type { CaptureArchiveReader } from "#lib/history/captures/archive-reader.ts";
 import type { CaptureStore } from "#lib/history/captures/store.ts";
 import type { HistoryIndex } from "#lib/history/index.ts";
 import { ftsQuery } from "#lib/history/query/query.ts";
@@ -32,10 +33,15 @@ import {
   HistoryApiUsageResponseSchema,
 } from "./schema.ts";
 
-export type HistoryApiDependencies = {
+type CaptureBackend =
+  | { readonly captures: CaptureStore; readonly captureArchive?: never }
+  | {
+      readonly captures?: never;
+      readonly captureArchive: CaptureArchiveReader;
+    };
+
+export type HistoryApiDependencies = CaptureBackend & {
   readonly index: HistoryIndex;
-  /** Captured agent requests (`captures.sqlite`). */
-  readonly captures: CaptureStore;
   /** Re-reads full transcripts; `targetedMessages` in production. */
   readonly readMessages: (records: readonly HistoryRecord[]) => Promise<{
     readonly messages: ReadonlyMap<string, readonly HistoryMessage[]>;
@@ -297,20 +303,35 @@ function captures(
       `History record ${String(session)} no longer exists; local ids change after a rebuild.`,
     );
   }
-  const page = listCaptures(dependencies.captures, {
-    session:
-      record === null
-        ? null
-        : {
-            source: record.source,
-            runtimeId: record.runtimeId,
-            workspace: record.workspace,
-            createdAt: record.createdAt,
-            updatedAt: record.updatedAt,
-          },
-    limit,
-    offset,
-  });
+  const target =
+    record === null
+      ? null
+      : {
+          source: record.source,
+          runtimeId: record.runtimeId,
+          workspace: record.workspace,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt,
+          // Mirrored history prefixes sourceId with the origin machine, before any numbered root.
+          machineId: record.sourceId.split("/", 1)[0] ?? "",
+        };
+  if (
+    target === null &&
+    offset > 10_000 &&
+    dependencies.captureArchive !== undefined
+  ) {
+    throw new BadRequest(
+      "Archived request listing supports offsets up to 10000; select a session to narrow the results",
+    );
+  }
+  const page =
+    dependencies.captureArchive === undefined
+      ? listCaptures(dependencies.captures, { session: target, limit, offset })
+      : dependencies.captureArchive.list(
+          target,
+          { limit, offset },
+          dependencies.now(),
+        );
   return Response.json(
     HistoryApiCapturesResponseSchema.parse({
       apiVersion: HISTORY_API_VERSION,
@@ -321,7 +342,10 @@ function captures(
 }
 
 function capture(dependencies: HistoryApiDependencies, id: number): Response {
-  const detail = captureDetail(dependencies.captures, id);
+  const detail =
+    dependencies.captureArchive === undefined
+      ? captureDetail(dependencies.captures, id)
+      : dependencies.captureArchive.detail(id, dependencies.now());
   if (detail === null) {
     throw new NotFound(`Capture ${String(id)} does not exist or was pruned.`);
   }

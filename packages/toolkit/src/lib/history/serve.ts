@@ -2,8 +2,12 @@ import { appendFile, chmod, mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { defaultSnapshotsPath } from "#lib/brim/cache.ts";
+import { loadBrimRankingSnapshots } from "#lib/brim/shared.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
-import { createOtlpMetricsExporter } from "./metrics-push.ts";
+import {
+  createOtlpMetricsExporter,
+  quotaMetricsFromSnapshots,
+} from "./metrics-push.ts";
 import {
   startUsageMetricsExport,
   type UsageMetricsExport,
@@ -13,6 +17,7 @@ import { loadQuotaSnapshots } from "./blocks.ts";
 import { ingestCaptureSpool } from "./captures/ingest.ts";
 import { CaptureStore } from "./captures/store.ts";
 import { createHistorySources } from "./sources.ts";
+import { scanHistorySources } from "./scan.ts";
 import { targetedMessages } from "./targeted.ts";
 import { HistoryIndex } from "./index.ts";
 import { defaultHistoryPaths, defaultHistoryRuntimePaths } from "./paths.ts";
@@ -20,17 +25,15 @@ import {
   HistoryDaemonStatusSchema,
   HistoryDaemonResponseSchema,
 } from "./ipc.ts";
-import type { HistoryPaths, HistoryRuntimePaths } from "./paths.ts";
+import type { HistoryRuntimePaths } from "./paths.ts";
 import type { HistoryDaemonState } from "./ipc.ts";
 import type {
-  HistorySource,
   HistorySourceName,
   HistorySourceResult,
   HistorySourceStatus,
 } from "./types.ts";
 
 const INTERVAL_SECONDS = 30;
-const SOURCE_SCAN_CONCURRENCY = 2;
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -71,28 +74,6 @@ export function rebuildBlockers(
     .map((result) => result.source);
 }
 
-export async function scanHistorySources(
-  sources: readonly HistorySource[],
-  paths: HistoryPaths,
-  force = false,
-): Promise<HistorySourceResult[]> {
-  const results: HistorySourceResult[] = [];
-  for (
-    let offset = 0;
-    offset < sources.length;
-    offset += SOURCE_SCAN_CONCURRENCY
-  ) {
-    results.push(
-      ...(await Promise.all(
-        sources
-          .slice(offset, offset + SOURCE_SCAN_CONCURRENCY)
-          .map(async (source) => source.scan(paths, { force })),
-      )),
-    );
-  }
-  return results;
-}
-
 /**
  * Starts the usage metrics push when `historyMetricsPushEnabled` resolves
  * true. Read once at boot; restart the daemon after changing it.
@@ -109,6 +90,7 @@ async function startMetricsExportIfEnabled(
     return null;
   }
   const endpoint = await config.get("historyMetricsPushEndpoint");
+  const sharedBrim = (await config.value("brimServiceUrl")) !== null;
   await logLine(runtimePaths, "usage metrics push enabled", {
     enabledSource: enabled.source,
     endpoint: endpoint.value,
@@ -117,6 +99,23 @@ async function startMetricsExportIfEnabled(
   return startUsageMetricsExport({
     ledgerPath: runtimePaths.usageExportDb,
     snapshotsPath: defaultSnapshotsPath(),
+    ...(sharedBrim
+      ? {
+          readQuota: async () => {
+            const snapshots = await loadBrimRankingSnapshots(
+              defaultSnapshotsPath(),
+              false,
+            );
+            return quotaMetricsFromSnapshots(
+              snapshots.filter(
+                (snapshot) =>
+                  snapshot.freshness === undefined ||
+                  "current" in snapshot.freshness,
+              ),
+            );
+          },
+        }
+      : {}),
     exporter: createOtlpMetricsExporter(endpoint.value),
     hostname: os.hostname(),
     log: async (message, extra) => {

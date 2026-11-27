@@ -4,6 +4,18 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
+    id: "brim-archive-refresh",
+    workflowType: "runBrimArchiveRefresh",
+    args: [],
+    timing: { kind: "interval", every: "5 minutes" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "45 minutes",
+    memo: "Refresh Brim's private history index from the encrypted workstation archive",
+    initialPauseNote:
+      "Awaiting published Brim service, its read-only archive grant, and a compatible workflow worker",
+  },
+  {
     namespace: "beta",
     id: "daily-notification-policy-canary",
     workflowType: "runDailyNotificationCanary",

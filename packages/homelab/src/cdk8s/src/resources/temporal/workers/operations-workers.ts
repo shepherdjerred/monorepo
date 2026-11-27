@@ -21,7 +21,11 @@ import {
   seaweedfsS3,
   FLAGS_MANAGEMENT_URL,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
-import { FEEDS_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import {
+  BRIM_ENDPOINT,
+  FEEDS_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import { BRIM_SERVICE_ACTIVE } from "@shepherdjerred/homelab/cdk8s/src/resources/brim-service/index.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -80,6 +84,7 @@ export type TemporalOperationsWorkerProps = {
 export function createTemporalOperationsWorkers(
   chart: Chart,
   props: TemporalOperationsWorkerProps,
+  brimEnabled = BRIM_SERVICE_ACTIVE,
 ) {
   // kubectl does not discover in-cluster credentials automatically. This is
   // bootstrap configuration only; the projected token remains on the pod.
@@ -147,6 +152,15 @@ export function createTemporalOperationsWorkers(
       ...githubEnv(props.secret),
       ...props.homelabAuditEnvironment,
       ...opsSnapshotEnv(props.secret),
+      ...(brimEnabled
+        ? {
+            BRIM_API_URL: EnvValue.fromValue(BRIM_ENDPOINT.url),
+            BRIM_SCHEDULER_TOKEN: EnvValue.fromSecretValue({
+              secret: props.secret,
+              key: "BRIM_SCHEDULER_TOKEN",
+            }),
+          }
+        : {}),
       // The mining-reset queue's Red Warfare recording archive.
       ...rwfArchiveEnv(props.secret),
       CLOUDFLARE_DDNS_API_TOKEN_FILE: EnvValue.fromValue(

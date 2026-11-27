@@ -16,6 +16,7 @@ let package = Package(
   products: [
     .library(name: "QuotaBarCore", targets: ["QuotaBarCore"]),
     .executable(name: "QuotaBar", targets: ["QuotaBar"]),
+    .executable(name: "brim-collector", targets: ["BrimCollectorCLI"]),
   ],
   targets: [
     .target(
@@ -28,6 +29,12 @@ let package = Package(
       dependencies: ["QuotaBarCore"],
       path: "Sources/QuotaBar",
       resources: [.process("Resources")],
+      swiftSettings: strictSwiftSettings,
+    ),
+    .executableTarget(
+      name: "BrimCollectorCLI",
+      dependencies: ["QuotaBarCore"],
+      path: "Sources/BrimCollectorCLI",
       swiftSettings: strictSwiftSettings,
     ),
     .testTarget(

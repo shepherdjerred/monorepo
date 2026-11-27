@@ -73,6 +73,35 @@ never reads agent logs itself.
 The `API & routers` segment reports OpenAI and Anthropic organization API spend
 for the current local month.
 
+## MacBook collector
+
+`brim-collector` refreshes Brim’s quota windows, reset credits, and OpenAI and
+Anthropic billing and publishes the readings to the private shared Brim
+service. It uses the existing Brim provider selection, CLI sign-ins, and
+Keychain entries. If a provider requires a new sign-in, sign in to that CLI
+or app on MacBook. The next collection records the recovered reading.
+
+From this package, run `bun run build:collector` to build the one-shot command.
+Run it once from MacBook’s graphical login session so macOS can prompt for
+first-time access to Brim’s Keychain items. Supply `BRIM_BASE_URL` as the HTTPS
+base URL for the deployed Brim endpoint. Toolkit resolves the scoped publisher
+credential by name from the MacBook login Keychain service
+`monorepo-brim-macbook-publish-token`, or from its configured credential override.
+Install the toolkit from the same checkout so it recognizes that credential.
+
+```sh
+collector_dir=$(bun scripts/xcode-env.ts -- swift build -c release --show-bin-path)
+toolkit run --env BRIM_MACBOOK_PUBLISH_TOKEN -- "$collector_dir/brim-collector" "$BRIM_BASE_URL"
+bun run install:collector "$BRIM_BASE_URL"
+```
+
+The installer places the collector in `~/.local/bin` and runs it whenever the
+user logs in and every five minutes thereafter. Check
+`~/Library/Logs/BrimCollector/collector.log` for errors. The first publication
+imports the retained native quota history. Samples that fail to upload stay
+pending locally for retry. Keep the native login item until Hub and Herdr
+cutover checks pass.
+
 ## Sessions window
 
 **Browse sessions** in the menu-bar footer opens the Sessions window, a browser

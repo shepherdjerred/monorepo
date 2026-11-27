@@ -30,7 +30,9 @@
             "grok-mirror",
             "kimi-mirror",
             "muse-mirror",
-            "antigravity-mirror"
+            "antigravity-mirror",
+            "cursor-mirror",
+            "conductor-mirror"
           ]
         },
         "sourceId": {

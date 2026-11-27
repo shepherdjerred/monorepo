@@ -52,8 +52,7 @@ const config = [
       "e2e/server.ts",
       "e2e/traces.spec.ts",
     ],
-    // `package.json#imports` has no `#modules/*` alias; composition roots and
-    // E2E harnesses mount feature modules from `src/modules/<id>/`.
+    // These files use relative imports to mount existing feature modules.
     rules: { "custom-rules/no-parent-imports": "off" },
   },
 ];

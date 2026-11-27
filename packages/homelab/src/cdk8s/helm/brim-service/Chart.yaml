@@ -1,0 +1,6 @@
+apiVersion: v2
+name: brim-service
+description: Brim
+type: application
+version: "$version"
+appVersion: "$appVersion"

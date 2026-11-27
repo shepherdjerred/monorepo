@@ -931,6 +931,17 @@
           "argoApp": "errors"
         }
       ]
+    },
+    {
+      "id": "brim-service",
+      "rootReleaseExclusions": { "brim-service": "inactive" },
+      "images": ["brim-service"],
+      "charts": ["brim-service"],
+      "title": "Brim",
+      "kind": "product",
+      "package": "brim-service",
+      "namespaces": ["brim-service"],
+      "argoApps": []
     }
   ]
 }

@@ -12,7 +12,9 @@ import {
   antigravityMirrorPaths,
   claudeMirrorPaths,
   codexMirrorPaths,
+  conductorMirrorPaths,
   createMirrorSource,
+  cursorMirrorPaths,
   grokMirrorPaths,
   kimiMirrorPaths,
   museMirrorPaths,
@@ -422,6 +424,18 @@ export function createHistorySources(): readonly HistorySource[] {
       label: "Antigravity",
       createBase: createAntigravitySource,
       roots: antigravityMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "cursor-mirror",
+      label: "Cursor",
+      createBase: createCursorSource,
+      roots: cursorMirrorPaths,
+    }),
+    createMirrorSource({
+      name: "conductor-mirror",
+      label: "Conductor",
+      createBase: createConductorSource,
+      roots: conductorMirrorPaths,
     }),
   ];
 }

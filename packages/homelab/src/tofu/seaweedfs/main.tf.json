@@ -124,6 +124,26 @@
       "wiki_sjer_red": { "bucket": "wiki-sjer-red" }
     },
     "terraform_data": {
+      "brim_capture_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.brim_sessions.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 30
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-brim-captures\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"captures/v1/\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ],
+        "triggers_replace": {
+          "bucket": "${aws_s3_bucket.brim_sessions.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "expire_days": 30
+        }
+      },
       "ci_handoff_lifecycle": {
         "input": {
           "bucket": "${aws_s3_bucket.ci_handoff.id}",

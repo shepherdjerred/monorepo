@@ -35,6 +35,7 @@ import {
 } from "#test-fixtures/promotion";
 import { seedReportFixtures } from "#test-fixtures/reports-fixture";
 import { createFixtureTracesServerModule } from "../src/modules/traces/fixtures.ts";
+import { createBrimFixtureModule } from "./brim-fixture.ts";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -414,7 +415,7 @@ const app = createApp({
   digests: opsFixture.digests,
   reports: opsFixture.reports,
   opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
-  modules: [tracesFixture.module],
+  modules: [tracesFixture.module, await createBrimFixtureModule()],
 });
 const port = Number(
   Bun.argv[2] ?? Bun.env["ALERT_DASHBOARD_E2E_PORT"] ?? "17341",

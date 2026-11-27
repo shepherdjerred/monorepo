@@ -36,6 +36,7 @@
         "@prisma/client-runtime-utils": "7.10.1",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",
+        "@shepherdjerred/flags": "workspace:*",
         "@shepherdjerred/llm-observability": "workspace:*",
         "@shepherdjerred/loaded": "workspace:*",
         "@shepherdjerred/ops-clients": "workspace:*",
@@ -304,6 +305,23 @@
         "@vitest/coverage-istanbul": "5.0.5",
         "eslint": "^10.7.0",
         "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.5",
+      },
+    },
+    "packages/brim-service": {
+      "name": "@shepherdjerred/brim-service",
+      "version": "0.1.0",
+      "dependencies": {
+        "@shepherdjerred/toolkit": "workspace:*",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.5",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.5",
+        "eslint": "^10.7.0",
         "typescript": "^6.0.3",
         "vitest": "5.0.5",
       },
@@ -4751,6 +4769,8 @@
     "@shepherdjerred/architecture": ["@shepherdjerred/architecture@workspace:packages/architecture"],
 
     "@shepherdjerred/birmel": ["@shepherdjerred/birmel@workspace:packages/birmel"],
+
+    "@shepherdjerred/brim-service": ["@shepherdjerred/brim-service@workspace:packages/brim-service"],
 
     "@shepherdjerred/bugsink-config": ["@shepherdjerred/bugsink-config@workspace:packages/bugsink-config"],
 

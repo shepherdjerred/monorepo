@@ -1,7 +1,7 @@
 public import Foundation
 public import Observation
 
-private enum ProviderFetchResult: Sendable {
+enum ProviderFetchResult: Sendable {
   case success(ProviderID, UsageSnapshot)
   case failure(ProviderID, QuotaError)
 }
@@ -361,7 +361,7 @@ public final class QuotaBarModel {
     }
   }
 
-  nonisolated private static func fetch(
+  nonisolated static func fetch(
     provider: any UsageProvider,
     timeout: Duration
   ) async -> ProviderFetchResult {

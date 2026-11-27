@@ -599,6 +599,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Loops up to five bounded syncLlmArchiveIndex Activities on the infra queue
   // and continues as new if more objects remain; no workflow-level sleeps.
   "runLlmArchiveIndex",
+  "runBrimArchiveRefresh",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

@@ -175,25 +175,23 @@ public final class APIPlatformModel {
 
   private func fetchState(for platform: APIPlatformID) async -> APIPlatformFetchResult {
     do {
-      guard let token = try await credentials.token(for: platform) else {
-        return APIPlatformFetchResult(
-          platform: platform,
-          state: .unauthenticated(
-            message: APIPlatformError.credentialsMissing(platform).localizedDescription),
-          snapshot: nil
-        )
-      }
-      let snapshot = try await Self.fetch(
+      let snapshot = try await Self.readSnapshot(
         platform: platform,
         openAI: openAI,
         anthropic: anthropic,
-        token: token,
+        credentials: credentials,
         timeout: providerTimeout
       )
       return APIPlatformFetchResult(
         platform: platform, state: .available(snapshot), snapshot: snapshot)
-    } catch {
-      let apiError = Self.classify(error: error, platform: platform)
+    } catch let apiError {
+      if case .credentialsMissing = apiError {
+        return APIPlatformFetchResult(
+          platform: platform,
+          state: .unauthenticated(message: apiError.localizedDescription),
+          snapshot: nil
+        )
+      }
       if let cached = lastSuccessful[platform] {
         return APIPlatformFetchResult(
           platform: platform,
@@ -213,6 +211,24 @@ public final class APIPlatformModel {
         state: .unavailable(message: apiError.localizedDescription),
         snapshot: nil
       )
+    }
+  }
+
+  nonisolated static func readSnapshot(
+    platform: APIPlatformID,
+    openAI: OpenAIAPIClient,
+    anthropic: AnthropicAPIClient,
+    credentials: APIPlatformCredentialStore,
+    timeout: Duration
+  ) async throws(APIPlatformError) -> APIPlatformSnapshot {
+    do {
+      guard let token = try await credentials.token(for: platform) else {
+        throw APIPlatformError.credentialsMissing(platform)
+      }
+      return try await fetch(
+        platform: platform, openAI: openAI, anthropic: anthropic, token: token, timeout: timeout)
+    } catch {
+      throw classify(error: error, platform: platform)
     }
   }
 

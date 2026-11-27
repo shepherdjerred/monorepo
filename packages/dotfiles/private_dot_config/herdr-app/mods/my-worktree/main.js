@@ -88,9 +88,8 @@ const NO_CHOICE = { mode: null, model: null, effort: null };
 // Agents to start, as `brim --json` ranks them: least used first, then other windows;
 // unavailable ones (no usable quota data) last, with Brim's reason, and still startable.
 // One starts the way `brim --provider` does (its agent-bin wrapper, on the
-// space's machine); Shell starts none. Windows has no Brim: there the list is
-// Herdr's installed agents, unranked, and one starts through its PowerShell
-// profile wrapper.
+// space's machine); Shell starts none. Windows ranks installed agents using
+// shared Brim readings, then starts one through its PowerShell profile wrapper.
 // Brim's provider ids, by Herdr's program key.
 const PROVIDER = {
   claude: "claude-code",
@@ -404,8 +403,7 @@ export default class Worktree extends View {
     this.picking = props()?.action === "new" && !props()?.argv;
     this.agents = undefined; // { choices, ranked, other, unavailable (counts) } once read
     this.pick = 0;
-    // Whether the space's machine is Windows: no Brim, agents start through
-    // the PowerShell profile. Known before the agents are listed.
+    // Windows agents start through the PowerShell profile.
     this.windowsTarget = !this.on && window()?.platform === "windows";
     if (checking()) return;
     cx.spawn(async (cx) => {
@@ -470,6 +468,11 @@ export default class Worktree extends View {
       if (this.windowsTarget) {
         const seen = new Set();
         const installed = [];
+        const quotaResult = await exec("brim", ["--json"], {
+          on: this.on,
+        }).catch(() => null);
+        const quotas =
+          quotaResult?.code === 0 ? JSON.parse(quotaResult.stdout) : null;
         for (const a of await knownAgents({ on: this.on ?? null })) {
           const provider = PROVIDER[a.key];
           if (!a.installed || !provider || seen.has(provider)) continue;
@@ -482,17 +485,29 @@ export default class Worktree extends View {
             unranked: true,
           });
         }
+        const available = new Map(
+          installed.map((entry) => [entry.provider, entry]),
+        );
+        const ranked =
+          quotas?.ranked.filter((entry) => available.has(entry.provider)) ?? [];
+        const other =
+          quotas?.other.filter((entry) => available.has(entry.provider)) ?? [];
+        const ordered = [...ranked, ...other];
+        const used = new Set(ordered.map((entry) => entry.provider));
         this.agents = {
-          choices: [...installed, SHELL],
-          ranked: 0,
-          other: 0,
+          choices: [
+            ...ordered,
+            ...installed.filter((entry) => !used.has(entry.provider)),
+            SHELL,
+          ],
+          ranked: ranked.length,
+          other: other.length,
           unavailable: 0,
-          unranked: true,
+          unranked: ordered.length === 0,
         };
       } else {
-        // Brim's quota cache lives on the Macs: from Windows, ask the space's machine.
         const r = await exec("brim", ["--json"], {
-          on: window()?.platform === "windows" ? this.on : null,
+          on: this.on,
         });
         if (r.code !== 0)
           throw new Error(r.stderr.trim() || `brim --json exited ${r.code}.`);

@@ -1,0 +1,264 @@
+.brim-page,
+.brim-panel {
+  min-inline-size: 0;
+}
+
+.brim-nav,
+.brim-source,
+.brim-pager,
+.brim-inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.8rem;
+}
+
+.brim-nav {
+  margin-block: 0 1rem;
+  border-block-end: 1px solid var(--ui-line);
+}
+
+.brim-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.7rem;
+  min-block-size: 2.5rem;
+  border-block-end: 2px solid transparent;
+  color: var(--ui-muted);
+  text-decoration: none;
+}
+
+.brim-nav a:hover,
+.brim-nav a[aria-current="page"] {
+  color: var(--ui-ink);
+}
+
+.brim-nav a[aria-current="page"] {
+  border-block-end-color: var(--ui-accent);
+}
+
+.brim-source {
+  margin-block: 0 1rem;
+  color: var(--ui-muted);
+  overflow-wrap: anywhere;
+}
+
+.brim-panel .brim-source {
+  padding: 0.75rem 1rem 0;
+  margin: 0;
+}
+
+.brim-source strong {
+  color: var(--ui-ink);
+}
+
+.brim-panel {
+  margin-block-end: 1.1rem;
+}
+
+.brim-panel .panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.brim-quota-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17.5rem), 1fr));
+  gap: 0.9rem;
+  padding: 0.9rem;
+}
+
+.brim-quota {
+  min-inline-size: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+.brim-quota header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 0.6rem;
+}
+
+.brim-quota h3,
+.brim-quota p {
+  margin: 0;
+}
+
+.brim-muted,
+.brim-reading-details,
+.brim-table small,
+.brim-message-meta > span {
+  color: var(--ui-muted);
+  font-size: 0.82em;
+}
+
+.brim-status {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  color: var(--ui-muted);
+  font-size: 0.78em;
+}
+
+.brim-status[data-state="sign_in_required"] {
+  color: var(--ui-sev-warning-text);
+}
+
+.brim-status[data-state="current"] {
+  color: var(--ui-sev-ok-text);
+}
+
+.brim-windows {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 0.85rem;
+}
+
+.brim-window dt {
+  font-weight: 600;
+}
+
+.brim-window dd {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+  margin: 0;
+}
+
+.brim-window meter {
+  inline-size: 100%;
+}
+
+.brim-table {
+  max-inline-size: 100%;
+  overflow: auto;
+}
+
+.brim-table .ui-table {
+  min-inline-size: 42rem;
+}
+
+.brim-table :is(td, th) small {
+  display: block;
+  margin-block-start: 0.2rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.brim-chart,
+.brim-message,
+.brim-pager,
+.brim-search,
+.brim-periods,
+.brim-messages {
+  margin: 0;
+  padding: 0.75rem 1rem;
+}
+
+.brim-blocks {
+  list-style: none;
+}
+
+.brim-back {
+  margin-block: 0 0.75rem;
+}
+
+.brim-search {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  align-items: end;
+  gap: 0.6rem;
+}
+
+.brim-search label {
+  display: grid;
+  gap: 0.25rem;
+  min-inline-size: 0;
+}
+
+.brim-inline-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--ui-muted);
+}
+
+.brim-page :is(input[type="search"], select) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: 2.25rem;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius, 0.25rem);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: max(1rem, 1em);
+  padding: 0.25rem 0.5rem;
+}
+
+.brim-messages {
+  display: grid;
+  gap: 0.7rem;
+  list-style-position: inside;
+}
+
+.brim-messages li,
+.brim-payload {
+  min-inline-size: 0;
+  padding: 0.6rem 0.8rem;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.4rem;
+}
+
+.brim-panel > .brim-payload {
+  margin: 0.55rem 1rem;
+}
+
+.brim-messages li > .brim-payload {
+  padding: 0;
+  border: 0;
+}
+
+.brim-payload + .brim-payload {
+  margin-block-start: 0.55rem;
+}
+
+.brim-message-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+}
+
+.brim-page summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.brim-page pre {
+  max-block-size: 34rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--ui-font-mono);
+}
+
+.brim-page :focus-visible {
+  outline: 2px solid var(--ui-focus, currentColor);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .brim-page :is(input[type="search"], select, .ui-btn, .brim-nav a) {
+    min-block-size: 3rem;
+  }
+}

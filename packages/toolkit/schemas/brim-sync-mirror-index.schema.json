@@ -109,6 +109,20 @@
               "type": "string",
               "minLength": 1
             }
+          },
+          "cursorDatabases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "conductorDatabases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         },
         "required": [

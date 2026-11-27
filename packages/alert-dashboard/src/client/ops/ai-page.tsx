@@ -114,6 +114,9 @@ function AiBody({
   return (
     <>
       <PageHeading title="AI usage & spend">
+        <Link className="ui-btn" to="/brim">
+          Open Brim
+        </Link>
         <Link className="ui-btn" to="/traces">
           Explore LLM traces
         </Link>

@@ -183,7 +183,9 @@ function storedModelCandidates(
     case "codex":
     case "codex-mirror":
     case "conductor":
+    case "conductor-mirror":
     case "cursor":
+    case "cursor-mirror":
     case "muse":
     case "muse-mirror": {
       return [model];
