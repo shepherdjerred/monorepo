@@ -237,14 +237,14 @@ describe("pooled CI admission budget", () => {
     );
     expect(budget.quota).toEqual({
       cpu: "24",
-      memory: "72Gi",
-      "ephemeral-storage": "60Gi",
+      memory: "74Gi",
+      "ephemeral-storage": "68Gi",
     });
   });
 
   test("checks the overlap rather than only the new workflow cap", () => {
     // 22 PR and main slots hold 55Gi of services beside a 4Gi step, inside
-    // the 62Gi compute quota; 12 more legacy slots overflow it.
+    // the 64Gi compute quota; 12 more legacy slots overflow it.
     const largeServices = step({
       services: [
         { name: "db", resources: { ...SMALL, memoryRequest: "2560Mi" } },

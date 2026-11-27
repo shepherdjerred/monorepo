@@ -39,7 +39,7 @@ Preemption is `Never` on all of them.
 
 | ClusterQueue             | LocalQueue       | CPU | Memory | Ephemeral | Pods | Admits                              |
 | ------------------------ | ---------------- | --: | -----: | --------: | ---: | ----------------------------------- |
-| `woodpecker`             | `default`        |  21 |   62Gi |      48Gi |   69 | `pr`, `main` and `maintenance` pods |
+| `woodpecker`             | `default`        |  21 |   64Gi |      56Gi |   69 | `pr`, `main` and `maintenance` pods |
 | `woodpecker-light`       | `ci-light`       |   2 |    8Gi |       8Gi |    4 | `pr-light` pods                     |
 | `woodpecker-gates`       | `ci-gates`       |   1 |    2Gi |       4Gi |    4 | `review` and `completion` pods      |
 | `woodpecker-maintenance` | `ci-maintenance` |   1 |    2Gi |       2Gi |    1 | The Temporal maintenance worker     |
@@ -75,13 +75,17 @@ counts only the capped number of held service sets.
 ## Node totals
 
 [`kueue-config.test.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/kueue-config.test.ts)
-holds these sums to liskov's allocatable capacity.
+holds these sums to liskov's allocatable capacity. The resident column is
+the allowance for requests outside Kueue, measured with six agents.
 
 | Resource  | Every queue | Resident requests outside Kueue | Allocatable |
 | --------- | ----------: | ------------------------------: | ----------: |
-| CPU       |          27 |      2.0 allowance (six agents) |          29 |
-| Memory    |        82Gi |               5Gi for buildkitd |      91.5Gi |
-| Ephemeral |        94Gi |                               — |     836 GiB |
+| CPU       |          27 |                 2.0 (1.93 live) |          29 |
+| Memory    |        84Gi |                 7Gi (6.96 live) |      91.5Gi |
+| Ephemeral |       102Gi |                               — |     836 GiB |
+
+The sums cover the source quotas only. A queue quota changed by hand on the
+cluster is outside them until ArgoCD restores the source value.
 
 ## Related
 

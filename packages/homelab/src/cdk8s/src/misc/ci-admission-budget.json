@@ -1,17 +1,17 @@
 {
-  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: CPU follows the same rule (every queue, 24 aggregate + 1 maintenance + 2 Delivery, plus about 2.0 of resident requests, <= 29), and every queue plus buildkitd's requests must fit the allocatable memory, so a pod Kueue admits can always schedule. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi. The quota is not where the overcommit lives: step requests are sized from measured usage (p90 memory, see the pipeline generator's tiers.ts), and limits stay the per-container backstop above them. The pool workflow caps are a backstop above Kueue's resource admission: an agent holds a workflow's slot while Kueue gates its pod, so the pr cap is sized so that Kueue, not the agent's first-in-first-out queue, orders waiting PR work. The pr cap of 12 was sized when the light checks shared it; they now have their own pool, which only leaves more of its slots to heavier workflows that Kueue still orders by priority. The main pool is 10 so 17-workflow main pipelines do not wait behind FIFO slots. The aggregate splits into compute, light and gate quotas. Short service-free PR checks in the light, scanner or contained tier route to the pr-light pool, whose lightQuota is reserved (no cohort, so verify can never borrow it) and holds every pr-light slot's largest pod at once: 4 slots x (500m CPU, 2Gi checkout memory, 2Gi ephemeral) = 2 CPU, 8Gi, 8Gi, taken from computeQuota. A pr-light workflow therefore waits only for one of its own slots, never for Kueue.",
+  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: CPU follows the same rule (every queue, 24 aggregate + 1 maintenance + 2 Delivery, plus about 2.0 of resident requests, <= 29), and every queue plus the requests resident outside Kueue (about 7Gi: buildkitd, the agents, node daemons) must fit the allocatable memory, so a pod Kueue admits can always schedule. Delivery's executor reserve (2 CPU, 8Gi) is a separate Kueue queue beside this budget, so computeQuota.memory gives up the same 8Gi. The quota is not where the overcommit lives: step requests are sized from measured usage (p90 memory, see the pipeline generator's tiers.ts), and limits stay the per-container backstop above them. The pool workflow caps are a backstop above Kueue's resource admission: an agent holds a workflow's slot while Kueue gates its pod, so the pr cap is sized so that Kueue, not the agent's first-in-first-out queue, orders waiting PR work. The pr cap of 12 was sized when the light checks shared it; they now have their own pool, which only leaves more of its slots to heavier workflows that Kueue still orders by priority. The main pool is 10 so 17-workflow main pipelines do not wait behind FIFO slots. The aggregate splits into compute, light and gate quotas. Short service-free PR checks in the light, scanner or contained tier route to the pr-light pool, whose lightQuota is reserved (no cohort, so verify can never borrow it) and holds every pr-light slot's largest pod at once: 4 slots x (500m CPU, 2Gi checkout memory, 2Gi ephemeral) = 2 CPU, 8Gi, 8Gi. Its CPU and 6Gi of its memory came out of computeQuota; the other 2Gi and its ephemeral storage came from node slack, so the aggregate grew to 74Gi and 68Gi and computeQuota (64Gi) still fits a browser pod beside three verify pods. A pr-light workflow therefore waits only for one of its own slots, never for Kueue.",
   "maxWorkflows": 31,
   "legacyMaxWorkflows": 0,
   "maxServicesPerWorkflow": 2,
   "quota": {
     "cpu": "24",
-    "memory": "72Gi",
-    "ephemeral-storage": "60Gi"
+    "memory": "74Gi",
+    "ephemeral-storage": "68Gi"
   },
   "computeQuota": {
     "cpu": "21",
-    "memory": "62Gi",
-    "ephemeral-storage": "48Gi"
+    "memory": "64Gi",
+    "ephemeral-storage": "56Gi"
   },
   "lightQuota": {
     "cpu": "2",

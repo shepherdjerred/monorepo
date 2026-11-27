@@ -7,9 +7,13 @@ import {
 
 /**
  * Tiers whose PR workflows the `pr-light` agent pool takes: thin steps,
- * third-party scanners and single-tool contained checks. Each is small,
- * short and capped by tight limits. Every other tier -- verify, browser,
- * medium builds, the dry-run rehearsal with its heavy limits -- stays in `pr`.
+ * third-party scanners and single-tool contained checks. Each requests at
+ * most 500m CPU and 1.5Gi, and their lanes finish in about a minute. Their
+ * limits are not all tight: `LIGHT_TIER` keeps 7 CPU / 12Gi so a cold cache
+ * still gets real CPU, while the scanner and contained tiers cap at 2 CPU /
+ * 4Gi. Admission reserves requests only. Every other tier -- verify, browser,
+ * medium builds, the dry-run rehearsal with its 12 CPU / 24Gi limits -- stays
+ * in `pr`.
  */
 const PR_LIGHT_TIERS: readonly ResourceTier[] = [
   LIGHT_TIER,

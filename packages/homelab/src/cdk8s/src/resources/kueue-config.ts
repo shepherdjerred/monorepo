@@ -44,8 +44,10 @@ export const CI_GATE_LOCAL_QUEUE = "ci-gates";
  * It lends nothing. Kueue lends idle quota only within a cohort, and with
  * preemption off a lender gets its quota back only when the borrower
  * finishes. A verify pod that borrowed it would hold it for a 5-30 minute run,
- * gating the light checks behind verify again. The reserve is small, and the
- * light work it holds used compute quota before it had its own.
+ * gating the light checks behind verify again. The idle reserve is the price:
+ * over the 72 hours to 2026-11-27 the light checks kept about 0.2 of the four
+ * slots busy on average, so about 1.9 of its 2 CPU sat idle, in exchange for
+ * a replayed p90 start wait of about 19 seconds.
  */
 export const CI_LIGHT_CLUSTER_QUEUE = "woodpecker-light";
 export const CI_LIGHT_LOCAL_QUEUE = "ci-light";

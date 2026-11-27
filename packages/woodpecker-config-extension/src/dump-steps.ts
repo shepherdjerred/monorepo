@@ -25,7 +25,7 @@ import {
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
-import { CHECKOUT_TIER } from "#src/pipeline/tiers.ts";
+import { WORKFLOW_CHECKOUT_TIER } from "#src/pipeline/emit.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -165,13 +165,14 @@ if (Bun.argv.includes("--include-canaries")) {
 }
 // Inspect every container's own grants and maximum requests. Ordered containers
 // share a workspace but never inherit the setup container's secrets. A
-// workflow that checks out runs its clone pods first, one at a time; the
-// checkout container is the largest of them, and the admission check needs
-// it to prove a reserve that holds a whole workflow.
+// workflow that checks out runs its clone pods first, one at a time. The
+// emitter's checkout tier is the largest of them (emit.test.ts holds it to the
+// emitted pods), and the admission check needs it to prove a reserve that
+// holds a whole workflow.
 const commands = routed.flatMap((step) => [
   step.skipClone === true || step.backend === "local"
     ? step
-    : { ...step, checkout: CHECKOUT_TIER },
+    : { ...step, checkout: WORKFLOW_CHECKOUT_TIER },
   ...(step.orderedSteps ?? []).map((command) => ({
     ...command,
     agentLabels: step.agentLabels,

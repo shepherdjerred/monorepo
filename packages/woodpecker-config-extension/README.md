@@ -49,7 +49,7 @@ private Gradle home; the browser lane mounts a 4Gi TMPDIR. Each profile adds
 its whole tmpfs allowance to the lane's limit, while the request stays the
 lane's measured tier (tmpfs pages included): verify requests 20Gi with a 36Gi
 limit, and browser requests 4Gi with a 16Gi limit. Kueue admits on those
-requests, so the 62Gi compute quota runs at most three verify pods at once,
+requests, so the 64Gi compute quota runs at most three verify pods at once,
 and every queue stays within the node's allocatable memory. Homelab admission adds memory-backed volumes only to
 a profiled lane's single execution container, preserving clone, service,
 checkout, and report storage. The production inventory enables the flag, while

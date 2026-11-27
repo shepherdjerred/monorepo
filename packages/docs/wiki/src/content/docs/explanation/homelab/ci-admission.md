@@ -101,9 +101,10 @@ four slots, each held for about a minute.
 
 Four is the smallest slot count that meets a one-minute start. Replaying the
 same 72 hours of light-check arrivals, three slots left the 90th percentile
-waiting 77 seconds, and four cut it to 19. The quota came out of the compute
-queue, so liskov's total budget is unchanged. Most of it is not new cost
-either: the light checks used compute quota before they had their own.
+waiting 77 seconds, and four cut it to 19. The reserve's CPU came out of the
+compute queue. Its ephemeral storage and 2Gi of its memory came from node
+slack instead. That keeps room in the compute queue for a browser pod beside
+three verify pods.
 
 ### Why the light queue lends nothing
 
@@ -111,7 +112,9 @@ Kueue lends idle quota only inside a cohort. With preemption off, a lender
 gets its quota back only when the borrower's pod finishes. A verify pod that
 borrowed the light reserve would hold it for a 5 to 30 minute run. The light
 checks would then be gated behind verify again, which is the wait this pool
-removes. The reserve is small, so keeping it idle between checks costs little.
+removes. The idle reserve is the price instead. Over those 72 hours the light
+checks kept about 0.2 of the four slots busy on average. About 1.9 of the
+reserve's 2 CPU therefore sat idle, in exchange for a 19-second p90 start.
 
 ## Why gates have reserved capacity
 
@@ -230,11 +233,10 @@ A root check, `check-ci-admission-budget.ts`, rules that out. It proves that
 every in-flight workflow's services plus the largest step always fit the
 budget. Most services use the small `SERVICE_TIER`. Paper needs a larger
 reservation, so its workflow has a shared concurrency cap across agents and
-PRs. The `docker-e2e` lane's Tempo and MinIO have a cap too. Without it, the
-proof had to assume every compute slot could hold them, and their ephemeral
-storage alone overflowed the compute quota once the light reserve left it.
-Each cap sits at or above the most that ran at once, so the proof accounts for
-it without reducing the checks.
+PRs. The `docker-e2e` lane's Tempo and MinIO have a cap too, so their held
+quota stays bounded however many PRs run it. Each cap sits at or above the
+most that ran at once, so the proof accounts for it without reducing the
+checks.
 
 Kueue never preempts CI. It stops a plain pod by deleting it, and Woodpecker
 reports a pod that vanishes mid-step as a success.

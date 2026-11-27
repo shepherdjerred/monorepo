@@ -183,9 +183,10 @@ describe("kueue-config", () => {
 
   it("takes the CI budget from its language-neutral source", () => {
     expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("21");
-    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("62Gi");
-    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("48Gi");
-    // The light reserve came out of compute, so the aggregate is unchanged.
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("64Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("56Gi");
+    // The light reserve's CPU and 6Gi of its memory came out of compute; the
+    // rest of its memory and its ephemeral storage came from node slack.
     expect(quota(CI_LIGHT_CLUSTER_QUEUE, "cpu")).toBe("2");
     expect(quota(CI_LIGHT_CLUSTER_QUEUE, "memory")).toBe("8Gi");
     expect(quota(CI_LIGHT_CLUSTER_QUEUE, "ephemeral-storage")).toBe("8Gi");
@@ -194,18 +195,21 @@ describe("kueue-config", () => {
     expect(quota(CI_GATE_CLUSTER_QUEUE, "ephemeral-storage")).toBe("4Gi");
     expect(CI_ADMISSION_BUDGET.quota).toEqual({
       cpu: "24",
-      memory: "72Gi",
-      "ephemeral-storage": "60Gi",
+      memory: "74Gi",
+      "ephemeral-storage": "68Gi",
     });
   });
 
-  it("keeps every queue's memory plus buildkitd within liskov's allocatable memory", () => {
+  it("keeps every queue's memory plus resident requests within liskov's allocatable memory", () => {
     // Kueue admits against each queue alone, so an admitted pod can still sit
     // unschedulable when the queues together exceed the node. liskov reports
-    // about 91.5Gi allocatable, and buildkitd permanently requests 5Gi
-    // (`resources/buildkitd.ts`).
+    // 95,939,924Ki (about 91.5Gi) allocatable. Measured 2026-11-27, the
+    // requests resident outside Kueue were 6.7Gi with four agents: buildkitd
+    // 5Gi (`resources/buildkitd.ts`), the agents 128Mi each, prometheus 320Mi,
+    // openebs 256Mi, promtail 256Mi, kube-system 150Mi, ci-cache 128Mi and
+    // small daemons. Six agents make it 6.96Gi.
     const LISKOV_ALLOCATABLE_GIB = 91.5;
-    const BUILDKITD_REQUEST_GIB = 5;
+    const RESIDENT_MEMORY_ALLOWANCE_GIB = 7;
     const queuedGib = CLUSTER_QUEUES.map((name) => {
       const memory = quota(name, "memory") ?? "";
       if (!/^\d+Gi$/u.test(memory)) {
@@ -213,7 +217,7 @@ describe("kueue-config", () => {
       }
       return Number.parseInt(memory, 10);
     }).reduce((total, gib) => total + gib, 0);
-    expect(queuedGib + BUILDKITD_REQUEST_GIB).toBeLessThanOrEqual(
+    expect(queuedGib + RESIDENT_MEMORY_ALLOWANCE_GIB).toBeLessThanOrEqual(
       LISKOV_ALLOCATABLE_GIB,
     );
   });

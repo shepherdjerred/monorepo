@@ -18,6 +18,14 @@ import { WORKSPACE_SEEDS } from "#src/pipeline/performance.ts";
 import { ramScratchProfile } from "./ram-scratch.ts";
 
 /**
+ * The checkout container's tier: the largest pod a workflow runs before its
+ * step, since the ownership containers around it stay light. `dump-steps.ts`
+ * records it on every workflow that clones, so the admission check sizes a
+ * reserve that holds a whole workflow, not only its step.
+ */
+export const WORKFLOW_CHECKOUT_TIER: ResourceTier = { ...CHECKOUT_TIER };
+
+/**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
  *
  * CI never falls back onto the production node. If the CI node is down,
@@ -367,7 +375,7 @@ function ordinaryCloneConfiguration(
           ...(identity.event === "tag" ? { tags: true } : {}),
         },
         backend_options: {
-          kubernetes: podOptions(step, identity, CHECKOUT_TIER),
+          kubernetes: podOptions(step, identity, WORKFLOW_CHECKOUT_TIER),
         },
       },
       finalizeCloneStep(step, identity),
@@ -478,7 +486,7 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
               ],
               backend_options: {
                 kubernetes: {
-                  ...podOptions(step, identity, CHECKOUT_TIER),
+                  ...podOptions(step, identity, WORKFLOW_CHECKOUT_TIER),
                   securityContext: {
                     // Ownership was prepared before the non-root helper starts.
                     runAsUser: 1000,
