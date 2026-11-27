@@ -172,7 +172,9 @@ describe("vitest.config.ts", () => {
       beforeConfig.test.fsModuleCachePath,
     );
   });
+});
 
+describe("vitest.config.ts default export and CI scratch root", () => {
   test("exports a plain config object as default so packages/the-storm/vitest.e2e.config.ts loads cleanly", async () => {
     expect(typeof defaultVitestConfig).toBe("object");
     expect(defaultVitestConfig).not.toBeNull();
@@ -202,5 +204,40 @@ describe("vitest.config.ts", () => {
     expect(parsed.default.test.fileParallelism).toBe(false);
     expect(parsed.default.cacheDir.length).toBeGreaterThan(0);
     expect(parsed.default.test.fsModuleCachePath.length).toBeGreaterThan(0);
+  });
+
+  test("places isolated per-workspace caches under TMPDIR/vitest-cache when CI is set", () => {
+    const ciScratchRoot = path.join("/dev/shm/ci-tmp", "vitest-cache");
+    const baseOptions = {
+      repositoryRoot: "/app",
+      runtime: "bun-1.4.5",
+      ci: "true",
+      tempDir: "/dev/shm/ci-tmp",
+      resolveVitestRealpath: () =>
+        "/app/node_modules/.bun/vitest@5.0.5+441ecf710ce58215/node_modules/vitest/package.json",
+      readDirMtime: () => "1700000000000",
+    };
+
+    const temporalCi = createVitestConfig({
+      ...baseOptions,
+      workspaceRoot: "/app/packages/temporal",
+      tier: "ci",
+    });
+    const mediaCi = createVitestConfig({
+      ...baseOptions,
+      workspaceRoot: "/app/packages/media",
+      tier: "ci",
+    });
+
+    for (const candidate of [
+      temporalCi.cacheDir,
+      temporalCi.test.fsModuleCachePath,
+      mediaCi.cacheDir,
+      mediaCi.test.fsModuleCachePath,
+    ]) {
+      expect(candidate.startsWith(`${ciScratchRoot}${path.sep}`)).toBe(true);
+      expect(candidate).not.toContain("node_modules/.vitest-cache");
+    }
+    expect(temporalCi.cacheDir).not.toBe(mediaCi.cacheDir);
   });
 });
