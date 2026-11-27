@@ -31,6 +31,9 @@ import {
 } from "#src/tips/tips.fixture.ts";
 
 const PROMPT_VERSION = "tips-test-1";
+const DARK_SPHERE = [
+  { kind: "ability", champion: SYNDRA, slot: "Q", name: "Dark Sphere" },
+];
 
 const WORK: SelectedWork = {
   general: [
@@ -223,8 +226,8 @@ describe("generating tips", () => {
             ...MATCHUP_ANSWER,
             forward: [
               {
-                text: "Give up a minion rather than take a free Dark Sphere.",
-                cites: [],
+                text: "Give up a minion rather than take a free Dark Sphere; the win rate is 51% here.",
+                cites: DARK_SPHERE,
                 basis: [],
               },
               ...withBasis(AHRI_INTO_SYNDRA_TIPS).slice(1),
@@ -244,7 +247,7 @@ describe("generating tips", () => {
     });
     const retry = model.calls[1];
     expect(retry?.prompt).toContain("Your previous answer was rejected");
-    expect(retry?.prompt).toContain("Dark Sphere is named but not cited");
+    expect(retry?.prompt).toContain("cites a win rate");
     expect(retry?.prompt).toContain(model.calls[0]?.prompt);
     expect(report.usage.costUsd).toBeCloseTo(2 * FAKE_CALL_COST_USD);
   });

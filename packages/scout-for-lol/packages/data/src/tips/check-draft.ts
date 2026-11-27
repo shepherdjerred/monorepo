@@ -32,6 +32,7 @@ import type { Lane } from "#src/model/riot/lane.ts";
 import {
   type TipIssue,
   type TipValidationContext,
+  addMissingAbilityCites,
   dropAbsentKeywordCites,
   validateGeneralTipSet,
   validateGlossaryEntry,
@@ -233,8 +234,14 @@ export function checkMatchupDraft(input: {
     ...wikiStamp,
   };
   const merged = withProposals(env.glossary, glossary.entries);
-  const forwardTips = dropAbsentKeywordCites(forward.tips, merged);
-  const reverseTips = dropAbsentKeywordCites(reverse.tips, merged);
+  const forwardTips = addMissingAbilityCites(
+    dropAbsentKeywordCites(forward.tips, merged),
+    base,
+  );
+  const reverseTips = addMissingAbilityCites(
+    dropAbsentKeywordCites(reverse.tips, merged),
+    base,
+  );
   const forwardSet = MatchupTipSetSchema.safeParse({
     ...stamp,
     champion: first.championId,
@@ -303,7 +310,10 @@ export function checkGeneralDraft(input: {
     return { issues: structural, result: undefined };
   }
   const merged = withProposals(env.glossary, glossary.entries);
-  const keptTips = dropAbsentKeywordCites(tips.tips, merged);
+  const keptTips = addMissingAbilityCites(
+    dropAbsentKeywordCites(tips.tips, merged),
+    base,
+  );
   const set = GeneralTipSetSchema.safeParse({
     lane,
     champion: grounding.championId,

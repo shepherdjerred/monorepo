@@ -54,9 +54,9 @@ describe("tip schemas", () => {
     expect(reverse.champion).not.toBe(forward.champion);
   });
 
-  test("rejects tips over 160 characters and tip counts out of range", () => {
+  test("rejects tips over the 240-character ceiling and tip counts out of range", () => {
     const { forward } = ahriSyndraMidSets(HASH);
-    const longTip = { text: "x".repeat(161), cites: [] };
+    const longTip = { text: "x".repeat(241), cites: [] };
     expect(
       MatchupTipSetSchema.safeParse({ ...forward, tips: [longTip] }).success,
     ).toBe(false);

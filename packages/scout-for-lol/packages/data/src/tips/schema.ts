@@ -34,7 +34,13 @@ import {
 
 export const TIP_FILE_SCHEMA_VERSION = 1;
 
+/**
+ * The length a tip's own words may take. An official ability name is not
+ * counted (some are long, "Flap, Flap, Flap"), so the stored schema allows the
+ * names on top, and the validator holds the rest to this.
+ */
 export const TIP_TEXT_MAX_LENGTH = 160;
+export const TIP_TEXT_HARD_MAX_LENGTH = 240;
 export const GLOSSARY_DEFINITION_MAX_LENGTH = 200;
 /**
  * Tips per set. A generated set has `MIN` to `MAX` tips, as many distinct
@@ -101,7 +107,7 @@ export type AbilityCite = Extract<Cite, { kind: "ability" }>;
 export type AbilityNumberCite = Extract<Cite, { kind: "abilityNumber" }>;
 
 export const TipSchema = z.strictObject({
-  text: z.string().trim().min(1).max(TIP_TEXT_MAX_LENGTH),
+  text: z.string().trim().min(1).max(TIP_TEXT_HARD_MAX_LENGTH),
   cites: z.array(CiteSchema),
 });
 export type Tip = z.infer<typeof TipSchema>;
