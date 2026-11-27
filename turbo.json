@@ -359,7 +359,8 @@
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
     "//#prettier-scout": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_SCOUT_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -381,7 +382,8 @@
       ]
     },
     "//#prettier-homelab": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_HOMELAB_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -403,7 +405,8 @@
       ]
     },
     "//#prettier-packages": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["CI_PRETTIER_PACKAGES_CHANGED_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",
@@ -427,7 +430,8 @@
       ]
     },
     "//#prettier-root": {
-      "env": ["CI_CHANGED_BASE", "CI_ROOT_CHECK_INPUTS_SHA256"],
+      "env": ["CI_PRETTIER_ROOT_CHANGED_SHA256", "CI_ROOT_CHECK_INPUTS_SHA256"],
+      "passThroughEnv": ["CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/prettier-cache.ts",
         "bun.lock",

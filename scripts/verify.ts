@@ -1,4 +1,5 @@
 import { rootCheckEnvironment } from "./ci/root-check-inputs.ts";
+import { prettierChangedEnvironment } from "./ci/run-shard-check.ts";
 
 const turboTasks = [
   "build",
@@ -250,6 +251,7 @@ export async function main(
       stderr: "inherit",
       env: {
         ...(await rootCheckEnvironment(environment)),
+        ...(await prettierChangedEnvironment(environment)),
         CI_VITEST_MAX_WORKERS:
           environment["CI_VITEST_MAX_WORKERS"] ??
           String(VERIFY_VITEST_MAX_WORKERS),
