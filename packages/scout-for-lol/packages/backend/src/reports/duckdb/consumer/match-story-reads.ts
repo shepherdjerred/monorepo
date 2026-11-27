@@ -2,6 +2,7 @@ import { type RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { MATCH_UI_READ_COLUMNS } from "#src/report-lake/loadout.ts";
 import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   buildTimelineCoverageSource,
@@ -14,7 +15,6 @@ import {
 import {
   fullMatchRowsSql,
   MatchParticipantRowSchema,
-  runSource,
   TimelineEventReadSchema,
   TimelineFrameReadSchema,
   type LakeMatchParticipantRow,

@@ -1,6 +1,5 @@
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import type { DuckDBValue } from "@duckdb/node-api";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type {
   ScoutQlGroupSize,
@@ -13,13 +12,10 @@ import {
   type CompiledGroupFactsColumns,
   type PlanQueryInput,
 } from "#src/reports/duckdb/compile-plan.ts";
-import {
-  withDuckDBConnection,
-  type DuckDBSession,
-} from "#src/reports/duckdb/instance.ts";
+import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { bindParams } from "#src/reports/duckdb/lake/statement.ts";
 import {
   withLakeQueryRetry,
-  type BoundParam,
   type LakeFiles,
 } from "#src/reports/duckdb/lake.ts";
 import { loadServerPeople } from "#src/reports/server-people.ts";
@@ -83,15 +79,6 @@ export type PlanExecutionInput = {
 };
 
 const EMPTY_RESULT: PlanAggregationResult = { rows: [], rowsScanned: 0 };
-
-function bindParams(
-  session: DuckDBSession,
-  params: BoundParam[],
-): DuckDBValue[] {
-  return params.map((param) =>
-    param.kind === "list" ? session.list(param.values) : param.value,
-  );
-}
 
 async function queryInput(
   input: PlanExecutionInput,

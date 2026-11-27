@@ -1,7 +1,7 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import type { LakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   listParam,
@@ -45,19 +45,21 @@ export async function readRosterGames(
     [],
   );
   if (source === undefined) return [];
-  const rows = await page.session.run(
-    `SELECT puuid, match_id, game_creation_ms, champion_id, champion_name, queue, queue_id, win FROM (` +
+  return await runSource({
+    session: page.session,
+    source,
+    trailingParams: [
+      scalarParam(options.newestPerAccount),
+      scalarParam(options.sinceMs),
+    ],
+    sql:
+      `SELECT puuid, match_id, game_creation_ms, champion_id, champion_name, queue, queue_id, win FROM (` +
       `SELECT puuid, match_id, champion_id, champion_name, queue, queue_id, win, ` +
       `${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
       `row_number() OVER (PARTITION BY puuid ORDER BY ${GAME_CREATED_MS_SQL} DESC, match_id DESC) AS recency ` +
       `FROM (${source.sql})) ` +
       `WHERE recency <= ? OR game_creation_ms >= ? ` +
       `ORDER BY puuid, game_creation_ms DESC, match_id DESC`,
-    bindParams(page.session, [
-      ...source.params,
-      scalarParam(options.newestPerAccount),
-      scalarParam(options.sinceMs),
-    ]),
-  );
-  return rows.map((row) => RosterGameRowSchema.parse(row));
+    schema: RosterGameRowSchema,
+  });
 }

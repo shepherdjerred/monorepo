@@ -2,12 +2,11 @@ import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   withLakePage,
   type LakePage,
 } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   listParam,
@@ -65,13 +64,12 @@ export async function fetchGuildAccountCounts(options: {
         params: [listParam(options.puuids)],
       });
       if (source === undefined) return [];
-      return await withDuckDBConnection(async (session) => {
-        const rows = await session.run(
+      return await runSource({
+        source,
+        sql:
           `SELECT puuid, count(DISTINCT match_id)::BIGINT AS games, max(${GAME_CREATED_MS_SQL})::BIGINT AS last_match_ms ` +
-            `FROM (${source.sql}) GROUP BY puuid`,
-          bindParams(session, source.params),
-        );
-        return rows.map((row) => AccountCountSchema.parse(row));
+          `FROM (${source.sql}) GROUP BY puuid`,
+        schema: AccountCountSchema,
       });
     },
   );
@@ -122,11 +120,13 @@ export async function readGuildMatchRows(
     `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
     `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
     `ORDER BY game_creation_ms DESC, match_id DESC, participant_id, team_id, champion_name`;
-  const rows = await page.session.run(
+  return await runSource({
+    session: page.session,
+    source: target,
+    trailingParams: full.params,
     sql,
-    bindParams(page.session, [...target.params, ...full.params]),
-  );
-  return rows.map((row) => GuildMatchRowSchema.parse(row));
+    schema: GuildMatchRowSchema,
+  });
 }
 
 export async function fetchGuildMatchRows(

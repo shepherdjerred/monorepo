@@ -18,14 +18,10 @@ import {
   MatchLoadoutLakeRowSchema,
 } from "#src/report-lake/loadout.ts";
 import {
-  withDuckDBConnection,
-  type DuckDBSession,
-} from "#src/reports/duckdb/instance.ts";
-import {
   inLakePage,
   type LakePage,
 } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildMatchesSource,
   buildMatchTeamsSource,
@@ -37,41 +33,10 @@ import {
   withLakeQueryRetry,
   scalarParam,
   type BoundParam,
-  type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
-
-export async function runSource<T>(options: {
-  source: SqlFragment;
-  sql: string;
-  leadingParams?: BoundParam[];
-  trailingParams?: BoundParam[];
-  schema: z.ZodType<T>;
-  abortSignal?: AbortSignal | undefined;
-  /** Run on this connection instead of taking a slot of its own. */
-  session?: DuckDBSession | undefined;
-}): Promise<T[]> {
-  const run = async (session: DuckDBSession): Promise<T[]> => {
-    const rows = await session.run(
-      options.sql,
-      bindParams(session, [
-        ...(options.leadingParams ?? []),
-        ...options.source.params,
-        ...(options.trailingParams ?? []),
-      ]),
-    );
-    return rows.map((row) => options.schema.parse(row));
-  };
-  if (options.session !== undefined) return await run(options.session);
-  return await withDuckDBConnection(
-    run,
-    options.abortSignal === undefined
-      ? {}
-      : { abortSignal: options.abortSignal },
-  );
-}
 
 export const MatchParticipantRowSchema = z
   .object({

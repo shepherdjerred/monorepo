@@ -1,7 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { runSource } from "./profile-lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   buildTimelineEventParticipantsSource,
   buildTimelineParticipantFramesSource,

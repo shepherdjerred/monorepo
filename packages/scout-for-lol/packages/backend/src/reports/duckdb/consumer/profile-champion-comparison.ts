@@ -8,7 +8,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import { withLakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
-import { runSource } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { runSource } from "#src/reports/duckdb/lake/statement.ts";
 import {
   entryAccountPairs,
   entryGamesSource,
