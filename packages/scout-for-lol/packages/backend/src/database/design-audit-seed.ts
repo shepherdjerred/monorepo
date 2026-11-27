@@ -18,6 +18,7 @@ import {
 } from "#src/database/design-audit-champion-fixture.ts";
 import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
+import { withPlayerPageFixture } from "#src/database/design-audit-player-page-fixture.ts";
 import {
   designAuditMatchFixtures,
   designAuditHistoryFixtures,
@@ -321,7 +322,7 @@ export async function seedDesignAuditDatabase(
       timelineEvents: review.timelineEvents,
       timelineCoverage: review.timelineCoverage,
       timelineEventParticipants: review.timelineEventParticipants,
-      matchFacts: [
+      matchFacts: await withPlayerPageFixture(prisma, puuid, new Date(), [
         ...champions.tracked,
         ...designAuditHistoryFixtures({
           playerId: player.id,
@@ -394,7 +395,7 @@ export async function seedDesignAuditDatabase(
           championName: "Janna",
           gameCreationAt: new Date("2025-12-28T21:00:00.000Z"),
         },
-      ],
+      ]),
       untrackedMatchFacts: [
         ...champions.untracked,
         ...review.extra,

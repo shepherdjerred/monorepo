@@ -7,6 +7,7 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { championScopeInput } from "#src/lib/champions/champion-pages.ts";
+import { parsePlayerPageFilters } from "#src/lib/player/page-filters.ts";
 import { playerHistoryInput } from "#src/lib/player/player-feed.ts";
 import { playerSummaryInput } from "#src/lib/player/player-page.ts";
 import { parsePlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
@@ -110,7 +111,7 @@ export function consumerPlayerLoader({
 }: LoaderFunctionArgs): null {
   const parsed = PlayerIdSchema.safeParse(Number(params["playerId"]));
   if (!parsed.success) return null;
-  const filters = parsePlayerProfileFilters(new URL(request.url).searchParams);
+  const filters = parsePlayerPageFilters(new URL(request.url).searchParams);
   void preloadQuery(
     queryClient.query(
       trpcOptions.consumerPlayer.profileSummary.queryOptions(

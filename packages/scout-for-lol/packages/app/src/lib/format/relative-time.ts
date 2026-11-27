@@ -17,6 +17,10 @@ function plural(count: number, unit: string): string {
  * ago", "2 hours ago", "Yesterday", "3 days ago", then the date.
  */
 export function relativeWhen(atMs: number, nowMs: number): string {
+  // A missing time reaches here as 0 or NaN; a date near 1970 would be invented.
+  if (!Number.isFinite(atMs) || atMs <= 0) {
+    throw new Error(`${atMs.toString()} is not a time something happened`);
+  }
   const elapsed = Math.max(0, nowMs - atMs);
   if (elapsed < MINUTE_MS) return "Just now";
   if (elapsed < HOUR_MS) {

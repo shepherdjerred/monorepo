@@ -35,7 +35,7 @@ describe("latelyLines", () => {
     const lines = latelyLines(playerSummary());
     expect(lines?.lead).toBe("Won 12 of the last 20");
     expect(lines?.sub).toBe(
-      "On a 3-game win streak, with a 60.0% win rate and a 3.42 KDA.",
+      "On a 3-game win streak, with a 60% win rate and a 3.42 KDA.",
     );
   });
 
@@ -54,7 +54,7 @@ describe("latelyLines", () => {
       highlights: { ...summary.highlights, streak: null },
       behavior: { ...summary.behavior, recent20: null },
     });
-    expect(lines?.sub).toBe("With a 60.0% win rate.");
+    expect(lines?.sub).toBe("With a 60% win rate.");
   });
 
   test("calls a loss run a losing streak and one game just that game", () => {

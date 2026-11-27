@@ -26,6 +26,18 @@ describe("relativeWhen", () => {
     expect(relativeWhen(NOW - elapsed, NOW)).toBe(text);
   });
 
+  test("a missing time fails loudly rather than reading as 1970", () => {
+    expect(() => relativeWhen(0, NOW)).toThrow("not a time");
+    expect(() => relativeWhen(Number.NaN, NOW)).toThrow("not a time");
+    expect(() => relativeWhenInline(-1, NOW)).toThrow("not a time");
+  });
+
+  test("a game over a week old reads as its date, not a count", () => {
+    // The design-audit seed pins its older games to 2025-12-31.
+    const seeded = Date.UTC(2025, 11, 31, 16, 0, 0);
+    expect(relativeWhenInline(seeded, NOW)).toBe("Dec 31");
+  });
+
   test("a time slightly in the future reads as now", () => {
     expect(relativeWhen(NOW + 5000, NOW)).toBe("Just now");
   });

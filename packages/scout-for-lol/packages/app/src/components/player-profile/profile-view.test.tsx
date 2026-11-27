@@ -68,7 +68,7 @@ describe("ProfileView", () => {
     const html = view(playerSummary());
     expect(html).toContain("Won 12 of the last 20");
     expect(html).toContain(
-      "On a 3-game win streak, with a 60.0% win rate and a 3.42 KDA.",
+      "On a 3-game win streak, with a 60% win rate and a 3.42 KDA.",
     );
     expect(html).toContain("20 games ago");
     expect(html).toContain('role="img"');
@@ -142,7 +142,7 @@ describe("ProfileView sections", () => {
     expect(html).toContain('href="/players/2"');
     expect(html).toContain("Best champions");
     expect(html).toContain("8 games");
-    expect(html).toContain("Won 75.0%");
+    expect(html).toContain("Won 75%");
     expect(html).toContain("Small sample");
   });
 

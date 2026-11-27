@@ -1,6 +1,5 @@
 import { Panel } from "@scout-for-lol/design-system/components/surfaces/panel";
 import { ChampionFace } from "@scout-for-lol/design-system/domain/profile/champion-face";
-import { formatPercent } from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
 import { useState } from "react";
 import { Link } from "react-router";
 import {
@@ -8,6 +7,7 @@ import {
   SECTION_HEADING,
   TEXT_LINK,
 } from "#src/components/friendly-classes.ts";
+import { wholePercent } from "#src/lib/format/percent.ts";
 import { gamesText } from "#src/lib/champions/champion-pages.ts";
 import {
   BEST_CHAMPIONS_PREVIEW,
@@ -27,7 +27,7 @@ function Tile(props: { champion: BestChampion }) {
       </b>
       <span className="text-scout-subtle">{gamesText(champion.games)}</span>
       <span className="text-scout-subtle">
-        Won {formatPercent(champion.winRate)}
+        Won {wholePercent(champion.winRate)}
       </span>
       {champion.lowSample ? (
         <span className={`${NOTE} mt-2`}>Small sample</span>

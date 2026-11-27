@@ -15,7 +15,7 @@ import {
   splitClimb,
 } from "#src/lib/player/player-feed.ts";
 import { playerSummaryInput } from "#src/lib/player/player-page.ts";
-import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
+import { usePlayerPageUrlState } from "#src/lib/player/use-player-page-url-state.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useConsumerPlayerParams } from "#src/lib/routes/route-params.ts";
 
@@ -30,7 +30,7 @@ export function ConsumerPlayerProfile() {
 
 function ConsumerPlayerProfileContent() {
   const { playerId } = useConsumerPlayerParams();
-  const { filters, setFilters } = usePlayerProfileUrlState();
+  const { filters, setFilters } = usePlayerPageUrlState();
   const trpc = useTRPC();
   const keep = { placeholderData: keepPreviousData };
   const summaryQuery = useQuery(

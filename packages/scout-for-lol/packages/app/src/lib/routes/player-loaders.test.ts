@@ -46,7 +46,21 @@ describe("player loaders", () => {
     expect(ranks).toContain('"playerId":42');
   });
 
-  test("a visit with no filters starts on the ranked queues and every game", () => {
+  test("Ranked in the URL is the ranked queues, written out", () => {
+    const query = vi.spyOn(queryClient, "query").mockResolvedValue(undefined);
+    consumerPlayerLoader(
+      loaderArgs(
+        "http://localhost/app/players/42?queue=solo&queue=flex&queue=ranked+5s&queue=clash",
+        { playerId: "42" },
+      ),
+    );
+    const history = prefetchedKeys(query).find((key) =>
+      key.includes("matchHistory"),
+    );
+    expect(history).toContain('"queues":["solo","flex","ranked 5s","clash"]');
+  });
+
+  test("a visit with no filters starts on every game and every queue", () => {
     const query = vi.spyOn(queryClient, "query").mockResolvedValue(undefined);
     consumerPlayerLoader(
       loaderArgs("http://localhost/app/players/42", { playerId: "42" }),
@@ -55,7 +69,7 @@ describe("player loaders", () => {
       key.includes("profileSummary"),
     );
     expect(summary).toContain('"games":"all"');
-    expect(summary).toContain('"queues":["solo","flex","ranked 5s","clash"]');
+    expect(summary).not.toContain("queues");
   });
 
   test("an id that is not a player warms nothing", () => {

@@ -6,7 +6,7 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/data";
 import type { GameResult } from "@scout-for-lol/design-system/domain/profile/result-strip";
-import { formatPercent } from "@scout-for-lol/design-system/domain/profile/win-rate-bar";
+import { wholePercent } from "#src/lib/format/percent.ts";
 import { streakPhrase, wonOfLast } from "#src/lib/player/form-text.ts";
 import type { PlayerProfileFilters } from "#src/lib/player/player-profile-filters.ts";
 import {
@@ -58,7 +58,7 @@ function kdaText(summary: PlayerSummary): string | undefined {
 export function latelyLines(summary: PlayerSummary): LatelyLines | null {
   const { lately, streak } = summary.highlights;
   if (lately === null) return null;
-  const rate = `${formatPercent((lately.wins / lately.games) * 100)} win rate`;
+  const rate = `${wholePercent((lately.wins / lately.games) * 100)} win rate`;
   const kda = kdaText(summary);
   const facts = [rate, ...(kda === undefined ? [] : [kda])].join(" and a ");
   const run = streakPhrase(streak);
