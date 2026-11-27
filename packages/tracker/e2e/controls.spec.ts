@@ -193,6 +193,39 @@ test("the context menu copies an issue's ID to the clipboard", async ({
   ).toBe(identifier);
 });
 
+test("opening an issue menu leaves its submenus closed until chosen", async ({
+  page,
+}, info) => {
+  const mobile = info.project.name === "mobile";
+  const { tag, identifiers } = await scratchIssues(page, 3);
+  const [first = "", second = "", third = ""] = identifiers;
+  try {
+    await page.goto(`/issues?team=${scratchTeam}&group=none&q=${tag}`);
+    await selectRows(page, [first, second], mobile);
+    await openMenu(page, third, mobile);
+    const menu = page.getByRole("menu", { name: `Actions for ${third}` });
+    const assignee = menu.getByRole("menuitem", {
+      name: "Assignee",
+      exact: true,
+    });
+    const unassigned = page.getByRole("menuitem", {
+      name: "Unassigned",
+      exact: true,
+    });
+    await expect(assignee).toHaveAttribute("aria-expanded", "false");
+    if (mobile) await assignee.tap();
+    else await assignee.hover();
+    await expect(unassigned).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(assignee).toHaveAttribute("aria-expanded", "false");
+    await assignee.press("ArrowRight");
+    await expect(unassigned).toBeVisible();
+  } finally {
+    for (const identifier of identifiers)
+      await removeIssue(page.request, identifier);
+  }
+});
+
 test("grouping by priority shows headers, and a collapsed group stays collapsed after reload", async ({
   page,
 }) => {
