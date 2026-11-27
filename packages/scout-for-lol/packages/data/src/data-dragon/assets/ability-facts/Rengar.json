@@ -119,7 +119,15 @@
         ]
       },
       "resolvedDescription": "Rengar's next 2 Attacks gain 40% Attack Speed. The first Attack deals 20/55/90/125/160 (+100% AD) (+5% AD) physical damage. Max Ferocity: The first Attack deals 35-240 (based on level) (+100% AD) (+20% AD) physical damage and grants Rengar 50-101% (based on level) Attack Speed for 5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 325,
+        "lineWidth": 55,
+        "missileSpeed": 3000,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Battle Roar",
@@ -200,7 +208,15 @@
       "resolvedDescription": "Rengar roars, dealing 50/80/110/140/170 (+80% AP) magic damage to nearby enemies and restoring 50% of the damage taken in the last 1.5 seconds as Health. Max Ferocity: Deals {{ totaldamageempowered }} magic damage and additionally cleanses Rengar of crowd control.",
       "unresolved": [
         "totaldamageempowered"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 400,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Bola Strike",
@@ -265,7 +281,30 @@
         ]
       },
       "resolvedDescription": "Rengar throws a bola, dealing 55/100/145/190/235 (+80% bonus AD) physical damage to the first enemy hit, revealing and Slowing them by 30/45/60/75/90% for 1.75 seconds. Max Ferocity: Deals 50-305 (based on level) (+80% bonus AD) physical damage and Roots for 1.75 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": 70,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "rengaremis",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Thrill of the Hunt",
@@ -334,7 +373,15 @@
         ]
       },
       "resolvedDescription": "Passive: Rengar will also leap Attack when Camouflaged. Active: Rengar gains 40/50/60% Move Speed and True Sight in a small area around the nearest enemy champion for 12/16/20 seconds. After 2 seconds, Rengar becomes Camouflaged and can leap without being in Brush. Leaping to the nearest champion deals an additional 100% AD physical damage, shreds 15/20/25 Armor for 4 seconds, and ends this Ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 75,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

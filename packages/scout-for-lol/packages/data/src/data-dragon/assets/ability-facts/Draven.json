@@ -91,7 +91,114 @@
         ]
       },
       "resolvedDescription": "Draven readies a Spinning Axe, causing his next Attack to deal an additional 40/45/50/55/60 (+75/85/95/105/115% bonus AD) physical damage and ricochet into the air. If Draven catches it, he readies another Spinning Axe. Draven can hold two Spinning Axes at once.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 50,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "dravenspinningattack",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningattack2",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningattack2crit",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningattackcrit",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningreturn",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningreturncatch",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "dravenspinningreturnleftaxe",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Blood Rush",
@@ -184,7 +291,15 @@
         ]
       },
       "resolvedDescription": "Draven becomes Ghosted, gains 50/55/60/65/70% Move Speed decaying over 1.5 seconds and 20/25/30/35/40% Attack Speed for 3 seconds. When Draven catches a Spinning Axe, this Ability's Cooldown is refreshed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.2419,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Stand Aside",
@@ -242,7 +357,30 @@
         ]
       },
       "resolvedDescription": "Draven chucks a sideways axe that deals 75/110/145/180/215 (+50% bonus AD) physical damage, Knocks Back, and Slows by 20/25/30/35/40% for 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 130,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "dravendoubleshotmissile",
+            "width": 130,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Whirling Death",
@@ -293,7 +431,32 @@
       "resolvedDescription": "Draven hurls two massive axes that deal 200/300/400 (+110/130/150% bonus AD) physical damage. Upon hitting a champion or Recasting, they reverse direction and return to Draven. The axes deal 5% less damage for each enemy hit, down to a minimum of 50%. If Whirling Death would leave an enemy champion with less health than 100% of Draven's current League of Draven stacks ({{ rpassivetruedamage }}), he will execute them.",
       "unresolved": [
         "rpassivetruedamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.5,
+        "radius": 299.3,
+        "lineWidth": 160,
+        "missileSpeed": 2000,
+        "missiles": [
+          {
+            "name": "dravenr",
+            "width": 160,
+            "movement": "DecelToLocationMovement",
+            "speed": 2000,
+            "minSpeed": 2000,
+            "maxSpeed": 2000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "TriggerOnMovementComplete",
+              "ReturnToCasterOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

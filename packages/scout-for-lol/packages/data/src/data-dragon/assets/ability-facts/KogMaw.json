@@ -18,7 +18,30 @@
         ]
       },
       "resolvedDescription": "4 seconds after dying, Kogmaw explodes, dealing true damage to surrounding enemies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "kogmawicathiansurprise",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Caustic Spittle",
@@ -83,7 +106,44 @@
         ]
       },
       "resolvedDescription": "Passive: Kog'Maw gains 5/10/15/20/25% Attack Speed. Active: Kog'Maw vomits a corrosive projectile that deals 80/125/170/215/260 (+90% AP) magic damage to the first enemy hit and shreds 16/20/24/28/32% Armor and Magic Resist for 4 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1650,
+        "missiles": [
+          {
+            "name": "kogmawcausticspittle",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "kogmawqmis",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 1650,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Bio-Arcane Barrage",
@@ -150,7 +210,30 @@
       "resolvedDescription": "Kog'Maw gains 130/150/170/190/210 Attack Range and his Attacks deal an additional {{ totalhealthdamage }} max Health magic damage On-Hit for 8 seconds.",
       "unresolved": [
         "totalhealthdamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 7,
+        "missiles": [
+          {
+            "name": "kogmawbioarcanebarrageattack",
+            "width": 100,
+            "movement": "FixedSpeedMovement",
+            "speed": 1800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Void Ooze",
@@ -215,7 +298,30 @@
         ]
       },
       "resolvedDescription": "Kog'Maw spits bile, dealing 70/110/150/190/230 (+65% AP) magic damage and leaving a trail of ooze for 3 seconds. Enemies in the ooze are Slowed by 40/45/50/55/60%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 175,
+        "lineWidth": 120,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "kogmawvoidoozemissile",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Living Artillery",
@@ -299,7 +405,15 @@
         ]
       },
       "resolvedDescription": "Kog'Maw shoots acid at an area, dealing 100/140/180 (+35/40/45% AP) (+75% bonus AD) plus 0.83333% per 1% missing Health magic damage and revealing enemies hit for 2 seconds. Enemies below 40% Health instead take 200/280/360 (+70/80/90% AP) (+150% bonus AD) magic damage. Subsequent shots within 8 seconds cost an additional 40 Mana (max: 400 Mana).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 240,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     }
   }
 }

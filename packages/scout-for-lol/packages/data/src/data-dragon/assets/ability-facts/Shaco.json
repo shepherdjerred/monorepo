@@ -117,7 +117,15 @@
       "resolvedDescription": "Shaco teleports and becomes Invisible for 2.5/2.75/3/3.25/3.5 seconds. Using Jack In The Box or Hallucinate does not break Invisibility. Shaco's next Attack while Invisible deals an additional 25/35/45/55/65 (+60% bonus AD) physical damage. If striking from behind, this Attack critically strikes for {{ qcritdamagemod }} damage.",
       "unresolved": [
         "qcritdamagemod"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Jack In The Box",
@@ -217,7 +225,15 @@
         ]
       },
       "resolvedDescription": "Shaco creates a trap that stealths itself after 2 seconds and lasts for 40 (+10% AP) seconds. It activates when an enemy comes near or when revealed, Fearing nearby enemy Champions for 0.5/0.75/1/1.25/1.5 seconds, or 2 seconds for minions and jungle monsters. Once activated, the trap fires at all nearby enemies for 5 seconds, dealing 10/15/20/25/30 (+12% AP) magic damage, or 25/40/55/70/85 (+18% AP) damage if focused on a single target. Jack in the Box's attacks deal an additional 20/35/50/65/80 damage to monsters.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Two-Shiv Poison",
@@ -303,7 +319,15 @@
         ]
       },
       "resolvedDescription": "Passive: While this Ability is off Cooldown, Shaco's Attacks Slow the target by 20/22.5/25/27.5/30% for 2 seconds. Active: Shaco throws a shiv, dealing 70/95/120/145/170 (+80% bonus AD) (+60% AP) magic damage and Slowing by 20/22.5/25/27.5/30% for 3 seconds. If the target has less than 30% Health, the shiv deals 105/142.5/180/217.5/255 (+120% bonus AD) (+90% AP) damage instead.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Hallucinate",
@@ -377,7 +401,15 @@
         ]
       },
       "resolvedDescription": "Shaco briefly disappears, then reappears with a clone that lasts 18 seconds and detonates when it dies, dealing 150/225/300 (+70% AP) magic damage and spawning three mini Jack in the Boxes that trigger immediately. The clone deals 60% of Shaco's damage and receives 50% increased damage. Mini Jack in the Boxes deal 10/20/30 (+10% AP) magic damage, or 25/50/75 (+15% AP) magic damage if firing at only one enemy, and Fear for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

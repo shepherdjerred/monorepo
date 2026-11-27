@@ -106,7 +106,58 @@
         ]
       },
       "resolvedDescription": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun. While using the rocket launcher, Jinx's Attacks deal 110% AD physical damage to the target and nearby enemies, gain 100/125/150/175/200 range, cost Mana, and scale 10% less with bonus Attack Speed. While using the minigun, Jinx's Attacks grant Attack Speed for 2.5 seconds, stacking up to 3 times (+30/55/80/105/130% max).",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 2000,
+        "missiles": [
+          {
+            "name": "jinxqattack",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "jinxqattack2",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "jinxqcritattack",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Zap!",
@@ -178,7 +229,30 @@
         ]
       },
       "resolvedDescription": "Jinx fires a shock blast that deals 10/60/110/160/210 (+140% AD) physical damage to the first enemy hit, Slows them by 40/50/60/70/80%, and reveals them for 2 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 60,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "jinxwmissile",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Flame Chompers!",
@@ -236,7 +310,30 @@
         ]
       },
       "resolvedDescription": "Jinx tosses out 3 chompers that last for 5 seconds. They explode on contact with enemy champions, Rooting them for 1.5 seconds and dealing 90/140/190/240/290 (+100% AP) magic damage to nearby enemies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.25,
+        "radius": 315,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "jinxehit",
+            "width": 120,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Super Mega Death Rocket!",
@@ -290,7 +387,15 @@
         ]
       },
       "resolvedDescription": "Jinx fires a rocket that explodes on the first enemy champion hit, dealing 20/35/50 (+12% bonus AD) to 200/350/500 (+120% bonus AD) + 25/30/35% missing Health physical damage, gaining damage over the first second of travel time. Nearby enemies take 80% Damage. Missing Health damage cannot exceed 1200 against Monsters.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.6,
+        "radius": 100,
+        "lineWidth": 140,
+        "missileSpeed": 1700,
+        "missiles": []
+      }
     }
   }
 }

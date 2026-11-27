@@ -69,7 +69,31 @@
         ]
       },
       "resolvedDescription": "Amumu launches a bandage, pulling himself to the first enemy hit, Stunning them for 1 second, and dealing 70/95/120/145/170 (+85% AP) magic damage. This Ability has 2 charges.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 2000,
+        "missiles": [
+          {
+            "name": "sadmummybandagetoss",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Despair",
@@ -120,7 +144,15 @@
         ]
       },
       "resolvedDescription": "Toggle: Amumu begins crying, dealing 10 plus 1/1.25/1.5/1.75/2% (+0.5% AP) max Health magic damage to nearby enemies every second and refreshing Curse.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Tantrum",
@@ -185,7 +217,15 @@
         ]
       },
       "resolvedDescription": "Passive: Amumu takes 5/7/9/11/13 (+3% bonus Armor) (+3% bonus Magic Resist) reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by 0.75 seconds. Active: Amumu throws a tantrum, dealing 65/95/125/155/185 (+50% AP) magic damage to nearby enemies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Curse of the Sad Mummy",
@@ -224,7 +264,15 @@
         ]
       },
       "resolvedDescription": "Amumu flares out his bandages, Stunning for 1.5 seconds, dealing 200/300/400 (+80% AP) magic damage and applying Curse.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 550,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     }
   }
 }

@@ -24,7 +24,30 @@
         ]
       },
       "resolvedDescription": "Seeds spawn around Zyra periodically, becoming faster with level. Zyra can cast Deadly Spines or Grasping Roots near seeds to grow plants, who fight for Zyra.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 1200,
+        "lineWidth": null,
+        "missileSpeed": 1500,
+        "missiles": [
+          {
+            "name": "zyrapseedmis",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Deadly Spines",
@@ -61,7 +84,44 @@
         ]
       },
       "resolvedDescription": "Zyra causes thick vines to spread and explode into spines, dealing 60/100/140/180/220 (+65% AP) magic damage. If this Ability is cast near a Seed, the Seed grows into a Thorn Spitter that deals 15-75 (based on level) (+20% AP) magic damage and lasts 8 seconds. Thorn Spitters have 575 range.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 140,
+        "lineWidth": 85,
+        "missileSpeed": 1400,
+        "missiles": [
+          {
+            "name": "zyraqplantmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "zyraqplantmissileonspawn",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Rampant Growth",
@@ -121,7 +181,30 @@
       "resolvedDescription": "Zyra plants a Seed that lasts 60 seconds. These Seeds grant True Sight of enemy champions that step on them for 2 seconds, but are still destroyed. This Ability has 2 charges with a {{ ammorechargetime }} second recharge time. Killing an enemy minion or monster reduces the recharge time by 35%. Champion takedowns reduce the recharge time by 100% instead.",
       "unresolved": [
         "ammorechargetime"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.2432,
+        "radius": 45,
+        "lineWidth": null,
+        "missileSpeed": 2200,
+        "missiles": [
+          {
+            "name": "zyrawseedmis",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Grasping Roots",
@@ -193,7 +276,15 @@
         ]
       },
       "resolvedDescription": "Zyra sends vines forward, Rooting for 1/1.25/1.5/1.75/2 second(s) and dealing 60/95/130/165/200 (+60% AP) magic damage. If this Ability passes near a Seed, the Seed grows into a Vine Lasher that deals 15-75 (based on level) (+20% AP) magic damage and lasts 8 seconds. Vine Lashers have 400 range, and their Attacks Slow by 30% for 2 seconds. The Slow from multiple Vine Lashers stacks up to 2 times.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 70,
+        "missileSpeed": 1150,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Stranglethorns",
@@ -242,7 +333,30 @@
         ]
       },
       "resolvedDescription": "Zyra summons the fury of nature, growing a twisted thicket that deals 200/300/400 (+70% AP) magic damage. After 2 seconds, the vines snap upwards, Knocking Up for 1 second. Zyra's plants within the thicket become enraged, resetting their duration, gaining 50% Health and Attacking for 50% bonus damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": 0.25,
+        "radius": 500,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "zyrarsplash",
+            "width": 85,
+            "movement": "FixedSpeedMovement",
+            "speed": 650,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }
