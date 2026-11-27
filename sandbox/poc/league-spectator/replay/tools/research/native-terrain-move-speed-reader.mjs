@@ -1,4 +1,4 @@
-import { decodeRegisteredState } from "../../latest-state-fields.mjs";
+import { decodeRegisteredStateGroup } from "../../latest-state-fields.mjs";
 
 // Opcode 309 body reader 0x1072260 and vector reader 0x11190b0.
 const defaultRecordCounts = [255, null, null, 1, null, 2, 0, null];
@@ -9,6 +9,22 @@ const wireGroupSelectors = [1, 2, 4, 8, 16, 32, 64];
 const moveSpeedSchema = {
   groups: { 32: { count: 32, floatMask: 0x0f99fbff } },
   fields: { moveSpeed: { group: 32, index: 24, type: "float" } },
+};
+// Compact champion registration and consumer fields verified by the original
+// health and resource readers on the current replay build.
+const championStatsSchema = {
+  groups: {
+    1: { count: 28, floatMask: 0x0fffff07 },
+    ...moveSpeedSchema.groups,
+  },
+  fields: {
+    ...moveSpeedSchema.fields,
+    health: { group: 32, index: 0, type: "float" },
+    healthMax: { group: 32, index: 1, type: "float" },
+    resource: { group: 32, index: 15, type: "float" },
+    resourceMax: { group: 32, index: 16, type: "float" },
+    gold: { group: 1, index: 0, type: "float" },
+  },
 };
 
 function readReplicationVector(payload, decodeVectorByte, decodeTailByte) {
@@ -50,9 +66,16 @@ function readReplicationVector(payload, decodeVectorByte, decodeTailByte) {
   return { vector, count };
 }
 
-function readMoveSpeeds(vector, count, verifiedChampionIds) {
+function readChampionReplication(
+  vector,
+  count,
+  verifiedChampionIds,
+  includeChampionStats,
+) {
   const view = new DataView(vector.buffer);
   const updates = [];
+  const statsWrites = includeChampionStats ? [] : null;
+  const schema = includeChampionStats ? championStatsSchema : moveSpeedSchema;
   let cursor = 0;
   let recordIndex = 0;
   let championGroups = 0;
@@ -74,30 +97,36 @@ function readMoveSpeeds(vector, count, verifiedChampionIds) {
       cursor = start + size;
       if (cursor > vector.length)
         throw Error("Truncated opcode 309 replication group body");
-      if (group !== 32 || !verifiedChampionIds.has(entityId)) continue;
-      championGroups++;
-      const { values } = decodeRegisteredState(
-        {
-          groups: [
-            {
-              group,
-              mask,
-              dataHex: Array.from(vector.subarray(start, cursor), (byte) =>
-                byte.toString(16).padStart(2, "0"),
-              ).join(""),
-            },
-          ],
-        },
-        moveSpeedSchema,
+      if (
+        !verifiedChampionIds.has(entityId) ||
+        (group !== 32 && !(statsWrites && group === 1 && mask & 1))
+      )
+        continue;
+      if (group === 32) championGroups++;
+      const { values } = decodeRegisteredStateGroup(
+        group,
+        mask,
+        vector.subarray(start, cursor),
+        schema,
       );
       if (Object.hasOwn(values, "moveSpeed"))
         updates.push({ entityId, recordIndex, moveSpeed: values.moveSpeed });
+      if (statsWrites) {
+        const { moveSpeed, ...stats } = values;
+        if (Object.keys(stats).length > 0)
+          statsWrites.push({ entityId, ...stats });
+      }
     }
     recordIndex++;
   }
   if (recordIndex !== count)
     throw Error("Opcode 309 replication record count mismatch");
-  return { recordCount: count, championGroups, updates };
+  return {
+    recordCount: count,
+    championGroups,
+    updates,
+    ...(statsWrites && { statsWrites }),
+  };
 }
 
 /** Decode recorded MoveSpeed writes for independently bound champion IDs. */
@@ -105,7 +134,11 @@ export function createMoveSpeed309ReaderFromCodecs({
   decodeReplicationVectorByte,
   decodeReplicationTailByte,
 }) {
-  return (payload, verifiedChampionIds) => {
+  return (
+    payload,
+    verifiedChampionIds,
+    { includeChampionStats = false } = {},
+  ) => {
     if (!(verifiedChampionIds instanceof Set))
       throw Error("A verified champion ID set is required");
     const { vector, count } = readReplicationVector(
@@ -113,6 +146,11 @@ export function createMoveSpeed309ReaderFromCodecs({
       decodeReplicationVectorByte,
       decodeReplicationTailByte,
     );
-    return readMoveSpeeds(vector, count, verifiedChampionIds);
+    return readChampionReplication(
+      vector,
+      count,
+      verifiedChampionIds,
+      includeChampionStats,
+    );
   };
 }

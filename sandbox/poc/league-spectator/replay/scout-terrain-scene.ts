@@ -108,7 +108,13 @@ const recordedStructureLoss = z.object({
   context: z.number().int().positive(),
   timeSeconds: z.number().positive(),
 });
-export const SceneSchema = z.object({
+const ChampionHealthTracksSchema = createChampionHealthTracksSchema(z);
+const ChampionResourceTracksSchema = createChampionResourceTracksSchema(z);
+const WorkerChampionStatsSchema = z.strictObject({
+  championHealthTracks: ChampionHealthTracksSchema,
+  championResourceTracks: ChampionResourceTracksSchema,
+});
+const TerrainSceneFields = z.object({
   identity: z.object({
     build: z.enum([terrainPositionBuild, currentTerrainPositionBuild]),
     protocol: z.literal(terrainPositionProtocol),
@@ -119,8 +125,8 @@ export const SceneSchema = z.object({
   winningTeam: teamId.optional(),
   teamVision: TeamVisionSchema.optional(),
   championAnimationCues: ChampionAnimationCuesSchema.optional(),
-  championHealthTracks: createChampionHealthTracksSchema(z).optional(),
-  championResourceTracks: createChampionResourceTracksSchema(z).optional(),
+  championHealthTracks: ChampionHealthTracksSchema.optional(),
+  championResourceTracks: ChampionResourceTracksSchema.optional(),
   championExperience: championExperienceSceneSchema(z).optional(),
   championInventory: replayInventorySceneSchema(z).optional(),
   championEliminations: z
@@ -353,6 +359,7 @@ export const SceneSchema = z.object({
     .object({
       waypointOrigin: z.tuple([z.number().int(), z.number().int()]),
       allowCurrentBuild: z.literal(true).optional(),
+      decodeChampionStats: z.literal(true).optional(),
     })
     .optional(),
   navgrid: z
@@ -363,6 +370,20 @@ export const SceneSchema = z.object({
     })
     .optional(),
 });
+export const SceneSchema = TerrainSceneFields.refine(
+  (scene) =>
+    scene.workerMotion?.decodeChampionStats !== true ||
+    (scene.identity.build === currentTerrainPositionBuild &&
+      scene.workerMotion.allowCurrentBuild === true &&
+      scene.motion === undefined &&
+      scene.championHealthTracks === undefined &&
+      scene.championResourceTracks === undefined),
+  {
+    path: ["workerMotion", "decodeChampionStats"],
+    message:
+      "Replay-derived champion stats require current worker motion without embedded motion or stat tracks.",
+  },
+);
 export type TerrainScene = z.infer<typeof SceneSchema>;
 type TerrainFrame = TerrainScene["frames"][number];
 type MaterialBindings = Map<
@@ -496,6 +517,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
       unresolvedParticipants: z.number().int().nonnegative(),
       tracks: z.array(z.looseObject({ participantId })),
     }),
+    championStats: WorkerChampionStatsSchema.optional(),
   }),
   z.object({ type: z.literal("error"), message: z.string() }),
 ]);
@@ -549,6 +571,13 @@ async function loadWorkerMotion(
       },
     );
     if (result.type === "error") throw new Error(result.message);
+    if (
+      (result.championStats !== undefined) !==
+      (workerMotion.decodeChampionStats === true)
+    )
+      throw new Error(
+        "Replay motion worker returned unexpected champion stats coverage.",
+      );
     return result;
   } finally {
     if (cancel !== undefined) signal.removeEventListener("abort", cancel);
@@ -589,6 +618,21 @@ export async function loadSceneMotion(
       participant.teamId,
     ]),
   );
+  const championStats = decoded.championStats;
+  if (championStats !== undefined) {
+    if (teams.size !== scene.identity.participantCount)
+      throw new Error("Replay-derived champion stats require a unique roster.");
+    readChampionHealthTracks(
+      championStats.championHealthTracks,
+      teams.keys(),
+      scene.identity.durationMilliseconds,
+    );
+    readChampionResourceTracks(
+      championStats.championResourceTracks,
+      teams.keys(),
+      scene.identity.durationMilliseconds,
+    );
+  }
   const decodedPositionFrames: TerrainFrame[] = decoded.frames
     .filter(({ markers }) => markers.length > 0)
     .map(({ timeSeconds, markers }) => ({
@@ -604,7 +648,14 @@ export async function loadSceneMotion(
       }),
     }));
   return {
-    scene: { ...scene, motion: decoded.motion, decodedPositionFrames },
+    scene: {
+      ...scene,
+      motion: decoded.motion,
+      decodedPositionFrames,
+      ...(championStats === undefined
+        ? {}
+        : { ...championStats, workerMotion: undefined }),
+    },
     heights,
   };
 }

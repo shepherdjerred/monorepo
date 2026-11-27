@@ -2,7 +2,10 @@ import { decompress } from "scout-terrain-fzstd";
 import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/prepare.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
-import { createPreparedTerrainByteCodecs } from "./native-terrain-byte-codecs.mjs";
+import {
+  createPreparedTerrainByteCodecs,
+  currentTerrainPositionBuild,
+} from "./native-terrain-byte-codecs.mjs";
 import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-identities.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
 import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
@@ -16,6 +19,7 @@ async function prepareMotion({
   replayBytes,
   decoderBytes,
   allowCurrentBuild = false,
+  decodeChampionStats,
 }) {
   if (
     !(replayBytes instanceof ArrayBuffer) ||
@@ -37,6 +41,15 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (
+    decodeChampionStats !== undefined &&
+    (decodeChampionStats !== true ||
+      !options.allowCurrentBuild ||
+      replay.build !== currentTerrainPositionBuild)
+  )
+    throw new Error(
+      "Replay-derived champion stats require the reviewed current build.",
+    );
   const codecs = await createPreparedTerrainByteCodecs(
     new Uint8Array(decoderBytes),
     replay,
@@ -61,7 +74,7 @@ async function prepareMotion({
     createPosition944ReaderFromCodecs(codecs),
     options,
   );
-  const { motion, coverage } = prepareNativeTerrainMotion(
+  const { motion, coverage, championStats } = prepareNativeTerrainMotion(
     prepared,
     keyframes,
     replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
@@ -69,10 +82,21 @@ async function prepareMotion({
       readWaypoints: createWaypointReaderFromCodecs(codecs),
       readMoveSpeed: createMoveSpeed309ReaderFromCodecs(codecs),
       waypointOrigin,
+      ...(decodeChampionStats === true ? { includeChampionStats: true } : {}),
       ...options,
     },
   );
-  return { type: "ready", frames: keyframes.frames, motion, coverage };
+  if (decodeChampionStats === true && championStats === undefined)
+    throw new Error(
+      "Replay motion worker has no champion stats for this replay.",
+    );
+  return {
+    type: "ready",
+    frames: keyframes.frames,
+    motion,
+    coverage,
+    ...(championStats === undefined ? {} : { championStats }),
+  };
 }
 
 globalThis.addEventListener("message", async ({ data }) => {

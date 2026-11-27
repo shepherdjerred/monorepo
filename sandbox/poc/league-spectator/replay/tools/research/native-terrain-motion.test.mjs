@@ -164,6 +164,57 @@ function actor(sample, participantId) {
 }
 
 describe("exact-build continuous champion motion", () => {
+  test("requests current champion stats only on gameplay replication packets", () => {
+    const older = fixture();
+    expect(() =>
+      prepare({
+        ...older,
+        options: { ...older.options, includeChampionStats: true },
+      }),
+    ).toThrow("exact current terrain replay build");
+
+    const verified = Array.from({ length: 10 }, (_, index) => ({
+      context: index + 1,
+      footerRow: index + 1,
+    }));
+    const statsWrites = verified.map(({ context }) => ({
+      entityId: context,
+      health: 10,
+      healthMax: 10,
+      resource: 0,
+      resourceMax: 0,
+      gold: 0,
+    }));
+    const current = { ...identity, build: "16.23.841.8428" };
+    const scan = prepareNativeTerrainMotion(
+      {
+        packetReader: { ...current, durationSeconds: 12 },
+        observations: {
+          ...current,
+          roster: new Array(10),
+          binding: { verified, events: [] },
+          returns: [],
+        },
+      },
+      { frames: [] },
+      [packet(0, 309, { stream: 2 }), packet(1, 309)],
+      {
+        ...older.options,
+        allowCurrentBuild: true,
+        includeChampionStats: true,
+        readMoveSpeed: (_body, ids, options) => {
+          expect(ids.size).toBe(10);
+          expect(options.includeChampionStats).toBe(true);
+          return { updates: [], statsWrites };
+        },
+      },
+    );
+    expect(scan.championStats.championHealthTracks).toHaveLength(10);
+    expect(scan.championStats.championHealthTracks[0].points).toEqual([
+      [1, 10, 10],
+    ]);
+  });
+
   test("integrates ordinary speed writes in recorded order and samples turns", () => {
     const { sample, coverage } = prepare();
     expect(actor(sample(2.5), first)).toMatchObject({

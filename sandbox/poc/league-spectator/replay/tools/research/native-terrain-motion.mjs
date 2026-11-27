@@ -1,7 +1,11 @@
 import { movementWorldPaths } from "../../movement-records.mjs";
-import { isExactTerrainReplay } from "./native-terrain-byte-codecs.mjs";
+import {
+  currentTerrainPositionBuild,
+  isExactTerrainReplay,
+} from "./native-terrain-byte-codecs.mjs";
 import { readNativeTerrainReturnPosition } from "./native-terrain-motion-return.mjs";
 import { sampleNativeTerrainMotion } from "./native-terrain-motion-sample.mjs";
+import { createRecordedChampionStatAccumulator } from "./recorded-champion-stat-accumulator.mjs";
 
 function addSnapshots(actors, frames, durationSeconds) {
   let previousTime = -Infinity;
@@ -148,7 +152,13 @@ export function prepareNativeTerrainMotion(
   prepared,
   keyframes,
   timedPackets,
-  { readWaypoints, readMoveSpeed, waypointOrigin, allowCurrentBuild = false },
+  {
+    readWaypoints,
+    readMoveSpeed,
+    waypointOrigin,
+    allowCurrentBuild = false,
+    includeChampionStats = false,
+  },
 ) {
   const { packetReader, observations } = prepared;
   const { durationSeconds } = packetReader;
@@ -164,6 +174,13 @@ export function prepareNativeTerrainMotion(
   )
     throw Error(
       "Expected exact-build terrain motion and verified lifecycle inputs",
+    );
+  if (
+    includeChampionStats &&
+    packetReader.build !== currentTerrainPositionBuild
+  )
+    throw Error(
+      "Champion stats require the exact current terrain replay build",
     );
   movementWorldPaths([], waypointOrigin);
   const structures = new Set(
@@ -214,6 +231,12 @@ export function prepareNativeTerrainMotion(
   collectLifecycle(actors, observations, durationSeconds);
 
   const ids = new Set(actors.keys());
+  const championStats = includeChampionStats
+    ? createRecordedChampionStatAccumulator(ids, durationSeconds)
+    : null;
+  const replicationOptions = championStats
+    ? { includeChampionStats: true }
+    : undefined;
   let opcode = null;
   let context = 0;
   let previousTime = -Infinity;
@@ -252,9 +275,14 @@ export function prepareNativeTerrainMotion(
           );
       }
     } else if (opcode === 309) {
-      for (const { entityId, moveSpeed } of readMoveSpeed(packet.payload, ids)
-        .updates)
+      const replication = readMoveSpeed(
+        packet.payload,
+        ids,
+        replicationOptions,
+      );
+      for (const { entityId, moveSpeed } of replication.updates)
         applyMoveSpeed(actors.get(entityId), moveSpeed, timeSeconds);
+      championStats?.observe(timeSeconds, replication.statsWrites);
     } else {
       const actor = actors.get(context);
       if (!actor) continue;
@@ -296,6 +324,7 @@ export function prepareNativeTerrainMotion(
   return {
     motion,
     coverage,
+    ...(championStats && { championStats: championStats.finish() }),
     sample: (time) => sampleNativeTerrainMotion(motion, time),
   };
 }

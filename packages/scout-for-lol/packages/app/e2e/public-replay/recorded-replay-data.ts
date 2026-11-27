@@ -107,6 +107,9 @@ const SceneIdentitySchema = z.object({
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
+  workerMotion: z
+    .object({ decodeChampionStats: z.literal(true).optional() })
+    .optional(),
   championInventory: z.object({ tracks: z.array(z.unknown()) }).optional(),
   championExperience: z
     .object({ thresholds: z.array(z.number()), tracks: z.array(z.unknown()) })
@@ -170,6 +173,7 @@ export async function readRecordedReplay() {
     championAnimationCues,
     championHealthTracks,
     championResourceTracks,
+    workerMotion,
     championInventory,
     championExperience,
   } = SceneIdentitySchema.parse(
@@ -185,6 +189,14 @@ export async function readRecordedReplay() {
       "The scene, manifest and ROFL must identify the same replay.",
     );
   }
+  const directChampionStats = workerMotion?.decodeChampionStats === true;
+  if (
+    directChampionStats &&
+    (championHealthTracks !== undefined || championResourceTracks !== undefined)
+  )
+    throw new Error(
+      "Direct worker stats require a scene without baked champion stat tracks.",
+    );
 
   const packageDigest = sha256(manifest);
   const packageRoot = `${packagePrefix}${packageDigest}`;
@@ -217,8 +229,10 @@ export async function readRecordedReplay() {
       [],
     unitVisibility: teamVision !== undefined,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
-    championHealth: championHealthTracks !== undefined,
-    championResources: championResourceTracks !== undefined,
+    directChampionStats,
+    championHealth: directChampionStats || championHealthTracks !== undefined,
+    championResources:
+      directChampionStats || championResourceTracks !== undefined,
     championInventory: championInventory !== undefined,
     championExperience: championExperience !== undefined,
     descriptor: {

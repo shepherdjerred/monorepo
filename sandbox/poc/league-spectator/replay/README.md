@@ -324,6 +324,21 @@ The authored request manifest passed in `--champion-animation-cues` supplies
 verified action windows from the loaded skins. Passive locomotion and death
 animation still require native selection evidence.
 
+For a private 16.23.841.8428 package, pass `--champion-stats-from-replay` with
+the prepared position decoder and worker decompressor. The browser worker reads
+health, primary resource, and held gold from the original replay in the same
+pass as movement. Leave out the `--champion-health` and
+`--champion-resources` inputs in this mode.
+
+Set `SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY` to the directory containing the
+verified current-build health and resource exports and their native receipts
+before running the paired browser proof. The standalone worker verifier uses
+the same files and also exercises the two unsupported replay controls.
+
+```powershell
+bun tools/verify-direct-champion-stats-worker.mjs $manifest $manifestSha256 $riftReplay $mayhemReplay $olderRiftReplay $oracleDirectory
+```
+
 To check the positional byte maps for another build, pass the original ROFL
 to `prepare-native-terrain-decoder.mjs` with `--for-replay <saved-rofl>`.
 The tool checks the replay's build and protocol against the pinned macOS

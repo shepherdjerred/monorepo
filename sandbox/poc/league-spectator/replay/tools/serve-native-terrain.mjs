@@ -66,6 +66,7 @@ const { positionals, values } = parseArgs({
     "champion-health-sha256": { type: "string" },
     "champion-resources": { type: "string" },
     "champion-resources-sha256": { type: "string" },
+    "champion-stats-from-replay": { type: "boolean" },
     "champion-experience": { type: "string" },
     "champion-experience-sha256": { type: "string" },
     "experience-map-definition": { type: "string" },
@@ -158,6 +159,19 @@ const championStatInputs = [
     return { ...entry, path, digest };
   })
   .filter(({ path }) => path !== undefined);
+const decodeChampionStats = values["champion-stats-from-replay"] === true;
+if (decodeChampionStats) {
+  assert.ok(
+    privatePackageOutput !== undefined &&
+      values["position-decoder"] !== undefined &&
+      values["worker-decompressor"] !== undefined,
+    "Replay-decoded champion stats require a private package with a motion worker",
+  );
+  assert.ok(
+    championStatInputs.every(({ kind }) => kind === "experience"),
+    "Replay-decoded champion stats conflict with prepared health or resources",
+  );
+}
 const experienceMapPath = values["experience-map-definition"];
 assert.equal(
   experienceMapPath === undefined,
@@ -1126,6 +1140,10 @@ const [bytes, receipts, , baseMetadata, baseMesh, projection] =
 const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
 const currentBuild = replay.build === currentTerrainPositionBuild;
+assert.ok(
+  !decodeChampionStats || currentBuild,
+  "Replay-decoded champion stats require the verified current build",
+);
 if (currentBuild) {
   assert.ok(
     privatePackageOutput !== undefined &&
@@ -1568,6 +1586,7 @@ if (decoderBytes !== undefined) {
     scene.workerMotion = {
       waypointOrigin,
       ...(currentBuild ? decoderOptions : {}),
+      ...(decodeChampionStats ? { decodeChampionStats: true } : {}),
     };
   } else {
     const [
