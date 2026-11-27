@@ -1,6 +1,6 @@
 /**
  * The UI under the app host's Content-Security-Policy (`appPolicy` in
- * `start.ts`): no route or viewer may trip it, so pdf.js, the terminal
+ * `src/domain/csp.ts`, served by `start.ts`): no route or viewer may trip it, so pdf.js, the terminal
  * player, markdown images, video and frames all work with only the content
  * origin allowed beyond 'self'.
  */

@@ -216,6 +216,7 @@ export function summarizeArtifact(
     id: artifact.id,
     boardId: board.id,
     boardSlug: board.slug,
+    boardTitle: board.title,
     title: artifact.title,
     kind: artifact.kind,
     ownerKey: artifact.ownerKey,

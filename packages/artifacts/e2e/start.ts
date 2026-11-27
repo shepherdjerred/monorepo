@@ -4,6 +4,7 @@
  * ports make different origins, which is all the sandbox needs here.
  */
 import path from "node:path";
+import { appPolicy } from "#domain/csp.ts";
 import { createFakeService, type FakeService } from "./fake-service.ts";
 import type { FakeServiceOptions } from "./fake-types.ts";
 
@@ -22,26 +23,6 @@ export type E2eServer = {
   readonly service: FakeService;
   readonly stop: () => Promise<void>;
 };
-
-/**
- * The Content-Security-Policy the app host is expected to send, so the e2e
- * proves the UI works under it: the content origin may supply images, media,
- * fetches and frames, and nothing else leaves the app origin.
- */
-export function appPolicy(contentOrigin: string): string {
-  return [
-    "default-src 'self'",
-    // The terminal player compiles a WebAssembly module.
-    "script-src 'self' 'wasm-unsafe-eval'",
-    `img-src 'self' data: blob: ${contentOrigin}`,
-    `media-src ${contentOrigin} blob:`,
-    `connect-src 'self' ${contentOrigin}`,
-    `frame-src ${contentOrigin}`,
-    "worker-src 'self' blob:",
-    "style-src 'self' 'unsafe-inline'",
-    "frame-ancestors 'none'",
-  ].join("; ");
-}
 
 async function serveStatic(
   pathname: string,

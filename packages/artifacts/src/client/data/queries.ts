@@ -1,6 +1,12 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { api, keys } from "./api.ts";
 
+/**
+ * The waiting header follows the live stream (a `waiter` change); this slow
+ * poll only covers a stream that is down or a tab that missed a message.
+ */
+const WAITER_FALLBACK_POLL_MS = 60_000;
+
 export function useInbox() {
   return useQuery({
     queryKey: keys.inbox,
@@ -65,7 +71,7 @@ export function useWaiters(scope: { board?: string; artifactId?: string }) {
   return useQuery({
     queryKey: keys.waiters(JSON.stringify(scope)),
     queryFn: () => api.feedback.waiters.query(scope),
-    refetchInterval: 8000,
+    refetchInterval: WAITER_FALLBACK_POLL_MS,
     refetchIntervalInBackground: true,
   });
 }
@@ -77,7 +83,7 @@ export function usePending(
   return useQuery({
     queryKey: keys.pending(JSON.stringify(scope)),
     queryFn: () => api.feedback.pending.query({ scope }),
-    refetchInterval: 8000,
+    refetchInterval: WAITER_FALLBACK_POLL_MS,
     refetchIntervalInBackground: true,
   });
 }

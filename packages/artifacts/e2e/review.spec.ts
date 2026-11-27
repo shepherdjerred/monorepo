@@ -416,6 +416,8 @@ test.describe("threads", () => {
     const api = agentApi(baseURL);
     const artifactId = seeded.demo.webm.artifactId;
     await openFocused(page, artifactId);
+    // The breadcrumb names the board by its title, not its slug.
+    await expect(page.locator(".ar-crumbs")).toHaveText("Demo board");
     await expect(page.getByTestId("waiting")).toHaveText(/No agent waiting/u);
 
     await page.getByLabel("General comment").fill("Audio is missing");
@@ -436,8 +438,9 @@ test.describe("threads", () => {
     expect(stream.status).toBe(200);
     // A stream nobody reads is dropped; an agent's `wait` reads it.
     void drain(stream.body);
+    // The stream's connect wakes the page; the 60 s poll is only a fallback.
     await expect(page.getByTestId("waiting")).toHaveText("karpathy waiting", {
-      timeout: 20_000,
+      timeout: 5000,
     });
 
     const claim = await api.feedback.claim.mutate({
@@ -453,5 +456,9 @@ test.describe("threads", () => {
     });
     await expect(page.getByTestId("delivery-chip")).toHaveText("Replied");
     controller.abort();
+    // Closing the stream is announced too: the header does not wait for the poll.
+    await expect(page.getByTestId("waiting")).toHaveText("No agent waiting", {
+      timeout: 5000,
+    });
   });
 });

@@ -5,6 +5,7 @@ import type { ChangeHub } from "#infrastructure/change-hub.ts";
 import { reportError } from "#infrastructure/log.ts";
 import { gaugeLines, type Metrics } from "#infrastructure/metrics.ts";
 import { LOGIN_HEADER } from "./auth.ts";
+import { databaseReady, probeAnswer } from "./health.ts";
 import { appRouter } from "./router.ts";
 import type { HostClass } from "./rpc.ts";
 import type { StreamStats } from "./streams.ts";
@@ -40,15 +41,12 @@ export function createInternalHandler(options: InternalHostOptions) {
     return;
   });
 
-  app.get("/healthz", (c) => c.json({ status: "ok" }));
-  app.get("/readyz", async (c) => {
-    try {
-      await services.deps.db.$queryRaw`SELECT 1`;
-      return c.json({ status: "ok" });
-    } catch {
-      return c.json({ status: "unavailable" }, 503);
-    }
-  });
+  const ready = databaseReady(services.deps.db);
+  for (const kind of ["healthz", "readyz"] as const)
+    app.get(`/${kind}`, async (c) => {
+      const answer = await probeAnswer(kind, ready);
+      return c.json(answer.body, answer.status);
+    });
 
   app.get("/metrics", async (c) => {
     const lines = [

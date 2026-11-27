@@ -133,6 +133,7 @@ export const ArtifactSummarySchema = z.strictObject({
   id: Id,
   boardId: Id,
   boardSlug: BoardSlugSchema,
+  boardTitle: z.string(),
   title: z.string(),
   kind: ArtifactKindSchema,
   ownerKey: z.string(),
