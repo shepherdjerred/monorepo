@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`the hall record-break message > is one embed for the records, with mentions disabled 1`] = `
+exports[`the hall record-break message > renders a previously queued v1 announcement with its original content 1`] = `
 [
   {
     "color": 16104002,
@@ -16,6 +16,35 @@ exports[`the hall record-break message > is one embed for the records, with ment
         "inline": false,
         "name": "Ranked Summoner's Rift · Most assists",
         "value": "12,346 — Alice \\*the\\* Great, Bob\\_",
+      },
+    ],
+    "title": "🏛️ Guild Hall of Fame record broken!",
+  },
+]
+`;
+
+exports[`the hall record-break message > shows the previous and top three scores in one embed with mentions disabled 1`] = `
+[
+  {
+    "color": 16104002,
+    "description": "Match NA1\\_9301 set new guild records.
+[Open the Hall of Fame](https://scout-for-lol.com/app/halls/100000000000000001)",
+    "fields": [
+      {
+        "inline": false,
+        "name": "Ranked Summoner's Rift · Most kills",
+        "value": "Previous #1 · 12,320 — Bob\\_
+#1 · 12,345 — Alice \\*the\\* Great
+#2 · 12,320 — Bob\\_
+#3 · 12,295 — Alice \\*the\\* Great",
+      },
+      {
+        "inline": false,
+        "name": "Ranked Summoner's Rift · Most assists",
+        "value": "Previous #1 · 12,321 — Bob\\_
+#1 · 12,346 — Alice \\*the\\* Great, Bob\\_
+#2 · 12,321 — Bob\\_
+#3 · 12,296 — Alice \\*the\\* Great",
       },
     ],
     "title": "🏛️ Guild Hall of Fame record broken!",
