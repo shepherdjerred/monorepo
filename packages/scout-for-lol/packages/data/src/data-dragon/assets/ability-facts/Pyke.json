@@ -30,7 +30,15 @@
         ]
       },
       "resolvedDescription": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Bone Skewer",
@@ -144,7 +152,31 @@
         ]
       },
       "resolvedDescription": "Tap: Pyke stabs, dealing 100/150/200/250/300 (+75% bonus AD) physical damage to the first enemy hit, preferring champions. They are then Slowed by 90% for 1 second. Hold: Pyke throws his harpoon, dealing 100/150/200/250/300 (+75% bonus AD) physical damage to the first enemy hit and Pulling them towards him. They are then Slowed by 90% for 1 second. If Pyke successfully hits an enemy champion or the channel does not complete successfully, 75% of the Mana cost is refunded.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "pykeqrange",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Ghostwater Dive",
@@ -223,7 +255,15 @@
         ]
       },
       "resolvedDescription": "Pyke gains Camouflage and 45% (+200% Lethality) Move Speed decaying over 5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Phantom Undertow",
@@ -295,7 +335,30 @@
         ]
       },
       "resolvedDescription": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom Stuns for 1.25 (+1% Lethality) seconds and deals 100/150/200/250/300 (+100% bonus AD) physical damage to champions.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.275,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "pykeemissile",
+            "width": 110,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Death From Below",
@@ -334,7 +397,44 @@
         ]
       },
       "resolvedDescription": "Pyke strikes all enemy champions in an X, teleporting to and executing targets below 250-550 (based on level) (+80% bonus AD) (+150% Lethality) Health. Champions above the threshold and non-champions instead take physical damage equal to 50% of that amount (125-275 (based on level) (+40% bonus AD) (+75% Lethality)). When an enemy champion dies inside the X, Pyke can Recast this Ability for free within 20 seconds. If he executed that champion, the last assisting ally will also get kill gold. If he did not, he will still get kill gold as if he did.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "pykerspellpassive",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "pykertrail",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

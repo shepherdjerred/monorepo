@@ -94,7 +94,58 @@
         "tooltip_qwbonusdamage",
         "spell.hweiqe:slowpercent",
         "spell.hweiqe:duration"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "hweiqe",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 800,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hweiqetell",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1500,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hweiqq",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "W": {
       "name": "Subject: Serenity",
@@ -162,7 +213,58 @@
       "unresolved": [
         "tooltip_wqmovespeed",
         "spell.hweiww:tooltipallymod*100"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "hweiwefoxfiremis",
+            "width": null,
+            "movement": "CircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hweiwq",
+            "width": 145,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hweiww",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 0.5,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Subject: Torment",
@@ -234,7 +336,59 @@
         ]
       },
       "resolvedDescription": "Hwei paints visions of torment that control enemies. Grim Visage Hwei launches a terrifying face that causes the first enemy hit to Flee for 1/1.125/1.25/1.375/1.5 second(s) and take 70/110/150/190/230 (+65% AP) magic damage. Gaze of the Abyss Hwei forms an eye that lingers and provides vision locking onto the first enemy champion that enters and launching a homing missile that Roots the first enemy hit for 1.2/1.4/1.6/1.8/2 seconds dealing 70/110/150/190/230 (+65% AP) magic damage. Crushing Maw Hwei paints a set of jaws at a target location that Drags enemies to the center dealing 70/110/150/190/230 (+65% AP) magic damage and Slowing enemies caught by 40/47.5/55/62.5/70% decaying over 1.25 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "hweieq",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": true
+          },
+          {
+            "name": "hweiew",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hweiewtriggermissile",
+            "width": 30,
+            "movement": "AcceleratingMovement",
+            "speed": 1300,
+            "minSpeed": 1300,
+            "maxSpeed": 2100,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Spiraling Despair",
@@ -288,7 +442,15 @@
         ]
       },
       "resolvedDescription": "Hwei launches a vision of pure despair that sticks to an enemy champion for 3 seconds. The vision expands over time applying a Slow to enemies for 10% stacking every 0.25 seconds, and dealing 10/20/30 (+5% AP) magic damage per second. Upon completion, the vision shatters, dealing 200/325/450 (+80% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 150,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

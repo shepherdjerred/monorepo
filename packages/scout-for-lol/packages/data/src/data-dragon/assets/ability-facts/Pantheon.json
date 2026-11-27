@@ -33,7 +33,15 @@
         ]
       },
       "resolvedDescription": "Every few spells or attacks, Pantheon's next spell is empowered.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Comet Spear",
@@ -147,7 +155,30 @@
         ]
       },
       "resolvedDescription": "Tap: Pantheon thrusts his spear, dealing 70/100/130/160/190 (+115% bonus AD) physical damage to enemies hit. Refunds 60% of this Ability's Cooldown. Hold: Pantheon hurls his spear, dealing 70/100/130/160/190 (+115% bonus AD) (+50% AP) physical damage to the first enemy hit and 50% less to further targets. This Ability is enhanced against enemies below 20% Health to deal 70/100/130/160/190 (+85/130/175/220/265) (+230% bonus AD) physical damage instead. Mortal Will Bonus: Deals an additional 20-240 (based on level) (+115% bonus AD) physical damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "pantheonqmissile",
+            "width": 55,
+            "movement": "FixedSpeedMovement",
+            "speed": 2700,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Shield Vault",
@@ -243,7 +274,15 @@
       "unresolved": [
         "maxhealthdamagecalc",
         "empowereddamagemultcalcmodified"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Aegis Assault",
@@ -343,7 +382,15 @@
         ]
       },
       "resolvedDescription": "Pantheon braces his shield and engages enemies in a chosen direction for 1.5 seconds, becoming immune to non-tower damage from that direction and dealing 100% AD physical damage over the duration. After channeling Pantheon slams with his shield, dealing 55/105/155/205/255 (+150% bonus AD) physical damage. Mortal Will Bonus: When Pantheon slams his shield he gains 5-30 (based on level) (+2.5% bonus Health) Armor and 5-30 (based on level) (+2.5% bonus Health) Magic Resist for 4 seconds, and 60% Move Speed for 1.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Grand Starfall",
@@ -412,7 +459,57 @@
         ]
       },
       "resolvedDescription": "Passive: Pantheon gains 10/20/30% Armor Penetration. Active: Pantheon gathers his strength to leap high into the air. He throws his spear from above which in a small area deals 70/100/130/160/190 (+115% bonus AD) (+50% AP) physical damage and Slows by 50% for 2 seconds. Pantheon then crashes down as a meteor at the target area. Deals up to 300/500/700 (+100% AP) magic damage to enemies in a line (decreased by up to 50% at the edges of the area). This Ability instantly readies Mortal Will.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "AreaClamped",
+        "castTime": 0.1,
+        "radius": 750,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "pantheonrmissile",
+            "width": 250,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "pantheonrmissile2",
+            "width": 450,
+            "movement": "AcceleratingMovement",
+            "speed": 3400,
+            "minSpeed": 180,
+            "maxSpeed": 4000,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnHit"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "pantheonrmissile3",
+            "width": 55,
+            "movement": "FixedSpeedMovement",
+            "speed": 14000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete",
+              "CastOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

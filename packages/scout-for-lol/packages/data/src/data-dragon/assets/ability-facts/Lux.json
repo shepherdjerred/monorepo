@@ -18,7 +18,30 @@
         ]
       },
       "resolvedDescription": "Lux's damaging spells charge the target with energy for a few seconds. Lux's next attack ignites the energy, dealing bonus magic damage (depending on Lux's level) to the target.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 1400,
+        "missiles": [
+          {
+            "name": "luxilluminatingfraulein",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Light Binding",
@@ -69,7 +92,44 @@
         ]
       },
       "resolvedDescription": "Lux fires a ball of light, Rooting the first two enemies for 2 seconds and dealing 80/120/160/200/240 (+75% AP) magic damage to each.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 80,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "luxlightbindingdummy",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "luxlightbindingmis",
+            "width": 70,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Prismatic Barrier",
@@ -120,7 +180,58 @@
         ]
       },
       "resolvedDescription": "Lux throws her wand, granting 40/55/70/85/100 (+40% AP) Shield for 2.5 seconds to allies it passes through. Then it returns, granting the same Shield on its return.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 299.3,
+        "lineWidth": 150,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "luxprismaticwavemissile",
+            "width": 110,
+            "movement": "AcceleratingMovement",
+            "speed": 2200,
+            "minSpeed": 500,
+            "maxSpeed": 2200,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "luxprismaticwavereturn",
+            "width": 110,
+            "movement": "AcceleratingMovement",
+            "speed": 50,
+            "minSpeed": 50,
+            "maxSpeed": 2400,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "luxprismaticwavereturndead",
+            "width": 110,
+            "movement": "AcceleratingMovement",
+            "speed": 50,
+            "minSpeed": 50,
+            "maxSpeed": 2400,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Lucent Singularity",
@@ -185,7 +296,15 @@
         ]
       },
       "resolvedDescription": "Lux creates a light zone that Slows by 25/30/35/40/45% and reveals the area. After 5 seconds or on Recasting this Ability, it detonates, dealing 65/115/165/215/265 (+80% AP) magic damage and Slowing for an additional 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 295,
+        "lineWidth": null,
+        "missileSpeed": 1300,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Final Spark",
@@ -224,7 +343,30 @@
         ]
       },
       "resolvedDescription": "Lux fires a dazzling ray of light, dealing 300/400/500 (+120% AP) magic damage to all enemies in a line.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 250,
+        "lineWidth": 190,
+        "missileSpeed": 3000,
+        "missiles": [
+          {
+            "name": "luxrvfxmis",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 3600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

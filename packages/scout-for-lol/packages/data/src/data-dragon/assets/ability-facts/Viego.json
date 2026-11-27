@@ -160,7 +160,15 @@
       "resolvedDescription": "Passive: Viego's Attacks deal an additional 2/3/4/5/6% current Health physical damage. His first Attack against an enemy he has recently damaged with an Ability hits a second time, dealing 20% AD (+15% AP) physical damage and restoring 150% of damage dealt as Health. These bonuses are kept during Possession. Active: Viego stabs forward, dealing {{ totaldamage }} physical damage.",
       "unresolved": [
         "totaldamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Spectral Maw",
@@ -274,7 +282,31 @@
         ]
       },
       "resolvedDescription": "Begin Charging: Viego begins gathering Mist, Slowing himself by 10%. Release: Viego dashes forward and hurls the gathered Mist. Deals 80/135/190/245/300 (+100% AP) magic damage and Stuns the first enemy hit for 0.25 to 1.25 seconds based on charge time.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "viegowmis",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 1300,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete",
+              "DestroyOnHit"
+            ],
+            "stopsOnFirstHit": true
+          }
+        ]
+      }
     },
     "E": {
       "name": "Harrowed Path",
@@ -355,7 +387,86 @@
       "resolvedDescription": "Viego sends forth a spectre to haunt the first terrain hit, surrounding it with Mist for 8 seconds. Viego gains Camouflage, {{ totalmovespeed }} Move Speed, and 30/35/40/45/50% Attack Speed while inside the Mist.",
       "unresolved": [
         "totalmovespeed"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "viegoemissile",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "viegoewallfollowmis",
+            "width": 130,
+            "movement": "WallFollowMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "ResimulateTrailVfxOnEnterVisibility",
+              "TriggerOnDelay"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "viegoewallfollowmiscounterclockwise",
+            "width": 130,
+            "movement": "WallFollowMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "ResimulateTrailVfxOnEnterVisibility",
+              "TriggerOnDelay"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "viegoewallfollowmiscounterclockwisehead",
+            "width": 130,
+            "movement": "WallFollowMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "viegoewallfollowmishead",
+            "width": 130,
+            "movement": "WallFollowMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Heartbreaker",
@@ -427,7 +538,15 @@
       "unresolved": [
         "totaldamage",
         "totaldamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": null,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

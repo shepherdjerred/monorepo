@@ -51,7 +51,15 @@
         ]
       },
       "resolvedDescription": "Kled rides his trusty steed, Skaarl, who takes damage for him. When Skaarl's health depletes, Kled dismounts. While dismounted, Kled's abilities change and he deals less damage to champions. Kled can restore Skaarl's courage by fighting enemies. At maximum courage, Kled remounts with a portion of Skaarl's health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Bear Trap on a Rope",
@@ -158,7 +166,30 @@
         ]
       },
       "resolvedDescription": "Mounted: Kled throws a bear trap that deals 30/55/80/105/130 (+60% bonus AD) physical damage and hooks onto the first enemy champion or large jungle monster hit. If Kled stays near a hooked enemy for 1.75 seconds, he yanks out the trap, dealing 60/110/160/210/260 (+120% bonus AD) physical damage, Pulling them, and Slowing by 30/35/40/45/50% for 2.5 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "kledqmissile",
+            "width": 45,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Violent Tendencies",
@@ -246,7 +277,15 @@
       "resolvedDescription": "Passive: Kled's next Attack grants 150% Attack Speed for four Attacks or 4 seconds. The fourth hit deals an additional 20/30/40/50/60 plus {{ percentdamage }} max Health physical damage.",
       "unresolved": [
         "percentdamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Jousting",
@@ -325,7 +364,15 @@
         ]
       },
       "resolvedDescription": "Kled dashes, dealing 35/60/85/110/135 (+55% bonus AD) physical damage to enemies he passes through, pulling minions and small monsters towards him. If this Ability hits an enemy champion or large jungle monster, Kled gains 50% Move Speed for 1 second(s) and can Recast within 3 seconds to dash back through the same target.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Chaaaaaaaarge!!!",
@@ -387,7 +434,15 @@
       "unresolved": [
         "minimumdamagetooltip",
         "maximumchargedamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

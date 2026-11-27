@@ -54,7 +54,72 @@
         ]
       },
       "resolvedDescription": "Bel'Veth gains permanent attack speed stacks after taking down large minions and monsters and champions. She also gains temporary bonus attack speed after using an ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "belvethpassivemissile1",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "belvethpassivemissile2",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "belvethpassivemissile3",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "belvethpassivemissile4",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Void Surge",
@@ -198,7 +263,15 @@
       "resolvedDescription": "Bel'Veth dashes, dealing 12/14/16/18/20 (+105% AD) physical damage to enemies she passes through. Each direction has an unique Cooldown of {{ f1 }} seconds that scales down based on her Attack Speed.",
       "unresolved": [
         "f1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Above and Below",
@@ -256,7 +329,15 @@
         ]
       },
       "resolvedDescription": "Bel'Veth slams her tail, dealing 80/140/200/260/320 (+150% bonus AP) magic damage, Knocking Up foes for 0.6/0.7/0.8/0.9/1 seconds, and Slowing them by 30% for 2 seconds. If a champion is hit, this refreshes the Cooldown of Void Surge in that direction.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.5,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Royal Maelstrom",
@@ -351,7 +432,15 @@
       "resolvedDescription": "Bel'Veth channels and slashes around herself, gaining 20/30/40/50/60% Damage Reduction, 20/25/30/35/40% Life Steal, and Attacking {{ f2.0 }} times over 1.5 seconds with the number of Attacks increasing based on her Attack Speed. Each Attack strikes the lowest-health enemy, dealing 10/12/14/16/18 (+12% AD) to 20/24/28/32/36 (+24% AD) physical damage based on the target's missing Health. Using another Ability or Recasting ends this Ability early.",
       "unresolved": [
         "f2.0"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Endless Banquet",
@@ -490,7 +579,15 @@
         ]
       },
       "resolvedDescription": "Passive: Attacks deal an additional 2/4/6 (+3% bonus AD) true damage, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral. Active: Bel'Veth consumes a Void Coral, gaining 1 Lavender stack and activating her true form. Void Coral from void epic monsters causes minions that die nearby to become Void Remora. While casting, Bel'Veth Slows nearby enemies before exploding, dealing 150/200/250 (+150% AP) + 20% missing-Health true damage. In her true form, Bel'Veth gains 100/250/400 (+150% bonus AD) (+150% AP) max Health, 25/75/125 Attack range, 6/13/20% Total Attack Speed, and Void Surge can pass through walls. True form lasts 45 seconds, increased to 90 seconds at 40 Lavender stacks. At 80 Lavender stacks, true form lasts until death.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 1,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }
