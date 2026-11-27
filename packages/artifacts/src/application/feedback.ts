@@ -44,13 +44,31 @@ export function scopeSql(scope: FeedbackScope): Prisma.Sql {
   }
 }
 
+/** Who is asking, so comments the caller can never take do not fill the batch. */
+type Claimer = { actorId: string; now: Date; orphanMs: number };
+
 /** Comments in scope that are human, unhandled, on an open thread. */
 async function candidates(
   tx: Pick<Tx, "$queryRaw">,
   scope: FeedbackScope,
-  settledBefore: Date | null,
-  lock: boolean,
+  filter: {
+    settledBefore: Date | null;
+    lock: boolean;
+    claimer: Claimer | null;
+  },
 ): Promise<Candidate[]> {
+  const { settledBefore, lock, claimer } = filter;
+  // Mirrors `claimDecision` so the LIMIT counts only comments the caller may
+  // take; a held, acknowledged or live-owned backlog cannot starve newer ones.
+  const takeable =
+    claimer === null
+      ? Prisma.empty
+      : Prisma.sql`AND (
+        d."commentId" IS NULL
+        OR (d."actorId" = ${claimer.actorId} AND d."ackedAt" IS NULL)
+        OR (d."actorId" <> ${claimer.actorId}
+          AND holder."lastSeenAt" < ${new Date(claimer.now.getTime() - claimer.orphanMs)})
+      )`;
   const settled =
     settledBefore === null
       ? Prisma.empty
@@ -62,11 +80,13 @@ async function candidates(
     JOIN "Actor" author ON author."id" = c."authorId" AND author."kind" = 'human'
     LEFT JOIN "Artifact" a ON a."id" = t."artifactId"
     LEFT JOIN "Delivery" d ON d."commentId" = c."id"
+    LEFT JOIN "Actor" holder ON holder."id" = d."actorId"
     WHERE t."state" = 'open'
       AND (t."artifactId" IS NULL OR a."deletedAt" IS NULL)
       AND (d."commentId" IS NULL OR d."handledAt" IS NULL)
       AND ${scopeSql(scope)}
       ${settled}
+      ${takeable}
     ORDER BY c."createdAt", c."id"
     LIMIT ${CLAIM_BATCH}
     ${lock ? Prisma.sql`FOR UPDATE OF c SKIP LOCKED` : Prisma.empty}`;
@@ -212,12 +232,11 @@ export function createFeedback(deps: Deps) {
       deps.settings.value("deliveryOrphanMinutes"),
     ]);
     const now = deps.now();
-    const found = await candidates(
-      db,
-      scope,
-      new Date(now.getTime() - settle),
-      false,
-    );
+    const found = await candidates(db, scope, {
+      settledBefore: new Date(now.getTime() - settle),
+      lock: false,
+      claimer: { actorId, now, orphanMs: orphanMinutes * MINUTE_MS },
+    });
     const held = await db.delivery.findMany({
       where: { commentId: { in: found.map((row) => row.commentId) } },
       include: { actor: true },
@@ -242,7 +261,11 @@ export function createFeedback(deps: Deps) {
       if (decision !== "skip") deliverable += 1;
     }
     const next = await nextDeliverable(scope, settle);
-    const all = await candidates(db, scope, null, false);
+    const all = await candidates(db, scope, {
+      settledBefore: null,
+      lock: false,
+      claimer: null,
+    });
     const settling = all.filter(
       (row) => deliverableAt(row.updatedAt, settle / 1000) > now,
     ).length;
@@ -274,12 +297,15 @@ export function createFeedback(deps: Deps) {
       ]);
       const now = deps.now();
       const claimed = await transact(db, async (tx) => {
-        const found = await candidates(
-          tx,
-          scope,
-          new Date(now.getTime() - settle),
-          true,
-        );
+        const found = await candidates(tx, scope, {
+          settledBefore: new Date(now.getTime() - settle),
+          lock: true,
+          claimer: {
+            actorId: actor.id,
+            now,
+            orphanMs: orphanMinutes * MINUTE_MS,
+          },
+        });
         const held = await deliveries(
           tx,
           found.map((row) => row.commentId),

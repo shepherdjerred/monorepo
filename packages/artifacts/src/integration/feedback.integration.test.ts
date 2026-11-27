@@ -223,6 +223,21 @@ describe("delivery", () => {
     ]);
   });
 
+  it("reaches comments past a full batch the caller already acknowledged", async () => {
+    const scene = await scenario();
+    for (let index = 0; index < 101; index += 1)
+      await comment(human, scene, `batch note ${String(index)}`);
+    const agent = make(fast, "batch-reader");
+    const first = await claimItems(agent);
+    expect(first).toHaveLength(100);
+    await agent.mutate("feedback.ack", {
+      commentIds: first.map((item) => item.comment.id),
+    });
+    // Acknowledged comments stay unhandled; they must not fill the next batch.
+    const rest = await claimItems(agent);
+    expect(rest.map((item) => item.comment.body)).toEqual(["batch note 100"]);
+  });
+
   it("lets a new session take over comments held by an actor not seen for 15 minutes", async () => {
     const scene = await scenario();
     await comment(human, scene, "orphaned note");

@@ -53,11 +53,18 @@ export function createMaintenance(deps: Deps) {
   async function purgeBoard(
     boardId: string,
     actorId: string,
+    due: { archivedBefore: Date; idleBefore: Date },
   ): Promise<boolean> {
     const purged = await transact(db, async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Board" WHERE "id" = ${boardId} FOR UPDATE`;
       const board = await tx.board.findUnique({ where: { id: boardId } });
       if (board === null || board.keep || board.expiredAt !== null) return null;
+      // A publish or unarchive may have landed between selecting the candidate
+      // and taking the lock; only a board that is still due loses its content.
+      const archiveDue =
+        board.archivedAt !== null && board.archivedAt <= due.archivedBefore;
+      const idleDue = board.lastActivityAt <= due.idleBefore;
+      if (!archiveDue && !idleDue) return null;
       const versions = await tx.version.findMany({
         where: { artifact: { boardId } },
         select: { id: true },
@@ -99,15 +106,17 @@ export function createMaintenance(deps: Deps) {
       deps.settings.value("boardIdleDays"),
       deps.settings.value("archiveGraceDays"),
     ]);
+    const cutoffs = {
+      archivedBefore: new Date(now - graceDays * DAY_MS),
+      idleBefore: new Date(now - idleDays * DAY_MS),
+    };
     const due = await db.board.findMany({
       where: {
         keep: false,
         expiredAt: null,
         OR: [
-          {
-            archivedAt: { not: null, lte: new Date(now - graceDays * DAY_MS) },
-          },
-          { lastActivityAt: { lte: new Date(now - idleDays * DAY_MS) } },
+          { archivedAt: { not: null, lte: cutoffs.archivedBefore } },
+          { lastActivityAt: { lte: cutoffs.idleBefore } },
         ],
       },
       select: { id: true },
@@ -115,7 +124,7 @@ export function createMaintenance(deps: Deps) {
     });
     let count = 0;
     for (const board of due)
-      if (await purgeBoard(board.id, actorId)) count += 1;
+      if (await purgeBoard(board.id, actorId, cutoffs)) count += 1;
     return { count, more: due.length === BOARD_BATCH };
   }
 

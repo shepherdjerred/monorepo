@@ -131,7 +131,12 @@ export function FrameViewer({
   const modeRef = useRef({ mode: frameMode, scale });
   modeRef.current = { mode: frameMode, scale };
 
-  const src = contentFileUrl(version, version.entryPath);
+  // A Mermaid entry is source text; the content host renders the diagram only
+  // for the bare token prefix.
+  const src =
+    artifact.kind === "mermaid"
+      ? version.contentUrl
+      : contentFileUrl(version, version.entryPath);
   const prefixPathname =
     version.contentUrl === null ? "/" : new URL(version.contentUrl).pathname;
   const commenting = review?.commentMode === true;
