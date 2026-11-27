@@ -27,16 +27,13 @@ import {
   isMinorVersionBump,
   minorVersionKey,
 } from "./update-changelog.ts";
-import {
-  fetchPatches,
-  selectPatchByMinor,
-  type RiotPatch,
-} from "./riot-patch.ts";
+import { fetchPatches, selectPatchByMinor } from "./riot-patch.ts";
 import { generateAbilityFactsAssets } from "./ability-facts.ts";
 import { downloadAbilityIcons } from "./ability-icons.ts";
 import { buildAugmentNameCatalog } from "./augment-names.ts";
 import type { AugmentNameCatalog } from "#src/data-dragon/augment-names-schema.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
+import { archiveThenAnalyze } from "./patch-notes-archive.ts";
 import {
   PatchChangesetHistorySchema,
   type PatchChangeset,
@@ -49,8 +46,6 @@ const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx
 // Structured patch changeset consumed by Explore (bundled asset).
 const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
 const PATCH_NOTES_HISTORY_ASSET = `${ASSETS_DIR}/patch-notes-history.json`;
-// Raw patch-notes provenance — committed but not imported at runtime.
-const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
 // scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
 const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
@@ -1499,33 +1494,6 @@ async function readPreviousVersion(): Promise<string | undefined> {
   return parsed.success ? parsed.data.version : undefined;
 }
 
-/**
- * Append a "What's New" entry to the frontend changelog — but only on a
- * minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
- * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
- * never spams the changelog.
- *
- * The entry references the REAL player-facing patch number (e.g. "26.13") pulled
- * from Riot's patch-notes feed, not the Data Dragon version ("16.13"). A
- * network/parse failure throws (fail fast); a not-yet-posted matching patch is
- * an expected timing case that skips the entry without blocking the asset PR.
- */
-/**
- * Archive the raw patch-notes page for provenance/re-analysis. Best-effort: a
- * fetch failure is logged and skipped (the structured changeset is what Explore
- * actually consume). Committed but excluded from formatting and never imported.
- */
-async function saveRawPatchNotes(
-  patch: RiotPatch,
-  officialPatchContent: string,
-): Promise<void> {
-  await Bun.write(
-    `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
-    officialPatchContent,
-  );
-  console.log(`✓ Archived raw patch ${patch.patch} notes`);
-}
-
 async function savePatchChangeset(changeset: PatchChangeset): Promise<void> {
   const historyFile = Bun.file(PATCH_NOTES_HISTORY_ASSET);
   const history =
@@ -1554,6 +1522,17 @@ async function savePatchChangeset(changeset: PatchChangeset): Promise<void> {
   }
 }
 
+/**
+ * Append a "What's New" entry to the frontend changelog — but only on a
+ * minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
+ * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
+ * never spams the changelog.
+ *
+ * The entry references the REAL player-facing patch number (e.g. "26.13") pulled
+ * from Riot's patch-notes feed, not the Data Dragon version ("16.13"). A
+ * network/parse failure throws (fail fast); a not-yet-posted matching patch is
+ * an expected timing case that skips the entry without blocking the asset PR.
+ */
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
   version: string,
@@ -1595,13 +1574,18 @@ async function maybeAppendChangelogEntry(
   try {
     console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
     const officialPatchContent = await fetchOfficialPatchNotes(patch);
-    const changeset = await analyzePatch(patch, officialPatchContent);
+    // Archives the raw HTML before the model call: the deterministic
+    // patch-changes parser reads it, so a model failure must not lose it.
+    const changeset = await archiveThenAnalyze(
+      patch,
+      officialPatchContent,
+      analyzePatch,
+    );
     await savePatchChangeset(changeset);
     console.log(
       `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
     );
     highlights = changeset.changelogHighlights;
-    await saveRawPatchNotes(patch, officialPatchContent);
   } catch (error) {
     console.warn(
       `⚠ Patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
