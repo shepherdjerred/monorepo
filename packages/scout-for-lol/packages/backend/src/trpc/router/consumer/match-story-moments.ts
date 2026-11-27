@@ -260,7 +260,8 @@ function firstBloodMoment(
   kills: readonly KillEvent[],
   roster: StoryRoster,
 ): StoryMoment | null {
-  const first = kills[0];
+  // A turret or minion execution (`killerId` 0) is not first blood.
+  const first = kills.find((kill) => kill.killerId > 0);
   if (first === undefined) return null;
   const killers = player(roster, first.killerId, "killer");
   return {

@@ -131,6 +131,22 @@ describe("buildMoments", () => {
     });
   });
 
+  test("first blood is the first kill a champion made, not an execution", () => {
+    const first = moments([
+      kill("x0", 30_000, 0, 8),
+      kill("k1", 90_000, 4, 9),
+    ]).find((moment) => moment.kind === "first_blood");
+    expect(first).toMatchObject({
+      text: "First blood at 1:30 by RiverQuartz",
+      teamId: 100,
+    });
+    expect(
+      moments([kill("x0", 30_000, 0, 8)]).filter(
+        (moment) => moment.kind === "first_blood",
+      ),
+    ).toEqual([]);
+  });
+
   test("names objectives by kind and subtype, with the killer and assistants", () => {
     const result = moments(
       [
