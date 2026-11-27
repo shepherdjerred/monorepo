@@ -115,3 +115,17 @@ export async function mainCiIncident(
 export function formatMainCiIncident(report: MainCiIncidentReport): string {
   return report.available ? `Incident: ${report.guidance}` : report.warning;
 }
+
+/** The incident for a red `main`, or undefined when `main` is not red. */
+export function redMainIncident(
+  red: boolean,
+): Promise<MainCiIncidentReport | undefined> {
+  return red ? mainCiIncident() : Promise.resolve(undefined);
+}
+
+/** Text appended to a report: a newline and the incident line, or nothing. */
+export function incidentSuffix(
+  incident: MainCiIncidentReport | undefined,
+): string {
+  return incident === undefined ? "" : `\n${formatMainCiIncident(incident)}`;
+}

@@ -42,10 +42,7 @@ import {
   formatCoordination,
   type CoordinationSummary,
 } from "#lib/forum.ts";
-import {
-  formatMainCiIncident,
-  mainCiIncident,
-} from "#lib/incidents/main-ci.ts";
+import { incidentSuffix, redMainIncident } from "#lib/incidents/main-ci.ts";
 import {
   mainFailure,
   reportCommandError,
@@ -74,8 +71,7 @@ export async function reportResult(
   const { signal, coordination } = options;
   const report = await resultReport(result, observer, signal);
   // Advisory: the lookup never throws, so the exit code below is unchanged.
-  const incident =
-    result.verdict.outcome === "main_red" ? await mainCiIncident() : undefined;
+  const incident = await redMainIncident(result.verdict.outcome === "main_red");
   console.log(
     sanitizeText(
       json
@@ -88,13 +84,7 @@ export async function reportResult(
             null,
             2,
           )
-        : [
-            formatResult(report),
-            ...(coordination === undefined
-              ? []
-              : [formatCoordination(coordination)]),
-            ...(incident === undefined ? [] : [formatMainCiIncident(incident)]),
-          ].join("\n"),
+        : `${formatResult(report)}${coordination === undefined ? "" : `\n${formatCoordination(coordination)}`}${incidentSuffix(incident)}`,
       [observer.github.token, observer.woodpecker.token],
     ),
   );
@@ -405,7 +395,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
           secrets,
         )
       : [];
-  const incident = main.state === "red" ? await mainCiIncident() : undefined;
+  const incident = await redMainIncident(main.state === "red");
   const report = {
     ...summarizeMain(main, observer),
     diagnostics,
@@ -429,8 +419,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
       ].join("\n"),
     ),
     report.guidance,
-    ...(incident === undefined ? [] : [formatMainCiIncident(incident)]),
-    formatCoordination(report.coordination),
+    formatCoordination(report.coordination) + incidentSuffix(incident),
   ].join("\n");
   console.log(
     sanitizeText(json ? JSON.stringify(report, null, 2) : text, secrets),
