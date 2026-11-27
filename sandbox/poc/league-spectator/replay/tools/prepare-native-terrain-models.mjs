@@ -222,20 +222,30 @@ async function describeMaterial(materialRef, definitions, root, wad, archive) {
     name: value(sampler, "TextureName"),
     reference: field(sampler, "texturePath"),
   }));
+  const shader = field(node, "name");
   return {
     objectHash: pathHash,
     classHash: node.classHash,
     ...origin,
     samplers,
+    ...(shader?.type === "Hash64" && shader.value === "3485991204182179237"
+      ? { shader }
+      : {}),
   };
 }
 
 function baseColor(material) {
-  for (const pattern of [
-    /^(Diffuse_?Texture|Diffuse_Sword_Texture)$/i,
-    /^(Diffuse_Color|Diff_Tex)$/i,
-    /^Main_?Texture$/i,
-  ]) {
+  const mainTexture = /^Main_?Texture$/i;
+  // This shader uses Diffuse_Texture's RGB channels for distortion and
+  // Main_Texture for the actor color. Export only the authored color input.
+  const patterns = material.shader
+    ? [mainTexture]
+    : [
+        /^(Diffuse_?Texture|Diffuse_Sword_Texture)$/i,
+        /^(Diffuse_Color|Diff_Tex)$/i,
+        mainTexture,
+      ];
+  for (const pattern of patterns) {
     const matches = material.samplers.filter(({ name }) => pattern.test(name));
     if (matches.length === 1 && matches[0].reference) return matches[0];
     if (matches.length) break;
