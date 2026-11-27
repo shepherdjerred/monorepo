@@ -5,6 +5,7 @@ import type { ControlPlaneExecution } from "#lib/delivery/platform/control-plane
 import type { ControlPlaneUpgradeSnapshot } from "@shepherdjerred/delivery/contract";
 import { ControlPlaneReplayReceiptSchema } from "#lib/delivery/platform/control-plane-history.ts";
 import { candidateSourceCommand } from "#lib/delivery/workers/worker-candidate-checkout.ts";
+import { DELIVERY_JOB_GIT_ENVIRONMENT } from "#shared/delivery-job.ts";
 
 /** Same frozen install/build path as the native replay tooling; no provider/vault credentials enter children. */
 export async function replayControlPlaneCandidate(
@@ -25,6 +26,8 @@ export async function replayControlPlaneCandidate(
     MISE_EXEC_AUTO_INSTALL: "false",
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     TEMPORAL_NAMESPACE: "prod",
+    // As for worker candidates: Git ignores configuration in the kept job home.
+    ...DELIVERY_JOB_GIT_ENVIRONMENT,
   };
   const run = async (command: string[], cwd = directory) => {
     const result = await candidateSourceCommand(command, cwd, environment);
@@ -33,6 +36,8 @@ export async function replayControlPlaneCandidate(
   try {
     const source = snapshot.nextArtifact.sourceRevision;
     await run(["git", "init", "--quiet"]);
+    // Git reads ~/.config/git/attributes unless configuration names a file.
+    await run(["git", "config", "core.attributesFile", "/dev/null"]);
     await run([
       "git",
       "fetch",

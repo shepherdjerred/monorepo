@@ -299,8 +299,15 @@ describe("candidate child environment", () => {
         "TEMPORAL_ADDRESS",
         "TEMPORAL_NAMESPACE",
         "TEMPORAL_TLS",
+        "GIT_CONFIG_GLOBAL",
+        "GIT_CONFIG_NOSYSTEM",
       ].sort(),
     );
+    // Git configuration in the kept job home never reaches a candidate.
+    expect(environment).toMatchObject({
+      GIT_CONFIG_GLOBAL: "/dev/null",
+      GIT_CONFIG_NOSYSTEM: "1",
+    });
     const result = await candidateSourceCommand(
       [
         "bun",
@@ -788,6 +795,7 @@ describe("kept candidate tree", () => {
           .filter((argv) => argv[0] === "git"),
       ).toEqual([
         ["git", "init", "--quiet"],
+        ["git", "config", "core.attributesFile", "/dev/null"],
         [
           "git",
           "config",
@@ -809,8 +817,9 @@ describe("kept candidate tree", () => {
         ["git", "update-ref", "--no-deref", "HEAD", source],
         ["git", "read-tree", "HEAD"],
         ["git", "update-index", "-q", "--refresh"],
+        // No completed install was kept, so every node_modules goes too.
+        ["git", "clean", "-ffdxq"],
         ["git", "reset", "-q", "--hard"],
-        ["git", "clean", "-ffdxq", "-e", "node_modules"],
         ["git", "rev-parse", "HEAD"],
         ["git", "status", "--porcelain=v1", "--untracked-files=no"],
       ]);
@@ -830,21 +839,42 @@ describe("kept candidate tree", () => {
       ).toBe(`${candidateRoot}/packages/temporal`);
       const kept = await stat(candidateRoot);
       expect(kept.isDirectory()).toBe(true);
+      // The byte-exact attributes are gone before the reset; the install
+      // completed, so the next Job keeps node_modules.
+      await expect(
+        stat(path.join(candidateRoot, ".git/info/attributes")),
+      ).rejects.toMatchObject({ code: "ENOENT" });
+      expect(
+        await Bun.file(
+          path.join(candidateRoot, "node_modules/.delivery-install-complete"),
+        ).exists(),
+      ).toBe(true);
     });
   });
-  test("refuses a candidate tree that is the executor's checkout", async () => {
+  test.each([
+    ["the executor's checkout", `${executor.root}/`],
+    ["inside the executor's checkout", `${executor.root}/packages/candidate`],
+    ["a directory holding the executor's checkout", "/workspace"],
+  ])("refuses a candidate tree that is %s", async (_name, candidateRoot) => {
+    const calls: (readonly string[])[] = [];
     await expect(
       withWorkerCandidateCheckout(
         {
           sourceRevision: "b".repeat(40),
           target: "central",
           executor,
-          candidateRoot: `${executor.root}/`,
+          candidateRoot,
         },
         async () => "unreachable",
-        { execute: async (argv) => ok("b".repeat(40))(argv) },
+        {
+          execute: async (argv) => {
+            calls.push(argv);
+            return ok("b".repeat(40))(argv);
+          },
+        },
       ),
     ).rejects.toThrow("must not replace the executor's");
+    expect(calls).toEqual([]);
   });
 });
 

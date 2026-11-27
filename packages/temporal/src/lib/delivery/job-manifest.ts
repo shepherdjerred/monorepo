@@ -10,13 +10,13 @@ import {
 } from "homelab/src/delivery-stage-admission.ts";
 import {
   DELIVERY_JOB_BOOTSTRAP,
-  PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   DeliveryJobRequestSchema,
   deliveryJobArchive,
   deliveryJobNamespace,
   deliveryStageWorkspaceClaim,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
+import { PREVIOUS_DELIVERY_JOB_BOOTSTRAPS } from "./previous-job-bootstraps.ts";
 import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
 import { deliveryJobNativeAddonEnv } from "./job-swc-env.ts";
 

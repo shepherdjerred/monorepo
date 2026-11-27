@@ -229,19 +229,33 @@ names the previous revision, so a depth-1 fetch negotiates against it and
 downloads only what changed; without that ref the fetch is the whole ~670 MB
 tree. Everything in the store except its objects, shallow boundary and that
 ref is rebuilt for every Job, and `git fsck --full` must pass, or the Job
-says so on stderr and fetches into an empty store. The checkout's own
-repository is new for every Job and borrows the store's objects through
-alternates. Its index starts without stat data, so every tracked file is
-hashed against the revision and `reset --hard` rewrites only files whose
-content differs; everything untracked except `node_modules`, nested
-repositories included, is removed and the tracked tree must report no
-change. The tree therefore equals the revision whatever an earlier Job left,
-and `bun install --frozen-lockfile` writes only what the lockfile changed.
-The store is repacked to one revision once it holds more than eight packs.
+writes a `git-store-reset` JSON event to stderr and fetches into an empty
+store. Git reads no configuration from the kept `/workspace/home`
+(`GIT_CONFIG_GLOBAL=/dev/null`, `GIT_CONFIG_NOSYSTEM=1`, and
+`core.attributesFile=/dev/null` in each repository), so nothing a Job or
+candidate test leaves there can run hooks or hide a changed file. The
+checkout's own repository is new for every Job and borrows the store's
+objects through alternates. Its index starts without stat data, so every
+tracked file's exact bytes are hashed against the revision (with attributes
+that disable end-of-line and filter conversion for that step only); everything
+untracked except `node_modules`, nested repositories and stray
+`.gitattributes` included, is removed, and `reset --hard` rewrites only the
+files whose bytes differ, with the revision's own attributes. The tracked
+tree must then report no change. The tree therefore equals the revision
+whatever an earlier Job left, and `bun install --frozen-lockfile` writes only
+what the lockfile changed. `node_modules` is kept only when the previous
+install wrote its completion marker
+(`node_modules/.delivery-install-complete`); an install cut short leaves none,
+so the next Job removes every `node_modules`, installs from scratch and writes
+an `install-reset` event. The store is repacked to one revision once it holds
+more than eight packs.
 Generated code, the `llm-models` runtime build and the toolkit binary are kept
 as hard links in `/workspace/prepared` with a sha256 manifest, keyed by the
 revision, runner image and bootstrap; a Job with the same key restores them
-only if every file still matches, and test recipes always regenerate. It
+only if every file still matches and no kept path is or lies under a tracked
+path, `.git` or `node_modules`, and the tracked tree must still be clean
+afterwards (otherwise the Job fails and discards them). Test recipes always
+regenerate. It
 re-links the CI image's mise toolchain instead of copying it, and copies only
 mise's per-tool metadata, so a missing tool version still installs beside the
 image's. Image provenance installs only the Temporal workspace's production
@@ -254,11 +268,13 @@ installs a version the image lacks only from a checksum that revision's
 archive downloads, the only places `aws` runs.
 A worker
 candidate at the executor's own revision reuses the prepared checkout. Any other
-candidate is prepared the same way in `/workspace/candidate`, a tree the claim
-keeps beside the executor's: a fresh repository borrows the executor's
-objects, a blobless fetch adds the candidate's commit and trees, and the
-content-verified reset, clean and `bun install --frozen-lockfile` write only
-its difference from the previous candidate. Candidate `mise exec` never
+candidate is prepared the same way in `/workspace/candidate`, a real
+directory the claim keeps beside the executor's (a symlink there is replaced,
+and a path that resolves to, inside or above the executor's checkout is
+refused): a fresh repository borrows the executor's objects, a blobless fetch
+adds the candidate's commit and trees, and the byte-verified clean, reset and
+`bun install --frozen-lockfile` write only its difference from the previous
+candidate, with the same completion marker guarding its `node_modules`. Candidate `mise exec` never
 auto-installs tools that the unprivileged Job cannot read from the image, such
 as Rust. Adoption and recovery accept only the current bootstrap and the exact
 earlier ones listed in `PREVIOUS_DELIVERY_JOB_BOOTSTRAPS`, and the retired

@@ -29,17 +29,33 @@ export const STAGE_WORKSPACE: PreparedWorkspace = {
 };
 
 /** The files the full install prepares outside Git: generated code, builds and the toolkit. */
-const BINARIES = ["toolkit"] as const;
+const BINARIES: readonly string[] = ["toolkit"];
+
+/**
+ * A kept path is `bin/<binary>` or an untracked checkout file `source/...`
+ * outside any repository metadata and installed packages: keeping never lists
+ * `.git` or `node_modules` (`ls-files --others --exclude=node_modules`), so a
+ * manifest naming one was not written by keepPreparedOutputs.
+ */
+function keepablePath(value: string) {
+  const [top, ...rest] = value.split("/");
+  if (path.posix.normalize(value) !== value || rest.length === 0) return false;
+  return top === "bin"
+    ? rest.length === 1 && BINARIES.includes(rest[0] ?? "")
+    : top === "source" &&
+        rest.every(
+          (segment) =>
+            !["", ".", "..", "node_modules"].includes(segment) &&
+            segment.toLowerCase() !== ".git",
+        );
+}
 
 const Sha256 = z.string().regex(/^[a-f0-9]{64}$/u);
 const KeptPath = z
   .string()
   .refine(
-    (value) =>
-      /^(?:source|bin)\/./u.test(value) &&
-      path.posix.normalize(value) === value &&
-      !value.split("/").includes(".."),
-    "Kept output path must stay inside the prepared directory",
+    keepablePath,
+    "Kept output path must be a kept binary or a checkout file outside .git and node_modules",
   );
 const ManifestSchema = z
   .object({
@@ -113,8 +129,9 @@ function destination(workspace: PreparedWorkspace, kept: string) {
  * Restore the outputs a previous Job prepared from the same inputs, as hard
  * links, or report why not. Restoring requires the kept manifest's key to
  * equal `key`, the kept files to be exactly the manifest's (regular files, no
- * additions or removals) and every file's sha256 to match. Nothing is linked
- * unless all of that holds.
+ * additions or removals), every file's sha256 to match and no kept path to be
+ * or lie under a tracked path of the checkout. Nothing is linked unless all of
+ * that holds. The bootstrap then checks the tracked tree is still clean.
  */
 export async function restorePreparedOutputs(
   workspace: PreparedWorkspace,
@@ -142,6 +159,16 @@ export async function restorePreparedOutputs(
       (await sha256(path.join(workspace.prepared, file.path))) !== file.sha256
     )
       return { restored: false, reason: "changed", detail: file.path };
+  const conflict = await trackedConflict(
+    workspace,
+    manifest.files.map((file) => file.path),
+  );
+  if (conflict !== undefined)
+    return {
+      restored: false,
+      reason: "changed",
+      detail: `${conflict} is or lies under a tracked path`,
+    };
   for (const file of manifest.files) {
     const target = destination(workspace, file.path);
     await mkdir(path.dirname(target), { recursive: true });
@@ -151,6 +178,38 @@ export async function restorePreparedOutputs(
     await link(path.join(workspace.prepared, file.path), target);
   }
   return { restored: true, files: manifest.files.length };
+}
+
+/**
+ * The first kept `source/...` path that is a tracked file or directory of the
+ * checkout, or lies under a tracked file or symlink. Linking it would replace
+ * tracked content, or write through a tracked symlink, behind the clean-tree
+ * check the bootstrap made before restoring.
+ */
+async function trackedConflict(
+  workspace: PreparedWorkspace,
+  kept: readonly string[],
+) {
+  const listed = await git(workspace.source, ["ls-files", "-z"]);
+  const tracked = new Set(listed.split("\0").filter((entry) => entry !== ""));
+  const directories = new Set<string>();
+  for (const file of tracked)
+    for (
+      let end = file.indexOf("/");
+      end !== -1;
+      end = file.indexOf("/", end + 1)
+    )
+      directories.add(file.slice(0, end));
+  return kept.find((file) => {
+    const [top, ...rest] = file.split("/");
+    if (top !== "source") return false;
+    const relative = rest.join("/");
+    return (
+      tracked.has(relative) ||
+      directories.has(relative) ||
+      rest.some((_, index) => tracked.has(rest.slice(0, index).join("/")))
+    );
+  });
 }
 
 async function git(cwd: string, args: readonly string[]) {

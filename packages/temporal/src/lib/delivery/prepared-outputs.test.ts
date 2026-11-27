@@ -8,8 +8,10 @@ import {
   symlink,
   writeFile,
 } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import {
   keepPreparedOutputs,
   restorePreparedOutputs,
@@ -104,6 +106,31 @@ beforeEach(async () => {
 afterEach(async () => {
   await rm(root, { recursive: true, force: true });
 });
+
+const KeptManifest = z.object({
+  files: z.array(z.object({ path: z.string(), sha256: z.string() })),
+});
+
+/**
+ * Add `kept` to the kept outputs with a matching sha256 in the manifest, as
+ * something sharing the claim could, and return the restore result.
+ */
+async function restoreForged(kept: string, content: string) {
+  await prepare();
+  await keepPreparedOutputs(workspace, KEY);
+  const target = path.join(workspace.prepared, kept);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, content);
+  const manifest = path.join(workspace.prepared, "manifest.json");
+  const { files } = KeptManifest.parse(await Bun.file(manifest).json());
+  files.push({
+    path: kept,
+    sha256: createHash("sha256").update(content).digest("hex"),
+  });
+  await writeFile(manifest, JSON.stringify({ key: KEY, files }));
+  await nextJob();
+  return await restorePreparedOutputs(workspace, KEY);
+}
 
 describe("prepared outputs kept between stage Jobs", () => {
   it("keeps hard links to every generated output and the toolkit, and restores them for the same inputs", async () => {
@@ -252,4 +279,65 @@ describe("prepared outputs kept between stage Jobs", () => {
       reason: "absent",
     });
   });
+});
+
+describe("restoring a manifest that keepPreparedOutputs never wrote", () => {
+  it.each([
+    ["repository configuration", "source/.git/config"],
+    ["a hook", "source/.git/hooks/post-checkout"],
+    ["a nested repository's metadata", "source/packages/x/.GIT/config"],
+    ["an installed package", "source/node_modules/prisma/index.js"],
+    ["a binary other than the toolkit", "bin/git"],
+  ])(
+    "treats a manifest naming %s as absent and links nothing",
+    async (_name, kept) => {
+      const config = path.join(workspace.source, ".git/config");
+      const before = await Bun.file(config).text();
+      expect(await restoreForged(kept, "[core]\n\thooksPath = /tmp\n")).toEqual(
+        {
+          restored: false,
+          reason: "absent",
+        },
+      );
+      expect(await restoredFiles()).toEqual([]);
+      expect(await Bun.file(config).text()).toBe(before);
+      expect(
+        await Bun.file(
+          path.join(workspace.source, "node_modules/prisma/index.js"),
+        ).text(),
+      ).toBe("dep\n");
+    },
+  );
+
+  it.each([
+    ["is a tracked file", "source/packages/delivery/schema.prisma"],
+    ["is a tracked directory", "source/docs"],
+    ["lies under a tracked file", "source/packages/delivery/schema.prisma/x"],
+    ["lies under a tracked symlink", "source/packages/linked/schema.prisma"],
+  ])(
+    "regenerates when a kept path %s, and links nothing",
+    async (_name, kept) => {
+      // A tracked symlink to a tracked directory: writing through it would
+      // replace tracked content without naming a tracked path.
+      await symlink("delivery", path.join(workspace.source, "packages/linked"));
+      await mkdir(path.join(workspace.source, "docs"));
+      await writeFile(
+        path.join(workspace.source, "docs/guide.md"),
+        "# Guide\n",
+      );
+      git(["add", "packages/linked", "docs"]);
+      git(["commit", "-q", "-m", "link"]);
+      expect(await restoreForged(kept, "model Forged {}\n")).toEqual({
+        restored: false,
+        reason: "changed",
+        detail: `${kept} is or lies under a tracked path`,
+      });
+      expect(await restoredFiles()).toEqual([]);
+      expect(
+        await Bun.file(
+          path.join(workspace.source, "packages/delivery/schema.prisma"),
+        ).text(),
+      ).toBe("model A {}\n");
+    },
+  );
 });
