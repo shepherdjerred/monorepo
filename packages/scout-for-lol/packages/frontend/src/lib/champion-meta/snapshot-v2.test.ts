@@ -12,6 +12,7 @@ import {
 import {
   SNAPSHOT_V2_BUDGET,
   SNAPSHOT_V2_DIRECTORY,
+  SNAPSHOT_V2_MAX_CHANGED_FILES,
 } from "@scout-for-lol/data/meta/snapshot-v2-budget.ts";
 import {
   assertSnapshotWithinBudget,
@@ -20,7 +21,10 @@ import {
   snapshotBudgetViolations,
 } from "./snapshot-v2-files.ts";
 import {
+  changedFileCount,
   readSnapshotDirectory,
+  refreshSnapshotDirectory,
+  snapshotChangeSet,
   writeSnapshotDirectory,
 } from "./snapshot-v2-fs.ts";
 import { EMPTY_SNAPSHOT_V2 } from "./snapshot-v2-schema.ts";
@@ -459,5 +463,96 @@ describe("snapshot v2 size budget", () => {
     );
     expect(() => parseSnapshotV2(committed)).not.toThrow();
     expect(snapshotBudgetViolations(committed)).toEqual([]);
+  });
+});
+
+/** `count` distinct matchup files, each holding `content`. */
+function syntheticFiles(count: number, content = "{}\n", offset = 0) {
+  return new Map(
+    Array.from({ length: count }, (_, index) => [
+      `matchups/ahri/middle/opponent-${(index + offset).toString()}.json`,
+      content,
+    ]),
+  );
+}
+
+describe("snapshot v2 refresh guard", () => {
+  const LIMIT = SNAPSHOT_V2_MAX_CHANGED_FILES;
+
+  test("the limit is below the 3,000 files a GitHub pull request lists", () => {
+    expect(LIMIT).toBe(2500);
+  });
+
+  test("counts added, rewritten and removed files, and not unchanged ones", () => {
+    const existing = new Map([
+      ["a.json", "1"],
+      ["b.json", "2"],
+      ["c.json", "3"],
+    ]);
+    const next = new Map([
+      ["a.json", "1"],
+      ["b.json", "changed"],
+      ["d.json", "4"],
+    ]);
+    const changes = snapshotChangeSet(existing, next);
+    expect(changes).toEqual({
+      added: ["d.json"],
+      modified: ["b.json"],
+      removed: ["c.json"],
+    });
+    expect(changedFileCount(changes)).toBe(3);
+  });
+
+  test("refreshes a change set just under the limit and at it", async () => {
+    const target = path.join(directory, "champion-meta");
+    const under = await refreshSnapshotDirectory(
+      target,
+      syntheticFiles(LIMIT - 1),
+    );
+    expect(changedFileCount(under)).toBe(LIMIT - 1);
+    // One more file added to the same directory reaches the limit exactly.
+    const at = await refreshSnapshotDirectory(target, syntheticFiles(LIMIT));
+    expect(changedFileCount(at)).toBe(1);
+    const full = await refreshSnapshotDirectory(
+      target,
+      syntheticFiles(LIMIT, '{"week":2}\n'),
+    );
+    expect(changedFileCount(full)).toBe(LIMIT);
+    const written = await readSnapshotDirectory(target);
+    expect(written.size).toBe(LIMIT);
+  });
+
+  test("refuses a change set over the limit, names AI-1031 and plan (b), and writes nothing", async () => {
+    const target = path.join(directory, "champion-meta");
+    const week1 = syntheticFiles(LIMIT);
+    await refreshSnapshotDirectory(target, week1);
+
+    // Every file rewritten and one more added: LIMIT + 1 changes.
+    const week2 = syntheticFiles(LIMIT + 1, '{"week":2}\n');
+    const refused = refreshSnapshotDirectory(target, week2);
+    await expect(refused).rejects.toThrow(
+      new RegExp(`${(LIMIT + 1).toString()} files`, "u"),
+    );
+    await expect(refused).rejects.toThrow(/AI-1031 plan \(b\)/u);
+    await expect(refused).rejects.toThrow(/champion-meta-snapshot-guard/u);
+    await expect(refused).rejects.toThrow(/Nothing was written/u);
+
+    // The directory is exactly what week 1 left: nothing truncated, nothing partly written.
+    expect(await readSnapshotDirectory(target)).toEqual(week1);
+  });
+
+  test("removed files count too: replacing a big snapshot with a small different one can trip it", async () => {
+    const target = path.join(directory, "champion-meta");
+    await refreshSnapshotDirectory(target, syntheticFiles(2000));
+    await expect(
+      refreshSnapshotDirectory(target, syntheticFiles(600, "{}\n", 10_000)),
+    ).rejects.toThrow(/2600 files \(600 added, 0 rewritten, 2000 removed\)/u);
+  });
+
+  test("a refresh over the size budget names AI-1031 and plan (b) too", () => {
+    const big = "x".repeat(SNAPSHOT_V2_BUDGET.matchup.maxBytes + 1);
+    expect(() =>
+      assertSnapshotWithinBudget(new Map([["matchups/a/top/b.json", big]])),
+    ).toThrow(/AI-1031 plan \(b\)/u);
   });
 });

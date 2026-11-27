@@ -1,4 +1,4 @@
-import { Context } from "@temporalio/activity";
+import { ApplicationFailure, Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
@@ -6,6 +6,7 @@ import { installScoutWorkspace } from "#activities/bot-clone.ts";
 import {
   changedAllowedFiles,
   cloneMainForGeneratedRefresh,
+  isInGeneratedDirectory,
   publishGeneratedRefresh,
 } from "./generated-refresh.ts";
 import {
@@ -16,6 +17,18 @@ import {
 const FRONTEND_ROOT = "packages/scout-for-lol/packages/frontend";
 /** Repo-root-relative: used for `git add` and the `git status` allowlist. */
 export const CHAMPION_META_SNAPSHOT_PATH = `${FRONTEND_ROOT}/src/data/generated/champion-meta.snapshot.json`;
+/**
+ * The split snapshot v2 (an index, one file per champion, one per matchup),
+ * written beside the single file. The activity may change files below this
+ * directory and nothing else but the single file above.
+ */
+export const CHAMPION_META_SNAPSHOT_V2_DIRECTORY = `${FRONTEND_ROOT}/src/data/generated/champion-meta`;
+/**
+ * Present in every error the snapshot's size or change-set guard raises
+ * (`snapshot-v2-budget.ts` in the Scout data package). The guard is
+ * deterministic, so the activity does not retry it.
+ */
+export const SNAPSHOT_GUARD_MARKER = "champion-meta-snapshot-guard";
 
 export const ChampionMetaWorkflowInputSchema = z.strictObject({
   /** Origin of the deployed meta API the snapshot is fetched from. */
@@ -45,13 +58,29 @@ export function championMetaBranchName(contentHash: string): string {
   return `chore/scout-champion-meta-${contentHash}`;
 }
 
+/** The files of the split snapshot in `repoDir`, as repository-relative paths in a fixed order. */
+async function snapshotV2Paths(repoDir: string): Promise<string[]> {
+  const found: string[] = [];
+  const glob = new Bun.Glob("**/*.json");
+  for await (const relative of glob.scan({
+    cwd: `${repoDir}/${CHAMPION_META_SNAPSHOT_V2_DIRECTORY}`,
+  })) {
+    found.push(`${CHAMPION_META_SNAPSHOT_V2_DIRECTORY}/${relative}`);
+  }
+  return found.toSorted();
+}
+
+/** One hash over the single file and every file of the split snapshot, in a fixed order. */
 export async function championMetaContentHash(
   repoDir: string,
 ): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(
-    await Bun.file(`${repoDir}/${CHAMPION_META_SNAPSHOT_PATH}`).text(),
-  );
+  for (const path of [
+    CHAMPION_META_SNAPSHOT_PATH,
+    ...(await snapshotV2Paths(repoDir)),
+  ]) {
+    hasher.update(`${path}\n${await Bun.file(`${repoDir}/${path}`).text()}\n`);
+  }
   return hasher.digest("hex").slice(0, 12);
 }
 
@@ -75,7 +104,46 @@ async function changedSnapshotFiles(repoDir: string): Promise<string[]> {
     repoDir,
     [CHAMPION_META_SNAPSHOT_PATH],
     "Champion-meta refresh",
+    [CHAMPION_META_SNAPSHOT_V2_DIRECTORY],
   );
+}
+
+/** The changed files outside the split snapshot, which the formatter gates apply to. */
+export function singleFilePaths(changedFiles: readonly string[]): string[] {
+  return changedFiles.filter(
+    (path) =>
+      !isInGeneratedDirectory(path, CHAMPION_META_SNAPSHOT_V2_DIRECTORY),
+  );
+}
+
+/**
+ * The changed files as the result reports them: the single file by path and
+ * the split snapshot as one line with a count, so the result of a refresh that
+ * rewrites thousands of files stays small.
+ */
+export function summarizeChangedFiles(
+  changedFiles: readonly string[],
+): string[] {
+  const single = singleFilePaths(changedFiles);
+  const split = changedFiles.length - single.length;
+  return split === 0
+    ? single
+    : [
+        ...single,
+        `${CHAMPION_META_SNAPSHOT_V2_DIRECTORY}/ (${split.toString()} files)`,
+      ];
+}
+
+/** A guard failure is the same on every attempt, so Temporal must not retry it. */
+export function refuseRetryOfGuard(error: unknown): never {
+  if (error instanceof Error && error.message.includes(SNAPSHOT_GUARD_MARKER)) {
+    throw ApplicationFailure.create({
+      message: error.message,
+      type: "ChampionMetaSnapshotGuard",
+      nonRetryable: true,
+    });
+  }
+  throw error;
 }
 
 const SKIPPED_NO_DIFF: ChampionMetaRefreshResult = {
@@ -93,9 +161,12 @@ export type ChampionMetaActivities = typeof championMetaActivities;
 export const championMetaActivities = {
   /**
    * Fetch the champion meta from the deployed API into the committed
-   * snapshot the Scout champion pages are built from, and open a PR when it
-   * differs. Deterministic (no agent). An API with nothing published yields
-   * the empty snapshot, so an unchanged empty snapshot opens no PR.
+   * snapshots the Scout champion pages are built from (the single file, and
+   * the split snapshot v2 beside it), and open a PR when they differ.
+   * Deterministic (no agent). An API with nothing published yields the empty
+   * snapshots, so unchanged empty snapshots open no PR. A split snapshot over
+   * its size budget, or one that would change more files than a PR can carry,
+   * fails the refresh instead of being truncated (AI-1031).
    */
   async refreshChampionMeta(
     input: ChampionMetaWorkflowInput,
@@ -122,23 +193,32 @@ export const championMetaActivities = {
 
       // Absolute output path: `bun run --filter` would resolve a relative one
       // against the filtered package, not the repo root.
-      await runCommand(
-        [
-          "bun",
-          "run",
-          "refresh-champion-meta",
-          "--origin",
-          config.metaOrigin,
-          "--output",
-          `${repoDir}/${CHAMPION_META_SNAPSHOT_PATH}`,
-        ],
-        { cwd: `${repoDir}/${FRONTEND_ROOT}` },
-      );
+      try {
+        await runCommand(
+          [
+            "bun",
+            "run",
+            "refresh-champion-meta",
+            "--origin",
+            config.metaOrigin,
+            "--output",
+            `${repoDir}/${CHAMPION_META_SNAPSHOT_PATH}`,
+            "--snapshot-dir",
+            `${repoDir}/${CHAMPION_META_SNAPSHOT_V2_DIRECTORY}`,
+          ],
+          { cwd: `${repoDir}/${FRONTEND_ROOT}` },
+        );
+      } catch (error) {
+        refuseRetryOfGuard(error);
+      }
 
+      // The split snapshot is compact JSON the generator writes byte-for-byte
+      // and Prettier ignores (`**/generated/**`), so only the single file goes
+      // through the formatting gates.
       let files = await changedSnapshotFiles(repoDir);
       await discardFormattingOnlyChanges({
         repoDir,
-        changedFiles: files,
+        changedFiles: singleFilePaths(files),
         component: "scout-champion-meta-refresh",
       });
       files = await changedSnapshotFiles(repoDir);
@@ -146,7 +226,7 @@ export const championMetaActivities = {
 
       await runScoutGeneratedPreflight({
         repoDir,
-        changedFiles: files,
+        changedFiles: singleFilePaths(files),
         runCommand,
       });
       files = await changedSnapshotFiles(repoDir);
@@ -161,7 +241,8 @@ export const championMetaActivities = {
         "",
         `Content hash: ${contentHash}`,
         `Source: ${config.metaOrigin}/api/meta/v1`,
-        "Regenerated `champion-meta.snapshot.json` from the meta API; minimum samples are those the API enforces.",
+        `Changed files: ${files.length.toString()}, the single file and the split snapshot below \`champion-meta/\` (an index, one file per champion and one per matchup).`,
+        "Regenerated `champion-meta.snapshot.json` and the split snapshot from the meta API; minimum samples are those the API enforces. The refresh fails rather than open a PR over the size budget or over 2,500 changed files (AI-1031).",
         "",
         "## Verification",
         "Ran the snapshot generator and generated-file preflight. Full CI and automated review must pass before merge. Live page acceptance has not run.",
@@ -173,8 +254,11 @@ export const championMetaActivities = {
         branch: championMetaBranchName(contentHash),
         title: championMetaPrTitle(),
         body,
-        files: [CHAMPION_META_SNAPSHOT_PATH],
-        changedFiles: files,
+        files: [
+          CHAMPION_META_SNAPSHOT_PATH,
+          CHAMPION_META_SNAPSHOT_V2_DIRECTORY,
+        ],
+        changedFiles: summarizeChangedFiles(files),
         onAutoMergeFailure: (prUrl) => (error: unknown) => {
           jsonLog("warning", "Champion-meta PR auto-merge setup failed", {
             prUrl,

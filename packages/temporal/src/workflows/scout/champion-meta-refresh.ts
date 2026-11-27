@@ -8,8 +8,9 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshChampionMeta } = proxyActivities<ChampionMetaActivities>({
   taskQueue: TASK_QUEUES.SCOUT,
-  // Clone, root install, then up to ~170 paced API reads (the meta API allows
-  // 120 requests a minute per IP) and a PR.
+  // Clone, root install, then up to ~340 paced API reads (a champion and a
+  // matchups read per champion; the meta API allows 120 requests a minute per
+  // IP) and a PR. A snapshot over its guard (AI-1031) fails non-retryably.
   startToCloseTimeout: "45 minutes",
   heartbeatTimeout: "60 seconds",
   retry: {

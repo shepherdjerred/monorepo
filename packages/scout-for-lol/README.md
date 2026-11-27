@@ -126,8 +126,13 @@ are one-shot and each command starts a new saved conversation.
   route, and refuses to write over the size budget in `data/src/meta/snapshot-v2-budget.ts`,
   which `scripts/check-asset-sizes.ts` also enforces on what is committed. The
   index states the patch, queue, rank bracket and the lane window. The
-  single-file snapshot stays until the public pages switch to v2; the weekly
-  workflow does not write v2 yet.
+  single-file snapshot stays until the public pages switch to v2. The weekly
+  workflow writes both through its PR: its path allowlist is the single file
+  plus the `champion-meta/` directory and nothing else. A refresh that would
+  change more than 2,500 files (a PR carries at most 3,000) or break the size
+  budget fails without writing and without a retry, naming AI-1031: the next
+  step then is plan (b) there, publishing each snapshot as a content-addressed
+  bundle in object storage and committing only a pointer.
 - Scout beta bootstraps deterministic Workflow versioning with a capable stable
   image followed by a distinct credentialless candidate; the backend retains
   its embedded drain poller and all effectful Activity Workers until the

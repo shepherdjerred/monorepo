@@ -1,5 +1,7 @@
 import {
   SNAPSHOT_V2_BUDGET,
+  SNAPSHOT_V2_GUARD_HINT,
+  SNAPSHOT_V2_GUARD_MARKER,
   type SnapshotV2FileClass,
 } from "@scout-for-lol/data/meta/snapshot-v2-budget.ts";
 import {
@@ -184,7 +186,7 @@ export function assertSnapshotWithinBudget(files: SnapshotTexts): void {
   const violations = snapshotBudgetViolations(files);
   if (violations.length > 0) {
     throw new Error(
-      `Champion meta snapshot is over its size budget:\n${violations.join("\n")}`,
+      `Champion meta snapshot is over its size budget:\n${violations.join("\n")}\n${SNAPSHOT_V2_GUARD_MARKER}: ${SNAPSHOT_V2_GUARD_HINT}`,
     );
   }
 }
