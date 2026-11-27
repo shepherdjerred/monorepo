@@ -1,5 +1,5 @@
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { synthesize, synthesizedConfigurationPath } from "#scripts/synth.ts";
 
@@ -51,13 +51,6 @@ const ConfigurationSchema = z.looseObject({
   removed: z.array(z.looseObject({ from: z.string() })),
   moved: z.unknown().optional(),
 });
-
-async function seaweedfs() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("seaweedfs") ?? ""),
-  );
-}
 
 const ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
@@ -283,8 +276,19 @@ const TERRAFORM_DATA = Object.fromEntries(
 );
 
 describe("seaweedfs", () => {
-  test("keeps every bucket address, its protection, imports and the forgotten bucket", async () => {
-    const { resource, terraform, ...stack } = await seaweedfs();
+  let configuration: z.infer<typeof ConfigurationSchema>;
+
+  beforeAll(async () => {
+    const synthesized = await synthesize();
+    const raw = synthesized.get("seaweedfs");
+    if (raw === undefined) {
+      throw new Error("SeaweedFS stack was not synthesized");
+    }
+    configuration = ConfigurationSchema.parse(JSON.parse(raw));
+  });
+
+  test("keeps every bucket address, its protection, imports and the forgotten bucket", () => {
+    const { resource, terraform, ...stack } = configuration;
     const buckets = resource.aws_s3_bucket;
     expect(
       Object.fromEntries(
@@ -332,8 +336,8 @@ describe("seaweedfs", () => {
     });
   });
 
-  test("the deployment identity reaches the provider and provisioners", async () => {
-    const { variable, locals, provider } = await seaweedfs();
+  test("the deployment identity reaches the provider and provisioners", () => {
+    const { variable, locals, provider } = configuration;
     expect(variable).toEqual({
       seaweedfs_access_key_id: {
         description: "SeaweedFS S3 deployment identity access key",
@@ -370,15 +374,15 @@ describe("seaweedfs", () => {
     });
   });
 
-  test("keeps every lifecycle and seed provisioner byte for byte", async () => {
-    const { resource } = await seaweedfs();
+  test("keeps every lifecycle and seed provisioner byte for byte", () => {
+    const { resource } = configuration;
     // OpenTofu never plans a provisioner change, so the zero-change plan
     // cannot see one: the scripts are pinned here instead.
     expect(resource.terraform_data).toEqual(TERRAFORM_DATA);
   });
 
-  test("every provisioner re-runs by replacement when a value it reads changes", async () => {
-    const { resource } = await seaweedfs();
+  test("every provisioner re-runs by replacement when a value it reads changes", () => {
+    const { resource } = configuration;
     const ProvisionedSchema = z.looseObject({
       input: z.record(z.string(), z.unknown()),
       provisioner: z.array(z.unknown()).min(1),
@@ -399,8 +403,8 @@ describe("seaweedfs", () => {
     }
   });
 
-  test("every bucket gets exactly one lifecycle configuration holding all its rules", async () => {
-    const { resource } = await seaweedfs();
+  test("every bucket gets exactly one lifecycle configuration holding all its rules", () => {
+    const { resource } = configuration;
     const LifecycleSchema = z.object({
       input: z.looseObject({
         bucket: z.string(),
