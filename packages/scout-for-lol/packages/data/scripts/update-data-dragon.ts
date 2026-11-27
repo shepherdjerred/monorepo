@@ -34,6 +34,7 @@ import { buildAugmentNameCatalog } from "./augment-names.ts";
 import type { AugmentNameCatalog } from "#src/data-dragon/augment-names-schema.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
 import { archiveThenAnalyze } from "./patch-notes-archive.ts";
+import { writePatchChanges } from "./generate-patch-changes.ts";
 import {
   PatchChangesetHistorySchema,
   type PatchChangeset,
@@ -1873,6 +1874,12 @@ async function main(): Promise<void> {
 
     // Add a "What's New" entry to the marketing site on minor-version bumps.
     await maybeAppendChangelogEntry(previousVersion, version);
+
+    // Re-derive the structured patch changes from the archived pages: the
+    // archive may have gained a page above, and champion/item ids may have
+    // moved with this refresh.
+    console.log("\n📜 Regenerating patch changes from the archive...");
+    await writePatchChanges();
   } catch (error) {
     console.error("\n❌ Error updating Data Dragon assets:");
     console.error(error);
