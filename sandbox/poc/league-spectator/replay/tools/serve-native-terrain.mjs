@@ -2551,7 +2551,24 @@ const animationScene =
   verifiedChampionModels === undefined
     ? scene
     : { ...scene, championModels: verifiedChampionModels };
-if (animationCatalogPath !== undefined) {
+if (animationCatalogPath !== undefined && decodeChampionModels) {
+  const { readCurrentChampionAnimationModelCatalog } =
+    await import("./research/recorded-champion-animation-resources.mjs");
+  const { championAnimationModelCatalog, routes } =
+    await readCurrentChampionAnimationModelCatalog(
+      animationCatalogPath,
+      animationCatalogDigest,
+      {
+        modelManifestPath: values["champion-models"],
+        modelManifestSha256: values["champion-catalog-sha256"],
+        identity,
+      },
+    );
+  assert.ok(scene.workerMotion, "Champion animations require a motion worker");
+  scene.workerMotion.championAnimationModelCatalog =
+    championAnimationModelCatalog;
+  championAnimationRoutes = routes;
+} else if (animationCatalogPath !== undefined) {
   const { readCurrentChampionAnimationCatalog } =
     await import("./research/recorded-champion-animation-resources.mjs");
   const { bindings, routes } = await readCurrentChampionAnimationCatalog(

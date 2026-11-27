@@ -3,6 +3,10 @@ import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/p
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
 import { createCurrentChampionAnimationCueAccumulator } from "./native-terrain-animation-cue-reader.mjs";
+import {
+  indexChampionAnimationActions,
+  selectChampionAnimations,
+} from "./native-terrain-animation-model-selector.mjs";
 import { createCurrentMap11AnnouncerCollector } from "./native-terrain-announcer-reader.mjs";
 import {
   createPreparedTerrainByteCodecs,
@@ -170,7 +174,7 @@ function finishLaneMinions(lane, modelIds) {
   return { laneMinionInstances, laneMinionCoverage: coverage };
 }
 
-function createChampionAnimationCollector(replay, binding, codecs, catalog) {
+function readPreparedChampionAnimationActors(binding, catalog) {
   const verified = new Set(binding.verified.map(({ context }) => context));
   if (
     !Array.isArray(catalog) ||
@@ -191,31 +195,15 @@ function createChampionAnimationCollector(replay, binding, codecs, catalog) {
       throw Error(
         "Champion animation catalog needs verified distinct actors and models.",
       );
-    const byName = new Map();
-    const { rig: actorRig, bindings: actorBindings } = actions[0];
-    for (const action of actions) {
-      const { name, durationSeconds, rig, clip, bindings } = action;
-      if (
-        typeof name !== "string" ||
-        name.length >= 256 ||
-        !/^[A-Za-z0-9_]+$/u.test(name) ||
-        byName.has(name) ||
-        !Number.isFinite(durationSeconds) ||
-        durationSeconds <= 0 ||
-        typeof rig !== "string" ||
-        !/^\/champion-animations\/[a-f0-9]{64}\.skl$/u.test(rig) ||
-        rig !== actorRig ||
-        typeof clip !== "string" ||
-        !/^\/champion-animations\/[a-f0-9]{64}\.clip$/u.test(clip) ||
-        typeof bindings !== "string" ||
-        !/^\/champion-animations\/[a-f0-9]{64}\.json$/u.test(bindings) ||
-        bindings !== actorBindings
-      )
-        throw Error("Invalid authored champion animation action.");
-      byName.set(name, { durationSeconds, rig, clip, bindings });
-    }
-    actors.set(participantId, { model, actions: byName });
+    actors.set(participantId, {
+      model,
+      actions: indexChampionAnimationActions(actions),
+    });
   }
+  return actors;
+}
+
+function createChampionAnimationCollector(replay, codecs, actors) {
   const accumulator = createCurrentChampionAnimationCueAccumulator(
     replay,
     recoverTerrainByteSubstitution(codecs),
@@ -281,6 +269,7 @@ async function prepareMotion({
   decodeChampionInventory,
   decodeChampionExperience,
   championAnimationCatalog,
+  championAnimationModelCatalog,
   championModelCatalog,
   announcerEvents,
   decodeTeamVision,
@@ -408,11 +397,20 @@ async function prepareMotion({
       "Replay-derived champion experience requires the reviewed current build.",
     );
   if (
-    championAnimationCatalog !== undefined &&
+    (championAnimationCatalog !== undefined ||
+      championAnimationModelCatalog !== undefined) &&
     (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
   )
     throw Error(
       "Replay-derived champion animations require the reviewed current build.",
+    );
+  if (
+    championAnimationModelCatalog !== undefined &&
+    (championAnimationCatalog !== undefined ||
+      championModelCatalog === undefined)
+  )
+    throw Error(
+      "Build-scoped champion animations require only the archive model catalog.",
     );
   if (
     announcerEvents !== undefined &&
@@ -479,15 +477,22 @@ async function prepareMotion({
     decodeChampionInventory === true
       ? createRecordedInventoryCollector(replay, identity, prepared, codecs)
       : undefined;
-  const animation =
-    championAnimationCatalog === undefined
+  const selectedAnimations =
+    championAnimationModelCatalog === undefined
       ? undefined
-      : createChampionAnimationCollector(
+      : selectChampionAnimations(
           replay,
-          binding,
-          codecs,
-          championAnimationCatalog,
+          championAnimationModelCatalog,
+          championModels,
         );
+  const animationActors =
+    championAnimationCatalog === undefined
+      ? selectedAnimations?.actors
+      : readPreparedChampionAnimationActors(binding, championAnimationCatalog);
+  const animation =
+    animationActors === undefined
+      ? undefined
+      : createChampionAnimationCollector(replay, codecs, animationActors);
   const announcer =
     announcerMapping === undefined
       ? undefined
@@ -658,6 +663,9 @@ async function prepareMotion({
     ...(animation === undefined
       ? {}
       : { championAnimationCues: animation.finish() }),
+    ...(selectedAnimations === undefined
+      ? {}
+      : { championAnimationOmissions: selectedAnimations.omissions }),
     ...(laneResult ?? {}),
     ...(neutralResult ?? {}),
     ...(teamVision === undefined

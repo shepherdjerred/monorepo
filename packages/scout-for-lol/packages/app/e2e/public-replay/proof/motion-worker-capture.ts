@@ -10,6 +10,7 @@ export async function observeDirectChampionStatsWorker(page: Page) {
       "decodeChampionInventory",
       "decodeChampionExperience",
       "championAnimationCatalog",
+      "championAnimationModelCatalog",
       "championModelCatalog",
       "announcerEvents",
       "decodeTeamVision",
@@ -61,6 +62,10 @@ export async function observeDirectChampionStatsWorker(page: Page) {
                       "championExperienceTracks",
                     ),
                     animationCues: property(response, "championAnimationCues"),
+                    championAnimationOmissions: property(
+                      response,
+                      "championAnimationOmissions",
+                    ),
                     championModels: property(response, "championModels"),
                     announcerCues: property(response, "announcerCues"),
                     teamVision: property(response, "teamVision"),

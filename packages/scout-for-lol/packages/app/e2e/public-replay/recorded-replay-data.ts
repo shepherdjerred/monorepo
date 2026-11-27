@@ -119,6 +119,20 @@ const SceneIdentitySchema = z.object({
         .array(z.tuple([z.string(), z.number().int().nonnegative()]))
         .optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      championAnimationModelCatalog: z
+        .strictObject({
+          build: z.string(),
+          protocol: z.string(),
+          models: z
+            .array(
+              z.strictObject({
+                model: z.string(),
+                actions: z.array(z.unknown()).nonempty(),
+              }),
+            )
+            .nonempty(),
+        })
+        .optional(),
       championModelCatalog: z.object({}).optional(),
       terrainControllerGraph: z.object({}).optional(),
       laneMinionCatalog: z
@@ -189,27 +203,41 @@ async function readUploadedReplay(
   return uploaded;
 }
 
-function championCapabilities({
+function championAnimationCapabilities({
   workerMotion,
-  championHealthTracks,
-  championResourceTracks,
-  championInventory,
-  championInventoryItems,
-  championExperience,
-  championExperienceThresholds,
   championAnimationCues,
 }: z.infer<typeof SceneIdentitySchema>) {
+  const directChampionAnimationModels =
+    workerMotion?.championAnimationModelCatalog !== undefined;
+  const preparedAnimationCatalog =
+    workerMotion?.championAnimationCatalog !== undefined;
+  if (directChampionAnimationModels && preparedAnimationCatalog)
+    throw new Error("The recorded scene has two champion animation catalogs.");
+  const directChampionAnimation =
+    directChampionAnimationModels || preparedAnimationCatalog;
+  if (directChampionAnimation && championAnimationCues !== undefined)
+    throw new Error(
+      "Direct worker animation requires a scene without baked cues.",
+    );
+  return { directChampionAnimation, directChampionAnimationModels };
+}
+
+function championCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
+  const {
+    workerMotion,
+    championHealthTracks,
+    championResourceTracks,
+    championInventory,
+    championInventoryItems,
+    championExperience,
+    championExperienceThresholds,
+  } = scene;
   const directChampionStats = workerMotion?.decodeChampionStats === true;
   const directChampionInventory =
     workerMotion?.decodeChampionInventory === true;
   const directChampionExperience =
     workerMotion?.decodeChampionExperience === true;
-  const directChampionAnimation =
-    workerMotion?.championAnimationCatalog !== undefined;
-  if (directChampionAnimation && championAnimationCues !== undefined)
-    throw new Error(
-      "Direct worker animation requires a scene without baked cues.",
-    );
+  const animation = championAnimationCapabilities(scene);
   if (
     directChampionExperience
       ? championExperience !== undefined ||
@@ -237,9 +265,9 @@ function championCapabilities({
       directChampionStats,
       directChampionInventory,
       directChampionExperience,
-      directChampionAnimation,
+      animation.directChampionAnimation,
     ].includes(true),
-    directChampionAnimation,
+    ...animation,
     directChampionStats,
     directChampionExperience,
     championExperience:

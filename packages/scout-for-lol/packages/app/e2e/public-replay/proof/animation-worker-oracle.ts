@@ -40,6 +40,56 @@ export const workerAnimationCues = z.array(
   }),
 );
 
+export const AnimationOmissionsSchema = z.strictObject({
+  missingModel: z.array(z.number().int().positive()),
+});
+
+export async function verifyRecordedAnimationResponse(
+  actual: {
+    animationCues?: z.infer<typeof workerAnimationCues> | undefined;
+    championAnimationOmissions?:
+      z.infer<typeof AnimationOmissionsSchema> | undefined;
+  },
+  {
+    descriptor,
+    directChampionAnimation,
+    directChampionAnimationModels,
+    championAnimationCueCount,
+  }: {
+    descriptor: { sha256: string };
+    directChampionAnimation: boolean;
+    directChampionAnimationModels: boolean;
+    championAnimationCueCount: number;
+  },
+  oracleRoot: string,
+) {
+  // The pinned legacy cue oracle covers the other five actors on this replay.
+  expect(actual.championAnimationOmissions).toEqual(
+    directChampionAnimationModels
+      ? {
+          missingModel: [
+            1_073_742_161, 1_073_742_162, 1_073_742_165, 1_073_742_166,
+            1_073_742_170,
+          ],
+        }
+      : undefined,
+  );
+  if (directChampionAnimation) {
+    if (actual.animationCues === undefined)
+      throw new Error(
+        "Direct worker response is missing champion animation cues.",
+      );
+    await verifyDirectAnimationCues(
+      oracleRoot,
+      descriptor.sha256,
+      actual.animationCues,
+    );
+    return actual.animationCues.length;
+  }
+  expect(actual.animationCues).toBeUndefined();
+  return championAnimationCueCount;
+}
+
 export async function verifyDirectAnimationCues(
   oracleRoot: string,
   replaySha256: string,

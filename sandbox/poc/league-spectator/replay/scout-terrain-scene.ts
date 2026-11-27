@@ -12,6 +12,7 @@ import {
 import {
   ChampionAnimationCatalogSchema,
   ChampionAnimationCuesSchema,
+  ChampionAnimationModelCatalogSchema,
   ChampionAnimationWorkerCuesSchema,
   loadRecordedChampionAnimations,
   matchesRenderedAnimationCatalog,
@@ -502,6 +503,8 @@ const TerrainSceneFields = z.object({
       decodeChampionInventory: z.literal(true).optional(),
       decodeChampionExperience: z.literal(true).optional(),
       championAnimationCatalog: ChampionAnimationCatalogSchema.optional(),
+      championAnimationModelCatalog:
+        ChampionAnimationModelCatalogSchema.optional(),
       championModelCatalog: ChampionModelCatalogSchema.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
@@ -627,6 +630,32 @@ export const SceneSchema = TerrainSceneFields.refine(
       path: ["workerMotion", "championModelCatalog"],
       message:
         "Replay-derived champion models require an exact current archive catalog and worker motion.",
+    },
+  )
+  .refine(
+    (scene) => {
+      const worker = scene.workerMotion;
+      const catalog = worker?.championAnimationModelCatalog;
+      if (catalog === undefined) return true;
+      if (
+        worker?.championModelCatalog === undefined ||
+        worker.championAnimationCatalog !== undefined ||
+        scene.championAnimationCues !== undefined ||
+        scene.identity.build !== catalog.build ||
+        scene.identity.protocol !== catalog.protocol
+      )
+        return false;
+      const models = new Set(
+        Object.values(worker.championModelCatalog.assets).map(
+          ({ model }) => `/champion-models/${model.sha256}.glb`,
+        ),
+      );
+      return catalog.models.every(({ model }) => models.has(model));
+    },
+    {
+      path: ["workerMotion", "championAnimationModelCatalog"],
+      message:
+        "Build-scoped animation requires the exact archive model catalog and no prepared cues or bindings.",
     },
   )
   .refine(
@@ -903,6 +932,11 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     championExperienceTracks:
       createChampionExperienceTracksSchema(z).optional(),
     championAnimationCues: ChampionAnimationWorkerCuesSchema.optional(),
+    championAnimationOmissions: z
+      .strictObject({
+        missingModel: z.array(z.number().int().positive()).max(10),
+      })
+      .optional(),
     announcerCues: AnnouncerCuesSchema.optional(),
     teamVision: TeamVisionSchema.optional(),
     terrainVisibility: TerrainVisibilitySchema.optional(),
@@ -1128,9 +1162,13 @@ async function loadWorkerMotion(
         "Replay motion worker returned unexpected champion experience coverage.",
       );
     const animationCatalog = workerMotion.championAnimationCatalog;
+    const animationModelCatalog = workerMotion.championAnimationModelCatalog;
     if (
       (result.championAnimationCues !== undefined) !==
-      (animationCatalog !== undefined)
+        (animationCatalog !== undefined ||
+          animationModelCatalog !== undefined) ||
+      (result.championAnimationOmissions !== undefined) !==
+        (animationModelCatalog !== undefined)
     )
       throw new Error(
         "Replay motion worker returned unexpected champion animation coverage.",
@@ -1143,6 +1181,36 @@ async function loadWorkerMotion(
         result.championAnimationCues,
         animationCatalog,
       );
+    if (
+      animationModelCatalog !== undefined &&
+      result.championModels !== undefined &&
+      result.championAnimationCues !== undefined &&
+      result.championAnimationOmissions !== undefined
+    ) {
+      const models = new Map(
+        animationModelCatalog.models.map((entry) => [entry.model, entry]),
+      );
+      const missingModel: number[] = [];
+      const selected = result.championModels.bindings.flatMap(
+        ({ participantId, url }) => {
+          const entry = models.get(url);
+          if (entry !== undefined) return [{ ...entry, participantId }];
+          missingModel.push(participantId);
+          return [];
+        },
+      );
+      const omissions = result.championAnimationOmissions.missingModel;
+      if (
+        omissions.length !== missingModel.length ||
+        missingModel.some(
+          (participantId, index) => participantId !== omissions[index],
+        )
+      )
+        throw Error(
+          "Replay motion worker returned inconsistent animation omissions.",
+        );
+      validateWorkerAnimationCues(result.championAnimationCues, selected);
+    }
     const announcerEvents = workerMotion.announcerEvents;
     if (
       (result.announcerCues !== undefined) !==

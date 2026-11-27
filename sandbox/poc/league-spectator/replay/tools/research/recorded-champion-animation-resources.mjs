@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { mapBinHash } from "../map-scene-assets.mjs";
+import { openChampionModelCatalog } from "./native-terrain-champion-model-catalog.mjs";
 import {
   currentTerrainPositionBuild,
   terrainPositionProtocol,
@@ -261,22 +262,22 @@ export function createCurrentChampionAnimationCatalog(
   };
 }
 
-/** Bind reusable authored clips to admitted exact model digests. */
-export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
+async function readAuthoredAnimationCatalog(path, pin, identity) {
   const proof = await readPinnedAnimationJson(path, pin);
   assert.equal(proof.schema, 1);
   assert.equal(proof.kind, "current-champion-animation-catalog");
   assert.equal(proof.build, currentTerrainPositionBuild);
   assert.equal(proof.protocol, terrainPositionProtocol);
-  assert.equal(proof.build, scene.identity.build);
-  assert.equal(proof.protocol, scene.identity.protocol);
+  assert.equal(proof.build, identity.build);
+  assert.equal(proof.protocol, identity.protocol);
   assert.ok(Array.isArray(proof.entries) && proof.entries.length > 0);
+  return proof;
+}
+
+async function loadAuthoredAnimationModels(path, entries, requireModel) {
   const { routes, loadResources } = createAnimationAssetLoader(path);
   const models = new Map();
-  const admitted = new Set(
-    scene.championModels?.bindings.map(({ url }) => url),
-  );
-  for (const entry of proof.entries) {
+  for (const entry of entries) {
     const {
       modelSha256,
       name,
@@ -291,7 +292,7 @@ export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
     assert.match(name, /^[A-Za-z0-9_]+$/u);
     assert.equal(graphKey, mapBinHash(name));
     const model = `/champion-models/${modelSha256}.glb`;
-    if (!admitted.has(model)) continue;
+    if (!requireModel(model, entry)) continue;
     const resources = await loadResources(entry);
     const actor = models.get(model) ?? {
       actions: new Map(),
@@ -315,6 +316,20 @@ export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
     actor.actions.set(name, { name, durationSeconds, ...resources });
     models.set(model, actor);
   }
+  return { models, routes };
+}
+
+/** Bind reusable authored clips to admitted exact model digests. */
+export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
+  const proof = await readAuthoredAnimationCatalog(path, pin, scene.identity);
+  const admitted = new Set(
+    scene.championModels?.bindings.map(({ url }) => url),
+  );
+  const { models, routes } = await loadAuthoredAnimationModels(
+    path,
+    proof.entries,
+    (model) => admitted.has(model),
+  );
   const bindings = [];
   for (const { participantId, url: model } of scene.championModels?.bindings ??
     []) {
@@ -327,4 +342,84 @@ export async function readCurrentChampionAnimationCatalog(path, pin, scene) {
       });
   }
   return { bindings, routes };
+}
+
+/** Authenticate model, rig, and clip bindings before projecting an independent index. */
+export async function readCurrentChampionAnimationModelCatalog(
+  path,
+  pin,
+  { modelManifestPath, modelManifestSha256, identity },
+) {
+  const [proof, { catalog }] = await Promise.all([
+    readAuthoredAnimationCatalog(path, pin, identity),
+    openChampionModelCatalog(
+      modelManifestPath,
+      modelManifestSha256,
+      identity,
+      undefined,
+      { requireArchive: true },
+    ),
+  ]);
+  assert.deepEqual(Object.keys(proof).sort(), [
+    "build",
+    "entries",
+    "kind",
+    "protocol",
+    "schema",
+  ]);
+  const modelsByDigest = new Map();
+  for (const asset of Object.values(catalog.assets)) {
+    const digest = asset.model.sha256;
+    const binding = [
+      asset.inputs?.skeleton?.sha256,
+      asset.jointBindings?.sha256,
+    ];
+    if (modelsByDigest.has(digest))
+      assert.deepEqual(
+        modelsByDigest.get(digest),
+        binding,
+        "Same model digest has inconsistent rig provenance",
+      );
+    modelsByDigest.set(digest, binding);
+  }
+  const { models, routes } = await loadAuthoredAnimationModels(
+    path,
+    proof.entries,
+    (_model, entry) => {
+      assert.deepEqual(Object.keys(entry).sort(), [
+        "animationSha256",
+        "bindings",
+        "clip",
+        "durationSeconds",
+        "graphKey",
+        "graphSha256",
+        "modelSha256",
+        "name",
+        "rig",
+      ]);
+      const binding = modelsByDigest.get(entry.modelSha256);
+      assert.ok(
+        binding !== undefined,
+        "Animation model is absent from the pinned archive catalog",
+      );
+      assert.deepEqual(
+        [entry.rig.sha256, entry.bindings.sha256],
+        binding,
+        "Animation rig or joint bindings disagree with the pinned model",
+      );
+      return true;
+    },
+  );
+  const { build, protocol } = proof;
+  return {
+    championAnimationModelCatalog: {
+      build,
+      protocol,
+      models: [...models].map(([model, { actions }]) => ({
+        model,
+        actions: [...actions.values()],
+      })),
+    },
+    routes,
+  };
 }

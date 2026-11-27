@@ -2,7 +2,8 @@ import { expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { z } from "zod";
 import {
-  verifyDirectAnimationCues,
+  AnimationOmissionsSchema,
+  verifyRecordedAnimationResponse,
   workerAnimationCues,
 } from "./animation-worker-oracle.ts";
 import { RecordedTerrainVisibilitySchema } from "./terrain-visibility-schema.ts";
@@ -85,6 +86,7 @@ const reply = z.object({
   inventoryTracks: inventory.optional(),
   experienceTracks: experience.optional(),
   animationCues: workerAnimationCues.optional(),
+  championAnimationOmissions: AnimationOmissionsSchema.optional(),
   teamVision: teamVision.optional(),
   terrainVisibility: RecordedTerrainVisibilitySchema.optional(),
   laneMinionInstances: z.array(z.unknown()).optional(),
@@ -174,6 +176,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory: boolean;
     directChampionExperience: boolean;
     directChampionAnimation: boolean;
+    directChampionAnimationModels: boolean;
     directChampionModels: boolean;
     directReplayObservations: boolean;
     championAnimationCueCount: number;
@@ -200,6 +203,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory,
     directChampionExperience,
     directChampionAnimation,
+    directChampionAnimationModels,
   } = fixture;
   const oracleRoot = Bun.env["SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY"];
   if (oracleRoot === undefined || oracleRoot === "")
@@ -210,10 +214,13 @@ export async function verifyDirectChampionStatsWorker(
   expect(actual.decodeChampionStats).toBe(directChampionStats);
   expect(actual.decodeChampionInventory).toBe(directChampionInventory);
   expect(actual.decodeChampionExperience).toBe(directChampionExperience);
-  expect(actual.hasChampionAnimationCatalog).toBe(directChampionAnimation);
+  const legacyAnimationCatalog =
+    directChampionAnimation && !directChampionAnimationModels;
+  expect(actual.hasChampionAnimationCatalog).toBe(legacyAnimationCatalog);
   const optionalKeys = Object.entries({
     announcerEvents: fixture.announcerEvents !== undefined,
-    championAnimationCatalog: directChampionAnimation,
+    championAnimationCatalog: legacyAnimationCatalog,
+    championAnimationModelCatalog: directChampionAnimationModels,
     championModelCatalog: fixture.directChampionModels,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
@@ -326,20 +333,12 @@ export async function verifyDirectChampionStatsWorker(
   } else {
     expect(actual.experienceTracks).toBeUndefined();
   }
-  if (directChampionAnimation) {
-    if (actual.animationCues === undefined)
-      throw new Error(
-        "Direct worker response is missing champion animation cues.",
-      );
-    await verifyDirectAnimationCues(
-      oracleRoot,
-      descriptor.sha256,
-      actual.animationCues,
-    );
-    return { cueCount: actual.animationCues.length, terrainVisibility };
-  }
-  expect(actual.animationCues).toBeUndefined();
-  return { cueCount: fixture.championAnimationCueCount, terrainVisibility };
+  const cueCount = await verifyRecordedAnimationResponse(
+    actual,
+    fixture,
+    oracleRoot,
+  );
+  return { cueCount, terrainVisibility };
 }
 
 async function verifyDirectTerrainVisibility(

@@ -620,8 +620,11 @@ the track manifest and digest with `--champion-inventory` and
 To play verified champion animation requests on 16.23.841.8428, pass
 `--champion-animation-catalog` and `--champion-animation-catalog-sha256` to the
 private package builder. The catalog binds authored clips to the exact model,
-rig, and joint order. The browser worker reads the request windows from the
-original ROFL during its motion scan. Prepared playback uses
+rig, and joint order. With `--champion-models-from-replay`, the package keeps
+build-scoped action entries by model digest. The browser worker selects those
+entries using the recorded skins and reads the request windows during the
+same motion scan. It reports participants without an authored model entry.
+Prepared playback uses
 `--champion-animation-cues` and `--champion-animation-cues-sha256` with the
 [recorded cue manifest](tools/research/README.md#recorded-champion-animation-cues).
 Native animation blending and preemption remain unverified.

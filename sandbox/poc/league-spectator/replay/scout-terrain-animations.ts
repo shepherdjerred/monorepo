@@ -27,24 +27,43 @@ export const ChampionAnimationWorkerCuesSchema = z.array(
 export const ChampionAnimationCuesSchema =
   ChampionAnimationWorkerCuesSchema.nonempty();
 
+const animationModel = z.strictObject({
+  model: championModel,
+  actions: z
+    .array(
+      z.strictObject({
+        name: z.string().regex(/^[A-Za-z0-9_]+$/),
+        durationSeconds: z.number().positive(),
+        ...clipResources,
+      }),
+    )
+    .nonempty(),
+});
+
 export const ChampionAnimationCatalogSchema = z
-  .array(
-    z.strictObject({
-      participantId: z.number().int().positive(),
-      model: championModel,
-      actions: z
-        .array(
-          z.strictObject({
-            name: z.string().regex(/^[A-Za-z0-9_]+$/),
-            durationSeconds: z.number().positive(),
-            ...clipResources,
-          }),
-        )
-        .nonempty(),
-    }),
-  )
+  .array(animationModel.extend({ participantId: z.number().int().positive() }))
   .min(1)
   .max(10);
+
+export const ChampionAnimationModelCatalogSchema = z
+  .strictObject({
+    build: z.string(),
+    protocol: z.string(),
+    models: z.array(animationModel).nonempty(),
+  })
+  .refine(
+    ({ models }) =>
+      new Set(models.map(({ model }) => model)).size === models.length &&
+      models.every(
+        ({ actions }) =>
+          new Set(actions.map(({ name }) => name)).size === actions.length &&
+          actions.every(
+            ({ rig, bindings }) =>
+              rig === actions[0].rig && bindings === actions[0].bindings,
+          ),
+      ),
+    "Expected unique animation models and actions from one rig per model",
+  );
 
 type AnimationCatalog = z.infer<typeof ChampionAnimationCatalogSchema>;
 
