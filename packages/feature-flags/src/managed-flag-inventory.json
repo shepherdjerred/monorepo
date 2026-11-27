@@ -4849,6 +4849,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "alert-dashboard-ci-jobs-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Show Woodpecker queue depth, jobs, and CI finish estimates on the Hub CI service page.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "mail-relay-enabled",
       "owner": "mail",
       "namespace": "mail",

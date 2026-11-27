@@ -419,6 +419,22 @@ test("billed LLM cost remains paused until the candidate receives all Workflow t
 });
 
 describe("ops overview schedules", () => {
+  test.each([
+    ["ops-ci-dashboard", "runOpsCiDashboard", "1 minute"],
+    ["ops-ci-dashboard-timings", "runOpsCiDashboardTimings", "15 minutes"],
+  ] as const)(
+    "%s has an independent cadence and skips overlaps",
+    (id, workflowType, every) => {
+      expect(findScheduleById(id)).toMatchObject({
+        workflowType,
+        args: [],
+        timing: { kind: "interval", every },
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        overlap: ScheduleOverlapPolicy.SKIP,
+      });
+    },
+  );
+
   test("the snapshot runs every five minutes, skipping overlaps and stale catchup", () => {
     expect(findScheduleById("ops-snapshot")).toMatchObject({
       workflowType: "runOpsSnapshot",
@@ -588,6 +604,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // publish Activity. No workflow-level sleeps; Activity timeouts and retry
   // budgets fit inside the five-minute execution timeout.
   "runOpsSnapshot",
+  "runOpsCiDashboard",
+  "runOpsCiDashboardTimings",
   // Awaits a single triggerOpsDigest Activity; the dashboard renders and
   // sends. No workflow-level sleeps.
   "runOpsDigest",
