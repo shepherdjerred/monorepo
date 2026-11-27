@@ -14,6 +14,8 @@ struct SettingsView: View {
   @State private var apiDrafts: [APIPlatformID: String] = [:]
   @State private var apiHasCredential: Set<APIPlatformID> = []
   @State private var apiMessages: [APIPlatformID: String] = [:]
+  @State private var confirmsMuseRecovery = false
+  @State private var museRecoveryMessage: String?
 
   var body: some View {
     Form {
@@ -106,6 +108,28 @@ struct SettingsView: View {
         Text("5 minutes").tag(TimeInterval(300))
         Text("15 minutes").tag(TimeInterval(900))
         Text("30 minutes").tag(TimeInterval(1_800))
+      }
+      Button("Refresh Muse sign-in…") { confirmsMuseRecovery = true }
+        .disabled(model.isRecoveringMuse || !model.settings.enabledProviders.contains(.muse))
+        .confirmationDialog(
+          "Refresh Muse sign-in?",
+          isPresented: $confirmsMuseRecovery,
+          titleVisibility: .visible
+        ) {
+          Button("Refresh Muse") {
+            museRecoveryMessage = "Checking Muse sign-in…"
+            Task {
+              museRecoveryMessage = await model.recoverMuseSignIn() ?? "Muse quota refreshed."
+            }
+          }
+        } message: {
+          Text(
+            "If Muse reports a sign-in problem, Brim will send one short prompt "
+              + "using your subscription."
+          )
+        }
+      if let museRecoveryMessage {
+        Text(museRecoveryMessage).font(.caption).foregroundStyle(.secondary)
       }
     }
   }

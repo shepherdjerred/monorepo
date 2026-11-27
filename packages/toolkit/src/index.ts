@@ -53,6 +53,7 @@ Credential helpers (no secrets on disk):
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
   forum <COMMAND>             Agent notices, discussions, and replies
+  agent <COMMAND>             Coding-agent presence and task labels
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
@@ -313,6 +314,11 @@ async function dispatchBuiltinCommand(
     case "brim": {
       const { handleBrimCommand } = await import("./handlers/brim.ts");
       await handleBrimCommand(args.slice(1));
+      return;
+    }
+    case "agent": {
+      const { handleAgentCommand } = await import("./commands/agent.ts");
+      await handleAgentCommand(args.slice(1));
       return;
     }
     default:

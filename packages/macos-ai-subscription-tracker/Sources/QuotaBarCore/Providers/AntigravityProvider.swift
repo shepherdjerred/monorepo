@@ -25,7 +25,7 @@ public struct AntigravityProvider: UsageProvider {
     )
     guard result.terminationStatus == 0 else {
       _ = await planResult
-      throw QuotaError.credentialsMissing(id)
+      throw QuotaError.providerCommandFailed(id)
     }
     let usage = try Self.parse(data: result.stdout)
     return PlanOutcome(await planResult, parse: Self.parsePlan).applied(to: usage)

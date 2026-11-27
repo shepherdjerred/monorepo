@@ -18,14 +18,57 @@ public struct MuseProvider: UsageProvider {
 
   public func fetch() async throws -> UsageSnapshot {
     let executableURL = try executableURL ?? Self.locateExecutable()
+    return try await fetchUsage(executableURL: executableURL)
+  }
+
+  private func fetchUsage(executableURL: URL) async throws -> UsageSnapshot {
     let result = try await commandRunner.run(
       executableURL: executableURL,
       arguments: ["usage", "--json"]
     )
     guard result.terminationStatus == 0 else {
-      throw QuotaError.credentialsMissing(id)
+      if let response = try? JSONDecoder().decode(MuseUsageResponse.self, from: result.stdout),
+        response.allowance == nil, Self.signInReasons.contains(response.reason ?? "")
+      {
+        throw QuotaError.credentialsExpired(id)
+      }
+      let diagnosis = String(bytes: result.stderr, encoding: .utf8)
+      if diagnosis?.contains("not logged in: run `muse login` first") == true {
+        throw QuotaError.credentialsExpired(id)
+      }
+      throw QuotaError.providerCommandFailed(id)
     }
     return try Self.parse(data: result.stdout)
+  }
+
+  private static let signInReasons: Set<String> = [
+    "not_signed_in", "auth_expired", "auth_refresh_failed",
+  ]
+
+  func recoverSignIn() async throws -> UsageSnapshot {
+    let executableURL = try executableURL ?? Self.locateExecutable()
+    do {
+      return try await fetchUsage(executableURL: executableURL)
+    } catch QuotaError.credentialsExpired(.muse) {
+      let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
+        "brim-muse-\(UUID().uuidString)", isDirectory: true)
+      try FileManager.default.createDirectory(
+        at: directory, withIntermediateDirectories: false,
+        attributes: [.posixPermissions: 0o700])
+      defer { try? FileManager.default.removeItem(at: directory) }
+      let result = try await commandRunner.run(
+        executableURL: executableURL,
+        arguments: [
+          "exec", "--provider", "meta", "--preset", "empty", "--max-model-steps", "1",
+          "--effort", "minimal", "--worktree", "off", "--disable-shell", "--disable-write",
+          "--disable-web-tools", "--disable-reminders", "--disable-request-user-input",
+          "--no-foreign-personal-context", "--no-session-log", "--", "Reply OK.",
+        ],
+        workingDirectory: directory
+      )
+      guard result.terminationStatus == 0 else { throw QuotaError.credentialsExpired(id) }
+      return try await fetchUsage(executableURL: executableURL)
+    }
   }
 
   public static func locateExecutable(
@@ -84,6 +127,9 @@ public struct MuseProvider: UsageProvider {
           notes: ["Uses the signed-in Muse CLI without reading or storing its token."],
           sourceTimestamp: now
         )
+      }
+      if signInReasons.contains(response.reason ?? "") {
+        throw QuotaError.credentialsExpired(.muse)
       }
       throw QuotaError.credentialsMissing(.muse)
     }
