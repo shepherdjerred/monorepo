@@ -444,8 +444,11 @@ For current-build inhibitors, use `--authored-inhibitor-catalog` and
 `--authored-inhibitor-catalog-sha256` in place of the prepared inhibitor
 manifest. The builder matches the authored registration order to the replay's
 turret anchors and checks all indexed inhibitor states against the original
-loss and return packets. The standing model hides on loss and returns at the
-recorded time when seeking or playing forward.
+loss and return packets. Add `--inhibitors-from-replay` to resolve the six
+opening inhibitors and verify their lifetimes in the browser's existing
+motion scan. The package supplies the authored order and model bindings.
+The standing model hides on loss and returns at the recorded time when
+seeking or playing forward.
 Use `--authored-nexus-catalog` and `--authored-nexus-catalog-sha256` with the
 same placement receipt to bind both Nexus models and verify the terminal loss.
 The terminal loss supplies the Nexus cutoff. The transition animation remains
@@ -530,6 +533,13 @@ bun sandbox/poc/league-spectator/replay/tools/prove-paired-scout-replay.mjs $man
 ```
 
 Use the directory containing the pinned replay checks as `$oracleDirectory`.
+For `--inhibitors-from-replay`, include `scout-8428-v39-inhibitor-oracle.json`.
+Create it from the prepared `.8428` scene with SHA-256
+`79acadaddb858b3b88fd4c550e62c1907f64243e427f45c35f3dec7f055a07dd`.
+Copy `identity.replaySha256` to `replaySha256`, `inhibitorModels.instances` to
+`inhibitorModels.instances`, and `inhibitorLosses` to `inhibitorLosses`, in that
+order. Use UTF-8 JSON with two-space indentation and a trailing LF. The test
+checks the digest and compares the full worker response before checking draws.
 The harness also tests announcer playback when the package declares the
 announcer preview. It releases the local backend after the browser test and
 prints the evidence directory under `.cache`.

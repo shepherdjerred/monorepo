@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { recordedInhibitorReturnWitnesses } from "./recorded-inhibitor-assertions.ts";
 import { readRecordedReplay, replayPath } from "./recorded-replay-data.ts";
 import {
   observeRecordedReplayRequests,
@@ -138,23 +139,26 @@ async function preparePlaybackSurface(page: Page) {
   return { play, surface };
 }
 
+function reviewedInhibitorReturnWindows(
+  fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
+) {
+  const returnSeconds = fixture.directInhibitors
+    ? recordedInhibitorReturnWitnesses.map(({ returnedAt }) => returnedAt)
+    : (fixture.inhibitorInstances ?? [])
+        .flatMap(({ inactiveRanges }) =>
+          (inactiveRanges ?? []).map(([, end]) => end),
+        )
+        .filter((end) => end !== null);
+  return returnSeconds.map((end) => ({
+    label: `inhibitor return at ${Math.floor(end).toString()}s`,
+    timeSeconds: Math.floor(end) - 2,
+  }));
+}
+
 function reviewedSamplingWindows(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
 ): readonly SamplingWindow[] {
   if (fixture.descriptor.sha256 === reviewedCurrentRift) {
-    const returns =
-      fixture.inhibitorInstances?.flatMap(({ inactiveRanges }) =>
-        (inactiveRanges ?? []).flatMap(([, end]) =>
-          end === null
-            ? []
-            : [
-                {
-                  label: `inhibitor return at ${Math.floor(end).toString()}s`,
-                  timeSeconds: Math.floor(end) - 2,
-                },
-              ],
-        ),
-      ) ?? [];
     return [
       { label: "opening", timeSeconds: 15 },
       { label: "first lane wave", timeSeconds: 36 },
@@ -191,7 +195,7 @@ function reviewedSamplingWindows(
           ]
         : []),
       { label: "late super minions", timeSeconds: 2076 },
-      ...returns,
+      ...reviewedInhibitorReturnWindows(fixture),
     ];
   }
   if (fixture.descriptor.sha256 !== reviewedLongReplay)

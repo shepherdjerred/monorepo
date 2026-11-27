@@ -96,6 +96,7 @@ const { positionals, values } = parseArgs({
     "inhibitor-models-sha256": { type: "string" },
     "authored-inhibitor-catalog": { type: "string" },
     "authored-inhibitor-catalog-sha256": { type: "string" },
+    "inhibitors-from-replay": { type: "boolean" },
     "world-unit-models": { type: "string" },
     "world-unit-models-sha256": { type: "string" },
     "neutral-unit-models": { type: "string" },
@@ -228,6 +229,7 @@ const announcerDirectory = values["announcer-preview"];
 const announcerCatalogDirectory = values["announcer-catalog"];
 const inhibitorCatalogPath = values["authored-inhibitor-catalog"];
 const inhibitorCatalogDigest = values["authored-inhibitor-catalog-sha256"];
+const decodeInhibitors = values["inhibitors-from-replay"] === true;
 const nexusCatalogPath = values["authored-nexus-catalog"];
 const nexusCatalogDigest = values["authored-nexus-catalog-sha256"];
 assert.equal(
@@ -253,6 +255,13 @@ assert.ok(
       values["turret-placements"] !== undefined &&
       values["inhibitor-models"] === undefined),
   "Authored inhibitor catalogs require a private package and turret placements without prepared inhibitor models",
+);
+assert.ok(
+  !decodeInhibitors ||
+    (inhibitorCatalogPath !== undefined &&
+      values["worker-decompressor"] !== undefined &&
+      values["position-decoder"] !== undefined),
+  "Replay-derived inhibitors require a pinned authored catalog and motion worker",
 );
 const championStatInputs = [
   { kind: "health", field: "championHealthTracks" },
@@ -1758,6 +1767,7 @@ if (decodeChampionModels) {
 }
 let structureModelRoutes;
 let inhibitorModelRoutes;
+let inhibitorCatalog;
 let placementSha;
 let nexus;
 if (values["turret-placements"] !== undefined) {
@@ -1828,7 +1838,28 @@ if (values["turret-placements"] !== undefined) {
     structureModelRoutes = structures.routes;
   }
   let inhibitors;
-  if (inhibitorCatalogPath !== undefined) {
+  if (decodeInhibitors) {
+    const { projectCurrentInhibitorCatalog } =
+      await import("./research/native-terrain-inhibitor-catalog-author.mjs");
+    const catalog = await readPinnedWorldUnitManifest(
+      inhibitorCatalogPath,
+      inhibitorCatalogDigest,
+    );
+    assert.equal(catalog.placementReceiptSha256, placementSha);
+    const { bindings, assetIds, routes } = await loadWorldModelBindings(
+      inhibitorCatalogPath,
+      catalog.assets,
+      "inhibitor-models",
+      110,
+    );
+    inhibitorCatalog = projectCurrentInhibitorCatalog(
+      catalog,
+      assetIds,
+      placementReceipt,
+    );
+    scene.inhibitorModelBindings = bindings;
+    inhibitorModelRoutes = routes;
+  } else if (inhibitorCatalogPath !== undefined) {
     const [
       { bindNativeTerrainInhibitorCatalog },
       { readCurrentInhibitorPacketState },
@@ -1976,6 +2007,7 @@ if (decoderBytes !== undefined) {
       ...(decodeChampionInventory ? { decodeChampionInventory: true } : {}),
       ...(decodeChampionExperience ? { decodeChampionExperience: true } : {}),
       ...(championModelCatalog === undefined ? {} : { championModelCatalog }),
+      ...(inhibitorCatalog === undefined ? {} : { inhibitorCatalog }),
     };
   } else {
     const [
@@ -2529,22 +2561,49 @@ if (terrainControllerMaterialsPath !== undefined) {
     missingReplacementMeshControllerIds,
   };
 }
-if (decodeTeamVision) {
-  assert.ok(
-    currentBuild && scene.workerMotion && replayCodecs,
-    "Replay-derived team vision requires the current motion worker",
-  );
-  const { readCurrentRecordedTeamVision } =
-    await import("./research/recorded-team-vision.mjs");
-  readCurrentRecordedTeamVision(
-    replay,
+if (decodeTeamVision || inhibitorCatalog !== undefined) {
+  assert.ok(currentBuild && scene.workerMotion && replayCodecs);
+  let visionScene =
     replayWorldUnits === undefined
       ? scene
-      : { ...scene, worldUnitModels: replayWorldUnits },
-    replayTimedPacketEnvelopes(replayPacketEnvelopes(replay, decompress)),
-    replayCodecs,
-  );
-  scene.workerMotion.decodeTeamVision = true;
+      : { ...scene, worldUnitModels: replayWorldUnits };
+  let inhibitorValidator;
+  if (inhibitorCatalog !== undefined) {
+    const { createCurrentReplayInhibitorCollector } =
+      await import("./research/native-terrain-inhibitor-worker.mjs");
+    inhibitorValidator = createCurrentReplayInhibitorCollector(
+      prepared,
+      inhibitorCatalog,
+    );
+    visionScene = {
+      ...visionScene,
+      inhibitorModels: { instances: inhibitorValidator.instances },
+    };
+  }
+  function* validatedPackets() {
+    for (const packet of replayTimedPacketEnvelopes(
+      replayPacketEnvelopes(replay, decompress),
+    )) {
+      inhibitorValidator?.observe(packet);
+      yield packet;
+    }
+  }
+  if (decodeTeamVision) {
+    const { readCurrentRecordedTeamVision } =
+      await import("./research/recorded-team-vision.mjs");
+    readCurrentRecordedTeamVision(
+      replay,
+      visionScene,
+      validatedPackets(),
+      replayCodecs,
+    );
+    scene.workerMotion.decodeTeamVision = true;
+  } else {
+    for (const _ of validatedPackets()) {
+      // Iterate the same preflight without collecting fog.
+    }
+  }
+  inhibitorValidator?.finish();
 }
 let championAnimationRoutes;
 const animationScene =

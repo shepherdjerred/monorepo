@@ -16,6 +16,7 @@ import {
 import { bindNativeTerrainChampionIdentities } from "./native-terrain-champion-identities.mjs";
 import { prepareCurrentChampionModelBindings } from "./native-terrain-champion-opening.mjs";
 import { prepareNativeTerrainChampionKeyframes } from "./native-terrain-champion-keyframes.mjs";
+import { createCurrentReplayInhibitorCollector } from "./native-terrain-inhibitor-worker.mjs";
 import {
   createCurrentMap11ControllerObserver,
   verifyCurrentMap11ControllerGraph,
@@ -278,6 +279,7 @@ async function prepareMotion({
   neutralObjectiveModels,
   decodeNeutralCamps,
   neutralCampSkins,
+  inhibitorCatalog,
   terrainControllerGraph,
 }) {
   if (
@@ -297,6 +299,10 @@ async function prepareMotion({
   )
     throw new Error("Replay motion identity differs from the scene.");
   const options = { allowCurrentBuild: allowCurrentBuild === true };
+  if (inhibitorCatalog !== undefined && !options.allowCurrentBuild)
+    throw Error(
+      "Replay-derived inhibitors require the reviewed current build.",
+    );
   if (
     championModelCatalog !== undefined &&
     (!options.allowCurrentBuild || replay.build !== currentTerrainPositionBuild)
@@ -501,8 +507,14 @@ async function prepareMotion({
           recoverTerrainByteSubstitution(codecs),
           announcerMapping,
         );
+  const inhibitors =
+    inhibitorCatalog === undefined
+      ? undefined
+      : createCurrentReplayInhibitorCollector(prepared, inhibitorCatalog);
   const dynamicActors =
-    laneMinionCatalog !== undefined || neutralModelIds !== undefined;
+    laneMinionCatalog !== undefined ||
+    neutralModelIds !== undefined ||
+    inhibitors !== undefined;
   const teamVision =
     decodeTeamVision === true
       ? createCurrentRecordedTeamVisionCollector(
@@ -516,6 +528,9 @@ async function prepareMotion({
           { dynamicActors },
         )
       : undefined;
+  if (teamVision !== undefined)
+    for (const { context } of inhibitors?.instances ?? [])
+      teamVision.addCandidate(context, 0);
   const rawWaypoints = createWaypointReaderFromCodecs(codecs);
   const readWaypoints = dynamicActors
     ? cacheLastWaypoints(rawWaypoints)
@@ -567,6 +582,7 @@ async function prepareMotion({
     terrain,
     lane,
     neutral,
+    inhibitors,
   ].filter((collector) => collector !== undefined);
   const observe = (packet) => {
     for (const observer of observers) observer.observe(packet);
@@ -644,6 +660,7 @@ async function prepareMotion({
         ...(neutralResult?.neutralObjectiveInstances ?? []).map(
           ({ context }) => context,
         ),
+        ...(inhibitors?.instances ?? []).map(({ context }) => context),
       ])
     : undefined;
   return {
@@ -668,6 +685,7 @@ async function prepareMotion({
       : { championAnimationOmissions: selectedAnimations.omissions }),
     ...(laneResult ?? {}),
     ...(neutralResult ?? {}),
+    ...(inhibitors?.finish() ?? {}),
     ...(teamVision === undefined
       ? {}
       : { teamVision: teamVision.finish(visibleDynamicContexts) }),

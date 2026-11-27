@@ -46,17 +46,39 @@ export function bindNativeTerrainInhibitorCatalog(
   const openingInhibitors = new Set(
     inhibitors.read(0).inhibitors.map(({ context }) => context),
   );
+  const registration = resolveNativeTerrainInhibitorRegistration(
+    catalog.registration,
+    opening,
+    openingInhibitors,
+  );
+  if (inhibitors.losses === null)
+    throw Error("Incomplete exact inhibitor placement or lifecycle evidence");
+  return {
+    ...registration,
+    losses: inhibitors.losses,
+    renderableLosses: inhibitors.renderableLosses,
+    ...(inhibitors.inactivity === undefined
+      ? {}
+      : { inactivity: inhibitors.inactivity }),
+    presentationOmissions: inhibitors.presentationOmissions,
+    unresolvedSnapshotStates: inhibitors.unresolvedSnapshotStates,
+  };
+}
+
+export function resolveNativeTerrainInhibitorRegistration(
+  registration,
+  opening,
+  openingInhibitors,
+) {
   const turretByName = new Map(opening.map((row) => [row.mapNameHash, row]));
-  const firstContext = turretByName.get(
-    catalog.registration[0]?.mapNameHash,
-  )?.context;
+  const firstContext = turretByName.get(registration[0]?.mapNameHash)?.context;
   if (!firstContext) throw Error("Missing opening Map11 structure anchor");
   const turretAnchors = [];
   const instances = [];
   const installedOffsets = new Set();
   const names = new Set();
   const typeCounts = { barracks: 0, 0: 0, 1: 0, 2: 0 };
-  for (const [index, row] of catalog.registration.entries()) {
+  for (const [index, row] of registration.entries()) {
     const context = firstContext + index;
     const { mapNameHash, transform, placementSource } = row;
     const type = row.kind === "barracks" ? "barracks" : row.attackableType;
@@ -121,19 +143,8 @@ export function bindNativeTerrainInhibitorCatalog(
     typeCounts[1] !== 6 ||
     typeCounts[2] !== 2 ||
     openingInhibitors.size !== 0 ||
-    instances.filter(({ team }) => team === 100).length !== 3 ||
-    inhibitors.losses === null
+    instances.filter(({ team }) => team === 100).length !== 3
   )
     throw Error("Incomplete exact inhibitor placement or lifecycle evidence");
-  return {
-    turretAnchors,
-    instances,
-    losses: inhibitors.losses,
-    renderableLosses: inhibitors.renderableLosses,
-    ...(inhibitors.inactivity === undefined
-      ? {}
-      : { inactivity: inhibitors.inactivity }),
-    presentationOmissions: inhibitors.presentationOmissions,
-    unresolvedSnapshotStates: inhibitors.unresolvedSnapshotStates,
-  };
+  return { turretAnchors, instances };
 }

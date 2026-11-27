@@ -101,6 +101,8 @@ const SceneIdentitySchema = z.object({
       ),
     })
     .optional(),
+  inhibitorModelBindings: z.array(z.unknown()).length(2).optional(),
+  inhibitorLosses: z.array(z.unknown()).optional(),
   championAnimationCues: z.array(z.unknown()).optional(),
   championHealthTracks: z.array(z.unknown()).optional(),
   championResourceTracks: z.array(z.unknown()).optional(),
@@ -119,6 +121,7 @@ const SceneIdentitySchema = z.object({
         .array(z.tuple([z.string(), z.number().int().nonnegative()]))
         .optional(),
       championAnimationCatalog: z.array(z.unknown()).nonempty().optional(),
+      inhibitorCatalog: z.object({}).optional(),
       championAnimationModelCatalog: z
         .strictObject({
           build: z.string(),
@@ -314,6 +317,7 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
   const { workerMotion, terrainVisibility, teamVision } = scene;
   const directPlayerState = usesDirectPlayerState(scene);
   const directChampionModels = usesDirectChampionModels(scene);
+  const directInhibitors = usesDirectInhibitors(scene);
   const directTerrainVisibility =
     workerMotion?.terrainControllerGraph !== undefined;
   if (directTerrainVisibility && terrainVisibility !== undefined)
@@ -333,15 +337,33 @@ function workerCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {
     directNeutralCampSkins: workerMotion?.neutralCampSkins,
     directPlayerState,
     directChampionModels,
+    directInhibitors,
     preparedChampionModels: scene.championModels,
-    directWorldObservations:
-      directChampionModels ||
-      directPlayerState ||
-      directTerrainVisibility ||
-      directTeamVision ||
-      workerMotion?.laneMinionCatalog !== undefined ||
+    directWorldObservations: [
+      directInhibitors,
+      directChampionModels,
+      directPlayerState,
+      directTerrainVisibility,
+      directTeamVision,
+      workerMotion?.laneMinionCatalog !== undefined,
       workerMotion?.neutralObjectiveModels !== undefined,
+    ].includes(true),
   };
+}
+
+function usesDirectInhibitors(scene: z.infer<typeof SceneIdentitySchema>) {
+  const direct = scene.workerMotion?.inhibitorCatalog !== undefined;
+  if (
+    direct !== (scene.inhibitorModelBindings !== undefined) ||
+    (direct &&
+      [scene.inhibitorModels, scene.inhibitorLosses].some(
+        (value) => value !== undefined,
+      ))
+  )
+    throw new Error(
+      "The recorded scene has inconsistent worker inhibitor inputs.",
+    );
+  return direct;
 }
 
 export async function readRecordedReplay() {

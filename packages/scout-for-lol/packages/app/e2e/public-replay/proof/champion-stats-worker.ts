@@ -178,6 +178,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionAnimation: boolean;
     directChampionAnimationModels: boolean;
     directChampionModels: boolean;
+    directInhibitors: boolean;
     directReplayObservations: boolean;
     championAnimationCueCount: number;
     announcerEvents?: unknown;
@@ -222,6 +223,7 @@ export async function verifyDirectChampionStatsWorker(
     championAnimationCatalog: legacyAnimationCatalog,
     championAnimationModelCatalog: directChampionAnimationModels,
     championModelCatalog: fixture.directChampionModels,
+    inhibitorCatalog: fixture.directInhibitors,
     decodeChampionExperience: directChampionExperience,
     decodeChampionInventory: directChampionInventory,
     decodeChampionStats: directChampionStats,

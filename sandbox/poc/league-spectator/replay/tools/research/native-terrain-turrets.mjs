@@ -99,7 +99,7 @@ function readInstalledPlacements(receipt, build) {
   return placements;
 }
 
-function readOpeningBindings(packetReader, placements) {
+export function readOpeningBindings(packetReader, placements, observeOpening) {
   const { keyframe, packets } = packetReader.read(0);
   if (keyframe.timeSeconds !== 0) throw Error("Expected a time-zero keyframe");
   const marked = new Set();
@@ -114,6 +114,7 @@ function readOpeningBindings(packetReader, placements) {
       packet.marker & 32
         ? (context + ((packet.paramBits << 24) >> 24)) >>> 0
         : packet.paramBits;
+    observeOpening?.(opcode, context, packet.payload);
     if (opcode === 1012 && packet.payload.length === 41) marked.add(context);
     if (opcode === 921) {
       const names = namePayloads.get(context) ?? [];

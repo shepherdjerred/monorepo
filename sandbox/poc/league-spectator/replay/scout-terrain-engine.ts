@@ -20,11 +20,22 @@ import {
   prepareScene,
   SceneSchema,
 } from "./scout-terrain-scene.ts";
+import {
+  currentInhibitorArchiveModels,
+  currentInhibitorRegistrationSha256,
+} from "./tools/research/native-terrain-inhibitor-assets.mjs";
 import * as terrainRenderer from "./tools/research/native-terrain.mjs";
 
 const maxZoomStep = 8;
 const detailDistance = 3000;
 const clamp = (coordinate: number) => Math.max(0, Math.min(1, coordinate));
+
+async function sha256Hex(bytes: BufferSource) {
+  return Array.from(
+    new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("");
+}
 
 function recordedTimeline(
   data: ReturnType<typeof prepareScene>,
@@ -175,6 +186,37 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const modelCatalog = scene.workerMotion?.championModelCatalog;
   const animationCatalog = scene.workerMotion?.championAnimationModelCatalog;
   const files = new Map(localManifest.files.map((file) => [file.path, file]));
+  const inhibitorCatalog = scene.workerMotion?.inhibitorCatalog;
+  if (inhibitorCatalog !== undefined) {
+    const registration = new TextEncoder().encode(
+      JSON.stringify(inhibitorCatalog.registration),
+    );
+    if ((await sha256Hex(registration)) !== currentInhibitorRegistrationSha256)
+      throw new ReplayCapabilityError(
+        "invalid-package",
+        "The inhibitor registration disagrees with the reviewed build.",
+      );
+    for (const [selector, id] of inhibitorCatalog.models) {
+      const { sha256, bytes } = currentInhibitorArchiveModels[selector];
+      const path = `inhibitor-models/${sha256}.glb`;
+      const file = files.get(path);
+      const binding = scene.inhibitorModelBindings?.find(
+        ({ participantId }) => participantId === id,
+      );
+      if (
+        file?.sha256 !== sha256 ||
+        file.bytes !== bytes ||
+        binding?.url !== `/${path}` ||
+        binding.skinScale !== 1 ||
+        binding.hiddenRanges.length !== 1 ||
+        binding.hiddenRanges[0] !== "Destroyed"
+      )
+        throw new ReplayCapabilityError(
+          "invalid-package",
+          "An inhibitor model disagrees with its reviewed archive binding.",
+        );
+    }
+  }
   if (modelCatalog !== undefined) {
     for (const { model } of Object.values(modelCatalog.assets)) {
       const file = files.get(`champion-models/${model.sha256}.glb`);
@@ -211,10 +253,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       "Replay-derived announcements require the announcer preview capability.",
     );
   if (announcerProfile !== undefined) {
-    const replayDigest = Array.from(
-      new Uint8Array(await crypto.subtle.digest("SHA-256", replay)),
-      (byte) => byte.toString(16).padStart(2, "0"),
-    ).join("");
+    const replayDigest = await sha256Hex(replay);
     if (replayDigest !== localManifest.capabilities.replaySha256)
       throw new ReplayCapabilityError(
         "incompatible-build",

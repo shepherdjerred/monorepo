@@ -169,6 +169,135 @@ const worldModelInstance = z.object({
   position,
   basis: z.array(z.number()).length(9),
 });
+const inactiveInhibitorRanges = z.array(
+  z.tuple([z.number().positive(), z.number().positive().nullable()]),
+);
+const inhibitorInstance = worldModelInstance.extend({
+  teamId,
+  destroyedAtSeconds: z.number().positive().nullable(),
+  inactiveRanges: inactiveInhibitorRanges.optional(),
+});
+const inhibitorLosses = z.array(
+  z.object({ timeSeconds: z.number().positive() }),
+);
+const transformColumn = z.tuple([
+  z.number(),
+  z.number(),
+  z.number(),
+  z.number(),
+]);
+const inhibitorCatalog = z.strictObject({
+  build: z.literal(currentTerrainPositionBuild),
+  protocol: z.literal(terrainPositionProtocol),
+  registration: z
+    .array(
+      z.strictObject({
+        kind: z.enum(["building", "barracks"]),
+        attackableType: z.union([
+          z.literal(0),
+          z.literal(1),
+          z.literal(2),
+          z.null(),
+        ]),
+        mapNameHash: z.number().int().positive().max(0xffffffff),
+        characterRecord: z.string().nullable(),
+        asset: z.string().nullable(),
+        explicitTeam: teamId.nullable(),
+        transform: z.tuple([
+          transformColumn,
+          transformColumn,
+          transformColumn,
+          transformColumn,
+        ]),
+        placementSource: z.strictObject({
+          archivedOffset: z.number().int().nonnegative(),
+          installedOffset: z.number().int().nonnegative(),
+          bytes: z.number().int().positive(),
+          sha256: z.string().regex(/^[a-f0-9]{64}$/),
+        }),
+      }),
+    )
+    .length(38),
+  models: z.tuple([
+    z.tuple([z.literal("inhibitor/0"), participantId]),
+    z.tuple([z.literal("inhibitor/3"), participantId]),
+  ]),
+});
+
+function validInhibitorRanges(
+  instances: readonly z.infer<typeof inhibitorInstance>[],
+  duration: number,
+) {
+  return instances.every(({ destroyedAtSeconds, inactiveRanges }) => {
+    if (inactiveRanges === undefined) return true;
+    return (
+      (inactiveRanges.length === 0) === (destroyedAtSeconds === null) &&
+      (destroyedAtSeconds === null || destroyedAtSeconds <= duration) &&
+      inactiveRanges.every(([start, end], index) => {
+        const previous = inactiveRanges[index - 1];
+        return (
+          start <= duration &&
+          (end === null || (end > start && end <= duration)) &&
+          (previous === undefined ||
+            (previous[1] !== null && start >= previous[1]))
+        );
+      })
+    );
+  });
+}
+
+function validateWorkerInhibitors(
+  catalog: z.infer<typeof inhibitorCatalog>,
+  instances: z.infer<typeof inhibitorInstance>[],
+  losses: z.infer<typeof inhibitorLosses>,
+  duration: number,
+) {
+  if (!validInhibitorRanges(instances, duration))
+    throw Error(
+      "Replay motion worker returned invalid inhibitor inactivity ranges.",
+    );
+  const models = new Map<string, number>(catalog.models);
+  const times: number[] = [];
+  let startContext: number | undefined;
+  let index = 0;
+  for (const [offset, row] of catalog.registration.entries()) {
+    if (row.attackableType !== 1) continue;
+    const instance = instances[index++];
+    const [x, y, z, translation] = row.transform;
+    const basis = [...x.slice(0, 3), ...y.slice(0, 3), ...z.slice(0, 3)];
+    if (
+      instance === undefined ||
+      instance.inactiveRanges === undefined ||
+      row.asset === null
+    )
+      throw Error(
+        "Replay motion worker returned incomplete inhibitor coverage.",
+      );
+    startContext ??= instance.context - offset;
+    if (
+      startContext <= 0 ||
+      instance.context !== startContext + offset ||
+      instance.participantId !== models.get(row.asset) ||
+      instance.teamId !== (row.asset === "inhibitor/0" ? 100 : 200) ||
+      instance.position.some((value, axis) => value !== translation[axis]) ||
+      instance.basis.some((value, axis) => value !== basis[axis]) ||
+      instance.destroyedAtSeconds !== (instance.inactiveRanges[0]?.[0] ?? null)
+    )
+      throw Error(
+        "Replay motion worker returned an unadmitted inhibitor placement.",
+      );
+    times.push(...instance.inactiveRanges.map(([time]) => time));
+  }
+  times.sort((a, b) => a - b);
+  if (
+    index !== instances.length ||
+    times.length !== losses.length ||
+    losses.some(({ timeSeconds }, i) => timeSeconds !== times[i])
+  )
+    throw Error(
+      "Replay motion worker returned inconsistent inhibitor loss clocks.",
+    );
+}
 const worldUnitInstance = z.object({
   context: z.number().int().positive(),
   participantId,
@@ -384,9 +513,7 @@ const TerrainSceneFields = z.object({
     )
     .optional(),
   neutralObjectiveKills: NeutralObjectiveKillsSchema.optional(),
-  inhibitorLosses: z
-    .array(z.object({ timeSeconds: z.number().positive() }))
-    .optional(),
+  inhibitorLosses: inhibitorLosses.optional(),
   playerState: PlayerStateSchema.optional(),
   participants: z
     .array(
@@ -459,23 +586,7 @@ const TerrainSceneFields = z.object({
   inhibitorModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
-      instances: z
-        .array(
-          worldModelInstance.extend({
-            teamId,
-            destroyedAtSeconds: z.number().positive().nullable(),
-            inactiveRanges: z
-              .array(
-                z.tuple([
-                  z.number().positive(),
-                  z.number().positive().nullable(),
-                ]),
-              )
-              .optional(),
-          }),
-        )
-        .min(1)
-        .max(6),
+      instances: z.array(inhibitorInstance).min(1).max(6),
       omittedContexts: z.array(participantId).optional(),
     })
     .refine(({ instances, omittedContexts }) => {
@@ -486,6 +597,7 @@ const TerrainSceneFields = z.object({
       return contexts.length === 6 && new Set(contexts).size === 6;
     }, "Expected six accounted-for inhibitor contexts")
     .optional(),
+  inhibitorModelBindings: z.array(modelBinding).length(2).optional(),
   worldUnitModels: z
     .object({
       bindings: z.array(modelBinding).nonempty(),
@@ -506,6 +618,7 @@ const TerrainSceneFields = z.object({
       championAnimationModelCatalog:
         ChampionAnimationModelCatalogSchema.optional(),
       championModelCatalog: ChampionModelCatalogSchema.optional(),
+      inhibitorCatalog: inhibitorCatalog.optional(),
       announcerEvents: AnnouncerEventsSchema.optional(),
       terrainControllerGraph: TerrainControllerGraphSchema.optional(),
       laneMinionCatalog: LaneMinionCatalogSchema.optional(),
@@ -540,36 +653,44 @@ const TerrainSceneFields = z.object({
     .optional(),
 });
 export const SceneSchema = TerrainSceneFields.refine(
-  ({ identity, inhibitorModels }) => {
-    const duration = identity.durationMilliseconds / 1000;
-    return (
-      inhibitorModels?.instances.every(
-        ({ destroyedAtSeconds, inactiveRanges }) => {
-          if (inactiveRanges === undefined) return true;
-          if (
-            (inactiveRanges.length === 0) !== (destroyedAtSeconds === null) ||
-            (destroyedAtSeconds !== null && destroyedAtSeconds > duration)
-          )
-            return false;
-          return inactiveRanges.every(([start, end], index) => {
-            const previous = inactiveRanges[index - 1];
-            return (
-              start <= duration &&
-              (end === null || (end > start && end <= duration)) &&
-              (previous === undefined ||
-                (previous[1] !== null && start >= previous[1]))
-            );
-          });
-        },
-      ) ?? true
-    );
-  },
+  ({ identity, inhibitorModels }) =>
+    validInhibitorRanges(
+      inhibitorModels?.instances ?? [],
+      identity.durationMilliseconds / 1000,
+    ),
   {
     path: ["inhibitorModels", "instances"],
     message:
       "Recorded inhibitor inactive ranges must be ordered and within the replay.",
   },
 )
+  .refine(
+    (scene) => {
+      const catalog = scene.workerMotion?.inhibitorCatalog;
+      const bindings = scene.inhibitorModelBindings;
+      if (catalog === undefined) return bindings === undefined;
+      const ids = new Set(catalog.models.map(([, modelId]) => modelId));
+      return (
+        scene.identity.build === catalog.build &&
+        scene.identity.protocol === catalog.protocol &&
+        scene.workerMotion?.allowCurrentBuild === true &&
+        scene.motion === undefined &&
+        scene.inhibitorModels === undefined &&
+        scene.inhibitorLosses === undefined &&
+        ids.size === 2 &&
+        bindings !== undefined &&
+        bindings.every(
+          ({ participantId, url }) =>
+            ids.delete(participantId) && url.startsWith("/inhibitor-models/"),
+        )
+      );
+    },
+    {
+      path: ["workerMotion", "inhibitorCatalog"],
+      message:
+        "Replay-derived inhibitors require an exact archive catalog and no prepared lifetimes.",
+    },
+  )
   .refine(
     (scene) =>
       scene.workerMotion?.decodeChampionStats !== true ||
@@ -947,6 +1068,10 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
     neutralCampCoverage: NeutralCampCoverageSchema.optional(),
     championModels: ChampionModelsSchema.optional(),
+    inhibitorModels: z
+      .strictObject({ instances: z.array(inhibitorInstance).length(6) })
+      .optional(),
+    inhibitorLosses: inhibitorLosses.optional(),
     recordedPlayerState: z
       .strictObject({
         playerState: PlayerStateSchema,
@@ -1115,6 +1240,25 @@ async function loadWorkerMotion(
         terrainGraph,
         identity.durationMilliseconds / 1000,
       );
+    const inhibitors = workerMotion.inhibitorCatalog;
+    if (
+      (result.inhibitorModels !== undefined) !== (inhibitors !== undefined) ||
+      (result.inhibitorLosses !== undefined) !== (inhibitors !== undefined)
+    )
+      throw Error(
+        "Replay motion worker returned unexpected inhibitor coverage.",
+      );
+    if (
+      inhibitors !== undefined &&
+      result.inhibitorModels !== undefined &&
+      result.inhibitorLosses !== undefined
+    )
+      validateWorkerInhibitors(
+        inhibitors,
+        result.inhibitorModels.instances,
+        result.inhibitorLosses,
+        identity.durationMilliseconds / 1000,
+      );
     if ((result.teamVision !== undefined) !== (teamVisionActors !== undefined))
       throw Error(
         "Replay motion worker returned unexpected team vision coverage.",
@@ -1123,6 +1267,7 @@ async function loadWorkerMotion(
       const decodedContexts = [
         ...(result.laneMinionInstances ?? []),
         ...(result.neutralObjectiveInstances ?? []),
+        ...(result.inhibitorModels?.instances ?? []),
       ].map(({ context }) => context);
       const contexts = new Set([
         ...teamVisionActors.contexts,
@@ -1605,6 +1750,18 @@ export async function loadSceneMotion(
       motion: decoded.motion,
       decodedPositionFrames,
       ...neutrals,
+      ...(decoded.inhibitorModels === undefined ||
+      scene.inhibitorModelBindings === undefined
+        ? {}
+        : {
+            inhibitorModels: {
+              bindings: scene.inhibitorModelBindings,
+              instances: decoded.inhibitorModels.instances,
+            },
+            inhibitorLosses: decoded.inhibitorLosses,
+            inhibitorModelBindings: undefined,
+            workerMotion: undefined,
+          }),
       ...(decoded.laneMinionInstances === undefined
         ? {}
         : {
