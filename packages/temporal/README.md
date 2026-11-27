@@ -731,8 +731,9 @@ dispatch flag and unpause this exact schedule. Reconciliation preserves the
 operator's subsequent pause state.
 
 Describe the workflow and read its `ciMaintenance` memo for the pending request ID, pipeline receipt,
-completed fingerprints, and blocked streams. The coordinator allows one
-submission at a time, coalesces repeated ticks, and retains fingerprints
+queue and start times, any age-out, completed fingerprints, pre-work retry and
+age-out counts, the last successful inspection (`inspectedAt`),
+and blocked streams. The coordinator allows one submission at a time, coalesces repeated ticks, and retains fingerprints
 across worker replacement and continue-as-new. The memo is refreshed after
 each tick; Workflow history records in-flight writes before that snapshot.
 CI image fingerprints cover
@@ -763,13 +764,62 @@ Canary branches target beta consumer flags and do not require a beta dispatcher.
 
 Writes have one activity attempt. After a lost response, subsequent ticks
 search for the recorded request ID; they never repeat the POST blindly.
-Read failures preserve state. A failed pipeline blocks that stream until an
-operator inspects it and sends `maintenanceRetry` with its exact `kind` and
-`requestId`. The other stream may continue. An absent submission requires an
-API/history audit first: send `maintenanceConfirmAbsent` with its exact
-`requestId` and a non-secret `evidence` explanation, then explicitly retry.
-That signal cannot clear a request with a known pipeline receipt. Never
-confirm absence while the original request or pipeline could still settle.
+Read failures preserve state. A pipeline that fails after a command started
+blocks that stream until an operator inspects it and sends `maintenanceRetry`
+with its exact `kind` and `requestId`. A pipeline that ends before any command
+starts (a config-extension or forge error) is resubmitted automatically up to
+six consecutive times per stream; the seventh such ending blocks the stream
+with a reason that says so. The other streams may continue. An absent
+submission requires an API/history audit first: send
+`maintenanceConfirmAbsent` with its exact `requestId` and a non-secret
+`evidence` explanation, then explicitly retry. That signal cannot clear a
+request with a known pipeline receipt. Never confirm absence while the
+original request or pipeline could still settle.
+
+Only one request is pending at a time. Once a request has waited in
+Woodpecker's queue for two hours without an agent taking it, each tick checks
+Woodpecker's task queue (`/api/queue/info`) for evidence that it is stuck
+rather than slow. Woodpecker hands each agent the oldest pending task it
+matches, so a request behind a long backlog keeps its place and is never
+canceled. It counts as stuck when newer tasks in its agent pool (`ci-pool`)
+run ahead of it, when it heads an idle pool, or when the queue holds no task
+for it. A busy concurrency group, a paused queue, or a pool that is taking no
+work at all is not evidence against the request. A stuck request is re-read by
+request ID and canceled only if no step has started, because Woodpecker's
+cancel also kills running work. A cancel, once sent, is recorded and never
+sent again, even when its result is unconfirmed; a check that fails before any
+cancel is sent records nothing and runs again next tick. The canceled request
+settles on a later read-back without counting a retry. Three consecutive stuck
+age-outs block the stream; an agent taking one of its requests resets the
+count. Streams are chosen round-robin after the last settled one, so an
+aged-out stream waits for every other stream's turn.
+
+Every tick also publishes health to Alertmanager from the infra worker's `ops`
+queue, reading the coordinator memo and the cluster rather than the
+coordinator itself. `CiMaintenanceStreamBlocked` (per `stream`) fires once a
+stream has been blocked for 30 minutes. `CiMaintenanceRequestStalled` fires
+once a pending request has had no receipt, or an unconfirmed age-out, for 30
+minutes, or has waited without an agent for two and a half hours, or for
+eight hours while its latest age-out check (`lastQueueCheck`) finds it
+`waiting` behind older work in its pool. `CiMaintenanceCoordinatorStalled`
+fires while dispatch is enabled and the coordinator has not completed an
+inspection (`inspectedAt`) for 30 minutes on two reads a minute apart, so the
+tick's own wake, for example after dispatch is turned back on, can refresh it
+first. A `repo-automation` Activity holding that one-slot queue for over 30
+minutes, such as a long git backup, also trips it. `CiWorkspaceGoldenStale` fires once the
+selected golden snapshot is more than 36 hours old or its source commit trails
+main by more than 36 hours, while `ci-workspace-golden-refresh-enabled` is on.
+A source that cannot be read, or a flag whose Flags source failed, leaves out
+only its own occurrences, which keep their state until their one-hour TTL; the
+rest still publish, and a read that also fails the Activity's retry fails the
+tick, which `temporal-failure-watch` reports. A healthy tick resolves every
+occurrence it publishes.
+
+Delivery's `temporal` recipe syncs the chart, waiting for every Deployment to
+be Synced and Healthy, before its `worker-rollout` step routes Workflows to the
+new build, so the `repo` and `infra` Activity workers register new Activities
+first. A tick whose health Activity is not registered yet logs a warning
+instead of failing.
 
 `toolkit ci maintenance --json` lists recent maintenance receipts separately
 from verification. A successful maintenance run must emit one structured

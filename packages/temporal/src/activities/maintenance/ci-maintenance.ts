@@ -16,6 +16,10 @@ import {
   maintenanceCandidates,
   MaintenancePipelineSchema,
 } from "./ci-maintenance-client.ts";
+import {
+  cancelStuckMaintenance,
+  type StuckMaintenanceOutcome,
+} from "./ci-maintenance-age-out.ts";
 
 export const ciMaintenanceActivities = {
   async wakeCiMaintenance(): Promise<void> {
@@ -95,6 +99,16 @@ export const ciMaintenanceActivities = {
       }),
     });
     return MaintenancePipelineSchema.parse(response).number;
+  },
+  /**
+   * Cancels a queued request only with evidence that it is stuck. Once the
+   * cancel is sent the outcome is returned, never thrown, and the coordinator
+   * records it so the cancel is not sent again.
+   */
+  async cancelStuckCiMaintenance(
+    request: MaintenanceRequest,
+  ): Promise<StuckMaintenanceOutcome> {
+    return await cancelStuckMaintenance(request);
   },
 };
 export type CiMaintenanceActivities = typeof ciMaintenanceActivities;
