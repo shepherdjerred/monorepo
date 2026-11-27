@@ -105,10 +105,12 @@ The verify and Playwright workflows use the first-party
 [`ci-cache`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ci-cache/index.ts)
 service on `liskov` over the tailnet.
 [Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)
-keep trusted main output separate from PR output, while copy-on-write read-through
-lets `monorepo-pull-request` read `monorepo` entries on a miss without writing
-back to `monorepo`. Developer shells default to local caching because their
-network connection is less predictable.
+split the cache into two trust domains. Main and
+[the owner's own pull requests](#owner-pull-requests-share-mains-build-cache)
+share the trusted `monorepo` team. Every other pull request writes
+`monorepo-pull-request`, whose copy-on-write read-through reads `monorepo`
+entries on a miss without writing back to `monorepo`. Developer shells default
+to local caching because their network connection is less predictable.
 
 `ci-cache` stores and returns each client's `x-artifact-tag` signature
 unchanged. Signing keys stay with their respective clients. Turbo rejects
@@ -130,9 +132,10 @@ unchanged plugin modules and Rust compilation units load cached outputs instead
 of rebuilding.
 
 Neither Gradle nor `sccache` checks artifact signatures, so `ci-cache` enforces
-the trust split through Basic Auth users instead. Default-branch verify holds
-the `ci-main` write password; pull requests hold the `ci-pull-request` read-only
-password, and `ci-cache` rejects writes from the read user. The
+the trust split through Basic Auth users instead. Verify in the trusted domain
+holds the `ci-main` write password; other pull requests hold the
+`ci-pull-request` read-only password, and `ci-cache` rejects writes from the
+read user. The
 [pipeline](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
 attaches one identity per trust domain
 (`packages/woodpecker-config-extension/src/pipeline/gradle-build-cache.ts` and
@@ -226,6 +229,36 @@ configuration you already have", which is the branch's own committed YAML — th
 opposite of a refusal. For the same reason the server runs the extension in
 exclusive mode, so there is no committed YAML to fall back to when the extension
 fails.
+
+## Owner pull requests share main's build cache
+
+The owner's own pull requests and main write one remote build cache. Neither
+rebuilds a Turbo task, Gradle output or Rust compilation unit the other already
+built.
+
+The cache used to split on the event alone. Every pull request built in the
+pull-request domain, and only main was trusted. Main could not load a pull
+request's entries, so it rebuilt each change that its pull request had already
+built.
+
+That split guarded against a risk this repository does not have. One person
+lands work here: the owner, directly or through his agents. An owner pull
+request is code he is about to merge, so its entries are the ones main would
+write. Sharing them extends no trust that main does not already extend.
+
+Renovate is the case the split exists for. Its pull requests bring third-party
+code that nobody here wrote, so they stay in the pull-request domain. So do
+forks, credentialless hosted automation, the owner's GitHub Apps and every
+other account. Those builds still read main's entries; they cannot write them.
+
+[`cacheTrustDomain`](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/cache-trust-domain.ts)
+decides from forge identity alone. It reads the author and sender logins and
+the fork flag that Woodpecker signs into each request. A branch name, commit
+message or pull request title cannot move a build into the trusted domain. The
+owner's canary benchmarks resolve through the same function, so the two rules
+cannot drift. The
+[CI cache access reference](/reference/homelab-control-plane-access/) lists
+which identity each build receives.
 
 ## The lanes are phases, not duplicated test suites
 

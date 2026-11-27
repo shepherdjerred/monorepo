@@ -524,6 +524,76 @@ describe("signed workflow routing", () => {
   );
 });
 
+describe("signed cache trust domain", () => {
+  const trustedCache = {
+    team: "monorepo",
+    user: "ci-main",
+    keys: [
+      "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+      "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+    ],
+  };
+  const pullRequestCache = {
+    team: "monorepo-pull-request",
+    user: "ci-pull-request",
+    keys: [
+      "GRADLE_BUILD_CACHE_READ_PASSWORD",
+      "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
+    ],
+  };
+  const VerifyWorkflowSchema = z.object({
+    steps: z.array(
+      z.object({
+        environment: z.record(z.string(), z.string()).default({}),
+        backend_options: z.object({
+          kubernetes: z.object({
+            secrets: z.array(z.object({ key: z.string() })).default([]),
+          }),
+        }),
+      }),
+    ),
+  });
+
+  test.each([
+    { login: "shepherdjerred", cache: trustedCache },
+    { login: "derrej", cache: trustedCache },
+    { login: BOT, cache: pullRequestCache },
+    { login: "renovate[bot]", cache: pullRequestCache },
+  ])(
+    "a same-repository PR by $login verifies in the $cache.team cache",
+    async ({ login, cache }) => {
+      // Approved, so Renovate receives its full reviewed graph.
+      const { app } = harness(true);
+      const response = await app.request(
+        await request({ author: login, sender: login, changed_files: [] }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      const workflow = VerifyWorkflowSchema.parse(
+        parse(
+          result.configs.find(
+            (entry) => entry.name === ".woodpecker/verify.yaml",
+          )?.data ?? "",
+        ),
+      );
+      const verify = workflow.steps.find(
+        (step) => step.environment["TURBO_TEAM"] !== undefined,
+      );
+      expect(verify?.environment).toMatchObject({
+        TURBO_TEAM: cache.team,
+        GRADLE_BUILD_CACHE_USERNAME: cache.user,
+        SCCACHE_WEBDAV_USERNAME: cache.user,
+      });
+      const keys = new Set(
+        workflow.steps.flatMap((step) =>
+          step.backend_options.kubernetes.secrets.map((grant) => grant.key),
+        ),
+      );
+      for (const key of [...trustedCache.keys, ...pullRequestCache.keys])
+        expect(keys.has(key), key).toBe(cache.keys.includes(key));
+    },
+  );
+});
+
 describe("signed extended verification routing", () => {
   const REQUEST = "8f6d3a2e-4c1b-4e7a-9f0d-2b5c6d7e8f90";
   const manual = {

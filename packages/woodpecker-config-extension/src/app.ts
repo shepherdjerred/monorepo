@@ -17,6 +17,7 @@ import { changedFilesSince } from "#src/github-compare.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
 import { grantSccacheWebdav } from "#src/pipeline/sccache-webdav.ts";
+import { cacheTrustDomain } from "#src/pipeline/cache-trust-domain.ts";
 import { routeSteps } from "#src/pipeline/routing.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { isPrVerificationEvent, prStatusEvent } from "#src/pr-event.ts";
@@ -486,7 +487,11 @@ export function createApp(options: AppOptions): Hono {
       ...step,
       environment: { ...step.environment, CI_REPO_ID: String(repo.id) },
     }));
-    const trustDomain = prVerification ? "pull-request" : "trusted";
+    const trustDomain = cacheTrustDomain({
+      proposal: prVerification,
+      credentialless: credentiallessAutomation,
+      pipeline,
+    });
     const selected = groupSmallChecks(
       grantSccacheWebdav(
         grantGradleBuildCache(

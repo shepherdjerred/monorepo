@@ -98,6 +98,7 @@ if (Bun.argv.includes("--include-canaries")) {
           source: "0".repeat(40),
           feature: "scratch",
           main: false,
+          trustDomain: "trusted",
         },
         { ...DISABLED_PERFORMANCE, scratch: true },
         gateImage,

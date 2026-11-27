@@ -12,6 +12,10 @@ import {
   withoutGradleBuildCache,
 } from "./gradle-build-cache.ts";
 import { grantSccacheWebdav, withoutSccacheWebdav } from "./sccache-webdav.ts";
+import {
+  cacheTrustDomain,
+  type CacheTrustDomain,
+} from "./cache-trust-domain.ts";
 import { RAM_SCRATCH } from "./ram-scratch.ts";
 import {
   DISABLED_PERFORMANCE,
@@ -34,6 +38,8 @@ const Request = z.object({
 });
 export type BenchmarkRequest = z.infer<typeof Request> & {
   readonly main: boolean;
+  /** Resolved from the signed request by the rule pull requests use. */
+  readonly trustDomain: CacheTrustDomain;
 };
 
 /** Exclusive signed owner request: never falls through to main release work. */
@@ -81,7 +87,15 @@ export function benchmarkRequest(
     (request.profile !== "verify" || pipeline.branch === defaultBranch)
   )
     throw new Error("RAM scratch requires a verify canary branch");
-  return { ...request, main: pipeline.branch === defaultBranch };
+  return {
+    ...request,
+    main: pipeline.branch === defaultBranch,
+    trustDomain: cacheTrustDomain({
+      proposal: pipeline.branch !== defaultBranch,
+      credentialless: false,
+      pipeline,
+    }),
+  };
 }
 
 export function benchmarkSteps(
@@ -157,16 +171,15 @@ export function benchmarkSteps(
           },
         }),
   }));
-  const trustDomain = request.main ? "trusted" : "pull-request";
   return grantSccacheWebdav(
     grantGradleBuildCache(
       signRemoteCacheSteps(
         performanceSteps(cached, options, request.main, false),
-        trustDomain,
+        request.trustDomain,
       ),
-      trustDomain,
+      request.trustDomain,
     ),
-    trustDomain,
+    request.trustDomain,
   ).map((candidate) => ({
     ...candidate,
     commands: candidate.commands.map((command) =>

@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
 import { benchmarkRequest, benchmarkSteps } from "#src/pipeline/benchmark.ts";
+import type { CacheTrustDomain } from "#src/pipeline/cache-trust-domain.ts";
 import { groupSmallChecks } from "#src/pipeline/group-small-checks.ts";
 import { performanceSteps } from "#src/pipeline/performance.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
@@ -404,11 +405,12 @@ test("verify benchmarks use the Gradle cache only when warm, in their trust doma
     variant: "baseline",
     source: "0".repeat(40),
     feature: "gradle",
+    main: false,
   } as const;
-  const verify = (cache: "cold" | "warm", main: boolean) =>
+  const verify = (cache: "cold" | "warm", trustDomain: CacheTrustDomain) =>
     benchmarkSteps(
       TEST_IMAGES,
-      { ...request, cache, main },
+      { ...request, cache, trustDomain },
       DISABLED_PERFORMANCE,
       helper,
     )[0];
@@ -416,14 +418,49 @@ test("verify benchmarks use the Gradle cache only when warm, in their trust doma
     (step?.secrets ?? [])
       .map((grant) => grant.env)
       .filter((env) => env.startsWith("GRADLE_BUILD_CACHE_"));
-  expect(passwords(verify("warm", true))).toEqual([
+  expect(passwords(verify("warm", "trusted"))).toEqual([
     "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
   ]);
-  expect(passwords(verify("warm", false))).toEqual([
+  expect(passwords(verify("warm", "pull-request"))).toEqual([
     "GRADLE_BUILD_CACHE_READ_PASSWORD",
   ]);
-  const cold = verify("cold", true);
+  const cold = verify("cold", "trusted");
   expect(passwords(cold)).toEqual([]);
   expect(cold?.environment?.["GRADLE_BUILD_CACHE_URL"]).toBeUndefined();
   expect(cold?.environment?.["SCCACHE_WEBDAV_ENDPOINT"]).toBeUndefined();
+});
+
+/** A warm verify benchmark started by hand, as Woodpecker reports one. */
+const benchmarkTrustDomain = (branch: string, author: string) =>
+  benchmarkRequest(
+    PipelineSchema.parse({
+      ...fixture.pipeline,
+      event: "manual",
+      branch,
+      ref: `refs/heads/${branch}`,
+      author,
+      sender: "",
+      variables: {
+        CI_BENCHMARK_PROFILE: "verify",
+        CI_BENCHMARK_SOURCE: fixture.pipeline.commit,
+        CI_BENCHMARK_VARIANT: "baseline",
+        CI_BENCHMARK_CACHE: "warm",
+        CI_BENCHMARK_FEATURE: "gradle",
+      },
+    }),
+    "main",
+    true,
+  )?.trustDomain;
+
+test("benchmark requests resolve their cache by the rule pull requests use", () => {
+  expect(benchmarkTrustDomain("main", "shepherdjerred")).toBe("trusted");
+  expect(benchmarkTrustDomain("main", "long-summer-intern[bot]")).toBe(
+    "trusted",
+  );
+  expect(benchmarkTrustDomain("ci-canary/gradle", "shepherdjerred")).toBe(
+    "trusted",
+  );
+  expect(
+    benchmarkTrustDomain("ci-canary/gradle", "long-summer-intern[bot]"),
+  ).toBe("pull-request");
 });

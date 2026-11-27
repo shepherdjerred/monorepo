@@ -125,10 +125,19 @@ Verify also names the first-party `ci-cache` Gradle and `sccache` WebDAV
 endpoints in `GRADLE_BUILD_CACHE_URL` and `SCCACHE_WEBDAV_ENDPOINT`.
 `grantGradleBuildCache` and `grantSccacheWebdav` give every step carrying those
 variables one identity for its trust domain: `ci-main` with
-`GRADLE_BUILD_CACHE_WRITE_PASSWORD` on the default branch, or
-`ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` for a pull request.
-`ci-cache` rejects writes from the read user. A cold benchmark drops both URLs
-so it measures a build without shared Gradle or Rust compiler outputs.
+`GRADLE_BUILD_CACHE_WRITE_PASSWORD` in the trusted domain, or
+`ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` in the pull-request
+domain. `ci-cache` rejects writes from the read user. A cold benchmark drops
+both URLs so it measures a build without shared Gradle or Rust compiler outputs.
+
+`cacheTrustDomain` (`src/pipeline/cache-trust-domain.ts`) picks that domain,
+and the Turbo team and signing key, for both the PR graph and benchmark
+requests. Default-branch work is trusted. A same-repository pull request or
+canary benchmark is trusted only when `authorizePipeline` classes the actor
+owner-controlled, the event is not credentialless hosted automation, and
+neither the author nor the sender is a GitHub App. Renovate, the owner's Apps,
+credentialless automation and every other actor use the pull-request domain.
+`test/pr-reachable-secrets.test.ts` pins what each pull-request shape reaches.
 
 ### Experimental workspace reuse
 
