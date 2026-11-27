@@ -42,7 +42,11 @@ function participantById(
 function laneRow(
   matchup: RoleMatchup,
   side: LaneSide,
-  context: { hasTimeline: boolean; derivedAt: string },
+  context: {
+    hasTimeline: boolean;
+    derivedAt: string;
+    checkpointTimestampMs: number | null;
+  },
 ): LaneResultLakeRow {
   const { laner, opponent, sign } = side;
   const at15 = matchup.at15;
@@ -67,7 +71,11 @@ function laneRow(
     opponent_champion_id: opponent.champion_id,
     win: laner.win,
     has_timeline: context.hasTimeline,
-    checkpoint_timestamp_ms: at15?.timestampMs ?? null,
+    checkpoint_timestamp_ms: context.checkpointTimestampMs,
+    checkpoint_complete:
+      matchup.checkpoint === "missing"
+        ? null
+        : matchup.checkpoint === "complete",
     // `0 * -1` is `-0`, which serializes as 0 but compares unequal under
     // Object.is; adding 0 normalizes it.
     gold_diff_at_15: at15 === null ? null : sign * at15.goldDelta + 0,
@@ -82,7 +90,8 @@ function laneRow(
  * so the table and the page cannot disagree about who was ahead.
  *
  * `frames` are the match's checkpoint frames (first frame stamped in
- * [15:00, 16:00)); none means the game ended first or the frame is missing.
+ * [15:00, 16:00)); none means the game ended first or the frame is missing,
+ * and a frame missing a participant gives `checkpoint_complete = false`.
  * A match the pairing rejects (not a standard Rift game, or roles that do not
  * pair one-to-one) has no rows.
  */
@@ -100,6 +109,8 @@ export function laneResultRows(input: {
   const context = {
     hasTimeline: input.hasTimeline,
     derivedAt: input.derivedAt,
+    // Every frame read for a match shares the checkpoint's timestamp.
+    checkpointTimestampMs: input.frames[0]?.frame_timestamp_ms ?? null,
   };
   return matchups.flatMap((matchup) => {
     const blue = participantById(input.participants, matchup.blueParticipantId);

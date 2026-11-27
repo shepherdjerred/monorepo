@@ -108,7 +108,7 @@ describe("lakeSchemaFingerprint", () => {
       fingerprint: lakeSchemaFingerprint(),
     }).toEqual({
       epoch: 3,
-      fingerprint: "04a28bc7e0b80111",
+      fingerprint: "e767138ef6f2cf23",
     });
 
     const SpecializedSchema = z.object({

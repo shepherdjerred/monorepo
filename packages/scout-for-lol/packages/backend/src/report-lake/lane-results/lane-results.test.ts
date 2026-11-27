@@ -18,7 +18,10 @@ import {
 } from "#src/report-lake/schema.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { timelineStagingFilePath } from "#src/report-lake/staging.ts";
-import { writeLaneResultsParquet } from "#src/report-lake/lane-results/derive-lane-results.ts";
+import {
+  writeLaneResultsParquet,
+  type LaneResultsWritten,
+} from "#src/report-lake/lane-results/derive-lane-results.ts";
 import type { LaneResultReadRow } from "#src/report-lake/lane-results/lane-result-columns.ts";
 import {
   fetchFullMatch,
@@ -29,6 +32,7 @@ import { resolveLakeFiles } from "#src/reports/duckdb/lake.ts";
 import {
   buildRoleMatchups,
   LANE_DELTA_CHECKPOINT_MS,
+  type RoleCheckpoint,
   type RoleMatchup,
 } from "#src/reports/lanes/role-matchups.ts";
 import { writeTestLake } from "#src/testing/report-lake/test-report-lake.ts";
@@ -53,7 +57,15 @@ const surrendered = RiotMatchIdSchema.parse("NA1_7300000002");
 const noTimeline = RiotMatchIdSchema.parse("NA1_7300000003");
 const aram = RiotMatchIdSchema.parse("NA1_7300000004");
 const withBot = RiotMatchIdSchema.parse("NA1_7300000005");
-const ALL_MATCHES = [ranked, surrendered, noTimeline, aram, withBot];
+const partialFrame = RiotMatchIdSchema.parse("NA1_7300000006");
+const ALL_MATCHES = [
+  ranked,
+  surrendered,
+  noTimeline,
+  aram,
+  withBot,
+  partialFrame,
+];
 
 function matchFacts(
   matchId: RiotMatchId,
@@ -170,18 +182,24 @@ async function writeFixtureLake(options: {
       ...matchFacts(noTimeline),
       ...matchFacts(aram, { queueId: 450, gameMode: "ARAM", mapId: 12 }),
       ...botFacts,
+      ...matchFacts(partialFrame),
     ],
     timelineFrames: [
       ...(options.lateTimeline ? [] : frames(ranked, 20)),
       ...frames(surrendered, 14),
       ...frames(aram, 16),
       ...frames(withBot, 18),
+      // Riot's 15:00 frame for this match omits participant 7.
+      ...frames(partialFrame, 18).filter(
+        (row) => !(row.frame_index === 15 && row.participant_id === 7),
+      ),
     ],
     timelineCoverage: [
       ...(options.lateTimeline ? [] : [coverage(ranked, 21)]),
       coverage(surrendered, 15),
       coverage(aram, 17),
       coverage(withBot, 19),
+      coverage(partialFrame, 19),
     ],
   });
   return lakeDir;
@@ -209,7 +227,7 @@ async function derive(
   scope: "all" | readonly string[],
   derivedAt: Date,
   foldBuildId?: string,
-): Promise<number> {
+): Promise<LaneResultsWritten> {
   return await writeLaneResultsParquet({
     buildDir: await currentBuild(lakeDir),
     inputs: await resolveLakeFiles(lakeDir),
@@ -232,6 +250,7 @@ async function laneRows(lakeDir: string): Promise<LaneResultReadRow[]> {
 type LaneVerdict = {
   matchId: RiotMatchId;
   participantId: number;
+  checkpoint: RoleCheckpoint;
   ahead: boolean | null;
   gold: number | null;
   cs: number | null;
@@ -243,12 +262,14 @@ function sideVerdict(
   matchId: RiotMatchId,
   participantId: number,
   sign: 1 | -1,
-  at15: RoleMatchup["at15"],
+  matchup: RoleMatchup,
 ): LaneVerdict {
+  const { at15, checkpoint } = matchup;
   if (at15 === null) {
     return {
       matchId,
       participantId,
+      checkpoint,
       ahead: null,
       gold: null,
       cs: null,
@@ -258,6 +279,7 @@ function sideVerdict(
   return {
     matchId,
     participantId,
+    checkpoint,
     ahead: sign * at15.goldDelta > 0,
     gold: sign * at15.goldDelta + 0,
     cs: sign * at15.creepScoreDelta + 0,
@@ -279,8 +301,8 @@ async function matchPageVerdicts(lakeDir: string): Promise<LaneVerdict[]> {
     });
     for (const matchup of matchups ?? []) {
       verdicts.push(
-        sideVerdict(matchId, matchup.blueParticipantId, 1, matchup.at15),
-        sideVerdict(matchId, matchup.redParticipantId, -1, matchup.at15),
+        sideVerdict(matchId, matchup.blueParticipantId, 1, matchup),
+        sideVerdict(matchId, matchup.redParticipantId, -1, matchup),
       );
     }
   }
@@ -291,10 +313,16 @@ async function matchPageVerdicts(lakeDir: string): Promise<LaneVerdict[]> {
   );
 }
 
+function tableCheckpoint(complete: boolean | null): RoleCheckpoint {
+  if (complete === null) return "missing";
+  return complete ? "complete" : "incomplete";
+}
+
 function tableVerdicts(rows: readonly LaneResultReadRow[]): LaneVerdict[] {
   return rows.map((row) => ({
     matchId: row.match_id,
     participantId: row.participant_id,
+    checkpoint: tableCheckpoint(row.checkpoint_complete),
     ahead: row.gold_diff_at_15 === null ? null : row.gold_diff_at_15 > 0,
     gold: row.gold_diff_at_15,
     cs: row.cs_diff_at_15,
@@ -319,11 +347,14 @@ describe("lane_results", () => {
   test("agrees with the match page's buildRoleMatchups for every laner", async () => {
     const lakeDir = await fixtureLake({ lateTimeline: false });
     await recordFingerprint(lakeDir, lakeSchemaFingerprint());
-    expect(await derive(lakeDir, "all", new Date())).toBe(40);
+    expect(await derive(lakeDir, "all", new Date())).toEqual({
+      rows: 50,
+      incompleteCheckpointMatches: 1,
+    });
 
     const rows = await laneRows(lakeDir);
     const page = await matchPageVerdicts(lakeDir);
-    expect(page).toHaveLength(40);
+    expect(page).toHaveLength(50);
     expect(tableVerdicts(rows)).toEqual(page);
 
     // The 15:00 frame is stamped at 900303 ms, so the checkpoint is that
@@ -388,6 +419,22 @@ describe("lane_results", () => {
     expect(
       byMatch(noTimeline).map((row) => [row.has_timeline, row.gold_diff_at_15]),
     ).toEqual(Array.from({ length: 10 }, () => [false, null]));
+    // A 15:00 frame missing one participant is a stated state: every lane of
+    // the match keeps its row and its checkpoint, with no difference.
+    expect(
+      byMatch(partialFrame).map((row) => [
+        row.has_timeline,
+        row.checkpoint_timestamp_ms,
+        row.checkpoint_complete,
+        row.gold_diff_at_15,
+      ]),
+    ).toEqual(Array.from({ length: 10 }, () => [true, 900_303, false, null]));
+    expect(
+      byMatch(ranked).every((row) => row.checkpoint_complete === true),
+    ).toBe(true);
+    expect(
+      byMatch(surrendered).every((row) => row.checkpoint_complete === null),
+    ).toBe(true);
     // A bot laner keeps its slot with no PUUID.
     const bot = byMatch(withBot).find((row) => row.participant_id === 10);
     expect(bot?.puuid).toBeNull();
@@ -430,7 +477,7 @@ describe("lane_results", () => {
         new Date("2026-11-21T00:05:00.000Z"),
         foldBuildId,
       ),
-    ).toBe(10);
+    ).toEqual({ rows: 10, incompleteCheckpointMatches: 0 });
 
     expect(await laneRows(folded)).toEqual(await laneRows(rebuilt));
   });

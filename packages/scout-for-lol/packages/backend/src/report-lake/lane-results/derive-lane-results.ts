@@ -302,6 +302,12 @@ async function deriveMonth(
   );
 }
 
+export type LaneResultsWritten = {
+  rows: number;
+  /** Matches whose 15:00 frame omits a participant (no lane result). */
+  incompleteCheckpointMatches: number;
+};
+
 /**
  * Write `lane_results` Parquet into a candidate build for the scope's matches.
  *
@@ -320,9 +326,11 @@ export async function writeLaneResultsParquet(options: {
   foldBuildId?: string;
   timeoutMs: number;
   abortSignal?: AbortSignal | undefined;
-}): Promise<number> {
+}): Promise<LaneResultsWritten> {
   options.abortSignal?.throwIfAborted();
-  if (options.scope !== "all" && options.scope.length === 0) return 0;
+  if (options.scope !== "all" && options.scope.length === 0) {
+    return { rows: 0, incompleteCheckpointMatches: 0 };
+  }
   const tmpPath = path.join(
     options.buildDir,
     `${LANE_RESULTS_TABLE}.ndjson.tmp`,
@@ -341,9 +349,11 @@ export async function writeLaneResultsParquet(options: {
           [],
           MonthRowSchema,
         );
+        const incomplete = new Set<string>();
         for (const { month } of months) {
           options.abortSignal?.throwIfAborted();
           for (const row of await deriveMonth(session, month, derivedAt)) {
+            if (row.checkpoint_complete === false) incomplete.add(row.match_id);
             await writer.write(row);
           }
         }
@@ -359,7 +369,10 @@ export async function writeLaneResultsParquet(options: {
               : { fileNamePrefix: `fold-${options.foldBuildId}` }),
           });
         }
-        return writer.rows;
+        return {
+          rows: writer.rows,
+          incompleteCheckpointMatches: incomplete.size,
+        };
       },
       {
         timeoutMs: options.timeoutMs,

@@ -242,7 +242,7 @@ export async function rebuildReportLake(
     }
 
     deadline.throwIfAborted();
-    const laneResultRows = await writeLaneResultsParquet({
+    const laneResults = await writeLaneResultsParquet({
       buildDir,
       inputs: await buildDirLaneResultInputs(buildDir),
       scope: "all",
@@ -250,7 +250,7 @@ export async function rebuildReportLake(
       timeoutMs: remainingTimeoutMs(),
       abortSignal: deadline,
     });
-    onProgress?.({ phase: "deriving-lane-results", rows: laneResultRows });
+    onProgress?.({ phase: "deriving-lane-results", rows: laneResults.rows });
 
     deadline.throwIfAborted();
     const accountRows = await writeAccountsParquet(prisma, buildDir, deadline);
@@ -336,7 +336,8 @@ export async function rebuildReportLake(
       timelineEventParticipantRows: timelines.eventParticipantRows,
       timelineParticipantFrameRows: timelines.participantFrameRows,
       timelineCoverageRows: timelines.coverageRows,
-      laneResultRows,
+      laneResultRows: laneResults.rows,
+      laneResultIncompleteCheckpoints: laneResults.incompleteCheckpointMatches,
       skippedMatches,
       skippedPrematches,
       skippedCompetitionRankHistory: rankHistory.skipped,

@@ -1,6 +1,7 @@
 import path from "node:path";
 import {
   reportLakeCompactionRowsTotal,
+  reportLakeLaneCheckpointIncompleteTotal,
   reportLakeLastPublishTimestamp,
 } from "#src/metrics/reports/report-lake.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
@@ -26,6 +27,8 @@ export type CompactionSummary = {
   timelineCoverageRows: number;
   /** Rows derived into `lane_results` (a fold's re-derivations, or all). */
   laneResultRows: number;
+  /** Derived matches whose 15:00 frame omits a participant. */
+  laneResultIncompleteCheckpoints: number;
   skippedMatches: number;
   skippedPrematches: number;
   skippedCompetitionRankHistory: number;
@@ -79,5 +82,9 @@ export function publishCompactionMetrics(
       summary.crawl.rows[table],
     );
   }
+  reportLakeLaneCheckpointIncompleteTotal.inc(
+    { tier: summary.tier },
+    summary.laneResultIncompleteCheckpoints,
+  );
   reportLakeLastPublishTimestamp.set({ tier: summary.tier }, Date.now() / 1000);
 }

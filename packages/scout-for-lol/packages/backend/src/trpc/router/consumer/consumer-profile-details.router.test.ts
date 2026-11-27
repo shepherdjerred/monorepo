@@ -541,6 +541,7 @@ describe("role-paired match scoreboards", () => {
       role: "top",
       blueParticipantId: 1,
       redParticipantId: 6,
+      checkpoint: "complete",
       at15: {
         timestampMs: 900_303,
         goldDelta: 500,
@@ -595,21 +596,18 @@ describe("role-paired match scoreboards", () => {
     // A game that ended at 14:30, or one missing its 15:00 frame, reads no frames.
     const matchups = buildRoleMatchups({ rows, frames: [] });
     expect(matchups).toHaveLength(5);
-    expect(matchups?.map((matchup) => matchup.at15)).toEqual([
-      null,
-      null,
-      null,
-      null,
-      null,
-    ]);
+    expect(
+      matchups?.map((matchup) => [matchup.checkpoint, matchup.at15]),
+    ).toEqual(Array.from({ length: 5 }, () => ["missing", null]));
   });
 
-  test("fails when the checkpoint frame omits a participant", () => {
-    expect(() =>
-      buildRoleMatchups({
-        rows,
-        frames: frames.slice(0, -1),
-      }),
-    ).toThrow(/missing a 15-minute lane frame/);
+  test("states an incomplete checkpoint, with no lane result, when the frame omits a participant", () => {
+    // Riot's participantFrames is an open record; a partial frame is boundary
+    // data, and every lane of the match loses its result, not just one.
+    const matchups = buildRoleMatchups({ rows, frames: frames.slice(0, -1) });
+    expect(matchups).toHaveLength(5);
+    expect(
+      matchups?.map((matchup) => [matchup.checkpoint, matchup.at15]),
+    ).toEqual(Array.from({ length: 5 }, () => ["incomplete", null]));
   });
 });

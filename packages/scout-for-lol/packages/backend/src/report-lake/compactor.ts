@@ -252,7 +252,7 @@ export async function runReportLakeFold(
         });
         // Re-derive every match a staged match or timeline row names, so a
         // timeline folded after its match replaces the timeline-less rows.
-        const laneResultRows = await writeLaneResultsParquet({
+        const laneResults = await writeLaneResultsParquet({
           buildDir,
           inputs: await buildDirLaneResultInputs(buildDir),
           scope: stagedLaneResultScope([
@@ -303,7 +303,9 @@ export async function runReportLakeFold(
           timelineEventParticipantRows: stagedTimelineEventParticipants.rows,
           timelineParticipantFrameRows: stagedTimelineParticipantFrames.rows,
           timelineCoverageRows: stagedTimelineCoverage.rows,
-          laneResultRows,
+          laneResultRows: laneResults.rows,
+          laneResultIncompleteCheckpoints:
+            laneResults.incompleteCheckpointMatches,
           skippedMatches: stagedMatches.skipped,
           skippedPrematches: stagedPrematches.skipped,
           skippedCompetitionRankHistory: stagedRankHistory.skipped,

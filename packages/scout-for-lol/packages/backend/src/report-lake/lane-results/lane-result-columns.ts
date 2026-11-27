@@ -9,8 +9,9 @@ import { z } from "zod";
  * A row pairs a laner with the same-role opponent `buildRoleMatchups` pairs
  * them with, and states their gold, creep score and experience difference at
  * the 15:00 checkpoint (laner minus opponent). Only a match that
- * `buildRoleMatchups` can pair has rows. A match with no timeline, or one that
- * ended before 15:00, has rows whose differences are NULL.
+ * `buildRoleMatchups` can pair has rows. A match with no timeline, one that
+ * ended before 15:00, or one whose 15:00 frame omits a participant has rows
+ * whose differences are NULL.
  *
  * The table is derived, never staged: every fold re-derives the matches its
  * staged rows touch, and a rebuild derives every match. Readers keep the newest
@@ -43,6 +44,11 @@ export const LaneResultLakeRowSchema = z.object({
   has_timeline: z.boolean(),
   /** The 15:00 checkpoint frame's timestamp; NULL when there is none. */
   checkpoint_timestamp_ms: z.number().int().nullable(),
+  /**
+   * Whether the checkpoint frame holds every participant; NULL when there is
+   * no checkpoint. FALSE (a partial Riot frame) leaves the differences NULL.
+   */
+  checkpoint_complete: z.boolean().nullable(),
   gold_diff_at_15: z.number().int().nullable(),
   cs_diff_at_15: z.number().int().nullable(),
   xp_diff_at_15: z.number().int().nullable(),
@@ -70,6 +76,7 @@ export const LANE_RESULT_LAKE_COLUMNS: Record<
   win: "BOOLEAN",
   has_timeline: "BOOLEAN",
   checkpoint_timestamp_ms: "BIGINT",
+  checkpoint_complete: "BOOLEAN",
   gold_diff_at_15: "INTEGER",
   cs_diff_at_15: "INTEGER",
   xp_diff_at_15: "INTEGER",

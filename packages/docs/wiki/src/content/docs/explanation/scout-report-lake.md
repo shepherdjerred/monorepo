@@ -495,6 +495,14 @@ checkpoint, and its rows carry `NULL` differences rather than a nearby frame.
 A match with no timeline keeps its rows too, with `has_timeline` false, so a
 lane figure can state how many of its games could be measured.
 
+A checkpoint frame can also omit a participant: Riot's timeline states frames
+as an open record, and nothing between Riot and the lake guarantees ten
+entries. That is boundary data, not a broken internal contract, so it is a
+stated state rather than an error. The match's rows carry
+`checkpoint_complete` false with `NULL` differences, the match page shows no
+lane result for it, and a metric counts such matches. Failing instead would
+let one Riot timeline stop every fold and rebuild in a stage.
+
 Nothing is staged for the table. A fold re-derives every match that its staged
 match or timeline rows name, and a rebuild derives every match. Timelines
 arrive separately from matches, so a match is often derived first without its

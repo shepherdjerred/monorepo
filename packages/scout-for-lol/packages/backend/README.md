@@ -462,11 +462,18 @@ participant id, champion), team, role, win, queue and game time, whether the
 lake holds the match's timeline, and the gold, creep score and experience
 difference against the opponent at the 15:00 checkpoint. The checkpoint is the
 first frame stamped at or after 15:00 and before 16:00; with none (a shorter
-game, a missing frame, no timeline) the differences are `NULL`. "Ahead at 15"
-means a gold difference strictly greater than zero. Nothing is staged for it: a
-fold re-derives the matches its staged match or timeline rows name
-(`report-lake/lane-results/`), a rebuild derives all of them, and reads keep the
-newest derivation per laner. Each build manifest records `laneResultRows`.
+game, a missing frame, no timeline) the differences are `NULL` and
+`checkpoint_complete` is `NULL`. A checkpoint frame that omits a participant
+(Riot's `participantFrames` is an open record) gives `checkpoint_complete =
+false` and `NULL` differences for the whole match; `buildRoleMatchups`
+(`reports/lanes/role-matchups.ts`) states the same `incomplete` checkpoint to
+the match page instead of failing. "Ahead at 15" means a gold difference
+strictly greater than zero. Nothing is staged for it: a fold re-derives the
+matches its staged match or timeline rows name (`report-lake/lane-results/`), a
+rebuild derives all of them, and reads keep the newest derivation per laner.
+Each build manifest records `laneResultRows` and
+`laneResultIncompleteCheckpoints`, and
+`report_lake_lane_checkpoint_incomplete_total` counts incomplete checkpoints.
 
 Every participant has a `matches` row. `puuid` is non-null exactly when the row
 names a player; a bot or an unresolved player has a `NULL` `puuid` and its
