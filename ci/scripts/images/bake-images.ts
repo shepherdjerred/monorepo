@@ -7,6 +7,7 @@ import {
 } from "../../../scripts/lib/ci/image-publication-handoff.ts";
 import {
   classifyRuntimeChange,
+  exactSmokeHarnessChanged,
   imageRuntimeFingerprint,
   runExactCandidateSmoke,
   sourceLabelVerifier,
@@ -269,6 +270,27 @@ async function publishStarlightTag(
   if (tag.exitCode !== 0) throw new Error(`Version tag failed for ${name}`);
 }
 
+/** Classify a pushed candidate's runtime against the original it would replace. */
+async function runtimeOutcome(
+  options: {
+    readonly image: string;
+    readonly candidate: string;
+    readonly original: ArtifactVersion | undefined;
+  },
+  getRuntimeFingerprint: (image: string) => Promise<string | undefined>,
+): Promise<PushOutcome["outcome"]> {
+  const { image, candidate, original } = options;
+  const candidateFingerprint = await getRuntimeFingerprint(candidate);
+  if (candidateFingerprint === undefined)
+    throw new TransientError(`Candidate unavailable: ${candidate}`);
+  return original === undefined
+    ? "no-pin-bumped"
+    : classifyRuntimeChange(
+        { image, pinnedDigest: original.digest, candidateFingerprint },
+        getRuntimeFingerprint,
+      );
+}
+
 export async function pushImages(
   options: PushOptions,
   dependencies: {
@@ -295,7 +317,8 @@ export async function pushImages(
     readonly writeText?: TextWriter;
   } = {},
 ): Promise<void> {
-  const { targets, commit, buildNumber, contractHash } = options;
+  const { targets, commit, buildNumber, contractHash, exactHarnessChanged } =
+    options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
   const readOriginals =
@@ -367,31 +390,27 @@ export async function pushImages(
     const digest = await getManifestDigest(candidateTag);
     const candidate = `${image}@${digest}`;
     await verifyRegistryAccess(name, digest);
-    if (applicationImageTargets.has(name)) {
-      await verifySourceLabel(candidate);
-      await smokeCandidate(name, candidate, contractHash);
-    }
-    const newFingerprint = await getRuntimeFingerprint(candidate);
-    if (newFingerprint === undefined)
-      throw new TransientError(`Candidate unavailable: ${candidate}`);
-    const outcome =
-      original === undefined
-        ? "no-pin-bumped"
-        : await classifyRuntimeChange(
-            {
-              image,
-              pinnedDigest: original.digest,
-              candidateFingerprint: newFingerprint,
-            },
-            getRuntimeFingerprint,
-          );
+    const applicationImage = applicationImageTargets.has(name);
+    if (applicationImage) await verifySourceLabel(candidate);
+    const outcome = await runtimeOutcome(
+      { image, candidate, original },
+      getRuntimeFingerprint,
+    );
     outcomes.push({ image: name, outcome });
     if (original !== undefined && outcome === "content-unchanged") {
       // Same runtime bytes (VERSION/GIT_SHA excluded): Delivery keeps the
       // original, pending or qualified, instead of registering a duplicate.
+      // That original already passed its own exact-digest smoke, so pulling
+      // and booting the discarded duplicate would prove nothing new — unless
+      // the harness itself changed, in which case the original meets it now.
+      if (applicationImage && exactHarnessChanged === true) {
+        await smokeCandidate(name, `${image}@${original.digest}`, contractHash);
+      }
       retained.push(original);
       continue;
     }
+    // Only a candidate Delivery will register is smoked at its exact digest.
+    if (applicationImage) await smokeCandidate(name, candidate, contractHash);
     await publishStarlightTag(name, candidate, buildNumber, executor);
     deliveryDigests[`shepherdjerred/${name}`] = digest;
   }
@@ -448,6 +467,10 @@ async function main(): Promise<void> {
         commit,
         buildNumber,
         contractHash,
+        exactHarnessChanged: await exactSmokeHarnessChanged(
+          selection.fallbackReason,
+          selectionReport,
+        ),
       },
       {
         owners,

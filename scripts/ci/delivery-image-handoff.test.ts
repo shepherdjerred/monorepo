@@ -312,13 +312,19 @@ async function publishCandidate(
       },
       getRuntimeFingerprint: fingerprint,
       writeDeliveryMetadata: async (digests, retained) => {
-        expect(verified).toEqual(["registry", "source", "smoke"]);
+        // Every candidate is access- and source-checked; only one handed off
+        // as a new artifact is smoked at its exact digest.
+        expect(verified).toEqual(
+          Object.keys(digests).length > 0
+            ? ["registry", "source", "smoke"]
+            : ["registry", "source"],
+        );
         delivery.push({ digests, retained });
       },
       writeText: () => Promise.resolve(),
     },
   );
-  return { operation, delivery };
+  return { operation, delivery, verified };
 }
 
 test("retains the qualified original for a verified runtime-unchanged Arcade candidate", async () => {
@@ -329,6 +335,8 @@ test("retains the qualified original for a verified runtime-unchanged Arcade can
   expect(output.delivery).toEqual([
     { digests: {}, retained: [arcadeOriginal] },
   ]);
+  // The discarded duplicate is never pulled back for an exact-digest smoke.
+  expect(output.verified).toEqual(["registry", "source"]);
   const [publication] = await buildPublications(
     {
       digests: output.delivery[0]?.digests,
@@ -370,11 +378,17 @@ test("retains the qualified original for a verified runtime-unchanged Arcade can
 });
 
 test("does not hand off an image whose exact candidate smoke failed", async () => {
-  const output = await publishCandidate({ smokeFails: true });
+  const output = await publishCandidate({
+    smokeFails: true,
+    // A runtime change makes this a candidate Delivery would register.
+    fingerprint: async (image) =>
+      image === reference ? "changed-runtime" : "identical-runtime",
+  });
   await expect(output.operation).rejects.toThrow(
     "Exact candidate smoke failed",
   );
   expect(output.delivery).toEqual([]);
+  expect(output.verified).toEqual(["registry", "source"]);
 });
 
 test("back-to-back pipelines retain the previous pipeline's pending image instead of republishing it", async () => {

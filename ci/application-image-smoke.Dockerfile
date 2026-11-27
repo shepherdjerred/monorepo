@@ -9,9 +9,10 @@
 ARG CANDIDATE_IMAGE=scratch
 
 # Pure-Rust debian:trixie-slim application images (e.g. charts, ci-cache) ship
-# no Bun runtime in production. Stage a standalone Bun binary only inside this
-# ephemeral smoke harness so `smoke-app-in-image.ts` runs identically across all
-# candidate images.
+# no Bun runtime in production. Bind-mount a standalone Bun binary into the
+# smoke RUN only, so `smoke-app-in-image.ts` runs identically across all
+# candidate images without committing a ~100 MB harness layer on top of every
+# candidate.
 FROM oven/bun:1.4.5-slim@sha256:b780593f3e10918cbdaec3d5a08d52224b9198069a65eb47812085c2ec007643 AS bun-harness
 
 FROM ${CANDIDATE_IMAGE}
@@ -20,12 +21,6 @@ ARG SMOKE_TARGET
 ARG EXPECTED_CONTRACT_HASH
 
 USER 0:0
-COPY --from=bun-harness --chown=1000:1000 --chmod=0755 \
-  /usr/local/bin/bun \
-  /tmp/smoke-bun
-COPY --chown=1000:1000 \
-  ci/scripts/images/smoke-app-in-image.ts \
-  /app/ci/scripts/images/
 
 # Scout and Media production images deliberately exclude PostgreSQL. Their
 # exact-digest smokes start ephemeral databases to exercise deployed migrations,
@@ -48,4 +43,8 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 ENV EXPECTED_CONTRACT_HASH=${EXPECTED_CONTRACT_HASH}
 ENV HOME=/tmp
 USER 1000:1000
-RUN sh -c 'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts'
+# The harness binary and script are read-only bind mounts: they exist only for
+# this RUN and never become candidate-image layers.
+RUN --mount=type=bind,from=bun-harness,source=/usr/local/bin/bun,target=/tmp/smoke-bun \
+    --mount=type=bind,source=ci/scripts/images/smoke-app-in-image.ts,target=/app/ci/scripts/images/smoke-app-in-image.ts \
+    sh -c 'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts'
