@@ -21,8 +21,8 @@ import { CHECKPOINT_TIMES_MS } from "#src/league/crawl/crawl-records.ts";
 import { createLakeMetaReader } from "#src/meta/meta-reader.ts";
 import { rollUpMeta } from "#src/meta/meta-rollup.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
-import { MATCH_LOADOUT_LAKE_COLUMNS_SQL } from "#src/report-lake/loadout.ts";
 import {
+  fullMatchRowsSql,
   MatchParticipantRowSchema,
   type LakeMatchParticipantRow,
   type LaneDeltaFrame,
@@ -272,15 +272,9 @@ describe("lane partials", () => {
     const { participants, checkpoints } = await withDuckDBConnection(
       async (session) => ({
         participants: await session.run(
-          `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms,
-             game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id,
-             puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement,
-             augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id,
-             riot_id_game_name, riot_id_tagline,
-             champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score,
-             gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills,
-             inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL}
-           FROM read_parquet($1, hive_partitioning = false) ORDER BY match_id, participant_id`,
+          fullMatchRowsSql(
+            "SELECT * FROM read_parquet($1, hive_partitioning = false)",
+          ),
           [session.list(files(buildDir, "matches_crawl", DAY))],
         ),
         checkpoints: await session.run(
