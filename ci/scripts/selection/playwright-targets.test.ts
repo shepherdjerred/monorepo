@@ -16,6 +16,14 @@ const workspaces = new Map<string, WorkspacePackage>([
     "@shepherdjerred/tracker",
     { dir: "packages/tracker/", workspaceDependencies: [] },
   ],
+  [
+    "@shepherdjerred/tasknotes-web",
+    { dir: "packages/tasknotes-web/", workspaceDependencies: [] },
+  ],
+  [
+    "tasknotes-server",
+    { dir: "packages/tasknotes-server/", workspaceDependencies: [] },
+  ],
   ["sjer.red", { dir: "packages/sjer.red/", workspaceDependencies: [] }],
   [
     "@shepherdjerred/docs-wiki",
@@ -89,6 +97,22 @@ function packages(
 }
 
 describe("Playwright target selection", () => {
+  test("selects Facet browser acceptance for its same-origin server changes", async () => {
+    const packageName = "@shepherdjerred/tasknotes-web";
+    expect(
+      packages(
+        await selectPlaywrightTargets(
+          ["packages/tasknotes-server/src/web-ui.ts"],
+          ".",
+          workspaces,
+        ),
+      ),
+    ).toEqual([packageName]);
+    expect(additionalPlaywrightInstallFilters([packageName])).toEqual([
+      "tasknotes-server",
+    ]);
+  });
+
   test("selects Delivery browser acceptance for its service or UI changes", async () => {
     expect(
       packages(
