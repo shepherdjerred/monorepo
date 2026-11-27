@@ -12,6 +12,13 @@ import {
   type CanvasFrameModel,
 } from "#client/canvas/model.ts";
 import type { WorldRect } from "#client/canvas/camera.ts";
+import {
+  noteModels,
+  withRect,
+  type Note,
+  type NoteModel,
+} from "#client/canvas/notes/shapes.ts";
+import { opsForNudge, opsForRects, opsForRemove } from "./builders.ts";
 import { createHistory } from "./history.ts";
 import { NUDGE, NUDGE_FAST, stepOrder, type OrderStep } from "./geometry.ts";
 import { entryBetween, entryOps } from "./ops.ts";
@@ -20,10 +27,21 @@ import { useBoardLayout, type SaveStatus } from "./use-layout.ts";
 export type Arrange = {
   /** The frames to draw: server index, edits not yet saved, and any drag in progress. */
   readonly frames: readonly CanvasFrameModel[];
+  /** The annotations to draw, with any drag, resize or endpoint drag in progress. */
+  readonly notes: readonly NoteModel[];
   readonly selection: ReadonlySet<string>;
   readonly setSelection: (selection: ReadonlySet<string>) => void;
   /** Live positions of the frames being dragged or resized, or null. */
   readonly setDraft: (draft: ReadonlyMap<string, WorldRect> | null) => void;
+  /** Whole-note drafts (an endpoint drag, a new shape being drawn), or null. */
+  readonly setNoteDraft: (draft: ReadonlyMap<string, Note> | null) => void;
+  /** Saves a finished edit of one annotation (create, text, colour, endpoint) as an undo step. */
+  readonly putNote: (
+    label: string,
+    id: string,
+    note: Note,
+    key?: string,
+  ) => void;
   /** Saves a finished drag or resize as one undo step. */
   readonly commitRects: (
     label: string,
@@ -51,18 +69,19 @@ function touchedBy(ops: readonly BoardOp[]): string[] {
       case "removeFrame":
       case "placeFrame":
         return [op.artifactId];
-      case "reorder":
       case "putNote":
       case "deleteNote":
+        return [op.id];
+      case "reorder":
       case "setLaunch":
         return [];
     }
   });
 }
 
-function titleOf(data: Pick<BoardData, "artifacts">, id: string): string {
+function nameOf(artifacts: BoardData["artifacts"], id: string): string {
   return (
-    data.artifacts.find((artifact) => artifact.id === id)?.title ?? "frame"
+    artifacts.find((artifact) => artifact.id === id)?.title ?? "annotation"
   );
 }
 
@@ -84,6 +103,9 @@ export function useArrange(
   const [draft, setDraft] = useState<ReadonlyMap<string, WorldRect> | null>(
     null,
   );
+  const [noteDraft, setNoteDraft] = useState<ReadonlyMap<string, Note> | null>(
+    null,
+  );
   const [announcement, setAnnouncement] = useState("");
   const own = useRef(new Set<string>());
   const selectionRef = useRef(selection);
@@ -98,6 +120,21 @@ export function useArrange(
         draft,
       ),
     [layout.index, data.artifacts, draft],
+  );
+
+  const notes = useMemo(
+    () =>
+      noteModels(layout.index).map((model) => {
+        const whole = noteDraft?.get(model.id);
+        const rect = draft?.get(model.id);
+        const note =
+          whole ??
+          (rect === undefined ? model.note : withRect(model.note, rect));
+        return note === model.note
+          ? model
+          : { ...model, note, rect: rect ?? model.rect };
+      }),
+    [layout.index, draft, noteDraft],
   );
 
   const edit = useCallback(
@@ -127,61 +164,41 @@ export function useArrange(
 
   const commitRects = useCallback(
     (label: string, rects: ReadonlyMap<string, WorldRect>) => {
-      const index = layout.latest();
-      const moves = [...rects].flatMap(([id, rect]) => {
-        const frame = index.frames[id];
-        if (frame === undefined) return [];
-        const resized = frame.w !== rect.w || frame.h !== rect.h;
-        return [
-          {
-            artifactId: id,
-            x: rect.x,
-            y: rect.y,
-            ...(resized ? { w: rect.w, h: rect.h } : {}),
-          },
-        ];
-      });
-      const done =
-        moves.length === 0 ? null : edit(label, [{ op: "moveFrames", moves }]);
+      const ops = opsForRects(layout.latest(), rects);
+      const done = ops.length === 0 ? null : edit(label, ops);
       setDraft(null);
-      const [first] = moves;
-      if (done !== null && first !== undefined) {
-        const frame = done.frames[first.artifactId];
-        const what =
-          moves.length === 1
-            ? titleOf({ artifacts: artifacts.current }, first.artifactId)
-            : `${String(moves.length)} frames`;
+      const [first] = [...rects.keys()];
+      if (done !== null && first !== undefined)
         setAnnouncement(
-          `${label === "Resize" ? "Resized" : "Moved"} ${what}${frame === undefined ? "" : ` to ${String(Math.round(frame.x))}, ${String(Math.round(frame.y))}`}`,
+          `${label === "Resize" ? "Resized" : "Moved"} ${rects.size === 1 ? nameOf(artifacts.current, first) : `${String(rects.size)} items`}`,
         );
-      }
     },
     [edit, layout],
+  );
+
+  const putNote = useCallback(
+    (label: string, id: string, note: Note, key?: string) => {
+      edit(label, [{ op: "putNote", id, note }], key);
+      setNoteDraft(null);
+      setAnnouncement(label);
+    },
+    [edit],
   );
 
   const nudge = useCallback(
     (dx: number, dy: number, fast: boolean) => {
       const step = fast ? NUDGE_FAST : NUDGE;
-      const index = layout.latest();
-      const moves = [...selectionRef.current].flatMap((id) => {
-        const frame = index.frames[id];
-        return frame === undefined
-          ? []
-          : [
-              {
-                artifactId: id,
-                x: frame.x + dx * step,
-                y: frame.y + dy * step,
-              },
-            ];
-      });
-      if (moves.length === 0) return;
-      edit("Nudge", [{ op: "moveFrames", moves }], "nudge");
-      const [first] = moves;
-      if (first !== undefined)
-        setAnnouncement(
-          `Moved ${moves.length === 1 ? titleOf({ artifacts: artifacts.current }, first.artifactId) : `${String(moves.length)} frames`} to ${String(first.x)}, ${String(first.y)}`,
-        );
+      const ops = opsForNudge(
+        layout.latest(),
+        selectionRef.current,
+        dx * step,
+        dy * step,
+      );
+      if (ops.length === 0) return;
+      edit("Nudge", ops, "nudge");
+      setAnnouncement(
+        `Moved ${selectionRef.current.size === 1 ? "1 item" : `${String(selectionRef.current.size)} items`} by ${String(dx * step)}, ${String(dy * step)}`,
+      );
     },
     [edit, layout],
   );
@@ -200,17 +217,12 @@ export function useArrange(
   );
 
   const remove = useCallback(() => {
-    const ids = [...selectionRef.current].filter(
-      (id) => id in layout.latest().frames,
-    );
-    if (ids.length === 0) return;
-    edit(
-      "Delete from board",
-      ids.map((id) => ({ op: "removeFrame", artifactId: id })),
-    );
+    const ops = opsForRemove(layout.latest(), selectionRef.current);
+    if (ops.length === 0) return;
+    edit("Delete", ops);
     setSelection(new Set());
     setAnnouncement(
-      `Removed ${ids.length === 1 ? titleOf({ artifacts: artifacts.current }, ids[0] ?? "") : `${String(ids.length)} frames`} from the board`,
+      `Removed ${ops.length === 1 ? "1 item" : `${String(ops.length)} items`} from the board`,
     );
   }, [edit, layout]);
 
@@ -221,12 +233,14 @@ export function useArrange(
       if (entry === null) return;
       const ops = entryOps(entry, direction, layout.latest());
       for (const id of entry.frames.keys()) own.current.add(id);
+      for (const id of entry.notes.keys()) own.current.add(id);
       layout.apply(ops);
       setSelection(
         new Set(
-          [...entry.frames.keys()].filter(
-            (id) => id in applyBoardOps(layout.latest(), ops).frames,
-          ),
+          [...entry.frames.keys(), ...entry.notes.keys()].filter((id) => {
+            const next = applyBoardOps(layout.latest(), ops);
+            return id in next.frames || id in next.notes;
+          }),
         ),
       );
       setAnnouncement(
@@ -250,9 +264,12 @@ export function useArrange(
 
   return {
     frames,
+    notes,
     selection,
     setSelection,
     setDraft,
+    setNoteDraft,
+    putNote,
     commitRects,
     nudge,
     order,

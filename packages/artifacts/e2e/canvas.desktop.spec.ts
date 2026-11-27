@@ -4,6 +4,7 @@ import {
   SETTLE_MS,
   camera,
   cameraOf,
+  expectNoAxeViolations,
   frame,
   openBoard,
   viewportBox,
@@ -338,7 +339,6 @@ test.describe("canvas", () => {
   test("the canvas has no axe violations, with a live frame and a pin", async ({
     page,
   }) => {
-    const { default: AxeBuilder } = await import("@axe-core/playwright");
     await openBoard(page, "concepts");
     await page.keyboard.press("c");
     const view = await viewportBox(page);
@@ -356,15 +356,6 @@ test.describe("canvas", () => {
     await page.waitForTimeout(800);
     // axe cannot see into a sandboxed opaque-origin frame, and WebKit hangs
     // waiting for the one that is live; the frame's content is not ours to check.
-    const results = await new AxeBuilder({ page })
-      .exclude("iframe")
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    expect(
-      results.violations.map(
-        (violation) =>
-          `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
-      ),
-    ).toEqual([]);
+    await expectNoAxeViolations(page, { iframes: false });
   });
 });

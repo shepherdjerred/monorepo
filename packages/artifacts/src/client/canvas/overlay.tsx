@@ -6,9 +6,9 @@
 import { LogOutIcon, MaximizeIcon } from "lucide-react";
 import { useCallback, useRef } from "react";
 import { Link } from "react-router";
-import type { Camera } from "./camera.ts";
+import type { Camera, WorldRect } from "./camera.ts";
 import type { CameraController } from "./controller.ts";
-import { useFollowCamera } from "./follow.ts";
+import { useFollowCamera, useFollowRect } from "./follow.ts";
 import type { CanvasFrameModel } from "./model.ts";
 import { KIND_LABEL } from "./placeholder.tsx";
 
@@ -126,20 +126,12 @@ export function SelectionRing({
   active,
 }: {
   readonly controller: CameraController;
-  readonly model: CanvasFrameModel;
+  readonly model: { readonly rect: WorldRect };
   readonly active: boolean;
 }): React.JSX.Element {
   const { rect } = model;
   const ref = useRef<HTMLDivElement>(null);
-  const place = useCallback(
-    (camera: Camera, element: HTMLElement) => {
-      element.style.width = `${String(rect.w * camera.s)}px`;
-      element.style.height = `${String(rect.h * camera.s)}px`;
-      element.style.transform = `translate(${String(camera.x + rect.x * camera.s)}px, ${String(camera.y + rect.y * camera.s)}px)`;
-    },
-    [rect.x, rect.y, rect.w, rect.h],
-  );
-  useFollowCamera(controller, ref, place);
+  useFollowRect(controller, ref, rect);
   return (
     <div
       ref={ref}

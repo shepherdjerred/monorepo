@@ -1,26 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { applyBoardOps } from "#domain/board-ops.ts";
-import {
-  EMPTY_BOARD_INDEX,
-  type BoardIndex,
-} from "@shepherdjerred/artifacts/contract";
+import type { BoardIndex } from "@shepherdjerred/artifacts/contract";
+import { A, B, C, board } from "./fixtures.ts";
 import { createHistory } from "./history.ts";
 import { coalesceOps, entryBetween, entryOps, mergeEntries } from "./ops.ts";
-
-const A = "11111111-1111-4111-8111-111111111111";
-const B = "22222222-2222-4222-8222-222222222222";
-const C = "33333333-3333-4333-8333-333333333333";
-
-function board(): BoardIndex {
-  return {
-    ...EMPTY_BOARD_INDEX,
-    frames: {
-      [A]: { page: 0, x: 0, y: 0, w: 640, h: 420 },
-      [B]: { page: 0, x: 700, y: 0, w: 640, h: 420 },
-    },
-    order: [A, B],
-  };
-}
 
 function moved(
   index: BoardIndex,
@@ -244,5 +227,119 @@ describe("coalescing ops", () => {
       "reorder",
     ]);
     expect(ops.at(-1)).toEqual({ op: "reorder", order: [B, A] });
+  });
+});
+
+describe("annotations in history", () => {
+  const sticky = {
+    type: "sticky" as const,
+    page: 0,
+    x: 10,
+    y: 10,
+    w: 200,
+    h: 160,
+    text: "Hi",
+    color: "yellow",
+  };
+
+  test("creating a note undoes to nothing and redoes to the note", () => {
+    const before = board();
+    const after = applyBoardOps(before, [
+      { op: "putNote", id: "n1", note: sticky },
+    ]);
+    const entry = entryBetween({
+      label: "Add sticky",
+      before,
+      after,
+      touched: ["n1"],
+      at: 0,
+    });
+    if (entry === null) throw new Error("expected an entry");
+    const undone = applyBoardOps(after, entryOps(entry, "undo", after));
+    expect(undone.notes).toEqual({});
+    expect(undone.order).toEqual([A, B]);
+    const redone = applyBoardOps(undone, entryOps(entry, "redo", undone));
+    expect(redone.notes["n1"]).toEqual(sticky);
+  });
+
+  test("an edit to a note undoes to the old text", () => {
+    const withNote = applyBoardOps(board(), [
+      { op: "putNote", id: "n1", note: sticky },
+    ]);
+    const after = applyBoardOps(withNote, [
+      { op: "putNote", id: "n1", note: { ...sticky, text: "Changed" } },
+    ]);
+    const entry = entryBetween({
+      label: "Edit text",
+      before: withNote,
+      after,
+      touched: ["n1"],
+      at: 0,
+    });
+    if (entry === null) throw new Error("expected an entry");
+    expect(
+      applyBoardOps(after, entryOps(entry, "undo", after)).notes["n1"],
+    ).toMatchObject({ text: "Hi" });
+  });
+
+  test("deleting a note undoes to the note in its old place in the order", () => {
+    const withNote = applyBoardOps(board(), [
+      { op: "putNote", id: "n1", note: sticky },
+      { op: "reorder", order: [A, "n1", B] },
+    ]);
+    const after = applyBoardOps(withNote, [{ op: "deleteNote", id: "n1" }]);
+    const entry = entryBetween({
+      label: "Delete",
+      before: withNote,
+      after,
+      touched: ["n1"],
+      at: 0,
+    });
+    if (entry === null) throw new Error("expected an entry");
+    const restored = applyBoardOps(after, entryOps(entry, "undo", after));
+    expect(restored.notes["n1"]).toEqual(sticky);
+    expect(restored.order).toEqual([A, "n1", B]);
+  });
+
+  test("undo leaves a note an agent added meanwhile alone", () => {
+    const before = board();
+    const mine = applyBoardOps(before, [
+      { op: "putNote", id: "n1", note: sticky },
+    ]);
+    const entry = entryBetween({
+      label: "Add sticky",
+      before,
+      after: mine,
+      touched: ["n1"],
+      at: 0,
+    });
+    if (entry === null) throw new Error("expected an entry");
+    const agent = {
+      type: "title" as const,
+      page: 0,
+      x: 0,
+      y: 0,
+      text: "Agent",
+      size: "m" as const,
+    };
+    const withAgent = applyBoardOps(mine, [
+      { op: "putNote", id: "agent-note", note: agent },
+    ]);
+    const undone = applyBoardOps(withAgent, entryOps(entry, "undo", withAgent));
+    expect(undone.notes["n1"]).toBeUndefined();
+    expect(undone.notes["agent-note"]).toEqual(agent);
+  });
+
+  test("adjacent puts of one note coalesce to the last", () => {
+    expect(
+      coalesceOps([
+        { op: "putNote", id: "n1", note: sticky },
+        { op: "putNote", id: "n1", note: { ...sticky, x: 99 } },
+        { op: "putNote", id: "n2", note: sticky },
+      ]),
+    ).toEqual([
+      { op: "putNote", id: "n1", note: { ...sticky, x: 99 } },
+      { op: "putNote", id: "n2", note: sticky },
+    ]);
   });
 });

@@ -24,11 +24,19 @@ import type { CameraController } from "./controller.ts";
 import type { Point } from "#client/lib/geometry.ts";
 import { createPinch } from "./pinch.ts";
 
-export type Tool = "select" | "hand";
+/** What a press does: select and arrange, pan, or draw one kind of annotation. */
+export type Tool =
+  "select" | "hand" | "text" | "sticky" | "pen" | "box" | "line" | "arrow";
+
+/** True for the tools that draw. */
+export function isDrawTool(tool: Tool): boolean {
+  return tool !== "select" && tool !== "hand";
+}
 
 export type Tap = {
   /** The frame under the pointer when it went down, or null on empty canvas. */
-  readonly frameId: string | null;
+  /** The frame or annotation under the pointer when it went down, or null on empty canvas. */
+  readonly targetId: string | null;
   /** Viewport-relative. */
   readonly point: Point;
   readonly shiftKey: boolean;
@@ -48,7 +56,8 @@ export type PointerSession = {
 
 export type SessionStart = {
   /** The frame under the pointer when it went down, or null on empty canvas. */
-  readonly frameId: string | null;
+  /** The frame or annotation under the pointer when it went down, or null on empty canvas. */
+  readonly targetId: string | null;
   /** Viewport-relative. */
   readonly point: Point;
   readonly shiftKey: boolean;
@@ -61,7 +70,12 @@ export type GestureDeps = {
   readonly tool: () => Tool;
   readonly spaceHeld: () => boolean;
   readonly onTap: (tap: Tap) => void;
-  readonly onDoubleTap: (frameId: string) => void;
+  readonly onDoubleTap: (targetId: string) => void;
+  /**
+   * What is under a viewport point: the page may prefer an annotation drawn
+   * above the frame the DOM found. Without it the DOM's frame is the target.
+   */
+  readonly pick?: (point: Point, frame: string | null) => string | null;
   /**
    * A mouse press with the select tool; the session it returns takes over
    * from panning once the pointer moves 4 px. Null pans (or taps) instead.
@@ -78,7 +92,7 @@ type Tracked = {
   session?: PointerSession | null;
   point: Point;
   readonly down: Point;
-  readonly frameId: string | null;
+  readonly targetId: string | null;
   readonly type: string;
   readonly shiftKey: boolean;
 };
@@ -92,7 +106,7 @@ const GestureSchema = z.object({
   clientY: z.number(),
 });
 
-function frameOf(target: EventTarget | null): string | null {
+function domTargetOf(target: EventTarget | null): string | null {
   const element = target instanceof Element ? target : null;
   return (
     element?.closest<HTMLElement>("[data-frame-id]")?.dataset["frameId"] ?? null
@@ -112,7 +126,7 @@ export function attachGestures(deps: GestureDeps): () => void {
   let pan: Pan | null = null;
   let session: PointerSession | null = null;
   let dragged = false;
-  let lastTap: { frameId: string; at: number; point: Point } | null = null;
+  let lastTap: { targetId: string; at: number; point: Point } | null = null;
 
   function relative(event: { clientX: number; clientY: number }): Point {
     const rect = viewport.getBoundingClientRect();
@@ -142,18 +156,24 @@ export function attachGestures(deps: GestureDeps): () => void {
     return a === undefined || b === undefined ? null : [a.point, b.point];
   }
 
-  /** A mouse press with the select tool may become the page's own drag. */
+  function pickTarget(point: Point, frame: string | null): string | null {
+    return deps.pick === undefined ? frame : deps.pick(point, frame);
+  }
+
+  /** A mouse press with the select tool, or a mouse or pen press with a drawing tool, may become the page's own drag. */
   function startSession(event: PointerEvent, point: Point): void {
     const tracked = pointers.get(event.pointerId);
+    const tool = deps.tool();
     const wanted =
-      event.pointerType === "mouse" &&
       event.button === 0 &&
-      deps.tool() === "select" &&
-      !deps.spaceHeld();
+      !deps.spaceHeld() &&
+      tool !== "hand" &&
+      (event.pointerType === "mouse" ||
+        (event.pointerType === "pen" && isDrawTool(tool)));
     if (tracked === undefined || !wanted) return;
     tracked.session =
       deps.beginSession?.({
-        frameId: tracked.frameId,
+        targetId: tracked.targetId,
         point,
         shiftKey: event.shiftKey,
       }) ?? null;
@@ -167,7 +187,7 @@ export function attachGestures(deps: GestureDeps): () => void {
     pointers.set(event.pointerId, {
       point,
       down: point,
-      frameId: frameOf(event.target),
+      targetId: pickTarget(point, domTargetOf(event.target)),
       type: event.pointerType,
       shiftKey: event.shiftKey,
     });
@@ -268,18 +288,18 @@ export function attachGestures(deps: GestureDeps): () => void {
     if (!real) return;
     const now = performance.now();
     deps.onTap({
-      frameId: tracked.frameId,
+      targetId: tracked.targetId,
       point: tracked.point,
       shiftKey: tracked.shiftKey,
     });
-    if (tracked.frameId === null || tracked.type === "mouse") {
+    if (tracked.targetId === null || tracked.type === "mouse") {
       // A mouse reports double clicks itself (`dblclick`); touch and pen need counting.
       if (tracked.type !== "mouse") lastTap = null;
       return;
     }
     const previous = lastTap;
     if (
-      previous?.frameId === tracked.frameId &&
+      previous?.targetId === tracked.targetId &&
       now - previous.at < DOUBLE_TAP_MS &&
       Math.hypot(
         previous.point.x - tracked.point.x,
@@ -287,16 +307,16 @@ export function attachGestures(deps: GestureDeps): () => void {
       ) < DOUBLE_TAP_DISTANCE_PX
     ) {
       lastTap = null;
-      deps.onDoubleTap(tracked.frameId);
+      deps.onDoubleTap(tracked.targetId);
       return;
     }
-    lastTap = { frameId: tracked.frameId, at: now, point: tracked.point };
+    lastTap = { targetId: tracked.targetId, at: now, point: tracked.point };
   }
 
   function onDoubleClick(event: MouseEvent): void {
     if (inIgnored(event.target)) return;
-    const frameId = frameOf(event.target);
-    if (frameId !== null) deps.onDoubleTap(frameId);
+    const targetId = pickTarget(relative(event), domTargetOf(event.target));
+    if (targetId !== null) deps.onDoubleTap(targetId);
   }
 
   function onWheel(event: WheelEvent): void {

@@ -181,6 +181,22 @@ canvas fits and reveals into what it leaves, and the viewer narrows (the
 `MessageCircle` glyph, read from its icon data (`lib/pin-shape.ts`), with the tail
 tip as the hotspot and the anchor.
 
+**Annotations** (`src/client/canvas/notes/`) are the board index's `notes`:
+sticky, title, box, line, arrow and pen (a stroke of 2 to 500 points as offsets
+from its origin, simplified with Ramer-Douglas-Peucker before it is stored).
+The tool pill's second group draws them (`T` `S` `P` `B` `A` `L`): a drag draws
+(a click makes a title or a default sticky), the tool reverts to select after
+one shape unless Shift is held, text is typed in an overlay `<textarea>` (Enter
+or double-click edits, Ctrl/Cmd+Enter saves, Esc abandons), and a small palette
+sets the colour. They render in the world layer, one `<svg>` per straight
+segment or stroke, share `order` with frames for z-order, and never take a
+pointer: hit-testing is geometry (a 12 screen-pixel stroke for lines, arrows
+and pen strokes, borders only for boxes). Moving, resizing, deleting and undo
+use the arrangement machinery over `putNote` and `deleteNote`; arrows store plain
+coordinates and do not follow frames. Agents read them back in
+`boards.get` (and `toolkit artifacts show --json`, as `notes`); the outline lists
+the text of stickies and titles.
+
 **Arranging** (`src/client/canvas/arrange/`). Click selects, Shift-click adds,
 a drag on empty canvas draws a marquee, a drag on a frame moves the selection
 (4 px threshold, pointer capture, edge auto-pan, 8 px grid, Alt for free

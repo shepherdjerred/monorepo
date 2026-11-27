@@ -8,6 +8,13 @@ import { screenToWorld, type WorldRect } from "#client/canvas/camera.ts";
 import type { CameraController } from "#client/canvas/controller.ts";
 import type { PointerSession } from "#client/canvas/gestures.ts";
 import type { Point } from "#client/lib/geometry.ts";
+import {
+  drawNote,
+  snapAngle,
+  type DrawTool,
+} from "#client/canvas/notes/create.ts";
+import { fitStroke } from "#client/canvas/notes/simplify.ts";
+import type { Note } from "#client/canvas/notes/shapes.ts";
 import { createAutoPan } from "./autopan.ts";
 import {
   framesInMarquee,
@@ -189,5 +196,107 @@ export function createMarqueeSession(hooks: MarqueeHooks): PointerSession {
       hooks.onMarquee(null);
       hooks.onSelect(hooks.base);
     },
+  });
+}
+
+export type DrawHooks = {
+  readonly controller: CameraController;
+  readonly size: () => Size;
+  readonly start: Point;
+  readonly tool: Exclude<DrawTool, "text">;
+  readonly color: string;
+  /** Shift while drawing a line or arrow snaps it to 45 degrees. */
+  readonly constrain: () => boolean;
+  /** The shape as it is being drawn, or null when it is gone. */
+  readonly onPreview: (note: Note | null) => void;
+  readonly onCreate: (note: Note) => void;
+};
+
+/** Drawing one annotation: a drag makes a sticky, box, line or arrow; a pen collects a stroke. */
+export function createDrawSession(hooks: DrawHooks): PointerSession {
+  const origin = screenToWorld(hooks.controller.get(), hooks.start);
+  const stroke: Point[] = [origin];
+  let current: Note | null = null;
+  return createDrag({
+    controller: hooks.controller,
+    size: hooks.size,
+    start: hooks.start,
+    apply(delta) {
+      const to = { x: origin.x + delta.x, y: origin.y + delta.y };
+      if (hooks.tool === "pen") {
+        stroke.push(to);
+        const fitted = fitStroke(stroke);
+        const [first] = fitted ?? [];
+        current =
+          fitted === null || first === undefined
+            ? null
+            : {
+                type: "pen",
+                page: 0,
+                x: first.x,
+                y: first.y,
+                points: fitted.map((point) => [
+                  roundTenth(point.x - first.x),
+                  roundTenth(point.y - first.y),
+                ]),
+                color: hooks.color,
+              };
+      } else
+        current = drawNote(hooks.tool, origin, to, {
+          color: hooks.color,
+          constrain: hooks.constrain(),
+        });
+      hooks.onPreview(current);
+    },
+    commit() {
+      hooks.onPreview(null);
+      if (current !== null) hooks.onCreate(current);
+    },
+    cancel() {
+      hooks.onPreview(null);
+    },
+  });
+}
+
+function roundTenth(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+export type EndpointHooks = {
+  readonly controller: CameraController;
+  readonly size: () => Size;
+  readonly start: Point;
+  readonly note: Extract<Note, { type: "line" | "arrow" }>;
+  /** Which end moves. */
+  readonly end: "start" | "end";
+  readonly constrain: () => boolean;
+  readonly onDraft: (note: Note) => void;
+  readonly onCommit: (note: Note) => void;
+  readonly onCancel: () => void;
+};
+
+/** Dragging one end of a line or arrow. */
+export function createEndpointSession(hooks: EndpointHooks): PointerSession {
+  const { note } = hooks;
+  const moving = hooks.end === "start";
+  const fixed = moving ? { x: note.x2, y: note.y2 } : { x: note.x, y: note.y };
+  const from = moving ? { x: note.x, y: note.y } : { x: note.x2, y: note.y2 };
+  let current: Note = note;
+  return createDrag({
+    controller: hooks.controller,
+    size: hooks.size,
+    start: hooks.start,
+    apply(delta) {
+      const raw = { x: from.x + delta.x, y: from.y + delta.y };
+      const to = hooks.constrain() ? snapAngle(fixed, raw) : raw;
+      current = moving
+        ? { ...note, x: to.x, y: to.y }
+        : { ...note, x2: to.x, y2: to.y };
+      hooks.onDraft(current);
+    },
+    commit: () => {
+      hooks.onCommit(current);
+    },
+    cancel: hooks.onCancel,
   });
 }

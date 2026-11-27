@@ -81,6 +81,8 @@ test.describe("keyboard", () => {
     page,
   }) => {
     await page.goto("/b/concepts");
+    // Tab only once the page has rendered, or the first press lands on nothing.
+    await expect(page.getByTestId("canvas-viewport")).toBeVisible();
     // Safari does not Tab to links without Option, which the helper adds.
     const webkit = page.context().browser()?.browserType().name() === "webkit";
     await page.keyboard.press(webkit ? "Alt+Tab" : "Tab");
@@ -93,6 +95,7 @@ test.describe("keyboard", () => {
       page.getByRole("heading", { name: "Concepts", level: 1 }),
     ).toBeVisible();
 
+    await expect(page.getByTestId("outline-frame").first()).toBeVisible();
     await tabTo(page, (element) =>
       element.label.startsWith("Comment on Concept A"),
     );

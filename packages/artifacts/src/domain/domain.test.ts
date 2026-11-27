@@ -356,6 +356,27 @@ describe("board operations", () => {
     expect(gone.notes).toEqual({});
     expect(gone.order).toEqual([A, B]);
   });
+  it("stores a pen stroke as a note and removes it with deleteNote", () => {
+    const points: [number, number][] = [
+      [0, 0],
+      [10, 4],
+      [20, 0],
+    ];
+    const note = {
+      type: "pen" as const,
+      page: 0,
+      x: 5,
+      y: 6,
+      points,
+      color: "blue",
+    };
+    const next = applyBoardOps(placed, [{ op: "putNote", id: "p1", note }]);
+    expect(next.notes["p1"]).toMatchObject({ type: "pen", x: 5 });
+    expect(next.order).toEqual([A, B, "p1"]);
+    expect(applyBoardOps(next, [{ op: "deleteNote", id: "p1" }]).notes).toEqual(
+      {},
+    );
+  });
   it("refuses a note that would shadow a frame id", () => {
     const note = {
       type: "title",

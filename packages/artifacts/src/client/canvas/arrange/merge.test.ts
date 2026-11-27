@@ -1,26 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { applyBoardOps } from "#domain/board-ops.ts";
 import {
-  EMPTY_BOARD_INDEX,
   type BoardIndex,
   type BoardOp,
 } from "@shepherdjerred/artifacts/contract";
 import { applyDraft } from "#client/canvas/model.ts";
-
-const A = "11111111-1111-4111-8111-111111111111";
-const B = "22222222-2222-4222-8222-222222222222";
-const C = "33333333-3333-4333-8333-333333333333";
-
-function board(): BoardIndex {
-  return {
-    ...EMPTY_BOARD_INDEX,
-    frames: {
-      [A]: { page: 0, x: 0, y: 0, w: 640, h: 420 },
-      [B]: { page: 0, x: 700, y: 0, w: 640, h: 420 },
-    },
-    order: [A, B],
-  };
-}
+import { A, B, C, board } from "./fixtures.ts";
 
 /** What the canvas draws: the server's index with the outbox applied on top. */
 function drawn(base: BoardIndex, outbox: readonly BoardOp[]): BoardIndex {

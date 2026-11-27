@@ -65,3 +65,42 @@ export async function openBoard(page: Page, slug: string): Promise<void> {
 export function frame(page: Page, artifactId: string) {
   return page.locator(`[data-frame-id="${artifactId}"]`);
 }
+
+/** 100 %, so a screen pixel is a world pixel. */
+export const FIXED_CAMERA: Camera = { x: 40, y: 140, s: 1 };
+
+/** Opens a board with its camera stored at `FIXED_CAMERA`, once `ready` is visible. */
+export async function openBoardAtFixedCamera(
+  page: Page,
+  slug: string,
+  ready: "canvas-frame" | "canvas-viewport",
+): Promise<void> {
+  await page.addInitScript(
+    ([key, value]) => {
+      localStorage.setItem(String(key), String(value));
+    },
+    [`artifacts.canvas.camera.v1:${slug}`, JSON.stringify(FIXED_CAMERA)],
+  );
+  await page.goto(`/b/${slug}`);
+  await expect(page.getByTestId(ready).first()).toBeVisible();
+  await page.waitForTimeout(500);
+}
+
+/** Fails with each violation's rule and targets; `iframes: false` skips content that is not ours to check. */
+export async function expectNoAxeViolations(
+  page: Page,
+  options: { iframes: boolean },
+): Promise<void> {
+  const { default: AxeBuilder } = await import("@axe-core/playwright");
+  const builder = new AxeBuilder({ page });
+  if (!options.iframes) builder.exclude("iframe");
+  const results = await builder
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(
+    results.violations.map(
+      (violation) =>
+        `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
+    ),
+  ).toEqual([]);
+}

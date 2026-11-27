@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { agentApi, resetAndSeed, sharedFixtures } from "./review-setup.ts";
+import {
+  FIXED_CAMERA,
+  expectNoAxeViolations,
+  openBoardAtFixedCamera,
+} from "./canvas-helpers.ts";
 import { publishFixture } from "./seed.ts";
 
 test.beforeAll(async ({ baseURL }) => {
@@ -8,8 +13,6 @@ test.beforeAll(async ({ baseURL }) => {
 });
 
 const SAVED_MS = 6000;
-/** The camera every spec opens at: 100 %, so a screen pixel is a world pixel. */
-const CAMERA = { x: 40, y: 140, s: 1 };
 
 type Ids = readonly string[];
 
@@ -38,16 +41,8 @@ async function makeBoard(
   return ids;
 }
 
-async function open(page: Page, slug: string): Promise<void> {
-  await page.addInitScript(
-    ([key, value]) => {
-      localStorage.setItem(String(key), String(value));
-    },
-    [`artifacts.canvas.camera.v1:${slug}`, JSON.stringify(CAMERA)],
-  );
-  await page.goto(`/b/${slug}`);
-  await expect(page.getByTestId("canvas-frame").first()).toBeVisible();
-  await page.waitForTimeout(500);
+function open(page: Page, slug: string): Promise<void> {
+  return openBoardAtFixedCamera(page, slug, "canvas-frame");
 }
 
 function frame(page: Page, id: string) {
@@ -158,8 +153,8 @@ test.describe("arranging", () => {
     const box = await frame(page, a).boundingBox();
     const view = await page.getByTestId("canvas-viewport").boundingBox();
     if (box === null || view === null) throw new Error("no boxes");
-    expect(box.x - view.x).toBeCloseTo(CAMERA.x + 117, 0);
-    expect(box.y - view.y).toBeCloseTo(CAMERA.y + 65, 0);
+    expect(box.x - view.x).toBeCloseTo(FIXED_CAMERA.x + 117, 0);
+    expect(box.y - view.y).toBeCloseTo(FIXED_CAMERA.y + 65, 0);
   });
 
   test("a fixed-viewport frame keeps its aspect on resize, a responsive one resizes freely", async ({
@@ -449,21 +444,11 @@ test.describe("arranging", () => {
     page,
     baseURL,
   }) => {
-    const { default: AxeBuilder } = await import("@axe-core/playwright");
     await makeBoard(baseURL, "axe");
     await open(page, "axe");
     await page.getByRole("button", { name: /^Frame 1,/u }).click();
     await page.keyboard.press("ArrowRight");
     await expect(page.locator("[data-handle]")).toHaveCount(8);
-    const results = await new AxeBuilder({ page })
-      .exclude("iframe")
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    expect(
-      results.violations.map(
-        (violation) =>
-          `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`,
-      ),
-    ).toEqual([]);
+    await expectNoAxeViolations(page, { iframes: false });
   });
 });

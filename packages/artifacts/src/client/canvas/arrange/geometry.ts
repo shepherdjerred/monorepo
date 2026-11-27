@@ -2,7 +2,7 @@
  * Pure geometry of arranging frames: grid snapping, marquee hit-testing,
  * the eight resize handles and z-order steps. Nothing here knows about the DOM.
  */
-import { clamp, type Point } from "#client/lib/geometry.ts";
+import type { Point } from "#client/lib/geometry.ts";
 import { intersects, type WorldRect } from "#client/canvas/camera.ts";
 
 /** Frames snap to this grid, in world pixels; Alt disables it. */
@@ -234,13 +234,4 @@ export function stepOrder(
     result[at] = neighbour;
   }
   return result;
-}
-
-/** A frame size within the limits, for a frame placed or restored with odd values. */
-export function clampSize(rect: WorldRect): WorldRect {
-  return {
-    ...rect,
-    w: clamp(rect.w, MIN_WIDTH, 100_000),
-    h: clamp(rect.h, MIN_HEIGHT, 100_000),
-  };
 }

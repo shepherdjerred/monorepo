@@ -1,5 +1,5 @@
-import { useLayoutEffect, type RefObject } from "react";
-import type { Camera } from "./camera.ts";
+import { useCallback, useLayoutEffect, type RefObject } from "react";
+import type { Camera, WorldRect } from "./camera.ts";
 import type { CameraController } from "./controller.ts";
 
 /**
@@ -23,4 +23,22 @@ export function useFollowCamera(
     run(controller.get());
     return controller.onFrame(run);
   }, [controller, ref, place]);
+}
+
+/** Sizes and places an element over a world rectangle as the camera moves. */
+export function useFollowRect(
+  controller: CameraController,
+  ref: RefObject<HTMLElement | null>,
+  rect: WorldRect,
+): void {
+  const { x, y, w, h } = rect;
+  const place = useCallback(
+    (camera: Camera, element: HTMLElement) => {
+      element.style.width = `${String(w * camera.s)}px`;
+      element.style.height = `${String(h * camera.s)}px`;
+      element.style.transform = `translate(${String(camera.x + x * camera.s)}px, ${String(camera.y + y * camera.s)}px)`;
+    },
+    [x, y, w, h],
+  );
+  useFollowCamera(controller, ref, place);
 }

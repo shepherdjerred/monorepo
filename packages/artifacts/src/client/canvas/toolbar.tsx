@@ -1,5 +1,11 @@
 import {
   HandIcon,
+  MoveUpRightIcon,
+  PencilIcon,
+  SlashIcon,
+  SquareIcon,
+  StickyNoteIcon,
+  TypeIcon,
   MaximizeIcon,
   MessageCircleIcon,
   MinusIcon,
@@ -250,4 +256,42 @@ export function commentTool(state: {
     onPress: state.onToggle,
     testId: "comment-mode",
   };
+}
+
+const DRAWING: readonly {
+  readonly tool: Tool;
+  readonly label: string;
+  readonly shortcut: string;
+  readonly Icon: LucideIcon;
+}[] = [
+  { tool: "text", label: "Text tool", shortcut: "T", Icon: TypeIcon },
+  {
+    tool: "sticky",
+    label: "Sticky note tool",
+    shortcut: "S",
+    Icon: StickyNoteIcon,
+  },
+  { tool: "pen", label: "Pen tool", shortcut: "P", Icon: PencilIcon },
+  { tool: "box", label: "Box tool", shortcut: "B", Icon: SquareIcon },
+  { tool: "arrow", label: "Arrow tool", shortcut: "A", Icon: MoveUpRightIcon },
+  { tool: "line", label: "Line tool", shortcut: "L", Icon: SlashIcon },
+];
+
+/** The annotation tools: text, sticky, pen, box, arrow, line. */
+export function drawingTools(state: {
+  readonly tool: Tool;
+  readonly commenting: boolean;
+  readonly onPick: (tool: Tool) => void;
+}): readonly ToolButton[] {
+  return DRAWING.map((entry) => ({
+    id: entry.tool,
+    label: entry.label,
+    shortcut: entry.shortcut,
+    Icon: entry.Icon,
+    active: state.tool === entry.tool && !state.commenting,
+    onPress: () => {
+      state.onPick(entry.tool);
+    },
+    testId: `tool-${entry.tool}`,
+  }));
 }
