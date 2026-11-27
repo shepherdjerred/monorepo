@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 238,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 13,
+      "tips": [
+        {
+          "text": "Use Living Shadow to reach Ryze quickly; he has little defense once you are on him.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            }
+          ]
+        },
+        {
+          "text": "Stay close to Ryze and land Shadow Slash, which slows him and stops his escapes.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Watch Ryze's Realm Warp; it can drop his allies into the fight from across the map.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "R",
+              "name": "Realm Warp"
+            }
+          ]
+        }
+      ],
+      "inputHash": "fe807fbc5c7a27362f51e392bfdc2ab5e89b510cb95e75b84c3259a98d4590d9",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 84,
+      "tips": [
+        {
+          "text": "Wait for Akali to spend her energy on Five Point Strike, then go in with Shadow Slash.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            }
+          ]
+        },
+        {
+          "text": "Drop Living Shadow near Akali before you slash, so your Shadow is there to hit her when she runs.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            }
+          ]
+        }
+      ],
+      "inputHash": "f28654569f7079f37af2a28cfebba052bcfac108a291e86c1fae9b6e30027457",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 90,
+      "tips": [
+        {
+          "text": "Dash in with Death Mark when Malzahar has just taken damage, since Void Shift is then down and he can't shrug off the hit.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "R",
+              "name": "Death Mark"
+            },
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "passive",
+              "name": "Void Shift"
+            }
+          ]
+        },
+        {
+          "text": "Don't walk into Call of the Void; its silence stops your escape abilities, so step out of the way first.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            },
+            { "kind": "keyword", "id": "silenced" }
+          ]
+        },
+        {
+          "text": "Avoid last-hitting minions that Malefic Visions is on; if they die, the visions can pass over to you.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "E",
+              "name": "Malefic Visions"
+            }
+          ]
+        }
+      ],
+      "inputHash": "a0f40c9ff1c64034a5b9303334cf0a16de5f72f3e3ca976211031882f8948ce6",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Dash in with Death Mark once Ahri has used Spirit Rush, since she has little escape left then.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "R",
+              "name": "Death Mark"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "R",
+              "name": "Spirit Rush"
+            }
+          ]
+        },
+        {
+          "text": "After Ahri spends Charm, step in with Living Shadow and Shadow Slash to get her slowed.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        }
+      ],
+      "inputHash": "5facd56b3c0e547c434a627b39c0446040fc7578c27c8bee49dafa995e45888a",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 112,
+      "tips": [
+        {
+          "text": "Dash in with Death Mark when Viktor is far from his Arcane Storm recast, since he cannot move it away fast.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "R",
+              "name": "Death Mark"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "R",
+              "name": "Arcane Storm"
+            }
+          ]
+        },
+        {
+          "text": "Step back from Viktor's Gravity Field range and wait for it to end before walking in.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            }
+          ]
+        },
+        {
+          "text": "Use Living Shadow to dodge Hextech Ray and close on Viktor, because his poke leaves him exposed up close.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "E",
+              "name": "Hextech Ray"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c6b6086d55bc9e2b1cd83ee1969a4170956af0637e732dc15e347d2fcd75f6c8",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 517,
+      "tips": [
+        {
+          "text": "Hit Sylas with Razor Shuriken as he walks up, then step back before Chain Lash can pin you down.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "Q",
+              "name": "Razor Shuriken"
+            },
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "Q",
+              "name": "Chain Lash"
+            }
+          ]
+        },
+        {
+          "text": "Use Living Shadow to dodge Sylas's Abscond / Abduct, then slash him with Shadow Slash once he comes close.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "W",
+              "name": "Living Shadow"
+            },
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "E",
+              "name": "Abscond / Abduct"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            }
+          ]
+        }
+      ],
+      "inputHash": "6e5647fa646c694a8d7977e578d551cdb2fb6609a4769f98e06ad424bd248899",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 238,
+      "opponent": 777,
+      "tips": [
+        {
+          "text": "Trade with Shadow Slash when Yone steps in, then pull back before his Spirit Cleave lands.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "W",
+              "name": "Spirit Cleave"
+            }
+          ]
+        },
+        {
+          "text": "Wait for his Fate Sealed before diving in, since if it catches you, you will be knocked up.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "R",
+              "name": "Fate Sealed"
+            },
+            { "kind": "keyword", "id": "knocked-up" }
+          ]
+        }
+      ],
+      "inputHash": "c2b97b30e86d7454b6475e66529624abd26b8162ae601656c34cf6b3ef5074a2",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

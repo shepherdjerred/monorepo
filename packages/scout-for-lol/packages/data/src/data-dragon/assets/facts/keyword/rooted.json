@@ -1,0 +1,11 @@
+{
+  "kind": "keyword",
+  "patch": "16.23.1",
+  "key": "rooted",
+  "name": "Rooted",
+  "description": "Cannot move for a short time, though abilities and attacks still work.",
+  "facts": [],
+  "parts": [],
+  "icon": null,
+  "keyFact": null
+}

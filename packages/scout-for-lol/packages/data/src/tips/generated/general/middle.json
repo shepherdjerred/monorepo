@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 103,
+      "tips": [
+        {
+          "text": "Use Charm on a champion walking toward you, then follow with Orb of Deception and Fox-Fire while they are held.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            }
+          ]
+        },
+        {
+          "text": "Spend Spirit Rush to finish a low champion or to chase a straggler, since its long cooldown means you cannot use it again soon.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "R",
+              "name": "Spirit Rush"
+            }
+          ]
+        },
+        {
+          "text": "Use Fox-Fire's speed boost to close a gap on a fleeing enemy or to get out of a bad trade.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            }
+          ]
+        },
+        {
+          "text": "Last-hit minions steadily so Essence Theft keeps healing you between trades.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "passive",
+              "name": "Essence Theft"
+            }
+          ]
+        },
+        {
+          "text": "Stay behind minions when enemies are near, because Charm and Orb of Deception need a clear path to land.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "E",
+              "name": "Charm"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            }
+          ]
+        }
+      ],
+      "inputHash": "078a2883e52e8420647f3a505d928ed30e4c3badc686744009a121bcfa3f6e17",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { gameAssetManifest } from "#src/browser-assets.ts";
 import {
   buildAllGameFacts,
+  buildKeywordFact,
   parseItemDescription,
 } from "#src/game-facts/build.ts";
 import {
@@ -274,5 +275,27 @@ describe("every entity", () => {
         520,
       );
     }
+  });
+});
+
+describe("buildKeywordFact", () => {
+  test("turns a glossary entry into a keyword fact a tooltip can show", () => {
+    expect(
+      buildKeywordFact("16.23.1", {
+        id: "charmed",
+        term: "Charmed",
+        definition: "Walks toward the caster and cannot attack or cast.",
+      }),
+    ).toEqual({
+      kind: "keyword",
+      patch: "16.23.1",
+      key: "charmed",
+      name: "Charmed",
+      description: "Walks toward the caster and cannot attack or cast.",
+      facts: [],
+      parts: [],
+      icon: null,
+      keyFact: null,
+    });
   });
 });

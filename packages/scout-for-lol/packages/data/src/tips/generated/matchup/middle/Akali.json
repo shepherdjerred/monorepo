@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 1,
+  "lane": "middle",
+  "champion": 84,
+  "sets": [
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 13,
+      "tips": [
+        {
+          "text": "Slip Twilight Shroud when Ryze marks you with Flux, then strike him out of the smoke.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "E",
+              "name": "Spell Flux"
+            }
+          ]
+        },
+        {
+          "text": "Use Shuriken Flip to dash in on Ryze once his Realm Warp portal opens, while he is still winding up.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "E",
+              "name": "Shuriken Flip"
+            },
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "R",
+              "name": "Realm Warp"
+            }
+          ]
+        },
+        {
+          "text": "Trade hard right after Ryze spends Overload; his burst is weakest once his runes are used up.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 13,
+              "slot": "Q",
+              "name": "Overload"
+            }
+          ]
+        }
+      ],
+      "inputHash": "a1738d390b619a602361264e46667f969f8e836a1c2e66ebb91cc1505523023c",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 90,
+      "tips": [
+        {
+          "text": "Trade with Five Point Strike right after Malzahar casts Call of the Void, while he is still recovering from it.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "Q",
+              "name": "Call of the Void"
+            }
+          ]
+        },
+        {
+          "text": "Stay out of Malefic Visions' reach, since each spell he lands on you refreshes the damage.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 90,
+              "slot": "E",
+              "name": "Malefic Visions"
+            }
+          ]
+        },
+        {
+          "text": "After you hit him with a spell, step out of the ring it leaves so your next attack empowers.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "passive",
+              "name": "Assassin's Mark"
+            }
+          ]
+        }
+      ],
+      "inputHash": "853c5650dcf86a0b41b1a6b94728252d5f071d7a74a879dbeb4dc810087885ca",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 103,
+      "tips": [
+        {
+          "text": "Wait until Ahri spends her Charm before you commit; once it is used, Akali can dash in safely.",
+          "cites": [
+            { "kind": "ability", "champion": 103, "slot": "E", "name": "Charm" }
+          ]
+        },
+        {
+          "text": "Use Shuriken Flip to mark Ahri, then dash in with its recast to close the gap.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "E",
+              "name": "Shuriken Flip"
+            }
+          ]
+        },
+        {
+          "text": "Hide in Twilight Shroud to dodge Fox-Fire and Orb of Deception while you wait for your cooldowns.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "Q",
+              "name": "Orb of Deception"
+            },
+            {
+              "kind": "ability",
+              "champion": 103,
+              "slot": "W",
+              "name": "Fox-Fire"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c0018b7348ca7af607a9702716f84d1906cbd533c9a9a339368694f0b3484f5f",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 105,
+      "tips": [
+        {
+          "text": "Slow Fizz with Five Point Strike as he closes in, then slip into Twilight Shroud before his burst lands.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Wait for Urchin Strike to go on cooldown before you commit, since his dash is his main way in.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 105,
+              "slot": "Q",
+              "name": "Urchin Strike"
+            }
+          ]
+        },
+        {
+          "text": "When you see Chum the Waters fly, leave the fight; the shark takes a short delay before it erupts.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 105,
+              "slot": "R",
+              "name": "Chum the Waters"
+            }
+          ]
+        }
+      ],
+      "inputHash": "66661c6b64823f727e3c37bc69bfb58e161b851764facf034c64ce8b57abaa57",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 112,
+      "tips": [
+        {
+          "text": "Trade with Five Point Strike right after Viktor spends Gravity Field, while it is still on cooldown.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "W",
+              "name": "Gravity Field"
+            }
+          ]
+        },
+        {
+          "text": "Stay out of Hextech Ray's line, and step in only once Arcane Storm has ended.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "E",
+              "name": "Hextech Ray"
+            },
+            {
+              "kind": "ability",
+              "champion": 112,
+              "slot": "R",
+              "name": "Arcane Storm"
+            }
+          ]
+        }
+      ],
+      "inputHash": "d2edd9b6a0b1bfbfc59433b1a52417b3250fb3abae0f3d1682a45bf4c8d1c1a0",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 157,
+      "tips": [
+        {
+          "text": "Wait for Yasuo to spend Wind Wall before you throw Five Point Strike, since the wall blocks your kunai.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 157,
+              "slot": "W",
+              "name": "Wind Wall"
+            }
+          ]
+        },
+        {
+          "text": "When Yasuo dashes at you with Sweeping Blade, hide in Twilight Shroud; he cannot target you while you are invisible inside it.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 157,
+              "slot": "E",
+              "name": "Sweeping Blade"
+            }
+          ]
+        }
+      ],
+      "inputHash": "c0dd3afd4c9f298d281975f7908cc5c140fa8a5f985f63975304fb39fcd304fa",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 238,
+      "tips": [
+        {
+          "text": "Step into Twilight Shroud when Zed's Death Mark lands on you; the smoke keeps you hidden while the mark is still counting down.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "R",
+              "name": "Death Mark"
+            }
+          ]
+        },
+        {
+          "text": "Zed's Shadow Slash can only get you slowed when his Shadow hits you, so keep clear of that Shadow.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 238,
+              "slot": "E",
+              "name": "Shadow Slash"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        }
+      ],
+      "inputHash": "f28654569f7079f37af2a28cfebba052bcfac108a291e86c1fae9b6e30027457",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 517,
+      "tips": [
+        {
+          "text": "Hit Sylas with Five Point Strike from max range; it slows him, so he can't close the gap easily.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Step into Twilight Shroud when Sylas gets close, since being Invisible keeps you out of his Kingslayer lunge.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "W",
+              "name": "Twilight Shroud"
+            },
+            {
+              "kind": "ability",
+              "champion": 517,
+              "slot": "W",
+              "name": "Kingslayer"
+            }
+          ]
+        }
+      ],
+      "inputHash": "ffc30ba70817ea14db33cb58fd9fce53410ca0088eb96c82d916a14c1b0ba334",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    },
+    {
+      "lane": "middle",
+      "champion": 84,
+      "opponent": 777,
+      "tips": [
+        {
+          "text": "Hit Yone with Five Point Strike as he steps in with Mortal Steel, so the tip slows him.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 84,
+              "slot": "Q",
+              "name": "Five Point Strike"
+            },
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "Q",
+              "name": "Mortal Steel"
+            },
+            { "kind": "keyword", "id": "slowed" }
+          ]
+        },
+        {
+          "text": "Stay out of Yone's reach when Fate Sealed is ready, or you will be knocked up toward him.",
+          "cites": [
+            {
+              "kind": "ability",
+              "champion": 777,
+              "slot": "R",
+              "name": "Fate Sealed"
+            },
+            { "kind": "keyword", "id": "knocked-up" }
+          ]
+        }
+      ],
+      "inputHash": "c9ac591fa745c8c5e1811dcfd7b35cefed2e77948b2ca8ac48ca4bfb718e90e5",
+      "promptVersion": "tips-1",
+      "model": "claude-haiku-5-5"
+    }
+  ]
+}
