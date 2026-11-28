@@ -52,12 +52,15 @@ function routerLink(onNavigate?: () => void) {
   );
 }
 
+function countOf(count: number | undefined): { count?: number } {
+  return count === undefined ? {} : { count };
+}
+
 function countProps(
   counts: ReadonlyMap<string, number>,
   id: string,
 ): { count?: number } {
-  const count = counts.get(id);
-  return count === undefined ? {} : { count };
+  return countOf(counts.get(id));
 }
 
 function isCurrent(route: Route | undefined, id: string): boolean {
@@ -73,6 +76,8 @@ export type NavigationProps = {
   readonly view?: View | undefined;
   /** Drifted items across every deployment, once the drift report loads. */
   readonly driftCount?: number | undefined;
+  /** Retired flags across every deployment, once the archive loads. */
+  readonly archivedCount?: number | undefined;
   readonly status?: string | undefined;
   readonly failure?: string | undefined;
 };
@@ -84,6 +89,7 @@ function NavigationGroups({
   route,
   view,
   driftCount,
+  archivedCount,
   status,
   failure,
   onNavigate,
@@ -94,6 +100,10 @@ function NavigationGroups({
   const entries: SidebarEntry[] = ids === undefined ? [] : sidebarEntries(ids);
   const singles = entries.filter((entry) => entry.kind === "single");
   const groups = entries.filter((entry) => entry.kind === "group");
+  const viewCounts = new Map<View, number | undefined>([
+    ["drift", driftCount],
+    ["archive", archivedCount],
+  ]);
   return (
     <>
       <SidebarGroup label="Views">
@@ -103,9 +113,7 @@ function NavigationGroups({
             href={entry.href}
             label={entry.label}
             icon={entry.icon}
-            {...(driftCount !== undefined && entry.view === "drift"
-              ? { count: driftCount }
-              : {})}
+            {...countOf(viewCounts.get(entry.view))}
             current={view === entry.view}
             renderLink={renderLink}
           />

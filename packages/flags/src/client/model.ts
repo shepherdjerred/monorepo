@@ -284,15 +284,23 @@ export function removeConstraint(
   };
 }
 
-/** Flags whose key contains `query`, ignoring case and surrounding spaces. */
+/**
+ * Flags whose key (or, with `describe`, description) contains `query`,
+ * ignoring case and surrounding spaces.
+ */
 export function filterFlags<T extends { readonly key: string }>(
   flags: readonly T[],
   query: string,
+  describe?: (flag: T) => string | undefined,
 ): T[] {
   const needle = query.trim().toLowerCase();
   return needle.length === 0
     ? [...flags]
-    : flags.filter((flag) => flag.key.toLowerCase().includes(needle));
+    : flags.filter(
+        (flag) =>
+          flag.key.toLowerCase().includes(needle) ||
+          describe?.(flag)?.toLowerCase().includes(needle) === true,
+      );
 }
 
 /** The `?q=` suffix that carries a search through a flag link; empty for no search. */
