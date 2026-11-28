@@ -115,6 +115,7 @@ fails when any of these pairs drops below its WCAG ratio in either theme.
 | `ink`, `ink-2`, `muted`    | `bg`, `panel`, `head`, `hover`, `side-hover`, `active`          | 4.5:1   |
 | `faint`, `accent`          | `bg`, `panel`, `head`, `hover`                                  | 4.5:1   |
 | `on-accent`                | `accent`                                                        | 4.5:1   |
+| `ink-2` (avatar initials)  | `track`                                                         | 4.5:1   |
 | `sev-<severity>-text`      | `bg`, `panel`, `head`, `hover`, `sev-<severity>-soft`           | 4.5:1   |
 | `sev-<severity>`           | `bg`, `panel`, `head`, `hover`, `track`                         | 3:1     |
 | `accent` (as an indicator) | `bg`, `panel`, `head`, `hover`, `side-hover`, `active`, `track` | 3:1     |
@@ -143,13 +144,136 @@ One shared piece per job:
 | Dialog                | `Dialog`, `ui-dialog*` classes            |
 | Buttons               | `Button` (`default`, `primary`, `danger`) |
 | Command palette       | `CommandPalette`                          |
+| Data table            | `DataTable`                               |
+| List toolbar          | `FilterBar`                               |
+| Selection actions     | `BulkBar`                                 |
+| Activity, steps       | `Timeline`                                |
+| Trend in a row        | `Sparkline`                               |
+| Status grid           | `StatusMatrix`                            |
+| Budget, breakdown     | `Meter`, `StackedMeter`                   |
 | Theme                 | `createThemeStore()`                      |
 | Icons                 | `ICONS`                                   |
+
+## Overlays and inputs
+
+One shared piece per job, all on Base UI. Popups share the menu look
+(`panel`, `line` border, `radius-md`, `shadow-menu`, `z-popover`), fade
+with `duration-press` only when motion is allowed, and are inert while they
+fade out.
+
+| Job                            | Piece                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Commands on a button           | `Menu` with `MenuItem`, `MenuLinkItem`, `MenuCheckboxItem`, `MenuRadioGroup`, `Submenu`, `MenuGroup` |
+| Commands on a target           | `ContextMenu` (right-click, long press, Shift+F10, Menu key), same items                             |
+| A few controls by a button     | `Popover`                                                                                            |
+| A short list of values         | `Select` (28px)                                                                                      |
+| A long or searched list        | `Combobox` (single or `multiple` with chips; `loadOptions`; `onCreate`)                              |
+| An outcome, an Undo            | `toast.notify`, `toast.error`, `toast.undo` under one `ToastProvider`                                |
+| A panel on an edge             | `Sheet` (`right`, `left`, `bottom`)                                                                  |
+| A person or agent              | `Avatar` (16, 20, 24px), `ActorChip`                                                                 |
+| Keyboard shortcuts, help       | `createShortcutRegistry`, `ShortcutSheet`, `KeyHint`                                                 |
+| Search and multi-step commands | `CommandPaletteCommands` in a `CommandPalette`                                                       |
+
+There is no tooltip.
+
+### Rows
+
+Menu, select and combobox rows are 30px (`nav-row`, 36px with a
+description, 44px on `pointer: coarse`): a 15px icon, the label and an
+optional muted description, then at the end a shortcut hint (muted mono, no
+keycap, hidden on touch screens), a check in `accent` or a submenu chevron.
+Destructive items use `sev-error-text`; disabled items use `faint`.
+
+### Select
+
+`Select` is the Base UI select in every browser: a 28px trigger and a menu
+of rows. The native customizable select (`appearance: base-select`,
+`<selectedcontent>`) is Limited Availability (Chromium and Safari only), so
+the package does not use it; the consoles' browser-support policy needs an
+explicit request before any Limited Availability feature ships.
+
+### Toasts
+
+| Kind     | Glyph and word | Shown for | Announced                        |
+| -------- | -------------- | --------- | -------------------------------- |
+| `notify` | ok, "Done"     | 4s        | Politely                         |
+| `error`  | error, "Error" | 10s       | Assertively (high priority)      |
+| `undo`   | ok, "Done"     | 6s        | Politely; Undo runs at most once |
+
+At most four show; older ones wait. F6 moves focus to the region, hover or
+focus holds them, and `toast.undoLatest()` runs the newest Undo (bind it to
+⌘Z). A toast is a labelled group, never a dialog.
+
+## Keyboard shortcuts
+
+`createShortcutRegistry()` listens on the document; the key handler and
+`ShortcutSheet` read the same list. Each shortcut is
+`{ id, keys, description, group, run?, anywhere?, scope?, sheet? }`.
+
+| `keys`                     | Means                                                      |
+| -------------------------- | ---------------------------------------------------------- |
+| `"c"`, `"?"`, `"Escape"`   | One key, matched on `KeyboardEvent.key` (`"P"` is Shift+P) |
+| `"g i"`                    | A sequence; the second key within 900ms                    |
+| `"Mod+K"`, `"Mod+Shift+,"` | A chord; `Mod` is ⌘ or Ctrl, the key matched on `code`     |
+| `"Ctrl+K"`, `"Alt+N"`      | A chord on that exact modifier                             |
+
+| Focus or state                    | Plain keys | Chords  |
+| --------------------------------- | ---------- | ------- |
+| A text field                      | Ignored    | Ignored |
+| A select, menu or listbox         | Ignored    | Run     |
+| An open dialog, popover or sheet  | Ignored    | Ignored |
+| Enter on a link, button or option | Ignored    | —       |
+| `anywhere: true`                  | Run        | Run     |
+
+A shortcut whose `run` returns `false` leaves the key to the browser; one
+without `run` is listed only. The first key of a sequence wins over a
+one-key shortcut on the same key. Two shortcuts on one binding in one scope,
+or one id twice, throw. Hints show ⌘ ⌥ ⇧ on Apple platforms and Ctrl/Alt
+elsewhere; `aria-keyshortcuts` gives `Meta+K Control+K` for `Mod+K`.
 
 The page kit (`PageBody`, `PageHeading`, `SummaryGrid`, `Card`,
 `CardToolbar`, `Tag`, `Segmented`, `TopBar`, `ThemeToggle`, `SeverityBadge`,
 `Button size="page"`, `.ui-data`, `.ui-summary*`, `.ui-eyebrow`) is
 deprecated and is deleted once nothing imports it.
+
+## Detail, form, time and feedback pieces
+
+| Piece                                                  | Job                                    | Key props                                                                      |
+| ------------------------------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `DescriptionList`                                      | Key-value facts                        | `layout` (`grid`, `rail`), `items` `{ label, value, mono?, wide?, severity? }` |
+| `Disclosure`                                           | Collapsible block                      | `title`, `count`, `defaultOpen`                                                |
+| `CodeBlock`                                            | Mono, scrolling text                   | `code`, `label`, `lineNumbers`, `activeLine`, `wrap`                           |
+| `CopyButton`                                           | Copy to clipboard                      | `text`, `label`, `variant` (`icon`, `text`)                                    |
+| `Pager`, `ListToggle`, `useCapped`                     | Keyset paging; cap a list and show all | `newerHref`, `olderHref`, `renderLink`; `useCapped(items, cap)`                |
+| `BackLink`                                             | `HeaderBar` `lead`                     | `href`, `label`                                                                |
+| `Checkbox`, `RadioGroup`, `Switch`                     | Choice controls (Base UI)              | `label`, `hint`, `invalid`, `options`                                          |
+| `Fieldset`, `Textarea`, `InputAddon`                   | Field groups and inputs                | `legend`, `hint`, `error`; `prefix`, `suffix`                                  |
+| `FormActions`, `ErrorSummary`                          | Form footer; failed-submit summary     | `submit`, `pending`, `cancel`, `status`; `errors`, `focusOnMount`              |
+| `RelativeTime`, `ExactTime`, `Duration`                | Times                                  | `value`, `now`; `precision`, `year`; `ms` or `start`/`end`                     |
+| `Kbd`, `useSearchShortcut`, `isEditableTarget`         | Keyboard                               | `ref` of the search input                                                      |
+| `StatusDot`, `SavedStatus`, `Skeleton`, `EmailPreview` | Feedback                               | `state`; `saved`; `kind`; `html`, `text`                                       |
+
+### Formatters
+
+| Function                                  | Output                                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `formatRelative(value, now)`              | `just now` (under 45s), `45s ago`, `5m ago`, `3h ago`, `4d ago`, `2mo ago`, `1y ago`; `in 5m` for the future |
+| `formatExact(value, { precision, year })` | `Nov 26, 14:02 PT` (Pacific, 24-hour); `precision` is `day`, `minute` or `second`                            |
+| `formatDuration(ms)`                      | `850ms`, `45s`, `12m 5s`, `2h 14m`, `3d 4h`                                                                  |
+| `formatBytes(bytes)`                      | Binary units: `0 B`, `1.5 KiB`, `14.2 MiB`, `118 GiB`, `1 TiB`                                               |
+| `formatCount(n)`                          | `1,234,567`                                                                                                  |
+| `formatPercent(ratio, digits)`            | `97.1%` from `0.971`                                                                                         |
+
+### Conventions
+
+- Timestamps read relative with the exact time on hover (`title`, and the ISO
+  moment in `dateTime`). Absolute times are Pacific time.
+- Bytes use binary units.
+- Page titles read "Page · App".
+- Every relative time on a page shares one 30-second ticker, paused while the
+  tab is hidden.
+- Forms use TanStack Form with a Zod schema; errors are read with
+  `fieldErrorMessage` and listed with `ErrorSummary`.
 
 ## Conformance contract
 
@@ -205,3 +329,39 @@ on the document. `CommandPalette` draws the modal dialog and
 `sections` of `{ id, label, detail?, icon }` items and an `onSelect` that runs
 after the dialog has closed and returned focus. `ConsoleShell` adds the
 search button to the sidebar and the top bar when given the store.
+
+## Data table contract
+
+`DataTable` is built on TanStack Table 9 and TanStack Virtual 3.
+
+| Behaviour    | Contract                                                                                                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sorting      | One column at a time; a header button cycles ascending, descending. Numbers by value, text numeric-aware and case-blind; null, undefined and NaN last both ways. `aria-sort` on the header; each sort is announced. |
+| Search       | Case-blind substring of `searchText(row)`, through TanStack's global filter.                                                                                                                                        |
+| Filters      | `Tabs` drawn by the table and applied by the app to `rows`. "Clear filters" empties the search and returns each filter to its `defaultValue` (the first option by default).                                         |
+| Count        | "N of M" with `totalCount` as M when given; a polite status.                                                                                                                                                        |
+| Groups       | `groupBy` buckets rows worst first by `rank`; rows keep their sorted order inside a group. Heading rows are 32px: twist, `StatusGlyph`, word, count.                                                                |
+| Cap          | 25 rows by default, then "Showing N of M" and "Show all". No cap while virtualized.                                                                                                                                 |
+| Virtualizing | `virtualize` renders only rows in view once more than 200 match: against the page (head stuck to the page) or in a `{ maxHeight }` box.                                                                             |
+| Selection    | Checkbox column with select-all (indeterminate when partial) and Shift ranges; `onSelectionChange(keys, rows)`; `bulkActions` shows `BulkBar`.                                                                      |
+| Export       | Copy CSV (RFC 4180) or JSON of the filtered, sorted rows; `exportValue`, else `sortValue`, else plain rendered text.                                                                                                |
+| Keys         | With `keyboardNavigation`, j and k move the current row (`data-current`, `aria-current`) and Enter or `o` calls `onRowOpen`, except while typing.                                                                   |
+| Phone        | The table scrolls sideways; `stack` turns rows into label/value lines.                                                                                                                                              |
+
+`Timeline` shows times in Pacific (`America/Los_Angeles`) as a mono 24-hour
+clock, with the exact time and zone on hover.
+`sections` of `{ id, label, detail?, icon, checked?, hint? }` items and an
+`onSelect` that runs after the dialog has closed and returned focus.
+`ConsoleShell` adds the search button to the sidebar and the top bar when
+given the store.
+
+`CommandPaletteCommands` is a ready body for the same dialog:
+
+| Behaviour     | Contract                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Static        | `sections`, filtered by every typed word in `label`, `detail` and `keywords`; or a function of the query                                          |
+| Server search | `loadSections(query, signal)`, debounced (180ms), aborted when superseded, listed after the static sections                                       |
+| Status        | "Searching…" while loading; `errorText` when the load fails                                                                                       |
+| Steps         | A command with `step` opens a nested list; the breadcrumb sits before the input; Backspace on an empty query, Escape and the back button leave it |
+| Running       | `run(context)` after the palette closes; `stay` runs at once and keeps it open                                                                    |
+| Recent        | `createRecentCommands({ key })` keeps the last five run ids in `localStorage`; shown first while nothing is typed                                 |

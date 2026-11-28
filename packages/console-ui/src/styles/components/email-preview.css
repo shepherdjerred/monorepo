@@ -1,0 +1,30 @@
+/* Email preview: a toolbar, then a sandboxed frame or the plain-text body. */
+@layer ui.components {
+  .ui-email-frame {
+    display: block;
+    width: 100%;
+    height: 360px;
+    border: 0;
+    border-block: 1px solid var(--ui-line);
+    background: var(--ui-panel);
+  }
+  .ui-email-frame[data-scheme="light"] {
+    color-scheme: light;
+  }
+  .ui-email-frame[data-scheme="dark"] {
+    color-scheme: dark;
+  }
+  .ui-email-text {
+    max-height: 360px;
+    margin: 0;
+    padding: var(--ui-space-3) var(--ui-gutter);
+    overflow: auto;
+    border-block: 1px solid var(--ui-line);
+    background: var(--ui-head);
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

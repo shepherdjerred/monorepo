@@ -1,8 +1,10 @@
+import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ClockIcon, HouseIcon } from "lucide-react";
 import { describe, expect, test } from "vitest";
 import { Banner } from "@shepherdjerred/console-ui/components/banner.tsx";
 import { Button } from "@shepherdjerred/console-ui/components/button.tsx";
+import { ButtonLink } from "@shepherdjerred/console-ui/components/button-link.tsx";
 import { Chip } from "@shepherdjerred/console-ui/components/chip.tsx";
 import { createCommandPaletteStore } from "@shepherdjerred/console-ui/components/command-palette.tsx";
 import { ConsoleShell } from "@shepherdjerred/console-ui/components/shell/console-shell.tsx";
@@ -62,6 +64,26 @@ describe("ConsoleShell", () => {
     expect(html).toContain('aria-current="page"');
   });
 
+  test("accepts a sidebar footer as a function of the drawer's close", () => {
+    let calls = 0;
+    const footerHtml = renderToStaticMarkup(
+      <ConsoleShell
+        app={{ label: "Hub", mark: "H" }}
+        apps={[{ label: "Hub", url: "/", group: "Ops" }]}
+        theme={theme}
+        nav={() => null}
+        sidebarFooter={() => {
+          calls += 1;
+          return <a href="/docs">Docs</a>;
+        }}
+      >
+        <main id="main">page</main>
+      </ConsoleShell>,
+    );
+    expect(footerHtml).toContain('<a href="/docs">Docs</a>');
+    expect(calls).toBeGreaterThan(0);
+  });
+
   test("puts the theme row in the sidebar footer and the page in the panel", () => {
     expect(html).toContain('class="ui-nav-item ui-theme-row"');
     expect(html).toContain('<div class="ui-panel"><main id="main">page</main>');
@@ -80,6 +102,22 @@ describe("HeaderBar", () => {
     expect(html).toBe(
       '<header class="ui-header"><div class="ui-header-lead"><a href="/alerts">Alerts</a></div><h1 class="ui-header-title" id="page-title" tabindex="-1">KubePodCrashLooping</h1></header>',
     );
+  });
+
+  test("draws the title as plain text when the page has its own h1", () => {
+    const html = renderToStaticMarkup(<HeaderBar title="Issue" titleAs="p" />);
+    expect(html).toContain('<p class="ui-header-title">Issue</p>');
+    expect(html).not.toContain("<h1");
+  });
+
+  test("keeps actions pinned right when title, meta and actions are all present", async () => {
+    const css = await Bun.file(
+      path.join(import.meta.dirname, "../styles/components/header.css"),
+    ).text();
+    expect(css).toMatch(/\.ui-header-actions \{[^}]*margin-left: auto;/);
+    // Meta before actions must not zero the actions' auto margin.
+    expect(css).not.toContain(".ui-header-meta + .ui-header-actions");
+    expect(css).toContain(".ui-header-meta:not(:last-child)");
   });
 
   test("leaves a plain title out of the tab order", () => {
@@ -132,16 +170,24 @@ describe("StatusGlyph and Chip", () => {
 });
 
 describe("Button", () => {
-  test("has a danger variant and renders links through Base UI", () => {
+  test("has a danger variant; ButtonLink is a real link without role=button", () => {
     expect(
       renderToStaticMarkup(<Button variant="danger">Delete</Button>),
     ).toContain('data-variant="danger"');
     const link = renderToStaticMarkup(
-      <Button render={<a href="/new" />} nativeButton={false}>
+      <ButtonLink href="/new" variant="primary">
         New
-      </Button>,
+      </ButtonLink>,
     );
-    expect(link).toMatch(/^<a href="\/new"[^>]*class="ui-btn"/);
+    expect(link).toMatch(/^<a [^>]*href="\/new"/);
+    expect(link).toContain('class="ui-btn"');
+    expect(link).toContain('data-variant="primary"');
+    expect(link).not.toContain("role=");
+    const routed = renderToStaticMarkup(
+      <ButtonLink render={<a href="/routed" />}>Go</ButtonLink>,
+    );
+    expect(routed).toContain('class="ui-btn"');
+    expect(routed).not.toContain("role=");
   });
 });
 

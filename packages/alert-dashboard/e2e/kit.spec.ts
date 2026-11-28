@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import {
@@ -47,7 +48,12 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.setViewportSize(viewport);
       for (const path of KIT_PATHS) {
         await gotoLoadedPage(page, path);
-        expect(await violations(page), path).toEqual([]);
+        // Legacy mode: the sandboxed email preview frame cannot run axe's
+        // cross-frame scripts, so axe checks the frame as one element.
+        expect(
+          await violations(new AxeBuilder({ page }).setLegacyMode(true)),
+          path,
+        ).toEqual([]);
       }
     }
     await page.setViewportSize(DESKTOP);
@@ -66,6 +72,22 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
+test("a linked row navigates from any cell, not only the lead cell", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const row = page
+    .getByRole("row")
+    .filter({ has: page.locator("a.ui-row-link") })
+    .first();
+  // The link's cover sits over every cell, so click where the last cell is.
+  const box = await row.getByRole("cell").last().boundingBox();
+  if (box === null) throw new Error("the last cell has no box");
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page).toHaveURL(/\/kit\/detail$/);
+});
+
 test("a stacked table reads as label and value lines on a phone", async ({
   page,
 }) => {
@@ -81,4 +103,122 @@ test("a stacked table reads as label and value lines on a phone", async ({
   );
   expect(label).toBe('"Status"');
   await expect(page.locator("thead").first()).toHaveCSS("position", "absolute");
+});
+
+test("the detail and forms section shows validation errors and a summary", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const summary = page
+    .getByRole("alert")
+    .filter({ hasText: "problems to fix" });
+  await expect(summary).toBeVisible();
+  await summary.getByRole("link", { name: "Target URL" }).click();
+  await expect(page.getByLabel("Target URL")).toBeFocused();
+  await page.getByLabel("Target URL").fill("https://ha.example.com");
+  await page.getByLabel("Short link").fill("ha");
+  await expect(summary).toHaveCount(0);
+});
+
+test("copy announces and the search shortcut focuses the filter", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  await page.getByRole("button", { name: "Copy fingerprint" }).click();
+  await expect(page.getByText("Copied", { exact: true })).toBeAttached();
+  expect(
+    await page.evaluate(() => globalThis.navigator.clipboard.readText()),
+  ).toBe("9f2c41ab77d0");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("/");
+  await expect(page.getByLabel("Filter alerts")).toBeFocused();
+  await page.keyboard.type("a/b");
+  await expect(page.getByLabel("Filter alerts")).toHaveValue("a/b");
+});
+
+test("the email preview is sandboxed and toggles dark and plain text", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const frame = page.locator("iframe.ui-email-frame");
+  await expect(frame).toHaveAttribute("sandbox", "");
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await expect(frame).toHaveAttribute("data-scheme", "dark");
+  await page.getByRole("radio", { name: "Plain text" }).click();
+  await expect(page.locator("pre.ui-email-text")).toContainText(
+    "Weekly digest",
+  );
+});
+
+test.describe("the data section", () => {
+  test("a data table sorts from the keyboard and announces it", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const header = section.locator("thead th", { hasText: "Count" });
+    await expect(header).toHaveAttribute("aria-sort", "none");
+    await header.getByRole("button", { name: "Count" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(header).toHaveAttribute("aria-sort", "ascending");
+    await expect(section.getByRole("status").first()).toHaveText(
+      "Sorted by Count, ascending, 300 rows",
+    );
+    await page.keyboard.press("Space");
+    await expect(header).toHaveAttribute("aria-sort", "descending");
+  });
+
+  test("300 rows render only those in view and follow j and k", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const rows = section.locator("tbody tr[data-key]");
+    await expect(section.locator(".ui-filterbar-count")).toHaveText(
+      "300 signals",
+    );
+    await expect(rows.first()).toBeVisible();
+    expect(await rows.count()).toBeLessThan(100);
+    const firstKey = await rows.first().getAttribute("data-key");
+    const secondKey = await rows.nth(1).getAttribute("data-key");
+
+    await page.locator("body").press("j");
+    await page.locator("body").press("j");
+    const current = section.locator("tr[data-current]");
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute("data-key", secondKey ?? "");
+
+    await section.evaluate((element) => {
+      element.scrollIntoView({ block: "end" });
+    });
+    await expect(rows.first()).not.toHaveAttribute("data-key", firstKey ?? "");
+    expect(await rows.count()).toBeLessThan(100);
+    // The head stays stuck to the top of the viewport.
+    const head = section.locator("thead th").first();
+    const box = await head.boundingBox();
+    expect(box?.y).toBeLessThan(2);
+  });
+
+  test("selecting rows shows the bulk bar until the selection clears", async ({
+    page,
+  }) => {
+    await page.setViewportSize(DESKTOP);
+    await gotoLoadedPage(page, "/kit");
+    const section = page.locator("#data-table");
+    const bar = section.getByRole("region", { name: "Bulk actions" });
+    const all = section.getByRole("checkbox", { name: "Select all rows" });
+    await expect(bar).toHaveCount(0);
+    await all.check();
+    await expect(bar).toContainText("300 selected");
+    await bar.getByRole("button", { name: "Clear selection" }).click();
+    await expect(bar).toHaveCount(0);
+    await expect(all).not.toBeChecked();
+  });
 });

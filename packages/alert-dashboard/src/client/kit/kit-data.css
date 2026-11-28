@@ -1,0 +1,22 @@
+/* Layout for the gallery's data specimens, built from shared tokens. */
+.kit-data-detail {
+  display: grid;
+  gap: var(--ui-space-2);
+  max-width: 720px;
+}
+.kit-data-detail p {
+  margin: 0;
+}
+.kit-data-meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--ui-space-5) var(--ui-space-8);
+  padding-top: var(--ui-space-1);
+}
+.kit-data-inline {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ui-space-4);
+}

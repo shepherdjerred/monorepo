@@ -50,6 +50,8 @@ const TEXT_PAIRS: readonly Pair[] = [
   ...pairs(["faint"], PANEL_SURFACES),
   ...pairs(["accent"], PANEL_SURFACES),
   { foreground: "on-accent", background: "accent" },
+  // Avatar initials on the track fill.
+  { foreground: "ink-2", background: "track" },
   // Severity words and figures, and email chips on their soft tints.
   ...SEVERITIES.flatMap((severity) =>
     pairs(

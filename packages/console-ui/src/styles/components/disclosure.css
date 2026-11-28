@@ -1,0 +1,41 @@
+/* Disclosure: a native details element with a chevron that turns when open. */
+@layer ui.components {
+  .ui-disclosure {
+    border-top: 1px solid var(--ui-line);
+  }
+  .ui-disclosure-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-2);
+    min-height: var(--ui-row);
+    padding: 0 var(--ui-gutter);
+    font-weight: var(--ui-weight-medium);
+    list-style: none;
+    cursor: pointer;
+  }
+  .ui-disclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+  .ui-disclosure-summary:hover {
+    background: var(--ui-hover);
+  }
+  .ui-disclosure-summary > svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--ui-muted);
+    transition: transform var(--ui-duration-press);
+  }
+  .ui-disclosure[open] > .ui-disclosure-summary > svg {
+    transform: rotate(90deg);
+  }
+  .ui-disclosure-body {
+    padding: 0 var(--ui-gutter) var(--ui-space-4) calc(var(--ui-gutter) + 22px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-disclosure-summary > svg {
+      transition: none;
+    }
+  }
+}

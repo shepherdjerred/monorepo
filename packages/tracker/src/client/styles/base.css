@@ -4,11 +4,10 @@
  * console's 28px controls: a bordered panel button with a pressable edge, and
  * the accent for the primary action.
  *
- * They sit in tracker.elements, below ui.components (styles.css fixes the
- * order), and skip `ui-*` controls, so console-ui's own buttons keep their
+ * They sit in console-ui's `ui.app` layer, below ui.components, and skip `ui-*` controls, so console-ui's own buttons keep their
  * look; every unlayered Tracker class rule still wins over them.
  */
-@layer tracker.elements {
+@layer ui.app {
   button,
   input,
   select,

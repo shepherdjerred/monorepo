@@ -15,7 +15,9 @@ async function stylesheet(name: string): Promise<string> {
 }
 
 const componentSheets = [
-  ...new Bun.Glob("*.css").scanSync({ cwd: path.join(styles, "components") }),
+  ...new Bun.Glob("**/*.css").scanSync({
+    cwd: path.join(styles, "components"),
+  }),
 ].map((name) => `components/${name}`);
 const classSheets = [...componentSheets, "page.css"];
 
@@ -56,9 +58,9 @@ describe("stylesheets", () => {
 
   test("index.css declares the layer order before importing", async () => {
     const css = withoutComments(await stylesheet("index.css")).trim();
-    expect(css.startsWith("@layer ui.reset, ui.tokens, ui.components;")).toBe(
-      true,
-    );
+    expect(
+      css.startsWith("@layer ui.reset, ui.tokens, ui.app, ui.components;"),
+    ).toBe(true);
   });
 
   test.each(["reset.css", "tokens.css", "fonts.css", ...classSheets])(

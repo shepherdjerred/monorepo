@@ -8,7 +8,11 @@
     grid-template-columns: var(--ui-sidebar) minmax(0, 1fr);
     min-height: 100dvh;
   }
+  /* A column, so the page under the header bar can take `flex: 1` and
+     reach the panel's foot without measuring the viewport. */
   .ui-panel {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     margin: var(--ui-space-2) var(--ui-space-2) var(--ui-space-2) 0;
     border: 1px solid var(--ui-line);

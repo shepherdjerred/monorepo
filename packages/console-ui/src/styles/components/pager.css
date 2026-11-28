@@ -1,0 +1,38 @@
+/* Pager, "show all" toggle, back link and the copy control's wrapper. */
+@layer ui.components {
+  .ui-pager {
+    display: flex;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-gutter);
+  }
+  .ui-back-link {
+    display: inline-flex;
+    color: var(--ui-muted);
+    text-decoration: none;
+    align-items: center;
+    gap: var(--ui-space-1);
+    font-size: var(--ui-text-md);
+  }
+  .ui-back-link:hover {
+    color: var(--ui-ink);
+    text-decoration: underline;
+  }
+  .ui-back-link svg {
+    width: 14px;
+    height: 14px;
+  }
+  .ui-list-toggle {
+    margin: var(--ui-space-2) 0;
+  }
+  .ui-copy {
+    display: inline-flex;
+    align-items: center;
+  }
+  .ui-copy[data-state="copied"] svg {
+    color: var(--ui-sev-ok-text);
+  }
+  .ui-copy[data-state="failed"] .ui-icon-btn,
+  .ui-copy[data-state="failed"] .ui-btn {
+    color: var(--ui-sev-error-text);
+  }
+}

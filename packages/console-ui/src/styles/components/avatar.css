@@ -1,0 +1,46 @@
+/*
+ * Avatars: 16, 20 or 24px rounded squares (the round radius is for dots).
+ * The initials sit on the track fill until the image loads, or when it
+ * fails. `ActorChip` puts a 16px avatar and the name in a chip.
+ */
+@layer ui.components {
+  .ui-avatar {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    overflow: hidden;
+    border-radius: var(--ui-radius-sm);
+    background: var(--ui-track);
+    color: var(--ui-ink-2);
+    font-size: var(--ui-text-xs);
+    font-weight: var(--ui-weight-strong);
+    line-height: 1;
+    vertical-align: middle;
+    user-select: none;
+  }
+  .ui-avatar[data-size="16"] {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--ui-radius-xs);
+  }
+  .ui-avatar[data-size="24"] {
+    width: 24px;
+    height: 24px;
+  }
+  .ui-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ui-chip > .ui-avatar:first-child {
+    margin-left: -4px;
+  }
+  .ui-actor-name {
+    color: var(--ui-ink-2);
+  }
+  .ui-actor-kind {
+    color: var(--ui-muted);
+  }
+}

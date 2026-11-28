@@ -11,12 +11,21 @@ import {
   State,
   StatusGlyph,
   Tabs,
+  useSearchShortcut,
 } from "@shepherdjerred/console-ui";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { Link } from "react-router";
 
+import { KitDetailForms } from "./kit-detail-forms.tsx";
 import { KitControls } from "./kit-controls.tsx";
-import { KIT_GROUPS, KitTabs, type KitAlert } from "./kit-parts.tsx";
+import { KitData } from "./kit-data.tsx";
+import { KitOverlays } from "./kit-overlays.tsx";
+import {
+  KIT_GROUPS,
+  KitDisabledTabs,
+  KitTabs,
+  type KitAlert,
+} from "./kit-parts.tsx";
 import "./kit.css";
 
 type Scope = "all" | "firing" | "silenced";
@@ -190,12 +199,41 @@ function EmptyTable(): React.JSX.Element {
   );
 }
 
+function WrapTable(): React.JSX.Element {
+  return (
+    <div className="ui-table-scroll">
+      <table className="ui-table">
+        <thead>
+          <tr>
+            <th scope="col">Failure</th>
+            <th scope="col" className="ui-num">
+              Count
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-wrap="">
+              Wrapping cell: a long headline or error message breaks onto
+              further lines instead of stretching the row, as in this
+              connection-refused example from the mail relay.
+            </td>
+            <td className="ui-num">3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /**
  * `/kit`: every console-ui piece in a realistic list page. Reached from the
  * command palette, not the sidebar.
  */
 export function KitPage(): React.JSX.Element {
   const [scope, setScope] = useState<Scope>("all");
+  const search = useRef<HTMLInputElement>(null);
+  useSearchShortcut(search);
   const Refresh = ICONS.refresh;
   const Add = ICONS.add;
   return (
@@ -243,7 +281,11 @@ export function KitPage(): React.JSX.Element {
         }
       >
         <div className="ui-toolbar">
-          <SearchField label="Filter alerts" placeholder="Filter alerts…" />
+          <SearchField
+            ref={search}
+            label="Filter alerts"
+            placeholder="Filter alerts…"
+          />
           <Tabs
             label="Show"
             value={scope}
@@ -256,6 +298,12 @@ export function KitPage(): React.JSX.Element {
       </Section>
       <Section title="Silences" count={0}>
         <EmptyTable />
+      </Section>
+      <Section title="Disabled tab" headingLevel={3}>
+        <KitDisabledTabs />
+      </Section>
+      <Section title="Wrapping cells" headingLevel={3}>
+        <WrapTable />
       </Section>
       <div className="ui-columns">
         <Section title="Banners" headingLevel={3}>
@@ -281,6 +329,9 @@ export function KitPage(): React.JSX.Element {
         </Section>
       </div>
       <KitControls />
+      <KitDetailForms />
+      <KitData />
+      <KitOverlays />
     </main>
   );
 }

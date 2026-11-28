@@ -1,0 +1,45 @@
+/*
+ * Sparkline and StatusMatrix: an inline SVG line in the accent or a
+ * severity colour, and a status grid built on `.ui-table`.
+ */
+@layer ui.components {
+  .ui-sparkline {
+    display: inline-block;
+    flex: none;
+    color: var(--ui-accent);
+    vertical-align: middle;
+    overflow: visible;
+  }
+  .ui-sparkline[data-sev] {
+    color: var(--ui-sev);
+  }
+  .ui-sparkline-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ui-sparkline-dot {
+    fill: currentColor;
+  }
+  .ui-sparkline-empty {
+    stroke: var(--ui-faint);
+    stroke-width: 1;
+    stroke-dasharray: 2 2;
+  }
+
+  .ui-matrix tbody td {
+    color: var(--ui-ink-2);
+  }
+  .ui-matrix-meta {
+    display: block;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-regular);
+  }
+  .ui-table.ui-matrix tbody th[scope="row"] {
+    height: auto;
+    padding-block: 6px;
+  }
+}

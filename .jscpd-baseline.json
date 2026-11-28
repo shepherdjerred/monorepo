@@ -4,6 +4,42 @@
       "clones": 1,
       "tokens": 134
     },
+    "packages/alert-dashboard/src/client/severity-buckets.ts|packages/console-ui/src/components/data/severity-buckets.ts": {
+      "clones": 1,
+      "tokens": 144
+    },
+    "packages/alert-dashboard/src/client/visuals/data-table-parts.tsx|packages/console-ui/src/components/data/data-table-toolbar.tsx": {
+      "clones": 1,
+      "tokens": 96
+    },
+    "packages/alert-dashboard/src/client/visuals/data-table-utils.ts|packages/console-ui/src/components/data/data-table-model.ts": {
+      "clones": 2,
+      "tokens": 326
+    },
+    "packages/alert-dashboard/src/client/visuals/data-table.test.tsx|packages/console-ui/src/components/data/data-table.test.tsx": {
+      "clones": 5,
+      "tokens": 575
+    },
+    "packages/alert-dashboard/src/client/visuals/meters.test.tsx|packages/console-ui/src/components/data/data-pieces.test.tsx": {
+      "clones": 1,
+      "tokens": 73
+    },
+    "packages/alert-dashboard/src/client/visuals/sparkline.test.tsx|packages/console-ui/src/components/data/data-pieces.test.tsx": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/alert-dashboard/src/client/visuals/sparkline.tsx|packages/console-ui/src/components/data/sparkline.tsx": {
+      "clones": 1,
+      "tokens": 97
+    },
+    "packages/alert-dashboard/src/client/visuals/status-matrix.test.tsx|packages/console-ui/src/components/data/data-pieces.test.tsx": {
+      "clones": 1,
+      "tokens": 188
+    },
+    "packages/alert-dashboard/src/client/visuals/status-matrix.tsx|packages/console-ui/src/components/data/status-matrix.tsx": {
+      "clones": 1,
+      "tokens": 70
+    },
     "packages/alert-dashboard/src/infrastructure/observability.ts|packages/discord-plays-core/src/observability/tracing.ts": {
       "clones": 1,
       "tokens": 73

@@ -31,6 +31,7 @@ import { SidebarItem } from "@shepherdjerred/console-ui/components/shell/sidebar
 import { StatusGlyph } from "@shepherdjerred/console-ui/components/status-glyph.tsx";
 import {
   Tabs,
+  enabledTargetIndex,
   tabTargetIndex,
 } from "@shepherdjerred/console-ui/components/tabs.tsx";
 import { ThemeRow } from "@shepherdjerred/console-ui/components/shell/theme-row.tsx";
@@ -192,6 +193,32 @@ describe("HeaderBar and Tabs", () => {
     ["End", 0, 1],
   ] as const)("%s from %i selects %i", (key, from, to) => {
     expect(tabTargetIndex(key, from, 2)).toBe(to);
+  });
+
+  test("a disabled option renders disabled and keys skip it", () => {
+    const markup = renderToStaticMarkup(
+      <Tabs
+        label="View"
+        value="html"
+        onChange={noop}
+        options={[
+          { value: "html", label: "HTML" },
+          { value: "text", label: "Plain text", disabled: true },
+          { value: "raw", label: "Raw" },
+        ]}
+      />,
+    );
+    expect(markup).toContain(
+      'aria-checked="false" disabled="" tabindex="-1">Plain text',
+    );
+    expect(markup).not.toContain('aria-checked="true" disabled');
+    const disabled = [false, true, false];
+    expect(enabledTargetIndex("ArrowRight", 0, disabled)).toBe(2);
+    expect(enabledTargetIndex("ArrowLeft", 2, disabled)).toBe(0);
+    expect(enabledTargetIndex("End", 0, [false, false, true])).toBe(1);
+    expect(enabledTargetIndex("Home", 2, [true, false, false])).toBe(1);
+    expect(enabledTargetIndex("ArrowRight", 0, [false, true])).toBe(0);
+    expect(enabledTargetIndex("Enter", 0, disabled)).toBeUndefined();
   });
 
   test("ignores other keys", () => {

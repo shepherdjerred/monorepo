@@ -49,6 +49,7 @@
     "@prisma/client-runtime-utils": "7.10.1",
     "@shepherdjerred/loaded": "workspace:*",
     "@shepherdjerred/experiments": "workspace:*",
+    "@tanstack/react-form": "^1.33.6",
     "@tanstack/react-query": "^5.101.2",
     "@trpc/client": "^11.18.0",
     "@trpc/server": "^11.18.0",

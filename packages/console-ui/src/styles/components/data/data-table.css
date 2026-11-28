@@ -1,0 +1,122 @@
+/*
+ * DataTable: a `.ui-table` flush in its section, with button headers for
+ * sorting, a checkbox column, twist cells, detail rows on the head
+ * background and the spacer rows a virtualized body keeps in place of the
+ * rows out of view.
+ */
+@layer ui.components {
+  .ui-datatable {
+    min-width: 0;
+  }
+  /*
+   * A head stuck to the page needs a box that does not scroll, so above
+   * phone width the table must fit the panel. On a phone the box scrolls
+   * sideways again and the head scrolls with the rows.
+   */
+  @media (width > 600px) {
+    .ui-datatable[data-page-sticky] .ui-datatable-scroll {
+      overflow-x: visible;
+    }
+  }
+  @media (width <= 600px) {
+    .ui-datatable[data-page-sticky] .ui-table[data-sticky] thead th {
+      position: static;
+    }
+  }
+  .ui-datatable-scroll[data-contained] {
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .ui-datatable-scroll[data-contained] .ui-table[data-sticky] thead th {
+    top: 0;
+  }
+  .ui-datatable-scroll:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .ui-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-space-1);
+    height: var(--ui-head-row);
+    margin: 0 calc(-1 * var(--ui-space-1));
+    padding: 0 var(--ui-space-1);
+    border-radius: var(--ui-radius-xs);
+    color: inherit;
+    font-weight: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ui-sort:hover,
+  .ui-table th[aria-sort="ascending"] .ui-sort,
+  .ui-table th[aria-sort="descending"] .ui-sort {
+    color: var(--ui-ink);
+  }
+  .ui-sort:focus-visible {
+    outline-offset: -2px;
+  }
+  .ui-sort svg {
+    width: 12px;
+    height: 12px;
+    flex: none;
+  }
+  .ui-sort .ui-sort-idle {
+    opacity: 0;
+  }
+  .ui-sort:is(:hover, :focus-visible) .ui-sort-idle {
+    opacity: 1;
+  }
+  /* Right-aligned figures keep the header text over the numbers. */
+  .ui-table thead .ui-num .ui-sort {
+    flex-direction: row-reverse;
+  }
+
+  .ui-table :is(th, td).ui-datatable-select,
+  .ui-table :is(th, td).ui-datatable-twist {
+    width: 1px;
+    padding-right: 0;
+  }
+  .ui-table :is(th, td).ui-datatable-twist .ui-twist {
+    margin-right: 0;
+  }
+  .ui-datatable-check {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--ui-accent);
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  .ui-table tbody tr[data-selected]:not([data-current]) > * {
+    background: var(--ui-hover);
+  }
+
+  .ui-table tbody tr.ui-datatable-detail > td {
+    height: auto;
+    padding-block: var(--ui-space-3);
+    color: var(--ui-ink-2);
+    white-space: normal;
+  }
+  .ui-table tbody tr.ui-datatable-spacer > td,
+  .ui-table tbody tr.ui-datatable-spacer:hover > td {
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .ui-table-group .ui-glyph {
+    gap: 6px;
+  }
+
+  @media (width <= 600px) {
+    .ui-table[data-stack] tbody tr.ui-datatable-spacer {
+      padding: 0;
+      border: 0;
+    }
+    .ui-table[data-stack] :is(tbody, tfoot) :is(td, th).ui-datatable-select,
+    .ui-table[data-stack] :is(tbody, tfoot) :is(td, th).ui-datatable-twist {
+      width: auto;
+    }
+  }
+}

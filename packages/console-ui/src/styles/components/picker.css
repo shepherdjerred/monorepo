@@ -1,0 +1,76 @@
+/*
+ * The 28px picker control of `Select` and the single `Combobox`: the field
+ * look with the chosen option's icon and label and a chevron. Their lists
+ * are menus (menu.css).
+ */
+@layer ui.components {
+  .ui-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    height: var(--ui-control);
+    padding: 0 7px 0 9px;
+    border: 1px solid var(--ui-btn-edge);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    font-weight: var(--ui-weight-medium);
+    text-align: left;
+    cursor: pointer;
+  }
+  .ui-picker:hover:not(:disabled, [data-disabled]) {
+    background: var(--ui-hover);
+  }
+  .ui-picker:is(:disabled, [data-disabled]) {
+    color: var(--ui-faint);
+    cursor: not-allowed;
+  }
+  .ui-picker-value {
+    display: inline-flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .ui-picker .ui-menu-icon {
+    width: 14px;
+    height: 14px;
+  }
+  /* The closed control shows the label only. */
+  .ui-picker-value .ui-menu-description {
+    display: none;
+  }
+  .ui-picker-placeholder {
+    color: var(--ui-faint);
+    font-weight: var(--ui-weight-regular);
+  }
+  .ui-picker-chevron {
+    display: flex;
+    flex: none;
+    margin-left: auto;
+    color: var(--ui-muted);
+  }
+  .ui-picker-chevron svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Touch: the control stays 28px with a 44px hit area. */
+  @media (pointer: coarse) {
+    .ui-picker:not([data-multiple]) {
+      position: relative;
+    }
+    .ui-picker:not([data-multiple])::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--ui-hit));
+      height: max(100%, var(--ui-hit));
+      transform: translate(-50%, -50%);
+      content: "";
+    }
+  }
+}

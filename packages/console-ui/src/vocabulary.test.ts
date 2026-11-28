@@ -21,8 +21,9 @@ type Finding = { readonly rule: string; readonly where: string };
 
 const COLOUR_LITERAL =
   /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(|\b(?:white|black)\b/i;
-/** Only the unread dot is round; everything else uses the radius scale. */
-const ROUND_ALLOWED = /\.ui-unread\b/;
+/** Only dots are round (unread, timeline, live status, radio); everything else uses the radius scale. */
+const ROUND_ALLOWED =
+  /\.ui-(?:unread|timeline-dot|status-dot-mark|choice-dot)\b|\.ui-choice-box\[data-shape="radio"\]/;
 const ALLOWED_WIDTHS = new Set(Object.values(BREAKPOINTS));
 
 /** Property → the values it may take. A failing value is a finding. */
@@ -97,7 +98,9 @@ function countByRule(found: readonly Finding[]): Record<string, number> {
 }
 
 const componentSheets = [
-  ...new Bun.Glob("*.css").scanSync({ cwd: path.join(styles, "components") }),
+  ...new Bun.Glob("**/*.css").scanSync({
+    cwd: path.join(styles, "components"),
+  }),
 ].toSorted((a, b) => a.localeCompare(b));
 
 describe("the shared stylesheet", () => {
@@ -116,7 +119,7 @@ describe("the shared stylesheet", () => {
   test("index.css imports every component file", async () => {
     const index = await Bun.file(path.join(styles, "index.css")).text();
     const imported = [
-      ...index.matchAll(/@import "\.\/components\/([\w-]+\.css)";/g),
+      ...index.matchAll(/@import "\.\/components\/([\w/-]+\.css)";/g),
     ].map((match) => match[1] ?? "");
     expect(imported.toSorted((a, b) => a.localeCompare(b))).toEqual(
       componentSheets,

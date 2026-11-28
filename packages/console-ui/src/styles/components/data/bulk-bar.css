@@ -1,0 +1,34 @@
+/*
+ * BulkBar: the selection bar. A hairline above, the panel behind, stuck to
+ * the bottom of the viewport while its section scrolls by.
+ */
+@layer ui.components {
+  .ui-bulkbar {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--ui-z-sticky);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2) var(--ui-space-3);
+    min-height: var(--ui-header);
+    padding: var(--ui-space-2) var(--ui-gutter);
+    border-top: 1px solid var(--ui-line);
+    background: var(--ui-panel);
+    box-shadow: var(--ui-shadow-menu);
+  }
+  .ui-bulkbar-count {
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-strong);
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-bulkbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2);
+  }
+  .ui-bulkbar .ui-bulkbar-clear {
+    margin-left: auto;
+  }
+}

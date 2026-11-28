@@ -56,8 +56,8 @@ export type PhoneNavProps = {
   /** Icon buttons between the switcher and the theme toggle, e.g. search. */
   readonly actions?: ReactNode;
   readonly theme: ThemeStore;
-  /** Pinned to the bottom of the drawer. */
-  readonly footer?: ReactNode;
+  /** Pinned to the bottom of the drawer; call `close` when a link is followed. */
+  readonly footer?: ((close: () => void) => ReactNode) | undefined;
   /** Closes the drawer while true, e.g. while the command palette is open. */
   readonly forceClosed?: boolean;
   /** The drawer's navigation groups; call `close` when a link is followed. */
@@ -120,7 +120,7 @@ export function PhoneNav({
             {children(close)}
           </nav>
           {footer === undefined ? null : (
-            <div className="ui-drawer-foot">{footer}</div>
+            <div className="ui-drawer-foot">{footer(close)}</div>
           )}
         </Dialog.Popup>
       </Dialog.Portal>

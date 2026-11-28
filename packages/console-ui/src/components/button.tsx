@@ -22,8 +22,8 @@ export type ButtonProps = Omit<ButtonPrimitive.Props, "className"> & {
 
 /**
  * The 28px pressable button. Lucide icons inside it pick up the muted
- * colour. For a link styled as a button, pass `render={<a href="…" />}` and
- * `nativeButton={false}` (Base UI's render prop), or a router link.
+ * colour. For a link styled as a button use `ButtonLink`: Base UI puts
+ * `role="button"` on a `render={<a/>}` anchor, which breaks link semantics.
  */
 export function Button({
   variant = "default",

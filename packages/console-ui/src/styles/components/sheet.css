@@ -1,0 +1,138 @@
+/*
+ * Sheets: a modal panel on an edge of the screen. Side sheets (right, left)
+ * hold side panels and peeks and fill the width on a phone; the bottom sheet
+ * holds a phone's "More". Same parts as the dialog: a 15px title row, the
+ * scrolling body, optional actions pinned to the bottom.
+ */
+@layer ui.components {
+  .ui-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--ui-z-overlay);
+    display: flex;
+    flex-direction: column;
+    width: min(400px, 100vw);
+    border-left: 1px solid var(--ui-line);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    box-shadow: var(--ui-shadow-overlay);
+  }
+  .ui-sheet:focus-visible {
+    outline: none;
+  }
+  .ui-sheet[data-size="lg"] {
+    width: min(560px, 100vw);
+  }
+  .ui-sheet[data-side="left"] {
+    right: auto;
+    left: 0;
+    border-right: 1px solid var(--ui-line);
+    border-left: 0;
+  }
+  .ui-sheet[data-side="bottom"] {
+    top: auto;
+    left: 0;
+    width: auto;
+    max-height: 85dvh;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--ui-line);
+    border-left: 0;
+    border-top-left-radius: var(--ui-radius-lg);
+    border-top-right-radius: var(--ui-radius-lg);
+  }
+  .ui-sheet-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ui-space-2);
+    min-height: var(--ui-header);
+    padding: 0 var(--ui-space-3) 0 var(--ui-gutter);
+  }
+  .ui-sheet-title {
+    flex: 1;
+    margin: 0;
+    font-size: var(--ui-text-xl);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-sheet-body {
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: var(--ui-space-3);
+    padding: 0 var(--ui-gutter) var(--ui-space-4);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .ui-sheet-description {
+    margin: 0;
+    color: var(--ui-muted);
+  }
+  .ui-sheet-actions {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-gutter) var(--ui-space-4);
+    border-top: 1px solid var(--ui-line-soft);
+  }
+
+  /* A list of 44px navigation rows, as a phone's "More" holds. */
+  .ui-sheet-links {
+    display: grid;
+    gap: 2px;
+    margin: 0 calc(-1 * var(--ui-space-2));
+    padding: 0;
+    list-style: none;
+  }
+  .ui-sheet-links :is(a, button) {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-space-3);
+    width: 100%;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--ui-radius-md);
+    background: transparent;
+    color: var(--ui-ink-2);
+    font-size: var(--ui-text-lg);
+    font-weight: var(--ui-weight-medium);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .ui-sheet-links :is(a, button):hover {
+    background: var(--ui-hover);
+  }
+  .ui-sheet-links :is(a, button)[aria-current] {
+    background: var(--ui-active);
+    color: var(--ui-ink);
+  }
+  .ui-sheet-links svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--ui-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-sheet {
+      transition: transform var(--ui-duration-panel) var(--ui-ease-out);
+    }
+    .ui-sheet:is([data-starting-style], [data-ending-style]) {
+      transform: translateX(100%);
+    }
+    .ui-sheet[data-side="left"]:is([data-starting-style], [data-ending-style]) {
+      transform: translateX(-100%);
+    }
+    .ui-sheet[data-side="bottom"]:is(
+        [data-starting-style],
+        [data-ending-style]
+      ) {
+      transform: translateY(100%);
+    }
+  }
+}

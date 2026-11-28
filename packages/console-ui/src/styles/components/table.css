@@ -6,6 +6,7 @@
  */
 @layer ui.components {
   .ui-table-scroll {
+    position: relative;
     overflow-x: auto;
   }
   .ui-table {
@@ -42,6 +43,13 @@
     padding: 0 var(--ui-space-3);
     border-bottom: 1px solid var(--ui-line-soft);
     white-space: nowrap;
+  }
+  /* Opt-in wrapping for headlines and error text: `<td data-wrap>`. */
+  .ui-table :is(th, td)[data-wrap] {
+    height: auto;
+    padding-block: var(--ui-space-2);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .ui-table tbody th[scope="row"] {
     color: var(--ui-ink);
@@ -142,6 +150,14 @@
 
   .ui-lead {
     position: relative;
+  }
+  /*
+   * In a linked row the row, not the lead cell, must contain the cover, or
+   * only the lead cell navigates. The lead cell stays static there, so keep
+   * it the row's first cell: its unread dot then measures from the row edge.
+   */
+  .ui-table tr:has(.ui-row-link) .ui-lead {
+    position: static;
   }
   .ui-lead > .ui-glyph {
     margin-right: 9px;

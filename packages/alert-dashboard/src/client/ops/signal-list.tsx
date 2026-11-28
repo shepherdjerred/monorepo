@@ -1,4 +1,8 @@
-import { StatusGlyph } from "@shepherdjerred/console-ui";
+import {
+  StatusGlyph,
+  cappedCount,
+  useCapped,
+} from "@shepherdjerred/console-ui";
 import {
   severityRank,
   type Severity,
@@ -13,7 +17,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 
 import { signalUsedRatio } from "./ai-quota.ts";
-import { ListToggle, cappedCount, useCapped } from "./capped-list.tsx";
+import { ListToggle } from "./capped-list.tsx";
 import { ExternalLink, ServiceLink } from "./ops-ui.tsx";
 import { bucketBySeverity } from "#client/severity-buckets.ts";
 import { age } from "#client/time.ts";

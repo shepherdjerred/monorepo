@@ -12,6 +12,7 @@ import {
   HeaderBar,
   StatusGlyph,
   Tabs,
+  useCapped,
 } from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,7 +24,7 @@ import {
 import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 
-import { ListToggle, useCapped } from "./capped-list.tsx";
+import { ListToggle } from "./capped-list.tsx";
 import { isSnapshotUnavailable, snapshotQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";

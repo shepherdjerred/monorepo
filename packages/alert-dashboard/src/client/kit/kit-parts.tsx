@@ -1,4 +1,9 @@
-import { NavTabs, type RenderLinkProps } from "@shepherdjerred/console-ui";
+import {
+  NavTabs,
+  Tabs,
+  type RenderLinkProps,
+} from "@shepherdjerred/console-ui";
+import { useState } from "react";
 import { Link, useLocation } from "react-router";
 
 /** The gallery's two pages, as route tabs. */
@@ -99,3 +104,23 @@ export const KIT_GROUPS: readonly {
     ],
   },
 ];
+
+type PreviewView = "html" | "text";
+
+/** A `Tabs` group with a disabled option, as on a message without a text part. */
+export function KitDisabledTabs(): React.JSX.Element {
+  const [view, setView] = useState<PreviewView>("html");
+  return (
+    <div className="ui-toolbar">
+      <Tabs
+        label="Message view"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "html", label: "HTML" },
+          { value: "text", label: "Text part", disabled: true },
+        ]}
+      />
+    </div>
+  );
+}

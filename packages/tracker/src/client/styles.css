@@ -1,6 +1,3 @@
-/* tracker.elements (base.css) sits between console-ui's reset and its components. */
-@layer ui.reset, tracker.elements, ui.tokens, ui.components;
-
 @import "@shepherdjerred/console-ui/styles/index.css";
 @import "./styles/tokens.css";
 @import "./styles/base.css";

@@ -1,0 +1,37 @@
+/* Connection state: a dot and a word. The dot is the only round shape here. */
+@layer ui.components {
+  .ui-status-dot {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-status-dot-mark {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--ui-radius-round);
+    background: var(--ui-sev-unknown);
+  }
+  .ui-status-dot[data-state="live"] .ui-status-dot-mark {
+    background: var(--ui-sev-ok);
+  }
+  .ui-status-dot[data-state="connecting"] .ui-status-dot-mark,
+  .ui-status-dot[data-state="reconnecting"] .ui-status-dot-mark {
+    background: var(--ui-sev-warning);
+    animation: ui-pulse 1.4s ease-in-out infinite;
+  }
+  .ui-status-dot[data-state="offline"] .ui-status-dot-mark {
+    background: var(--ui-sev-error);
+  }
+  @keyframes ui-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ui-status-dot-mark {
+      animation: none !important;
+    }
+  }
+}
