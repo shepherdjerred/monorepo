@@ -102,11 +102,17 @@ test("deepens only until the base becomes a verified ancestor", async () => {
     true,
   );
   expect(valid).toBe(true);
-  expect(fetches.map((command) => command[4])).toEqual([
+  expect(fetches.map((command) => command[3])).toEqual([
     "--deepen=32",
     "--deepen=128",
   ]);
   expect(fetches[0]?.at(-1)).toBe(HEAD_COMMIT);
+  // A filtered fetch makes the workspace a partial clone, and Git then rewrites
+  // every local object into a new pack (the whole golden checkout).
+  for (const fetch of fetches)
+    expect(fetch.some((argument) => argument.startsWith("--filter"))).toBe(
+      false,
+    );
 });
 
 test("runs conservatively when a bounded history fetch fails", async () => {
@@ -127,7 +133,7 @@ test("runs conservatively when a bounded history fetch fails", async () => {
     true,
   );
   expect(valid).toBe(false);
-  expect(commands.at(-1)?.[4]).toBe("--deepen=32");
+  expect(commands.at(-1)?.[3]).toBe("--deepen=32");
 });
 
 test("stops after bounded deepening when the base stays unreachable", async () => {
@@ -149,7 +155,7 @@ test("stops after bounded deepening when the base stays unreachable", async () =
     true,
   );
   expect(valid).toBe(false);
-  expect(fetches.map((command) => command[4])).toEqual([
+  expect(fetches.map((command) => command[3])).toEqual([
     "--deepen=32",
     "--deepen=128",
     "--deepen=512",
