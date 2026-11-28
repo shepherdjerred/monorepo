@@ -37,7 +37,7 @@ features = ["std", "NSResponder", "NSView", "NSWindow"]
 # Click-through, no-activate and topmost on Windows: the extended window
 # styles, `SetLayeredWindowAttributes` and `SetWindowPos`.
 [target.'cfg(windows)'.dependencies.winsafe]
-version = "0.0.27"
+version = "0.0.29"
 features = ["user"]
 
 # Compile the Metal shaders when the window starts rather than at build time,

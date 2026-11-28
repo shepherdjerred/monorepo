@@ -36,16 +36,18 @@ async function renderExamples() {
   const options: SatoriOptions = {
     width: 1200,
     height: 630,
-    fonts: [
-      {
+    // Presets ask for weights 700 and 900; Satori 0.49+ synthesizes bold when
+    // the loaded face declares less than the requested weight, so load real faces.
+    fonts: await Promise.all(
+      ([400, 700, 900] as const).map(async (weight) => ({
         name: "Roboto",
-        weight: 400,
-        style: "normal",
+        weight,
+        style: "normal" as const,
         data: await fs.readFile(
-          "node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff",
+          `node_modules/@fontsource/roboto/files/roboto-latin-${String(weight)}-normal.woff`,
         ),
-      },
-    ],
+      })),
+    ),
   };
 
   const promises = Object.entries(presets).map(async ([name, preset]) => {

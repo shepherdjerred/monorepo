@@ -40,7 +40,7 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-markdown": "^10.1.0",
-    "react-router": "8.4.0",
+    "react-router": "8.5.3",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.4.0",
     "ts-pattern": "^5.7.0",
