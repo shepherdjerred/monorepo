@@ -1,4 +1,4 @@
-import { Button, Card } from "@shepherdjerred/console-ui";
+import { Button, Section } from "@shepherdjerred/console-ui";
 import { useEffect, useRef, type SubmitEvent } from "react";
 
 import type { Experiment } from "@shepherdjerred/experiments/contract";
@@ -160,20 +160,10 @@ function ExperimentActionForm({
       <FormError error={mutation.error} />
       <ActionFields action={action} experiment={experiment} />
       <div className="experiments-actions">
-        <Button
-          type="submit"
-          size="page"
-          variant="primary"
-          disabled={mutation.isPending}
-        >
+        <Button type="submit" variant="primary" disabled={mutation.isPending}>
           {ACTIONS[action].submit}
         </Button>
-        <Button
-          type="button"
-          size="page"
-          onClick={onCancel}
-          disabled={mutation.isPending}
-        >
+        <Button type="button" onClick={onCancel} disabled={mutation.isPending}>
           Cancel
         </Button>
       </div>
@@ -186,20 +176,29 @@ export function ActionCard({
   ...form
 }: ActionFormProps & { readonly action: DetailAction }) {
   const title = ACTIONS[action].title;
-  const heading = useRef<HTMLHeadingElement>(null);
+  const headingText = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    heading.current?.focus();
+    const heading = headingText.current?.closest("h2");
+    if (heading !== undefined && heading !== null) {
+      heading.tabIndex = -1;
+      heading.focus();
+    }
   }, []);
   return (
-    <Card label={title} className="experiments-section experiments-action-card">
-      <h2 id="experiment-action" ref={heading} tabIndex={-1}>
-        {title}
-      </h2>
-      {action === "edit" ? (
-        <DraftForm {...form} />
-      ) : (
-        <ExperimentActionForm action={action} {...form} />
-      )}
-    </Card>
+    <Section
+      title={
+        <span id="experiment-action" ref={headingText}>
+          {title}
+        </span>
+      }
+    >
+      <div className="ui-section-body">
+        {action === "edit" ? (
+          <DraftForm {...form} />
+        ) : (
+          <ExperimentActionForm action={action} {...form} />
+        )}
+      </div>
+    </Section>
   );
 }

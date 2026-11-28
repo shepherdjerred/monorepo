@@ -1,11 +1,9 @@
 import {
   Button,
-  Card,
-  CardToolbar,
-  PageBody,
-  PageHeading,
+  HeaderBar,
   SearchField,
-  Segmented,
+  Section,
+  Tabs,
 } from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
@@ -37,12 +35,12 @@ function ExperimentTable({
 }) {
   return (
     <div
-      className="ui-data-scroll"
+      className="ui-table-scroll"
       role="region"
       aria-label="Experiment list"
       tabIndex={0}
     >
-      <table className="ui-data">
+      <table className="ui-table" data-stack>
         <thead>
           <tr>
             <th scope="col">Experiment</th>
@@ -92,14 +90,12 @@ export function ExperimentsListPage({ api }: { readonly api: string }) {
   }
 
   return (
-    <PageBody className="experiments-page">
-      <PageHeading
-        eyebrow="Ops"
+    <main id="main" className="experiments-page">
+      <HeaderBar
         title="Experiments"
         actions={
           <Link
             className="ui-btn"
-            data-size="page"
             data-variant="primary"
             to={NEW_EXPERIMENT_PATH}
           >
@@ -107,36 +103,34 @@ export function ExperimentsListPage({ api }: { readonly api: string }) {
           </Link>
         }
       />
-      <Card label="Experiments">
-        <search>
-          <CardToolbar>
-            <Segmented
-              label="Experiment status"
-              value={view}
-              options={VIEWS}
-              onChange={(next) => {
-                changeParam("view", next);
+      <Section title="Results">
+        <search className="ui-toolbar">
+          <Tabs
+            label="Experiment status"
+            value={view}
+            options={VIEWS}
+            onChange={(next) => {
+              changeParam("view", next);
+            }}
+          />
+          <form
+            action={EXPERIMENTS_PATH}
+            method="get"
+            onSubmit={(event) => {
+              event.preventDefault();
+            }}
+          >
+            <SearchField
+              name="q"
+              label="Search experiments"
+              placeholder="Search experiments"
+              value={query}
+              maxLength={200}
+              onChange={(event) => {
+                changeParam("q", event.currentTarget.value, true);
               }}
             />
-            <form
-              action={EXPERIMENTS_PATH}
-              method="get"
-              onSubmit={(event) => {
-                event.preventDefault();
-              }}
-            >
-              <SearchField
-                name="q"
-                label="Search experiments"
-                placeholder="Search experiments"
-                value={query}
-                maxLength={200}
-                onChange={(event) => {
-                  changeParam("q", event.currentTarget.value, true);
-                }}
-              />
-            </form>
-          </CardToolbar>
+          </form>
         </search>
         {list.isPending && (
           <p className="experiments-empty" role="status">
@@ -162,7 +156,7 @@ export function ExperimentsListPage({ api }: { readonly api: string }) {
           ) : (
             <ExperimentTable items={list.data.items} />
           ))}
-      </Card>
-    </PageBody>
+      </Section>
+    </main>
   );
 }

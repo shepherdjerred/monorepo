@@ -2,40 +2,8 @@
   overflow-wrap: anywhere;
 }
 
-.experiments-page .ui-data th a,
-.experiments-page .ui-data th {
-  white-space: normal;
-}
-
-.experiments-page .ui-card-toolbar {
-  flex-wrap: wrap;
-}
-
-.experiments-empty,
-.experiments-section {
-  padding: 1.125rem;
-}
-
-.experiments-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-
-@container ui-page (max-width: 720px) {
-  .experiments-detail-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.experiments-section h2 {
-  margin-block: 0 1rem;
-  font-size: 1.125rem;
-}
-
-.experiments-action-card {
-  margin-block-end: 1rem;
+.experiments-empty {
+  padding: var(--ui-gutter);
 }
 
 .experiments-form,
@@ -135,23 +103,9 @@
   color: var(--ui-sev-error-text);
 }
 
-.experiments-due {
-  color: var(--ui-sev-warning-text);
-}
-
-.experiments-section summary {
-  cursor: pointer;
-}
-
 @media (pointer: coarse) {
-  .experiments-form .ui-field-control,
-  .experiments-form .ui-btn,
   .experiments-form .experiments-choice,
   .experiments-choices label {
     min-block-size: 3rem;
-  }
-
-  .experiments-form .ui-field-control {
-    font-size: 1rem;
   }
 }

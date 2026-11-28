@@ -1,9 +1,4 @@
-import {
-  Button,
-  Card,
-  PageBody,
-  PageHeading,
-} from "@shepherdjerred/console-ui";
+import { Button, HeaderBar, Section } from "@shepherdjerred/console-ui";
 import type { SubmitEvent } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -107,19 +102,13 @@ export function DraftForm({
         {...(experiment === undefined ? {} : { plan: experiment.plan })}
       />
       <div className="experiments-actions">
-        <Button
-          type="submit"
-          size="page"
-          variant="primary"
-          disabled={mutation.isPending}
-        >
+        <Button type="submit" variant="primary" disabled={mutation.isPending}>
           {experiment === undefined ? "Save draft" : "Save changes"}
         </Button>
         {experiment === undefined && <Link to={EXPERIMENTS_PATH}>Cancel</Link>}
         {onCancel !== undefined && (
           <Button
             type="button"
-            size="page"
             onClick={onCancel}
             disabled={mutation.isPending}
           >
@@ -134,15 +123,17 @@ export function DraftForm({
 
 export function NewExperimentPage({ api }: { readonly api: string }) {
   return (
-    <PageBody className="experiments-page">
-      <PageHeading
-        eyebrow="Experiments"
-        title="New experiment"
-        description="Write down the change you want to try and how you’ll decide whether it worked."
-      />
-      <Card label="Draft experiment" className="experiments-section">
-        <DraftForm api={api} />
-      </Card>
-    </PageBody>
+    <main id="main" className="experiments-page">
+      <HeaderBar title="New experiment" focusOnMount />
+      <Section title="Draft experiment">
+        <div className="ui-section-body">
+          <p>
+            Write down the change you want to try and how you’ll decide whether
+            it worked.
+          </p>
+          <DraftForm api={api} />
+        </div>
+      </Section>
+    </main>
   );
 }

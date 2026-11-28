@@ -1,4 +1,4 @@
-import { Tag } from "@shepherdjerred/console-ui";
+import { Chip } from "@shepherdjerred/console-ui";
 import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { useEffect, useRef } from "react";
 import "./experiments.css";
@@ -38,9 +38,9 @@ export function ExperimentStatus({
 }: {
   readonly item: ExperimentSummary;
 }) {
-  if (item.isDue) return <Tag className="experiments-due">Review due</Tag>;
-  if (item.decision !== null) return <Tag>{DECISIONS[item.decision]}</Tag>;
-  return <Tag>{item.status === "draft" ? "Draft" : "Running"}</Tag>;
+  if (item.isDue) return <Chip severity="warning">Review due</Chip>;
+  if (item.decision !== null) return <Chip>{DECISIONS[item.decision]}</Chip>;
+  return <Chip>{item.status === "draft" ? "Draft" : "Running"}</Chip>;
 }
 
 const calendarDate = new Intl.DateTimeFormat("en-US", {

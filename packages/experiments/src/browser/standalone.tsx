@@ -1,12 +1,8 @@
 import "@shepherdjerred/console-ui/styles/index.css";
 import {
-  AppSwitcher,
-  ShellFrame,
-  Sidebar,
+  ConsoleShell,
   SidebarGroup,
   SidebarItem,
-  ThemeRow,
-  TopBar,
   createThemeStore,
 } from "@shepherdjerred/console-ui";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
@@ -22,19 +18,10 @@ import { NewExperimentPage } from "./draft-page.tsx";
 import { ExperimentsListPage } from "./list-page.tsx";
 import { EXPERIMENTS_PATH, NEW_EXPERIMENT_PATH } from "./presentation.tsx";
 
-const theme = createThemeStore("experiments-theme");
+const theme = createThemeStore();
 const queryClient = new QueryClient();
 
-function Switcher() {
-  return (
-    <AppSwitcher
-      current={{ label: "Experiments", mark: "E" }}
-      apps={CONSOLE_LINKS}
-    />
-  );
-}
-
-function ExperimentsNav({ onNavigate }: { readonly onNavigate?: () => void }) {
+function experimentsNav(onNavigate?: () => void) {
   return (
     <SidebarGroup label="Ops">
       <SidebarItem
@@ -52,26 +39,13 @@ function ExperimentsNav({ onNavigate }: { readonly onNavigate?: () => void }) {
 
 function StandaloneExperiments() {
   return (
-    <ShellFrame
-      sidebar={
-        <Sidebar
-          label="Experiments"
-          navLabel="Experiments navigation"
-          top={<Switcher />}
-          footer={<ThemeRow store={theme} />}
-        >
-          <ExperimentsNav />
-        </Sidebar>
-      }
+    <ConsoleShell
+      app={{ label: "Experiments", mark: "E" }}
+      apps={CONSOLE_LINKS}
+      navLabel="Experiments navigation"
+      theme={theme}
+      nav={experimentsNav}
     >
-      <TopBar
-        switcher={<Switcher />}
-        brand="Experiments"
-        navLabel="Experiments navigation"
-        theme={theme}
-      >
-        {(close) => <ExperimentsNav onNavigate={close} />}
-      </TopBar>
       <Routes>
         <Route path="/" element={<Navigate to={EXPERIMENTS_PATH} replace />} />
         <Route
@@ -87,7 +61,7 @@ function StandaloneExperiments() {
           element={<ExperimentDetailPage api={EXPERIMENTS_API_PATH} />}
         />
       </Routes>
-    </ShellFrame>
+    </ConsoleShell>
   );
 }
 

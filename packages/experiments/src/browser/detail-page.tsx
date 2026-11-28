@@ -1,9 +1,4 @@
-import {
-  Button,
-  Card,
-  PageBody,
-  PageHeading,
-} from "@shepherdjerred/console-ui";
+import { Button, HeaderBar, Section } from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState } from "react";
@@ -166,14 +161,16 @@ function ExperimentDetail({
   const actions = DETAIL_ACTIONS[experiment.status];
 
   return (
-    <PageBody className="experiments-page">
-      <Link to={EXPERIMENTS_PATH} className="experiments-back">
-        <ArrowLeftIcon aria-hidden="true" /> Experiments
-      </Link>
-      <PageHeading
-        eyebrow="Experiments"
+    <main id="main" className="experiments-page">
+      <HeaderBar
+        lead={
+          <Link to={EXPERIMENTS_PATH} className="experiments-back">
+            <ArrowLeftIcon aria-hidden="true" /> Experiments
+          </Link>
+        }
         title={experiment.title}
-        description={
+        focusOnMount
+        meta={
           <span className="experiments-summary">
             <ExperimentStatus item={experiment} />
             <span>{experiment.owner}</span>
@@ -190,7 +187,6 @@ function ExperimentDetail({
                 <Button
                   key={action}
                   type="button"
-                  size="page"
                   variant={index === 0 ? "primary" : "default"}
                   onClick={() => {
                     setNotice("");
@@ -222,27 +218,31 @@ function ExperimentDetail({
           }}
         />
       )}
-      <div className="experiments-detail-grid">
-        <Card label="Experiment plan" className="experiments-section">
-          <h2>{experiment.originalPlan === null ? "Plan" : "Current plan"}</h2>
-          <PlanDetails plan={experiment.plan} />
-          {experiment.originalPlan !== null && (
-            <details>
-              <summary>Original plan</summary>
-              <p>
-                Original review date ·{" "}
-                <ReviewDate date={experiment.originalReviewDate} />
-              </p>
-              <PlanDetails plan={experiment.originalPlan} />
-            </details>
-          )}
-        </Card>
-        <Card label="Experiment activity" className="experiments-section">
-          <h2>Activity</h2>
-          <Timeline events={experiment.timeline} />
-        </Card>
+      <div className="ui-columns">
+        <Section
+          title={experiment.originalPlan === null ? "Plan" : "Current plan"}
+        >
+          <div className="ui-section-body">
+            <PlanDetails plan={experiment.plan} />
+            {experiment.originalPlan !== null && (
+              <details>
+                <summary>Original plan</summary>
+                <p>
+                  Original review date ·{" "}
+                  <ReviewDate date={experiment.originalReviewDate} />
+                </p>
+                <PlanDetails plan={experiment.originalPlan} />
+              </details>
+            )}
+          </div>
+        </Section>
+        <Section title="Activity">
+          <div className="ui-section-body">
+            <Timeline events={experiment.timeline} />
+          </div>
+        </Section>
       </div>
-    </PageBody>
+    </main>
   );
 }
 
@@ -252,23 +252,27 @@ export function ExperimentDetailPage({ api }: { readonly api: string }) {
   if (detail.data !== undefined)
     return <ExperimentDetail key={id} api={api} experiment={detail.data} />;
   return (
-    <PageBody className="experiments-page">
-      <PageHeading eyebrow="Experiments" title="Experiment" />
-      <Link to={EXPERIMENTS_PATH}>Back to experiments</Link>
-      {detail.isPending && <p role="status">Loading experiment…</p>}
-      {detail.isError && (
-        <div>
-          <p role="alert">{detail.error.message}</p>
-          <Button
-            type="button"
-            onClick={() => {
-              void detail.refetch();
-            }}
-          >
-            Try again
-          </Button>
-        </div>
-      )}
-    </PageBody>
+    <main id="main" className="experiments-page">
+      <HeaderBar
+        title="Experiment"
+        lead={<Link to={EXPERIMENTS_PATH}>Back to experiments</Link>}
+      />
+      <div className="ui-section-body">
+        {detail.isPending && <p role="status">Loading experiment…</p>}
+        {detail.isError && (
+          <div>
+            <p role="alert">{detail.error.message}</p>
+            <Button
+              type="button"
+              onClick={() => {
+                void detail.refetch();
+              }}
+            >
+              Try again
+            </Button>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
