@@ -142,9 +142,9 @@ async function checkPlayerGatedRecovery(failedBeforeSync: DeploymentDetail) {
     { name: "ci.sjer.red/request-id", value: ownRequestId },
     { name: "ci.sjer.red/operation-id", value: ownOperationId },
   ];
-  const inspectSynced = createRecoveryInspector({
-    readApplication: async () => syncedApp,
-  });
+  const testJobName = `delivery-${"e".repeat(40)}`;
+  const testJobUid = "88888888-8888-4888-8888-888888888888";
+  const testFingerprint = "f".repeat(64);
   const gatedAfterSync: DeploymentDetail = {
     ...gatedBeforeSync,
     stages: [
@@ -152,15 +152,62 @@ async function checkPlayerGatedRecovery(failedBeforeSync: DeploymentDetail) {
       { ...stage, status: "succeeded" },
       { ...stage, key: "step-sync", operationId: ownRequestId },
       { ...stage, key: "step-minecraft-upgrade" },
-      { ...stage, key: "test-smoke" },
+      {
+        ...stage,
+        key: "test-smoke",
+        operationId: testJobName,
+        message: JSON.stringify({
+          namespace: "delivery-worker-jobs",
+          name: testJobName,
+          uid: testJobUid,
+          specFingerprint: testFingerprint,
+          requestId: failedBeforeSync.deployment.id,
+        }),
+      },
     ],
   };
+  await expect(
+    createRecoveryInspector({
+      readApplication: async () => syncedApp,
+    })(gatedAfterSync, { operationId: ownOperationId, reason }),
+  ).rejects.toMatchObject({ code: "PAUSED" });
+  const inspectSynced = createRecoveryInspector({
+    readApplication: async () => syncedApp,
+    readWorkerJobs: async (path) =>
+      path.includes("/jobs/")
+        ? {
+            metadata: {
+              name: testJobName,
+              namespace: "delivery-worker-jobs",
+              uid: testJobUid,
+              annotations: {
+                "delivery.shepherdjerred.com/request":
+                  failedBeforeSync.deployment.id,
+                "delivery.shepherdjerred.com/fingerprint": testFingerprint,
+              },
+            },
+            status: {
+              active: 0,
+              conditions: [{ type: "Failed", status: "True" }],
+            },
+          }
+        : {
+            items: [
+              {
+                metadata: {
+                  ownerReferences: [{ kind: "Job", uid: testJobUid }],
+                },
+                status: { phase: "Failed" },
+              },
+            ],
+          },
+  });
   expect(
     await inspectSynced(gatedAfterSync, {
       operationId: ownOperationId,
       reason,
     }),
-  ).toHaveLength(1);
+  ).toHaveLength(2);
 }
 
 describe("independent Argo recovery before step-sync", () => {

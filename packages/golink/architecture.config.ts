@@ -5,9 +5,10 @@ const architecture = defineArchitecture({
     {
       name: "shared-is-contract-only",
       comment:
-        "Shared wire schemas and slug validation are imported by both browser and server layers and must remain pure.",
+        "Shared wire schemas and slug validation are imported by both browser and server layers and must remain pure. " +
+        "The one server edge is shared/trpc-contract.ts, a type-only import of the tRPC router (as Hub and Tracker do).",
       from: "shared",
-      to: ["domain", "infrastructure", "server", "client"],
+      to: ["domain", "infrastructure", "client"],
     },
     {
       name: "domain-is-pure",

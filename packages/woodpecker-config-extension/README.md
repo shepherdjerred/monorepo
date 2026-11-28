@@ -125,10 +125,30 @@ Verify also names the first-party `ci-cache` Gradle and `sccache` WebDAV
 endpoints in `GRADLE_BUILD_CACHE_URL` and `SCCACHE_WEBDAV_ENDPOINT`.
 `grantGradleBuildCache` and `grantSccacheWebdav` give every step carrying those
 variables one identity for its trust domain: `ci-main` with
-`GRADLE_BUILD_CACHE_WRITE_PASSWORD` on the default branch, or
-`ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` for a pull request.
-`ci-cache` rejects writes from the read user. A cold benchmark drops both URLs
-so it measures a build without shared Gradle or Rust compiler outputs.
+`GRADLE_BUILD_CACHE_WRITE_PASSWORD` in the trusted domain, or
+`ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` in the pull-request
+domain. `ci-cache` rejects writes from the read user. A cold benchmark drops
+both URLs so it measures a build without shared Gradle or Rust compiler outputs.
+
+`cacheTrustDomain` (`src/pipeline/cache-trust-domain.ts`) picks that domain,
+and the Turbo team and signing key, for both the PR graph and benchmark
+requests. Default-branch work is trusted. A same-repository pull request or
+canary benchmark is trusted only when `authorizePipeline` admitted the actor
+as owner-controlled, the event is not credentialless hosted automation,
+neither the author nor the sender is a GitHub App, and both are in
+`CACHE_TRUSTED_ACTORS` (`shepherdjerred`, `derrej`). That list is separate
+from the CI allowlist on purpose. Renovate, the owner's Apps, credentialless
+automation and every other actor use the pull-request domain.
+`test/pr-reachable-secrets.test.ts` pins the full grants each pull-request
+shape reaches.
+
+The shared volumes follow the domain too. `cacheSourceSteps` mounts
+`woodpecker-source-main` for trusted builds and `woodpecker-source-pr`
+otherwise; only the pinned checkout image writes either. `formatCacheScope`
+gives verify `woodpecker-format-main` on the default branch,
+`woodpecker-format-pr` in the pull-request domain, and no formatter volume for
+a trusted proposal: `ci-pod-guard` admits the main volume only for
+default-branch verify, and the PR volume is written by Renovate's code.
 
 ### Experimental workspace reuse
 
@@ -273,6 +293,14 @@ in the handoff bucket. With RAM scratch on, the step carries the
 private PostgreSQL clusters land in tmpfs. Both variables are echoed into the
 step's environment.
 
+The request emits a second, independent workflow, `paper-smoke-nightly`: the
+Paper and fake-brain services and the ten-minute smoke from
+`lanes/storm-e2e.ts`, which left the pull-request graph with the Playwright
+lane (`playwright-e2e` is `defaultBranchOnly`, with a `pullRequestInclude` exception for `ci/ci-playwright/**` so an image promotion PR still runs it before auto-merge). It has its own concurrency
+group, holds only the checkout download grant, and shares the request's
+draft-priority PR-pool routing. The dispatcher treats the pipeline as green only
+when both required workflows are present and succeed, so a red or missing `paper-smoke-nightly` fails the night.
+
 Woodpecker starts the manual pipeline at main's tip. When `CI_EXTENDED_SOURCE`
 is the tip, the workflow runs there. When it is behind the tip but still the
 newest verified main commit and the source cache is on, the workflow checks
@@ -400,20 +428,27 @@ consistency, conflict markers and secrets in the proposed commit history.
 The filtered install includes root formatting plugins and script dependencies,
 with lifecycle scripts disabled.
 They create no merge verdict or browser/Tofu/rehearsal jobs.
-Hosted automation without exact-head approval keeps a credentialless preflight.
-Ready PRs run the full affected verification graph, while automated PR review runs
-outside Woodpecker in Temporal (`ci/code-review`).
+Hosted automation and dependency proposals from the repository bot stay
+credentialless until the owner's approval covers the exact head commit. The
+extension identifies dependency proposals by the signed GitHub source ref
+`chore/renovate-bundle-<16 lowercase hex digits>`.
+Once approved, these ready PRs run the full affected verification graph.
+Automated PR review runs outside Woodpecker in Temporal (`ci/code-review`).
 
 Deploy the ready-event compatibility path and server status-context template
 before enabling draft preflight. The server change requires a drained rollout;
 observe a real ready transition through full CI before changing draft coverage.
 
-`routing.ts` assigns Kubernetes workflows to PR, main, or completion
-agents. A PR targeting the default branch still uses the PR pool; only a push
-or manual run on that branch uses main capacity. Manual maintenance,
-benchmark and extended-tier runs on the default branch are background work:
-they use the PR pool at draft priority, below every ready PR, and leave main's
-reservation intact. Native workflows keep their host labels.
+`routing.ts` assigns Kubernetes workflows to PR, main, maintenance, or
+completion agents. A PR targeting the default branch still uses the PR pool;
+only a push or manual run on that branch uses main capacity. Benchmark and
+extended-tier runs on the default branch are background work in the PR pool
+at draft priority, below every ready PR, and leave main's reservation intact.
+Temporal maintenance (`CI_MAINTENANCE_KIND`) uses its own one-slot
+`maintenance` agent, so it never waits behind the PR backlog, and is admitted
+at main's priority. It is rare, capped at one workflow, and Kueue never
+preempts, so it only passes waiting work. Native workflows keep their host
+labels.
 
 The checkout-free `ci-complete` workflow uses its reserved `completion` pool
 with the trusted `CI_GATE_IMAGE` policy image and no checkout or services. It
@@ -428,7 +463,7 @@ pods; each agent fixes its queue label.
 
 Deploy mandatory-label agents and their queues before activating routing.
 Before allowing old and new agents to overlap, drain configurations generated
-without the shared Paper smoke concurrency cap. Retain the legacy agent until
+without the shared Paper smoke concurrency cap (it now runs nightly with its own group). Retain the legacy agent until
 all unlabelled workflows have finished; then remove it through the normal
 declarative release path. Routing labels prevent it from claiming new work.
 
@@ -480,7 +515,7 @@ Helm/GitOps publication uses `deployment` (Bun, Node, GitHub CLI, jq, Helm,
 ArgoCD, AWS CLI). OpenTofu containers use `tofu` (Bun and OpenTofu). These
 profiles resolve the checked-out `.mise.toml` pins even when the base image is
 older. Docker/buildx and Git remain prerequisites supplied by that image.
-Paper smoke uses `minecraft` (Bun, Java and Gradle), preserving its plugin build,
+The nightly Paper smoke uses `minecraft` (Bun, Java and Gradle), preserving its plugin build,
 sidecar preparation, smoke tests and ten-minute bound without bootstrapping
 Android or SwiftLint. Its Gradle dependency seed and workflow-local cache paths
 use the same preamble as exhaustive verification.
@@ -624,8 +659,11 @@ before its pipelines finish. Woodpecker still starts the manual pipeline at the
 tip. When the source is still that verified commit, the extension checks it out
 through the source cache in place of the tip. Otherwise, or without the source
 cache, it emits a no-work receipt and the dispatcher selects again.
-Maintenance runs in the PR pool at draft priority, sharing one concurrency
-group across all kinds. It leaves the main and ready-PR reservations intact.
+Maintenance runs on its own one-slot `maintenance` agent at main's admission
+priority, sharing one concurrency group across all kinds. Its pods queue for
+compute quota like any other workflow and take no slot from the main or PR
+agents. `bun src/dump-steps.ts` includes every kind so the admission-budget and
+credential checks cover them.
 
 The production inventory also enables the separate
 `ci-maintenance-dispatch-enabled` Temporal flag. Both runtime fallbacks remain

@@ -17,6 +17,10 @@ export type FlagsRouteLabel =
   | "apply"
   | "create_missing"
   | "retire"
+  | "history"
+  | "metadata"
+  | "archive"
+  | "usage"
   | "assets"
   | "client"
   | "other";
@@ -37,11 +41,16 @@ const APPLY_PATH = /^\/v1\/deployments\/[^/]+\/[^/]+\/apply$/u;
 const CREATE_MISSING_PATH =
   /^\/v1\/deployments\/[^/]+\/[^/]+\/create-missing$/u;
 const RETIRE_PATH = /^\/v1\/deployments\/[^/]+\/[^/]+\/retire$/u;
+const HISTORY_PATH =
+  /^\/v1\/deployments\/[^/]+\/[^/]+\/flags\/[^/]+\/history$/u;
+const METADATA_PATH = /^\/v1\/deployments\/[^/]+\/[^/]+\/metadata$/u;
 
 const EXACT_MANAGEMENT_ROUTES: Readonly<Record<string, FlagsRouteLabel>> = {
   "/metrics": "metrics",
   "/v1/deployments": "deployments",
   "/v1/diff": "diff",
+  "/v1/archive": "archive",
+  "/v1/usage": "usage",
 };
 
 const PATTERN_MANAGEMENT_ROUTES: readonly (readonly [
@@ -53,6 +62,8 @@ const PATTERN_MANAGEMENT_ROUTES: readonly (readonly [
   [APPLY_PATH, "apply"],
   [CREATE_MISSING_PATH, "create_missing"],
   [RETIRE_PATH, "retire"],
+  [HISTORY_PATH, "history"],
+  [METADATA_PATH, "metadata"],
 ];
 
 function escapeLabelValue(value: string): string {

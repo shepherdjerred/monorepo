@@ -25,7 +25,7 @@ import { routeFixture } from "./router.ts";
 
 function read(endpoint: FixtureEndpoint, sample: string, persona: Persona) {
   return routeFixture({
-    method: "GET",
+    method: endpoint.method,
     url: new URL(
       `http://fixture.invalid/api/v${String(endpoint.version)}${sample}`,
     ),
@@ -122,14 +122,15 @@ function mediaStatus(id: string): number {
 describe("fixture endpoints", () => {
   it("names every route once", () => {
     const routes = FIXTURE_ENDPOINTS.map(
-      (endpoint) => `v${String(endpoint.version)}${endpoint.path}`,
+      (endpoint) =>
+        `${endpoint.method} v${String(endpoint.version)}${endpoint.path}`,
     );
     expect(new Set(routes).size).toBe(routes.length);
   });
 
   describe.each(
     FIXTURE_ENDPOINTS.map((endpoint) => ({
-      route: `/api/v${String(endpoint.version)}${endpoint.path}`,
+      route: `${endpoint.method} /api/v${String(endpoint.version)}${endpoint.path}`,
       endpoint,
     })),
   )("$route", ({ endpoint }) => {

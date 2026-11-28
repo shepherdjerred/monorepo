@@ -419,7 +419,7 @@ export async function acquireUpstreamArtifact(
     )
       throw new DeliveryError(
         "CONFLICT",
-        "Immutable upstream origin already identifies different bytes or provenance",
+        `Immutable upstream origin already identifies different bytes or provenance (${originKey}: existing ${original.build.serviceId} ${original.component} ${original.version}@${original.digest} [${original.uri}] vs incoming ${input.serviceId} ${input.artifact.component} ${input.artifact.version}@${input.artifact.digest} [${input.artifact.uri}])`,
       );
     if (owner === undefined) {
       // Another service's original of this origin keeps its id; each

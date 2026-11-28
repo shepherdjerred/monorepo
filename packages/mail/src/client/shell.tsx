@@ -165,9 +165,9 @@ export const SENDER_ITEMS: readonly SenderNavSpec[] = [
     icon: MessageSquareIcon,
   },
   {
-    clientId: "bugsink",
-    label: "Bugsink",
-    href: "/?client=bugsink",
+    clientId: "errors",
+    label: "Errors",
+    href: "/?client=errors",
     icon: BugIcon,
   },
   {

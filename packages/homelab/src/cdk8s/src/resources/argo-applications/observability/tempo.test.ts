@@ -6,7 +6,10 @@ import { createTempoApp } from "./tempo.ts";
 
 const TempoApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.literal("tempo") }),
+  metadata: z.object({
+    name: z.literal("tempo"),
+    annotations: z.record(z.string(), z.string()),
+  }),
   spec: z.object({
     ignoreDifferences: z.array(
       z.object({
@@ -33,6 +36,9 @@ describe("Tempo Argo CD application", () => {
       throw new Error("Tempo Application was not synthesized");
     }
 
+    expect(manifest.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+    });
     expect(manifest.data.spec.ignoreDifferences).toEqual([
       {
         group: "apps",

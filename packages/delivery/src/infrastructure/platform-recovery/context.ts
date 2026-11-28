@@ -126,11 +126,26 @@ export async function heldPlatformRecovery(
   const global = await tx.platformLock.findUnique({
     where: { deploymentId: row.id },
   });
+  const startedWithGlobal =
+    model === null
+      ? row.kind !== "tofu-plan"
+      : row.stages.some((stage) => stage.key === stepStageKey("step", "apply"));
+  const recoveryIntents = startedWithGlobal
+    ? []
+    : await tx.recoveryIntent.findMany({
+        where: { deploymentId: row.id, kind: "platform" },
+        select: { detail: true },
+      });
+  const requiresGlobal =
+    startedWithGlobal ||
+    recoveryIntents.some(
+      (entry) => intentDetail(entry)["applyAdmittedAt"] != null,
+    );
   if (
     target === null ||
     env.activeDeploymentId !== row.id ||
     env.generation !== input.expectedEnvironmentGeneration ||
-    (global === null && row.kind !== "tofu-plan")
+    (global === null && requiresGlobal)
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -151,7 +166,7 @@ export async function heldPlatformRecovery(
         : { versionSetRevisionId: row.versionSetRevisionId, source: model }),
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
       target: target.instance,
-      global: global?.id ?? null,
+      global: startedWithGlobal ? (global?.id ?? null) : null,
       acceptedDeploymentId: env.acceptedDeploymentId,
     }),
   );

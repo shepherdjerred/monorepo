@@ -263,7 +263,7 @@ const seedTimeline: StorySeed = (trpc, queryClient) => {
   );
   queryClient.setQueryData(
     trpc.consumerMatch.chartSeries.queryOptions(input).queryKey,
-    { points: CHART_POINTS },
+    { goldLead: null, points: CHART_POINTS },
   );
 };
 

@@ -12,6 +12,12 @@ export const OPS_SNAPSHOT_STALE_SECONDS = 1800;
 /** One source failing every run for an hour, while the snapshot still ships. */
 export const OPS_SNAPSHOT_SOURCE_STALE_SECONDS = 3600;
 
+/**
+ * Six consecutive 5-minute `main-ci` signal posts to Hub's Incidents module
+ * failed, so a red `main` would not open an incident.
+ */
+export const INCIDENTS_SIGNAL_FAILING_FOR = "30m";
+
 const SCHEDULE_LABELS = "temporal_namespace, schedule_id, workflow_type";
 const SCHEDULE_IDENTITY_LABELS = "temporal_namespace, schedule_id";
 const SCHEDULE_LOOKBACK = "20m";
@@ -65,6 +71,24 @@ export function getOpsSnapshotRuleGroups(): PrometheusRuleSpecGroups[] {
             `time() - max by (source) (ops_snapshot_source_last_success_timestamp_seconds) > ${String(OPS_SNAPSHOT_SOURCE_STALE_SECONDS)}`,
           ),
           for: "10m",
+          labels: { severity: "warning", category: "ops" },
+        },
+        {
+          alert: "IncidentsSignalDeliveryFailing",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Incidents is not receiving {{ $labels.source }} signals",
+            ),
+            description: escapePrometheusTemplate(
+              `Every ops-snapshot post of the {{ $labels.source }} signal to Hub's /api/incidents/internal/signals has failed for ${INCIDENTS_SIGNAL_FAILING_FOR}, so a red main neither opens nor clears an incident. The snapshot itself still publishes. Inspect the infra worker logs for module ops.incidents-signal and Hub's Incidents readiness at /readyz/incidents.`,
+            ),
+          },
+          // The gauge is the last attempt's outcome, set on every run: it is
+          // 0 from the first failure, including a worker that never succeeded.
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "max by (source) (incidents_signal_post_ok) == 0",
+          ),
+          for: INCIDENTS_SIGNAL_FAILING_FOR,
           labels: { severity: "warning", category: "ops" },
         },
         {

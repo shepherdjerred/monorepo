@@ -1,11 +1,31 @@
 /*
  * The console look. Every rule lives in a `ui.*` cascade layer, so an app's
- * unlayered CSS always wins while it migrates onto these classes.
+ * unlayered CSS always wins while it migrates onto these classes. One file
+ * per piece under `components/`, imported in cascade order; `page.css` is
+ * the deprecated page kit and loads last.
  */
 @layer ui.reset, ui.tokens, ui.components;
 
 @import "./fonts.css";
 @import "./reset.css";
 @import "./tokens.css";
-@import "./components.css";
+@import "./components/base.css";
+@import "./components/shell.css";
+@import "./components/sidebar.css";
+@import "./components/menu.css";
+@import "./components/topbar.css";
+@import "./components/header.css";
+@import "./components/tabs.css";
+@import "./components/strip.css";
+@import "./components/section.css";
+@import "./components/table.css";
+@import "./components/glyph.css";
+@import "./components/chip.css";
+@import "./components/meter.css";
+@import "./components/button.css";
+@import "./components/field.css";
+@import "./components/banner.css";
+@import "./components/state.css";
+@import "./components/dialog.css";
+@import "./components/palette.css";
 @import "./page.css";

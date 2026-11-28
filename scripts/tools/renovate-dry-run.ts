@@ -9,7 +9,9 @@ import { run } from "../lib/run.ts";
 export type RenovateDryRunMode = "extract" | "lookup";
 
 const USAGE =
-  "Usage: bun run renovate-dry-run [extract|lookup] [--report-path <path>]";
+  "Usage: bun run renovate-dry-run [extract|lookup] [--report-path <path>] [--isolated-checkout]";
+// renovate: datasource=npm depName=renovate
+const RENOVATE_CLI_VERSION = "44.263.6";
 
 const PLACEHOLDER_TOKENS = new Set([
   "unused",
@@ -164,13 +166,18 @@ function parseReportPathOption(
 export function parseRenovateDryRunArgs(
   args: readonly string[],
   env: Readonly<Record<string, string | undefined>> = Bun.env,
-): { mode: RenovateDryRunMode; reportPath: string } {
+): { mode: RenovateDryRunMode; reportPath: string; isolatedCheckout?: true } {
   let mode: RenovateDryRunMode | undefined;
   let reportPath: string | undefined;
+  let isolatedCheckout = false;
 
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === undefined) continue;
+    if (arg === "--isolated-checkout") {
+      isolatedCheckout = true;
+      continue;
+    }
     const parsedReportPath = parseReportPathOption(arg, args[index + 1]);
     if (parsedReportPath !== null) {
       reportPath = parsedReportPath.value;
@@ -193,6 +200,7 @@ export function parseRenovateDryRunArgs(
     mode: resolvedMode,
     reportPath:
       reportPath ?? path.join(tmpBase, `renovate-${resolvedMode}.json`),
+    ...(isolatedCheckout ? { isolatedCheckout: true } : {}),
   };
 }
 
@@ -202,25 +210,44 @@ export async function runRenovateDryRun(
     cwd?: string;
     env?: Readonly<Record<string, string | undefined>>;
     runner?: typeof run;
+    signal?: AbortSignal;
   },
 ): Promise<{ mode: RenovateDryRunMode; reportPath: string }> {
   const cwd = options?.cwd ?? fileURLToPath(new URL("../..", import.meta.url));
   const env = options?.env ?? Bun.env;
   const runner = options?.runner ?? run;
-  const { mode, reportPath } = parseRenovateDryRunArgs(args, env);
-  const secrets = resolveRenovateSecrets(env);
-  const rawConfig = ConfigRecordSchema.parse(
-    await Bun.file(path.join(cwd, "renovate.json")).json(),
+  const { mode, reportPath, isolatedCheckout } = parseRenovateDryRunArgs(
+    args,
+    env,
   );
+  const secrets = resolveRenovateSecrets(env);
+  const repoConfigPath = path.join(cwd, "renovate.json");
+  const rawText = await Bun.file(repoConfigPath).text();
+  const rawConfig = ConfigRecordSchema.parse(JSON.parse(rawText));
   const sanitized = sanitizeRenovateConfig(rawConfig, secrets);
   const tempDir = await mkdtemp(path.join(tmpdir(), "renovate-dry-run-"));
   const tempConfigPath = path.join(tempDir, "renovate.json");
   try {
-    await Bun.write(tempConfigPath, `${JSON.stringify(sanitized, null, 2)}\n`);
+    // The local platform rereads the tracked config even when the
+    // require-config CLI flag is set. The disposable worker clone can
+    // safely present one sanitized repository config and restore it after.
+    const globalConfig = isolatedCheckout
+      ? { allowedEnv: ["BUN_CONFIG_MAX_HTTP_REQUESTS"] }
+      : { ...sanitized, allowedEnv: ["BUN_CONFIG_MAX_HTTP_REQUESTS"] };
+    if (isolatedCheckout) {
+      await Bun.write(
+        repoConfigPath,
+        `${JSON.stringify(sanitized, null, 2)}\n`,
+      );
+    }
+    await Bun.write(
+      tempConfigPath,
+      `${JSON.stringify(globalConfig, null, 2)}\n`,
+    );
     await runner(
       [
         "bunx",
-        "renovate",
+        `renovate@${RENOVATE_CLI_VERSION}`,
         "--platform=local",
         "--require-config=ignored",
         `--dry-run=${mode}`,
@@ -229,22 +256,33 @@ export async function runRenovateDryRun(
       ],
       {
         cwd,
+        ...(options?.signal === undefined ? {} : { signal: options.signal }),
         env: {
-          RENOVATE_ALLOWED_ENV: JSON.stringify([
-            "BUN_CONFIG_MAX_HTTP_REQUESTS",
-          ]),
           RENOVATE_CONFIG_FILE: tempConfigPath,
           RENOVATE_SECRETS: JSON.stringify(secrets),
         },
-        unsetEnv: ["DOCKERHUB_RENOVATE_TOKEN"],
+        unsetEnv: ["DOCKERHUB_RENOVATE_TOKEN", "RENOVATE_ALLOWED_ENV"],
       },
     );
     return { mode, reportPath };
   } finally {
-    await rm(tempDir, { recursive: true, force: true });
+    try {
+      if (isolatedCheckout) await Bun.write(repoConfigPath, rawText);
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   }
 }
 
 if (import.meta.main) {
-  await runRenovateDryRun(Bun.argv.slice(2));
+  const cancellation = new AbortController();
+  const cancel = () => {
+    cancellation.abort();
+  };
+  process.once("SIGTERM", cancel);
+  try {
+    await runRenovateDryRun(Bun.argv.slice(2), { signal: cancellation.signal });
+  } finally {
+    process.removeListener("SIGTERM", cancel);
+  }
 }

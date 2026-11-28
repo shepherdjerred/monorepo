@@ -70,6 +70,7 @@
             "successOnSurface",
             "warning",
             "warningText",
+            "warningOnSurface",
             "danger",
             "dangerText",
             "dangerOnSurface",
@@ -141,6 +142,9 @@
               "$ref": "#/$defs/color"
             },
             "warningText": {
+              "$ref": "#/$defs/color"
+            },
+            "warningOnSurface": {
               "$ref": "#/$defs/color"
             },
             "danger": {

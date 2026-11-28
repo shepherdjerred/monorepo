@@ -194,6 +194,29 @@ function validateClientSpecificEntry(
   }
   return violations;
 }
+const SHARED_TMP_SCRATCH_PATTERN = /\/tmp\/(?:pr-body\.md|scout-app\.png)\b/;
+
+function validateSharedScratchPaths(entry: GuidanceEntry): GuidanceViolation[] {
+  if (
+    entry.kind !== "file" ||
+    entry.path === PERSONAL_AGENT_PATH ||
+    isGlobalReferenceSkill(entry.path)
+  ) {
+    return [];
+  }
+  const match = SHARED_TMP_SCRATCH_PATTERN.exec(entry.contents);
+  if (match === null) {
+    return [];
+  }
+  return [
+    {
+      rule: "shared-tmp-scratch-path",
+      path: entry.path,
+      message: `hardcoded ${match[0]} collides across parallel subagents; allocate an isolated mktemp -d directory instead`,
+    },
+  ];
+}
+
 function validateAgentEntry(
   entry: GuidanceEntry,
   byPath: ReadonlyMap<string, GuidanceEntry>,
@@ -210,6 +233,7 @@ function validateAgentEntry(
     },
     violations,
   );
+  violations.push(...validateSharedScratchPaths(entry));
   const claudePath = claudeCompatibilityPath(entry.path);
   addWhenPresent(
     violations,
@@ -313,7 +337,10 @@ function validateSkillEntry(
     },
     violations,
   );
-  violations.push(...validateSkillMetadata(entry, registry));
+  violations.push(
+    ...validateSkillMetadata(entry, registry),
+    ...validateSharedScratchPaths(entry),
+  );
   return violations;
 }
 function validateCatalogSizes(

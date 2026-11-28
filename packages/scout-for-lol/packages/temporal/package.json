@@ -13,6 +13,7 @@
     "./activity-contracts": "./src/activity-contracts.ts",
     "./contracts": "./src/contracts.ts",
     "./pipeline-contracts": "./src/pipeline-contracts.ts",
+    "./rank-refresh-contracts": "./src/rank-refresh-contracts.ts",
     "./workflow-contracts": "./src/workflow-contracts.ts",
     "./execution-metadata": "./src/execution-metadata.ts",
     "./identifiers": "./src/identifiers.ts",
@@ -44,7 +45,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@scout-for-lol/data": "workspace:*",
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/activity": "1.26.0",

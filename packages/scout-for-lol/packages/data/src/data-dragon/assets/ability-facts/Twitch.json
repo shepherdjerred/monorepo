@@ -107,7 +107,15 @@
         ]
       },
       "resolvedDescription": "Twitch Camouflages and gains 10% Move Speed for 10/11/12/13/14 seconds. The Move Speed increases to 30% while near an enemy champion that can't see him. After exiting Camouflage, Twitch gains 40/45/50/55/60% Attack Speed for 6 seconds. When an enemy champion dies while afflicted with Venom, this Ability's Cooldown is refreshed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Venom Cask",
@@ -165,7 +173,30 @@
         ]
       },
       "resolvedDescription": "Twitch hurls a cask that adds a stack of Deadly Venom to all enemies struck and leaves behind a toxic cloud that persists for 3 seconds. Enemies that remain within the cloud are Slowed by 30/35/40/45/50% (+6% AP) and receive an additional stack of Deadly Venom each second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 275,
+        "lineWidth": null,
+        "missileSpeed": 1750,
+        "missiles": [
+          {
+            "name": "twitchvenomcaskmissile",
+            "width": 120,
+            "movement": "FixedSpeedMovement",
+            "speed": 1400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Contaminate",
@@ -232,7 +263,30 @@
       "resolvedDescription": "Deals 20/30/40/50/60 physical damage to all nearby enemies affected by Deadly Venom, plus an additional 15/20/25/30/35 (+35% bonus AD) physical damage and 35% AP magical damage per stack of Deadly Venom. Max Damage: {{ maxphysicaldamage }} physical damage and 210% AP magical damage.",
       "unresolved": [
         "maxphysicaldamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 1200,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": [
+          {
+            "name": "twitcheparticle",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Spray and Pray",
@@ -291,7 +345,30 @@
         ]
       },
       "resolvedDescription": "Twitch unleashes his crossbow, gaining 300 Attack Range and 30/45/60 Attack Damage, and causing his Attacks to become piercing bolts for 6 seconds. These bolts hit all enemies they pass through, but deal 10% less damage to subsequent targets, down to a minimum of 60% damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "twitchsprayandprayattack",
+            "width": 60,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

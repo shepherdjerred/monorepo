@@ -429,7 +429,7 @@ function imageDowngradeFindings(
   return findings;
 }
 
-function identity(resource: ManagedResource): string {
+export function identity(resource: ManagedResource): string {
   return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
 }
 

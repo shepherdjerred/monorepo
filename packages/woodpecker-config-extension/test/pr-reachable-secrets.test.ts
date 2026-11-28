@@ -5,6 +5,12 @@ import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
 import { grantSccacheWebdav } from "#src/pipeline/sccache-webdav.ts";
 import {
+  cacheTrustDomain,
+  type CacheTrustDomain,
+} from "#src/pipeline/cache-trust-domain.ts";
+import { credentiallessHostedAutomationSteps } from "#src/pipeline/steps.ts";
+import { authorizePipeline } from "#src/authorization.ts";
+import {
   EXTENDED_STEP_KEY,
   extendedRequest,
   extendedSteps,
@@ -27,6 +33,13 @@ import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { t
  * changed-file list is deliberate: `changedGuardMatches` treats "we could not
  * determine what changed" as "select it", so an empty list yields the MAXIMAL
  * pull-request-reachable set. That is the set worth bounding.
+ *
+ * Who opened the pull request changes exactly one thing: which remote build
+ * cache it joins. `cacheTrustDomain` gives the owner and his agent account
+ * main's trusted cache, so their pull requests and main reuse each other's
+ * Turbo, Gradle and sccache work. Every other shape stays in the isolated
+ * pull-request cache. The shapes below are resolved through that function, so
+ * a change to the rule shows up here as a change to what a pull request holds.
  */
 
 const allSteps = testPipelineSteps;
@@ -39,7 +52,10 @@ function credentialHolders(env: string): string[] {
 }
 
 /** The worst case: a pull request against the default branch, touching anything. */
-const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
+const pullRequestAgainstMain = (
+  steps: ReturnType<typeof allSteps>,
+  trustDomain: CacheTrustDomain = "pull-request",
+) =>
   grantSccacheWebdav(
     grantGradleBuildCache(
       signRemoteCacheSteps(
@@ -49,12 +65,82 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
           defaultBranch: "main",
           changedFiles: [],
         }),
-        "pull-request",
+        trustDomain,
       ),
-      "pull-request",
+      trustDomain,
     ),
-    "pull-request",
+    trustDomain,
   );
+
+/** A same-repository pull request as the forge reports it. */
+const pullRequestBy = (overrides: Record<string, unknown>) =>
+  PipelineSchema.parse({ ...fixture.pipeline, ...overrides });
+
+/** The owner's own pull requests, which share main's trusted cache. */
+const OWNER_PULL_REQUESTS = [
+  {
+    shape: "the owner",
+    pipeline: pullRequestBy({
+      author: "shepherdjerred",
+      sender: "shepherdjerred",
+    }),
+  },
+  {
+    shape: "the agent account",
+    pipeline: pullRequestBy({ author: "derrej", sender: "derrej" }),
+  },
+];
+
+/**
+ * Pull requests that must stay in the isolated cache. `admitted` records
+ * whether the pipeline runs at all: forks and unknown actors are refused
+ * before any step exists, and the cache rule refuses them again.
+ */
+const ISOLATED_PULL_REQUESTS = [
+  {
+    shape: "Renovate",
+    pipeline: pullRequestBy({
+      author: "renovate[bot]",
+      sender: "renovate[bot]",
+    }),
+    credentialless: false,
+    admitted: true,
+  },
+  {
+    shape: "credentialless automation",
+    pipeline: pullRequestBy({
+      author: "renovate[bot]",
+      sender: "renovate[bot]",
+    }),
+    credentialless: true,
+    admitted: true,
+  },
+  {
+    shape: "a fork",
+    pipeline: pullRequestBy({
+      author: "shepherdjerred",
+      sender: "shepherdjerred",
+      from_fork: true,
+    }),
+    credentialless: false,
+    admitted: false,
+  },
+  {
+    shape: "an unknown actor",
+    pipeline: pullRequestBy({ author: "octocat", sender: "octocat" }),
+    credentialless: false,
+    admitted: false,
+  },
+  {
+    shape: "an owner GitHub App",
+    pipeline: pullRequestBy({
+      author: "long-summer-intern[bot]",
+      sender: "long-summer-intern[bot]",
+    }),
+    credentialless: false,
+    admitted: true,
+  },
+];
 
 /** A push to the default branch, touching anything. */
 const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
@@ -89,19 +175,88 @@ const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
  * - `SEAWEEDFS_HANDOFF_*` reaches only the `ci-handoff` bucket.
  * - OpenTofu validation is offline and has no provider or state credentials.
  * - `GRADLE_BUILD_CACHE_READ_PASSWORD` is the Gradle cache's read-only user.
+ *
+ * Pinned as full `secret/key -> env` grants, not environment names, so a
+ * release key mapped onto an allowed name such as `TURBO_TOKEN` fails here.
+ * This is the set for every pull request outside the owner's own.
  */
-const PR_REACHABLE_SECRETS = [
-  "GITHUB_DOWNLOAD_TOKEN",
-  "GRADLE_BUILD_CACHE_READ_PASSWORD",
-  "SCCACHE_WEBDAV_PASSWORD",
-  "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
-  "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
-  "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
-  "TURBO_TOKEN",
+/** One Secret key mounted under one environment name: `[secret, key, env]`. */
+type Grant = readonly [secret: string, key: string, env: string];
+const GITHUB = "ci-github-credentials";
+const GRADLE = "ci-gradle-build-cache-credentials";
+const SEAWEEDFS = "ci-seaweedfs-credentials";
+const TURBO = "ci-turbo-cache-credentials";
+
+const PR_REACHABLE_GRANTS: readonly Grant[] = [
+  [GITHUB, "GITHUB_DOWNLOAD_TOKEN", "GITHUB_DOWNLOAD_TOKEN"],
+  [
+    GRADLE,
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+  ],
+  [GRADLE, "GRADLE_BUILD_CACHE_READ_PASSWORD", "SCCACHE_WEBDAV_PASSWORD"],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  ],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  ],
+  [
+    TURBO,
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+  ],
+  [TURBO, "TURBO_TOKEN", "TURBO_TOKEN"],
 ];
 
 /**
- * Credentials that must never be reachable from a pull request, named
+ * What the owner's own pull requests reach: the same grants, with the
+ * trusted cache's write identity in place of the read-only one. Nothing that
+ * publishes, deploys or mutates infrastructure is added.
+ */
+const OWNER_PR_REACHABLE_GRANTS: readonly Grant[] = [
+  [GITHUB, "GITHUB_DOWNLOAD_TOKEN", "GITHUB_DOWNLOAD_TOKEN"],
+  [
+    GRADLE,
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+  ],
+  [GRADLE, "GRADLE_BUILD_CACHE_WRITE_PASSWORD", "SCCACHE_WEBDAV_PASSWORD"],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+    "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
+  ],
+  [
+    SEAWEEDFS,
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+    "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
+  ],
+  [
+    TURBO,
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
+  ],
+  [TURBO, "TURBO_TOKEN", "TURBO_TOKEN"],
+];
+
+/**
+ * The trusted cache's write identity, by Secret key. Keys rather than
+ * environment names, because the Turbo signing key and the sccache password
+ * arrive under the same variable in either domain. Main and the owner's pull
+ * requests hold these; no other pull request may.
+ */
+const TRUSTED_CACHE_KEYS = [
+  "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+  "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+];
+
+/**
+ * Credentials that must never be reachable from any pull request, named
  * individually so the assertion says what it is protecting. Each belongs to a
  * step that publishes, deploys, or mutates infrastructure.
  */
@@ -114,8 +269,24 @@ const RELEASE_ONLY_SECRETS = [
   "CHARTMUSEUM_PASSWORD",
   "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
   "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
-  "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
 ];
+
+const grantKeys = (steps: ReturnType<typeof allSteps>) =>
+  new Set(steps.flatMap((step) => (step.secrets ?? []).map((g) => g.key)));
+
+const grantEnvs = (steps: ReturnType<typeof allSteps>) =>
+  new Set(steps.flatMap((step) => (step.secrets ?? []).map((g) => g.env)));
+
+/** Grants as sorted, comparable rows; the same shape for both sides. */
+const rows = (list: readonly Grant[]) =>
+  [...new Set(list.map((grant) => grant.join(" ")))].sort();
+
+const grants = (steps: ReturnType<typeof allSteps>) =>
+  rows(
+    steps.flatMap((step) =>
+      (step.secrets ?? []).map((g): Grant => [g.secret, g.key, g.env]),
+    ),
+  );
 
 /**
  * Exactly the steps allowed to write a published site or release archive.
@@ -172,13 +343,53 @@ describe("what a pull request can reach", () => {
     expect(reached).toEqual([]);
   });
 
-  test("puts exactly the reviewed set of credentials within reach", () => {
-    const reachable = new Set<string>();
-    for (const step of pullRequestAgainstMain(allSteps())) {
-      for (const grant of step.secrets ?? []) reachable.add(grant.env);
-    }
-    expect([...reachable].sort()).toEqual(PR_REACHABLE_SECRETS);
+  test.each(ISOLATED_PULL_REQUESTS)(
+    "a pull request from $shape reaches exactly the reviewed set and no trusted cache credential",
+    ({ pipeline, credentialless, admitted }) => {
+      const authorization = authorizePipeline(pipeline);
+      expect(authorization.allowed).toBe(admitted);
+      const trustDomain = cacheTrustDomain({
+        proposal: true,
+        credentialless,
+        authorization,
+        pipeline,
+      });
+      expect(trustDomain).toBe("pull-request");
+      const steps = pullRequestAgainstMain(allSteps(), trustDomain);
+      expect(grants(steps)).toEqual(rows(PR_REACHABLE_GRANTS));
+      const keys = grantKeys(steps);
+      for (const key of TRUSTED_CACHE_KEYS)
+        expect(keys.has(key), `${key} must not reach this PR`).toBe(false);
+    },
+  );
+
+  test("credentialless automation holds no credential at all", () => {
+    expect(
+      credentiallessHostedAutomationSteps(TEST_IMAGES).flatMap(
+        (step) => step.secrets ?? [],
+      ),
+    ).toEqual([]);
   });
+
+  test.each(OWNER_PULL_REQUESTS)(
+    "a pull request from $shape adds only the trusted cache identity to the reviewed set",
+    ({ pipeline }) => {
+      const trustDomain = cacheTrustDomain({
+        proposal: true,
+        credentialless: false,
+        authorization: authorizePipeline(pipeline),
+        pipeline,
+      });
+      expect(trustDomain).toBe("trusted");
+      const steps = pullRequestAgainstMain(allSteps(), trustDomain);
+      expect(grants(steps)).toEqual(rows(OWNER_PR_REACHABLE_GRANTS));
+      const keys = grantKeys(steps);
+      for (const key of TRUSTED_CACHE_KEYS)
+        expect(keys.has(key), key).toBe(true);
+      expect(keys.has("TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR")).toBe(false);
+      expect(keys.has("GRADLE_BUILD_CACHE_READ_PASSWORD")).toBe(false);
+    },
+  );
 
   test("isolates pull-request cache entries from the trusted namespace", () => {
     const remoteCacheSteps = pullRequestAgainstMain(allSteps()).filter((step) =>
@@ -191,29 +402,36 @@ describe("what a pull request can reach", () => {
       ),
     ).toBe(true);
 
-    const trustedCacheSteps = defaultBranchPush(allSteps()).filter((step) =>
-      step.secrets?.some((grant) => grant.env === "TURBO_TOKEN"),
-    );
-    expect(trustedCacheSteps.length).toBeGreaterThan(0);
-    expect(
-      trustedCacheSteps.every(
-        (step) => step.environment?.["TURBO_TEAM"] === "monorepo",
-      ),
-    ).toBe(true);
-  });
-
-  test("keeps publishing and chart-push credentials out of reach", () => {
-    const reachable = new Set(
-      pullRequestAgainstMain(allSteps()).flatMap((step) =>
-        (step.secrets ?? []).map((grant) => grant.env),
-      ),
-    );
-    for (const secret of RELEASE_ONLY_SECRETS) {
-      expect(reachable.has(secret), `${secret} must not reach a PR`).toBe(
-        false,
+    // Main and the owner's pull requests share one namespace.
+    for (const trusted of [
+      defaultBranchPush(allSteps()),
+      pullRequestAgainstMain(allSteps(), "trusted"),
+    ]) {
+      const trustedCacheSteps = trusted.filter((step) =>
+        step.secrets?.some((grant) => grant.env === "TURBO_TOKEN"),
       );
+      expect(trustedCacheSteps.length).toBeGreaterThan(0);
+      expect(
+        trustedCacheSteps.every(
+          (step) => step.environment?.["TURBO_TEAM"] === "monorepo",
+        ),
+      ).toBe(true);
     }
   });
+
+  test.each(["pull-request", "trusted"] as const)(
+    "keeps publishing and chart-push credentials out of reach of a %s-cache PR",
+    (trustDomain) => {
+      const reachable = grantEnvs(
+        pullRequestAgainstMain(allSteps(), trustDomain),
+      );
+      for (const secret of RELEASE_ONLY_SECRETS) {
+        expect(reachable.has(secret), `${secret} must not reach a PR`).toBe(
+          false,
+        );
+      }
+    },
+  );
 
   /**
    * The site-write identity is the one that can overwrite a published site, so
@@ -249,16 +467,20 @@ describe("what a pull request can reach", () => {
         true,
       );
     }
+    const keys = grantKeys(selected);
+    for (const key of TRUSTED_CACHE_KEYS)
+      expect(keys.has(key), `${key} must reach a main push`).toBe(true);
   });
 });
 
 describe("cache write boundaries and extended tier", () => {
   /**
    * Gradle cache entries are build outputs that later builds load instead of
-   * compiling, so a writer is as trusted as the code it builds. Only verify on
-   * the default branch may store entries; a pull request reads.
+   * compiling, so a writer is as trusted as the code it builds. Only verify in
+   * the trusted domain -- main, and the owner's own pull requests -- may store
+   * entries; every other pull request reads.
    */
-  test("lets only default-branch verify write the Gradle build cache", () => {
+  test("lets only trusted-domain verify write the Gradle build cache", () => {
     const holders = (
       steps: ReturnType<typeof allSteps>,
       env: string,
@@ -269,10 +491,15 @@ describe("cache write boundaries and extended tier", () => {
         .sort();
     const main = defaultBranchPush(allSteps());
     const pullRequest = pullRequestAgainstMain(allSteps());
-    expect(holders(main, "GRADLE_BUILD_CACHE_WRITE_PASSWORD")).toEqual([
-      "verify",
-    ]);
-    expect(holders(main, "GRADLE_BUILD_CACHE_READ_PASSWORD")).toEqual([]);
+    for (const trusted of [
+      main,
+      pullRequestAgainstMain(allSteps(), "trusted"),
+    ]) {
+      expect(holders(trusted, "GRADLE_BUILD_CACHE_WRITE_PASSWORD")).toEqual([
+        "verify",
+      ]);
+      expect(holders(trusted, "GRADLE_BUILD_CACHE_READ_PASSWORD")).toEqual([]);
+    }
     expect(holders(pullRequest, "GRADLE_BUILD_CACHE_READ_PASSWORD")).toEqual([
       "verify",
     ]);
@@ -323,8 +550,8 @@ describe("cache write boundaries and extended tier", () => {
   });
 
   /**
-   * The extended tier is a second main-only holder of the trusted Turbo
-   * signing key and the Gradle write password, beside default-branch verify.
+   * The extended tier is a main-only holder of the trusted Turbo signing key
+   * and the Gradle write password, beside trusted-domain verify.
    * It is not in the selected graph at all, and its request parser refuses
    * every pull-request shape, so no pull request can reach it; its grants are
    * pinned here so widening them is a reviewed change.
@@ -355,9 +582,7 @@ describe("cache write boundaries and extended tier", () => {
     expect(extended?.secrets?.map((grant) => grant.key).toSorted()).toEqual(
       mainVerify?.secrets?.map((grant) => grant.key).toSorted(),
     );
-    for (const secret of RELEASE_ONLY_SECRETS.filter(
-      (name) => name !== "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
-    ))
+    for (const secret of RELEASE_ONLY_SECRETS)
       expect(
         extended?.secrets?.some((grant) => grant.env === secret),
         secret,

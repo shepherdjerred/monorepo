@@ -5,8 +5,35 @@ import {
 } from "./ci-object-store-retry.ts";
 
 describe("CI object-store retry boundary", () => {
-  test("caps persistent connection failures at three attempts", async () => {
-    const failure = Object.assign(new Error("connection failed"), {
+  test("recovers from DNS lookup failures on the last attempt", async () => {
+    const failure = Object.assign(new TypeError("getaddrinfo ENOTFOUND"), {
+      code: "ENOTFOUND",
+    });
+    let attempts = 0;
+    const delays: number[] = [];
+    await expect(
+      withCiObjectStoreRetry(
+        () => {
+          attempts++;
+          return attempts < 5
+            ? Promise.reject(failure)
+            : Promise.resolve("uploaded");
+        },
+        (milliseconds) => {
+          delays.push(milliseconds);
+          return Promise.resolve();
+        },
+      ),
+    ).resolves.toBe("uploaded");
+    expect(attempts).toBe(5);
+    expect(delays).toEqual([1000, 2000, 4000, 8000]);
+  });
+
+  test("caps persistent connection failures at five attempts and throws the last error", async () => {
+    const firstFailure = Object.assign(new Error("connection failed"), {
+      code: "ConnectionRefused",
+    });
+    const lastFailure = Object.assign(new Error("connection still failed"), {
       code: "ConnectionRefused",
     });
     let attempts = 0;
@@ -15,16 +42,16 @@ describe("CI object-store retry boundary", () => {
       withCiObjectStoreRetry(
         () => {
           attempts++;
-          return Promise.reject(failure);
+          return Promise.reject(attempts < 5 ? firstFailure : lastFailure);
         },
         (milliseconds) => {
           delays.push(milliseconds);
           return Promise.resolve();
         },
       ),
-    ).rejects.toBe(failure);
-    expect(attempts).toBe(3);
-    expect(delays).toEqual([1000, 2000]);
+    ).rejects.toBe(lastFailure);
+    expect(attempts).toBe(5);
+    expect(delays).toEqual([1000, 2000, 4000, 8000]);
   });
 
   test.each([403, 404, 422])(

@@ -23,6 +23,7 @@ import {
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
+  ERRORS_ADMIN_ENDPOINT,
   FEEDS_ENDPOINT,
   GOLINK_ENDPOINT,
   MAIL_API_ENDPOINT,
@@ -245,6 +246,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         { ports: [tcp(7341)] },
         { to: [TRACKER_ENDPOINT.peer()], ports: [TRACKER_ENDPOINT.tcp()] },
         { to: [GOLINK_ENDPOINT.peer()], ports: [GOLINK_ENDPOINT.tcp()] },
+        {
+          to: [ERRORS_ADMIN_ENDPOINT.peer()],
+          ports: [ERRORS_ADMIN_ENDPOINT.tcp()],
+        },
         {
           to: [
             {

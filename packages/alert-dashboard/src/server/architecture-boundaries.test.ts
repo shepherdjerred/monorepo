@@ -1,3 +1,5 @@
+import { readdir } from "node:fs/promises";
+import path from "node:path";
 import {
   assertArchitectureFixtures,
   expectedFixtureRuleNames,
@@ -5,7 +7,7 @@ import {
 import { expect, test } from "vitest";
 import architecture, { MODULE_IDS, moduleBoundaries } from "#architecture";
 
-const packageRoot = import.meta.dir.replace(/\/src\/server$/u, "");
+const packageRoot = path.resolve(import.meta.dir, "../..");
 
 test("architecture fixtures prove every alert-dashboard boundary", async () => {
   await assertArchitectureFixtures({
@@ -15,13 +17,14 @@ test("architecture fixtures prove every alert-dashboard boundary", async () => {
 });
 
 test("every module directory on disk has a declared boundary", async () => {
-  const onDisk = new Set<string>();
-  const files = new Bun.Glob("modules/*/**").scan({
-    cwd: `${packageRoot}/src`,
+  const entries = await readdir(path.join(packageRoot, "src/modules"), {
+    withFileTypes: true,
   });
-  for await (const file of files) onDisk.add(file.split("/")[1] ?? "");
+  const onDisk = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
 
-  expect([...MODULE_IDS].sort()).toEqual([...onDisk].sort());
+  expect([...MODULE_IDS].sort()).toEqual(onDisk.sort());
 });
 
 test("module boundaries isolate each module and pass the checker's validation", () => {

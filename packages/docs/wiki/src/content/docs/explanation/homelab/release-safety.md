@@ -326,6 +326,25 @@ database or claim loses exactly what those checks protect. Either option by
 itself remains insufficient. This exception is deliberately resource-scoped;
 Application-wide replacement does not bypass the check.
 
+Every one of these checks reads Argo's last comparison of the requested
+revision. When that comparison failed (a `ComparisonError` or
+`InvalidSpecError` condition, or a sync status of `Unknown`), the resource list
+it serves describes no revision, and a check reading it finds nothing to refuse.
+On 2026-11-26 the media preflight recorded "apply-safe" while Argo's own
+server-side dry-run rejected the qBittorrent Deployment. So the preflight, and
+the sync step before its prune guards, refuse an Application whose comparison
+is incomplete and quote Argo's reason.
+
+For an Application that syncs with `ServerSideApply=true`, the preflight also
+refuses a target that drops a container, init container or volume that another
+field manager still co-owns. Server-side apply removes a field only when the
+applier was its sole owner, so a manual `kubectl patch` or Argo's older
+client-side manager keeps the entry alive. The sync then either leaves it
+running or, when the chart moved the entry to another list, fails with a
+duplicate name. The refusal names the manager.
+[Clear a stale field manager](/how-to/clear-a-stale-field-manager/) is the
+recovery.
+
 ## Related
 
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)

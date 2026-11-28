@@ -223,16 +223,65 @@ function apiCode(error: unknown): number | undefined {
   return error instanceof k8s.ApiException ? error.code : undefined;
 }
 
+const SNAPSHOT_LOCATION = {
+  group: SNAPSHOT_GROUP,
+  version: SNAPSHOT_VERSION,
+  namespace: CI_NAMESPACE,
+  plural: SNAPSHOT_PLURAL,
+};
+
+/** The snapshot new workspaces clone, the source it was built from, and its age. */
+export type GoldenSelection = {
+  snapshot: string;
+  /** The `ci.sjer.red/source` commit the selection records. */
+  source: string | undefined;
+  /** Undefined when the selected snapshot no longer exists. */
+  snapshotCreatedAt: Date | undefined;
+};
+
+/**
+ * Reads the clone policy's selected golden snapshot. Null means no snapshot
+ * is selected, so new workspaces clone nothing.
+ */
+export async function readCiWorkspaceGoldenSelection(
+  objects: k8s.CustomObjectsApi,
+  core: k8s.CoreV1Api,
+): Promise<GoldenSelection | null> {
+  let selection: k8s.V1ConfigMap;
+  try {
+    selection = await core.readNamespacedConfigMap({
+      name: CI_WORKSPACE_GOLDEN_CONFIG_MAP,
+      namespace: CI_NAMESPACE,
+    });
+  } catch (error: unknown) {
+    if (apiCode(error) === 404) return null;
+    throw error;
+  }
+  const snapshot = selection.data?.["snapshot"];
+  if (snapshot === undefined) return null;
+  let snapshotCreatedAt: Date | undefined;
+  try {
+    snapshotCreatedAt = toSnapshot(
+      await objects.getNamespacedCustomObject({
+        ...SNAPSHOT_LOCATION,
+        name: snapshot,
+      }),
+    ).createdAt;
+  } catch (error: unknown) {
+    if (apiCode(error) !== 404) throw error;
+  }
+  return {
+    snapshot,
+    source: selection.metadata?.annotations?.[SOURCE_ANNOTATION],
+    snapshotCreatedAt,
+  };
+}
+
 export function kubernetesCiWorkspaceGoldenClient(
   objects: k8s.CustomObjectsApi,
   core: k8s.CoreV1Api,
 ): CiWorkspaceGoldenClient {
-  const location = {
-    group: SNAPSHOT_GROUP,
-    version: SNAPSHOT_VERSION,
-    namespace: CI_NAMESPACE,
-    plural: SNAPSHOT_PLURAL,
-  };
+  const location = SNAPSHOT_LOCATION;
   return {
     async createSnapshot(name, source) {
       try {

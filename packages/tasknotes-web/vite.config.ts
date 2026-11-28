@@ -1,6 +1,7 @@
 import { env } from "node:process";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { offlineShellPlugin } from "./offline-shell-plugin.ts";
 
 const serverOrigin = env["TASKNOTES_SERVER_ORIGIN"] ?? "http://127.0.0.1:3000";
 
@@ -9,7 +10,7 @@ const serverOrigin = env["TASKNOTES_SERVER_ORIGIN"] ?? "http://127.0.0.1:3000";
 const tailnetHosts = [".ts.net"];
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), offlineShellPlugin()],
   build: { outDir: "dist", emptyOutDir: true, sourcemap: true },
   server: {
     host: "127.0.0.1",

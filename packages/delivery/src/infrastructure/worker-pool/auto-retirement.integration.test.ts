@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { retryRequest } from "#infrastructure/selection/request.ts";
 import type { WorkerVersion } from "#shared/contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { freshWorkerProof } from "#testing/worker-fixture.ts";
@@ -133,12 +134,11 @@ test("an environment that no longer admits releases is never offered", async () 
   expect(environments).toEqual([]);
 });
 
-/** Retires `worker` through the executor's guarded path; returns the accepted retirement. */
-async function retire(worker: WorkerVersion, candidateBuildId: string) {
+async function requestRetirement(worker: WorkerVersion) {
   const env = await suite.cluster.database.environment.findUniqueOrThrow({
     where: { id: worker.environmentId },
   });
-  const requested = await suite.delivery.autoRetireWorker(
+  return suite.delivery.autoRetireWorker(
     worker.id,
     {
       expectedEnvironmentGeneration: env.generation,
@@ -146,6 +146,11 @@ async function retire(worker: WorkerVersion, candidateBuildId: string) {
     },
     testExecutor,
   );
+}
+
+/** Retires `worker` through the executor's guarded path; returns the accepted retirement. */
+async function retire(worker: WorkerVersion, candidateBuildId: string) {
+  const requested = await requestRetirement(worker);
   await suite.delivery.claim(
     requested.id,
     testExecutor,
@@ -169,6 +174,114 @@ async function retire(worker: WorkerVersion, candidateBuildId: string) {
     where: { id: requested.id },
   });
 }
+
+async function automaticPool() {
+  const pool = await suite.fixture.acceptedPool();
+  await suite.cluster.database.environment.update({
+    where: { id: pool.env.id },
+    data: { automatic: true },
+  });
+  return {
+    ...pool,
+    reconcile: async () => {
+      const { deployments } = await suite.delivery.reconcile(
+        [pool.env.id],
+        testExecutor,
+      );
+      return deployments;
+    },
+  };
+}
+
+test("a settled host retirement preserves failed release suppression (D2)", async () => {
+  const { b, workerA, workerB, reconcile } = await automaticPool();
+  const database = suite.cluster.database;
+  const failed = await suite.fixture.publishRelease(3);
+  const deployments = await reconcile();
+  expect(deployments).toHaveLength(1);
+  const [failedId] = deployments;
+  if (failedId === undefined) throw new Error("Automatic release missing");
+  expect(
+    await database.deployment.findUniqueOrThrow({ where: { id: failedId } }),
+  ).toMatchObject({
+    kind: "deploy",
+    automatic: true,
+    versionSetRevisionId: failed.version.id,
+  });
+  await suite.delivery.claim(failedId, testExecutor);
+  await suite.delivery.finish(
+    failedId,
+    {
+      status: "failed",
+      message: "Candidate preflight refused",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const retired = await retire(workerA, workerB.buildId);
+  expect(retired).toMatchObject({
+    kind: "retire-host",
+    status: "succeeded",
+    versionSetRevisionId: b.version.id,
+  });
+  expect(await reconcile()).toEqual([]);
+
+  const detail = await suite.delivery.detail(failedId);
+  const retry = await suite.delivery.createDeployment(
+    {
+      ...retryRequest(detail),
+      requestId: "operator-retry",
+      expectedGeneration: detail.environment.generation,
+    },
+    testOperator,
+  );
+  expect(retry).toMatchObject({
+    kind: "deploy",
+    status: "queued",
+    automatic: false,
+    versionSetRevisionId: failed.version.id,
+  });
+  await suite.delivery.cancel(retry.id, testOperator);
+
+  const newer = await suite.fixture.publishRelease(4);
+  const next = await reconcile();
+  expect(next).toHaveLength(1);
+  const [nextId] = next;
+  if (nextId === undefined) throw new Error("New automatic release missing");
+  expect(
+    await database.deployment.findUniqueOrThrow({ where: { id: nextId } }),
+  ).toMatchObject({ automatic: true, versionSetRevisionId: newer.version.id });
+});
+
+test("an unsettled host retirement still holds automatic selection (D2, D5)", async () => {
+  const { workerA, workerB, env, reconcile } = await automaticPool();
+  const requested = await requestRetirement(workerA);
+  await suite.fixture.publishRelease(3);
+  expect(await reconcile()).toEqual([]);
+  await suite.delivery.claim(
+    requested.id,
+    testExecutor,
+    freshWorkerProof(workerA, workerB.buildId),
+  );
+  expect(await reconcile()).toEqual([]);
+  await suite.delivery.finish(
+    requested.id,
+    {
+      status: "failed",
+      message: "Retirement effect requires independent observation",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  expect(await reconcile()).toEqual([]);
+  expect(
+    await suite.cluster.database.environment.findUniqueOrThrow({
+      where: { id: env.id },
+    }),
+  ).toMatchObject({ activeDeploymentId: requested.id });
+});
 
 test("a host retirement keeps the watch of the deployment it follows (W1)", async () => {
   const { workerA, workerB, env } = await suite.fixture.acceptedPool();

@@ -390,6 +390,56 @@ describe("secret reference syntax", () => {
       },
     ]);
   });
+
+  test("unquoted dotenv assignments preserve spaces in item and field names without matching prose", () => {
+    const dotenv = [
+      "# Synthetic desktop release-signing fixture",
+      "SIGNING_KEY=op://Homelab/An Item/signing-key",
+      "SIGNING_PASSWORD=op://Homelab/An Item/signing password   ",
+      "export CHANNEL_TOKEN=op://Other Vault/Desktop Signer/api token # comment",
+      'QUOTED_KEY="op://Homelab/Quoted Item/signing-key"',
+      "INLINE_CALL=run op://Homelab/inline-item/token",
+      "Prose mention op://Homelab/Unquoted Prose Item/field is ignored",
+    ].join("\r\n");
+
+    expect(sourceAuditReferences(dotenv, "release-signing.env")).toEqual([
+      {
+        vault: "Homelab",
+        item: "An Item",
+        field: "signing-key",
+        source: "release-signing.env",
+        access: "onepassword",
+      },
+      {
+        vault: "Homelab",
+        item: "An Item",
+        field: "signing password",
+        source: "release-signing.env",
+        access: "onepassword",
+      },
+      {
+        vault: "Other Vault",
+        item: "Desktop Signer",
+        field: "api token",
+        source: "release-signing.env",
+        access: "onepassword",
+      },
+      {
+        vault: "Homelab",
+        item: "Quoted Item",
+        field: "signing-key",
+        source: "release-signing.env",
+        access: "onepassword",
+      },
+      {
+        vault: "Homelab",
+        item: "inline-item",
+        field: "token",
+        source: "release-signing.env",
+        access: "onepassword",
+      },
+    ]);
+  });
 });
 
 const managed = (item: string, source: string) => ({

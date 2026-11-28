@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RenovateRankedQueueSchema } from "@shepherdjerred/ops-model/renovate-ranking.ts";
 import {
   clusterFacetShape,
   monorepoCodeReviewProviderShape,
@@ -130,6 +131,7 @@ export type RenovateItem = z.infer<typeof RenovateItemSchema>;
 export type RenovateItemInput = z.input<typeof RenovateItemSchema>;
 
 export const RenovateFacetSchema = z.object({
+  ranking: RenovateRankedQueueSchema.optional(),
   issueNumber: z.number().nullable(),
   issueUrl: z.string().optional(),
   truncated: z.boolean(),

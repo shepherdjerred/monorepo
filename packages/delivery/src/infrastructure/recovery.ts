@@ -19,6 +19,8 @@ import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { RecoverDeploymentSchema } from "#shared/contract.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import type { KubernetesRead } from "#infrastructure/kubernetes/projected-reader.ts";
+import { inspectRecordedTestStageJobs } from "./argo-recovery/test-stage-jobs.ts";
 import {
   ArgoRecoverySchema,
   inspectNeverRequestedSync,
@@ -272,6 +274,7 @@ async function inspectRecordedSync(
  */
 export function createRecoveryInspector(options: {
   readApplication: ApplicationReader;
+  readWorkerJobs?: KubernetesRead;
   inspectTrmnl?: (detail: DeploymentDetail) => Promise<EvidenceInput[]>;
 }) {
   return async (
@@ -301,6 +304,11 @@ export function createRecoveryInspector(options: {
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
     requireKnownModelStages(detail, targets);
+    const testEvidence = await inspectRecordedTestStageJobs(
+      detail,
+      targets,
+      options.readWorkerJobs,
+    );
     const settled: SettledApplicationReadback[] = [];
     for (const target of targets) {
       const stage = detail.stages.find((entry) => entry.key === target.stage);
@@ -333,6 +341,10 @@ export function createRecoveryInspector(options: {
       plugins === undefined || options.inspectTrmnl === undefined
         ? []
         : await options.inspectTrmnl(detail);
-    return [...settled.map((entry) => entry.evidence), ...pluginEvidence];
+    return [
+      ...settled.map((entry) => entry.evidence),
+      ...testEvidence,
+      ...pluginEvidence,
+    ];
   };
 }

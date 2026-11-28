@@ -6,6 +6,7 @@ import {
 } from "#lib/delivery/model/effect-signal.ts";
 import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import { createHash } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 import type {
   DeploymentDetail,
   EvidenceInput,
@@ -35,6 +36,10 @@ import {
 } from "#lib/delivery/model/application.ts";
 import { applicationProgress } from "#lib/delivery/model/application-proof.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
+import {
+  TrackedWorkerCompatibilityError,
+  assertTrackedWorkerCompatibility,
+} from "#lib/delivery/model/tracked-worker-compatibility.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import {
   argoRequest,
@@ -56,8 +61,9 @@ import {
   type ApplicationStep,
 } from "./refused-sync.ts";
 
-const READBACK_ATTEMPTS = 120;
+const DEFAULT_READBACK_TIMEOUT_SECONDS = 600;
 const READBACK_INTERVAL_MS = 5000;
+const CHART_READ_RETRY_DELAYS_MS = [5000, 10_000, 20_000] as const;
 /** The Delivery API caps an evidence summary at 4000 chars; chunk below it. */
 const EVIDENCE_SUMMARY_BUDGET = 3500;
 
@@ -95,6 +101,27 @@ function reconciliationEvidence(
   }));
 }
 
+/** A Charts restart can interrupt this GET, before Delivery writes to ArgoCD. */
+async function fetchChartSource(uri: string, redirect: "error" | "follow") {
+  const cancellation = effectSignal();
+  for (let attempt = 0; ; attempt++) {
+    cancellation.throwIfAborted();
+    const response = await fetch(uri, {
+      method: "GET",
+      signal: AbortSignal.any([cancellation, AbortSignal.timeout(30_000)]),
+      redirect,
+    });
+    if (response.ok) return response;
+    const wait = CHART_READ_RETRY_DELAYS_MS[attempt];
+    if (wait === undefined || ![502, 503, 504].includes(response.status))
+      throw new Error(
+        `Source inspection returned HTTP ${response.status.toString()}`,
+      );
+    await response.body?.cancel();
+    await delay(wait, undefined, { signal: cancellation });
+  }
+}
+
 /**
  * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
  * must still resolve to it; other stores serve the recorded version. The
@@ -106,36 +133,37 @@ async function verifySourceBytes(
   rendered: RenderedApplication,
   operationId: string,
   readUri: string,
-): Promise<EvidenceInput> {
+): Promise<{ evidence: EvidenceInput; archiveBytes: Uint8Array | null }> {
   const artifact = rendered.sourceArtifact;
   if (artifact.uri.startsWith("oci://"))
-    return await verifyOciChart(artifact, operationId, effectSignal());
+    return {
+      evidence: await verifyOciChart(artifact, operationId, effectSignal()),
+      archiveBytes: null,
+    };
   if (!artifact.uri.startsWith("https://"))
     return {
-      kind: "preflight",
-      operationId,
-      summary: `Source ${artifact.id} ${artifact.version} is bound by its recorded digest ${artifact.digest}; its store serves it by version`,
+      evidence: {
+        kind: "preflight",
+        operationId,
+        summary: `Source ${artifact.id} ${artifact.version} is bound by its recorded digest ${artifact.digest}; its store serves it by version`,
+      },
+      archiveBytes: null,
     };
   const mapped = readUri !== artifact.uri;
-  const response = await fetch(readUri, {
-    signal: AbortSignal.any([effectSignal(), AbortSignal.timeout(30_000)]),
-    redirect: mapped ? "error" : "follow",
-  });
-  if (!response.ok)
-    throw new Error(
-      `Source inspection returned HTTP ${response.status.toString()}`,
-    );
-  const digest = `sha256:${createHash("sha256")
-    .update(new Uint8Array(await response.arrayBuffer()))
-    .digest("hex")}`;
+  const response = await fetchChartSource(readUri, mapped ? "error" : "follow");
+  const archiveBytes = new Uint8Array(await response.arrayBuffer());
+  const digest = `sha256:${createHash("sha256").update(archiveBytes).digest("hex")}`;
   if (digest !== artifact.digest)
     throw new Error(
       "Published source bytes differ from the immutable artifact digest",
     );
   return {
-    kind: "preflight",
-    operationId,
-    summary: `Source ${artifact.id} bytes match ${artifact.digest}${mapped ? ` at ${readUri}` : ""}`,
+    evidence: {
+      kind: "preflight",
+      operationId,
+      summary: `Source ${artifact.id} bytes match ${artifact.digest}${mapped ? ` at ${readUri}` : ""}`,
+    },
+    archiveBytes,
   };
 }
 
@@ -211,12 +239,7 @@ async function settleRefusedApplySafety(
   );
 }
 
-/**
- * When `writeBody` itself failed before any sync, read back the Application:
- * if it was absent beforehand and is still absent, or its full body matches
- * `prior` and its `spec.source` still canonically matches the latest
- * `status.history` entry with no active operation, no candidate body landed.
- */
+/** Read back after a failed writeBody to prove no candidate body or operation landed. */
 async function proveUnwrittenBody(
   rendered: RenderedApplication,
   priorRead: { read: false } | { read: true; value: unknown },
@@ -267,7 +290,7 @@ export async function applySafety(
 ) {
   const rendered = renderApplication(current, recipe);
   const operationId = deliveryOperationId(current.deployment.id);
-  const source = await verifySourceBytes(
+  const { evidence: source, archiveBytes } = await verifySourceBytes(
     rendered,
     operationId,
     minecraftChartReadUri(current, recipe, rendered),
@@ -275,13 +298,22 @@ export async function applySafety(
   // A worker pool's images and routes are proved before its hosts change.
   await workerRolloutPreflight(current);
   // A forum's first upgrade re-observes its original baseline before the
-  // candidate source replaces the one that baseline fingerprinted. A resumed
-  // step already recorded that intent, and the server refuses the check once
-  // the stage exists, so only the first attempt runs it.
+  // candidate source replaces the one that baseline fingerprinted.
   if (stageOf(current, key) === undefined)
     await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
   const step = { current, rendered, key, operationId };
+  try {
+    await assertTrackedWorkerCompatibility(current, recipe, archiveBytes);
+  } catch (error) {
+    if (error instanceof TrackedWorkerCompatibilityError)
+      return await settleRefusedApplySafety(
+        step,
+        "nothing was written to ArgoCD",
+        error,
+      );
+    throw error;
+  }
   const written = await writeBodyOrRefuse(step);
   try {
     await runGuardedArgoCommand(
@@ -317,8 +349,14 @@ async function waitForReadback(
   requestId: string,
   deploymentId: string,
 ) {
+  const timeoutSeconds = childSyncTimeoutSeconds(
+    rendered.name,
+    DEFAULT_READBACK_TIMEOUT_SECONDS,
+    CHILD_SYNC_TIMEOUT_FLOORS,
+  );
+  const maxAttempts = Math.ceil((timeoutSeconds * 1000) / READBACK_INTERVAL_MS);
   let incarnation: string | undefined;
-  for (let attempt = 0; attempt < READBACK_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     await requireOwned(deploymentId);
     const raw = await getArgoApplication(rendered.name, {
       signal: effectSignal(),
@@ -374,16 +412,8 @@ async function settledMediaIngressRetirement(
 }
 
 /**
- * The sync step: the guarded, request-identified sync of the rendered source
- * and its readback proof. A resumed step whose request already reached the
- * Application only reads back; it never syncs twice.
- *
- * A self-hosted sync may replace the very worker running it (D8). When that
- * worker's shutdown kills the step while it still holds the lease, the step
- * returns `{ waiting: false, executorReplaced: true }`, leaving its stage
- * `running`, and the Workflow runs it again on the replacement worker without
- * recording an Activity failure. Every other failure, a Failed or Error owned
- * operation included, fails as before.
+ * Guarded, request-identified sync of the rendered source and its readback proof.
+ * Self-hosted executor shutdown returns `{ waiting: false, executorReplaced: true }` (D8).
  */
 export async function sync(
   current: DeploymentDetail,
@@ -429,7 +459,7 @@ async function syncOwned(
   if (!before.requested) {
     let prune: Awaited<ReturnType<typeof syncPruneDecision>>;
     try {
-      prune = await syncPruneDecision(current, recipe, rendered);
+      prune = await syncPruneDecision(current, recipe, rendered, raw);
     } catch (error) {
       return await settleRefusedSyncGuard(
         { current, rendered, key, operationId: requestId },

@@ -8,3 +8,4 @@ export * from "./videoGraph.js";
 export * from "./encoders/index.js";
 export * from "./player.js";
 export * from "./LiveScheduleGate.js";
+export * from "./audioGraph.js";

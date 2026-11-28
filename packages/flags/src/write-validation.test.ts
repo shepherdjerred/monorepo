@@ -29,7 +29,7 @@ const InvalidValues = z.strictObject({
 
 function harness() {
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
   const app = createFlagsApp({ store, auth, peerAddress: () => null });
   return { app, store };
 }
@@ -185,15 +185,18 @@ describe("create-missing validation", () => {
 describe("diff reports invalid live values", () => {
   test("lists a seeded bad value without failing the request", async () => {
     const store = FlagStore.open(":memory:");
-    store.seedDocuments([
-      {
-        id: "delivery/prod",
-        flags: [
-          { type: "variant", key: "delivery-lease-seconds", value: "30" },
-        ],
-      },
-    ]);
-    store.seedFromInventory();
+    store.seedDocuments(
+      [
+        {
+          id: "delivery/prod",
+          flags: [
+            { type: "variant", key: "delivery-lease-seconds", value: "30" },
+          ],
+        },
+      ],
+      { kind: "system", id: "seed" },
+    );
+    store.seedFromInventory({ kind: "system", id: "seed" });
     const app = createFlagsApp({ store, auth, peerAddress: () => null });
     const response = await app.request("/v1/diff", {
       headers: { authorization: "Bearer machine-secret" },

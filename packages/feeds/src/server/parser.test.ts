@@ -18,6 +18,8 @@ describe("parseFeedXml", () => {
             <dc:creator>Jerred Shepherd</dc:creator>
             <pubDate>Tue, 14 Oct 2025 12:00:00 GMT</pubDate>
             <description>Short summary fallback</description>
+            <category>Engineering</category>
+            <category domain="tag"><![CDATA[Deep Dive]]></category>
             <content:encoded><![CDATA[<p>Read <a href="../docs/guide">the guide</a> and <img src="diagram.png" alt="Arch"></p>]]></content:encoded>
             <enclosure url="/media/episode-2.mp3" type="audio/mpeg" length="1048576" />
           </item>
@@ -49,6 +51,7 @@ describe("parseFeedXml", () => {
         length: 1_048_576,
       },
     ]);
+    expect(entry?.categories).toEqual(["Engineering", "Deep Dive"]);
     expect(entry?.contentHtml).toContain(
       '<a href="https://example.com/docs/guide" rel="noopener noreferrer">the guide</a>',
     );
@@ -72,6 +75,7 @@ describe("parseFeedXml", () => {
           <link rel="alternate" type="text/html" href="/oven-sh/bun/releases/tag/bun-v1.3.0"/>
           <link rel="enclosure" type="application/zip" length="2048" href="/oven-sh/bun/releases/download/bun-v1.3.0/bun.zip"/>
           <title>Bun v1.3.0</title>
+          <category term="release" label="Release" />
           <author><name>Jarred Sumner</name></author>
           <author><name>Bun Team</name></author>
           <content type="html">&lt;h2&gt;Changes&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;Faster SQLite&lt;/li&gt;&lt;/ul&gt;</content>
@@ -107,6 +111,7 @@ describe("parseFeedXml", () => {
     expect(entry?.contentHtml).toBe(
       "<h2>Changes</h2><ul><li>Faster SQLite</li></ul>",
     );
+    expect(entry?.categories).toEqual(["release", "Release"]);
   });
 
   test("parses RDF / RSS 1.0 feeds with sibling <item> elements", () => {
@@ -137,6 +142,10 @@ describe("parseFeedXml", () => {
     expect(parsed.entries[0]?.guid).toBe("https://lwn.net/Articles/999999/");
     expect(parsed.entries[0]?.author).toBe("corbet");
   });
+});
+
+describe("parseFeedXml sanitization and fallbacks", () => {
+  const fixedNow = 1_760_000_000;
 
   test("strips XSS vectors while preserving safe article formatting and mailto links", () => {
     const xssXml = `<rss version="2.0"><channel><title>Sec</title><link>https://sec.example.com</link>
@@ -211,6 +220,29 @@ describe("parseFeedXml", () => {
     expect(parsed.entries[1]?.guid).toMatch(/^sha256:[0-9a-f]{64}$/u);
     expect(parsed.entries[1]?.url).toBe("https://minimal.example.com/feed.xml");
     expect(parsed.entries[1]?.publishedAt).toBe(fixedNow);
+
+    expect(() =>
+      parseFeedXml(
+        "<rss version='2.0'><channel><title>Cut</title><item><title>1</title></item>",
+        "https://minimal.example.com/feed.xml",
+        fixedNow,
+      ),
+    ).toThrow(/truncated/iu);
+    expect(() =>
+      parseFeedXml(
+        "<rss version='2.0'><channel><title>Cut</title></channel></rss><!-- unclosed comment",
+        "https://minimal.example.com/feed.xml",
+        fixedNow,
+      ),
+    ).toThrow(/truncated/iu);
+
+    const withTrailingCacheComments = parseFeedXml(
+      `<rss version="2.0"><channel><title>Krebs</title><item><guid>k1</guid><title>Post</title><link>https://krebsonsecurity.com/p/1</link></item></channel></rss>\r\n<!--\r\nPerformance optimized by W3 Total Cache.\r\n-->\n<?cache-status hit?>\n`,
+      "https://krebsonsecurity.com/feed/",
+      fixedNow,
+    );
+    expect(withTrailingCacheComments.entries).toHaveLength(1);
+    expect(withTrailingCacheComments.entries[0]?.title).toBe("Post");
   });
 });
 

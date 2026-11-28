@@ -675,6 +675,68 @@ describe("catalog reconcile of a removal (4.10, section 7)", () => {
     expect(retired.refused).toEqual([]);
     expect(await siteLifecycles()).toEqual(["retired", "retired"]);
   });
+
+  test("an Application with an archive step refuses removal while allowing retirement (AI-355)", async () => {
+    const base = await catalogDocument();
+    const document: Document = {
+      ...base,
+      services: base.services.map((service) =>
+        service.id === "arcade"
+          ? {
+              ...service,
+              components: [
+                ...service.components,
+                { name: "archive:trmnl-plugins", producer: "first-party" },
+              ],
+            }
+          : service,
+      ),
+      recipes: base.recipes.map((entry) =>
+        entry.id === "arcade/3" &&
+        entry.definition.kind === "kubernetes-application"
+          ? {
+              ...entry,
+              definition: {
+                ...entry.definition,
+                steps: [
+                  ...entry.definition.steps,
+                  {
+                    kind: "archive" as const,
+                    instance: "application:arcade",
+                    pointOfNoReturn: false,
+                    archiveComponent: "archive:trmnl-plugins",
+                  },
+                ],
+              },
+            }
+          : entry,
+      ),
+    };
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    const refused = await context.delivery.reconcileCatalog(
+      arcadeProdMoved(document, "removed"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      {
+        id: "arcade/prod",
+        reason: expect.stringMatching(/archive step/u),
+      },
+    ]);
+    expect(await context.delivery.pendingRemovals()).toEqual([]);
+    const retired = await context.delivery.reconcileCatalog(
+      arcadeProdMoved(document, "retired"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(retired.refused).toEqual([]);
+    expect(retired.environments.retired).toEqual(["arcade/prod"]);
+  });
 });
 
 /** arcade/prod accepts a carried v1 recipe, whose Application declares no lifecycle. */

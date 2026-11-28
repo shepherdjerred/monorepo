@@ -47,9 +47,17 @@ function minecraftStatefulSet(
 function application(
   ignoreDifferences: readonly unknown[],
   syncOptions: readonly string[],
+  annotations?: Readonly<Record<string, string>>,
 ): unknown {
-  return { spec: { ignoreDifferences, syncPolicy: { syncOptions } } };
+  return {
+    ...(annotations === undefined ? {} : { metadata: { annotations } }),
+    spec: { ignoreDifferences, syncPolicy: { syncOptions } },
+  };
 }
+
+const CLIENT_SIDE_DIFF = {
+  "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+};
 
 const claimTemplateRule = {
   group: "apps",
@@ -60,8 +68,23 @@ const claimTemplateRule = {
 const CLAIM_TEMPLATE_FINDING =
   "apps/StatefulSet minecraft-tsmc/minecraft-tsmc changes immutable /spec/volumeClaimTemplates";
 
-describe("ArgoCD ignored differences", () => {
-  test("does not refuse a change the sync will never send", () => {
+describe("ArgoCD ignored differences under server-side diff", () => {
+  test("does not refuse a change the sync will never send when ServerSideDiff=false is set", () => {
+    expect(
+      analyzeApplySafety(
+        withIgnoredDifferencesApplied(
+          [minecraftStatefulSet()],
+          application(
+            [claimTemplateRule],
+            ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+            CLIENT_SIDE_DIFF,
+          ),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("refuses ServerSideApply=true without ServerSideDiff=false because server-side diff dry-runs the whole object", () => {
     expect(
       analyzeApplySafety(
         withIgnoredDifferencesApplied(
@@ -72,9 +95,42 @@ describe("ArgoCD ignored differences", () => {
           ),
         ),
       ),
-    ).toEqual([]);
+    ).toEqual([CLAIM_TEMPLATE_FINDING]);
   });
 
+  test("refuses explicit ServerSideDiff=true even without ServerSideApply=true", () => {
+    expect(
+      analyzeApplySafety(
+        withIgnoredDifferencesApplied(
+          [minecraftStatefulSet()],
+          application([claimTemplateRule], ["RespectIgnoreDifferences=true"], {
+            "argocd.argoproj.io/compare-options": "ServerSideDiff=true",
+          }),
+        ),
+      ),
+    ).toEqual([CLAIM_TEMPLATE_FINDING]);
+  });
+
+  test("honors ServerSideDiff=false inside comma-separated compare-options", () => {
+    expect(
+      analyzeApplySafety(
+        withIgnoredDifferencesApplied(
+          [minecraftStatefulSet()],
+          application(
+            [claimTemplateRule],
+            ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+            {
+              "argocd.argoproj.io/compare-options":
+                "IgnoreExtraneous, ServerSideDiff=false",
+            },
+          ),
+        ),
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("ArgoCD ignored differences", () => {
   test("still checks a field the sync applies despite the ignored diff", () => {
     // Without RespectIgnoreDifferences the field is hidden from the diff but
     // still applied, so the API server can still reject it.
@@ -249,6 +305,7 @@ describe("ArgoCD ignored differences", () => {
               },
             ],
             ["ServerSideApply=true", "RespectIgnoreDifferences=true"],
+            CLIENT_SIDE_DIFF,
           ),
         ),
       ),

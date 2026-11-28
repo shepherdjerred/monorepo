@@ -22,7 +22,6 @@ const MANAGED_VARS = [
   "ARGOCD_AUTH_TOKEN",
   "DISCORD_USER_TOKEN",
   "DISCORD_BOT_TOKEN",
-  "BUGSINK_TOKEN",
   "WOODPECKER_TOKEN",
   "TEMPORAL_API_KEY",
   "OP_SERVICE_ACCOUNT_TOKEN",
@@ -651,9 +650,6 @@ describe("command credential mapping", () => {
       expect(requiredCredentialsFor("pr", subcommand)).toEqual([]);
     }
     expect(requiredCredentialsFor("linear", undefined)).toEqual([]);
-    expect(requiredCredentialsFor("bugsink", "issues")).toEqual([
-      "BUGSINK_TOKEN",
-    ]);
     expect(requiredCredentialsFor("discord", "daemon")).toEqual([
       "DISCORD_BOT_TOKEN",
       "DISCORD_USER_TOKEN",

@@ -8,8 +8,8 @@ Internal SMTP workloads submit mail to `@shepherdjerred/mail` on
 `homelab-cluster-ca`.
 
 First-party TypeScript services submit structured messages over HTTP on `:7371`
-(`/v1/messages`). Four workloads speak SMTP instead: Alertmanager's
-`mail-fallback` receiver, Bugsink, XenForo (`storm-forum`), and Seerr. Requiring
+(`/v1/messages`). Three workloads speak SMTP instead: Alertmanager's
+`mail-fallback` receiver, XenForo (`storm-forum`), and Seerr. Requiring
 verified `STARTTLS` lets every SMTP caller authenticate without sending
 credentials in cleartext, before `@shepherdjerred/mail` relays queued mail over
 `[smtp.fastmail.com]:587`.
@@ -17,7 +17,7 @@ credentials in cleartext, before `@shepherdjerred/mail` relays queued mail over
 ## Why a cluster CA, not a self-signed leaf
 
 `@shepherdjerred/mail` runs in namespace `mail`, while its SMTP callers live in
-`prometheus`, `bugsink`, `storm-forum` (and `storm-forum-beta`), and `torrents`.
+`prometheus`, `storm-forum` (and `storm-forum-beta`), and `torrents`.
 A self-signed leaf certificate that acts as its own trust anchor breaks callers
 the first time the leaf rotates. `cert-manager`'s `rotationPolicy: Always` mints
 a new key, `tls.crt` changes, and cross-namespace clients have no coordinated
@@ -31,14 +31,14 @@ secrets. Callers trust `ca.crt`, never `tls.crt`.
 ```mermaid
 flowchart LR
   accTitle: Mail SMTP certificate issuance and trust
-  accDescr: A self-signed Issuer in cert-manager issues the non-rotating homelab-cluster-ca. ClusterIssuer homelab-ca-issuer signs the rotating mail-smtp-tls leaf presented by Mail on port 25 STARTTLS and distributes ca.crt to Alertmanager, Bugsink, XenForo, and Seerr across their namespaces before Mail relays outbound over smtp.fastmail.com:587.
+  accDescr: A self-signed Issuer in cert-manager issues the non-rotating homelab-cluster-ca. ClusterIssuer homelab-ca-issuer signs the rotating mail-smtp-tls leaf presented by Mail on port 25 STARTTLS and distributes ca.crt to Alertmanager, XenForo, and Seerr across their namespaces before Mail relays outbound over smtp.fastmail.com:587.
 
   SS[Self-signed Issuer] -->|issues, key never rotates| CA["Cluster CA<br/>homelab-cluster-ca"]
   CA -->|backs| CI["ClusterIssuer<br/>homelab-ca-issuer"]
   CI -->|issues, key rotates| LEAF["Mail SMTP leaf<br/>mail-smtp-tls"]
   CI -->|issues ca.crt per namespace| TRUST["Caller CA secrets<br/>ca.crt"]
   LEAF -->|"STARTTLS on :25"| MAIL["@shepherdjerred/mail<br/>mail.mail.svc.cluster.local:25"]
-  TRUST --> CALLERS["Alertmanager · Bugsink<br/>XenForo · Seerr"]
+  TRUST --> CALLERS["Alertmanager · XenForo · Seerr"]
   CALLERS -->|"AUTH over STARTTLS"| MAIL
   MAIL -->|"Submission :587"| FM["[smtp.fastmail.com]:587"]
 ```
@@ -67,10 +67,6 @@ through its runtime's TLS store before sending `PLAIN` or `LOGIN` credentials:
   cleartext connections;
   [`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
   mounts `ca.crt`, sets `smtp_require_tls: true`, and pins `server_name`.
-- **Bugsink**: Django web and Snappea worker containers in
-  [`bugsink/index.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/bugsink/index.ts)
-  enable `STARTTLS` against `mail.mail.svc.cluster.local:25` and trust `ca.crt`
-  alongside system roots.
 - **XenForo (`storm-forum`)**:
   [`release.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/storm-forum/src/release.ts)
   combines `/etc/ssl/certs/ca-certificates.crt` with

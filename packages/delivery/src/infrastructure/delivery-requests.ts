@@ -24,6 +24,7 @@ import {
   environment,
   ensureService,
   requestApproval,
+  type Transaction,
 } from "./delivery-data.ts";
 import { releaseTerminalOwnership } from "./terminal-ownership.ts";
 import {
@@ -55,6 +56,10 @@ import {
   validateForumCandidate,
 } from "./forum/freezer.ts";
 import { freezeRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
+import {
+  supersedeAutomaticRetirement,
+  type RetirementReplacement,
+} from "./selection/retirement-precedence.ts";
 
 /**
  * Whether the request waits for an approval of its selection. A recipe that
@@ -69,6 +74,21 @@ function selectionApprovalRequired(
   return override || (policy === "required" && !approvesAtPlan(definition));
 }
 
+async function beginSelectionRequest(
+  tx: Transaction,
+  actor: Principal,
+  options: Parameters<typeof beginDeploymentRequest>[2] & {
+    replacement: RetirementReplacement | undefined;
+  },
+) {
+  if (options.replacement !== undefined) {
+    // Follow claim's lock ordering before the request locks its environment.
+    await lock(tx, "delivery:claim");
+    await lock(tx, `deployment:${options.replacement.retirementId}`);
+  }
+  return beginDeploymentRequest(tx, actor, options);
+}
+
 /**
  * Request one deployment of an environment: freeze its selection, check
  * eligibility and the binding generation (E2), and record the request,
@@ -78,8 +98,10 @@ export async function createDeployment(
   this: Delivery,
   rawInput: DeploymentRequest,
   actor: Principal,
-  automatic = false,
+  mode: boolean | RetirementReplacement = false,
 ) {
+  const automatic = mode !== false;
+  const replacement = typeof mode === "object" ? mode : undefined;
   const parsed = parseDeploymentRequest(rawInput);
   const input: ParsedRequest = parsed.adoption ?? parsed.model;
   if (parsed.adoption !== null) requireScope(actor, "admin");
@@ -121,10 +143,11 @@ export async function createDeployment(
       this.forumPolicyReader,
     );
   return this.database.$transaction(async (tx) => {
-    const begun = await beginDeploymentRequest(tx, actor, {
+    const begun = await beginSelectionRequest(tx, actor, {
       requestId: input.requestId,
       input: requestInput,
       environmentId: input.environmentId,
+      replacement,
     });
     if (begun.kind === "replayed") return begun.deployment;
     const env = begun.environment;
@@ -153,6 +176,15 @@ export async function createDeployment(
     validateScoutSiteSelection(pipeline.definition, selected);
     validateTrmnlSelection(pipeline.definition, selected);
     await requireWorkerAdmission(tx, env, pipeline.definition, input.kind);
+    await supersedeAutomaticRetirement(tx, {
+      replacement,
+      environment: env,
+      expectedGeneration: input.expectedGeneration,
+      selected,
+      definition: pipeline.definition,
+      kind: input.kind,
+      actor,
+    });
     await requireIdleEnvironment(tx, env, input.expectedGeneration);
     const previousAccepted =
       env.acceptedDeploymentId === null

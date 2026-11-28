@@ -36,18 +36,18 @@ async function readApproval(
   tx: Prisma.TransactionClient,
   row: SeerrRequestApproval,
 ) {
-  const [receipt, stored] = await Promise.all([
-    tx.applicationEvent.findUniqueOrThrow({ where: { id: row.receiptId } }),
-    tx.migrationRecord.findUniqueOrThrow({
-      where: {
-        captureId_provenanceKey: {
-          captureId: row.captureId,
-          provenanceKey: row.provenanceKey,
-        },
+  const receipt = await tx.applicationEvent.findUniqueOrThrow({
+    where: { id: row.receiptId },
+  });
+  const stored = await tx.migrationRecord.findUniqueOrThrow({
+    where: {
+      captureId_provenanceKey: {
+        captureId: row.captureId,
+        provenanceKey: row.provenanceKey,
       },
-      include: { capture: true },
-    }),
-  ]);
+    },
+    include: { capture: true },
+  });
   const selection = personalSourceSelection(receipt.payload, stored);
   if (
     receipt.kind !== "personal_state_imported" ||

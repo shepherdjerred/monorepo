@@ -98,6 +98,9 @@ describe("friendly.css surface variables", () => {
     expect(declaration(css, "--scout-brand-soft")).toBe(
       "color-mix(in srgb, var(--scout-color-primary) 12%, var(--scout-color-surface))",
     );
+    expect(declaration(css, "--scout-loss-soft")).toBe(
+      "color-mix(in srgb, var(--scout-color-danger-on-surface) 14%, var(--scout-color-surface))",
+    );
     expect(css).not.toMatch(/#[0-9a-f]{3,8}\b/i);
     expect(css).not.toMatch(/\brgba?\(/);
   });
@@ -119,6 +122,15 @@ describe("friendly.css surface variables", () => {
       expect(
         contrast(parse(primaryText), parse(primary)),
       ).toBeGreaterThanOrEqual(4.5);
+    });
+
+    test(`${name} warning text is readable on every ground`, () => {
+      const { canvas, surface, surfaceRaised, warningOnSurface } = theme.colors;
+      for (const ground of [canvas, surface, surfaceRaised]) {
+        expect(
+          contrast(parse(warningOnSurface), parse(ground)),
+        ).toBeGreaterThanOrEqual(4.5);
+      }
     });
   }
 });
@@ -167,4 +179,11 @@ describe("Tailwind token mapping", () => {
       );
     });
   }
+
+  test("the app maps warning to the text colour its call sites expect", async () => {
+    const css = flatten(await read(files.app));
+    expect(css).toContain(
+      "--color-scout-warning: var(--scout-color-warning-on-surface);",
+    );
+  });
 });

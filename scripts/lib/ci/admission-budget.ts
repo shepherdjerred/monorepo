@@ -14,7 +14,10 @@ export const AdmissionBudgetSchema = z.object({
   quota: Quota,
 });
 
-const pool = (queue: "default" | "ci-gates") =>
+/** The Kueue LocalQueue an agent pool's pods join: compute or the gate reserve. */
+export type PoolQueue = "default" | "ci-gates";
+
+const pool = (queue: PoolQueue) =>
   z
     .object({
       maxWorkflows: z.number().int().positive(),
@@ -32,6 +35,10 @@ export const PooledAdmissionBudgetSchema = AdmissionBudgetSchema.extend({
     .object({
       pr: pool("default"),
       main: pool("default"),
+      // Temporal-dispatched maintenance (golden workspace, CI images, seeds,
+      // release notes) has its own agent so it never waits behind the PR
+      // backlog, but its pods still queue for compute quota.
+      maintenance: pool("default"),
       review: pool("ci-gates"),
       completion: pool("ci-gates"),
     })
@@ -44,3 +51,17 @@ export const PooledAdmissionBudgetSchema = AdmissionBudgetSchema.extend({
     })
     .strict(),
 }).strict();
+
+/**
+ * Workflow slots whose pods join `queue`. Pods quotas and the admission proof
+ * size each queue from this, so a pool added to the budget is counted in the
+ * queue it names rather than in a hard-coded list.
+ */
+export function queueWorkflows(
+  pools: Readonly<Record<string, { maxWorkflows: number; queue: PoolQueue }>>,
+  queue: PoolQueue,
+): number {
+  return Object.values(pools)
+    .filter((entry) => entry.queue === queue)
+    .reduce((sum, entry) => sum + entry.maxWorkflows, 0);
+}

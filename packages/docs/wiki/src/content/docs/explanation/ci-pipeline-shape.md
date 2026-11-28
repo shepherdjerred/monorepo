@@ -105,10 +105,12 @@ The verify and Playwright workflows use the first-party
 [`ci-cache`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ci-cache/index.ts)
 service on `liskov` over the tailnet.
 [Separate teams and signing keys](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/turbo-cache.ts)
-keep trusted main output separate from PR output, while copy-on-write read-through
-lets `monorepo-pull-request` read `monorepo` entries on a miss without writing
-back to `monorepo`. Developer shells default to local caching because their
-network connection is less predictable.
+split the cache into two trust domains. Main and
+[the owner's own pull requests](#owner-pull-requests-share-mains-build-cache)
+share the trusted `monorepo` team. Every other pull request writes
+`monorepo-pull-request`, whose copy-on-write read-through reads `monorepo`
+entries on a miss without writing back to `monorepo`. Developer shells default
+to local caching because their network connection is less predictable.
 
 `ci-cache` stores and returns each client's `x-artifact-tag` signature
 unchanged. Signing keys stay with their respective clients. Turbo rejects
@@ -130,9 +132,10 @@ unchanged plugin modules and Rust compilation units load cached outputs instead
 of rebuilding.
 
 Neither Gradle nor `sccache` checks artifact signatures, so `ci-cache` enforces
-the trust split through Basic Auth users instead. Default-branch verify holds
-the `ci-main` write password; pull requests hold the `ci-pull-request` read-only
-password, and `ci-cache` rejects writes from the read user. The
+the trust split through Basic Auth users instead. Verify in the trusted domain
+holds the `ci-main` write password; other pull requests hold the
+`ci-pull-request` read-only password, and `ci-cache` rejects writes from the
+read user. The
 [pipeline](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/app.ts)
 attaches one identity per trust domain
 (`packages/woodpecker-config-extension/src/pipeline/gradle-build-cache.ts` and
@@ -180,9 +183,9 @@ per-workspace classification.
 The extended tier runs in two places. The committer runs it locally for the
 workspaces a branch affects before marking the PR ready, and records the
 command and result in the PR body. A nightly Temporal schedule then dispatches
-a manual pipeline on main that emits one `verify-extended` workflow at the
-lowest admission priority, so it waits behind every pull request and main push,
-and runs the whole tier uncached (see the
+a manual pipeline on main that emits a `verify-extended` workflow and a
+`paper-smoke-nightly` workflow at the lowest admission priority, so they wait
+behind every pull request and main push, and run the whole tier uncached (see the
 [workflow inventory](/reference/temporal-workflows/)). That run is a safety net,
 not a main verdict: it gates no merge, and a red night raises an alert that
 names the pipeline, with `toolkit ci explain` giving the failing step.
@@ -227,18 +230,85 @@ opposite of a refusal. For the same reason the server runs the extension in
 exclusive mode, so there is no committed YAML to fall back to when the extension
 fails.
 
+## Owner pull requests share main's build cache
+
+The owner's own pull requests and main write one remote build cache. Neither
+rebuilds a Turbo task, Gradle output or Rust compilation unit the other already
+built.
+
+The cache used to split on the event alone. Every pull request built in the
+pull-request domain, and only main was trusted. Main could not load a pull
+request's entries, so it rebuilt each change that its pull request had already
+built.
+
+One person lands work here: the owner, directly or through his agents. An
+owner pull request is usually code he is about to merge, so its entries are the
+ones main would write anyway.
+
+The trade has a cost, and it is accepted rather than designed away. Every step
+of an owner pull request now holds `TURBO_TOKEN`, the trusted Turbo signing key
+and the `ci-main` write password. Code that never merges can therefore write
+signed entries under hashes main computes. A later main verify or Playwright
+run would replay that result, and nothing in Git would record why. Release
+artifacts are unaffected, because only the verification lanes read these
+caches. The exposure is limited to the owner and his agent account, who
+already decide what merges to main.
+
+Renovate is the case the split exists for. Its pull requests bring third-party
+code that nobody here wrote, so they stay in the pull-request domain. So do
+forks, credentialless hosted automation, the owner's GitHub Apps and every
+other account. Those builds still read main's entries; they cannot write them.
+
+The shared volumes follow the same line. Verify's formatter results are written
+by the code under test, so a trusted pull request must not read the volume that
+Renovate writes. Cluster admission reserves main's formatter volume for main, so
+an owner pull request mounts neither and runs Prettier in full. Source objects
+are different: only the extension's pinned checkout image writes them, so owner
+pull requests share main's source cache.
+
+[`cacheTrustDomain`](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/cache-trust-domain.ts)
+decides from forge identity alone. It reads the author and sender logins and
+the fork flag that Woodpecker signs into each request. A branch name, commit
+message or pull request title cannot move a build into the trusted domain. Its
+list of trusted accounts is separate from the list allowed to run CI, so
+admitting a new bot does not also let it write main's cache.
+
+Trust follows the account that sent the event, not whoever pushed the head
+commit, because Woodpecker does not report the pusher. A restart copies the
+original event's author and sender. The owner's canary benchmarks resolve
+through the same function, so the two rules cannot drift. The
+[CI cache access reference](/reference/homelab-control-plane-access/#ci-cache-trust-domains)
+lists which identity each build receives.
+
 ## The lanes are phases, not duplicated test suites
 
 The [browser lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts)
-compares PRs against their target branch. Its
+runs on the default branch, and on a pull request only when it changes
+`ci/ci-playwright/**`. It was the one pull-request lane past 15 minutes (29
+minutes at p90, with 13% of runs reaching its 30-minute timeout) and used about
+a third of CI CPU, so other pull requests skip it and the committer runs the
+affected projects locally with `bun run e2e:affected` before marking the PR
+ready. The exception exists for the `ci-playwright` image promotion, which
+auto-merges once CI is green and bumps the pinned `@playwright/test` versions:
+without it nothing would run the candidate image until the next main push. It
+is keyed on that directory, not on `bun.lock` or a root `package.json`, which
+would bring the lane back for most pull requests. The command wraps the same
 [selector](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/selection/run-playwright.ts)
-runs affected projects. When the base is unavailable, it runs all projects to
-preserve coverage.
+the lane uses and compares against the merge base with `origin/main`; unlike the
+lane, it stops with an error when that base cannot be found rather than running
+every project. See the
+[test tier reference](/reference/ci-test-tiers/#browser-and-paper-smoke-lanes).
+The accepted risk is the one the extended tier carries: a regression only a
+browser suite catches can reach main and fail the next main push, where this lane
+gates `sites`.
 
-Browser checks run alongside verification because their graph includes the
-builds they need. Completion and site publication wait for both lanes. Static
-wiki output has direct artifact checks, while browsers still exercise navigation
-and rendered behavior. The [portable Windows test graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/tasknotes-windows/turbo.json)
+On main, browser checks run alongside verification because their graph includes
+the builds they need, and site publication waits for both lanes: `sites` deploys
+the `sjer-red-dist` and `wiki-dist` bundles the lane publishes. Static wiki
+output has direct artifact checks, while browsers still exercise navigation and
+rendered behavior. The Paper smoke is likewise off pull requests: it runs as a
+second workflow of the nightly extended pipeline, and committers run `test:smoke`
+locally. The [portable Windows test graph](https://github.com/shepherdjerred/monorepo/blob/main/packages/tasknotes-windows/turbo.json)
 produces test and coverage evidence in one execution; the coverage thresholds
 remain unchanged.
 

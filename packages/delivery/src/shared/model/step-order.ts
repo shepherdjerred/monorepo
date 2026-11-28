@@ -79,18 +79,19 @@ export function contentStepRefusals(steps: readonly { kind: string }[]) {
 /**
  * Argo recovery settles a failed release by reading back exactly one
  * Application, with a TRMNL release's plugin bundle
- * (`createRecoveryInspector`), so an ambiguous plugin publication is
- * recoverable only while it is its release's only Application.
+ * (`createRecoveryInspector`), and never repairs a bucket, so an ambiguous
+ * plugin publication is recoverable only while it deploys no other
+ * Application or static site.
  */
 export const ARCHIVE_ALONE =
   "A plugin archive step's release deploys no other Application: its recovery reads back exactly one Application together with its plugin bundle";
 
-/** The refusal when a compound's Applications, by their steps, share a release with an archive step. */
+/** The refusal when a compound's Application or site members share a release with an archive step. */
 export function sharedArchiveRelease(
-  applications: readonly (readonly { kind: string }[])[],
+  members: readonly (readonly { kind: string }[])[],
 ) {
-  return applications.length > 1 &&
-    applications.some((steps) => steps.some((step) => step.kind === "archive"))
+  return members.length > 1 &&
+    members.some((steps) => steps.some((step) => step.kind === "archive"))
     ? [ARCHIVE_ALONE]
     : [];
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { synthesize } from "#scripts/synth.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
   data: z.record(z.string(), z.record(z.string(), z.unknown())),
@@ -15,18 +15,14 @@ const ConfigurationSchema = z.looseObject({
   }),
 });
 
-async function federation() {
-  const synthesized = await synthesize();
-  return ConfigurationSchema.parse(
-    JSON.parse(synthesized.get("anthropic-federation") ?? ""),
-  );
-}
+const readStack = useSynthesizedApp();
+const federation = () => readStack("anthropic-federation", ConfigurationSchema);
 
 const WORKLOADS = "${var.anthropic_federation_workloads}";
 
 describe("anthropic-federation", () => {
-  test("keeps the addresses of its state", async () => {
-    const { resource, data, variable } = await federation();
+  test("keeps the addresses of its state", () => {
+    const { resource, data, variable } = federation();
     expect(
       Object.entries(resource).flatMap(([type, byName]) =>
         Object.keys(byName).map((name) => `${type}.${name}`),
@@ -51,8 +47,8 @@ describe("anthropic-federation", () => {
     ]);
   });
 
-  test("keys every workload resource by the same workload map", async () => {
-    const { resource } = await federation();
+  test("keys every workload resource by the same workload map", () => {
+    const { resource } = federation();
     for (const address of [
       ["anthropic_service_account", "workload"],
       ["anthropic_service_account_workspace", "workload"],
@@ -70,8 +66,8 @@ describe("anthropic-federation", () => {
     });
   });
 
-  test("hands the identifiers off as non-secret STRING fields", async () => {
-    const { resource } = await federation();
+  test("hands the identifiers off as non-secret STRING fields", () => {
+    const { resource } = federation();
     expect(resource["onepassword_item"]?.["workload_identity"]).toMatchObject({
       vault: "v64ocnykdqju4ui6j6pua56xw4",
       category: "secure_note",
@@ -89,8 +85,8 @@ describe("anthropic-federation", () => {
     });
   });
 
-  test("keeps the provider constraints its lock file records, and encrypts state", async () => {
-    const { terraform } = await federation();
+  test("keeps the provider constraints its lock file records, and encrypts state", () => {
+    const { terraform } = federation();
     expect(terraform.required_providers).toEqual({
       anthropic: {
         source: "registry.terraform.io/ippontech/anthropic",

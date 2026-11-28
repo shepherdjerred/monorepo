@@ -323,7 +323,10 @@ export class GoalManager {
       reporter,
       updateTimer,
     };
-    reporter.activate((text) => void this.forwardMilestone(id, text));
+    reporter.activate(async (text) => {
+      if (this.active?.state.id === id)
+        await this.publishProgress(text, "milestone");
+    });
     recordGoalStarted(state, this.isStreaming, this.now);
     void this.observeProcess(id);
 
@@ -359,15 +362,6 @@ export class GoalManager {
     this.active.reporter.recordToolCall(entry);
   }
 
-  private async forwardMilestone(id: string, text: string): Promise<void> {
-    if (this.active?.state.id !== id) return;
-    try {
-      await this.publishProgress(text, "milestone");
-    } catch (error) {
-      logger.warn(`goal milestone forward failed: ${String(error)}`);
-    }
-  }
-
   async shutdown(): Promise<void> {
     this.shuttingDown = true;
     const startPromise = this.startPromise;
@@ -389,6 +383,11 @@ export class GoalManager {
     );
   }
 
+  private async drainGoalEffects(active: ActiveGoal): Promise<void> {
+    await this.controlGate.drain();
+    await active.reporter.drainMilestones();
+  }
+
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
     if (active?.state.id !== id) return;
@@ -398,7 +397,7 @@ export class GoalManager {
     if (claimed === undefined) return;
     try {
       const exitCode = await settleGoalProcess(claimed, false, () =>
-        this.controlGate.drain(),
+        this.drainGoalEffects(claimed),
       );
       const report = await readFinalReport(claimed.outputPath);
       claimed.state.finishedAt = this.now().toISOString();
@@ -434,7 +433,9 @@ export class GoalManager {
     const active = this.claimActive(id);
     if (active === undefined) return;
     try {
-      await settleGoalProcess(active, true, () => this.controlGate.drain());
+      await settleGoalProcess(active, true, () =>
+        this.drainGoalEffects(active),
+      );
       this.recordUsage(active);
       active.state.status = "timeout";
       active.state.finishedAt = this.now().toISOString();
@@ -462,7 +463,9 @@ export class GoalManager {
     const active = this.claimActive();
     if (active === undefined) return;
     try {
-      await settleGoalProcess(active, true, () => this.controlGate.drain());
+      await settleGoalProcess(active, true, () =>
+        this.drainGoalEffects(active),
+      );
       this.recordUsage(active);
       active.state.status = status;
       active.state.finishedAt = this.now().toISOString();

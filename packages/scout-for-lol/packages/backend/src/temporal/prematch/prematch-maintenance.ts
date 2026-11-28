@@ -1,5 +1,6 @@
 import { refreshPendingDareCallouts } from "#src/dares/presentation/dare-callout.ts";
 import { expireDareAcceptWindows } from "#src/dares/settlement/dare-sweep.ts";
+import { purgeExpiredLiveRosters } from "#src/live-roster/live-roster-retention.ts";
 import {
   runMaintenanceSteps,
   type MaintenanceStep,
@@ -12,6 +13,13 @@ export function prematchMaintenanceSteps(): MaintenanceStep[] {
       run: async () => {
         await expireDareAcceptWindows();
         await refreshPendingDareCallouts();
+      },
+    },
+    {
+      // Strangers' Riot IDs and recent form leave with their game.
+      name: "live game roster retention",
+      run: async () => {
+        await purgeExpiredLiveRosters(new Date());
       },
     },
   ];

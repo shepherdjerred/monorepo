@@ -54,11 +54,15 @@ export function registerMovieLifecycleRoutesV4(
   app.get("/api/v4/media/:id/movie-editions/:edition", async (c) => {
     const mediaId = parseInput(z.uuid(), c.req.param("id"));
     return c.json(
-      await media.getMovieTargetContextV4(c.get("actor"), {
-        mediaId,
-        rootMediaId: mediaId,
-        edition: parseInput(MovieEditionKeySchema, c.req.param("edition")),
-      }),
+      await media.getMovieTargetContextV4(
+        c.get("actor"),
+        {
+          mediaId,
+          rootMediaId: mediaId,
+          edition: parseInput(MovieEditionKeySchema, c.req.param("edition")),
+        },
+        c.req.query("discovery") === "1",
+      ),
     );
   });
   registerMovieRequestsV4(app, media, options);

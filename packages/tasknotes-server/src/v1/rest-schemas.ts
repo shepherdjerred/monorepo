@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Priority } from "../protocol/generated.ts";
-import { parseRRule } from "./rrule-parser.ts";
+import { parseRRule } from "@shepherdjerred/facet-protocol/recurrence";
 import {
   DeadlineSchema,
   FilterAddArgsSchema,

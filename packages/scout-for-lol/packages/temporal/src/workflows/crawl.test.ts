@@ -1,26 +1,12 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { Worker } from "@temporalio/worker";
+import { expect, test } from "vitest";
 import {
   CRAWL_FRONTIER_PRUNE_MAX_BATCHES,
   type ScoutParticipantCrawlResult,
 } from "#src/contracts.ts";
-import { scoutTaskQueues } from "#src/identifiers.ts";
-import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
+import { useScoutScheduledWorkflowHarness } from "./worker-pool.test-fixtures.ts";
 
 // Needs the Temporal test server: run with the extended tier.
-let environment: TestWorkflowEnvironment;
-const workers = createScoutWorkerPool();
-const queues = scoutTaskQueues("dev");
-
-beforeEach(async () => {
-  environment = await TestWorkflowEnvironment.createTimeSkipping();
-}, 60_000);
-
-afterEach(async () => {
-  await workers.drain();
-  await environment.teardown();
-});
+const harness = useScoutScheduledWorkflowHarness("crawl");
 
 const result: ScoutParticipantCrawlResult = {
   status: "completed",
@@ -31,32 +17,10 @@ const result: ScoutParticipantCrawlResult = {
   segmentsWritten: 1,
 };
 
-/** Start the workflow worker and a crawl-queue worker serving `activities`. */
-async function startWorkers(
-  activities: Record<string, (input: unknown) => unknown>,
-): Promise<void> {
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: queues.workflow,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-    }),
-  );
-  await workers.start(
-    await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: queues.crawl,
-      activities,
-    }),
-  );
-}
+const startWorkers = harness.start;
 
 function runTick(workflowId: string): Promise<unknown> {
-  return environment.client.workflow.execute("scoutParticipantCrawlWorkflow", {
-    workflowId,
-    taskQueue: queues.workflow,
-    args: [{ stage: "dev", trigger: "schedule" }],
-  });
+  return harness.run("scoutParticipantCrawlWorkflow", workflowId);
 }
 
 test("one tick runs one crawl Activity on the crawl queue and returns its counts", async () => {
@@ -88,14 +52,7 @@ test("a failed tick is not retried: the next scheduled tick is the retry", async
 }, 60_000);
 
 function runPrune(workflowId: string): Promise<unknown> {
-  return environment.client.workflow.execute(
-    "scoutCrawlFrontierPruneWorkflow",
-    {
-      workflowId,
-      taskQueue: queues.workflow,
-      args: [{ stage: "dev", trigger: "schedule" }],
-    },
-  );
+  return harness.run("scoutCrawlFrontierPruneWorkflow", workflowId);
 }
 
 test("a prune run repeats full batches until one comes back short, and totals them", async () => {

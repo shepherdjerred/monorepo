@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { TerraformSchema, synthesizedStack } from "#src/testing.ts";
+import { TerraformSchema, useSynthesizedApp } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
   terraform: TerraformSchema,
@@ -12,13 +12,12 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), z.unknown()),
 });
 
-async function anthropic() {
-  return synthesizedStack("anthropic", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const anthropic = () => readStack("anthropic", ConfigurationSchema);
 
 describe("anthropic", () => {
-  test("keeps the addresses of its state", async () => {
-    const { resource, variable, output } = await anthropic();
+  test("keeps the addresses of its state", () => {
+    const { resource, variable, output } = anthropic();
     expect(
       Object.entries(resource).flatMap(([type, byName]) =>
         Object.keys(byName).map((name) => `${type}.${name}`),
@@ -44,8 +43,8 @@ describe("anthropic", () => {
     });
   });
 
-  test("imports every declared key and every workspace with an id", async () => {
-    const { import: imports } = await anthropic();
+  test("imports every declared key and every workspace with an id", () => {
+    const { import: imports } = anthropic();
     expect(imports).toEqual([
       {
         for_each:
@@ -61,8 +60,8 @@ describe("anthropic", () => {
     ]);
   });
 
-  test("forgets the archived OpenRouter key instead of destroying it", async () => {
-    const { moved, removed } = await anthropic();
+  test("forgets the archived OpenRouter key instead of destroying it", () => {
+    const { moved, removed } = anthropic();
     expect(moved).toEqual([
       {
         from: 'anthropic_api_key.managed["openrouter"]',
@@ -77,8 +76,8 @@ describe("anthropic", () => {
     ]);
   });
 
-  test("keeps the provider address and constraint its lock file records, and encrypts state", async () => {
-    const { terraform } = await anthropic();
+  test("keeps the provider address and constraint its lock file records, and encrypts state", () => {
+    const { terraform } = anthropic();
     expect(terraform.required_providers).toEqual({
       anthropic: {
         source: "registry.terraform.io/ippontech/anthropic",

@@ -2,6 +2,8 @@ import { expect } from "@playwright/test";
 import { ROUTES } from "#e2e/browser/routes.ts";
 import { horizontalOverflow, open, test } from "#e2e/browser/support.ts";
 
+test.describe.configure({ mode: "parallel" });
+
 /**
  * WCAG 1.4.10 reflow: at 320 CSS pixels wide, which is also a 1280 pixel
  * window at 400 percent zoom, and at 720, which is 1440 at 200 percent, no

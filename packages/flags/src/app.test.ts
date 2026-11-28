@@ -17,6 +17,7 @@ const auth = {
   publicOrigin: "https://flags.example.test",
 };
 
+const testActor = { kind: "machine", id: "test" } as const;
 const machineHeaders = { authorization: "Bearer machine-secret" };
 const jsonHeaders = {
   authorization: "Bearer machine-secret",
@@ -25,7 +26,7 @@ const jsonHeaders = {
 
 function harness(peer: string | null = null) {
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
   const app = createFlagsApp({
     store,
     auth,
@@ -87,9 +88,9 @@ test("health, metrics, and an unknown path", async () => {
   );
   const current = store.flag("scout/prod", "dares_enabled");
   if (current === undefined) throw new Error("dares_enabled missing");
-  expect(store.apply("scout/prod", current.revision, [current.flag]).ok).toBe(
-    true,
-  );
+  expect(
+    store.apply("scout/prod", current.revision, [current.flag], testActor).ok,
+  ).toBe(true);
   const updatedMetrics = await app.request("/metrics");
   expect(await updatedMetrics.text()).toContain(
     'flags_deployment_revision{deployment="scout/prod"} 2',
@@ -100,14 +101,19 @@ test("health, metrics, and an unknown path", async () => {
 
 test("seeds deployments once and leaves an existing flag alone", () => {
   const store = FlagStore.open(":memory:");
-  const first = store.seedFromInventory();
+  const first = store.seedFromInventory({ kind: "system", id: "seed" });
   expect(first.seeded.length).toBeGreaterThan(0);
   const before = store.flag("scout/prod", "dares_enabled");
   if (before?.flag.type !== "boolean") throw new Error("dares_enabled missing");
   const changed: FlagValue = { ...before.flag, default: true };
-  const applied = store.apply("scout/prod", before.revision, [changed]);
+  const applied = store.apply(
+    "scout/prod",
+    before.revision,
+    [changed],
+    testActor,
+  );
   expect(applied.ok).toBe(true);
-  const second = store.seedFromInventory();
+  const second = store.seedFromInventory({ kind: "system", id: "seed" });
   expect(second.seeded).toEqual([]);
   expect(store.flag("scout/prod", "dares_enabled")?.flag).toMatchObject({
     default: true,
@@ -182,7 +188,7 @@ test("apply conflict writes nothing", async () => {
 
 test("retire refuses a missing key and deletes when the revision matches", async () => {
   const { app, store } = harness();
-  const created = store.createMissing("scout/prod", [added]);
+  const created = store.createMissing("scout/prod", [added], testActor);
   if (!created.ok) throw new Error("create failed");
   const refused = await app.request("/v1/deployments/scout/prod/retire", {
     method: "POST",
@@ -342,9 +348,12 @@ test("diff is empty after the seed and names a drifted flag", async () => {
   const current = store.flag("scout/prod", "dares_enabled");
   if (current?.flag.type !== "boolean")
     throw new Error("dares_enabled missing");
-  store.apply("scout/prod", current.revision, [
-    { ...current.flag, default: true },
-  ]);
+  store.apply(
+    "scout/prod",
+    current.revision,
+    [{ ...current.flag, default: true }],
+    testActor,
+  );
   const driftedResponse = await app.request("/v1/diff", {
     headers: machineHeaders,
   });
@@ -357,7 +366,7 @@ test("diff is empty after the seed and names a drifted flag", async () => {
 
 test("trusted proxy CIDR matches pod subnet peers and rejects out-of-subnet peers", async () => {
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
   let peer: string | null = null;
   const cidrAuth = authFromEnv({
     FLAGS_OPERATOR_LOGINS: "operator@example.com",
@@ -402,7 +411,7 @@ test("trusted proxy CIDR matches pod subnet peers and rejects out-of-subnet peer
 
 test("evaluation app serves health, snapshot, and evaluate without management routes", async () => {
   const store = FlagStore.open(":memory:");
-  store.seedFromInventory();
+  store.seedFromInventory({ kind: "system", id: "seed" });
   const app = createFlagsEvaluationApp({ store });
 
   const health = await app.request("/healthz");
@@ -454,7 +463,7 @@ test("metrics serves Prometheus text before the SPA client fallback and shares c
     await Bun.write(path.join(root, "assets", "bundle.js"), "export {};");
 
     const store = FlagStore.open(":memory:");
-    store.seedFromInventory();
+    store.seedFromInventory({ kind: "system", id: "seed" });
     const metrics = createFlagsMetrics();
     const managementApp = createFlagsApp({
       store,
@@ -585,7 +594,7 @@ test("metrics serves Prometheus text before the SPA client fallback and shares c
       'flags_http_requests_total{surface="evaluation",route="other",status="404"} 1',
     );
 
-    const created = store.createMissing("scout/prod", [added]);
+    const created = store.createMissing("scout/prod", [added], testActor);
     expect(created.ok).toBe(true);
     const secondScrape = await managementApp.request("/metrics");
     const secondBody = await secondScrape.text();

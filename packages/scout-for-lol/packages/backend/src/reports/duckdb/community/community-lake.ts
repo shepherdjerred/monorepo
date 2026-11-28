@@ -3,6 +3,10 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import {
+  withLakePage,
+  type LakePage,
+} from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
@@ -73,54 +77,65 @@ export async function fetchGuildAccountCounts(options: {
   );
 }
 
-/**
- * Full public rosters only for games reached through the authorized guild
- * PUUIDs. The lake has no guild field; this PUUID predicate is the boundary.
- */
-export async function fetchGuildMatchRows(options: {
+type GuildMatchRowOptions = {
   puuids: string[];
   queues?: string[];
   afterMs?: number;
   lakeDir?: string;
-}): Promise<GuildMatchRow[]> {
+};
+
+/**
+ * Full public rosters only for games reached through the authorized guild
+ * PUUIDs. The lake has no guild field; this PUUID predicate is the boundary.
+ *
+ * Runs on the caller's lake page.
+ */
+export async function readGuildMatchRows(
+  page: LakePage,
+  options: GuildMatchRowOptions,
+): Promise<GuildMatchRow[]> {
   if (options.puuids.length === 0) return [];
-  return await withLakeQueryRetry(
-    options.lakeDir ?? resolveLakeDir(),
-    async (files) => {
-      const clauses = ["puuid IN (SELECT unnest(?))"];
-      const params: BoundParam[] = [listParam(options.puuids)];
-      if (options.queues !== undefined) {
-        clauses.push("queue IN (SELECT unnest(?))");
-        params.push(listParam(options.queues));
-      }
-      if (options.afterMs !== undefined) {
-        clauses.push(`${GAME_CREATED_MS_SQL} >= ?`);
-        params.push(scalarParam(options.afterMs));
-      }
-      const target = buildMatchesSource(files, {
-        sql: clauses.join(" AND "),
-        params,
-      });
-      const full = buildMatchesSource(files, {
-        sql: "match_id IN (SELECT match_id FROM target)",
-        params: [],
-      });
-      if (target === undefined || full === undefined) return [];
-      const sql =
-        `WITH target AS (SELECT DISTINCT match_id FROM (${target.sql})), ` +
-        `full_rosters AS (${full.sql}) ` +
-        `SELECT match_id, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
-        `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
-        `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
-        `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
-        `ORDER BY game_creation_ms DESC, match_id DESC, participant_id, team_id, champion_name`;
-      return await withDuckDBConnection(async (session) => {
-        const rows = await session.run(
-          sql,
-          bindParams(session, [...target.params, ...full.params]),
-        );
-        return rows.map((row) => GuildMatchRowSchema.parse(row));
-      });
-    },
+  const clauses = ["puuid IN (SELECT unnest(?))"];
+  const params: BoundParam[] = [listParam(options.puuids)];
+  if (options.queues !== undefined) {
+    clauses.push("queue IN (SELECT unnest(?))");
+    params.push(listParam(options.queues));
+  }
+  if (options.afterMs !== undefined) {
+    clauses.push(`${GAME_CREATED_MS_SQL} >= ?`);
+    params.push(scalarParam(options.afterMs));
+  }
+  const target = buildMatchesSource(page.files, {
+    sql: clauses.join(" AND "),
+    params,
+  });
+  const full = buildMatchesSource(page.files, {
+    sql: "match_id IN (SELECT match_id FROM target)",
+    params: [],
+  });
+  if (target === undefined || full === undefined) return [];
+  const sql =
+    `WITH target AS (SELECT DISTINCT match_id FROM (${target.sql})), ` +
+    `full_rosters AS (${full.sql}) ` +
+    `SELECT match_id, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
+    `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
+    `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
+    `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
+    `ORDER BY game_creation_ms DESC, match_id DESC, participant_id, team_id, champion_name`;
+  const rows = await page.session.run(
+    sql,
+    bindParams(page.session, [...target.params, ...full.params]),
   );
+  return rows.map((row) => GuildMatchRowSchema.parse(row));
+}
+
+export async function fetchGuildMatchRows(
+  options: GuildMatchRowOptions,
+): Promise<GuildMatchRow[]> {
+  return options.puuids.length === 0
+    ? []
+    : await withLakePage(
+        options.lakeDir,
+        async (page) => await readGuildMatchRows(page, options),
+      );
 }

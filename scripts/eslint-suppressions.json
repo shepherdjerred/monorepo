@@ -38,10 +38,5 @@
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
-  },
-  "tools/jscpd-check.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
   }
 }

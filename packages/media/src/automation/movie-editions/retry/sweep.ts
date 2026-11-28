@@ -1,4 +1,5 @@
 import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import { MediaError } from "#application/errors.ts";
@@ -19,12 +20,85 @@ import {
   bindPlexTransactionDeadline,
   plexBindingFreshness,
 } from "#infrastructure/plex-binding/freshness.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { movieRetryTerminalV1 } from "./terminal.ts";
 import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
 import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
   PlexExclusionProofError,
   requireLibraryPlexExclusionDatabaseProof,
 } from "#automation/plex-exclusion/proof.ts";
+
+function requiresMovieRetryExclusionProof(
+  selected: Awaited<ReturnType<typeof selectMovieRetryV4>>,
+): boolean {
+  return (
+    selected.kind === "initial" ||
+    (selected.kind === "continuation" &&
+      selected.capture.continuation.phase === "prepared")
+  );
+}
+
+async function readPriorExclusionBlockedMovieRetriesV4(
+  tx: Prisma.TransactionClient,
+  current: Awaited<ReturnType<typeof selectMovieRetryV4>>["source"],
+  budget: PublicationAuthorityReadBudget,
+): Promise<{ count: number; reconcilingIds: string[] }> {
+  const excludedIds =
+    current.attempt.coordinatorOperationId === null
+      ? [current.attempt.operationId]
+      : [current.attempt.operationId, current.attempt.coordinatorOperationId];
+  const rows = await tx.operation.findMany({
+    where: {
+      id: { notIn: excludedIds },
+      kind: "reconcile_movie_edition_v4",
+      status: { in: ["reconciling", "completed"] },
+      result: { path: ["reason"], equals: PLEX_EXCLUSION_PROOF_REQUIRED },
+      OR: ["movieRetryV1", "movieRetryV2"].map((marker) => ({
+        AND: [
+          {
+            payload: {
+              path: [marker, "attemptId"],
+              equals: current.attempt.id,
+            },
+          },
+          {
+            payload: {
+              path: [marker, "previousCoordinatorOperationId"],
+              equals: current.operation.id,
+            },
+          },
+        ],
+      })),
+    },
+    select: { id: true, status: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: budget.take,
+  });
+  budget.consume(rows.length);
+  return {
+    count: rows.length,
+    reconcilingIds: rows
+      .filter((row) => row.status === "reconciling")
+      .map((row) => row.id),
+  };
+}
+
+async function completeSupersededBlockedMovieRetriesV4(
+  tx: Prisma.TransactionClient,
+  reconcilingIds: readonly string[],
+  queuedOperationId: string,
+): Promise<void> {
+  const patch = JSON.stringify({
+    supersededByOperationId: queuedOperationId,
+  });
+  for (const id of reconcilingIds) {
+    if (id === queuedOperationId) {
+      continue;
+    }
+    await tx.$executeRaw`UPDATE "Operation" SET status = 'completed'::"OperationStatus", result = COALESCE(result, '{}'::jsonb) || ${patch}::jsonb, "updatedAt" = NOW() WHERE id = ${id} AND status = 'reconciling'::"OperationStatus"`;
+  }
+}
 
 /** Real movie identity selects this route for default and named attempts; ordinary recovery remains literal. */
 export async function queueTerminalMovieRetryV4(
@@ -46,11 +120,7 @@ export async function queueTerminalMovieRetryV4(
     );
     const source = selected.source;
     if (source.attempt.id !== input.attemptId) return;
-    if (
-      selected.kind === "initial" ||
-      (selected.kind === "continuation" &&
-        selected.capture.continuation.phase === "prepared")
-    ) {
+    if (requiresMovieRetryExclusionProof(selected)) {
       await requireLibraryPlexExclusionDatabaseProof(context.db, "movies");
     }
     const terminal = await movieRetryTerminalV1(
@@ -93,6 +163,9 @@ export async function queueTerminalMovieRetryV4(
         identityHash(selected.capture)
       )
         return;
+      if (requiresMovieRetryExclusionProof(currentSelection)) {
+        await requireLibraryPlexExclusionDatabaseProof(tx, "movies");
+      }
       const authority = await movieRetryAuthorityV4(tx, {
         scope: input.scope,
         source: current,
@@ -104,6 +177,11 @@ export async function queueTerminalMovieRetryV4(
           : {}),
       });
       await assertNoPendingMovieRetryV4(tx, current, budget);
+      const blocked = await readPriorExclusionBlockedMovieRetriesV4(
+        tx,
+        current,
+        budget,
+      );
       const lease = await readRuntimeProof(tx);
       const freshness = plexBindingFreshness({
         observed: execution.observed,
@@ -125,8 +203,12 @@ export async function queueTerminalMovieRetryV4(
           "Movie retry configured library changed",
           409,
         );
-      await queueOperation(tx, {
-        key: `movie-retry-recover-v4:${source.attempt.id}:${source.operation.id}:${terminal.root.runId}:${terminal.child?.runId ?? "unstarted"}`,
+      const baseKey = `movie-retry-recover-v4:${source.attempt.id}:${source.operation.id}:${terminal.root.runId}:${terminal.child?.runId ?? "unstarted"}`;
+      const queuedOperationId = await queueOperation(tx, {
+        key:
+          blocked.count === 0
+            ? baseKey
+            : `${baseKey}:blocked:${String(blocked.count)}`,
         kind: "reconcile_movie_edition_v4",
         targetId: input.scope.mediaId,
         createdAt: new Date(),
@@ -139,6 +221,11 @@ export async function queueTerminalMovieRetryV4(
           ...movieRetrySelectionDetails(currentSelection),
         },
       });
+      await completeSupersededBlockedMovieRetriesV4(
+        tx,
+        blocked.reconcilingIds,
+        queuedOperationId,
+      );
       freshness.assertActive();
     });
     execution.assertActive();

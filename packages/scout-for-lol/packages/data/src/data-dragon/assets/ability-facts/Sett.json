@@ -178,7 +178,15 @@
       "resolvedDescription": "Sett itches for a fight, gaining 30% Move Speed towards enemy champions for 1.5 seconds. Additionally Sett's next two Attacks deal an additional 10/20/30/40/50 plus {{ maxhealthdamagecalc }} max Health physical damage.",
       "unresolved": [
         "maxhealthdamagecalc"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.33,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Haymaker",
@@ -344,7 +352,15 @@
       "unresolved": [
         "damageconversion",
         "f1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.75,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Facebreaker",
@@ -444,7 +460,15 @@
         ]
       },
       "resolvedDescription": "Sett smashes enemies on either side of him into each other, dealing 50/70/90/110/130 (+60% AD) physical damage and Slowing them by 70% for 0.5 seconds. If Sett grabbed at least one enemy on each side, all enemies are Stunned for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "The Show Stopper",
@@ -558,7 +582,15 @@
         ]
       },
       "resolvedDescription": "Sett grabs an enemy champion and Suppresses them as he carries them forward, then slams them into the ground, dealing 200/300/400 (+120% bonus AD) plus 40/50/60% of the grabbed enemy's bonus Health physical damage to surrounding enemies and Slowing them by 99% for 1 second. Enemies take less damage the further they are from where Sett lands.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 779.9,
+        "missiles": []
+      }
     }
   }
 }

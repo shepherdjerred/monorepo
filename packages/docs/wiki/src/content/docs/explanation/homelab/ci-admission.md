@@ -73,20 +73,57 @@ provider. A completion check can then queue behind work from newer PRs.
 The developer waits even after the expensive checks have finished.
 
 The [agent pools](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/agent.ts)
-give PR execution, main releases, reviews, and completion separate workflow
-caps. Review and completion share a small resource reserve but have separate
-agents. A backlog of review polls therefore cannot consume the completion slot.
+give PR execution, main releases, maintenance, reviews, and completion separate
+workflow caps. Review and completion share a small resource reserve but have
+separate agents. A backlog of review polls therefore cannot consume the
+completion slot.
 
 Mandatory agent labels keep a pool from taking unrelated workflows.
 All generated workflows use their assigned pool. The admission proof covers
-twelve compute slots and four gate slots. Its pod backstop also includes
-compute services, so partially started workflows cannot fill every slot before
-a step can run. The legacy pool has zero slots and no agent Deployment.
+every compute and gate slot in the budget. It also rejects a workflow routed
+to a pool with no agent, which Woodpecker would hold forever. Its pod backstop
+also includes compute services, so partially started workflows cannot fill
+every slot before a step can run. The legacy pool has zero slots and no agent
+Deployment.
 
 The reserve slightly reduces compute capacity. It buys predictable access for
 short verdict checks without increasing the total CPU, memory, or ephemeral
 storage budget. Gate workflows need no checkout or services, so their workspace
 claims are smaller too.
+
+## Why maintenance has its own agent
+
+Temporal dispatches CI maintenance as manual pipelines on main. These refresh
+the golden workspace, the CI images, and the workspace seeds, and refine
+release notes. They used to share the `pr` agent at the lowest priority.
+
+Kueue priority could not help them. The wait was in the `pr` agent's
+first-in-first-out queue, before any pod existed. With hundreds of PR workflows
+pending, a golden refresh waited hours. Every workspace cloned from the stale
+golden snapshot then rewrote what had changed since, which made a stale golden
+the largest avoidable writer on the CI pool.
+
+The [routing](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/routing.ts)
+now sends maintenance to a one-slot `maintenance` agent. An agent picks up a
+request as soon as the previous one finishes, whatever the PR backlog. Its
+pods still share the compute queue, so they are admitted at main's priority.
+At draft priority they would wait behind every queued ready PR pod.
+
+Main's priority is safe here. Maintenance runs once to a few times a day, and
+its pool runs one workflow at a time. Kueue never preempts, so maintenance
+only moves ahead of waiting work and never evicts running work. It takes no
+slot from main's agent either. Benchmarks, reproductions, and the extended
+tier remain background work in the `pr` pool at draft priority.
+
+The slot adds one workflow, not resources. The compute quota is unchanged.
+The maintenance agent takes only maintenance workflows, and none of them
+starts a service. The proof therefore charges its slot only for maintenance
+workflows' services, never a PR's. Maintenance workspaces keep the compute
+size, so they clone the golden snapshot too.
+
+This pool is unrelated to the Temporal maintenance worker below. That worker is
+a long-running pod with its own small Kueue queue. The maintenance pipelines
+use the shared compute queue.
 
 ## Why Delivery Jobs have their own reserve
 
@@ -114,7 +151,8 @@ allocatable memory, which is what lets an admitted Job schedule at once.
 ## Admission priority does not preempt production
 
 The queues define workload priorities for main releases, ready PRs, and drafts,
-in that order. These priorities order waiting work inside Kueue.
+in that order. CI maintenance shares main's priority. These priorities order
+waiting work inside Kueue.
 They leave every CI pod at the existing Kubernetes `batch-low` priority.
 Preemption remains disabled, so priority never cancels an admitted CI pod.
 
@@ -248,6 +286,8 @@ kubelet eviction, whatever the queue says.
   `resources/woodpecker/ci-namespace.ts`
 - Pod guard: `resources/woodpecker/ci-pod-guard.ts`
 - Agent pod defaults: `resources/woodpecker/agent.ts`
+- Agent pool routing:
+  `packages/woodpecker-config-extension/src/pipeline/routing.ts`
 - Workspace class: `misc/storage/storage-classes.ts`
 - Golden workspace clone policy:
   `resources/woodpecker/workspace-clone-policy.ts`

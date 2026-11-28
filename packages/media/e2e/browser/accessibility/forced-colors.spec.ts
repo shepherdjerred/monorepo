@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { test } from "#e2e/browser/support.ts";
 import type { RouteCase } from "#e2e/browser/routes.ts";
 
@@ -136,4 +136,51 @@ test("a checked box differs from an unchecked one", async ({
   const unchecked = await fill();
   await box.check();
   expect(await fill()).not.toBe(unchecked);
+});
+
+async function expectActiveEdgeDiffersFromResting(
+  active: Locator,
+  resting: Locator,
+) {
+  const readEdge = async (control: Locator) =>
+    control.evaluate((element) => {
+      const style = globalThis.getComputedStyle(element);
+      return {
+        borderTopColor: style.borderTopColor,
+        outlineStyle: style.outlineStyle,
+      };
+    });
+  const [activeEdge, restingEdge] = await Promise.all([
+    readEdge(active),
+    readEdge(resting),
+  ]);
+  expect(activeEdge.outlineStyle).toBe("solid");
+  expect(restingEdge.outlineStyle).toBe("none");
+  expect(activeEdge.borderTopColor).not.toBe(restingEdge.borderTopColor);
+}
+
+test("an active filter choice differs from a resting one", async ({
+  page: browserPage,
+  baseURL,
+}) => {
+  await openAt(browserPage, baseURL, page("member", "/library?kind=movie"));
+  await expectActiveEdgeDiffersFromResting(
+    browserPage.getByLabel("Films or series"),
+    browserPage.getByLabel("How long it is kept"),
+  );
+});
+
+test("an active date filter differs from an empty one", async ({
+  page: browserPage,
+  baseURL,
+}) => {
+  await openAt(
+    browserPage,
+    baseURL,
+    page("member", "/history?from=2026-03-01T00:00:00.000Z"),
+  );
+  await expectActiveEdgeDiffersFromResting(
+    browserPage.locator('label:has(input[aria-label="From this day"])'),
+    browserPage.locator('label:has(input[aria-label="Before this day"])'),
+  );
 });

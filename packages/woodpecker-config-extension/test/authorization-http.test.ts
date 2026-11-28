@@ -31,7 +31,7 @@ type HarnessLanes = {
 };
 
 function harness(
-  hostedAutomationApproved = false,
+  approved: boolean | Error = false,
   trustedGateImage?: string,
   cacheEnabled = false,
   lanes: HarnessLanes = {},
@@ -47,6 +47,11 @@ function harness(
   );
   const cancelSupersededPr = vi.fn(() => Promise.resolve());
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
+  const automationHeadApproved = vi.fn(() =>
+    typeof approved === "boolean"
+      ? Promise.resolve(approved)
+      : Promise.reject(approved),
+  );
   const performance = lanes.performance;
   const app = createApp({
     deliveryPublicationEnabled: () => Promise.resolve(true),
@@ -67,7 +72,7 @@ function harness(
     verifyBase: base,
     imageReleaseBase: base,
     cancelSupersededPr,
-    hostedAutomationApproved: () => Promise.resolve(hostedAutomationApproved),
+    automationHeadApproved,
   });
   return {
     app,
@@ -76,6 +81,7 @@ function harness(
     changedBase,
     cancelSupersededPr,
     sourceCacheEnabled,
+    automationHeadApproved,
   };
 }
 
@@ -255,7 +261,7 @@ describe("signed maintenance routing", () => {
     expect(response.status).toBe(400);
   });
   test.each(["release-notes", "ci-images"])(
-    "emits one %s workflow in the PR pool below ready priority",
+    "emits one %s workflow in the maintenance pool at main priority",
     async (kind) => {
       const { app, base, changedBase } = harness(false, undefined, false, {
         maintenance: true,
@@ -267,8 +273,8 @@ describe("signed maintenance routing", () => {
       expect(body.configs.map((config) => config.name)).toEqual([
         `.woodpecker/maintenance-${kind}.yaml`,
       ]);
-      expect(body.configs[0]?.data).toContain("ci-pool: pr");
-      expect(body.configs[0]?.data).toContain("priority-class: ci-draft");
+      expect(body.configs[0]?.data).toContain("ci-pool: maintenance");
+      expect(body.configs[0]?.data).toContain("priority-class: ci-main");
       expect(body.configs[0]?.data).toContain("group: ci-maintenance");
       expect(base).not.toHaveBeenCalled();
       expect(changedBase).not.toHaveBeenCalled();
@@ -398,9 +404,14 @@ describe("signed workflow routing", () => {
     expect(
       ready.configs.some((entry) => entry.name.includes("tofu-validate")),
     ).toBe(true);
-    expect(
-      ready.configs.some((entry) => entry.name.includes("playwright-e2e")),
-    ).toBe(true);
+    // The browser and Paper lanes left pull requests: even with unknown
+    // changed paths (everything selected) neither is emitted.
+    for (const lane of ["playwright-e2e", "paper-smoke"]) {
+      expect(
+        ready.configs.some((entry) => entry.name.includes(lane)),
+        lane,
+      ).toBe(false);
+    }
     const completion = ready.configs.find((entry) =>
       entry.name.endsWith("/ci-complete.yaml"),
     );
@@ -513,6 +524,218 @@ describe("signed workflow routing", () => {
   );
 });
 
+describe("signed cache trust domain", () => {
+  const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
+  const TRUSTED_KEYS = [
+    "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_TRUSTED",
+  ];
+  const PULL_REQUEST_KEYS = [
+    "GRADLE_BUILD_CACHE_READ_PASSWORD",
+    "TURBO_REMOTE_CACHE_SIGNATURE_KEY_PR",
+  ];
+  const trusted = { team: "monorepo", user: "ci-main", keys: TRUSTED_KEYS };
+  const isolated = {
+    team: "monorepo-pull-request",
+    user: "ci-pull-request",
+    keys: PULL_REQUEST_KEYS,
+  };
+  const WorkflowSchema = z.object({
+    steps: z.array(
+      z.object({
+        environment: z.record(z.string(), z.string()).default({}),
+        backend_options: z.object({
+          kubernetes: z.object({
+            secrets: z.array(z.object({ key: z.string() })).default([]),
+          }),
+        }),
+      }),
+    ),
+  });
+
+  /** What the emitted workflow that signs Turbo entries actually holds. */
+  function cacheIdentity(configs: { name: string; data: string }[]) {
+    const config = configs.find((entry) => entry.data.includes("TURBO_TEAM"));
+    if (config === undefined) throw new Error("No remote-cache workflow");
+    const workflow = WorkflowSchema.parse(parse(config.data));
+    const environment: Record<string, string> = Object.fromEntries(
+      workflow.steps.flatMap((step) => Object.entries(step.environment)),
+    );
+    const keys = new Set(
+      workflow.steps.flatMap((step) =>
+        step.backend_options.kubernetes.secrets.map((grant) => grant.key),
+      ),
+    );
+    return {
+      team: environment["TURBO_TEAM"],
+      user: environment["GRADLE_BUILD_CACHE_USERNAME"],
+      sccacheUser: environment["SCCACHE_WEBDAV_USERNAME"],
+      keys: [...TRUSTED_KEYS, ...PULL_REQUEST_KEYS].filter((key) =>
+        keys.has(key),
+      ),
+      formatRoot: environment["CI_FORMAT_CACHE_ROOT"],
+      formatClaims: config.data.match(/woodpecker-format-[a-z]+/gu) ?? [],
+      sourceClaims: [
+        ...new Set(config.data.match(/woodpecker-source-(?:main|pr)/gu)),
+      ],
+    };
+  }
+
+  const owner = { author: "shepherdjerred", sender: "shepherdjerred" };
+  /**
+   * Every pipeline shape the extension signs cache credentials for, through
+   * `createApp`, so `app.ts` resolving the wrong domain fails here. Formatter
+   * results and the source cache are on, so the shared volumes are pinned too:
+   * a trusted proposal mounts no formatter volume (ci-pod-guard admits
+   * `woodpecker-format-main` only for default-branch verify) and shares main's
+   * source objects; an isolated one keeps both `-pr` volumes.
+   */
+  test.each([
+    {
+      shape: "an owner PR",
+      pipeline: owner,
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "an agent-account PR",
+      pipeline: { author: "derrej", sender: "derrej" },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "the agent pushing to an owner PR",
+      pipeline: { author: "shepherdjerred", sender: "derrej" },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "an owner PR marked ready for review",
+      pipeline: {
+        ...owner,
+        event: "pull_request_metadata",
+        event_reason: ["ready_for_review"],
+        pr_draft: false,
+      },
+      cache: trusted,
+      format: undefined,
+      source: "woodpecker-source-main",
+    },
+    {
+      shape: "Renovate rebasing an owner PR",
+      pipeline: { author: "shepherdjerred", sender: "renovate[bot]" },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "an approved Renovate PR",
+      pipeline: { author: "renovate[bot]", sender: "renovate[bot]" },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "an owner App PR",
+      pipeline: { author: BOT, sender: BOT },
+      cache: isolated,
+      format: "pr",
+      source: "woodpecker-source-pr",
+    },
+    {
+      shape: "a push to main by the release App",
+      pipeline: {
+        event: "push",
+        ref: "refs/heads/main",
+        refspec: "",
+        author: "long-summer-intern[bot]",
+        sender: "long-summer-intern[bot]",
+      },
+      cache: trusted,
+      format: "main",
+      source: "woodpecker-source-main",
+    },
+  ])(
+    "$shape verifies in the $cache.team cache",
+    async ({ pipeline, cache, format, source }) => {
+      // Approved, so Renovate receives its full reviewed graph.
+      const { app } = harness(true, gateImage, true, {
+        performance: { formatting: true },
+      });
+      const response = await app.request(
+        await request({ ...pipeline, changed_files: [] }),
+      );
+      expect(response.status).toBe(200);
+      const identity = cacheIdentity(
+        ConfigResponseSchema.parse(await response.json()).configs,
+      );
+      expect(identity).toEqual({
+        team: cache.team,
+        user: cache.user,
+        sccacheUser: cache.user,
+        keys: cache.keys,
+        formatRoot:
+          format === undefined
+            ? undefined
+            : `/woodpecker/format-cache/${format}`,
+        formatClaims:
+          format === undefined ? [] : [`woodpecker-format-${format}`],
+        sourceClaims: [source],
+      });
+    },
+  );
+
+  test.each([
+    {
+      author: "shepherdjerred",
+      cache: trusted,
+      source: "woodpecker-source-main",
+    },
+    {
+      author: "long-summer-intern[bot]",
+      cache: isolated,
+      source: "woodpecker-source-pr",
+    },
+  ])(
+    "a canary benchmark started by $author uses the $cache.team cache",
+    async ({ author, cache, source }) => {
+      const { app } = harness(false, gateImage, true, { performance: {} });
+      const response = await app.request(
+        await request({
+          event: "manual",
+          branch: "ci-canary/cache-trust",
+          ref: "refs/heads/ci-canary/cache-trust",
+          refspec: "",
+          author,
+          sender: "",
+          variables: {
+            CI_BENCHMARK_PROFILE: "verify",
+            CI_BENCHMARK_VARIANT: "baseline",
+            CI_BENCHMARK_CACHE: "warm",
+            CI_BENCHMARK_SOURCE: fixture.pipeline.commit,
+            CI_BENCHMARK_FEATURE: "gradle",
+          },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(
+        cacheIdentity(
+          ConfigResponseSchema.parse(await response.json()).configs,
+        ),
+      ).toMatchObject({
+        team: cache.team,
+        user: cache.user,
+        keys: cache.keys,
+        formatClaims: [],
+        sourceClaims: [source],
+      });
+    },
+  );
+});
+
 describe("signed extended verification routing", () => {
   const REQUEST = "8f6d3a2e-4c1b-4e7a-9f0d-2b5c6d7e8f90";
   const manual = {
@@ -564,14 +787,26 @@ describe("signed extended verification routing", () => {
     expect(response.status).toBe(400);
     expect(imageFetcher).not.toHaveBeenCalled();
   });
-  test("a request for the tip emits one verify-extended workflow in the PR pool at draft priority", async () => {
+  test("a request for the tip emits verify-extended and the Paper smoke in the PR pool at draft priority", async () => {
     const { app, base, changedBase, cancelSupersededPr } = enabled();
     const response = await app.request(await request(manual));
     expect(response.status).toBe(200);
     const body = ConfigResponseSchema.parse(await response.json());
     expect(body.configs.map((config) => config.name)).toEqual([
       ".woodpecker/verify-extended.yaml",
+      ".woodpecker/paper-smoke-nightly.yaml",
     ]);
+    const paper: unknown = parse(body.configs[1]?.data ?? "");
+    expect(paper).toMatchObject({
+      labels: {
+        "ci-pool": "pr",
+        "kueue.x-k8s.io/priority-class": "ci-draft",
+      },
+      concurrency: { limit: 1, group: "paper-smoke-nightly" },
+    });
+    expect(paper).not.toHaveProperty("depends_on");
+    expect(body.configs[1]?.data).not.toContain("TURBO_TOKEN");
+    expect(body.configs[1]?.data).not.toContain("SEAWEEDFS_HANDOFF");
     const workflow = z
       .object({
         labels: z.record(z.string(), z.string()),
@@ -646,7 +881,10 @@ describe("signed extended verification routing", () => {
     const body = ConfigResponseSchema.parse(await response.json());
     expect(body.configs.map((config) => config.name)).toEqual([
       ".woodpecker/verify-extended.yaml",
+      ".woodpecker/paper-smoke-nightly.yaml",
     ]);
+    expect(body.configs[1]?.data).toContain(verified);
+    expect(body.configs[1]?.data).not.toContain(fixture.pipeline.commit);
     expect(body.configs[0]?.data).toContain("checkout.sh");
     expect(body.configs[0]?.data).toContain(verified);
     expect(body.configs[0]?.data).toContain("woodpecker-source-main");
@@ -756,4 +994,113 @@ describe("hosted Renovate pipeline authorization", () => {
     );
     expect(base).toHaveBeenCalled();
   });
+});
+
+describe("repository bot dependency proposal authorization", () => {
+  const branch = "chore/renovate-bundle-0123456789abcdef";
+  const bundle = {
+    author: "long-summer-intern[bot]",
+    sender: "shepherdjerred",
+    branch: "main",
+    refspec: `${branch}:main`,
+    changed_files: [
+      "package.json",
+      "bun.lock",
+      "packages/toolkit/src/example.ts",
+    ],
+  };
+
+  test.each([
+    {},
+    { event: "pull_request_metadata", event_reason: ["ready_for_review"] },
+    { refspec: "" },
+  ])(
+    "keeps an unapproved repo proposal credentialless with %j",
+    async (overrides) => {
+      const {
+        app,
+        automationHeadApproved,
+        sourceCacheEnabled,
+        cancelSupersededPr,
+      } = harness(false, TEST_IMAGES.base, true);
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      const result = ConfigResponseSchema.parse(await response.json());
+      expect(response.status).toBe(200);
+      expect(automationHeadApproved).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          author: bundle.author,
+          commit: fixture.pipeline.commit,
+          ref: fixture.pipeline.ref,
+        }),
+      );
+      expect(result.configs.map((entry) => entry.name).sort()).toEqual([
+        ".woodpecker/semgrep.yaml",
+        ".woodpecker/trivy.yaml",
+        ".woodpecker/verify.yaml",
+      ]);
+      const emitted = result.configs.map((entry) => entry.data).join("\n");
+      expect(emitted).not.toMatch(/secrets:|woodpecker-source-|TURBO_TOKEN/u);
+      expect(sourceCacheEnabled).not.toHaveBeenCalled();
+      expect(cancelSupersededPr).not.toHaveBeenCalled();
+    },
+  );
+
+  test("normal verification is admitted after review of the same head", async () => {
+    const { app, automationHeadApproved } = harness(true);
+    const response = await app.request(await request(bundle));
+    expect(response.status).toBe(200);
+    expect(automationHeadApproved).toHaveBeenCalledOnce();
+    expect(await response.json()).toMatchObject({
+      configs: expect.arrayContaining([
+        expect.objectContaining({ name: ".woodpecker/ci-complete.yaml" }),
+      ]),
+    });
+  });
+
+  test("keeps the credentialless graph when GitHub review state is unavailable", async () => {
+    const { app } = harness(new Error("review unavailable"));
+    const response = await app.request(await request(bundle));
+    expect(response.status).toBe(200);
+    const { configs } = ConfigResponseSchema.parse(await response.json());
+    expect(configs.map((entry) => entry.name)).toContain(
+      ".woodpecker/verify.yaml",
+    );
+    expect(configs.map((entry) => entry.name)).not.toContain(
+      ".woodpecker/ci-complete.yaml",
+    );
+    expect(configs.map((entry) => entry.data).join("\n")).not.toContain(
+      "secrets:",
+    );
+  });
+
+  test.each([
+    { author: BOT },
+    { branch, refspec: `chore/regular-bot-pr:${branch}` },
+    { refspec: `${branch}-extra:main` },
+    { refspec: "chore/renovate-bundle-0123456789ABCDEf:main" },
+  ])(
+    "does not require proposal approval for unrelated metadata %j",
+    async (overrides) => {
+      const { app, automationHeadApproved } = harness();
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      expect(response.status).toBe(200);
+      expect(automationHeadApproved).not.toHaveBeenCalled();
+    },
+  );
+
+  test.each([{ from_fork: true }, { sender: "mallory" }])(
+    "rejects the signed proposal before review lookup for %j",
+    async (overrides) => {
+      const { app, automationHeadApproved } = harness(true);
+      const response = await app.request(
+        await request({ ...bundle, ...overrides }),
+      );
+      expect(response.status).toBe(403);
+      expect(automationHeadApproved).not.toHaveBeenCalled();
+    },
+  );
 });

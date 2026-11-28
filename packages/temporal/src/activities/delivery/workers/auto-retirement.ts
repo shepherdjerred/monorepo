@@ -30,6 +30,20 @@ export type AutoRetirementResult = {
   skipped: { environmentId: string; workerId: string; reason: string }[];
 };
 
+export type LiveWorkerRouteObservation = {
+  currentBuildId: string;
+  rampingBuildId: string | null;
+};
+
+const PoolCandidateSchema = z.object({
+  candidateBuildId: z.string().optional(),
+});
+
+function poolCandidateBuildId(pool: unknown): string | undefined {
+  const parsed = PoolCandidateSchema.safeParse(pool);
+  return parsed.success ? parsed.data.candidateBuildId : undefined;
+}
+
 /**
  * Proposes, per idle worker environment, the first retained host whose
  * read-only retirement proof passes now (AI-472). Delivery requests the
@@ -43,16 +57,22 @@ export async function proposeDrainedRetirements<Pool>(
       environmentId: string;
       generation: number;
       pool: Pool;
-      workers: { id: string; generation: number }[];
+      workers: { id: string; generation: number; buildId?: string }[];
     }[];
   },
   prove: (pool: Pool, workerId: string) => Promise<unknown>,
   request: (workerId: string, body: unknown) => Promise<void>,
+  observeLiveRoutes?: (pool: Pool) => Promise<LiveWorkerRouteObservation[]>,
 ): Promise<AutoRetirementResult> {
   const result: AutoRetirementResult = { requested: [], skipped: [] };
   const refused: unknown[] = [];
   for (const environment of candidates.environments) {
-    const proved = await firstProved(environment, prove, result);
+    const proved = await firstProved(
+      environment,
+      prove,
+      result,
+      observeLiveRoutes,
+    );
     if (proved === undefined) continue;
     try {
       await request(proved.id, {
@@ -72,17 +92,71 @@ export async function proposeDrainedRetirements<Pool>(
   return result;
 }
 
+async function resolveLiveActiveBuilds<Pool>(
+  environment: {
+    environmentId: string;
+    pool: Pool;
+    workers: { id: string; generation: number; buildId?: string }[];
+  },
+  result: AutoRetirementResult,
+  observeLiveRoutes?: (pool: Pool) => Promise<LiveWorkerRouteObservation[]>,
+): Promise<Set<string> | "lagging"> {
+  if (observeLiveRoutes === undefined) return new Set<string>();
+  const routes = await observeLiveRoutes(environment.pool);
+  const acceptedBuild = poolCandidateBuildId(environment.pool);
+  const environmentLagsLive =
+    acceptedBuild !== undefined &&
+    routes.some(
+      (route) =>
+        route.currentBuildId !== acceptedBuild ||
+        (route.rampingBuildId !== null && route.rampingBuildId !== ""),
+    );
+  if (environmentLagsLive) {
+    for (const worker of environment.workers) {
+      result.skipped.push({
+        environmentId: environment.environmentId,
+        workerId: worker.id,
+        reason:
+          "Environment accepted worker lags live Temporal routing; settle acceptance before retiring hosts",
+      });
+    }
+    return "lagging";
+  }
+  return new Set(
+    routes.flatMap((route) =>
+      route.rampingBuildId === null || route.rampingBuildId === ""
+        ? [route.currentBuildId]
+        : [route.currentBuildId, route.rampingBuildId],
+    ),
+  );
+}
+
 /** The environment's first host whose proof passes; failures are recorded as skipped. */
 async function firstProved<Pool>(
   environment: {
     environmentId: string;
     pool: Pool;
-    workers: { id: string; generation: number }[];
+    workers: { id: string; generation: number; buildId?: string }[];
   },
   prove: (pool: Pool, workerId: string) => Promise<unknown>,
   result: AutoRetirementResult,
+  observeLiveRoutes?: (pool: Pool) => Promise<LiveWorkerRouteObservation[]>,
 ) {
+  const liveActiveBuilds = await resolveLiveActiveBuilds(
+    environment,
+    result,
+    observeLiveRoutes,
+  );
+  if (liveActiveBuilds === "lagging") return;
   for (const worker of environment.workers) {
+    if (worker.buildId !== undefined && liveActiveBuilds.has(worker.buildId)) {
+      result.skipped.push({
+        environmentId: environment.environmentId,
+        workerId: worker.id,
+        reason: "Retained worker still owns current or ramping routing",
+      });
+      continue;
+    }
     try {
       await prove(environment.pool, worker.id);
       return worker;
@@ -109,22 +183,31 @@ export async function retireDrainedWorkerHosts(): Promise<AutoRetirementResult> 
     connectTimeout: "10 seconds",
   });
   try {
+    const effects = retirementEffects(connection);
     const result = await connection.withDeadline(
       Date.now() + 90_000,
       async () =>
         await proposeDrainedRetirements(
           candidates,
           async (pool, workerId) =>
-            await proveWorkerRetirement(
-              pool,
-              workerId,
-              retirementEffects(connection),
-            ),
+            await proveWorkerRetirement(pool, workerId, effects),
           async (workerId, body) => {
             await deliveryRequest(
               `workers/${encodeURIComponent(workerId)}/auto-retire`,
               z.object({ id: z.string() }),
               body,
+            );
+          },
+          async (pool) => {
+            const routes = pool.versions[0]?.host.routes ?? [];
+            return await Promise.all(
+              routes.map(async (route) => {
+                const observed = await effects.routing(route);
+                return {
+                  currentBuildId: observed.currentBuildId,
+                  rampingBuildId: observed.rampingBuildId,
+                };
+              }),
             );
           },
         ),

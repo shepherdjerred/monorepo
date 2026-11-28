@@ -126,7 +126,15 @@
         ]
       },
       "resolvedDescription": "Tap: Warwick lunges forward and bites, dealing 120% AD (+100% AP) plus 6/7/8/9/10% max Health magic damage and healing for 25/37.5/50/62.5/75% of the damage dealt. Hold: Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": null,
+        "radius": 600,
+        "lineWidth": 55,
+        "missileSpeed": 1500,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Blood Hunt",
@@ -226,7 +234,15 @@
         ]
       },
       "resolvedDescription": "Passive: Warwick can sense champions below 50% Health, gaining 35/42.5/50/57.5/65% Move Speed towards them. Spells and attacks against enemies below 50% Health grant 70/80/90/100/110% Attack Speed. These effects are increased by 200% against enemies below 25% Health. Active: Warwick can briefly sense all enemies, and gains this Ability's passive effect against the closest champion for 8 seconds, regardless of Health. If no champions are found, this Ability's cooldown is reduced by 30%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.5,
+        "radius": 2200,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Primal Howl",
@@ -291,7 +307,15 @@
         ]
       },
       "resolvedDescription": "Warwick gains 35/40/45/50/55% damage reduction for 2.75 seconds. After it ends, Warwick howls, Fearing nearby enemies for 1 second. Warwick can Recast to end the Ability early.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": 90,
+        "missileSpeed": 1600,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Infinite Duress",
@@ -325,7 +349,15 @@
         ]
       },
       "resolvedDescription": "Warwick leaps a huge distance that scales with his Move Speed, Suppressing the first champion he collides with while he channels for 1.5 seconds. He attacks that champion 3 times over the duration, dealing 175/350/525 (+167% bonus AD) magic damage. Warwick heals for 100% of all damage dealt during the channel.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.1,
+        "radius": 675,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

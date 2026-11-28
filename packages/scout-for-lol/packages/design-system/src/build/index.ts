@@ -99,7 +99,79 @@ export function scoutAssetStreamFailureAction(
   return headersSent ? "destroy" : "not-found";
 }
 
-function configureAssetServer(middlewares: Connect.Server, base: string): void {
+export type ScoutAssetServerHooks = {
+  readonly statFile?: (
+    source: string,
+    defaultStat: typeof stat,
+  ) => Promise<unknown>;
+  readonly openReadStream?: (
+    source: string,
+    defaultOpenReadStream: typeof createReadStream,
+  ) => ReturnType<typeof createReadStream>;
+};
+
+function serveScoutAssetFile(
+  source: string,
+  response: Parameters<Connect.NextHandleFunction>[1],
+  hooks: ScoutAssetServerHooks,
+): void {
+  let closed = false;
+  response.once("close", () => {
+    closed = true;
+  });
+  const isResponseClosed = (): boolean =>
+    closed || response.destroyed || response.writableEnded;
+  const runStat = hooks.statFile
+    ? hooks.statFile(source, stat)
+    : stat(source);
+
+  void runStat
+    .then(() => {
+      if (isResponseClosed()) {
+        return;
+      }
+      response.setHeader("content-type", mimeType(source));
+      const stream = hooks.openReadStream
+        ? hooks.openReadStream(source, createReadStream)
+        : createReadStream(source);
+      const destroyStream = (): void => {
+        if (!stream.destroyed) {
+          stream.destroy();
+        }
+      };
+      stream.on("error", () => {
+        if (isResponseClosed()) {
+          destroyStream();
+          return;
+        }
+        if (scoutAssetStreamFailureAction(response.headersSent) === "destroy") {
+          response.destroy();
+          return;
+        }
+        response.statusCode = 404;
+        response.end("Not found");
+      });
+      response.once("close", destroyStream);
+      if (isResponseClosed()) {
+        destroyStream();
+        return;
+      }
+      stream.pipe(response);
+    })
+    .catch(() => {
+      if (isResponseClosed()) {
+        return;
+      }
+      response.statusCode = 404;
+      response.end("Not found");
+    });
+}
+
+function configureAssetServer(
+  middlewares: Connect.Server,
+  base: string,
+  hooks: ScoutAssetServerHooks = {},
+): void {
   const basePrefix = base === "/" ? "" : base.replace(/\/$/, "");
   middlewares.use((request, response, next) => {
     const requestPath = request.url?.split("?")[0];
@@ -127,33 +199,13 @@ function configureAssetServer(middlewares: Connect.Server, base: string): void {
       next();
       return;
     }
-    void stat(source)
-      .then(() => {
-        response.setHeader("content-type", mimeType(source));
-        const stream = createReadStream(source);
-        stream.on("error", () => {
-          if (
-            scoutAssetStreamFailureAction(response.headersSent) === "destroy"
-          ) {
-            response.destroy();
-            return;
-          }
-          response.statusCode = 404;
-          response.end("Not found");
-        });
-        response.on("close", () => {
-          stream.destroy();
-        });
-        stream.pipe(response);
-      })
-      .catch(() => {
-        response.statusCode = 404;
-        response.end("Not found");
-      });
+    serveScoutAssetFile(source, response, hooks);
   });
 }
 
-export function scoutAssetsPlugin(options: { emit?: boolean } = {}): Plugin {
+export function scoutAssetsPlugin(
+  options: { emit?: boolean; hooks?: ScoutAssetServerHooks } = {},
+): Plugin {
   let outputRoot = "";
   return {
     name: "scout-shared-assets",
@@ -161,10 +213,10 @@ export function scoutAssetsPlugin(options: { emit?: boolean } = {}): Plugin {
       outputRoot = resolve(config.root, config.build.outDir);
     },
     configureServer(server) {
-      configureAssetServer(server.middlewares, server.config.base);
+      configureAssetServer(server.middlewares, server.config.base, options.hooks);
     },
     configurePreviewServer(server) {
-      configureAssetServer(server.middlewares, server.config.base);
+      configureAssetServer(server.middlewares, server.config.base, options.hooks);
     },
     async closeBundle() {
       if (options.emit === true) {

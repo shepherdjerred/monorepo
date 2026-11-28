@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { domainRegistry } from "homelab/src/domain-registry.ts";
-import { synthesizedStack } from "#src/testing.ts";
+import { useSynthesizedApp } from "#src/testing.ts";
 
 const BASELINE = "module.domain_baseline";
 const STATICALLY_TYPED = "d4036b55fca60ca5f998866309e951d8";
@@ -14,7 +14,8 @@ const ConfigurationSchema = z.looseObject({
   removed: z.array(BlockSchema),
 });
 
-const cloudflare = () => synthesizedStack("cloudflare", ConfigurationSchema);
+const readStack = useSynthesizedApp();
+const cloudflare = () => readStack("cloudflare", ConfigurationSchema);
 
 const DOMAINS = Object.keys(domainRegistry.domains);
 const CACHED_ZONES = [
@@ -102,8 +103,8 @@ function declaredAddresses(
 }
 
 describe("cloudflare state migrations", () => {
-  test("every module address moves to a declared root address, and nothing is orphaned", async () => {
-    const { moved, resource } = await cloudflare();
+  test("every module address moves to a declared root address, and nothing is orphaned", () => {
+    const { moved, resource } = cloudflare();
     const byFrom = new Map(moved.map(({ from, to }) => [from, to]));
     expect(byFrom.size, "one move per source address").toBe(moved.length);
     expect(new Set(moved.map(({ to }) => to)).size).toBe(moved.length);
@@ -139,8 +140,8 @@ describe("cloudflare state migrations", () => {
       expect(declared, from).toContain(settle(from));
   });
 
-  test("a baseline resource keeps the identity it had before and inside the module", async () => {
-    const { moved } = await cloudflare();
+  test("a baseline resource keeps the identity it had before and inside the module", () => {
+    const { moved } = cloudflare();
     expect(moved).toHaveLength(139 + 293 + 1);
     const byFrom = new Map(moved.map(({ from, to }) => [from, to]));
     const chain = (address: string) => {
@@ -204,8 +205,8 @@ describe("cloudflare state migrations", () => {
     ]);
   });
 
-  test("adopts every object the stack imports, at its root address", async () => {
-    const { import: imports, resource } = await cloudflare();
+  test("adopts every object the stack imports, at its root address", () => {
+    const { import: imports, resource } = cloudflare();
     const declared = declaredAddresses(resource);
     for (const { to } of imports) expect(declared, to).toContain(to);
     const baseline = DOMAINS.flatMap((domain) => {
@@ -263,8 +264,8 @@ describe("cloudflare state migrations", () => {
     );
   });
 
-  test("forgets the retired buckets without destroying them", async () => {
-    const { removed } = await cloudflare();
+  test("forgets the retired buckets without destroying them", () => {
+    const { removed } = cloudflare();
     expect(removed).toEqual(
       [
         "cloudflare_r2_bucket.glitter_discord_corpus",

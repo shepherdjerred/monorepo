@@ -30,8 +30,11 @@ async function withClockHeld<Result>(
   page: Page,
   act: () => Promise<Result>,
 ): Promise<Result> {
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  const pauseTime = Date.now();
+  // The mocked clock advances between commands. Start more than a test
+  // timeout of simulated time before the intended pause.
+  await page.clock.install({ time: pauseTime - 60_000 });
+  await page.clock.pauseAt(pauseTime);
   try {
     return await act();
   } finally {

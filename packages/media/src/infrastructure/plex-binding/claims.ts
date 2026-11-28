@@ -104,8 +104,8 @@ export async function replacePlexClaims(
   )
     throw new PlexBindingProtection("ambiguous_item");
   // Conflict inspection never acquires a foreign canonical root or attempts adoption.
-  const conflicts = await Promise.all([
-    tx.plexItemClaim.count({
+  const conflicts = [
+    await tx.plexItemClaim.count({
       where: {
         serverMachineId: input.serverMachineId,
         groupId: { notIn: oldIds },
@@ -115,21 +115,21 @@ export async function replacePlexClaims(
         })),
       },
     }),
-    tx.plexPartClaim.count({
+    await tx.plexPartClaim.count({
       where: {
         serverMachineId: input.serverMachineId,
         groupId: { notIn: oldIds },
         partId: { in: [...parts.keys()] },
       },
     }),
-    tx.plexPathClaim.count({
+    await tx.plexPathClaim.count({
       where: {
         serverMachineId: input.serverMachineId,
         groupId: { notIn: oldIds },
         canonicalPathHash: { in: paths.map((row) => row.canonicalPathHash) },
       },
     }),
-  ]);
+  ];
   freshness.assertActive();
   if (conflicts.some((count) => count > 0))
     throw new PlexBindingProtection("ambiguous_item");

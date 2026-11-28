@@ -36,7 +36,44 @@
         ]
       },
       "resolvedDescription": "Udyr has four basic Abilities that swap between Stances and can Recast an Ability to renew it with Ultimate benefits. Additionally, after using an Ability, Udyr's next two Attacks gain Attack Speed.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "udyrqbouncemis",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "udyrqbouncemis2",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "Q": {
       "name": "Wilding Claw",
@@ -210,7 +247,44 @@
         "empoweredtotalas",
         "q2totalonhithpdamage",
         "empoweredlightningbonusmax"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "udyrqbouncemis",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "udyrqbouncemis2",
+            "width": null,
+            "movement": "FixedTimeSplineMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Iron Mantle",
@@ -323,7 +397,15 @@
         ]
       },
       "resolvedDescription": "Mantle Stance: Udyr gains 45/65/85/105/125/145 (+2/2.3/2.6/2.9/3.2/3.5% max Health) (+40% AP) (+50% bonus AD) Shield for 4 seconds. Additionally, Udyr's next two Attacks gain 15/16/17/18/19/20% Life Steal and restore 1.2% max Health (+8% AP) Health. Awaken: Gain 20-150 (based on level) (+45/65/85/105/125/145) (+65% AP) (+8% max Health) (+100% bonus AD) Shield, restore 10-75 (based on level) (+22.5/32.5/42.5/52.5/62.5/72.5) (+32.5% AP) (+4% max Health) (+50% bonus AD) Health over 4 seconds, and Udyr's next two Attacks instead have 30/32/34/36/38/40% Life Steal and restore 2.4% max Health (+16% AP) Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Blazing Stampede",
@@ -407,7 +489,15 @@
       "unresolved": [
         "movespeed",
         "movespeedbonus"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Wingborne Storm",
@@ -482,7 +572,15 @@
       "resolvedDescription": "Storm Stance: Udyr surrounds himself in a glacial storm for 4 seconds, dealing 20/36/52/68/84/100 (+35% AP) magic damage per second to nearby enemies and Slowing them by 15/18/21/24/27/30%. Additionally, Udyr's next two Attacks in this stance deal 10-40 (based on level) (+35% AP) magic damage to enemies in the storm. Awaken: Unleash the storm, causing it to follow Udyr's last Attacked enemy, deal an additional {{ percenthpblast }} max Health magic damage over the duration, and Slow by an additional 5%.",
       "unresolved": [
         "percenthpblast"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.1,
+        "radius": 370,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     }
   }
 }

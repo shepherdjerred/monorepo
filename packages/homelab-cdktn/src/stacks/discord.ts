@@ -11,7 +11,7 @@ import { ApplicationSettings } from "#generated/providers/discord/application-se
 import { DataDiscordCurrentApplication } from "#generated/providers/discord/data-discord-current-application/index.ts";
 import { DiscordProvider } from "#generated/providers/discord/provider/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { adopt } from "#src/state-migrations.ts";
 
 /**
@@ -48,7 +48,11 @@ export class DiscordStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "discord", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { discord: "0.1.3" },
+      providerConstraints: {
+        discord: pinnedProviderVersion(
+          "registry.terraform.io/alpaca744/discord",
+        ),
+      },
     });
 
     const bots = new TerraformVariable(this, "discord_bots", {

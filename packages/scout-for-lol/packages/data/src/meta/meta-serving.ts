@@ -22,7 +22,7 @@ import { z } from "zod";
  * states its patch, queue, bracket and sample size.
  *
  * Additive fields (game length, boots, keystones, single summoner spells,
- * items after the core, per-matchup spells) are optional in the schemas: a
+ * items after the core, per-matchup spells, lane rates) are optional in the schemas: a
  * `v1` file written before they existed still parses, and a reader that does
  * not know them ignores them. Entries below the sample floors are omitted.
  */
@@ -128,6 +128,21 @@ export const META_DURATION_BUCKETS = ["lt25", "25to35", "gt35"] as const;
 export const MetaDurationBucketSchema = z.enum(META_DURATION_BUCKETS);
 export type MetaDurationBucket = z.infer<typeof MetaDurationBucketSchema>;
 
+/**
+ * "Ahead at 15": the champion's gold at the 15:00 checkpoint was strictly
+ * greater than its same-role opponent's. Only games with a checkpoint count,
+ * so `games` is smaller than the slice's or matchup's own games (timelines
+ * are sampled and a game under 15 minutes has none), and it is the
+ * denominator of `aheadRate`. `share` is `games` over the games named by the
+ * denominator.
+ */
+const LaneFigureSchema = z.object({
+  games: z.number().int(),
+  ahead: z.number().int(),
+  aheadRate: RateSchema,
+  share: RateSchema,
+});
+
 const CoreItemSchema = CountedSchema.extend({
   itemId: z.number().int(),
   denominator: z.literal("slice_games"),
@@ -184,6 +199,10 @@ export const ChampionSliceSchema = z.object({
       denominator: z.literal("games_with_timeline"),
     }),
   ),
+  /** Gold lead at 15:00 against the same-role opponent, over games with a checkpoint. */
+  lane: LaneFigureSchema.extend({
+    denominator: z.literal("slice_games"),
+  }).optional(),
   /** Win rate by game length: under 25, 25 to 35 and over 35 minutes. */
   durations: z
     .array(
@@ -303,6 +322,10 @@ export const MatchupSliceSchema = z.object({
           }),
         )
         .optional(),
+      /** Gold lead at 15:00 in this matchup, over its games with a checkpoint. */
+      lane: LaneFigureSchema.extend({
+        denominator: z.literal("matchup_games"),
+      }).optional(),
     }),
   ),
 });
@@ -333,6 +356,20 @@ export const MetaManifestSchema = z.object({
     minEntryGames: z.number().int(),
     minMatchupGames: z.number().int(),
   }),
+  /**
+   * The ingest days that hold lane data: only days crawled since the crawl
+   * kept timeline checkpoints have any, and lane data cannot be backfilled,
+   * so this window is shorter than `source` until the retained window has
+   * rolled past it. Null when no retained day has lane data.
+   */
+  lane: z
+    .object({
+      firstDay: z.string(),
+      lastDay: z.string(),
+      days: z.number().int(),
+    })
+    .nullable()
+    .optional(),
   /** The slice the API serves without query parameters; null when nothing meets the sample floor. */
   defaults: MetaContextSchema.omit({ queue: true }).nullable(),
   patches: z.array(z.string()),
@@ -354,6 +391,7 @@ export const META_CAVEATS: readonly string[] = [
   "Counts come from the participant crawl: Summoner's Rift ranked solo, ranked flex and normal draft only. Arena, ARAM, Brawl, League Classic and any augment mode are excluded.",
   "The rank bracket is the rank of the player a match was found through, not of every participant.",
   "Build paths, starting items and skill orders come from the sampled subset of matches that have a timeline, so their sample is smaller than the slice's games.",
+  "Lane figures count the sampled matches with a 15:00 timeline checkpoint, from the days named by the manifest's lane window; a game under 15 minutes has none and is left out of them.",
 ];
 
 export function tierFilePath(context: MetaContext): string {

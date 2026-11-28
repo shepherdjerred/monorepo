@@ -39,7 +39,6 @@
     "astro-seo": "^1.1.0",
     "jsdom": "^31.0.1",
     "markdown-it": "^15.0.0",
-    "react": "19.3.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mermaid": "^3.0.0",
     "remark-toc": "^9.0.0",

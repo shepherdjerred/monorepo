@@ -30,11 +30,80 @@ const ACTIVE_PENDING_DESCRIPTIONS = [
   "Pipeline is pending",
   "Pipeline is running",
 ];
+const TERMINAL_WOODPECKER_STATES = [
+  "failure",
+  "error",
+  "killed",
+  "canceled",
+  "cancelled",
+  "skipped",
+  "declined",
+];
 const MISSING_POLL_MS = 3000;
 const MISSING_TIMEOUT_MS = 60_000;
 const PENDING_POLL_MS = 10_000;
 const PENDING_TIMEOUT_MS = 5_400_000;
 const pageCache = new Map();
+function parsePipelineRef(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    const match = /^\/repos\/(\d+)\/pipeline\/(\d+)\/?$/u.exec(parsed.pathname);
+    if (!match) return null;
+    return { origin: parsed.origin, repoId: match[1], pipelineNumber: match[2] };
+  } catch {
+    return null;
+  }
+}
+const pipelineRef = parsePipelineRef(pipeline);
+async function reconcileFromWoodpecker(incompleteContexts) {
+  if (!pipelineRef) return null;
+  try {
+    const url =
+      pipelineRef.origin +
+      "/api/repos/" +
+      pipelineRef.repoId +
+      "/pipelines/" +
+      pipelineRef.pipelineNumber;
+    const response = await fetch(url, { headers: { accept: "application/json" } });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (
+      !data ||
+      typeof data !== "object" ||
+      data.number !== Number(pipelineRef.pipelineNumber) ||
+      data.commit !== commit ||
+      !Array.isArray(data.workflows)
+    ) {
+      return null;
+    }
+    const byName = new Map();
+    for (const wf of data.workflows) {
+      if (!wf || typeof wf.name !== "string" || typeof wf.state !== "string") continue;
+      const states = byName.get(wf.name) ?? [];
+      states.push(wf.state);
+      byName.set(wf.name, states);
+    }
+    const failedContexts = [];
+    for (const context of expected) {
+      const wfName = context.split("/").slice(3).join("/");
+      const states = byName.get(wfName) ?? [];
+      if (states.some((state) => TERMINAL_WOODPECKER_STATES.includes(state))) {
+        failedContexts.push(context);
+      }
+    }
+    if (failedContexts.length > 0) {
+      return { failed: failedContexts, remaining: incompleteContexts };
+    }
+    const remaining = incompleteContexts.filter((context) => {
+      const wfName = context.split("/").slice(3).join("/");
+      const states = byName.get(wfName) ?? [];
+      return !(states.length > 0 && states.every((state) => state === "success"));
+    });
+    return { failed: [], remaining };
+  } catch {
+    return null;
+  }
+}
 // Combined /status stops at 100 contexts. The list endpoint is newest-first
 // and paginated; the first state we see for a context is the current one.
 async function statusesForPipeline() {
@@ -98,17 +167,49 @@ while (true) {
       ACTIVE_PENDING_DESCRIPTIONS.includes(entry.description)
     );
   });
+  const hasNonActivePending = incomplete.some((context) => {
+    const entry = current.get(context);
+    return (
+      entry !== undefined &&
+      entry.state === "pending" &&
+      !ACTIVE_PENDING_DESCRIPTIONS.includes(entry.description)
+    );
+  });
   if (allActivelyPending) {
     missingMs = 0;
     if (elapsedMs >= PENDING_TIMEOUT_MS) {
-      throw new Error("Required workflows have no completed status: " + incomplete.join(", "));
+      const reconciled = await reconcileFromWoodpecker(incomplete);
+      if (reconciled?.failed.length) {
+        throw new Error("Required workflows failed: " + reconciled.failed.join(", "));
+      }
+      if (reconciled && reconciled.remaining.length === 0) {
+        console.log("All " + expected.length + " required workflows passed in this pipeline");
+        process.exit(0);
+      }
+      throw new Error(
+        "Required workflows have no completed status: " +
+          (reconciled ? reconciled.remaining : incomplete).join(", "),
+      );
     }
     const delayMs = Math.min(PENDING_POLL_MS, PENDING_TIMEOUT_MS - elapsedMs);
     await Bun.sleep(delayMs);
     elapsedMs += delayMs;
   } else {
-    if (missingMs >= MISSING_TIMEOUT_MS || elapsedMs >= PENDING_TIMEOUT_MS) {
-      throw new Error("Required workflows have no completed status: " + incomplete.join(", "));
+    if (hasNonActivePending || missingMs >= MISSING_TIMEOUT_MS || elapsedMs >= PENDING_TIMEOUT_MS) {
+      const reconciled = await reconcileFromWoodpecker(incomplete);
+      if (reconciled?.failed.length) {
+        throw new Error("Required workflows failed: " + reconciled.failed.join(", "));
+      }
+      if (reconciled && reconciled.remaining.length === 0) {
+        console.log("All " + expected.length + " required workflows passed in this pipeline");
+        process.exit(0);
+      }
+      if (missingMs >= MISSING_TIMEOUT_MS || elapsedMs >= PENDING_TIMEOUT_MS) {
+        throw new Error(
+          "Required workflows have no completed status: " +
+            (reconciled ? reconciled.remaining : incomplete).join(", "),
+        );
+      }
     }
     const delayMs = Math.min(
       MISSING_POLL_MS,

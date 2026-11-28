@@ -186,6 +186,19 @@ export type ScoutPrematchArchiveResult = z.infer<
 >;
 
 /**
+ * What the live roster's recent-form pass did for one game. Counts only: the
+ * summaries themselves are written to the roster row, never returned.
+ */
+export const ScoutLiveRosterFormResultSchema = z.strictObject({
+  status: z.enum(["completed", "no-roster", "game-ended", "already-complete"]),
+  fetched: z.number().int().nonnegative(),
+  unavailable: z.number().int().nonnegative(),
+});
+export type ScoutLiveRosterFormResult = z.infer<
+  typeof ScoutLiveRosterFormResultSchema
+>;
+
+/**
  * The observation commit's input: the match, plus the discovering account and
  * the delivery mode when the run has them. See
  * `ScoutMatchProcessingInputSchema` for why both are optional and what their

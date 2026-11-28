@@ -4,6 +4,7 @@ import type {
   ReviewSchema,
   GitHubCheckSchema,
 } from "./schemas.ts";
+import type { StaleBaseReport } from "#lib/ci/stale-base/evaluate.ts";
 
 export type PullRequest = z.infer<typeof PullRequestSchema>;
 export type Review = z.infer<typeof ReviewSchema>;
@@ -24,4 +25,5 @@ export type HealthReport = {
   overallStatus: HealthStatus;
   checks: HealthCheck[];
   nextSteps: string[];
+  staleBase?: StaleBaseReport | undefined;
 };

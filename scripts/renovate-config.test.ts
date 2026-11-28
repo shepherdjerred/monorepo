@@ -994,14 +994,25 @@ test("names the companion a reviewer must refresh on a half upgrade", async () =
   expect(
     notes("ryanoasis/nerd-fonts", "packages/fonts/patch-berkeley-mono.py"),
   ).toContain("FONT_PATCHER_SHA256");
+  expect(
+    notes("argo-cd", "packages/version-catalog/src/catalog.json"),
+  ).toContain("ARGOCD_CLI_VERSION");
+  expect(
+    notes("argo-cd", "packages/version-catalog/src/catalog.json"),
+  ).toContain(".mise.toml");
 
   // Each named companion must exist where the note says it does.
   const windowsSource = await Bun.file(`${root}/${windows}`).text();
   expect(windowsSource).toContain("ARG DOTNET_SDK_SHA512_AMD64=");
   expect(windowsSource).toContain("ARG WINE_SOURCE_SHA256=");
-  expect(
-    await Bun.file(`${root}/packages/temporal/Dockerfile`).text(),
-  ).toContain("ARG DOTNET_SDK_SHA512_ARM64=");
+  const temporalDockerfile = await Bun.file(
+    `${root}/packages/temporal/Dockerfile`,
+  ).text();
+  expect(temporalDockerfile).toContain("ARG DOTNET_SDK_SHA512_ARM64=");
+  expect(temporalDockerfile).toContain("ARG ARGOCD_CLI_VERSION=");
+  expect(await Bun.file(`${root}/.mise.toml`).text()).toMatch(
+    /^argocd = "\d+\.\d+\.\d+"$/m,
+  );
   expect(await Bun.file(`${root}/ci/scripts/toolchain.sh`).text()).toContain(
     "MISE_BOOTSTRAP_SHA256=",
   );
@@ -1010,7 +1021,7 @@ test("names the companion a reviewer must refresh on a half upgrade", async () =
   ).toContain("FONT_PATCHER_SHA256");
 });
 
-test("releases timestamp-less datasources from the release-age gate", async () => {
+test("releases timestamp-less datasources and Docker digest refreshes from the release-age gate", async () => {
   const config = await loadRenovateConfig();
   const rule = config.packageRules.find(
     (candidate) =>
@@ -1021,6 +1032,19 @@ test("releases timestamp-less datasources from the release-age gate", async () =
   expect(rule?.matchDatasources).toEqual(["deb", "git-refs"]);
   expect(rule?.minimumReleaseAge).toBe("0 days");
   expect(rule?.matchPackageNames).toBeUndefined();
+
+  const dockerDigestRule = config.packageRules.find(
+    (candidate) =>
+      candidate.matchDatasources?.includes("docker") === true &&
+      candidate.matchUpdateTypes?.includes("digest") === true,
+  );
+  expect(dockerDigestRule).toEqual({
+    description:
+      "Docker digest-only updates refresh the digest of an already-pinned tag and often carry no registry release timestamp. Under the strict 30-day release-age gate they stay pending forever, so digest updates skip the gate while tag bumps still wait.",
+    matchDatasources: ["docker"],
+    matchUpdateTypes: ["digest"],
+    minimumReleaseAge: "0 days",
+  });
 });
 
 test("does not look up Storm artifacts that Maven Central cannot resolve", async () => {

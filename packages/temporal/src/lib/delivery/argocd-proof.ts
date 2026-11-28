@@ -5,6 +5,22 @@ import {
   deliveryArgoParameters,
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
+import { comparisonFindings } from "homelab/scripts/argocd/argocd-comparison.ts";
+
+/**
+ * Refuses before any pre-sync prune guard runs when Argo could not compare the
+ * Application. Each guard derives its obsolete resources from
+ * `managed-resources`, which a failed comparison leaves describing no
+ * revision, so a guard reading it could find nothing to refuse and let the
+ * sync through.
+ */
+export function assertComparedApplication(name: string, raw: unknown): void {
+  const findings = comparisonFindings(name, raw);
+  if (findings.length > 0)
+    throw new Error(
+      `Sync guards refuse ${name} until Argo completes its comparison: ${findings.join("; ")}`,
+    );
+}
 
 /** Identity metadata shared by native owned-resource proofs. */
 export const ArgoResourceSchema = z.object({

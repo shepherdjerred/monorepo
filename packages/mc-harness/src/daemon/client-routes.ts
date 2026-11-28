@@ -2,6 +2,7 @@ import {
   CLIENT_ACTION_REQUEST_SCHEMAS,
   type ClientAction,
   type ClientStartRequest,
+  type ClientState,
   type ClientSummary,
   ClientActionResponseSchema,
   ClientActionSchema,
@@ -47,6 +48,32 @@ function isRestrictedPrism(client: ClientSummary): boolean {
   );
 }
 
+async function verifyLiveSessionIdentity(
+  ctx: ClientRouteContext,
+  target: Target,
+  expectedName: string,
+  state: ClientState,
+): Promise<void> {
+  const { players } = await target.bridge.players();
+  const matched =
+    state.connected &&
+    state["name"] === expectedName &&
+    typeof state["uuid"] === "string" &&
+    players.some(
+      (player) => player.name === expectedName && player.uuid === state["uuid"],
+    );
+  if (!matched) {
+    await ctx.clients.stop(
+      expectedName,
+      "refused mismatched live player identity",
+    );
+    throw new DaemonError(
+      "Live player identity differs from the controlled client",
+      409,
+    );
+  }
+}
+
 async function startClient(
   ctx: ClientRouteContext,
   request: Request,
@@ -58,15 +85,22 @@ async function startClient(
   ) {
     if (ctx.live === undefined)
       throw new DaemonError("Live service unavailable", 503);
-    const summary = await ctx.live.write(
+    const status = await ctx.live.write(
       { kind: "client-action", name: start.name, action: "start" },
       readLiveWriteFlags(request.headers),
-      () => ctx.clients.startLive(start.name),
+      async (target) => {
+        const summary = await ctx.clients.startLive(start.name);
+        const current = await ctx.clients.status(summary.name);
+        await verifyLiveSessionIdentity(
+          ctx,
+          target,
+          summary.name,
+          current.state,
+        );
+        return current;
+      },
     );
-    return reply(
-      ClientStatusResponseSchema,
-      await ctx.clients.status(summary.name),
-    );
+    return reply(ClientStatusResponseSchema, status);
   }
   return start.target === "live"
     ? startLiveClient(ctx, request, start)
@@ -207,21 +241,22 @@ async function startLiveClient(
       "XiguaJerred is already connected; refusing to replace that session",
       409,
     );
-  const summary = await guarded(
+  const status = await guarded(
     { target, request, ctx: { live: ctx.live, clients: ctx.clients } },
     () =>
       Promise.resolve({ kind: "command", command: "capture-session-start" }),
-    () =>
-      ctx.clients.start({
+    async () => {
+      const summary = await ctx.clients.start({
         name: start.name,
         target: "live",
         game: { host: "mc.ts-mc.net", port: 30_000 },
-      }),
+      });
+      const current = await ctx.clients.status(summary.name);
+      await verifyLiveSessionIdentity(ctx, target, summary.name, current.state);
+      return current;
+    },
   );
-  return reply(
-    ClientStatusResponseSchema,
-    await ctx.clients.status(summary.name),
-  );
+  return reply(ClientStatusResponseSchema, status);
 }
 
 async function startSandboxClient(

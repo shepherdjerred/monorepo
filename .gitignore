@@ -69,6 +69,8 @@ logs/
 # Test coverage output
 coverage/
 /.ci-reports/
+# Written by ci/scripts/selection/run-playwright.ts (CI and `bun run e2e:affected`)
+/playwright-selection-report.json
 /.delivery-artifacts/
 /.delivery-tofu-artifacts/
 # Written by `release-root`, including its dry run; a receipt for one

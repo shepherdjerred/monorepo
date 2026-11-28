@@ -70,6 +70,7 @@ export type ParsedFeedEntry = {
   readonly contentHtml: string;
   readonly publishedAt: number;
   readonly enclosures: readonly Enclosure[];
+  readonly categories?: readonly string[] | undefined;
 };
 
 export type ParsedFeedDocument = {

@@ -148,7 +148,15 @@
       "unresolved": [
         "calc_damage_1_percent_max",
         "calc_damage_2_percent_max"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 15,
+        "missileSpeed": 8700,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Repudiation",
@@ -220,7 +228,15 @@
         ]
       },
       "resolvedDescription": "Ambessa gains 50-320 (based on level) (+150% bonus AD) Shield for 1.5 seconds and braces herself for 0.5 seconds. She then slams the ground, dealing 50/75/100/125/150 (+50% bonus AD) physical damage to nearby enemies, which increases to 75/112.5/150/187.5/225 (+75% bonus AD) physical damage if she braced herself from damage from an enemy champion, large monster, or structure.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 15,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Lacerate",
@@ -278,7 +294,15 @@
         ]
       },
       "resolvedDescription": "Ambessa whips her chains around, dealing 40/60/80/100/120 (+50% bonus AD) physical damage and Slowing enemies by 99%, which decays over 1 second. Initiating Drakehound's Step from this Ability will trigger an additional strike.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": 15,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Public Execution",
@@ -349,7 +373,15 @@
       "resolvedDescription": "Passive: Ambessa gains 10/20/30% Armor Penetration and her Abilities heal her for {{ calc_omnivamp }} of the damage she dealt. Active: Ambessa becomes Unstoppable and blinks to the farthest enemy champion in a line, Suppressing the target for 0.75 seconds and then slamming them into the ground, dealing 150/250/350 (+80% bonus AD) physical damage and Stunning them for 0.4 seconds.",
       "unresolved": [
         "calc_omnivamp"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.7,
+        "radius": 100,
+        "lineWidth": 15,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

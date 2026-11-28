@@ -28,15 +28,18 @@ const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
  * Catalog values already carry their tag and digest, so the reference is the
  * repository name joined to the value with a colon.
  */
-export type CatalogImageName =
-  | "aquasec/trivy"
-  | "semgrep/semgrep"
-  | "texlive/texlive"
-  | "trmnl/trmnlp"
-  | "grafana/tempo"
-  | "mikefarah/yq"
-  | "pgsty/silo"
-  | "plexinc/pms-docker";
+export const CATALOG_IMAGE_NAMES = [
+  "aquasec/trivy",
+  "semgrep/semgrep",
+  "texlive/texlive",
+  "trmnl/trmnlp",
+  "grafana/tempo",
+  "mikefarah/yq",
+  "pgsty/silo",
+  "plexinc/pms-docker",
+] as const;
+
+export type CatalogImageName = (typeof CATALOG_IMAGE_NAMES)[number];
 
 const DIGEST_PATHS = {
   base: "ci/ci-image/DIGEST",

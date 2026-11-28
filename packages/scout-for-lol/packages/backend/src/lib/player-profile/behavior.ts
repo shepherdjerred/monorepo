@@ -3,8 +3,9 @@ import {
   getCurrentSeason,
   type QueueType,
 } from "@scout-for-lol/data";
+import type { LakePage } from "#src/reports/duckdb/consumer/pages/lake-page.ts";
 import {
-  fetchPlayerMatchHistory,
+  readPlayerMatchHistory,
   type LakePlayerMatchHistoryRow,
 } from "#src/reports/duckdb/lake-reads.ts";
 
@@ -26,7 +27,19 @@ function formMetrics(rows: LakePlayerMatchHistoryRow[]) {
   };
 }
 
-function recordedStreak(rows: LakePlayerMatchHistoryRow[]) {
+/**
+ * The run of identical results ending at the newest game. `atLeast` is set
+ * when the read hit its 1000-game ceiling inside the run.
+ */
+export type PlayerStreak = {
+  result: "win" | "loss";
+  games: number;
+  atLeast: boolean;
+};
+
+function recordedStreak(
+  rows: LakePlayerMatchHistoryRow[],
+): PlayerStreak | null {
   const first = rows[0];
   if (first === undefined) return null;
   const games = rows.findIndex((row) => row.win !== first.win);
@@ -37,28 +50,34 @@ function recordedStreak(rows: LakePlayerMatchHistoryRow[]) {
   };
 }
 
-export async function buildPlayerBehavior(options: {
-  puuids: string[];
-  recentRows: LakePlayerMatchHistoryRow[];
-  roleShare: { position: string; games: number; percentage: number }[];
-  queue?: QueueType;
-  queues?: QueueType[];
-}) {
+/** Runs on the caller's lake page: the profile reads share one slot. */
+export async function buildPlayerBehavior(
+  page: LakePage,
+  options: {
+    puuids: string[];
+    recentRows: LakePlayerMatchHistoryRow[];
+    roleShare: { position: string; games: number; percentage: number }[];
+    queue?: QueueType;
+    queues?: QueueType[];
+  },
+) {
   const act = getCurrentSeason();
   const filters = {
     puuids: options.puuids,
     ...(options.queue === undefined ? {} : { queue: options.queue }),
     ...(options.queues === undefined ? {} : { queues: options.queues }),
   };
-  const [actRows, streakRows] = await Promise.all([
+  const actRows =
     act === undefined
-      ? Promise.resolve(null)
-      : fetchPlayerMatchHistory({
+      ? null
+      : await readPlayerMatchHistory(page, {
           ...filters,
           afterMs: act.startDate.getTime(),
-        }),
-    fetchPlayerMatchHistory({ ...filters, limit: 1000 }),
-  ]);
+        });
+  const streakRows = await readPlayerMatchHistory(page, {
+    ...filters,
+    limit: 1000,
+  });
   return {
     roleShare: options.roleShare,
     activityTimes: options.recentRows.map((row) => row.game_creation_ms),

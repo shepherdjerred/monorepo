@@ -134,7 +134,39 @@ export type TaskGraph = {
   readonly transit: ReadonlySet<string>;
   /** Files every task hash includes. */
   readonly globalFiles: readonly string[];
+  /** The lockfile, which Turbo hashes per package rather than globally. */
+  readonly lockfile: string;
+  /**
+   * Tasks by their `hashOfExternalDependencies`: one group per package whose
+   * lockfile closure is its own. An edit to the lockfile changes some groups.
+   */
+  readonly externalDependencyGroups: ReadonlyMap<string, readonly string[]>;
 };
+
+/** Commits per file, and how many root package.json commits changed dependencies. */
+export type Churn = {
+  readonly commits: ReadonlyMap<string, number>;
+  /** Null when unknown: every root package.json commit then counts as global. */
+  readonly rootDependencyEdits: number | null;
+};
+
+const ROOT_MANIFEST = "package.json";
+
+type Reach = { readonly tasks: number; readonly seconds: number };
+
+/** The average reach of a root package.json commit: dependency edits reach all. */
+function rootManifestReach(
+  local: Reach,
+  global: Reach,
+  dependencyEdits: number,
+  edits: number,
+): Reach {
+  const share = dependencyEdits / edits;
+  return {
+    tasks: Math.round(share * global.tasks + (1 - share) * local.tasks),
+    seconds: share * global.seconds + (1 - share) * local.seconds,
+  };
+}
 
 export type HotFile = {
   readonly file: string;
@@ -163,11 +195,17 @@ function reachableTasks(
 
 /**
  * Files ranked by the executed work their edits cause: commits in the window
- * times the median miss cost of every task hash they reach.
+ * times the median miss cost of every task hash they reach. Turbo scopes the
+ * lockfile per package, so one edit reaches the average external-dependency
+ * group, not every task. A root package.json commit that changes its
+ * dependency fields changes the global external-dependency hash, so it reaches
+ * every task; any other commit reaches only the root `//#` tasks that list it.
+ * When the churn cannot tell the two apart, every such commit counts as
+ * global, an upper bound.
  */
 export function hotFiles(
   graph: TaskGraph,
-  commits: ReadonlyMap<string, number>,
+  churn: Churn,
   costs: ReadonlyMap<string, number>,
   windowDays: number,
 ): HotFile[] {
@@ -182,11 +220,8 @@ export function hotFiles(
     }
   }
   // Most files share their direct task set with the rest of their package.
-  const reachedBySet = new Map<string, { tasks: number; seconds: number }>();
-  const ranked: HotFile[] = [];
-  for (const [file, editCount] of commits) {
-    const roots = direct.get(file);
-    if (roots === undefined || editCount === 0) continue;
+  const reachedBySet = new Map<string, Reach>();
+  const reach = (roots: Iterable<string>) => {
     const key = [...roots].toSorted().join("\n");
     let reached = reachedBySet.get(key);
     if (reached === undefined) {
@@ -201,6 +236,40 @@ export function hotFiles(
       };
       reachedBySet.set(key, reached);
     }
+    return reached;
+  };
+  // One lockfile edit changes some packages' closures, not all: average the
+  // reach of each external-dependency group.
+  const groups = [...graph.externalDependencyGroups.values()].map((tasks) =>
+    reach(tasks),
+  );
+  const lockfileReach = {
+    tasks: Math.round(
+      groups.reduce((sum, group) => sum + group.tasks, 0) / groups.length,
+    ),
+    seconds:
+      groups.reduce((sum, group) => sum + group.seconds, 0) / groups.length,
+  };
+  const allReach = reach(allTasks);
+  const reachOf = (file: string, editCount: number): Reach | undefined => {
+    const roots = direct.get(file);
+    if (file === graph.lockfile && groups.length > 0) return lockfileReach;
+    if (file === ROOT_MANIFEST && roots !== undefined)
+      return rootManifestReach(
+        reach(roots),
+        allReach,
+        churn.rootDependencyEdits === null
+          ? editCount
+          : Math.min(churn.rootDependencyEdits, editCount),
+        editCount,
+      );
+    return roots === undefined ? undefined : reach(roots);
+  };
+  const ranked: HotFile[] = [];
+  for (const [file, editCount] of churn.commits) {
+    if (editCount === 0) continue;
+    const reached = reachOf(file, editCount);
+    if (reached === undefined) continue;
     ranked.push({
       file,
       commits: editCount,
@@ -211,5 +280,96 @@ export function hotFiles(
   }
   return ranked.toSorted(
     (left, right) => right.weeklySeconds - left.weeklySeconds,
+  );
+}
+
+export const MISS_CAUSES = [
+  "own-inputs-changed",
+  "upstream-changed",
+  "no-own-or-upstream-change",
+  "identical-hash-rerun",
+  "unknown-first-seen-in-window",
+] as const;
+export type MissCause = (typeof MISS_CAUSES)[number];
+
+export type MissCauseRow = {
+  readonly cause: MissCause;
+  readonly misses: number;
+  readonly hours: number;
+  /** Share of all executed (MISS) task seconds in the window. */
+  readonly share: number;
+};
+
+type RunTask = VerifyRun["tasks"][number];
+
+/**
+ * Why a task executed, against the tasks with the same id that started before
+ * it (start order, so concurrent pipelines count):
+ *
+ * - identical-hash-rerun: any earlier task already had this exact hash, so the
+ *   work was cacheable; cache isolation (PR versus main), a lost artifact or a
+ *   concurrent duplicate. Checked first so an intervening different hash
+ *   cannot hide it.
+ * - unknown-first-seen-in-window: no earlier task with this id in the window,
+ *   so the window edge, not a change, is why it has no predecessor.
+ * - own-inputs-changed: earlier tasks exist, none with these own inputs.
+ * - upstream-changed: the latest earlier task with the same own inputs had
+ *   different dependency hashes.
+ * - no-own-or-upstream-change: same own inputs and dependency hashes, yet a
+ *   different hash, so the global hash, environment or task config moved.
+ */
+function classifyMiss(task: RunTask, earlier: readonly RunTask[]): MissCause {
+  if (earlier.some((candidate) => candidate.hash === task.hash))
+    return "identical-hash-rerun";
+  if (earlier.length === 0) return "unknown-first-seen-in-window";
+  const previous = latestStarted(
+    earlier.filter((candidate) => candidate.ownInputs === task.ownInputs),
+  );
+  if (previous === undefined) return "own-inputs-changed";
+  return previous.upstream === task.upstream
+    ? "no-own-or-upstream-change"
+    : "upstream-changed";
+}
+
+/** Why executed tasks ran, with hours and share of executed time per cause. */
+export function missCauses(runs: readonly VerifyRun[]): MissCauseRow[] {
+  const byId = new Map<string, RunTask[]>();
+  for (const task of runs.flatMap((run) => run.tasks))
+    byId.set(task.id, [...(byId.get(task.id) ?? []), task]);
+  const totals = new Map<MissCause, { count: number; seconds: number }>(
+    MISS_CAUSES.map((cause) => [cause, { count: 0, seconds: 0 }]),
+  );
+  for (const task of runs.flatMap((run) => run.tasks)) {
+    if (task.status !== "MISS") continue;
+    const earlier = (byId.get(task.id) ?? []).filter(
+      (candidate) => candidate !== task && candidate.start < task.start,
+    );
+    const total = totals.get(classifyMiss(task, earlier));
+    if (total === undefined) throw new Error("Unknown miss cause");
+    total.count += 1;
+    total.seconds += task.seconds;
+  }
+  const allSeconds = [...totals.values()].reduce(
+    (sum, total) => sum + total.seconds,
+    0,
+  );
+  return MISS_CAUSES.map((cause) => {
+    const total = totals.get(cause) ?? { count: 0, seconds: 0 };
+    return {
+      cause,
+      misses: total.count,
+      hours: total.seconds / 3600,
+      share: allSeconds === 0 ? 0 : total.seconds / allSeconds,
+    };
+  });
+}
+
+function latestStarted(candidates: readonly RunTask[]): RunTask | undefined {
+  return candidates.reduce<RunTask | undefined>(
+    (latest, candidate) =>
+      latest === undefined || candidate.start > latest.start
+        ? candidate
+        : latest,
+    undefined,
   );
 }

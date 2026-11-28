@@ -130,6 +130,8 @@ export const DELETED_SCHEDULE_IDS = [
   "golink-sync",
   // Replaced by `feeds-refresh` and `@shepherdjerred/feeds` startup catalog reconciliation.
   "freshrss-sync-hourly",
+  // Replaced by inline per-project event retention in `@shepherdjerred/errors`.
+  "bugsink-housekeeping",
 ] as const;
 
 /**

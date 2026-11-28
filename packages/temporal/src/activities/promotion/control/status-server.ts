@@ -61,6 +61,7 @@ export function startPromotionStatusServer(token: string) {
   return Bun.serve({
     hostname: "0.0.0.0",
     port: 7343,
+    idleTimeout: 30,
     fetch: promotionStatusFetch(token, read, async (runId, offset) =>
       readRedditSweepPostPage(store, runId, offset),
     ),

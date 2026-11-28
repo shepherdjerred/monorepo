@@ -104,7 +104,44 @@
         ]
       },
       "resolvedDescription": "Evelynn strikes with her Lasher, dealing 25/30/35/40/45 (+25% AP) magic damage to the first enemy hit and causing Evelynn's next 3 Attacks or Abilities on that unit to deal an additional 15/25/35/45/55 (+25% AP) magic damage. Evelynn can Recast this Ability up to 3 times. Recast: Evelynn fires spikes through the nearest enemy, dealing 25/30/35/40/45 (+25% AP) magic damage to all enemies hit.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": 60,
+        "missileSpeed": 2400,
+        "missiles": [
+          {
+            "name": "evelynnqdebuffcirclemissile",
+            "width": null,
+            "movement": "CircleMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "evelynnqlinemissile",
+            "width": 90,
+            "movement": "AcceleratingMovement",
+            "speed": 3000,
+            "minSpeed": 800,
+            "maxSpeed": 3000,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Allure",
@@ -218,7 +255,30 @@
         ]
       },
       "resolvedDescription": "Evelynn marks a champion or monster for 5 seconds. If Evelynn hits the target with an Attack or Ability, she will expunge the mark, refund its cost, and Slow the target by 45% for 0.75 seconds. If the mark lasts at least 2.5 seconds, expunging it has extra effects:Against champions: Charms them for 1.25/1.5/1.75/2/2.25 second(s) and removes 35/37.5/40/42.5/45% Magic Resist for 4 seconds.Against monsters: Charms them for 3/3.25/3.5/3.75/4 seconds and deals 250/300/350/400/450 (+60% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.15,
+        "radius": null,
+        "lineWidth": 100,
+        "missileSpeed": 2400,
+        "missiles": [
+          {
+            "name": "evelynnwmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 5000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Whiplash",
@@ -321,7 +381,15 @@
       "unresolved": [
         "percenthealthbasetooltip",
         "percenthealthempoweredtooltip"
-      ]
+      ],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.25,
+        "radius": null,
+        "lineWidth": 200,
+        "missileSpeed": 902,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Last Caress",
@@ -370,7 +438,30 @@
         ]
       },
       "resolvedDescription": "Evelynn unleashes her demonic energy, dealing heavy damage, becoming Untargetable and teleporting backwards. She deals 125/250/375 (+75% AP) magic damage, increased to 300/600/900 (+180% AP) against enemies below 30% Health. Upon cast, set Demon Shade to a 1.25 second cooldown.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.35,
+        "radius": 350,
+        "lineWidth": 80,
+        "missileSpeed": 1300,
+        "missiles": [
+          {
+            "name": "evelynnrtrail",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

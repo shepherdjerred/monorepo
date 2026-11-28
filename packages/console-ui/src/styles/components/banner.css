@@ -1,0 +1,31 @@
+/*
+ * Banner: a quiet full-bleed row under the header bar or a section head:
+ * glyph, severity word, text and optional actions. No tint, no thick bar;
+ * a hairline below separates it from what follows.
+ */
+@layer ui.components {
+  .ui-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px var(--ui-space-3);
+    min-height: 40px;
+    padding: var(--ui-space-2) var(--ui-gutter);
+    border-bottom: 1px solid var(--ui-line);
+    color: var(--ui-ink);
+  }
+  .ui-banner > .ui-glyph {
+    color: var(--ui-sev-ink);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-banner-text {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+  .ui-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2);
+  }
+}

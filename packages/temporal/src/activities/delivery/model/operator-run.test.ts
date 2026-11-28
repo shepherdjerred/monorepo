@@ -11,15 +11,25 @@ import { awaitAttestations } from "./operator-run.ts";
 const recorded: {
   key: string;
   status: string;
+  message?: string | undefined;
   evidence: EvidenceInput[];
 }[] = [];
 async function record(
   _current: unknown,
   key: string,
   status: "running" | "succeeded" | "failed",
-  receipt: { operationId: string; evidence?: EvidenceInput[] },
+  receipt: {
+    operationId: string;
+    message?: string;
+    evidence?: EvidenceInput[];
+  },
 ) {
-  recorded.push({ key, status, evidence: receipt.evidence ?? [] });
+  recorded.push({
+    key,
+    status,
+    message: receipt.message,
+    evidence: receipt.evidence ?? [],
+  });
   await Promise.resolve();
 }
 
@@ -44,36 +54,84 @@ const operatorRun = {
   stages: ["bootstrap", "verify"],
 };
 
-function attested(stages: { key: string; status: "running" | "succeeded" }[]) {
+function attested(
+  stages: {
+    key: string;
+    status: "running" | "succeeded";
+    message?: string;
+  }[],
+) {
   const current = detail(operatorRun, chart, stages);
+  for (const [index, stage] of stages.entries()) {
+    const entry = current.stages[index];
+    if (entry !== undefined && stage.message !== undefined) {
+      entry.message = stage.message;
+    }
+  }
   const value = requireModelRecipe(current);
   if (value.kind !== "operator-run") throw new Error("Expected operator-run");
   return { current, value };
 }
 
 describe("operator-run step", () => {
-  it("records intent once, then waits until every declared stage is attested", async () => {
-    const first = attested([{ key: "attest/bootstrap", status: "succeeded" }]);
+  it("records remaining stage keys and updates the message only when missing stages change", async () => {
+    const initial = attested([]);
     expect(
       await awaitAttestations(
-        first.current,
-        first.value,
+        initial.current,
+        initial.value,
         "step-attestation",
         record,
       ),
     ).toEqual({ waiting: true });
     expect(recorded).toEqual([
-      { key: "step-attestation", status: "running", evidence: [] },
+      {
+        key: "step-attestation",
+        status: "running",
+        message: "Awaiting operator attestation (--stage): bootstrap, verify",
+        evidence: [],
+      },
     ]);
     recorded.splice(0);
-    const again = attested([
-      { key: "step-attestation", status: "running" },
+
+    const progressed = attested([
+      {
+        key: "step-attestation",
+        status: "running",
+        message: "Awaiting operator attestation (--stage): bootstrap, verify",
+      },
       { key: "attest/bootstrap", status: "succeeded" },
     ]);
     expect(
       await awaitAttestations(
-        again.current,
-        again.value,
+        progressed.current,
+        progressed.value,
+        "step-attestation",
+        record,
+      ),
+    ).toEqual({ waiting: true });
+    expect(recorded).toEqual([
+      {
+        key: "step-attestation",
+        status: "running",
+        message: "Awaiting operator attestation (--stage): verify",
+        evidence: [],
+      },
+    ]);
+    recorded.splice(0);
+
+    const unchanged = attested([
+      {
+        key: "step-attestation",
+        status: "running",
+        message: "Awaiting operator attestation (--stage): verify",
+      },
+      { key: "attest/bootstrap", status: "succeeded" },
+    ]);
+    expect(
+      await awaitAttestations(
+        unchanged.current,
+        unchanged.value,
         "step-attestation",
         record,
       ),

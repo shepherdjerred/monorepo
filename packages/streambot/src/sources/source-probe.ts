@@ -8,6 +8,31 @@ import {
 import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 const log = logger.child("resolve");
+
+/**
+ * A split source plays its audio from the companion input (`-map 1:a:N`), so every audio fact —
+ * the legacy selection, its layout, and the ranked choice — has to come from that probe. The
+ * primary input's own audio streams, if any, are never mapped.
+ */
+function withCompanionAudio(primary: MediaInfo, audio: MediaInfo): MediaInfo {
+  const video = withoutPrimaryAudio(primary);
+  return {
+    ...video,
+    audioCodec: audio.audioCodec,
+    audioChannels: audio.audioChannels,
+    audioStreamIndex: audio.audioStreamIndex ?? 0,
+    ...(audio.audio === undefined ? {} : { audio: audio.audio }),
+    ranked: {
+      ...video.ranked,
+      ...(audio.ranked.audioStreamIndex === undefined
+        ? {}
+        : { audioStreamIndex: audio.ranked.audioStreamIndex }),
+      ...(audio.ranked.audio === undefined
+        ? {}
+        : { audio: audio.ranked.audio }),
+    },
+  };
+}
 export async function probeAndRecordSourceMetadata(
   config: Config,
   target: {
@@ -37,14 +62,7 @@ export async function probeAndRecordSourceMetadata(
     return null;
   }
   const info =
-    audio === undefined
-      ? primary
-      : {
-          ...primary,
-          audioCodec: audio.audioCodec,
-          audioChannels: audio.audioChannels,
-          audioStreamIndex: audio.audioStreamIndex ?? 0,
-        };
+    audio === undefined ? primary : withCompanionAudio(primary, audio);
   const resolution = resolutionBucket(info.height);
   log.info("source probed", {
     title: target.title,
@@ -73,7 +91,8 @@ export async function probePlaybackSource(
   signal: AbortSignal,
   sportsSource: boolean,
 ): Promise<MediaInfo | null> {
-  return await probeAndRecordSourceMetadata(
+  const unprobedCompanion = !sportsSource && resolved.audioInput !== undefined;
+  const info = await probeAndRecordSourceMetadata(
     config,
     {
       input: resolved.ffmpegInput,
@@ -86,4 +105,23 @@ export async function probePlaybackSource(
     },
     signal,
   );
+  return info === null || !unprobedCompanion ? info : withoutPrimaryAudio(info);
+}
+
+/**
+ * A yt-dlp `+` merge plays audio from its companion input, which this path does not probe. The
+ * primary input's audio streams (normally none) say nothing about it, so no audio layout or
+ * ranked index may be carried: `1:a:<index from input 0>` could name a stream that does not exist.
+ */
+function withoutPrimaryAudio(info: MediaInfo): MediaInfo {
+  const {
+    audio: _audio,
+    ranked: {
+      audioStreamIndex: _rankedIndex,
+      audio: _rankedAudio,
+      ...rankedVideo
+    },
+    ...rest
+  } = info;
+  return { ...rest, ranked: rankedVideo };
 }

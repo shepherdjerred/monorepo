@@ -57,6 +57,8 @@ test("classifies executed workflow shapes, retaining legacy expensive drafts", (
     ["ci-noop", "noop"],
     ["draft-preflight", "draft"],
     ["maintenance-release-notes", "maintenance"],
+    ["maintenance-workspace-golden", "maintenance"],
+    ["maintenance-workspace-seeds", "maintenance"],
     ["verify-extended", "extended"],
   ]) {
     expect(
@@ -82,12 +84,45 @@ test("classifies executed workflow shapes, retaining legacy expensive drafts", (
         event: "manual",
         ref: "refs/heads/main",
         branch: "main",
-        workflows: ["verify", "images", "helm-push", "argocd-sync"].map(
+        workflows: ["verify", "images", "helm-push", "delivery-publish"].map(
           (name) => ({ name, state: "success" }),
         ),
       }),
     ),
   ).toBe("main");
+  // A current main push, including a superseded one whose workflows all skipped.
+  for (const state of ["running", "skipped"])
+    expect(
+      pipelineKind(
+        pipeline({
+          event: "push",
+          ref: "refs/heads/main",
+          branch: "main",
+          workflows: [
+            "verify",
+            "images",
+            "helm-push",
+            "delivery-publish",
+            "playwright-e2e",
+            "release-please",
+          ].map((name) => ({ name, state })),
+        }),
+      ),
+    ).toBe("main");
+  // A pull request that merely contains verify is not a main push.
+  expect(
+    pipelineKind(
+      pipeline({
+        event: "push",
+        branch: "feature",
+        ref: "refs/heads/feature",
+        workflows: ["verify", "images", "helm-push"].map((name) => ({
+          name,
+          state: "success",
+        })),
+      }),
+    ),
+  ).toBe("other");
   expect(pipelineKind(pipeline({ workflows: [] }))).toBe("other");
 });
 

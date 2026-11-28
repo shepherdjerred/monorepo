@@ -13,12 +13,6 @@ export async function seedPlatformBrowser(
   delivery: Delivery,
   sourceBuildId: string,
 ) {
-  const controller = await controlPlaneFixture(database);
-  await controller.delivery.requestControlPlaneUpgrade(
-    controller.environment.id,
-    controller.input,
-    testOperator,
-  );
   for (const stack of ["anthropic", "discord"]) {
     const deployment = await requestTestPlan(delivery, sourceBuildId, stack);
     const saved = await checkpointTestPlan(delivery, deployment);
@@ -69,4 +63,13 @@ export async function seedPlatformBrowser(
       testExecutor,
     );
   }
+}
+
+export async function seedControlPlaneBrowser(database: Database) {
+  const controller = await controlPlaneFixture(database);
+  await controller.delivery.requestControlPlaneUpgrade(
+    controller.environment.id,
+    controller.input,
+    testOperator,
+  );
 }

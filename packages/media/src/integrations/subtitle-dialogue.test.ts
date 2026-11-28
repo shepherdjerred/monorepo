@@ -72,9 +72,15 @@ test.each(["srt", "vtt", "ass", "ssa"] as const)(
   },
 );
 
+const PARSER_CPU_BUDGET_US = 2_000_000;
+const PARSER_CHILD_TIMEOUT_MS = 10_000;
+
 test("long unmatched cues finish through the actual parser inside an independently time-bounded child", async () => {
   const moduleUrl = new URL("subtitle-validation.ts", import.meta.url).href;
+  // Start after imports and count CPU so child startup and time off CPU do not
+  // consume the parser budget. The parent separately kills a stuck child.
   const source = String.raw`import {validateSubtitle} from ${JSON.stringify(moduleUrl)};
+    const started = process.cpuUsage();
     for (const format of ["srt","vtt","ass","ssa"]) {
       for (const body of [
         (format==="srt"||format==="vtt"?"<":"{").repeat(1024*1024),
@@ -90,7 +96,12 @@ test("long unmatched cues finish through the actual parser inside an independent
       if(result.format!==format||result.text!==content) throw new Error("Long cue result changed");
       }
     }
-    process.stdout.write("parsed:20");`;
+    const {user, system} = process.cpuUsage(started);
+    const cpuUs = user + system;
+    if (cpuUs > ${PARSER_CPU_BUDGET_US.toString()}) {
+      process.stdout.write("Subtitle parser exceeded its 2-second CPU budget (" + cpuUs + " µs)");
+      process.exitCode = 1;
+    } else process.stdout.write("parsed:20");`;
   expect(await boundedParserChild(source)).toBe("parsed:20");
 });
 
@@ -107,25 +118,27 @@ function boundedParserChild(source: string): Promise<string> {
     let output = "",
       failure: Error | undefined;
     const deadline = setTimeout(() => {
-      failure = new Error(
+      failure ??= new Error(
         "Actual subtitle parser exceeded its bounded child deadline",
       );
       child.kill("SIGKILL");
-    }, 2000);
+    }, PARSER_CHILD_TIMEOUT_MS);
     child.stdout.setEncoding("utf8");
     child.stdout.on("data", (chunk: unknown) => {
       if (typeof chunk !== "string" || output.length + chunk.length > 128) {
-        failure = new Error("Unexpected subtitle parser child output");
+        failure ??= new Error("Unexpected subtitle parser child output");
         child.kill("SIGKILL");
       } else output += chunk;
     });
     child.once("error", (error) => {
-      failure = error;
+      failure ??= error;
     });
     child.once("close", (code) => {
       clearTimeout(deadline);
       if (failure === undefined && code === 0) resolve(output);
-      else reject(failure ?? new Error("Subtitle parser child failed"));
+      else {
+        reject(failure ?? new Error(output || "Subtitle parser child failed"));
+      }
     });
   });
 }
