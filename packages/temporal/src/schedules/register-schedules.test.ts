@@ -701,6 +701,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Repeats one bounded delete-batch Activity (at most 50 times per run) while
   // batches come back full; no Workflow-level sleeps.
   "scoutCrawlFrontierPruneWorkflow",
+  // Repeats one bounded batch Activity (at most 20 times per run) while batches
+  // come back full; no Workflow-level sleeps.
+  "scoutRankRefreshWorkflow",
   "scoutPipelineReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",

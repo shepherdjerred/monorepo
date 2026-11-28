@@ -2647,8 +2647,8 @@ Every Riot request goes through one in-process limiter
 (`src/league/api/client/rate-limiter.ts`, five slots). Each call site passes a
 `priority`: `realtime` (tracked players' spectator, match, timeline, match-list
 and rank reads), `interactive` (Explore, Riot ID lookups, teammate
-suggestions), `backfill` (initial history, recovery, mastery and Clash
-snapshots) or `crawl`. An untagged call is `realtime`, so nothing is demoted by
+suggestions), `backfill` (initial history, recovery, mastery, Clash
+snapshots and the daily rank refresh) or `crawl`. An untagged call is `realtime`, so nothing is demoted by
 omission. A freed slot goes to the highest class waiting, and one slot only
 ever serves `realtime`.
 
@@ -2882,6 +2882,36 @@ stored per UTC day.
 - **Metrics.** `scout_crawl_matches_crawled_total`, `scout_crawl_frontier_size`,
   `scout_crawl_budget_refusals_total{reason}`, `scout_crawl_riot_429_total` and
   `scout_crawl_ticks_total`.
+
+## Rank refresh
+
+`src/league/rank-refresh/` keeps `CurrentRankSnapshot` fresh for tracked
+players who have not played ranked lately, so the Players, Home and Server
+pages (which read ranks through `latestRanksByPuuid`) are not blank or stale.
+
+- **Who is due.** A tracked player is an `Account` row (a PUUID tracked by
+  several servers is one player). Rank evidence is a ranked game's `rankAfter`
+  captured in the last 7 days, or a snapshot fetched in the last 7 days. A
+  snapshot of an unranked player counts, so an unranked player is asked once a
+  window and a player refreshed today is never fetched again. Never-asked
+  players come first, then the longest unrefreshed.
+- **Schedule and queue.** `scoutRankRefreshWorkflow` (Schedule
+  `scout-{stage}-rank-refresh`, daily at 05:00 UTC, overlap SKIP, created
+  paused like the crawl until the worker bundle that exports it is live)
+  repeats the `refreshStaleRanks` Activity on the `background` queue, which
+  other backfills (initial history, silent post-match backfill) use, at most 20
+  times per run. Each call handles up to 50 players, heartbeats between them,
+  and a retried call re-selects only the players it did not reach.
+- **Riot.** The existing `fetchCurrentRanks` league-entry call at `backfill`
+  priority: below `realtime` and `interactive`, above `crawl`. A Riot 404 is
+  recorded as unranked. A transient failure (429, 408, 5xx, transport, a
+  deferred budget) fails the Activity at once and uses the background retry
+  policy. A permanent per-player rejection (any other 4xx, such as 400, 401 or 403) is reported and the batch continues; the Workflow excludes that player
+  for the rest of the run, so one bad player cannot block the others, and fails
+  the run at the end with one error naming the count and the first 8 characters
+  of each PUUID.
+- **Kill switch.** `scout-rank-refresh-enabled`, read per batch: on in beta,
+  off in production until an operator turns it on (AI-1093).
 
 ## Configuration
 

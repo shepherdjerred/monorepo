@@ -29,6 +29,7 @@ export const SCOUT_WORKFLOW_NAMES = {
   ingestionReconciliation: "scoutIngestionReconciliationWorkflow",
   participantCrawl: "scoutParticipantCrawlWorkflow",
   crawlFrontierPrune: "scoutCrawlFrontierPruneWorkflow",
+  rankRefresh: "scoutRankRefreshWorkflow",
   backgroundJob: "scoutBackgroundJobWorkflow",
   detachedWork: "scoutDetachedWorkWorkflow",
   reportLake: "scoutReportLakeWorkflow",

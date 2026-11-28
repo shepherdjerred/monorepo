@@ -1,4 +1,7 @@
-import type { Worker } from "@temporalio/worker";
+import { afterEach, beforeEach } from "vitest";
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { Worker } from "@temporalio/worker";
+import { scoutTaskQueues } from "#src/identifiers.ts";
 
 /**
  * The workers one test started, and the shutdown they all need.
@@ -36,5 +39,62 @@ export function createScoutWorkerPool(): ScoutWorkerPool {
       }
       await Promise.allSettled(runs.splice(0));
     },
+  };
+}
+
+export type ScoutScheduledWorkflowHarness = {
+  /** Start the workflow worker and one `queue` Activity worker serving `activities`. */
+  start: (
+    activities: Record<string, (input: unknown) => unknown>,
+  ) => Promise<void>;
+  /** Run a Schedule-started Workflow type to completion, as the Schedule starts it. */
+  run: (workflowType: string, workflowId: string) => Promise<unknown>;
+};
+
+/**
+ * The time-skipping test server, worker pool and teardown shared by the
+ * Workflow tests of the Schedule-started `dev` Workflows, whose input is
+ * `{ stage, trigger: "schedule" }`. Call it at the top of a test file.
+ */
+export function useScoutScheduledWorkflowHarness(
+  queue: "background" | "crawl",
+): ScoutScheduledWorkflowHarness {
+  const queues = scoutTaskQueues("dev");
+  const workers = createScoutWorkerPool();
+  let environment: TestWorkflowEnvironment | undefined;
+  const current = (): TestWorkflowEnvironment => {
+    if (environment === undefined) throw new Error("no test environment");
+    return environment;
+  };
+  beforeEach(async () => {
+    environment = await TestWorkflowEnvironment.createTimeSkipping();
+  }, 60_000);
+  afterEach(async () => {
+    await workers.drain();
+    await current().teardown();
+  });
+  return {
+    start: async (activities) => {
+      await workers.start(
+        await Worker.create({
+          connection: current().nativeConnection,
+          taskQueue: queues.workflow,
+          workflowsPath: new URL("index.ts", import.meta.url).pathname,
+        }),
+      );
+      await workers.start(
+        await Worker.create({
+          connection: current().nativeConnection,
+          taskQueue: queues[queue],
+          activities,
+        }),
+      );
+    },
+    run: (workflowType, workflowId) =>
+      current().client.workflow.execute(workflowType, {
+        workflowId,
+        taskQueue: queues.workflow,
+        args: [{ stage: "dev", trigger: "schedule" }],
+      }),
   };
 }

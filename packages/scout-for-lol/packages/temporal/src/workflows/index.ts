@@ -86,6 +86,11 @@ import type {
   ScoutParticipantCrawlInput,
   ScoutParticipantCrawlResult,
 } from "#src/contracts.ts";
+import { scoutRankRefreshWorkflow as rankRefresh } from "./rank-refresh/rank-refresh.ts";
+import type {
+  ScoutRankRefreshInput,
+  ScoutRankRefreshResult,
+} from "#src/rank-refresh-contracts.ts";
 import { scoutSilentPostmatchBackfillWorkflow as silentPostmatchBackfill } from "./silent-postmatch-backfill.ts";
 import {
   scoutCustomOperationWorkflow as customOperation,
@@ -130,6 +135,12 @@ export async function scoutCrawlFrontierPruneWorkflow(
   input: ScoutCrawlFrontierPruneInput,
 ): Promise<ScoutCrawlFrontierPruneResult> {
   return await crawlFrontierPrune(input);
+}
+
+export async function scoutRankRefreshWorkflow(
+  input: ScoutRankRefreshInput,
+): Promise<ScoutRankRefreshResult> {
+  return await rankRefresh(input);
 }
 
 export async function scoutBackgroundJobWorkflow(

@@ -3186,6 +3186,27 @@
       ]
     },
     {
+      "key": "scout-rank-refresh-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Run Scout's daily rank refresh: fetch the current rank of each tracked player with no rank evidence in the last 7 days from Riot at backfill priority and store it as their current-rank snapshot. A kill switch, read per Activity batch.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Production turns the refresh on as an explicit operator change once beta shows the Riot backfill budget has headroom and the release exporting the Workflow is promoted.",
+          "issue": "AI-1093",
+          "enableWhen": "The release exporting scoutRankRefreshWorkflow is promoted, a beta run drains without 429s attributable to it, and ranks appear for previously unranked tracked players; then the flag is turned on in the production Flags deployment.",
+          "reviewBy": "2026-12-11"
+        }
+      ]
+    },
+    {
       "key": "scout-participant-crawl-daily-match-budget",
       "owner": "scout",
       "namespace": "scout",
@@ -5422,6 +5443,14 @@
         },
         {
           "key": "scout-participant-crawl-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-rank-refresh-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],
