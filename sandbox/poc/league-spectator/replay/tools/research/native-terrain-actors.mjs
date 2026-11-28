@@ -546,11 +546,28 @@ export function createChampionModelRenderer(gl, models, createProgram) {
       for (const {
         participantId,
         position,
-        basis = identity,
+        basis: placementBasis,
+        pathDirection,
         inactive = false,
         collapsePhase = 0,
         palette: instancePalette,
       } of markers) {
+        // Recorded waypoints give the model a display heading. Effect
+        // attachment and projectile transforms have their own native inputs.
+        const basis =
+          pathDirection === undefined
+            ? (placementBasis ?? identity)
+            : [
+                pathDirection[1],
+                0,
+                -pathDirection[0],
+                0,
+                1,
+                0,
+                pathDirection[0],
+                0,
+                pathDirection[1],
+              ];
         const actor = actors.get(participantId);
         if (
           !actor ||

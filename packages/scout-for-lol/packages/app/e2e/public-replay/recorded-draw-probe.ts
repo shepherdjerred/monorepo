@@ -12,6 +12,7 @@ type RecordedDraw = {
   firstActorState?: { blend: boolean; depthWrites: boolean };
   actorOrigins: number[][];
   actorIndexCounts: number[];
+  actorBases: number[][];
   animationPaletteDraws: { indexCount: number; hash: number }[];
   recordedParticleDraws: number;
   recordedDepthDisabledParticleDraws: number;
@@ -32,6 +33,7 @@ export async function installRecordedDrawProbe(page: Page) {
       terrainBlendDraws: [],
       actorOrigins: [],
       actorIndexCounts: [],
+      actorBases: [],
       animationPaletteDraws: [],
       recordedParticleDraws: 0,
       recordedDepthDisabledParticleDraws: 0,
@@ -48,6 +50,7 @@ export async function installRecordedDrawProbe(page: Page) {
     const getUniformBlockIndex = originalMethod("getUniformBlockIndex");
     const uniform1i = originalMethod("uniform1i");
     const uniform3fv = originalMethod("uniform3fv");
+    const uniformMatrix3fv = originalMethod("uniformMatrix3fv");
     const uniformMatrix4fv = originalMethod("uniformMatrix4fv");
     const useProgram = originalMethod("useProgram");
     const clear = originalMethod("clear");
@@ -59,12 +62,14 @@ export async function installRecordedDrawProbe(page: Page) {
     const particlePrograms = new WeakSet<WebGLProgram>();
     const maskedGroundPrograms = new WeakSet<WebGLProgram>();
     const actorUniforms = new WeakSet<WebGLUniformLocation>();
+    const actorBasisUniforms = new WeakSet<WebGLUniformLocation>();
     const viewUniforms = new WeakSet<WebGLUniformLocation>();
     let terrainActive = false;
     let particlesActive = false;
     let maskedGroundActive = false;
     let textured = false;
     let pendingActor: number[] | undefined;
+    let pendingBasis: number[] = [];
     let paletteHash: number | undefined;
 
     gl.getUniformLocation = function (program, name) {
@@ -75,6 +80,8 @@ export async function installRecordedDrawProbe(page: Page) {
       }
       if (location !== null && name === "actorOrigin")
         actorUniforms.add(location);
+      if (location !== null && name === "actorBasis")
+        actorBasisUniforms.add(location);
       if (location !== null && name === "viewProjection")
         viewUniforms.add(location);
       if (location !== null && name === "NAVMESH_MASK_TEXTURE_SharedTexture")
@@ -111,6 +118,20 @@ export async function installRecordedDrawProbe(page: Page) {
       }
       uniform3fv.call(this, location, values, srcOffset, srcLength);
     };
+    gl.uniformMatrix3fv = function (location, transpose, values, ...offsets) {
+      if (location !== null && actorBasisUniforms.has(location)) {
+        const start = offsets[0] ?? 0;
+        pendingBasis = [...values].slice(start, start + 9);
+      }
+      uniformMatrix3fv.call(
+        this,
+        location,
+        transpose,
+        values,
+        offsets[0],
+        offsets[1],
+      );
+    };
     gl.uniformMatrix4fv = function (location, transpose, values, ...offsets) {
       if (location !== null && viewUniforms.has(location))
         draw.viewProjection = [...values].slice(
@@ -134,6 +155,7 @@ export async function installRecordedDrawProbe(page: Page) {
         delete draw.firstActorState;
         draw.actorOrigins = [];
         draw.actorIndexCounts = [];
+        draw.actorBases = [];
         draw.animationPaletteDraws = [];
         draw.recordedParticleDraws = 0;
         draw.recordedDepthDisabledParticleDraws = 0;
@@ -187,6 +209,7 @@ export async function installRecordedDrawProbe(page: Page) {
         };
         draw.actorOrigins.push(pendingActor);
         draw.actorIndexCounts.push(count);
+        draw.actorBases.push(pendingBasis);
         if (paletteHash !== undefined) {
           draw.animationPaletteDraws.push({
             indexCount: count,

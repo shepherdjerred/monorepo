@@ -220,19 +220,19 @@ function championAnimationCapabilities({
   workerMotion,
   championAnimationCues,
 }: z.infer<typeof SceneIdentitySchema>) {
-  const directChampionAnimationModels =
-    workerMotion?.championAnimationModelCatalog !== undefined;
+  const animationModelCount =
+    workerMotion?.championAnimationModelCatalog?.models.length;
   const preparedAnimationCatalog =
     workerMotion?.championAnimationCatalog !== undefined;
-  if (directChampionAnimationModels && preparedAnimationCatalog)
+  if (animationModelCount !== undefined && preparedAnimationCatalog)
     throw new Error("The recorded scene has two champion animation catalogs.");
   const directChampionAnimation =
-    directChampionAnimationModels || preparedAnimationCatalog;
+    animationModelCount !== undefined || preparedAnimationCatalog;
   if (directChampionAnimation && championAnimationCues !== undefined)
     throw new Error(
       "Direct worker animation requires a scene without baked cues.",
     );
-  return { directChampionAnimation, directChampionAnimationModels };
+  return { directChampionAnimation, animationModelCount };
 }
 
 function championCapabilities(scene: z.infer<typeof SceneIdentitySchema>) {

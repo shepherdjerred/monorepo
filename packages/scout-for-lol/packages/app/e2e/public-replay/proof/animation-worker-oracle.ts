@@ -15,18 +15,16 @@ const oracle = z.object({
   build: z.literal("16.23.841.8428"),
   protocol: z.literal("8bbfcd5af2bc92db"),
   replaySha256: digest,
-  cues: z
-    .array(
-      z.object({
-        ...timings,
-        context: z.number().int().positive(),
-        modelSha256: digest,
-        rig: asset,
-        clip: asset,
-        bindings: asset,
-      }),
-    )
-    .length(502),
+  cues: z.array(
+    z.object({
+      ...timings,
+      context: z.number().int().positive(),
+      modelSha256: digest,
+      rig: asset,
+      clip: asset,
+      bindings: asset,
+    }),
+  ),
 });
 
 export const workerAnimationCues = z.array(
@@ -53,26 +51,25 @@ export async function verifyRecordedAnimationResponse(
   {
     descriptor,
     directChampionAnimation,
-    directChampionAnimationModels,
+    animationModelCount,
     championAnimationCueCount,
   }: {
     descriptor: { sha256: string };
     directChampionAnimation: boolean;
-    directChampionAnimationModels: boolean;
+    animationModelCount: number | undefined;
     championAnimationCueCount: number;
   },
   oracleRoot: string,
 ) {
-  // The pinned legacy cue oracle covers the other five actors on this replay.
+  const expanded = animationModelCount === 8;
+  const missingModel = expanded
+    ? [1_073_742_165, 1_073_742_170]
+    : [
+        1_073_742_161, 1_073_742_162, 1_073_742_165, 1_073_742_166,
+        1_073_742_170,
+      ];
   expect(actual.championAnimationOmissions).toEqual(
-    directChampionAnimationModels
-      ? {
-          missingModel: [
-            1_073_742_161, 1_073_742_162, 1_073_742_165, 1_073_742_166,
-            1_073_742_170,
-          ],
-        }
-      : undefined,
+    animationModelCount === undefined ? undefined : { missingModel },
   );
   if (directChampionAnimation) {
     if (actual.animationCues === undefined)
@@ -83,6 +80,7 @@ export async function verifyRecordedAnimationResponse(
       oracleRoot,
       descriptor.sha256,
       actual.animationCues,
+      expanded,
     );
     return actual.animationCues.length;
   }
@@ -90,25 +88,31 @@ export async function verifyRecordedAnimationResponse(
   return championAnimationCueCount;
 }
 
-export async function verifyDirectAnimationCues(
+async function verifyDirectAnimationCues(
   oracleRoot: string,
   replaySha256: string,
   actual: z.infer<typeof workerAnimationCues>,
+  expanded: boolean,
 ) {
   const bytes = await Bun.file(
     path.join(
       oracleRoot,
-      "exact-8428-current-animation-batch",
+      expanded
+        ? "scout-8428-direct-no-blend-color-corrected"
+        : "exact-8428-current-animation-batch",
       "scout-animation.json",
     ),
   ).bytes();
   expect(new Bun.CryptoHasher("sha256").update(bytes).digest("hex")).toBe(
-    "87991ae95a6510547938a691f22d4b34c982d9235542d459ba0fa6474b756dc5",
+    expanded
+      ? "df3adc117471e1b39d357701341219aabc96baa9f3521cf9467ab7c77c930caf"
+      : "87991ae95a6510547938a691f22d4b34c982d9235542d459ba0fa6474b756dc5",
   );
   const { replaySha256: expectedReplay, cues } = oracle.parse(
     JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
   );
   expect(expectedReplay).toBe(replaySha256);
+  expect(cues).toHaveLength(expanded ? 1020 : 502);
   expect(actual).toEqual(
     cues.map((cue) => ({
       participantId: cue.context,

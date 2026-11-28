@@ -8,8 +8,11 @@ import { recordedAnimationRequests } from "./recorded-animation-requests.mjs";
 
 // Opcode 669 reader 0x1032910 and callback 0x135ab0. These compact
 // forms select the native 1x rate and zero adjustment/override defaults.
+// Even headers select bit 0x20, which forces zero transition time in the
+// original animation channel (0x15bb6ef, 0x15bafe8 and 0x15bb0c4).
 const reviewedHeaders = new Set([
-  0x39, 0x3b, 0x3f, 0xb9, 0xbb, 0xbf, 0xf9, 0xfb, 0xff,
+  0x39, 0x3b, 0x3f, 0xb8, 0xb9, 0xba, 0xbb, 0xbe, 0xbf, 0xf8, 0xf9, 0xfa, 0xfb,
+  0xfe, 0xff,
 ]);
 
 export function readCurrentAnimationCueRequest(body, substitution) {
@@ -69,7 +72,8 @@ export function readCurrentAnimationCueRequest(body, substitution) {
   }
   const name = String.fromCharCode(...bytes);
   if (!/^[A-Za-z0-9_]+$/u.test(name)) return null;
-  return { name, rate: 1, flags: second & 0x40 ? 16 : 0 };
+  const flags = ((second & 0x40) >> 2) | (((second & 1) ^ 1) << 5);
+  return { name, rate: 1, flags };
 }
 
 // Each catalog binding supplies a verified model and an untimed name -> clip

@@ -43,13 +43,41 @@ async function verifyLaterCue(
     ).toBeUndefined();
 }
 
+async function verifyWukongPathFacing(page: Page) {
+  async function wukongAt(seconds: number) {
+    await seek(page, seconds);
+    const draw = await readRecordedDraw(page);
+    const index = draw.actorIndexCounts.indexOf(16_995);
+    const [x, , z] = draw.actorOrigins[index] ?? [];
+    const forwardX = draw.actorBases[index]?.[6];
+    const forwardZ = draw.actorBases[index]?.[8];
+    if (
+      x === undefined ||
+      z === undefined ||
+      forwardX === undefined ||
+      forwardZ === undefined
+    )
+      throw new Error("The browser did not draw Wukong's placement.");
+    return { x, z, forwardX, forwardZ };
+  }
+  const first = await wukongAt(57.2);
+  const next = await wukongAt(57.3);
+  const dx = next.x - first.x;
+  const dz = next.z - first.z;
+  const distance = Math.hypot(dx, dz);
+  expect(distance).toBeGreaterThan(1);
+  expect(first.forwardX).toBeCloseTo(dx / distance, 3);
+  expect(first.forwardZ).toBeCloseTo(dz / distance, 3);
+  expect(await wukongAt(57.2)).toEqual(first);
+}
+
 export async function verifyRecordedChampionAnimation(
   page: Page,
   fixture: { current: boolean; long: boolean; cueCount: number },
   testInfo: TestInfo,
 ) {
   if (fixture.current) {
-    expect(fixture.cueCount).toBe(502);
+    expect([502, 1020]).toContain(fixture.cueCount);
     await verifyLaterCue(page, testInfo, {
       actor: "1073742167",
       indexCount: 16_995,
@@ -57,6 +85,7 @@ export async function verifyRecordedChampionAnimation(
       screenshot: "recorded-current-wukong-action.png",
     });
     expect(await paletteAt(page, 58.3, 16_995)).toBeUndefined();
+    if (fixture.cueCount === 1020) await verifyWukongPathFacing(page);
     await verifyLaterCue(page, testInfo, {
       actor: "1073742164",
       indexCount: 20_190,
@@ -65,6 +94,22 @@ export async function verifyRecordedChampionAnimation(
       absentAt: [863.8, 865.8],
       screenshot: "recorded-current-jhin-reload.png",
     });
+    if (fixture.cueCount === 1020) {
+      await verifyLaterCue(page, testInfo, {
+        actor: "1073742161",
+        indexCount: 16_356,
+        clocks: [1716.5, 1717],
+        absentAt: [1716.3, 1717.8],
+        screenshot: "recorded-current-heimer-winddown.png",
+      });
+      await verifyLaterCue(page, testInfo, {
+        actor: "1073742162",
+        indexCount: 40_497,
+        clocks: [1718.1, 1718.4],
+        absentAt: [1718, 1718.6],
+        screenshot: "recorded-current-lee-cast.png",
+      });
+    }
     return;
   }
   const { long, cueCount } = fixture;

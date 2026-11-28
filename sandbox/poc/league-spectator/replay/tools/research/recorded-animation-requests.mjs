@@ -1,5 +1,6 @@
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { replayPacketEnvelopes } from "../../transport.mjs";
+import { currentTerrainPositionBuild } from "./native-terrain-byte-codecs.mjs";
 
 export function* recordedAnimationRequests(replay, decompress, actors) {
   let context = 0;
@@ -25,9 +26,13 @@ export function supportsRecordedAnimationRequest(
   flags,
   adjustmentBits,
   overrideBits,
+  build,
 ) {
   return (
-    (flags === 0 || flags === 16) &&
+    (flags === 0 ||
+      flags === 16 ||
+      (build === currentTerrainPositionBuild &&
+        (flags === 32 || flags === 48))) &&
     adjustmentBits === "00000000" &&
     overrideBits === "00000000"
   );

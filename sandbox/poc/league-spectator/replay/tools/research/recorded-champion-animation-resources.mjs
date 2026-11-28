@@ -175,6 +175,7 @@ export async function readRecordedChampionAnimations(
         request.flags,
         request.adjustmentBits,
         request.overrideBits,
+        replay.build,
       ),
       "Unsupported authored animation request fields",
     );

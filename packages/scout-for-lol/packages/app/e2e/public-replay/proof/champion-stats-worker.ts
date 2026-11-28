@@ -181,7 +181,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory: boolean;
     directChampionExperience: boolean;
     directChampionAnimation: boolean;
-    directChampionAnimationModels: boolean;
+    animationModelCount: number | undefined;
     directChampionModels: boolean;
     directInhibitors: boolean;
     directTurrets: boolean;
@@ -212,7 +212,7 @@ export async function verifyDirectChampionStatsWorker(
     directChampionInventory,
     directChampionExperience,
     directChampionAnimation,
-    directChampionAnimationModels,
+    animationModelCount,
   } = fixture;
   const oracleRoot = Bun.env["SCOUT_REPLAY_E2E_STATS_ORACLE_DIRECTORY"];
   if (oracleRoot === undefined || oracleRoot === "")
@@ -223,6 +223,7 @@ export async function verifyDirectChampionStatsWorker(
   expect(actual.decodeChampionStats).toBe(directChampionStats);
   expect(actual.decodeChampionInventory).toBe(directChampionInventory);
   expect(actual.decodeChampionExperience).toBe(directChampionExperience);
+  const directChampionAnimationModels = animationModelCount !== undefined;
   const legacyAnimationCatalog =
     directChampionAnimation && !directChampionAnimationModels;
   expect(actual.hasChampionAnimationCatalog).toBe(legacyAnimationCatalog);

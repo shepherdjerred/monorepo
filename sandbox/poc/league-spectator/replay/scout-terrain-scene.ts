@@ -1220,7 +1220,12 @@ export const SceneSchema = TerrainSceneFields.refine(
     },
   );
 export type TerrainScene = z.infer<typeof SceneSchema>;
-type TerrainFrame = TerrainScene["frames"][number];
+type CapturedTerrainFrame = TerrainScene["frames"][number];
+type TerrainFrame = CapturedTerrainFrame & {
+  markers: (CapturedTerrainFrame["markers"][number] & {
+    pathDirection?: readonly [number, number];
+  })[];
+};
 type MaterialBindings = Map<
   string,
   {
@@ -2657,15 +2662,25 @@ export function prepareScene(
     const markers: TerrainFrame["markers"] = [];
     if (groundHeight !== undefined) {
       const sample: {
-        markers: { participantId: number; x: number; z: number }[];
+        markers: {
+          participantId: number;
+          x: number;
+          z: number;
+          direction: readonly [number, number] | null;
+        }[];
       } = sampleNativeTerrainMotion(motion, timeSeconds);
-      for (const { participantId, x, z } of sample.markers) {
+      for (const { participantId, x, z, direction } of sample.markers) {
         const teamId = teams.get(participantId);
         if (teamId === undefined)
           throw new Error("Motion marker has no participant.");
         const height = groundHeight(x, z);
         if (height !== null)
-          markers.push({ participantId, position: [x, height, z], teamId });
+          markers.push({
+            participantId,
+            position: [x, height, z],
+            teamId,
+            ...(direction === null ? {} : { pathDirection: direction }),
+          });
       }
     }
     cachedFrame = { timeSeconds, markers };

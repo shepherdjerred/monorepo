@@ -766,11 +766,20 @@ other actor events remain unverified.
 
 For 16.23.841.8428, the portable reader can reconstruct these windows from
 ordinary replay packets and a pinned untimed catalog of exact model and clip
-bindings. Run the batch with `--current-build` to also emit
+bindings. The reviewed compact layouts also include flags 32 and 48. The
+original channel uses zero transition duration for those flags. The current
+batch supports the linked uncompressed v4 clips as well as the v5 and
+compressed v1 formats. Run the batch with `--current-build` to also emit
 `champion-animation-catalog.json` and its SHA-256. Give that catalog to the
 private package builder for browser-derived playback. Compare the reader with
 the original packet receipt and timed cue artifact using
 `verify-current-animation-cues.mjs`.
+
+The terrain player points the champion model along the sampled waypoint
+direction whenever the replay supplies one. The model keeps the original
+axes at positional anchors with no waypoint direction. This is display
+facing. Native combat facing, locomotion poses, and particle attachment
+transforms use separate inputs.
 
 ### Recorded basic attack inputs
 

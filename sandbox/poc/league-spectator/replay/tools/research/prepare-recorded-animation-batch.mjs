@@ -14,7 +14,11 @@ import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/p
 import { mapBinHash } from "../map-scene-assets.mjs";
 import { auditChampionAnimation } from "../verify-native-terrain-champion-animation.mjs";
 import { openLocalWad } from "../wad.mjs";
-import { assertExactTerrainReplay } from "./native-terrain-byte-codecs.mjs";
+import { readCurrentAnimationCueRequest } from "./native-terrain-animation-cue-reader.mjs";
+import {
+  assertExactTerrainReplay,
+  recoverTerrainByteSubstitution,
+} from "./native-terrain-byte-codecs.mjs";
 import {
   readChampionModelSelections,
   verifyNativeCatalogOpening,
@@ -89,6 +93,7 @@ const decompress = (input, target) =>
   zstdDecompressSync(input, { maxOutputLength: target.byteLength });
 const skinKey = ({ champion, skinId }) => `${champion.toLowerCase()}-${skinId}`;
 let selected = sources.actors;
+let substitution;
 if (current) {
   assert.deepEqual(sources.nativeOpening, models.nativeOpening);
   const prepared = prepareReplayForSeek(
@@ -101,6 +106,7 @@ if (current) {
     replay,
     options,
   );
+  substitution = recoverTerrainByteSubstitution(codecs);
   const originalSelections = readChampionModelSelections(
     prepared,
     codecs,
@@ -200,6 +206,7 @@ for (const result of decoded) {
       result.callback.flags,
       result.callback.adjustmentFloatBits,
       result.callback.overrideFloatBits,
+      replay.build,
     )
   ) {
     assert.match(result.name, /^[A-Za-z0-9_]+$/u);
@@ -402,6 +409,7 @@ for (const row of packets) {
       flags,
       adjustmentFloatBits,
       overrideFloatBits,
+      replay.build,
     ) ||
     !(rate > 0)
   ) {
@@ -412,6 +420,17 @@ for (const row of packets) {
       overrideFloatBits,
     });
     continue;
+  }
+  if ((flags & 32) !== 0) {
+    const portable = readCurrentAnimationCueRequest(
+      Buffer.from(payload, "hex"),
+      substitution,
+    );
+    if (portable === null) {
+      omit("unsupported-no-blend-wire-layout");
+      continue;
+    }
+    assert.deepEqual(portable, { name, rate, flags });
   }
   const limit = Math.min(next ?? Infinity, replay.duration);
   if (!(timeSeconds >= 0 && limit > timeSeconds)) {
@@ -432,7 +451,8 @@ for (const row of packets) {
   }
   if (!(
     (authored.magic === "r3d2canm" && authored.version === 1) ||
-    (authored.magic === "r3d2anmd" && authored.version === 5)
+    (authored.magic === "r3d2anmd" &&
+      (authored.version === 5 || (current && authored.version === 4)))
   )) {
     omit("unsupported-authored-clip-format", {
       magic: authored.magic,
