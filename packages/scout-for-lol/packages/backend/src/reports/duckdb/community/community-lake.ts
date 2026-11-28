@@ -33,9 +33,12 @@ const GuildMatchRowSchema = z.object({
   participant_id: LakeInt.nullable(),
   riot_id_game_name: z.string().nullable(),
   riot_id_tagline: z.string(),
+  champion_id: LakeInt,
   champion_name: z.string(),
   team_position: z.string(),
   win: z.boolean(),
+  /** Riot's largestMultiKill: 2 double, 3 triple, 4 quadra, 5 penta. */
+  largest_multi_kill: LakeInt,
   kills: LakeInt,
   deaths: LakeInt,
   assists: LakeInt,
@@ -117,7 +120,7 @@ export async function readGuildMatchRows(
     `full_rosters AS (${full.sql}) ` +
     `SELECT match_id, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
     `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
-    `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
+    `riot_id_game_name, riot_id_tagline, champion_id, champion_name, team_position, win, largest_multi_kill, ` +
     `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
     `ORDER BY game_creation_ms DESC, match_id DESC, participant_id, team_id, champion_name`;
   return await runSource({

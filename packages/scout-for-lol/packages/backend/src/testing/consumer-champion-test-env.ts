@@ -1,3 +1,4 @@
+import type * as AccessModule from "#src/consumer/access.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -64,5 +65,24 @@ export async function createChampionPageTestEnv(
       extra?: Parameters<typeof writeChampionLobbies>[3],
     ) =>
       writeChampionLobbies(lakeDir, { guildId, otherGuildId }, lobbies, extra),
+  };
+}
+
+/**
+ * The replacement module for `#src/consumer/access.ts` that answers
+ * `unavailable` while `outage.unavailable` is set: a Discord lookup that cannot
+ * answer is not a denial. Use from a `vi.mock` factory with a `vi.hoisted`
+ * outage flag and `vi.importActual` for `actual`.
+ */
+export function withDiscordOutage(
+  actual: typeof AccessModule,
+  outage: { unavailable: boolean },
+): typeof AccessModule {
+  return {
+    ...actual,
+    resolveConsumerGuildAccess: (...args) =>
+      outage.unavailable
+        ? Promise.resolve({ kind: "unavailable" })
+        : actual.resolveConsumerGuildAccess(...args),
   };
 }
