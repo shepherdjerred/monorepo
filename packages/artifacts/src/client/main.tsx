@@ -4,13 +4,18 @@ import "./styles/base.css";
 import "./styles/viewers.css";
 import "./styles/review.css";
 import "./styles/pages.css";
+import "./styles/canvas.css";
+import "./styles/shell.css";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router";
 import { App } from "./app.tsx";
+import { installCommentCursor } from "./lib/pin-shape.ts";
 import { queryClient } from "./data/api.ts";
+
+installCommentCursor();
 
 const root = document.querySelector("#root");
 if (root === null) {

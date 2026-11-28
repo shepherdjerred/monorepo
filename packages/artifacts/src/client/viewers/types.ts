@@ -36,6 +36,23 @@ export type ViewerArtifact = {
   readonly kind: ArtifactKind;
 };
 
+/** Input a live frame forwarded over the bridge for the host to apply to its camera. */
+export type HostInput =
+  | {
+      readonly type: "wheel";
+      readonly dx: number;
+      readonly dy: number;
+      readonly ctrl: boolean;
+      /** Client coordinates (the browser rounds what the frame reports). */
+      readonly client: Point;
+    }
+  | {
+      readonly type: "gesture";
+      /** Cumulative scale since the gesture started. */
+      readonly scale: number;
+      readonly client: Point;
+    };
+
 export type ViewerProps = {
   readonly artifact: ViewerArtifact;
   readonly version: VersionView;
@@ -48,6 +65,8 @@ export type ViewerProps = {
   readonly adapterRef: { current: AnchorAdapter | null };
   /** Called when the view moved (scroll, zoom, resize, page turn): pins reposition. */
   readonly onViewChange: () => void;
+  /** Wheel and gesture input a live frame did not keep (canvas only). */
+  readonly onHostInput?: ((input: HostInput) => void) | undefined;
   /** Frame viewport preset; ignored by other kinds. */
   readonly preset: PresetId;
 };

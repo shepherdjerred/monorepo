@@ -48,11 +48,14 @@ export default defineConfig({
     {
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: desktopViewport },
+      grepInvert: /@phone/u,
     },
     {
       name: "mobile",
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
       testIgnore: /(?:\.desktop|server)\.spec\.ts$/u,
+      // Tests tagged @desktop assert the wide layout.
+      grepInvert: /@desktop/u,
     },
     // Playwright's bundled Firefox does not launch on this macOS, so WebKit is
     // the second desktop engine.
@@ -60,6 +63,7 @@ export default defineConfig({
       name: "webkit",
       use: { ...devices["Desktop Safari"], viewport: desktopViewport },
       testIgnore: /server\.spec\.ts$/u,
+      grepInvert: /@phone/u,
     },
   ],
   webServer: {

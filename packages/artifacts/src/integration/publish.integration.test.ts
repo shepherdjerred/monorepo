@@ -520,6 +520,115 @@ describe("boards", () => {
     expect(new Set(frames).size).toBe(8);
   });
 
+  it("a resize and a concurrent agent placeFrame both survive", async () => {
+    await human.mutate("boards.create", { slug: "resize", title: "Resize" });
+    const [frame, placed] = [crypto.randomUUID(), crypto.randomUUID()];
+    await human.mutate("boards.applyOps", {
+      slug: "resize",
+      ops: [{ op: "placeFrame", artifactId: frame, w: 640, h: 420 }],
+    });
+    await Promise.all([
+      human.mutate("boards.applyOps", {
+        slug: "resize",
+        ops: [
+          {
+            op: "moveFrames",
+            moves: [{ artifactId: frame, x: 96, y: 48, w: 800, h: 500 }],
+          },
+        ],
+      }),
+      human.mutate("boards.applyOps", {
+        slug: "resize",
+        ops: [{ op: "placeFrame", artifactId: placed, w: 400, h: 300 }],
+      }),
+    ]);
+    const board = z
+      .object({ index: BoardIndexSchema })
+      .parse(await human.query("boards.get", { slug: "resize" }));
+    expect(board.index.frames[frame]).toMatchObject({
+      x: 96,
+      y: 48,
+      w: 800,
+      h: 500,
+    });
+    expect(board.index.frames[placed]).toMatchObject({ w: 400, h: 300 });
+    expect(board.index.order).toHaveLength(2);
+    // A move without a size leaves the resized size alone.
+    await human.mutate("boards.applyOps", {
+      slug: "resize",
+      ops: [{ op: "moveFrames", moves: [{ artifactId: frame, x: 0, y: 0 }] }],
+    });
+    const moved = z
+      .object({ index: BoardIndexSchema })
+      .parse(await human.query("boards.get", { slug: "resize" }));
+    expect(moved.index.frames[frame]).toMatchObject({ w: 800, h: 500 });
+  });
+
+  it("stores notes of every kind and returns them with the board", async () => {
+    await human.mutate("boards.create", { slug: "notes", title: "Notes" });
+    const notes = {
+      s1: {
+        type: "sticky",
+        page: 0,
+        x: 0,
+        y: 0,
+        w: 200,
+        h: 160,
+        text: "Hi",
+        color: "yellow",
+      },
+      t1: { type: "title", page: 0, x: 10, y: 10, text: "Title", size: "l" },
+      b1: { type: "box", page: 0, x: 20, y: 20, w: 100, h: 80, color: "blue" },
+      l1: { type: "line", page: 0, x: 0, y: 0, x2: 50, y2: 50, color: "red" },
+      a1: { type: "arrow", page: 0, x: 0, y: 0, x2: 50, y2: 0, color: "red" },
+      p1: {
+        type: "pen",
+        page: 0,
+        x: 5,
+        y: 5,
+        points: [
+          [0, 0],
+          [4, 9],
+          [9, 0],
+        ],
+        color: "green",
+      },
+    } as const;
+    for (const [id, note] of Object.entries(notes))
+      await human.mutate("boards.applyOps", {
+        slug: "notes",
+        ops: [{ op: "putNote", id, note }],
+      });
+    const board = z
+      .object({ index: BoardIndexSchema })
+      .parse(await human.query("boards.get", { slug: "notes" }));
+    expect(Object.keys(board.index.notes).toSorted()).toEqual(
+      Object.keys(notes).toSorted(),
+    );
+    expect(board.index.notes["p1"]).toMatchObject({ type: "pen" });
+    expect(board.index.order).toHaveLength(6);
+    // A stroke over the cap is refused at the boundary.
+    await expectHttp(
+      human.mutate("boards.applyOps", {
+        slug: "notes",
+        ops: [
+          {
+            op: "putNote",
+            id: "p2",
+            note: {
+              type: "pen",
+              page: 0,
+              x: 0,
+              y: 0,
+              points: Array.from({ length: 501 }, (_, at) => [at, 0]),
+            },
+          },
+        ],
+      }),
+      400,
+    );
+  });
+
   it("replaces the whole document only against the current revision", async () => {
     await human.mutate("boards.create", { slug: "replace", title: "Replace" });
     const current = z

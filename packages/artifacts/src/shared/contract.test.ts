@@ -190,6 +190,14 @@ const board = {
   },
 };
 
+function stroke(points: unknown) {
+  return { type: "pen", page: 0, x: 10, y: 20, points, color: "red" };
+}
+
+function strokePoints(count: number) {
+  return Array.from({ length: count }, (_, at) => [at, at * 2]);
+}
+
 describe("BoardIndexSchema", () => {
   it("accepts a full index and the empty index", () => {
     expect(BoardIndexSchema.parse(board).frames[ID]).toEqual(frame);
@@ -237,6 +245,35 @@ describe("BoardIndexSchema", () => {
     ).toThrow();
   });
 
+  it("accepts a pen stroke of up to 500 points and rejects more, fewer or a malformed one", () => {
+    for (const count of [2, 500])
+      expect(
+        BoardIndexSchema.parse({
+          ...board,
+          notes: { ...board.notes, p1: stroke(strokePoints(count)) },
+        }).notes["p1"],
+      ).toMatchObject({ type: "pen" });
+    for (const points of [
+      strokePoints(1),
+      strokePoints(501),
+      [[0, 0], [1]],
+      [[0, 0], "x"],
+    ])
+      expect(() =>
+        BoardIndexSchema.parse({
+          ...board,
+          notes: { ...board.notes, p1: stroke(points) },
+        }),
+      ).toThrow();
+    expect(
+      BoardOpSchema.parse({
+        op: "putNote",
+        id: "p1",
+        note: stroke(strokePoints(3)),
+      }).op,
+    ).toBe("putNote");
+  });
+
   it("rejects a page outside pages, a duplicate or dangling order entry, and a bad note", () => {
     expect(() =>
       BoardIndexSchema.parse({
@@ -271,6 +308,10 @@ describe("BoardOpSchema", () => {
       { op: "placeFrame", artifactId: ID, w: 1440, h: 900 },
       { op: "placeFrame", artifactId: ID, w: 1, h: 1, rightOf: OTHER_ID },
       { op: "moveFrames", moves: [{ artifactId: ID, x: 1, y: 2 }] },
+      {
+        op: "moveFrames",
+        moves: [{ artifactId: ID, x: 1, y: 2, w: 800, h: 500 }],
+      },
       { op: "reorder", order: [ID, "n1"] },
       { op: "putNote", id: "n1", note: board.notes.n1 },
       { op: "deleteNote", id: "n1" },
@@ -284,6 +325,12 @@ describe("BoardOpSchema", () => {
     expect(() => BoardOpSchema.parse({ op: "explode" })).toThrow();
     expect(() =>
       BoardOpSchema.parse({ op: "moveFrames", moves: [] }),
+    ).toThrow();
+    expect(() =>
+      BoardOpSchema.parse({
+        op: "moveFrames",
+        moves: [{ artifactId: ID, x: 1, y: 2, w: 0 }],
+      }),
     ).toThrow();
     expect(() =>
       BoardOpSchema.parse({ op: "removeFrame", artifactId: "x" }),

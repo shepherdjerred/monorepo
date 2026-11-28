@@ -76,6 +76,15 @@ export async function tabTo(
   throw new Error("Tab never reached the expected element");
 }
 
+/** Opens the comments panel when it is collapsed (a phone starts with it collapsed). */
+export async function openPanel(page: Page): Promise<void> {
+  const toggle = page.getByTestId("panel-toggle");
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) === "false")
+    await toggle.click();
+  await expect(page.getByRole("region", { name: "Comments" })).toBeVisible();
+}
+
 export async function openFocused(
   page: Page,
   artifactId: string,
@@ -84,9 +93,12 @@ export async function openFocused(
   await page.goto(
     `/a/${artifactId}${version === undefined ? "" : `?v=${String(version)}`}`,
   );
+  // A phone's sheet starts collapsed and would cover the viewer; wide screens show the panel.
   await expect(
-    page.getByRole("complementary", { name: "Threads" }),
+    page.getByTestId("floating-nav").getByRole("heading", { level: 1 }),
   ).toBeVisible();
+  const width = page.viewportSize()?.width ?? 0;
+  if (width > 900) await openPanel(page);
 }
 
 export async function commentWithMode(page: Page, text: string): Promise<void> {
@@ -104,4 +116,21 @@ export async function enterCommentMode(page: Page): Promise<void> {
     "aria-pressed",
     "true",
   );
+}
+
+/** Shows version `number` of the focused artifact: the pill's select, or the overflow menu on a phone. */
+export async function selectVersion(page: Page, number: number): Promise<void> {
+  const width = page.viewportSize()?.width ?? 0;
+  if (width > 640) {
+    await page
+      .getByRole("combobox", { name: "Version" })
+      .selectOption(String(number));
+    return;
+  }
+  await page.getByRole("button", { name: "More" }).click();
+  await page
+    .getByRole("menuitem", {
+      name: new RegExp(`^Version v${String(number)}`, "u"),
+    })
+    .click();
 }

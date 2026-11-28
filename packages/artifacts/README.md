@@ -122,12 +122,12 @@ inventory with the activation.
 (`@shepherdjerred/console-ui`, TanStack Query, tRPC over
 `/trpc`). `vite build` writes `dist/client`, which the app host serves.
 
-| Route               | Shows                                                                           |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `/`                 | Inbox: Needs review, Active, Kept, Archived; Keep, Archive, expiry              |
-| `/a/:artifactId?v=` | Focused view: viewer, version switcher, thread sidebar                          |
-| `/b/:slug`          | Board as a grid of frames (at most 6 live); `?grid=1` skips the launch redirect |
-| `/b/:slug/outline`  | The same board as a list: every review action is a button or link               |
+| Route               | Shows                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| `/`                 | Inbox: Needs review, Active, Kept, Archived; Keep, Archive, expiry                      |
+| `/a/:artifactId?v=` | Focused view: viewer, version switcher, thread sidebar                                  |
+| `/b/:slug`          | Board as a free canvas (`src/client/canvas/`); `?view=canvas` skips the launch redirect |
+| `/b/:slug/outline`  | The same board as a list: every review action is a button or link                       |
 
 `ArtifactViewer` is the single switch over artifact kinds
 (`src/client/viewers/`). Each viewer exposes an `AnchorAdapter`
@@ -148,6 +148,70 @@ allow-popups`, never `allow-same-origin`) at a fixed 390 / 768 / 1440 or fit
 - **image, video, markdown, cast, file**: native `<img>` with wheel zoom,
   `<video preload="metadata">` with a timeline of pins, Markdown without raw
   HTML (remote images become links), the asciinema player, a download card.
+
+**The canvas** is a hand-rolled DOM canvas, not a library. The world layer is
+`translate(x, y) scale(s)` (origin 0 0, `s` from 0.05 to 4); chips, the
+selection ring, pins and the toolbar live in an unscaled overlay and follow the
+camera. The camera is a plain object written once per animation frame by
+`controller.ts`; React hears about it once, when it settles (120 ms after a
+pan, 250 ms after a zoom). `will-change: transform` is set only while it moves,
+because leaving it on blurs host text. Input (`gestures.ts`): non-passive wheel
+(Ctrl or Meta zooms at the cursor), Safari `gesture*` events and a two-pointer
+pinch arbitrated so one pinch is applied once (`pinch.ts`), Space-drag,
+middle-drag and `H` to pan, and wheel or gesture input a live frame forwards
+over the bridge. `1` fits all, `2` the selection, `0` is 100 %; the camera is
+stored per board in `localStorage`. Frames render in three tiers (`tiers.ts`):
+the one live frame, at most 8 inert previews (4 in Firefox, lowered by two when
+the frame rate over the last two seconds of motion is slow, never below 3) and
+the typed placeholder card. Stacking is CSS `z-index` from the index `order`;
+an iframe is never moved or remounted, because that reloads it. The outline
+route stays the keyboard and screen-reader path.
+
+**Shell.** The canvas and the focused view are full-bleed: the console-ui shell bar
+and the page header are one floating pill at the top left (`shell/floating-nav.tsx`:
+the workspace switcher and Inbox the bar had, then the page's title and actions;
+a phone keeps the mark, the title and an overflow menu). The inbox and the outline
+keep the normal bar. The comments are a floating card on the right
+(`shell/comments-panel.tsx`; a bottom sheet on a phone) that collapses to a pill
+with the `MessageCircle` icon, the open count and a dot while an agent waits.
+Shift+C toggles it, the choice is remembered per viewer in `localStorage`, and a
+pin click, J/K or a new comment opens it on the thread. While it is open the
+canvas fits and reveals into what it leaves, and the viewer narrows (the
+`--ar-inset-right` variable). The comment cursor and the pins are lucide's
+`MessageCircle` glyph, read from its icon data (`lib/pin-shape.ts`), with the tail
+tip as the hotspot and the anchor.
+
+**Annotations** (`src/client/canvas/notes/`) are the board index's `notes`:
+sticky, title, box, line, arrow and pen (a stroke of 2 to 500 points as offsets
+from its origin, simplified with Ramer-Douglas-Peucker before it is stored).
+The tool pill's second group draws them (`T` `S` `P` `B` `A` `L`): a drag draws
+(a click makes a title or a default sticky), the tool reverts to select after
+one shape unless Shift is held, text is typed in an overlay `<textarea>` (Enter
+or double-click edits, Ctrl/Cmd+Enter saves, Esc abandons), and a small palette
+sets the colour. They render in the world layer, one `<svg>` per straight
+segment or stroke, share `order` with frames for z-order, and never take a
+pointer: hit-testing is geometry (a 12 screen-pixel stroke for lines, arrows
+and pen strokes, borders only for boxes). Moving, resizing, deleting and undo
+use the arrangement machinery over `putNote` and `deleteNote`; arrows store plain
+coordinates and do not follow frames. Agents read them back in
+`boards.get` (and `toolkit artifacts show --json`, as `notes`); the outline lists
+the text of stickies and titles.
+
+**Arranging** (`src/client/canvas/arrange/`). Click selects, Shift-click adds,
+a drag on empty canvas draws a marquee, a drag on a frame moves the selection
+(4 px threshold, pointer capture, edge auto-pan, 8 px grid, Alt for free
+movement, Esc cancels), eight handles resize one frame (a fixed-viewport frame
+keeps its aspect), arrows nudge by 1 px (Shift 10), `[` `]` step z-order, Delete
+removes from the board after a confirm (never the artifact), Mod+Z and
+Shift+Mod+Z undo and redo. The arrangement is a replicated document:
+`useBoardLayout` keeps the server's index plus an outbox of
+`boards.applyOps` ops (`moveFrames` with optional `w` and `h`, `reorder`,
+`removeFrame`), saved 400 ms after the last edit and on `pagehide` (a
+`keepalive` request). What is drawn is the index with the outbox applied on
+top, and the ops are absolute, so another actor's change (an agent publishing a
+frame) merges by id without moving the camera or losing a drag in progress;
+a toast names the new frame with a jump-to. Undo entries record before and
+after per touched frame and replay as ops against the current board.
 
 Browser support is Baseline Widely Available. `bun run dev:client` serves the
 UI with Vite against a service on `:7440`.

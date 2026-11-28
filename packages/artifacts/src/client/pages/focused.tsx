@@ -14,7 +14,19 @@ import {
 import { ArtifactViewer } from "#client/viewers/artifact-viewer.tsx";
 import type { AnchorAdapter, PresetId } from "#client/viewers/types.ts";
 import { useFocusedData } from "./focused-data.ts";
-import { defaultPreset, FocusedHeader } from "./focused-header.tsx";
+import {
+  defaultPreset,
+  FocusedNav,
+  FocusedTools,
+  VersionMeta,
+} from "./focused-header.tsx";
+import { CommentsPanel } from "#client/shell/comments-panel.tsx";
+import {
+  NARROW_QUERY,
+  PANEL_CLEARANCE,
+  usePanelInset,
+  usePanelState,
+} from "#client/shell/panel-state.ts";
 import { useReviewKeys } from "./focused-shortcuts.ts";
 import { PlacementComposer, type Placement } from "./placement-composer.tsx";
 
@@ -47,6 +59,10 @@ export function FocusedPage(): React.JSX.Element {
   const [pane, setPane] = useState<HTMLElement | null>(null);
   const create = useCreateThread();
   const resolve = useSetResolved();
+  const panel = usePanelState("focused");
+  const wide = !globalThis.matchMedia(NARROW_QUERY).matches;
+  usePanelInset(wide && !panel.collapsed ? PANEL_CLEARANCE : 0);
+  const { expand } = panel;
 
   const numbered = useMemo(
     () => new Map(all.map((thread, position) => [thread.id, position + 1])),
@@ -67,11 +83,15 @@ export function FocusedPage(): React.JSX.Element {
       setSelectedId(threadId);
       const thread = all.find((candidate) => candidate.id === threadId);
       if (thread !== undefined) adapterRef.current?.reveal?.(thread.anchor);
-      document
-        .querySelector(`[id="thread-${threadId}"]`)
-        ?.scrollIntoView({ block: "nearest" });
+      // A pin, J/K or a new comment opens the panel on the thread.
+      expand();
+      requestAnimationFrame(() => {
+        document
+          .querySelector(`[id="thread-${threadId}"]`)
+          ?.scrollIntoView({ block: "nearest" });
+      });
     },
-    [all],
+    [all, expand],
   );
 
   const showVersion = useCallback(
@@ -153,22 +173,74 @@ export function FocusedPage(): React.JSX.Element {
           setPlacement(null);
           setCommentMode(false);
           setSelectedId(thread.id);
+          expand();
           setFilter("open");
         },
       },
     );
   }
 
+  const openCount = all.filter((thread) => thread.state === "open").length;
+
   return (
     <main className="ar-focus" id="content" tabIndex={-1}>
       <title>{`${detail.title} · Artifacts`}</title>
-      <FocusedHeader
+      <section className="ar-viewer-pane" ref={setPane} aria-label="Artifact">
+        {version === undefined ? (
+          <p className="ar-empty" role="status">
+            Loading version…
+          </p>
+        ) : (
+          <ArtifactViewer
+            artifact={{
+              id: detail.id,
+              title: detail.title,
+              kind: detail.kind,
+            }}
+            version={version}
+            mode="focus"
+            active={active}
+            onActiveChange={setActive}
+            preset={presetChoice ?? defaultPreset(shown.viewport)}
+            adapterRef={adapterRef}
+            review={{
+              commentMode,
+              pins,
+              selectedId,
+              onSelect: select,
+              onPlace: (anchor, at) => {
+                setPlacement({ anchor, at });
+              },
+            }}
+          />
+        )}
+        {placement === null ? null : (
+          <PlacementComposer
+            placement={placement}
+            pane={pane}
+            pending={create.isPending}
+            onSubmit={submitPlacement}
+            onCancel={() => {
+              setPlacement(null);
+            }}
+          />
+        )}
+        {commentMode && placement === null ? (
+          <p className="ar-mode-hint" role="status">
+            Comment mode: click where the comment belongs. Esc to leave.
+          </p>
+        ) : null}
+      </section>
+      <FocusedNav
         title={detail.title}
         boardSlug={detail.boardSlug}
         boardTitle={detail.boardTitle}
         versions={sorted}
         shown={shown}
         version={version}
+        onVersion={showVersion}
+      />
+      <FocusedTools
         framed={framed}
         preset={presetChoice ?? defaultPreset(shown.viewport)}
         onPreset={setPreset}
@@ -177,88 +249,44 @@ export function FocusedPage(): React.JSX.Element {
           setCommentMode(on);
           if (on) setActive(false);
         }}
-        onVersion={showVersion}
       />
-      <div className="ar-focus-body">
-        <section className="ar-viewer-pane" ref={setPane} aria-label="Artifact">
-          {version === undefined ? (
-            <p className="ar-empty" role="status">
-              Loading version…
-            </p>
-          ) : (
-            <ArtifactViewer
-              artifact={{
-                id: detail.id,
-                title: detail.title,
-                kind: detail.kind,
-              }}
-              version={version}
-              mode="focus"
-              active={active}
-              onActiveChange={setActive}
-              preset={presetChoice ?? defaultPreset(shown.viewport)}
-              adapterRef={adapterRef}
-              review={{
-                commentMode,
-                pins,
-                selectedId,
-                onSelect: select,
-                onPlace: (anchor, at) => {
-                  setPlacement({ anchor, at });
-                },
-              }}
-            />
-          )}
-          {placement === null ? null : (
-            <PlacementComposer
-              placement={placement}
-              pane={pane}
-              pending={create.isPending}
-              onSubmit={submitPlacement}
-              onCancel={() => {
-                setPlacement(null);
-              }}
-            />
-          )}
-          {commentMode && placement === null ? (
-            <p className="ar-mode-hint" role="status">
-              Comment mode: click where the comment belongs. Esc to leave.
-            </p>
-          ) : null}
-        </section>
-        <aside className="ar-sidebar" aria-label="Threads">
-          <WaitingHeader scope={{ type: "artifact", artifactId: detail.id }} />
-          <ThreadList
-            threads={all}
-            filter={filter}
-            onFilter={setFilter}
-            selectedId={selectedId}
-            onSelect={select}
-            currentVersion={latest}
-            viewedVersion={shown.number}
-            indexOf={(thread) => numbered.get(thread.id) ?? null}
-            onViewVersion={showVersion}
-            empty={
-              filter === "open"
-                ? "No open threads. Press C and click to comment."
-                : "No threads here."
-            }
-          />
-          <Composer
-            label="General comment"
-            pending={create.isPending}
-            onSubmit={(body) => {
-              create.mutate({
-                board: detail.boardSlug,
-                artifactId: detail.id,
-                versionId: shown.id,
-                anchor: { type: "general" },
-                body,
-              });
-            }}
-          />
-        </aside>
-      </div>
+      <CommentsPanel
+        state={panel}
+        scope={{ artifactId: detail.id }}
+        openCount={openCount}
+      >
+        <VersionMeta shown={shown} />
+        <WaitingHeader scope={{ type: "artifact", artifactId: detail.id }} />
+        <ThreadList
+          threads={all}
+          filter={filter}
+          onFilter={setFilter}
+          selectedId={selectedId}
+          onSelect={select}
+          currentVersion={latest}
+          viewedVersion={shown.number}
+          indexOf={(thread) => numbered.get(thread.id) ?? null}
+          onViewVersion={showVersion}
+          empty={
+            filter === "open"
+              ? "No open threads. Press C and click to comment."
+              : "No threads here."
+          }
+        />
+        <Composer
+          label="General comment"
+          pending={create.isPending}
+          onSubmit={(body) => {
+            create.mutate({
+              board: detail.boardSlug,
+              artifactId: detail.id,
+              versionId: shown.id,
+              anchor: { type: "general" },
+              body,
+            });
+          }}
+        />
+      </CommentsPanel>
     </main>
   );
 }

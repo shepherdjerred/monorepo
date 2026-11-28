@@ -8,6 +8,8 @@ import {
   drain,
   KARPATHY,
   openFocused,
+  openPanel,
+  selectVersion,
   resetAndSeed,
   sharedFixtures,
 } from "./review-setup.ts";
@@ -141,14 +143,16 @@ test.describe("html frames", () => {
     await expect(frame).toHaveAttribute("allow", "");
     await expect(frame).toHaveJSProperty("inert", true);
 
-    const cell = page.getByTestId("board-frame").first();
-    await cell.getByRole("button", { name: "Click to interact" }).click();
+    const cell = page.getByTestId("canvas-frame").first();
+    await cell.dblclick();
     await expect(frame).toHaveJSProperty("inert", false);
-    await expect(cell.getByRole("button", { name: /^Exit/u })).toBeVisible();
-    await cell.getByRole("button", { name: /^Exit/u }).click();
+    const exit = page.getByRole("button", { name: /^Exit/u });
+    await expect(exit).toBeVisible();
+    await exit.click();
     await expect(frame).toHaveJSProperty("inert", true);
 
-    await cell.getByRole("button", { name: "Click to interact" }).click();
+    await cell.dblclick();
+    await expect(frame).toHaveJSProperty("inert", false);
     await page.keyboard.press("Escape");
     await expect(frame).toHaveJSProperty("inert", true);
   });
@@ -209,7 +213,7 @@ test.describe("html frames", () => {
     if (rect === null) throw new Error("frame has no box");
     await page.mouse.click(
       rect.x + rect.width * 0.3,
-      rect.y + rect.height * 0.2,
+      rect.y + rect.height * 0.5,
     );
     await commentWithMode(page, "Version one needs a logo");
     await expect(page.getByTestId("pin")).toHaveCount(1);
@@ -227,7 +231,7 @@ test.describe("html frames", () => {
       "false",
     );
 
-    await page.getByRole("combobox", { name: "Version" }).selectOption("2");
+    await selectVersion(page, 2);
     await expect(page).toHaveURL(/v=2/u);
     const thread = page
       .getByTestId("thread")
@@ -313,7 +317,7 @@ test.describe("other kinds", () => {
 });
 
 test.describe("board", () => {
-  test("renders at most six live frames and loads the rest on request", async ({
+  test("renders at most eight previews and loads the rest on request", async ({
     page,
     baseURL,
   }) => {
@@ -321,7 +325,7 @@ test.describe("board", () => {
     const api = agentApi(baseURL);
     await api.boards.create.mutate({ slug: "many", title: "Many concepts" });
     const fixtures = await sharedFixtures();
-    for (let index = 0; index < 8; index += 1)
+    for (let index = 0; index < 11; index += 1)
       await publishFixture(String(baseURL), {
         board: "many",
         title: `Option ${String(index + 1)}`,
@@ -329,29 +333,35 @@ test.describe("board", () => {
         entryPath: fixtures.htmlV1.entryPath,
       });
     await page.goto("/b/many");
-    await expect(page.getByTestId("board-frame")).toHaveCount(8);
-    await expect(page.getByTestId("artifact-frame")).toHaveCount(6);
+    await expect(page.getByTestId("canvas-frame")).toHaveCount(11);
+    // Firefox previews fewer frames.
+    const cap =
+      page.context().browser()?.browserType().name() === "firefox" ? 4 : 8;
+    await expect(page.getByTestId("artifact-frame")).toHaveCount(cap);
     const placeholders = page.getByTestId("frame-placeholder");
-    await expect(placeholders).toHaveCount(2);
+    await expect(placeholders).toHaveCount(11 - cap);
     await expect(placeholders.first()).toContainText("HTML");
     await expect(placeholders.first()).toContainText("v1");
     await placeholders
       .first()
       .getByRole("button", { name: "Click to load" })
       .click();
-    await expect(page.getByTestId("artifact-frame")).toHaveCount(6);
-    await expect(placeholders).toHaveCount(2);
+    // The requested frame takes a slot; the farthest preview gives one up.
+    await expect(page.getByTestId("artifact-frame")).toHaveCount(cap);
+    await expect(placeholders).toHaveCount(11 - cap);
   });
 
-  test("the title opens the focused view and F does too", async ({ page }) => {
+  test("the chip opens the focused view and F does too", async ({ page }) => {
     await page.goto("/b/concepts");
-    await page.getByRole("link", { name: "Concept B", exact: true }).click();
+    // A narrow chip shows its link only once the frame is selected.
+    await page.getByRole("button", { name: /^Concept B,/u }).click();
+    await page.getByRole("link", { name: "Open Concept B full size" }).click();
     await expect(page).toHaveURL(/\/a\//u);
     await expect(
       page.getByRole("heading", { name: "Concept B", level: 1 }),
     ).toBeVisible();
     await page.goto("/b/concepts");
-    await page.getByTestId("board-frame").nth(2).hover();
+    await page.getByRole("button", { name: /^Concept C,/u }).click();
     await page.keyboard.press("f");
     await expect(
       page.getByRole("heading", { name: "Concept C", level: 1 }),
@@ -360,10 +370,11 @@ test.describe("board", () => {
 
   test("board comments are listed in the sidebar", async ({ page }) => {
     await page.goto("/b/concepts");
+    await openPanel(page);
     await page
       .getByLabel("Comment on the board")
       .fill("Overall direction B looks strongest");
-    await page.getByRole("button", { name: "Comment" }).click();
+    await page.getByRole("button", { name: "Comment", exact: true }).click();
     await expect(
       page.getByTestId("thread").filter({ hasText: "direction B" }),
     ).toBeVisible();
@@ -375,6 +386,7 @@ test.describe("threads", () => {
     page,
   }) => {
     await openFocused(page, seeded.demo.png.artifactId);
+    await openPanel(page);
     await page.getByLabel("General comment").fill("Needs a caption");
     await page
       .getByRole("button", { name: "Comment", exact: true })
@@ -416,8 +428,9 @@ test.describe("threads", () => {
     const api = agentApi(baseURL);
     const artifactId = seeded.demo.webm.artifactId;
     await openFocused(page, artifactId);
+    await openPanel(page);
     // The breadcrumb names the board by its title, not its slug.
-    await expect(page.locator(".ar-crumbs")).toHaveText("Demo board");
+    await expect(page.locator(".ar-fnav-crumb")).toHaveText("Demo board");
     await expect(page.getByTestId("waiting")).toHaveText(/No agent waiting/u);
 
     await page.getByLabel("General comment").fill("Audio is missing");

@@ -77,59 +77,13 @@
 
 /* Board */
 .ar-board {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: calc(100dvh - var(--ar-top));
-}
-.ar-board-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--ui-line);
-}
-.ar-board-body {
-  min-width: 0;
-  padding: 16px;
-}
-.ar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-  gap: 16px;
-  padding: 0;
-  list-style: none;
-}
-.ar-node {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-.ar-node[data-selected="true"] .ar-node-body {
-  outline: 2px solid color-mix(in srgb, var(--ui-accent) 60%, transparent);
-  outline-offset: 2px;
-}
-.ar-node-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 28px;
-}
-.ar-node-title {
-  overflow: hidden;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ui-ink);
-}
-.ar-node-head .ar-icon-button {
-  margin-left: auto;
-}
-.ar-node-body {
   position: relative;
+  height: 100dvh;
   overflow: hidden;
-  border: 1px solid var(--ui-line);
-  border-radius: 8px;
-  background: var(--ui-panel);
+}
+.ar-board > .ar-cv {
+  position: absolute;
+  inset: 0;
 }
 .ar-placeholder {
   display: grid;

@@ -317,6 +317,19 @@ describe("board operations", () => {
     expect(next.frames[A]).toMatchObject({ x: 5, y: 6, page: 0 });
     expect(C in next.frames).toBe(false);
   });
+  it("resizes in a move and leaves the size alone otherwise", () => {
+    const resized = applyBoardOps(placed, [
+      {
+        op: "moveFrames",
+        moves: [{ artifactId: A, x: 5, y: 6, w: 800, h: 500 }],
+      },
+    ]);
+    expect(resized.frames[A]).toMatchObject({ x: 5, y: 6, w: 800, h: 500 });
+    const moved = applyBoardOps(resized, [
+      { op: "moveFrames", moves: [{ artifactId: A, x: 7, y: 8 }] },
+    ]);
+    expect(moved.frames[A]).toMatchObject({ x: 7, y: 8, w: 800, h: 500 });
+  });
   it("reorders without losing or duplicating ids", () => {
     const next = applyBoardOps(placed, [
       { op: "reorder", order: [B, B, C, "zzz"] },
@@ -342,6 +355,27 @@ describe("board operations", () => {
     ]);
     expect(gone.notes).toEqual({});
     expect(gone.order).toEqual([A, B]);
+  });
+  it("stores a pen stroke as a note and removes it with deleteNote", () => {
+    const points: [number, number][] = [
+      [0, 0],
+      [10, 4],
+      [20, 0],
+    ];
+    const note = {
+      type: "pen" as const,
+      page: 0,
+      x: 5,
+      y: 6,
+      points,
+      color: "blue",
+    };
+    const next = applyBoardOps(placed, [{ op: "putNote", id: "p1", note }]);
+    expect(next.notes["p1"]).toMatchObject({ type: "pen", x: 5 });
+    expect(next.order).toEqual([A, B, "p1"]);
+    expect(applyBoardOps(next, [{ op: "deleteNote", id: "p1" }]).notes).toEqual(
+      {},
+    );
   });
   it("refuses a note that would shadow a frame id", () => {
     const note = {

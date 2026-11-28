@@ -79,6 +79,58 @@ export function frameScale(
   return Math.min(1, byWidth, byHeight);
 }
 
+/** The client point of a position the frame reported in its own (unscaled) pixels. */
+function frameClientPoint(
+  frame: HTMLIFrameElement | null,
+  at: { readonly x: number; readonly y: number },
+): Point | null {
+  if (frame === null) return null;
+  const rect = frame.getBoundingClientRect();
+  const width = frame.offsetWidth;
+  const scale = width > 0 ? rect.width / width : 1;
+  return { x: rect.left + at.x * scale, y: rect.top + at.y * scale };
+}
+
+/**
+ * The page did not keep this input: the canvas camera takes it. The point is
+ * the frame's own client pixels (rounded by the browser); pins never depend on
+ * it.
+ */
+function forwardHostInput(
+  frame: HTMLIFrameElement | null,
+  forward: ViewerProps["onHostInput"],
+  message: Extract<FrameMessage, { t: "wheel" | "gesture" }>,
+): void {
+  const client = frameClientPoint(frame, message);
+  if (client === null || forward === undefined) return;
+  forward(
+    message.t === "wheel"
+      ? {
+          type: "wheel",
+          dx: message.dx,
+          dy: message.dy,
+          ctrl: message.ctrl,
+          client,
+        }
+      : { type: "gesture", scale: message.scale, client },
+  );
+}
+
+/**
+ * Which controls the frame draws: the activate button while inert, and the Exit
+ * chip while active. On the canvas, the Exit chip is part of the unscaled
+ * overlay and a node never offers activation.
+ */
+function frameChrome(
+  mode: FrameMode,
+  active: boolean,
+): { readonly activate: boolean; readonly exit: boolean } {
+  return {
+    activate: !active && mode !== "node",
+    exit: active && mode === "focus",
+  };
+}
+
 function useContainerSize() {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -109,6 +161,7 @@ export function FrameViewer({
   review,
   adapterRef,
   onViewChange,
+  onHostInput,
   preset,
 }: ViewerProps): React.JSX.Element {
   const [containerRef, container] = useContainerSize();
@@ -120,6 +173,9 @@ export function FrameViewer({
     new Map<number, (point: Extract<FrameMessage, { t: "point" }>) => void>(),
   );
   const probeId = useRef(0);
+  // A ref, so a new callback from the canvas never rebuilds the bridge.
+  const hostInput = useRef(onHostInput);
+  hostInput.current = onHostInput;
 
   const size = presetSize(preset, version.viewport, container);
   const scale = frameScale(
@@ -174,10 +230,11 @@ export function FrameViewer({
             break;
           case "wheel":
           case "gesture":
+            forwardHostInput(frameRef.current, hostInput.current, message);
+            break;
           case "drawn":
           case "scroll":
           case "nav":
-            // Wheel and gesture forwarding to a canvas camera arrives with the canvas.
             break;
         }
       },
@@ -317,6 +374,7 @@ export function FrameViewer({
     return <p className="ar-note">This version’s files were deleted.</p>;
 
   const connected = doc !== null;
+  const chrome = frameChrome(mode, active);
   const wrapperStyle =
     preset === "responsive" || mode === "node"
       ? { width: "100%", height: "100%" }
@@ -363,7 +421,7 @@ export function FrameViewer({
               });
             }}
           />
-        ) : active ? null : (
+        ) : chrome.activate ? (
           <button
             type="button"
             className="ar-frame-activate"
@@ -372,9 +430,9 @@ export function FrameViewer({
             <PointerIcon aria-hidden="true" />
             <span>Click to interact</span>
           </button>
-        )}
+        ) : null}
       </div>
-      {active ? (
+      {chrome.exit ? (
         <button
           type="button"
           className="ar-exit-chip"
