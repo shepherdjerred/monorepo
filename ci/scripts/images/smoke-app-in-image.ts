@@ -58,6 +58,20 @@ function assertPassed(result: SmokeResult, label: string): void {
 const discordAuthPattern =
   "TokenInvalid|401|Unauthorized|Invalid token|An invalid token was provided";
 
+/**
+ * Boot an app under a timeout and require that it either exits with
+ * `acceptedStatus` or reaches Discord authentication with the dummy token.
+ */
+function discordBootProbe(start: string, acceptedStatus: number): string[] {
+  return [
+    "set +e",
+    `output="$(timeout 30s ${start} 2>&1)"`,
+    "status=$?",
+    String.raw`printf '%s\n' "$output"`,
+    String.raw`[ "$status" -eq ${acceptedStatus.toString()} ] || printf "%s\n" "$output" | grep -iE "${discordAuthPattern}"`,
+  ];
+}
+
 function backgroundProbeSmoke(
   packageDir: string,
   entry: string,
@@ -232,13 +246,7 @@ const commands: Record<
       // Bun. Missing either runtime is a broken advertised capability.
       "bun --version",
       "python3 --version",
-      "set +e",
-      'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
-      "status=$?",
-      String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
-        discordAuthPattern +
-        '"',
+      ...discordBootProbe("bun run scripts/start.ts", 124),
     ].join("\n"),
     env: {
       DISCORD_TOKEN: "smoke-test-dummy",
@@ -270,13 +278,7 @@ const commands: Record<
         ` const n = await prisma.karma.count();` +
         ` if (n !== 0) { throw new Error("expected an empty smoke database, got " + String(n)); }` +
         ` console.log("smoke: prisma query ok"); await disconnectPrisma();'`,
-      "set +e",
-      'output="$(timeout 30s bun scripts/start.ts 2>&1)"',
-      "status=$?",
-      String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -eq 0 ] || printf "%s\n" "$output" | grep -iE "` +
-        discordAuthPattern +
-        '"',
+      ...discordBootProbe("bun scripts/start.ts", 0),
     ].join("\n"),
     env: {
       DISCORD_TOKEN: "smoke-test-dummy",
@@ -298,13 +300,7 @@ const commands: Record<
       "cd /app/packages/streambot",
       "ffmpeg -version >/dev/null",
       "/usr/local/bin/yt-dlp --version >/dev/null",
-      "set +e",
-      'output="$(timeout 30s bun run src/index.ts 2>&1)"',
-      "status=$?",
-      String.raw`printf '%s\n' "$output"`,
-      String.raw`[ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
-        discordAuthPattern +
-        '"',
+      ...discordBootProbe("bun run src/index.ts", 124),
     ].join("\n"),
     env: { ...streambotImageSmokeEnv },
   },
