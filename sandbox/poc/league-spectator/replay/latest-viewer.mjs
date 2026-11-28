@@ -205,6 +205,10 @@ export function createLatestViewerEngine({
     controls = new OrbitControls(camera, $("scene"));
   const preparedEffects = new LatestPreparedEffectPlayback();
   const replayLoad = new LatestViewerReplayLoad();
+  let loadingViewDirty = true;
+  controls.addEventListener("change", () => {
+    loadingViewDirty = true;
+  });
   let preparingEffectPreview = false,
     effectPreviewJob = 0,
     preparedPlaybackClock = null,
@@ -591,6 +595,7 @@ export function createLatestViewerEngine({
     renderer.setSize(b.width, b.height, false);
     camera.aspect = b.width / b.height;
     camera.updateProjectionMatrix();
+    loadingViewDirty = true;
     directReplyLoop?.invalidate();
     effectLookahead?.invalidate();
     cancelPreparedEffectPreview("Window changed · prepare the sequence again.");
@@ -1526,6 +1531,7 @@ export function createLatestViewerEngine({
   }
   async function decode(buffer) {
     const load = replayLoad.begin();
+    loadingViewDirty = true;
     if (vfxRenderer === directEffectSession?.renderer) vfxRenderer = null;
     directReplyLoop?.close();
     directReplyLoop = null;
@@ -1772,6 +1778,7 @@ export function createLatestViewerEngine({
         $("status").textContent =
           "Binding decoded buildings to installed map objects…";
         await replayLoad.wait(load, loadWorldObjects(load));
+        loadingViewDirty = true;
         tracePreparation("heroes.worldobjects", "end", {
           heroes: heroes.length,
           buildings: buildings.length,
@@ -2794,10 +2801,15 @@ export function createLatestViewerEngine({
       previous = now;
       if (replayLoad.loading) {
         controls.update();
-        drawScene(camera, "loading replay", {
-          record: false,
-          directEffectRenderer: null,
-        });
+        // Keep the loading view responsive without resubmitting the frozen
+        // scene while its replay resources are still being prepared.
+        if (loadingViewDirty) {
+          loadingViewDirty = false;
+          drawScene(camera, "loading replay", {
+            record: false,
+            directEffectRenderer: null,
+          });
+        }
         return;
       }
       // Capture owns automatic world and camera updates while paused, including
