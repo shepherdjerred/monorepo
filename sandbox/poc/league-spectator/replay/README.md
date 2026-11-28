@@ -902,6 +902,18 @@ the recorded detached origin. It also checks the native stop request. It supplie
 an identity attachment and leaves ground-mask, fog and post-stop scheduling
 outside the CPU geometry receipt.
 
+Use the pinned original Map11 navgrid to compare the initial navigation mask
+with the archived `.8428` producer. The probe runs the original CPU expansion
+with a zero previous surface. The verifier compares every expanded byte with
+the shared JavaScript implementation. This receipt describes initialization.
+Admitting a masked effect at a recorded clock also requires the replay's
+overlay state, quality setting, and fade and blur history.
+
+```powershell
+uv run --with unicorn python sandbox/poc/league-spectator/replay/tools/research/probe-rift-navmesh-mask-source.py $macGameExecutable $originalMap11Navgrid $newPrivateMaskReceipt
+bun sandbox/poc/league-spectator/replay/tools/research/verify-rift-navmesh-mask-source.mjs $newPrivateMaskReceipt
+```
+
 Capture continuous 1× playback of the reviewed fight from a signed-out
 loopback Scout preview. The video and timeline cover 28:32–28:41. The timeline
 records the package digest, follow camera, actor draws, and particle draws at
