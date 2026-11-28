@@ -327,6 +327,7 @@ export function createRecordedParticleRenderer(
       if (particles.length === 0) return;
       const restoreDraw = saveState(gl, uniformBuffers.length, textureCount);
       let restoreRibbon;
+      let restoreUnmaskedCull;
       try {
         gl.useProgram(program);
         gl.bindVertexArray(vertexArray);
@@ -383,7 +384,12 @@ export function createRecordedParticleRenderer(
           indices,
           worldRibbon,
           worldMaskedQuad: masked,
+          worldUnmaskedQuad: unmasked,
         } of particles) {
+          if (!unmasked && restoreUnmaskedCull !== undefined) {
+            restoreUnmaskedCull();
+            restoreUnmaskedCull = undefined;
+          }
           const particleProgram = masked
             ? maskedProgram
             : alphaTest
@@ -408,10 +414,11 @@ export function createRecordedParticleRenderer(
           const paletteTexture = uploadedPalettes.get(palette);
           if (!base || !paletteTexture)
             throw Error("Missing recorded particle texture");
-          if (masked) {
+          if (masked || unmasked) {
             restoreRibbon?.();
             restoreRibbon = undefined;
             if (
+              (masked && unmasked) ||
               worldRibbon ||
               alphaTest ||
               depthTest ||
@@ -423,7 +430,19 @@ export function createRecordedParticleRenderer(
               indices.length !==
                 (vertices.length / worldVertices.length) * indicesPerQuad * 2
             )
-              throw Error("Invalid recorded masked world quad");
+              throw Error("Invalid recorded world quad");
+            if (unmasked && restoreUnmaskedCull === undefined) {
+              const front = gl.getParameter(gl.FRONT_FACE);
+              const mode = gl.getParameter(gl.CULL_FACE_MODE);
+              restoreUnmaskedCull = () => {
+                gl.frontFace(front);
+                gl.cullFace(mode);
+                gl.disable(gl.CULL_FACE);
+              };
+              gl.frontFace(gl.CW);
+              gl.cullFace(gl.BACK);
+              gl.enable(gl.CULL_FACE);
+            }
           } else if (worldRibbon === true) {
             if (
               !(vertices instanceof Uint8Array) ||
@@ -496,11 +515,14 @@ export function createRecordedParticleRenderer(
           gl.bindTexture(gl.TEXTURE_2D, base);
           gl.bufferData(
             gl.ARRAY_BUFFER,
-            masked || worldRibbon === true ? vertices : worldVertices,
+            masked || unmasked || worldRibbon === true
+              ? vertices
+              : worldVertices,
             gl.STREAM_DRAW,
           );
           gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STREAM_DRAW);
-          const offsetEnabled = masked && gl.isEnabled(gl.POLYGON_OFFSET_FILL);
+          const offsetEnabled =
+            (masked || unmasked) && gl.isEnabled(gl.POLYGON_OFFSET_FILL);
           if (offsetEnabled) gl.disable(gl.POLYGON_OFFSET_FILL);
           try {
             gl.drawElements(
@@ -514,6 +536,7 @@ export function createRecordedParticleRenderer(
           }
         }
       } finally {
+        restoreUnmaskedCull?.();
         restoreRibbon?.();
         restoreDraw();
       }

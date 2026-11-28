@@ -1,7 +1,7 @@
 """Verify original detached ArbitraryQuad pool retirement with reviewed inputs.
 
-The owned scene supplies quality, attachment and update cadence. The probe
-establishes CPU pool birth and natural retirement only.
+The owned scene supplies quality, attachment and update cadence. The optional
+GroundGlow1 mode also samples the original indexed world-quad writer.
 """
 
 import argparse
@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from champion_replication_archive import CURRENT_BUILD, read_replication_image
 
 
-def run(image, event, fields, cadence, supplied_random):
+def run(image, event, fields, cadence, supplied_random, camera=None):
     def constant(key, default=None):
         obj = fields.get(key)
         if obj is None:
@@ -173,8 +173,18 @@ def run(image, event, fields, cadence, supplied_random):
     put(resource_settings + 0x38, "Q", pool + 0x100)
     call(0x14B4E00, system + 0x248)
     pos = event["descriptor"]["positions"][0]
-    for at in [0xFC, 0x108, 0x278]:
-        put(system + at, "3f", *pos)
+    if camera is None:
+        for at in [0xFC, 0x108, 0x278]:
+            put(system + at, "3f", *pos)
+    else:
+        position_input = stop + 0x6600
+        put(position_input, "3f", *pos)
+        vm.reg_write(reg.UC_X86_REG_R12, position_input)
+        vm.reg_write(reg.UC_X86_REG_RBX, system)
+        call(0x178EFA8, system, time=pos[2], end=image.base + 0x178EFBE)
+        call(0x1790A7E, system, end=image.base + 0x1790A9E)
+        assert vm.mem_read(system + 0xFC, 24) == struct.pack("<6f", *pos, *pos)
+        assert vm.mem_read(system + 0x278, 12) == bytes(12)
     put(definition + 0xF8, "f", lifetime)
     put(definition + 0x108, "f", authored["lifetime"])
     put(definition + 0x3E8, "3f", *v(constant("f0eb7084")))
@@ -189,6 +199,110 @@ def run(image, event, fields, cadence, supplied_random):
     put(system + 0x1B0, "8f", *([1] * 8))
     put(system + 0x1D0, "f", 1)
     put(system + 0x1F0, "2f", 1, 1)
+
+    if camera is not None:
+        put(definition + 0x14, "B", fields["fa784eab"]["value"])
+        put(definition + 0x17, "B", fields["b9516a6f"]["value"])
+        put(definition + 0x70, "hB", fields["7b7a7318"]["value"], fields["6563bee8"]["value"])
+        put(definition + 0x77, "B", fields["b99310f4"]["value"])
+        assert (
+            fields["37ddb774"]["value"] == 1
+            and fields["3559e15b"]["value"] == 1
+            and "dddde180" not in fields
+            and "8d2e2474" not in fields
+        )
+        put(definition + 0x2D0, "I", flags | 0x10100A)
+        put(definition + 0x150, "4f", *v(constant("83cdeaa1"), "XYZW"))
+        wrapper = stop + 0x6900
+        emitter_entity = stop + 0x6C00
+        put(emitter_entity + 0x188, "Q", wrapper)
+        put(wrapper + 0x28, "Q", system)
+        scale = event["descriptor"]["scaleRate"][0]
+        scale_method = struct.unpack_from("<Q", image.image, 0x238CF98 + 0x1E8)[0] - image.base
+        assert scale_method == 0x378470
+        call(scale_method, emitter_entity, time=scale)
+        assert vm.mem_read(wrapper + 0xB8, 4) == struct.pack("<f", scale)
+        vm.reg_write(reg.UC_X86_REG_RBX, wrapper)
+        call(0x17947E9, wrapper, end=image.base + 0x1794804)
+        assert vm.mem_read(system + 0x154, 4) == struct.pack("<f", scale)
+
+        def lanes(key):
+            src = fields[key]["fields"]["bc037de7"]["fields"]
+            times = [x["value"] for x in src["5d68eeb5"]["elements"]]
+            values = [x["value"] for x in src["34474c3b"]["elements"]]
+            return src, times, values
+
+        def vector_curve(key, typed_offset, node):
+            lanes_src, times, values = lanes(key)
+            call(0x17AFEC0, node)
+            put(node + 0x20, "QII", node + 0x100, len(times), len(times))
+            put(node + 0x30, "QII", node + 0x140, len(times), len(times))
+            put(node + 0x100, f"{len(times)}f", *times)
+            put(node + 0x140, f"{len(times) * 3}f", *(n for row in values for n in v(row)))
+            put(definition + typed_offset, "Q", node)
+            return lanes_src
+
+        scale_curve = stop + 0xC000
+        put(definition + 0x420, "3f", *v(fields["d4e17a53"]["fields"]["b4b427aa"]["value"]))
+        vector_curve("d4e17a53", 0x430, scale_curve)
+        call(0x1703BA0, scale_curve)
+        motion = stop + 0xC500
+        motion_src = vector_curve("1d779e6a", 0x410, motion)
+        for axis, row in enumerate(motion_src["a7084719"]["elements"]):
+            probability = motion + 0x200 + axis * 0x70
+            put(motion + 8 + axis * 8, "Q", probability)
+            if not row["fields"]:
+                put(probability + 0x24, "B", 1)
+                put(probability + 0x20, "f", 1)
+                continue
+            times = [x["value"] for x in row["fields"]["40c351da"]["elements"]]
+            vals = [x["value"] for x in row["fields"]["e44b7382"]["elements"]]
+            put(probability, "QII", probability + 0x40, len(times), len(times))
+            put(probability + 0x10, "QII", probability + 0x50, len(times), len(times))
+            put(probability + 0x40, "4f", *times)
+            put(probability + 0x50, "4f", *vals)
+            put(probability + 0x25, "B", 1)
+        call(0x1703BA0, motion)
+        color = stop + 0xCA00
+        _src, times, vals = lanes("3d7e6258")
+        call(0x17B0430, color)
+        put(definition + 0x398, "Q", color)
+        put(color + 0x28, "QII", color + 0x100, len(times), len(times))
+        put(color + 0x38, "QII", color + 0x140, len(times), len(times))
+        put(color + 0x100, "4f", *times)
+        put(color + 0x140, "16f", *(q for value in vals for q in v(value, "XYZW")))
+        call(0x1705520, color)
+        view, draw, geometry, indices, vertices, view_row = (
+            stop + n for n in (0xA000, 0xA100, 0xA200, 0xA300, 0xA400, 0xE000)
+        )
+        put(image.base + 0x24DC310, "Q", view + 0x88)
+        put(quality + 0x360, "Q", view_row)
+        put(view_row, "Q", view)
+        put(view_row + 0x170, "6f", 1, 0, 0, 0, 1, 0)
+        put(view, "3f", *camera)
+        put(view + 0x24, "3f", 0, -1, 0)
+        writer = (
+            struct.unpack("<Q", vm.mem_read(struct.unpack("<Q", vm.mem_read(primitive, 8))[0] + 0x28, 8))[0]
+            - image.base
+        )
+        assert writer == 0x175B1F0
+
+        def geometry_bytes():
+            put(geometry, "5Q", indices, vertices, draw, actor, view)
+            call(writer, primitive, geometry)
+            ix, vert = struct.unpack("<2Q", vm.mem_read(geometry, 16))
+            if ix == indices:
+                return None
+            assert ix - indices == 12 and vert - vertices == 112
+            return [bytes(vm.mem_read(indices, 12)).hex(), bytes(vm.mem_read(vertices, 112)).hex()]
+
+        sampled = []
+        reads = set()
+
+        def trace_origin(cpu, _access, address, size, _value, _data):
+            reads.add((hex(cpu.reg_read(reg.UC_X86_REG_RIP) - image.base), hex(address - system), size))
+
+        vm.hook_add(unicorn.UC_HOOK_MEM_READ, trace_origin, begin=system + 0x278, end=system + 0x283)
     vm.mem_write(actor + 0x24, bytes(image.image[0x2140974:0x2140978]))
     put(actor + 0x18, "B", 0)
     for rva in (0x2050D8E, 0x2050B90, 0x14BC630, 0x14C5B20, 0x14C5B80):
@@ -208,6 +322,8 @@ def run(image, event, fields, cadence, supplied_random):
     for time in ages:
         call(0x1786280, actor, time=time)
         count = struct.unpack("<I", vm.mem_read(pool + 0x10, 4))[0]
+        if camera is not None and count:
+            sampled.append([time, geometry_bytes()])
         if count != (time <= lifetime):
             raise ValueError(f"Unexpected particle pool count {count} at age {time}")
     if births != [[0, lifetime]]:
@@ -216,6 +332,7 @@ def run(image, event, fields, cadence, supplied_random):
         "cadence": cadence,
         "suppliedRandomSample": supplied_random,
         "rngCalls": len(rng_samples),
+        **({"geometry": sampled, "worldScale": scale, "readOrigin": sorted(reads)} if camera is not None else {}),
         "authored": authored,
         "births": births,
         "lastLiveAge": lifetime,
@@ -237,7 +354,16 @@ def main():
     for name in ("assets", "creations", "stops"):
         parser.add_argument(f"--{name}-sha256", required=True)
     parser.add_argument("--pick", action="append", required=True, help="hex key:emitter:handle")
+    parser.add_argument(
+        "--world-ground-quad",
+        choices=("primary", "alternate"),
+        help="Sample the pinned GroundGlow1 world-quad writer from either camera control",
+    )
     args = parser.parse_args()
+    cameras = {"primary": (11853, 1900, 10747), "alternate": (12000, 1400, 11700)}
+    camera = cameras.get(args.world_ground_quad)
+    if camera is not None and args.pick != ["685154d2:GroundGlow1:1073820917"]:
+        parser.error("The world-quad probe is scoped to the authenticated GroundGlow1 event")
     if not __debug__:
         raise RuntimeError("Run this probe with Python assertions enabled")
     archive = args.archive.read_bytes()
@@ -277,7 +403,9 @@ def main():
             for emitter in asset["object"]["fields"]["868eb76a"]["elements"]
             if emitter["fields"]["3d25b8ce"]["value"] == name
         ]
-        cases = [run(image, event, fields, cadence, random) for cadence in (60, 120) for random in (0.125, 0.875)]
+        cases = [
+            run(image, event, fields, cadence, random, camera) for cadence in (60, 120) for random in (0.125, 0.875)
+        ]
         last_age = max(case["firstEmptyFloat32Age"] for case in cases)
         if event["stamp"] + last_age >= stops["window"][1]:
             raise ValueError("Native stop receipt does not cover natural cutoff")

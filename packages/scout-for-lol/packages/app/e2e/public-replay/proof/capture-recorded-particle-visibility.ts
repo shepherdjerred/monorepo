@@ -7,7 +7,11 @@ import { seek } from "#replay-e2e/recorded-replay-fixture.ts";
 import { comparePixels } from "./compare-recorded-pixels.ts";
 
 type Geometry =
-  "world-ribbon" | "billboard" | "depth-test-off" | "masked-ground";
+  | "world-ribbon"
+  | "billboard"
+  | "depth-test-off"
+  | "masked-ground"
+  | "unmasked-ground";
 type RecordedSubmission = {
   selected: boolean;
   mode: number;
@@ -123,6 +127,7 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
       indexCount: number,
       depthTest: boolean,
       worldRibbon: boolean,
+      unmaskedGround: boolean,
     ) {
       if (maskedGroundActive)
         return (
@@ -133,18 +138,30 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
         );
       if (targetGeometry === "world-ribbon") return worldRibbon;
       if (worldRibbon || indexCount !== 6) return false;
+      if (unmaskedGround || targetGeometry === "unmasked-ground")
+        return targetGeometry === "unmasked-ground" && unmaskedGround;
       return targetGeometry === "billboard"
         ? depthTest
         : targetGeometry === "depth-test-off" && !depthTest;
+    }
+    function hasUnmaskedGroundState(context: WebGL2RenderingContext) {
+      return (
+        context.isEnabled(context.CULL_FACE) &&
+        context.getParameter(context.FRONT_FACE) === context.CW &&
+        context.getParameter(context.CULL_FACE_MODE) === context.BACK &&
+        context.getParameter(context.DEPTH_WRITEMASK) === false
+      );
     }
     prototype.drawElements = function (mode, indexCount, indexType, offset) {
       if (particleProgramActive || maskedGroundActive) {
         const worldRibbon = this.isEnabled(this.POLYGON_OFFSET_FILL);
         const depthTest = this.isEnabled(this.DEPTH_TEST);
+        const unmaskedGround =
+          !depthTest && !worldRibbon && hasUnmaskedGroundState(this);
         const selected =
           mode === this.TRIANGLES &&
           indexType === this.UNSIGNED_SHORT &&
-          matchesGeometry(indexCount, depthTest, worldRibbon);
+          matchesGeometry(indexCount, depthTest, worldRibbon, unmaskedGround);
         const vertices = uploads.get(this.ARRAY_BUFFER);
         const indices = uploads.get(this.ELEMENT_ARRAY_BUFFER);
         const hex = (data: Uint8Array) =>
@@ -174,6 +191,53 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
   }, geometry);
 }
 
+async function verifyUnmaskedGroundPlayback(page: Page, seekSeconds: number) {
+  const speed = page.getByRole("combobox", { name: "Speed" });
+  await expect(speed).toHaveValue("1");
+  const clock = page.getByRole("slider", { name: "Replay time" });
+  const recording = clock.evaluate(
+    (element, endSeconds) =>
+      new Promise<{ seconds: number; selected: boolean; busy: boolean }[]>(
+        (resolve, reject) => {
+          if (!(element instanceof HTMLInputElement)) {
+            reject(new Error("Expected replay clock input."));
+            return;
+          }
+          const slider = element;
+          const frames: {
+            seconds: number;
+            selected: boolean;
+            busy: boolean;
+          }[] = [];
+          const deadline = performance.now() + 8000;
+          function frame(now: number) {
+            const seconds = slider.valueAsNumber;
+            const { draws } = globalThis.recordedParticleVisibility.frame;
+            frames.push({
+              seconds,
+              selected: draws.some(({ selected }) => selected),
+              busy: slider.getAttribute("aria-busy") === "true",
+            });
+            if (seconds >= endSeconds) resolve(frames);
+            else if (now >= deadline)
+              reject(new Error("Replay clock did not advance."));
+            else requestAnimationFrame(frame);
+          }
+          requestAnimationFrame(frame);
+        },
+      ),
+    seekSeconds + 1,
+  );
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  const frames = await recording;
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  assert.equal(frames[0]?.selected, false);
+  assert.equal(frames.at(-1)?.selected, false);
+  assert.ok(frames.some(({ selected }) => selected));
+  assert.ok(frames.every(({ busy }) => !busy));
+  return frames;
+}
+
 // Use a clock with one active effect family when multiple families share the
 // same draw class. The report includes every intercepted particle submission.
 const [previewArgument, output, secondsArgument, follow, geometry] =
@@ -186,8 +250,9 @@ assert.ok(
     (geometry === "world-ribbon" ||
       geometry === "billboard" ||
       geometry === "depth-test-off" ||
-      geometry === "masked-ground"),
-  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard|depth-test-off|masked-ground>",
+      geometry === "masked-ground" ||
+      geometry === "unmasked-ground"),
+  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard|depth-test-off|masked-ground|unmasked-ground>",
 );
 const preview = new URL(previewArgument);
 assert.equal(preview.protocol, "http:");
@@ -249,6 +314,13 @@ try {
   assert.ok(resetSeconds <= (descriptor.durationSeconds ?? 0));
   const play = page.getByRole("button", { name: "Play", exact: true });
   await expect(play).toBeEnabled({ timeout: 90_000 });
+  let playback:
+    Awaited<ReturnType<typeof verifyUnmaskedGroundPlayback>> | undefined;
+  if (geometry === "unmasked-ground") {
+    assert.ok(seconds + 1 <= (descriptor.durationSeconds ?? 0));
+    await seek(page, resetSeconds);
+    playback = await verifyUnmaskedGroundPlayback(page, seconds);
+  }
   const camera = page.getByRole("combobox", { name: "Camera" });
   const canvas = page.getByLabel("League of Legends replay scene");
   const readFrame = () =>
@@ -324,6 +396,7 @@ try {
         metrics,
         errors,
         credentialed: [...credentialed],
+        playback,
         submissions: frames.map(({ image: _image, ...receipt }) => receipt),
       },
       null,

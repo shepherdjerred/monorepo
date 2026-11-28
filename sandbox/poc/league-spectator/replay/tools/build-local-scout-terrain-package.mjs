@@ -98,6 +98,13 @@ export async function readLocalRecordedParticles(path, digest, identity) {
     expectedTextures.add(maskedQuad.texture);
     expectedTextures.add(maskedQuad.palette);
   }
+  if (track.worldUnmaskedQuad !== undefined) {
+    const { texture, palette, depthTest } = track.worldUnmaskedQuad;
+    assert.equal(track.schema, 6, "Unsupported unmasked ground particle track");
+    assert.equal(depthTest, false, "Unexpected unmasked quad depth test state");
+    expectedTextures.add(texture);
+    expectedTextures.add(palette);
+  }
   if (track.schema === 1) assert.equal(expectedTextures.size, 3);
   assert.equal(track.textures.files.length, expectedTextures.size);
   assert.equal(declaredTextures.size, expectedTextures.size);

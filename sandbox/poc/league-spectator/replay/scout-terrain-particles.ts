@@ -119,6 +119,19 @@ const worldTrack = z.strictObject({
   palette: png,
   paths: z.array(worldPath).min(1).max(256),
 });
+const worldQuadTrack = worldTrack.extend({
+  paths: z
+    .array(
+      worldPath.extend({
+        samples: z
+          .array(worldFrame.extend({ age: z.number().nonnegative() }))
+          .min(1)
+          .max(960),
+      }),
+    )
+    .min(1)
+    .max(256),
+});
 const indexedRibbonTrack = multipleProgramsTrack.extend({
   schema: z.literal(4),
   worldRibbon: worldTrack,
@@ -140,7 +153,10 @@ const worldCoordinate = z
 const worldScale = worldCoordinate.refine((lane) => Math.fround(lane) > 0);
 const maskedWorldTrack = depthStateTrack.extend({
   schema: z.literal(6),
-  worldMaskedQuad: worldTrack.extend({
+  worldUnmaskedQuad: worldQuadTrack
+    .extend({ depthTest: z.literal(false) })
+    .optional(),
+  worldMaskedQuad: worldQuadTrack.extend({
     vertexShader: glsl,
     fragmentShader: glsl,
     mask: z.strictObject({ path: r8, width: dimension, height: dimension }),
@@ -150,17 +166,6 @@ const maskedWorldTrack = depthStateTrack.extend({
       worldCoordinate,
       worldCoordinate,
     ]),
-    paths: z
-      .array(
-        worldPath.extend({
-          samples: z
-            .array(worldFrame.extend({ age: z.number().nonnegative() }))
-            .min(1)
-            .max(960),
-        }),
-      )
-      .min(1)
-      .max(256),
   }),
 });
 const billboardDepthTrack = familyTrack.extend({
@@ -261,11 +266,11 @@ function compileWorldPaths<Style extends object>(
         const count = vertices.length / 28;
         const quadCount = count / 4;
         if (
-          "worldMaskedQuad" in style &&
+          ("worldMaskedQuad" in style || "worldUnmaskedQuad" in style) &&
           (!Number.isInteger(quadCount) || indices.length !== quadCount * 12)
         )
           throw new Error(
-            "A recorded masked particle needs complete indexed quads.",
+            "A recorded world quad needs complete indexed quads.",
           );
         const view = new DataView(indices.buffer);
         for (let offset = 0; offset < indices.length; offset += 2)
@@ -389,13 +394,14 @@ export async function loadRecordedTerrainParticles(
   )
     throw new Error("The recorded particle track disagrees with this replay.");
   const components = track.families.flatMap((family) => family.components);
+  const unmaskedQuad = track.schema === 6 ? track.worldUnmaskedQuad : undefined;
   const noAlphaTestFragment =
     "noAlphaTestFragment" in track.shaders
       ? track.shaders.noAlphaTestFragment
       : undefined;
-  const needsNoAlphaTest = components.some(
-    (entry) => "alphaTest" in entry && !entry.alphaTest,
-  );
+  const needsNoAlphaTest =
+    unmaskedQuad !== undefined ||
+    components.some((entry) => "alphaTest" in entry && !entry.alphaTest);
   if (
     (noAlphaTestFragment !== undefined) !== needsNoAlphaTest ||
     track.shaders.fragment === noAlphaTestFragment
@@ -436,6 +442,21 @@ export async function loadRecordedTerrainParticles(
   if (maskedQuad !== undefined) {
     palettePaths.add(maskedQuad.palette);
     basePaths.add(maskedQuad.texture);
+  }
+  const unmaskedQuadAt =
+    unmaskedQuad === undefined
+      ? undefined
+      : compileWorldPaths(unmaskedQuad.paths, duration, {
+          texture: unmaskedQuad.texture,
+          palette: unmaskedQuad.palette,
+          blend: "src-alpha-one" as const,
+          alphaTest: false,
+          depthTest: unmaskedQuad.depthTest,
+          worldUnmaskedQuad: true as const,
+        });
+  if (unmaskedQuad !== undefined) {
+    palettePaths.add(unmaskedQuad.palette);
+    basePaths.add(unmaskedQuad.texture);
   }
   const expectedTextures = new Set([...palettePaths, ...basePaths]);
   if (
@@ -543,9 +564,13 @@ export async function loadRecordedTerrainParticles(
       worldRibbonAt === undefined
         ? legacyParticles
         : [...worldRibbonAt(timeSeconds), ...legacyParticles];
-    return maskedQuadAt === undefined
-      ? particles
-      : [...particles, ...maskedQuadAt(timeSeconds)];
+    const withMask =
+      maskedQuadAt === undefined
+        ? particles
+        : [...particles, ...maskedQuadAt(timeSeconds)];
+    return unmaskedQuadAt === undefined
+      ? withMask
+      : [...withMask, ...unmaskedQuadAt(timeSeconds)];
   }
 
   const shaderDecoder = new TextDecoder("utf-8", { fatal: true });

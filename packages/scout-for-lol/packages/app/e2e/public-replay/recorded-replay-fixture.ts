@@ -101,6 +101,7 @@ export async function readRecordedParticleTrack(
         schema: z.literal(6),
         worldRibbon: WorldRibbon,
         worldMaskedQuad: WorldRibbon,
+        worldUnmaskedQuad: WorldRibbon.optional(),
       }),
       DepthQualifiedParticleTrack.extend({ schema: z.literal(7) }),
     ])
@@ -139,11 +140,19 @@ function expectedParticleDraws(
     track.schema === 6
       ? expectedWorldParticleDraws(track.worldMaskedQuad, time)
       : 0;
-  return track.effects.reduce((draws, { start, family }) => {
-    const parts = families.get(family);
-    if (parts === undefined) throw new Error("Missing recorded effect family.");
-    return draws + expectedFor(start, parts, time);
-  }, ribbons + maskedGround);
+  const unmaskedGround =
+    track.schema === 6 && track.worldUnmaskedQuad !== undefined
+      ? expectedWorldParticleDraws(track.worldUnmaskedQuad, time)
+      : 0;
+  return track.effects.reduce(
+    (draws, { start, family }) => {
+      const parts = families.get(family);
+      if (parts === undefined)
+        throw new Error("Missing recorded effect family.");
+      return draws + expectedFor(start, parts, time);
+    },
+    ribbons + maskedGround + unmaskedGround,
+  );
 }
 
 function expectedWorldParticleDraws(
@@ -213,18 +222,21 @@ async function verifySnowflashDraws(
   }
 }
 
-async function verifyMaskedGroundDraws(
+async function verifyGroundQuadDraws(
   page: Page,
   track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
 ) {
   if (track.schema !== 6) return;
   expect(track.worldMaskedQuad.paths).toHaveLength(1);
-  for (const [seconds, expected] of [
-    [1712.7, 0],
-    [1713.2, 1],
-    [1714.7, 1],
-    [1714.8, 0],
-    [1713.2, 1],
+  const hasUnmasked = track.worldUnmaskedQuad !== undefined;
+  for (const [seconds, expected, unmasked] of [
+    [1712.7, 0, 0],
+    [1713.2, 1, 0],
+    [1714.7, 1, 0],
+    [1714.8, 0, Number(hasUnmasked)],
+    [1715.4, 0, 0],
+    [1714.8, 0, Number(hasUnmasked)],
+    [1713.2, 1, 0],
   ] as const) {
     expect(expectedWorldParticleDraws(track.worldMaskedQuad, seconds)).toBe(
       expected,
@@ -233,9 +245,13 @@ async function verifyMaskedGroundDraws(
     await expect
       .poll(async () => {
         const draw = await readRecordedDraw(page);
-        return [draw.recordedParticleDraws, draw.recordedMaskedGroundDraws];
+        return [
+          draw.recordedParticleDraws,
+          draw.recordedMaskedGroundDraws,
+          draw.recordedUnmaskedGroundDraws,
+        ];
       })
-      .toEqual([expectedParticleDraws(track, seconds), expected]);
+      .toEqual([expectedParticleDraws(track, seconds), expected, unmasked]);
   }
 
   const camera = page.getByRole("combobox", { name: "Camera" });
@@ -416,7 +432,7 @@ export async function verifyRecordedParticlePreview(
       0,
     );
   await vision.selectOption("all");
-  await verifyMaskedGroundDraws(page, track);
+  await verifyGroundQuadDraws(page, track);
   await verifyYasuoWindWallDraws(page, track);
   await verifySnowflashDraws(page, track);
   for (const [seconds, draws] of heimerImpactWitnesses(track))

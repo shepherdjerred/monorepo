@@ -238,6 +238,20 @@ entry against the pinned census. The `--archive-catalog` model converter checks
 the pinned inputs and installed archive indexes. The package builder binds
 models by the exact skin selectors in the replay's opening packets.
 
+Generate a build-wide selection with the exact archive census and Riot's
+patch-matched `championFull.json`. The selector verifies both input hashes
+and every listed skin key, and excludes archive-only entries. `--base-only`
+selects default models after verifying the same complete list.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/select-listed-terrain-skins.mjs `
+  $archiveCensus $censusSha256 $championFull $championFullSha256 > $skinSelection
+```
+
+Pass the emitted selection and its SHA-256 to `--prepare-archived-skins`
+before model conversion. The selection establishes archive membership.
+Model rendering, queue eligibility, and public admission have separate checks.
+
 ## Recorded Map11 announcements
 
 The extractor walks all saved streams for opcode 880. The native probe
@@ -780,6 +794,39 @@ direction whenever the replay supplies one. The model keeps the original
 axes at positional anchors with no waypoint direction. This is display
 facing. Native combat facing, locomotion poses, and particle attachment
 transforms use separate inputs.
+
+Use `probe-recorded-movement-provider-update.py` with the original macOS
+archive, ROFL, and pinned champion source manifest to reproduce provider
+behavior on the reviewed Maokai waypoint pair. The verifier decodes the
+original packets and executes their native coordinate expansion. It exercises
+the original provider constructor and update under controlled collision,
+elapsed-time, and wrapper inputs. A ready provider also occurs with singleton
+waypoints and zero elapsed time. Playback activation still requires actual
+actor-update history and animation-rate inputs.
+
+### Recorded unmasked ground particles
+
+The reviewed `.8428` Maokai E ground glow uses authored world vertices and
+the unmasked quad shader without alpha testing. The renderer applies source
+alpha additive blending and clockwise back-face culling. Depth testing,
+depth writes, and polygon offset are disabled for this pass.
+
+Run `probe-recorded-detached-quad-expiry.py` with the pinned archive,
+asset, creation, and stop receipts. Select `685154d2:GroundGlow1:1073820917`
+and produce separate `--world-ground-quad primary` and `alternate` receipts.
+The author verifies both outputs, extracts the authored texture from the
+exact installation, and adds the samples to the existing schema-6 track.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/research/author-recorded-world-ground-quad.mjs `
+  $installation $textureMipAssembly $primaryReceipt $alternateReceipt $baseTrack $output
+```
+
+The signed-out browser proof can follow the reviewed Maokai at `1715` with
+`capture-recorded-particle-visibility.ts` and `unmasked-ground`. It checks
+ordinary 1× playback and compares the same fixed frame with and without the
+selected draw. Other spell components require their own placement and
+material evidence.
 
 ### Recorded basic attack inputs
 

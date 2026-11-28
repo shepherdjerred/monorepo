@@ -17,6 +17,7 @@ type RecordedDraw = {
   recordedParticleDraws: number;
   recordedDepthDisabledParticleDraws: number;
   recordedMaskedGroundDraws: number;
+  recordedUnmaskedGroundDraws: number;
   viewProjection: number[];
 };
 
@@ -38,6 +39,7 @@ export async function installRecordedDrawProbe(page: Page) {
       recordedParticleDraws: 0,
       recordedDepthDisabledParticleDraws: 0,
       recordedMaskedGroundDraws: 0,
+      recordedUnmaskedGroundDraws: 0,
       viewProjection: [],
     };
     globalThis.recordedReplayDraw = draw;
@@ -160,6 +162,7 @@ export async function installRecordedDrawProbe(page: Page) {
         draw.recordedParticleDraws = 0;
         draw.recordedDepthDisabledParticleDraws = 0;
         draw.recordedMaskedGroundDraws = 0;
+        draw.recordedUnmaskedGroundDraws = 0;
         pendingActor = undefined;
         paletteHash = undefined;
       }
@@ -182,6 +185,12 @@ export async function installRecordedDrawProbe(page: Page) {
           draw.recordedMaskedGroundDraws += 1;
       } else if (!context.isEnabled(context.DEPTH_TEST)) {
         draw.recordedDepthDisabledParticleDraws += 1;
+        if (
+          count === 6 &&
+          type === context.UNSIGNED_SHORT &&
+          context.isEnabled(context.CULL_FACE)
+        )
+          draw.recordedUnmaskedGroundDraws += 1;
       }
     }
     gl.drawElements = function (mode, count, type, offset) {
