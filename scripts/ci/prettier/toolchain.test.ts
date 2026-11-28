@@ -107,6 +107,12 @@ describe("prettierPluginNames", () => {
     ).toEqual(["@acme/prettier-config"]);
   });
 
+  test("a string .prettierrc.json names a shared configuration package", () => {
+    expect(
+      prettierPluginNames(JSON.stringify("@acme/prettier-config"), null),
+    ).toEqual(["@acme/prettier-config"]);
+  });
+
   test.each([
     "./local.js",
     "../local.js",
@@ -153,6 +159,18 @@ describe("prettierPackageJsonSlice", () => {
     ]) {
       expect(prettierPackageJsonSlice(manifest(fields))).not.toBe(base);
     }
+  });
+
+  test("a present section of the wrong shape is unreadable, an absent one is empty", () => {
+    expect(() =>
+      prettierPackageJsonSlice(manifest({ overrides: [] })),
+    ).toThrow();
+    expect(() =>
+      prettierPackageJsonSlice(manifest({ patchedDependencies: "x" })),
+    ).toThrow();
+    expect(prettierPackageJsonSlice(manifest())).toBe(
+      prettierPackageJsonSlice(manifest({ overrides: undefined })),
+    );
   });
 
   test("packages that only mention Prettier are invisible", () => {
@@ -249,6 +267,29 @@ describe("prettierLockSlice", () => {
     expect(prettierLockSlice(lock(change), ["@acme/fmt"])).not.toBe(
       prettierLockSlice(lock(), ["@acme/fmt"]),
     );
+  });
+
+  test("a git plugin's dependencies, whose metadata sits at index 1, are inputs", () => {
+    const git = {
+      "git-fmt": [
+        "git-fmt@github:acme/git-fmt#abc",
+        { dependencies: { "printer-core": "^1" } },
+        "abc",
+      ],
+      "printer-core": ["printer-core@1.0.0", "", {}, "sha512-core"],
+    };
+    const bump = {
+      ...git,
+      "printer-core": ["printer-core@1.1.0", "", {}, "sha512-core2"],
+    };
+    expect(prettierLockSlice(lock(bump), ["git-fmt"])).not.toBe(
+      prettierLockSlice(lock(git), ["git-fmt"]),
+    );
+  });
+
+  test("a lock entry with malformed dependency metadata is unreadable", () => {
+    const broken = { "git-fmt": ["git-fmt@1.0.0", { dependencies: [] }] };
+    expect(() => prettierLockSlice(lock(broken), ["git-fmt"])).toThrow();
   });
 
   test("a bump of eslint-config-prettier or eslint is not an input", () => {

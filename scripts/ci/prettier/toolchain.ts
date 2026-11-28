@@ -129,10 +129,10 @@ export function prettierPluginNames(
 ): string[] {
   const specifiers = new Set<string>();
   if (configText !== null) {
-    pluginSpecifiers(
-      PrettierConfigSchema.parse(JSON.parse(configText)),
-      specifiers,
-    );
+    const config = PrettierConfigSchema.parse(JSON.parse(configText));
+    // A string configuration names a shared configuration package.
+    if (typeof config === "string") specifiers.add(config);
+    else pluginSpecifiers(config, specifiers);
   }
   if (manifestText !== null) {
     const manifest = PackageJsonSchema.parse(JSON.parse(manifestText));
@@ -170,9 +170,10 @@ export function prettierPackageJsonSlice(text: string): string {
     ["patchedDependencies", () => true],
   ];
   for (const [section, keep] of sections) {
-    const entries = PackageJsonSchema.safeParse(manifest[section]);
-    if (!entries.success) continue;
-    const kept = Object.entries(entries.data)
+    // An absent section holds nothing; a present one of the wrong shape is
+    // corrupt, so parsing throws and the caller checks in full.
+    if (!(section in manifest)) continue;
+    const kept = Object.entries(PackageJsonSchema.parse(manifest[section]))
       .filter(([key, value]) => keep(key, value))
       .toSorted(([left], [right]) => left.localeCompare(right));
     if (kept.length > 0) slice[section] = kept;
@@ -198,13 +199,23 @@ function packageUnits(key: string): string[] {
   return units;
 }
 
+/**
+ * Dependencies an entry declares. Its metadata object sits at index 2 for a
+ * registry package and at index 1 for a git, github or tarball one, so the
+ * first object in the tuple is read; a malformed one throws and the caller
+ * checks in full. An entry with no metadata object (a workspace link) has no
+ * dependencies of its own.
+ */
 function dependencyNames(entry: readonly unknown[]): string[] {
-  const metadata = LockEntryMetadataSchema.safeParse(entry[2]);
-  if (!metadata.success) return [];
+  const found = entry.find(
+    (item) => typeof item === "object" && item !== null && !Array.isArray(item),
+  );
+  if (found === undefined) return [];
+  const metadata = LockEntryMetadataSchema.parse(found);
   return [
-    ...Object.keys(metadata.data.dependencies ?? {}),
-    ...Object.keys(metadata.data.optionalDependencies ?? {}),
-    ...Object.keys(metadata.data.peerDependencies ?? {}),
+    ...Object.keys(metadata.dependencies ?? {}),
+    ...Object.keys(metadata.optionalDependencies ?? {}),
+    ...Object.keys(metadata.peerDependencies ?? {}),
   ];
 }
 
