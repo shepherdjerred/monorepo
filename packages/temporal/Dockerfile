@@ -21,7 +21,7 @@
 # Arch: the production cluster is amd64; local builds are arm64. Every download
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
-FROM public.ecr.aws/aws-cli/aws-cli:2.37.12@sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce AS aws-cli
+FROM public.ecr.aws/aws-cli/aws-cli:2.42.4@sha256:4a1a668837d5f97ced202e03827da1bc0b48cda946be89909cd7a02023f62921 AS aws-cli
 FROM node:24.22.3-bookworm-slim@sha256:873f586f3794f52281bd039bf02c048a0be08fde619338f9941bad1eb6b34530 AS renovate-node
 FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
@@ -191,15 +191,15 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Pinned operator CLI versions.
 # renovate: datasource=github-releases depName=cli/cli
-ARG GH_CLI_VERSION=2.105.0
+ARG GH_CLI_VERSION=2.106.0
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.2
 # renovate: datasource=github-releases depName=siderolabs/talos
 ARG TALOSCTL_VERSION=v1.14.6
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG TOFU_VERSION=1.13.9
+ARG TOFU_VERSION=1.13.10
 # renovate: datasource=github-releases depName=argoproj/argo-cd
-ARG ARGOCD_CLI_VERSION=v3.6.2
+ARG ARGOCD_CLI_VERSION=v3.6.3
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
 ARG VELERO_CLI_VERSION=v1.18.4
 # renovate: datasource=github-releases depName=woodpecker-ci/woodpecker
@@ -207,9 +207,9 @@ ARG WOODPECKER_CLI_VERSION=3.20.1
 # renovate: datasource=github-tags depName=temporalio/cli
 ARG TEMPORAL_CLI_VERSION=1.10.1
 # renovate: datasource=github-releases depName=grafana/gcx
-ARG GCX_VERSION=1.8.0
+ARG GCX_VERSION=1.9.1
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.13.9
+ARG UV_VERSION=0.13.10
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.76.2
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.

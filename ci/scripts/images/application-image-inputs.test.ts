@@ -158,7 +158,7 @@ describe("application image inputs", () => {
       expect(dockerfile).toContain("sha256sum -c -");
       expect(dockerfile).toContain("RUSTC_WRAPPER=/usr/local/bin/sccache");
     }
-    expect(new Set(versions)).toEqual(new Set(["0.19.0"]));
+    expect(new Set(versions)).toEqual(new Set(["0.20.1"]));
   });
 
   test("keeps Storm Forum PHP-FPM in the foreground with stderr logging", async () => {
