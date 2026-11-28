@@ -1,5 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import React from "react";
+import type React from "react";
 import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
 import { useContent } from "#src/hooks/use-content";

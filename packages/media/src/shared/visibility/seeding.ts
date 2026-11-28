@@ -35,7 +35,7 @@ export const CleanupEvaluationSchema = z
     reason: CleanupReasonSchema.nullable(),
   })
   .refine((value) => (value.status === "removed") === (value.reason === null), {
-    message: "Only removed outcomes have no reason",
+    error: "Only removed outcomes have no reason",
   });
 export type CleanupEvaluation = z.infer<typeof CleanupEvaluationSchema>;
 

@@ -26,7 +26,7 @@ const ClientAugmentNamesSchema = z
           HAS_VISIBLE_TEXT.test(augment.nameTRA) ||
           UNNAMED_CLIENT_AUGMENT_IDS.has(augment.id),
         {
-          message:
+          error:
             "Blank augment name for an ID not in UNNAMED_CLIENT_AUGMENT_IDS",
           path: ["nameTRA"],
         },

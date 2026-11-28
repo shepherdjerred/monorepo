@@ -443,7 +443,7 @@ export const ScoutDesktopRunStartRequestSchema =
   }).refine(
     (request) => request.gameContext === undefined || request.question !== null,
     {
-      message: "Only a question the player typed carries a game context.",
+      error: "Only a question the player typed carries a game context.",
       path: ["gameContext"],
     },
   );

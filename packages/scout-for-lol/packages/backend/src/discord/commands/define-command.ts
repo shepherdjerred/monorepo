@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -28,7 +28,7 @@ export async function replyError(
   try {
     await (interaction.replied || interaction.deferred
       ? interaction.editReply({ content })
-      : interaction.reply({ content, ephemeral: true }));
+      : interaction.reply({ content, flags: MessageFlags.Ephemeral }));
   } catch (sendError) {
     logger.error("❌ Failed to send error reply", sendError);
   }

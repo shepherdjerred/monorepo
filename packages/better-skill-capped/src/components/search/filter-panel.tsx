@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import type { Kind } from "#src/model/content";
 import { KINDS } from "#src/model/content";
 import type { Role } from "#src/model/role";

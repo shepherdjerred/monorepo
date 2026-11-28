@@ -51,7 +51,7 @@ const ExploreSkillFrontmatterSchema = z
   .refine(
     (skill) => skill.outputFor === undefined || DELIVERY_SKILLS.has(skill.name),
     {
-      message:
+      error:
         "outputFor is for delivery-only skills (DELIVERY_SKILLS); a skill that teaches a capability must reach every surface",
     },
   );

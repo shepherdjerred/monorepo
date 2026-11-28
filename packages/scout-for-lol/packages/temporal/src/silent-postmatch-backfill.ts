@@ -99,7 +99,7 @@ export const ScoutSilentPostmatchBackfillInputSchema = z
   })
   .refine(
     (input) => new Set(input.riotMatchIds).size === input.riotMatchIds.length,
-    { message: "riotMatchIds must not repeat a match", path: ["riotMatchIds"] },
+    { error: "riotMatchIds must not repeat a match", path: ["riotMatchIds"] },
   );
 export const ScoutSilentBackfillMatchOutcomeSchema = z.discriminatedUnion(
   "outcome",

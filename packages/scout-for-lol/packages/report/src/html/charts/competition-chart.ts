@@ -185,7 +185,8 @@ function buildLineOption(
       right: 360,
       top: 160,
       bottom: 80,
-      containLabel: true,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
       show: true,
       borderColor: palette.gold[5],
       borderWidth: 2,
@@ -306,7 +307,8 @@ function buildBarOption(
       right: 96,
       top: 160,
       bottom: 80,
-      containLabel: true,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
       show: true,
       borderColor: palette.gold[5],
       borderWidth: 2,
@@ -375,7 +377,7 @@ function buildBarOption(
             ? {}
             : { formatter: `{c}${props.valueSuffix}` }),
         },
-      },
+      } satisfies echarts.BarSeriesOption,
     ],
   };
 }

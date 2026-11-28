@@ -20,7 +20,7 @@ import { COMPONENT_PREFIX, COMPONENTS_DIR } from "./scan.ts";
 
 const ProgramModuleSchema = z.object({
   default: z.custom<BuildProgram>((value) => typeof value === "function", {
-    message: "must `export default` a build program function ((ctx) => { … })",
+    error: "must `export default` a build program function ((ctx) => { … })",
   }),
 });
 

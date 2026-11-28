@@ -1,6 +1,7 @@
 import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import {
@@ -53,12 +54,12 @@ export async function executeList(
   if (!guildId.success) {
     await interaction.reply({
       content: "`/list` can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Default-deny: without a resolvable member permission bitfield there is no
   // basis on which to release another server's configuration.

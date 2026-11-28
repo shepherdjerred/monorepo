@@ -144,14 +144,19 @@ describe("runMain", () => {
     expect(completed).toBe(true);
   });
 
-  test.each([
+  const classifiedFailures: [Error, number][] = [
     [new TransientError("registry unavailable"), EXIT_TRANSIENT],
     [new Error("invalid image pin"), 1],
-  ])("maps classified failures to exit status %#", async (error, code) => {
-    await expect(
-      runMain(async () => {
-        throw error;
-      }, throwExit),
-    ).rejects.toEqual(new ExitSignal(code));
-  });
+  ];
+
+  test.each(classifiedFailures)(
+    "maps classified failures to exit status %#",
+    async (error, code) => {
+      await expect(
+        runMain(async () => {
+          throw error;
+        }, throwExit),
+      ).rejects.toEqual(new ExitSignal(code));
+    },
+  );
 });

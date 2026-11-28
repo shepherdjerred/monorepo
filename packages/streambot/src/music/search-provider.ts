@@ -46,7 +46,7 @@ export const MusicAlbumHitSchema = z
       isYouTubeMusicArtworkUrl(album.artworkUrl),
     {
       path: ["artworkUrl"],
-      message: "Album artwork must be a YouTube image host URL",
+      error: "Album artwork must be a YouTube image host URL",
     },
   );
 export type MusicAlbumHit = z.infer<typeof MusicAlbumHitSchema>;
@@ -65,7 +65,7 @@ export const MusicArtistHitSchema = z
       isYouTubeMusicArtworkUrl(artist.artworkUrl),
     {
       path: ["artworkUrl"],
-      message: "Artist artwork must be a YouTube image host URL",
+      error: "Artist artwork must be a YouTube image host URL",
     },
   );
 export type MusicArtistHit = z.infer<typeof MusicArtistHitSchema>;

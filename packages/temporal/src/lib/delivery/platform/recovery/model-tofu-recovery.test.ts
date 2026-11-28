@@ -2,7 +2,13 @@ import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { V1Job } from "@kubernetes/client-node";
+import {
+  V1JobCondition,
+  V1JobStatus,
+  V1ObjectMeta,
+  type V1Job,
+} from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { PlatformRecoveryContextSchema } from "@shepherdjerred/delivery/contract";
 import type { DeliveryTofuContext } from "homelab/scripts/tofu/delivery-stack.ts";
 import { detail, timestamp } from "#lib/delivery/model/testing.ts";
@@ -117,12 +123,14 @@ function reader(requests: DeliveryJobRequest[]) {
   const jobs = new Map(
     requests.map((request) => {
       const job: V1Job = deliveryJobManifest(request);
-      job.metadata = structuredClone(job.metadata) ?? {};
+      job.metadata = structuredClone(job.metadata) ?? new V1ObjectMeta();
       job.metadata.uid = `uid-${request.stageKey}`;
-      job.status = {
+      job.status = model(V1JobStatus, {
         active: 0,
-        conditions: [{ type: "Complete", status: "True" }],
-      };
+        conditions: [
+          model(V1JobCondition, { type: "Complete", status: "True" }),
+        ],
+      });
       return [job.metadata.name ?? "", job] as const;
     }),
   );
@@ -297,12 +305,13 @@ describe("pre-effect OpenTofu recovery (AI-423)", () => {
       throw new Error("Broken frozen archive must not be re-executed");
     });
     const planJobManifest: V1Job = deliveryJobManifest(planRequest);
-    planJobManifest.metadata = structuredClone(planJobManifest.metadata) ?? {};
+    planJobManifest.metadata =
+      structuredClone(planJobManifest.metadata) ?? new V1ObjectMeta();
     planJobManifest.metadata.uid = jobUid;
-    planJobManifest.status = {
+    planJobManifest.status = model(V1JobStatus, {
       active: 0,
-      conditions: [{ type: "Failed", status: "True" }],
-    };
+      conditions: [model(V1JobCondition, { type: "Failed", status: "True" })],
+    });
     const planJobs = {
       read: async (name: string) => {
         if (name !== planJobManifest.metadata?.name)

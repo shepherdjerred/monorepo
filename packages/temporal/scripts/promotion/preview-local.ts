@@ -140,7 +140,7 @@ for (const target of targets) {
     lastOccurrenceId: occurrenceId,
   }));
   const environment = new MockActivityEnvironment({
-    workflowNamespace: "dev",
+    namespace: "dev",
     workflowExecution: { workflowId: `storm-promotion/${target.id}`, runId },
   });
   let lastProgress = 0;

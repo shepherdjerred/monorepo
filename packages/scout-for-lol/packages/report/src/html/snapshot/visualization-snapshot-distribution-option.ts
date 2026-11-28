@@ -86,7 +86,7 @@ export function histogramOption(
                 mode,
                 theme: presentation.theme,
               }),
-            },
+            } satisfies echarts.BarSeriesOption,
           ],
   };
 }
@@ -126,7 +126,7 @@ export function boxPlotOption(
         type: "boxplot",
         data: rows.map((row) => row.values),
         itemStyle: { borderColor: presentation.theme.border },
-      },
+      } satisfies echarts.BoxplotSeriesOption,
     ],
   };
 }
@@ -202,7 +202,8 @@ function distributionFrame(
       right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
       bottom: 58,
-      containLabel: true,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
     },
   };
 }

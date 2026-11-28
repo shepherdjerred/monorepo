@@ -24,7 +24,7 @@ const HallAnnouncementBaseSchema = z.strictObject({
   riotMatchId: RiotMatchIdSchema,
 });
 const wrongMatch = {
-  message: "Hall records must belong to the announced match",
+  error: "Hall records must belong to the announced match",
 };
 
 function recordsBelongToMatch(announcement: {

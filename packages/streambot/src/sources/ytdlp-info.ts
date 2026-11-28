@@ -121,7 +121,7 @@ export const YtdlpInfoSchema = z
   .refine(
     (info) =>
       info.url !== undefined || (info.requested_formats ?? []).length > 0,
-    { message: NO_PLAYABLE_FORMAT_ISSUE },
+    { error: NO_PLAYABLE_FORMAT_ISSUE },
   );
 
 /**

@@ -8,7 +8,16 @@ import {
   DeploymentDetailSchema,
   PlatformRecoveryContextSchema,
 } from "@shepherdjerred/delivery/contract";
-import type { V1Job, V1Pod } from "@kubernetes/client-node";
+import {
+  V1JobCondition,
+  V1JobStatus,
+  V1ObjectMeta,
+  V1OwnerReference,
+  V1Pod,
+  V1PodStatus,
+  type V1Job,
+} from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { executionApiFixture } from "./execution-api-fixtures.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { deliveryJobManifest } from "#lib/delivery/job-manifest.ts";
@@ -70,25 +79,30 @@ function nativeJob(request: DeliveryJobRequest, failed = false) {
   });
   if (job.metadata === undefined) throw new Error("Expected Job metadata");
   job.metadata.uid = receipt.uid;
-  job.status = {
+  job.status = model(V1JobStatus, {
     active: 0,
-    conditions: [{ type: failed ? "Failed" : "Complete", status: "True" }],
-  };
+    conditions: [
+      model(V1JobCondition, {
+        type: failed ? "Failed" : "Complete",
+        status: "True",
+      }),
+    ],
+  });
   jobs.set(receipt.name, job);
   pods.set(receipt.name, [
-    {
-      metadata: {
+    model(V1Pod, {
+      metadata: model(V1ObjectMeta, {
         ownerReferences: [
-          {
+          model(V1OwnerReference, {
             apiVersion: "batch/v1",
             kind: "Job",
             name: receipt.name,
             uid: receipt.uid,
-          },
+          }),
         ],
-      },
-      status: { phase: failed ? "Failed" : "Succeeded" },
-    },
+      }),
+      status: model(V1PodStatus, { phase: failed ? "Failed" : "Succeeded" }),
+    }),
   ]);
   return receipt;
 }
@@ -140,14 +154,14 @@ test("real PG+HTTP outage recovery rejects replaced/live native executors, then 
     "replaced",
   );
   original.metadata!.uid = native.uid;
-  original.status = { active: 1 };
+  original.status = model(V1JobStatus, { active: 1 });
   await expect(provePlatformNativeJobs(context, reader)).rejects.toThrow(
     "active",
   );
-  original.status = {
+  original.status = model(V1JobStatus, {
     active: 0,
-    conditions: [{ type: "Failed", status: "True" }],
-  };
+    conditions: [model(V1JobCondition, { type: "Failed", status: "True" })],
+  });
   const selected = controlPlaneSelections(
     controlPlaneJobInput(context.deployment),
   );

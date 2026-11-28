@@ -11,7 +11,7 @@ import { validateCommitMessage } from "../lib/commit-message.ts";
 
 async function main(): Promise<void> {
   const commitMsgFile = process.argv[2];
-  if (!commitMsgFile) {
+  if (commitMsgFile === undefined || commitMsgFile === "") {
     console.error("Usage: validate-commit-msg.ts <commit-msg-file>");
     process.exit(1);
   }

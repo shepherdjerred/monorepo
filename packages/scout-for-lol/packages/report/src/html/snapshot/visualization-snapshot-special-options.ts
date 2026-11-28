@@ -52,7 +52,7 @@ export function donutOption(
             ? { formatter: "{b}: {d}%" }
             : {}),
         },
-      },
+      } satisfies echarts.PieSeriesOption,
     ],
   };
 }
@@ -120,7 +120,7 @@ export function heatmapOption(
           defaultShow: true,
           mode,
         }),
-      },
+      } satisfies echarts.HeatmapSeriesOption,
     ],
   };
 }

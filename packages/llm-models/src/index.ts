@@ -151,7 +151,7 @@ const MultiEndpointNativeRouteSchema = z.strictObject({
     .array(ModelEndpointSchema)
     .min(1)
     .refine((items) => new Set(items).size === items.length, {
-      message: "NativeRoute endpoints must be unique",
+      error: "NativeRoute endpoints must be unique",
     }),
 });
 
@@ -266,7 +266,7 @@ export const ModelEntrySchema = z
         (accepted) =>
           accepted.input !== undefined || accepted.output !== undefined,
         {
-          message: "acceptedUpstreamPricing needs at least one of input/output",
+          error: "acceptedUpstreamPricing needs at least one of input/output",
         },
       )
       .optional(),
@@ -278,7 +278,7 @@ export const ModelEntrySchema = z
   .refine(
     (entry) =>
       entry.pricingOnly !== true || Object.keys(entry.routes).length === 0,
-    { message: "a pricingOnly model must declare no routes" },
+    { error: "a pricingOnly model must declare no routes" },
   );
 export type ModelEntry = z.infer<typeof ModelEntrySchema>;
 
@@ -287,7 +287,7 @@ export const CatalogSchema = z
   .refine(
     (cat) => Object.entries(cat).every(([key, entry]) => key === entry.id),
     {
-      message: "catalog key must equal entry.id",
+      error: "catalog key must equal entry.id",
     },
   );
 export type Catalog = z.infer<typeof CatalogSchema>;

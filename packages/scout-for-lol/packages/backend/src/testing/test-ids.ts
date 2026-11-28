@@ -22,7 +22,7 @@ import {
  * Rejects any non-digit characters to prevent silent ID collisions
  */
 const NumericIdentifierSchema = z.string().regex(/^\d+$/, {
-  message:
+  error:
     "Test ID identifier must contain only digits. Invalid characters will cause ID collisions.",
 });
 

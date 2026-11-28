@@ -25,24 +25,24 @@ export const CreateAgentChatSchema = z
     maxTurnsPerMessage: z.number().int().positive().max(100).default(24),
   })
   .refine((input) => input.prompt === undefined || input.turnId !== undefined, {
-    message: "turnId is required when prompt is present",
+    error: "turnId is required when prompt is present",
     path: ["turnId"],
   })
   .refine(
     (input) => input.prompt === undefined || input.submittedAt !== undefined,
     {
-      message: "submittedAt is required when prompt is present",
+      error: "submittedAt is required when prompt is present",
       path: ["submittedAt"],
     },
   )
   .refine((input) => input.prompt !== undefined || input.chatId !== undefined, {
-    message: "chatId is required when prompt is absent",
+    error: "chatId is required when prompt is absent",
     path: ["chatId"],
   })
   .refine(
     (input) => input.prompt !== undefined || input.bindingId !== undefined,
     {
-      message: "bindingId is required when prompt is absent",
+      error: "bindingId is required when prompt is absent",
       path: ["bindingId"],
     },
   );

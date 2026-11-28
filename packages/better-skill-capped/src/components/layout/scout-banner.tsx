@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { ExternalLink } from "lucide-react";
 import { Card, CardContent } from "#components/ui/card";
 

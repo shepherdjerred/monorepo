@@ -33,7 +33,7 @@ const RecordShapeSchema = SandboxSummarySchema.extend({
     rconPassword: z.string().regex(/^[0-9a-f]{48}$/u),
   }),
 }).refine((record) => record.providerRef.kind === record.provider, {
-  message: "providerRef.kind must match provider",
+  error: "providerRef.kind must match provider",
 });
 
 /**

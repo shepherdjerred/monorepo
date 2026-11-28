@@ -26,6 +26,7 @@ export function createGameLogger(): winston.Logger {
     level: "info",
     format: winston.format.combine(winston.format.json()),
     transports: [
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-class-instance-assignment -- false positive: typescript-eslint#13234 (winston re-exports winston-transport via an import * alias); remove when fixed upstream (AI-947)
       new winston.transports.Console({
         format: winston.format.combine(
           winston.format.colorize(),

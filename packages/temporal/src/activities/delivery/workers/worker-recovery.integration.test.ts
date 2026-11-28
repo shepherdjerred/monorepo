@@ -7,7 +7,16 @@ import {
   testOperator,
 } from "@shepherdjerred/delivery/testing";
 import type { WorkerRecoveryContext } from "@shepherdjerred/delivery/contract";
-import type { V1Job } from "@kubernetes/client-node";
+import {
+  V1JobCondition,
+  V1JobStatus,
+  V1ObjectMeta,
+  V1OwnerReference,
+  V1Pod,
+  V1PodStatus,
+  type V1Job,
+} from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 import {
   proveSettledWorkerRecovery,
@@ -56,7 +65,10 @@ beforeEach(async () => {
     input: { deployment: detail.deployment },
   });
   job.metadata!.uid = "native-job-1";
-  job.status = { active: 0, conditions: [{ type: "Failed", status: "True" }] };
+  job.status = model(V1JobStatus, {
+    active: 0,
+    conditions: [model(V1JobCondition, { type: "Failed", status: "True" })],
+  });
   prior = {
     metadata: {
       uid: "native-application-1",
@@ -147,19 +159,19 @@ function boundary(): WorkerRecoveryEffects {
       await proveTerminalWorkerJobs(requested, {
         job: async () => job,
         pods: async () => [
-          {
-            metadata: {
+          model(V1Pod, {
+            metadata: model(V1ObjectMeta, {
               ownerReferences: [
-                {
+                model(V1OwnerReference, {
                   apiVersion: "batch/v1",
                   kind: "Job",
                   name: job.metadata!.name!,
                   uid: "native-job-1",
-                },
+                }),
               ],
-            },
-            status: { phase: "Failed" },
-          },
+            }),
+            status: model(V1PodStatus, { phase: "Failed" }),
+          }),
         ],
       }),
     resources: async (_app, kind) =>
@@ -456,7 +468,7 @@ test.each(["receipt", "pods", "effectful", "name", "evidence", "status"])(
               code: ambiguity === "status" ? 403 : 404,
             }),
           ),
-        pods: () => Promise.resolve(ambiguity === "pods" ? [{}] : []),
+        pods: () => Promise.resolve(ambiguity === "pods" ? [new V1Pod()] : []),
       }),
     ).rejects.toMatchObject({ code: ambiguity === "status" ? 403 : 404 });
     expect(await cluster.database.targetLock.count()).toBe(2);

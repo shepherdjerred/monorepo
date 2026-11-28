@@ -6,7 +6,7 @@ import {
 import type { CommandReply } from "#src/discord/commands/define-command.ts";
 import { commandList, executeHelp } from "#src/discord/commands/help.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import type { ChatInputCommandInteraction } from "discord.js";
+import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 afterEach(() => {
@@ -27,7 +27,7 @@ describe("/help", () => {
     await executeHelp({ guildId: null, reply });
 
     expect(replyMock).toHaveBeenCalledWith(
-      expect.objectContaining({ ephemeral: true }),
+      expect.objectContaining({ flags: MessageFlags.Ephemeral }),
     );
     const payload = replyMock.mock.calls[0]?.[0];
     expect(JSON.stringify(payload)).toContain("/track");

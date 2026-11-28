@@ -38,7 +38,7 @@ export function MergePlayersDialog(props: {
   );
   const schema = PlayerAliasFormSchema.refine(
     (value) => value.alias !== props.sourceAlias,
-    { path: ["alias"], message: "Pick a different player." },
+    { path: ["alias"], error: "Pick a different player." },
   );
   const { form, formElement } = usePlayerAliasDialogForm(
     props.open,

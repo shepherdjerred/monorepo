@@ -111,7 +111,7 @@ export const MatchupTipSetSchema = z
   })
   .extend(GenerationStampSchema.shape)
   .refine((set) => set.champion !== set.opponent, {
-    message: "a matchup tip set needs two different champions",
+    error: "a matchup tip set needs two different champions",
   });
 export type MatchupTipSet = z.infer<typeof MatchupTipSetSchema>;
 

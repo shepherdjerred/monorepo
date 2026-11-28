@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { Eye, EyeOff } from "lucide-react";
 import type { ContentItem } from "#src/model/content";
 import { Button } from "#components/ui/button";

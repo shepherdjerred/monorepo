@@ -44,7 +44,7 @@ export const AgentChatSessionManifestSchema = z
     (manifest) =>
       manifest.files.reduce((bytes, file) => bytes + file.bytes, 0) <=
       MAX_SESSION_BUNDLE_BYTES,
-    { message: "Provider session bundle exceeds 256 MiB" },
+    { error: "Provider session bundle exceeds 256 MiB" },
   );
 export type AgentChatSessionManifest = z.infer<
   typeof AgentChatSessionManifestSchema

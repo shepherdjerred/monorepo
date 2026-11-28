@@ -1,4 +1,5 @@
 import * as k8s from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { Context } from "@temporalio/activity";
 import { log } from "#observability/log.ts";
 import {
@@ -304,7 +305,9 @@ export function kubernetesCiWorkspaceReaperClient(
         await api.deleteNamespacedPod({
           name,
           namespace: CI_NAMESPACE,
-          body: { preconditions: { uid } },
+          body: model(k8s.V1DeleteOptions, {
+            preconditions: model(k8s.V1Preconditions, { uid }),
+          }),
         });
         return "deleted";
       } catch (error: unknown) {
@@ -316,7 +319,9 @@ export function kubernetesCiWorkspaceReaperClient(
         await api.deleteNamespacedPersistentVolumeClaim({
           name,
           namespace: CI_NAMESPACE,
-          body: { preconditions: { uid } },
+          body: model(k8s.V1DeleteOptions, {
+            preconditions: model(k8s.V1Preconditions, { uid }),
+          }),
         });
         return "deleted";
       } catch (error: unknown) {

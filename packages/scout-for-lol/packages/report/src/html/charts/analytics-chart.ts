@@ -179,7 +179,8 @@ function cartesianOption(
       right: props.legend === "right" ? 300 : 70,
       top: 145,
       bottom: 90,
-      containLabel: true,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
     },
     xAxis: horizontal ? valueAxis : categoryAxis,
     yAxis: horizontal ? categoryAxis : valueAxis,
@@ -218,35 +219,32 @@ function donutOption(
 ): echarts.EChartsOption {
   const theme = chartTheme(props);
   const percent = props.labels === "percent";
+  const pie = {
+    type: "pie",
+    radius: ["36%", "68%"],
+    center: ["50%", "53%"],
+    data: props.items.map((item) => ({
+      name: item.name,
+      value: item.value,
+    })),
+    label: {
+      show: props.labels !== "hide",
+      color: theme.text,
+      fontFamily: BODY_FONT,
+      fontSize: 20,
+      formatter: percent ? "{b}\n{d}%" : `{b}\n{c}${props.valueSuffix ?? ""}`,
+    },
+    labelLine: { lineStyle: { color: theme.border } },
+    itemStyle: {
+      borderColor: theme.panel,
+      borderWidth: 3,
+      borderRadius: 6,
+    },
+  } satisfies echarts.PieSeriesOption;
   return {
     ...baseOption(props),
     legend: legend(theme, props.legend),
-    series: [
-      {
-        type: "pie",
-        radius: ["36%", "68%"],
-        center: ["50%", "53%"],
-        data: props.items.map((item) => ({
-          name: item.name,
-          value: item.value,
-        })),
-        label: {
-          show: props.labels !== "hide",
-          color: theme.text,
-          fontFamily: BODY_FONT,
-          fontSize: 20,
-          formatter: percent
-            ? "{b}\n{d}%"
-            : `{b}\n{c}${props.valueSuffix ?? ""}`,
-        },
-        labelLine: { lineStyle: { color: theme.border } },
-        itemStyle: {
-          borderColor: theme.panel,
-          borderWidth: 3,
-          borderRadius: 6,
-        },
-      },
-    ],
+    series: [pie],
   };
 }
 
@@ -258,7 +256,14 @@ function scatterOption(
   const maxSize = Math.max(...sizes, 1);
   return {
     ...baseOption(props),
-    grid: { left: 90, right: 75, top: 150, bottom: 85, containLabel: true },
+    grid: {
+      left: 90,
+      right: 75,
+      top: 150,
+      bottom: 85,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
+    },
     xAxis: { type: "value", ...axis(theme, props.xAxisLabel) },
     yAxis: { type: "value", ...axis(theme, props.yAxisLabel) },
     series: [
@@ -280,7 +285,7 @@ function scatterOption(
           color: theme.text,
           fontSize: 17,
         },
-      },
+      } satisfies echarts.ScatterSeriesOption,
     ],
   };
 }
@@ -295,7 +300,14 @@ function heatmapOption(
   const colors = chartColors(props, theme);
   return {
     ...baseOption(props),
-    grid: { left: 80, right: 110, top: 145, bottom: 110, containLabel: true },
+    grid: {
+      left: 80,
+      right: 110,
+      top: 145,
+      bottom: 110,
+      outerBoundsMode: "same",
+      outerBoundsContain: "axisLabel",
+    },
     xAxis: { type: "category", data: props.xCategories, ...axis(theme) },
     yAxis: { type: "category", data: props.yCategories, ...axis(theme) },
     visualMap: {
@@ -320,7 +332,7 @@ function heatmapOption(
           formatter: `{@[2]}${props.valueSuffix ?? ""}`,
         },
         itemStyle: { borderColor: theme.panel, borderWidth: 2 },
-      },
+      } satisfies echarts.HeatmapSeriesOption,
     ],
   };
 }

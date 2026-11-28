@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Connection } from "@temporalio/client";
 import { msToTs } from "@temporalio/common/time";
+import { temporal } from "@temporalio/proto";
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
@@ -77,58 +78,64 @@ async function readVersion(change = "none") {
   vi.spyOn(
     connection.workflowService,
     "describeWorkerDeploymentVersion",
-  ).mockResolvedValue({
-    workerDeploymentVersionInfo: {
-      deploymentVersion: identity,
-      status:
-        change === "inactive"
-          ? NATIVE_INACTIVE
-          : change === "detail-active"
-            ? NATIVE_ACTIVE
-            : NATIVE_DRAINED,
-      createTime: deactivated,
-      ...(change === "inactive"
-        ? {}
-        : {
-            drainageInfo: {
-              status: change === "detail-draining" ? DRAINING : DRAINED,
-              lastCheckedTime: checked,
-            },
-            // Even a detail timestamp cannot substitute for the summary.
-            ...(change === "missing-timestamp"
-              ? { lastDeactivationTime: deactivated }
-              : {}),
-          }),
-    },
-    versionTaskQueues: [],
-    toJSON: () => ({}),
-  });
+  ).mockResolvedValue(
+    temporal.api.workflowservice.v1.DescribeWorkerDeploymentVersionResponse.create(
+      {
+        workerDeploymentVersionInfo: {
+          deploymentVersion: identity,
+          status:
+            change === "inactive"
+              ? NATIVE_INACTIVE
+              : change === "detail-active"
+                ? NATIVE_ACTIVE
+                : NATIVE_DRAINED,
+          createTime: deactivated,
+          ...(change === "inactive"
+            ? {}
+            : {
+                drainageInfo: {
+                  status: change === "detail-draining" ? DRAINING : DRAINED,
+                  lastCheckedTime: checked,
+                },
+                // Even a detail timestamp cannot substitute for the summary.
+                ...(change === "missing-timestamp"
+                  ? { lastDeactivationTime: deactivated }
+                  : {}),
+              }),
+        },
+        versionTaskQueues: [],
+      },
+    ),
+  );
   const describeDeployment = vi
     .spyOn(connection.workflowService, "describeWorkerDeployment")
-    .mockResolvedValue({
-      workerDeploymentInfo: {
-        name:
-          change === "wrong-name" ? "another-deployment" : route.deploymentName,
-        versionSummaries: Array.from(
-          {
-            length:
-              { "missing-summary": 0, "duplicate-summary": 2 }[change] ?? 1,
+    .mockResolvedValue(
+      temporal.api.workflowservice.v1.DescribeWorkerDeploymentResponse.create({
+        workerDeploymentInfo: {
+          name:
+            change === "wrong-name"
+              ? "another-deployment"
+              : route.deploymentName,
+          versionSummaries: Array.from(
+            {
+              length:
+                { "missing-summary": 0, "duplicate-summary": 2 }[change] ?? 1,
+            },
+            () => summary,
+          ),
+          routingConfig: {
+            currentDeploymentVersion: {
+              ...identity,
+              buildId: change === "current" ? OLD : CURRENT,
+            },
+            ...(change === "ramping"
+              ? { rampingDeploymentVersion: identity }
+              : {}),
           },
-          () => summary,
-        ),
-        routingConfig: {
-          currentDeploymentVersion: {
-            ...identity,
-            buildId: change === "current" ? OLD : CURRENT,
-          },
-          ...(change === "ramping"
-            ? { rampingDeploymentVersion: identity }
-            : {}),
         },
-      },
-      conflictToken: new Uint8Array([1]),
-      toJSON: () => ({}),
-    });
+        conflictToken: new Uint8Array([1]),
+      }),
+    );
   try {
     const result = await retirementEffects(connection).version(route, OLD);
     expect(describeDeployment).toHaveBeenCalledTimes(

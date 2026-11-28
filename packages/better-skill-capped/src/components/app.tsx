@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { RouterProvider } from "@tanstack/react-router";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { persistOptions, queryClient } from "#src/lib/query-client";

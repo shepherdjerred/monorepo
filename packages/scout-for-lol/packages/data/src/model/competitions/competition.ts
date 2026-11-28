@@ -618,7 +618,7 @@ export const CachedLeaderboardSchema = z.object({
   version: z.literal("v1"),
   competitionId: CompetitionIdSchema,
   calculatedAt: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
-    message: "Invalid ISO 8601 datetime",
+    error: "Invalid ISO 8601 datetime",
   }), // ISO 8601 timestamp
   entries: z.array(CachedLeaderboardEntrySchema),
 });

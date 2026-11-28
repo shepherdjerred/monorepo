@@ -3,6 +3,7 @@ import {
   type ChatInputCommandInteraction,
   Client,
   Events,
+  IntentsBitField,
   type Guild,
   type Message,
   type MessageComponentInteraction,
@@ -160,9 +161,9 @@ export class CommandBot {
   }
 
   async login(): Promise<void> {
-    this.client.options.intents = this.client.options.intents.add(
-      ...(await commandIntents(this.deps.config.discord.botToken)),
-    );
+    const intents = new IntentsBitField(this.client.options.intents);
+    intents.add(...(await commandIntents(this.deps.config.discord.botToken)));
+    this.client.options.intents = intents;
     await this.client.login(this.deps.config.discord.botToken);
     log.info("command bot logged in", {
       user: this.client.user?.username ?? null,

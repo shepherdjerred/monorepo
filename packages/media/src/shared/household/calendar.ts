@@ -27,7 +27,7 @@ export const MovieReleaseDateSchema = z
   .refine(
     (value) => (value.date === null) === (value.precision === "unknown"),
     {
-      message: "A release date must preserve its actual precision",
+      error: "A release date must preserve its actual precision",
     },
   );
 export type MovieReleaseDate = z.infer<typeof MovieReleaseDateSchema>;
@@ -52,7 +52,7 @@ export const CalendarQuerySchema = z
       value.from <= value.to &&
       Date.parse(value.to) - Date.parse(value.from) <= 93 * 86_400_000,
     {
-      message: "Choose a calendar range of at most 94 days",
+      error: "Choose a calendar range of at most 94 days",
     },
   )
   .superRefine((value, context) => {

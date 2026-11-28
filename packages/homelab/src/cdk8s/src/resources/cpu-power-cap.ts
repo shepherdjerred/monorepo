@@ -31,7 +31,7 @@ const CpuPowerCapOptionsSchema = z
     pl2Watts: z.number().positive(),
   })
   .refine((value) => value.pl2Watts >= value.pl1Watts, {
-    message: "pl2Watts must be >= pl1Watts",
+    error: "pl2Watts must be >= pl1Watts",
     path: ["pl2Watts"],
   });
 

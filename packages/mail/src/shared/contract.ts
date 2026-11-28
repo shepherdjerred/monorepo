@@ -44,7 +44,7 @@ export const SendMessageRequestSchema = z
     (value) =>
       (value.htmlBody !== undefined && value.htmlBody.length > 0) ||
       (value.plainBody !== undefined && value.plainBody.length > 0),
-    { message: "Either htmlBody or plainBody is required" },
+    { error: "Either htmlBody or plainBody is required" },
   );
 export type SendMessageRequest = z.infer<typeof SendMessageRequestSchema>;
 

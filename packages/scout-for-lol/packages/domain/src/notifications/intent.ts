@@ -307,7 +307,7 @@ export const NotificationIntentSchema = z
         intent.state.kind !== "unknown-delivery") ||
       intent.attemptCount >= 1,
     {
-      message:
+      error:
         "sending and unknown-delivery are only reachable after beginSend, so attemptCount must be at least 1",
     },
   )
@@ -316,7 +316,7 @@ export const NotificationIntentSchema = z
       ANNOUNCEMENT_INTENT_KINDS.has(intent.kind) ===
       (intent.announcement !== undefined),
     {
-      message:
+      error:
         "an announcement payload is carried by exactly the declared announcement kinds",
     },
   );

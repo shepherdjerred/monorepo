@@ -1,4 +1,5 @@
 import * as k8s from "@kubernetes/client-node";
+import { model } from "#lib/k8s-model.ts";
 import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import { log } from "#observability/log.ts";
@@ -352,11 +353,13 @@ export function kubernetesCiWorkspaceGoldenClient(
       }
     },
     async selectSnapshot(name, source) {
-      const metadata = {
-        name: CI_WORKSPACE_GOLDEN_CONFIG_MAP,
-        namespace: CI_NAMESPACE,
-        annotations: { [SOURCE_ANNOTATION]: source },
-      };
+      const metadata = (resourceVersion?: string) =>
+        model(k8s.V1ObjectMeta, {
+          name: CI_WORKSPACE_GOLDEN_CONFIG_MAP,
+          namespace: CI_NAMESPACE,
+          annotations: { [SOURCE_ANNOTATION]: source },
+          ...(resourceVersion === undefined ? {} : { resourceVersion }),
+        });
       let current: k8s.V1ConfigMap | undefined;
       try {
         current = await core.readNamespacedConfigMap({
@@ -369,10 +372,10 @@ export function kubernetesCiWorkspaceGoldenClient(
       if (current === undefined) {
         await core.createNamespacedConfigMap({
           namespace: CI_NAMESPACE,
-          body: {
-            metadata,
+          body: model(k8s.V1ConfigMap, {
+            metadata: metadata(),
             data: { snapshot: name, restoreSize: CI_WORKSPACE_VOLUME_SIZE },
-          },
+          }),
         });
         return;
       }
@@ -383,13 +386,10 @@ export function kubernetesCiWorkspaceGoldenClient(
       await core.replaceNamespacedConfigMap({
         name: CI_WORKSPACE_GOLDEN_CONFIG_MAP,
         namespace: CI_NAMESPACE,
-        body: {
-          metadata: {
-            ...metadata,
-            resourceVersion,
-          },
+        body: model(k8s.V1ConfigMap, {
+          metadata: metadata(resourceVersion),
           data: { snapshot: name, restoreSize: CI_WORKSPACE_VOLUME_SIZE },
-        },
+        }),
       });
     },
   };

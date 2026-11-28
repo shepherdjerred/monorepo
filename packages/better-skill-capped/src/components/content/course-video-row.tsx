@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Highlighter from "react-highlight-words";
 import { Bookmark, Eye, EyeOff } from "lucide-react";
 import type { Course, Video } from "#src/model/content";

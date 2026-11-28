@@ -1,5 +1,10 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { ApplicationFlags, Client, GatewayIntentBits } from "discord.js";
+import {
+  ApplicationFlags,
+  Client,
+  GatewayIntentBits,
+  IntentsBitField,
+} from "discord.js";
 import {
   quickPlay,
   prefixPlayQuery,
@@ -190,9 +195,9 @@ test("missing intent leaves slash commands usable; granted intents can be added 
   ).toBe(true);
   expect(() => messageContentAllowed({})).toThrow();
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  client.options.intents = client.options.intents.add(
-    GatewayIntentBits.MessageContent,
-  );
+  const intents = new IntentsBitField(client.options.intents);
+  intents.add(GatewayIntentBits.MessageContent);
+  client.options.intents = intents;
   expect(client.options.intents.has(GatewayIntentBits.MessageContent)).toBe(
     true,
   );

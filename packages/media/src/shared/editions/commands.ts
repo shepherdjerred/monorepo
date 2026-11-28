@@ -42,7 +42,7 @@ export const DefaultCommandV2Schema = z
       input.expected.targetVersion !== null ||
       ["request", "keep", "pin"].includes(input.command.action),
     {
-      message: "This action requires an existing target version",
+      error: "This action requires an existing target version",
       path: ["expected", "targetVersion"],
     },
   );

@@ -52,7 +52,7 @@ export const DuelNotificationIntentRecordSchema = z.strictObject({
       intent.kind === "duel-status" &&
       intent.origin.kind === "live" &&
       intent.target.kind === "channel",
-    { message: "Duel intents must be live channel duel-status announcements" },
+    { error: "Duel intents must be live channel duel-status announcements" },
   ),
 });
 
@@ -67,7 +67,7 @@ export const DareNotificationIntentRecordSchema = z.strictObject({
   dareId: z.number().int().positive(),
   intent: NotificationIntentSchema.refine(
     (intent) => intent.kind === "dare-status" && intent.origin.kind === "live",
-    { message: "Dare intents must be live dare-status notifications" },
+    { error: "Dare intents must be live dare-status notifications" },
   ),
 });
 
@@ -79,7 +79,7 @@ export const ProductNotificationIntentRecordSchema = z.strictObject({
   intent: NotificationIntentSchema.refine(
     (intent) =>
       intent.kind === "product-announcement" && intent.origin.kind === "live",
-    { message: "Product announcements require a live occurrence subject" },
+    { error: "Product announcements require a live occurrence subject" },
   ),
 });
 

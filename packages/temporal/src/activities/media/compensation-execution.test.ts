@@ -124,7 +124,7 @@ test("cancelled or private failures never publish a successful acknowledgement o
   });
 });
 
-test.each([
+test.each<{ name: string; error: () => Error; diagnostic: unknown }>([
   {
     name: "unproven partial",
     error: () =>

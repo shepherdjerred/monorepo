@@ -295,7 +295,7 @@ export const competitionRouter = router({
         (value) =>
           (value.playerId === undefined) !==
           (value.discordUserId === undefined),
-        { message: "Provide exactly one of playerId or discordUserId" },
+        { error: "Provide exactly one of playerId or discordUserId" },
       ),
     )
     .mutation(async ({ ctx, input }) => {

@@ -38,7 +38,7 @@ const InputSchema = z.strictObject({
         new Set(speakers.map((speaker) => speaker.label)).size ===
         SPEAKER_LABELS.length,
       {
-        message:
+        error:
           "Human holdout must contain one group each for speaker-1, speaker-2, and speaker-3",
       },
     ),
