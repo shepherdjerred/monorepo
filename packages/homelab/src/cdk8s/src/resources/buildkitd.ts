@@ -108,13 +108,12 @@ debug = false
 /**
  * The daemon image the Deployment runs.
  *
- * - `upstream`: moby/buildkit from the version catalog. This is what liskov
- *   runs.
+ * - `upstream` (default): moby/buildkit from the version catalog.
  * - `rewrite-reuse`: packages/homelab/images/buildkitd, the same release with
  *   one patch that reuses timestamp-rewritten layer blobs instead of
  *   re-gzipping every cached layer on every push. It is a first-party image,
  *   so it binds through its Delivery recipe like every other first-party
- *   workload. Its README lists what must exist before this can render.
+ *   workload, and renders only once that image is registered.
  */
 export type BuildkitdImage = "upstream" | "rewrite-reuse";
 

@@ -391,6 +391,13 @@
       "matchPackageNames": ["bun", "oven-sh/bun", "oven/bun", "@types/bun"]
     },
     {
+      "description": "packages/homelab/images/buildkitd rebuilds the version catalog's moby/buildkit release at that release's commit with one patch. Its FROM digest, the patched commit and the version string move together by hand with the catalog pin (see that image's README); resources/buildkitd.test.ts fails when they drift.",
+      "matchManagers": ["dockerfile"],
+      "matchFileNames": ["packages/homelab/images/buildkitd/Dockerfile"],
+      "matchPackageNames": ["moby/buildkit"],
+      "enabled": false
+    },
+    {
       "description": "The Dockerfile workspace-copy test's FROM lines are fixtures, not images; they otherwise produce a bogus pin-oven/bun branch.",
       "matchManagers": ["dockerfile"],
       "matchFileNames": ["scripts/checks/dockerfile-workspace-copies.test.ts"],

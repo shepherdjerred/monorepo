@@ -101,9 +101,9 @@ It decompresses each layer, rewrites the tar headers and recompresses the
 result, even when the layer was a cache hit and the output is byte-identical to
 the last push. `packages/homelab/images/buildkitd` holds a patched daemon that
 records each rewritten blob on its source blob and reuses it. Images stay
-byte-for-byte identical. That image is not deployed; its README lists the
-enablement steps and how to drop the patch once upstream reuses rewritten
-blobs itself.
+byte-for-byte identical. Its README explains the reuse checks, how retained
+blobs are counted toward cache usage, rollback, and how to drop the patch once
+upstream reuses rewritten blobs itself.
 
 The
 [chart producer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/helm/helm-push.ts)
