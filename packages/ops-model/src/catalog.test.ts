@@ -110,10 +110,16 @@ describe("service catalog", () => {
   test("parses the committed catalog", () => {
     expect(SERVICE_CATALOG.services.length).toBeGreaterThan(10);
   });
+});
 
+describe("service catalog ownership", () => {
   test("every registered first-party image has exactly one service owner", async () => {
     const registry = z
-      .object({ images: z.array(z.object({ name: z.string() })) })
+      .object({
+        images: z.array(
+          z.object({ name: z.string(), visibility: z.string().optional() }),
+        ),
+      })
       .parse(
         await Bun.file(
           new URL(
@@ -122,8 +128,28 @@ describe("service catalog", () => {
           ),
         ).json(),
       );
+    const exemptions = z
+      .object({ pendingPrivateImages: z.record(z.string(), z.string()) })
+      .parse(
+        await Bun.file(
+          new URL(
+            "../../../scripts/checks/service-registration-exemptions.json",
+            import.meta.url,
+          ),
+        ).json(),
+      );
+    const pending = new Set(Object.keys(exemptions.pendingPrivateImages));
+    for (const name of pending) {
+      expect(
+        registry.images.find((image) => image.name === name)?.visibility,
+      ).toBe("private");
+    }
     const index = new ServiceIndex();
-    const registered = registry.images.map((image) => image.name).sort();
+    const registered = registry.images
+      .filter((image) => !pending.has(image.name))
+      .map((image) => image.name)
+      .sort();
+    for (const image of pending) expect(index.byImage(image)).toBeUndefined();
     expect(
       SERVICE_CATALOG.services.flatMap((service) => service.images).sort(),
     ).toEqual(registered);
