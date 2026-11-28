@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { ALL_DASHBOARDS } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { SCOUT_GATEWAY_OWNER_ROLES } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
 import {
+  CI_POOL_WRITER_LOGICAL_BYTES_24H,
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
   getNvmeRuleGroups,
   NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
@@ -55,6 +56,11 @@ describe("dashboard query health", () => {
       "kueue_local_queue_resource_usage",
       "kueue_local_queue_resource_reservation",
       "kueue_admission_wait_time_seconds_bucket",
+      "woodpecker_pending_steps",
+      "woodpecker_running_steps",
+      "woodpecker_worker_count",
+      // Recorded by woodpecker-queue.ts as the expected agent slot total.
+      "woodpecker:agent_configured_slots:sum",
       "nvme_data_units_written_total",
       "nvme_host_write_commands_total",
       "nvme_percentage_used_ratio",
@@ -84,6 +90,7 @@ describe("dashboard query health", () => {
       ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
       ZFS_POOL_WRITE_AMPLIFICATION_24H,
       CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+      CI_POOL_WRITER_LOGICAL_BYTES_24H,
     ]) {
       expect(recorded).toContain(metric);
       expect(dashboardJson).toContain(metric);

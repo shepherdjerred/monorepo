@@ -132,7 +132,44 @@
         ]
       },
       "resolvedDescription": "Xayah throws two daggers, dealing 45/60/75/90/105 (+50% bonus AD) physical damage each and leaving two Feathers. Targets hit after the first take 22.5/30/37.5/45/52.5 (+25% bonus AD) damage from each dagger.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "LocationClamped",
+        "castTime": 0.25,
+        "radius": 210,
+        "lineWidth": 50,
+        "missileSpeed": 700,
+        "missiles": [
+          {
+            "name": "xayahqmissile1",
+            "width": 50,
+            "movement": "FixedSpeedMovement",
+            "speed": 400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "xayahqmissile2",
+            "width": 50,
+            "movement": "FixedSpeedMovement",
+            "speed": 400,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Deadly Plumage",
@@ -204,7 +241,58 @@
         ]
       },
       "resolvedDescription": "Xayah creates a storm of blades for 4 seconds that grants her 35/40/45/50/55% Attack Speed and cause her Attacks to fire a secondary blade that deals 25% damage. When the secondary blade hits a champion, she grants herself 30% Move Speed for 1.5 seconds. If Rakan is nearby he will also gain the effects of this Ability, except he gains Move Speed when Xayah strikes a target.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 1800,
+        "missiles": [
+          {
+            "name": "xayahwmissile1",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "xayahwmissile2",
+            "width": null,
+            "movement": "FixedSpeedSplineMovement",
+            "speed": 3000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "xayahwrakanmissile",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 2000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Bladecaller",
@@ -292,7 +380,44 @@
       "resolvedDescription": "Xayah calls all Feathers back to her, dealing {{ featherdamage }} physical damage each. If 3 or more Feathers hit an enemy, they are Rooted for 1.25 seconds.",
       "unresolved": [
         "featherdamage"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "xayahemissile",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 4000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "xayahemissilesfx",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "R": {
       "name": "Featherstorm",
@@ -331,7 +456,30 @@
         ]
       },
       "resolvedDescription": "Xayah leaps into the air becoming Untargetable and Ghosted for 1.5 seconds before raining down daggers that deal 200/300/400 (+100% bonus AD) physical damage and leave behind a line of Feathers.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 300,
+        "lineWidth": null,
+        "missileSpeed": 2200,
+        "missiles": [
+          {
+            "name": "xayahrmissile",
+            "width": 20,
+            "movement": "FixedSpeedMovement",
+            "speed": 4000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

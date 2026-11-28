@@ -1,9 +1,20 @@
-import { Encoders, Utils } from "@shepherdjerred/discord-video-stream";
-import type { PrepareStreamOptions } from "@shepherdjerred/discord-video-stream";
+import {
+  Encoders,
+  Utils,
+  fitWithin,
+  isDialogDownmixLayout,
+} from "@shepherdjerred/discord-video-stream";
+import type {
+  AudioProcessing,
+  PrepareStreamOptions,
+  SubtitleBurn,
+} from "@shepherdjerred/discord-video-stream";
+import type { AudioProcessingFlags } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   PipelineMode,
   ResolvedSource,
+  ResolvedSubtitle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
 
@@ -32,6 +43,8 @@ export type PrepareOptionsInput = {
   readonly startSeconds: number;
   /** Desired playback volume as a percentage (0-200), as the machine holds it. */
   readonly volumePercent: number;
+  /** This segment's audio flags, evaluated once by the streamer. All false is the legacy stage. */
+  readonly audioProcessing: AudioProcessingFlags;
 };
 
 /** Video-only extras: the encoder ladder position this attempt is on. */
@@ -61,6 +74,86 @@ function headerOptions(headers: ResolvedSource["ffmpegInputHeaders"]): {
 }
 
 /**
+ * The streams one segment maps and the probed facts that describe them. With track ranking off (or
+ * no ranked probe) these are exactly the legacy fields; with it on, each ranked stream replaces its
+ * legacy counterpart together with its own layout, display properties and transfer, so the
+ * downmix, output size and tonemap always describe the stream that is actually mapped.
+ */
+type PlayedTracks = Pick<
+  ResolvedSource,
+  | "ffmpegVideoStreamIndex"
+  | "ffmpegAudioStreamIndex"
+  | "probedVideo"
+  | "probedAudio"
+  | "hdr"
+>;
+
+function playedTracks(
+  resolved: ResolvedSource,
+  trackRanking: boolean,
+): PlayedTracks {
+  const legacy: PlayedTracks = {
+    ...(resolved.ffmpegVideoStreamIndex === undefined
+      ? {}
+      : { ffmpegVideoStreamIndex: resolved.ffmpegVideoStreamIndex }),
+    ...(resolved.ffmpegAudioStreamIndex === undefined
+      ? {}
+      : { ffmpegAudioStreamIndex: resolved.ffmpegAudioStreamIndex }),
+    ...(resolved.probedVideo === undefined
+      ? {}
+      : { probedVideo: resolved.probedVideo }),
+    ...(resolved.probedAudio === undefined
+      ? {}
+      : { probedAudio: resolved.probedAudio }),
+    ...(resolved.hdr === undefined ? {} : { hdr: resolved.hdr }),
+  };
+  const ranked = resolved.rankedTracks;
+  if (!trackRanking || ranked === undefined) return legacy;
+  return {
+    ...legacy,
+    ...(ranked.videoStreamIndex === undefined || ranked.video === undefined
+      ? {}
+      : {
+          ffmpegVideoStreamIndex: ranked.videoStreamIndex,
+          probedVideo: ranked.video,
+          hdr: ranked.hdr === true,
+        }),
+    ...(ranked.audioStreamIndex === undefined
+      ? {}
+      : {
+          ffmpegAudioStreamIndex: ranked.audioStreamIndex,
+          ...(ranked.audio === undefined ? {} : { probedAudio: ranked.audio }),
+        }),
+  };
+}
+
+/**
+ * The fork's opt-in audio steps for this segment. Each flag that is off contributes nothing, and
+ * with nothing contributed the key is absent, so the ffmpeg audio arguments are byte-identical to
+ * the ones that shipped before these flags existed.
+ *
+ * The downmix needs a layout the fork has a matrix for (`5.1`, `5.1(side)`, `7.1`); mono, stereo
+ * and an unknown layout keep `-ac 2`. Resync only means something where the demuxer rewrites
+ * timestamps by counting samples, which is the `normalizeTimestamps` path for discontinuous live.
+ */
+function audioProcessingOption(
+  flags: AudioProcessingFlags,
+  layout: string | undefined,
+  resyncable: boolean,
+): { audioProcessing?: AudioProcessing } {
+  const processing: AudioProcessing = {
+    ...(flags.dialogDownmix && isDialogDownmixLayout(layout)
+      ? { dialogDownmix: layout }
+      : {}),
+    ...(flags.loudnessNormalization ? { loudnessNormalization: true } : {}),
+    ...(resyncable && flags.liveResync ? { resyncTimestamps: true } : {}),
+  };
+  return Object.keys(processing).length === 0
+    ? {}
+    : { audioProcessing: processing };
+}
+
+/**
  * Music: audio only, over the normal voice connection.
  *
  * Everything the video path needs and this one does not is simply absent, not set to a neutral
@@ -76,6 +169,10 @@ function headerOptions(headers: ResolvedSource["ffmpegInputHeaders"]): {
 export function buildMusicPrepareOptions(
   input: PrepareOptionsInput,
 ): Partial<PrepareStreamOptions> {
+  const tracks = playedTracks(
+    input.resolved,
+    input.audioProcessing.trackRanking,
+  );
   return {
     audioOnly: true,
     includeAudio: true,
@@ -102,6 +199,16 @@ export function buildMusicPrepareOptions(
     ...(input.resolved.ffmpegInputOptions === undefined
       ? {}
       : { customInputOptions: [...input.resolved.ffmpegInputOptions] }),
+    // Music has always mapped the first audio stream (`0:a:0`); only a ranked choice changes that.
+    ...(input.audioProcessing.trackRanking &&
+    tracks.ffmpegAudioStreamIndex !== undefined
+      ? { audioStreamIndex: tracks.ffmpegAudioStreamIndex }
+      : {}),
+    ...audioProcessingOption(
+      input.audioProcessing,
+      tracks.probedAudio?.channelLayout,
+      false,
+    ),
   };
 }
 
@@ -118,10 +225,14 @@ export function buildVideoPrepareOptions(
 ): Partial<PrepareStreamOptions> {
   const { stream, resolved } = input;
   const useHardware = input.pipelineMode !== "sw";
+  const tracks = playedTracks(resolved, input.audioProcessing.trackRanking);
+  const size = outputSize(stream, tracks);
   return {
-    width: stream.width,
-    height: stream.height,
-    frameRate: stream.fps,
+    width: size.width,
+    height: size.height,
+    frameRate: outputFrameRate(stream, resolved),
+    ...(resolved.probedVideo?.interlaced === true ? { deinterlace: true } : {}),
+    ...(needsBt709Conversion(resolved) ? { convertColorToBt709: true } : {}),
     bitrateVideo: stream.bitrateKbps,
     bitrateVideoMax: stream.bitrateKbps * 2,
     bitrateAudio: stream.bitrateAudioKbps,
@@ -152,31 +263,34 @@ export function buildVideoPrepareOptions(
     ...(resolved.discontinuousLive === true
       ? { normalizeTimestamps: true }
       : startTimeOption(input.startSeconds)),
-    ...(resolved.subtitle
-      ? { subtitleBurn: { path: resolved.subtitle.path } }
-      : {}),
+    ...(resolved.subtitle === undefined
+      ? {}
+      : { subtitleBurn: subtitleBurnFor(resolved.subtitle) }),
     // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
     // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
-    inputColor: resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
+    inputColor: tracks.hdr === true ? ("hdr" as const) : ("sdr" as const),
     ...(useHardware
       ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
       : {}),
     // Discontinuous live input can change decoded frame format at an ad boundary, so keep its
     // decoder output in system memory from the first attempt; scaling and encoding stay on GPU.
+    //
+    // A rotated source (phone video) takes the same route: ffmpeg only autorotates software
+    // frames, so decoding straight into VAAPI surfaces would send the picture sideways.
     ...(input.pipelineMode === "hw-upload" ||
-    (useHardware && resolved.discontinuousLive === true)
+    (useHardware && (resolved.discontinuousLive === true || isRotated(tracks)))
       ? { hardwarePipelineMode: "upload" as const }
       : {}),
     ...headerOptions(resolved.ffmpegInputHeaders),
     ...(resolved.ffmpegInputOptions === undefined
       ? {}
       : { customInputOptions: [...resolved.ffmpegInputOptions] }),
-    ...(resolved.ffmpegVideoStreamIndex === undefined
+    ...(tracks.ffmpegVideoStreamIndex === undefined
       ? {}
-      : { videoStreamIndex: resolved.ffmpegVideoStreamIndex }),
-    ...(resolved.ffmpegAudioStreamIndex === undefined
+      : { videoStreamIndex: tracks.ffmpegVideoStreamIndex }),
+    ...(tracks.ffmpegAudioStreamIndex === undefined
       ? {}
-      : { audioStreamIndex: resolved.ffmpegAudioStreamIndex }),
+      : { audioStreamIndex: tracks.ffmpegAudioStreamIndex }),
     ...(resolved.audioInput === undefined
       ? {}
       : {
@@ -190,7 +304,123 @@ export function buildVideoPrepareOptions(
             ],
           },
         }),
+    ...audioProcessingOption(
+      input.audioProcessing,
+      tracks.probedAudio?.channelLayout,
+      resolved.discontinuousLive === true,
+    ),
   };
+}
+
+/**
+ * A staged text track burns through libass (with the source's attached fonts for ASS); an image
+ * track overlays the playback input's own subtitle stream.
+ */
+function subtitleBurnFor(subtitle: ResolvedSubtitle): SubtitleBurn {
+  return subtitle.kind === "image"
+    ? { kind: "image", subtitleStreamIndex: subtitle.subtitleIndex }
+    : {
+        path: subtitle.path,
+        ...(subtitle.fontsDir === undefined
+          ? {}
+          : { fontsDir: subtitle.fontsDir }),
+      };
+}
+
+/**
+ * The encoded picture size: the source's display aspect fitted inside the configured box, so a
+ * 2.39:1 film encodes at 1920x804 rather than being stretched to 1920x1080, and a portrait clip
+ * at 608x1080. Discord letterboxes a non-16:9 stream itself, so no padding is encoded and the GPU
+ * and software pipelines size identically. A source whose probe failed keeps the configured box.
+ */
+function outputSize(
+  stream: Pick<Config["stream"], "width" | "height">,
+  resolved: Pick<ResolvedSource, "probedVideo">,
+): { width: number; height: number } {
+  const box = { width: stream.width, height: stream.height };
+  return resolved.probedVideo === undefined
+    ? box
+    : fitWithin(resolved.probedVideo.displayAspect, box);
+}
+
+function isRotated(resolved: Pick<ResolvedSource, "probedVideo">): boolean {
+  const rotation = resolved.probedVideo?.rotation;
+  return rotation !== undefined && rotation !== 0;
+}
+
+/** Film, PAL and NTSC rates and their doubles: the cadences a source can be played back at exactly. */
+const STANDARD_FRAME_RATES = [
+  24_000 / 1001,
+  24,
+  25,
+  30_000 / 1001,
+  30,
+  48_000 / 1001,
+  48,
+  50,
+  60_000 / 1001,
+  60,
+  100,
+  120_000 / 1001,
+  120,
+] as const;
+
+/** 23.976 and 24 differ by 0.1%, so recognising a rate must be tighter than that. */
+const FRAME_RATE_MATCH_TOLERANCE = 0.0005;
+
+/** NTSC sits 0.1% under its integer rate, so a cap that close still counts as fitting. */
+const CAP_TOLERANCE = 0.002;
+
+/**
+ * The rate a video segment is encoded at — `-r`, the GPU subtitle canvas, and the rate Discord is
+ * told all read this one value. `stream.fps` is a cap, not a forced rate: forcing 30 made a
+ * 23.976 film judder (a 3:2 duplicate cadence) and halved 50/60p sport. The source's own rate
+ * plays when it fits under the cap; a faster source plays at the largest whole fraction of its
+ * rate that does (60 → 30, 50 → 25), so frames are dropped evenly rather than in a beat.
+ *
+ * Only a recognised standard rate is followed. ffprobe's average for a variable-rate phone or
+ * screen recording is an arbitrary number, and an unprobed source has none; both keep the cap,
+ * which is exactly the forced rate every segment used before.
+ */
+export function outputFrameRate(
+  stream: Pick<Config["stream"], "fps">,
+  resolved: Pick<ResolvedSource, "probedVideo">,
+): number {
+  const source = resolved.probedVideo?.frameRate;
+  if (source === undefined) return stream.fps;
+  const standard = STANDARD_FRAME_RATES.find(
+    (rate) => Math.abs(rate - source) / rate < FRAME_RATE_MATCH_TOLERANCE,
+  );
+  if (standard === undefined) return stream.fps;
+  // A cap within 0.2% of the source counts as fitting, so a configured 29.97 does not halve a
+  // 30 fps source.
+  const divisor = Math.max(
+    1,
+    Math.ceil(standard / (stream.fps * (1 + CAP_TOLERANCE))),
+  );
+  return standard / divisor;
+}
+
+/** ffprobe `color_space` values that mean the BT.601 matrix (625-line and 525-line). */
+const BT601_MATRICES = new Set(["bt470bg", "smpte170m"]);
+
+/**
+ * Convert to BT.709 limited range when the source is tagged as something else we can convert:
+ * a BT.601 matrix (SD material, which would otherwise be decoded with HD coefficients after the
+ * upscale and shift hue), or full range on a tagged BT.709 matrix. Untagged sources are left
+ * alone: both scalers assume BT.601 for an untagged frame, which would wrongly "convert" the
+ * untagged HD majority. HDR is already tonemapped to BT.709.
+ */
+function needsBt709Conversion(
+  resolved: Pick<ResolvedSource, "probedVideo" | "hdr">,
+): boolean {
+  const video = resolved.probedVideo;
+  if (video === undefined || resolved.hdr === true) return false;
+  const colorSpace = video.colorSpace ?? "";
+  return (
+    BT601_MATRICES.has(colorSpace) ||
+    (colorSpace === "bt709" && video.colorRange === "pc")
+  );
 }
 
 /**
@@ -201,12 +431,15 @@ export function buildVideoPrepareOptions(
 export function buildGoLivePlayOptions(
   stream: Pick<
     Config["stream"],
-    "readrateInitialBurst" | "videoPlayoutDelayMaxMs" | "liveBufferMs"
+    "readrateInitialBurst" | "videoPlayoutDelayMaxMs" | "liveBufferMs" | "fps"
   >,
-  resolved: Pick<ResolvedSource, "live">,
+  resolved: Pick<ResolvedSource, "live" | "probedVideo">,
 ) {
   return {
     type: "go-live" as const,
+    // The rate Discord's video attributes advertise: the encoded rate, stated rather than read
+    // back from the demuxed stream's codec parameters.
+    frameRate: outputFrameRate(stream, resolved),
     readrateInitialBurst: stream.readrateInitialBurst,
     videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
     ...(resolved.live === true ? { liveBufferMs: stream.liveBufferMs } : {}),

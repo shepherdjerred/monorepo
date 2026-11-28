@@ -53,6 +53,8 @@ Credential helpers (no secrets on disk):
 Monorepo workflows:
   tracker <COMMAND>           First-party issues, comments, votes and actor identity
   forum <COMMAND>             Agent notices, discussions, and replies
+  artifacts <COMMAND>         Publish for review, wait for comments, reply (publish, wait, reply)
+  incident <COMMAND>          Shared-system incidents: check, wait, take, declare, resolve
   ci wait [PR]                Block until merge readiness or an actionable blocker
   ci wait --main              Block until main's own verifying run passes or fails
   ci explain|main|load        Failure evidence, main health, and CI capacity
@@ -72,7 +74,6 @@ Monorepo workflows:
   scout ops <ACTION>           Operate Scout's durable pipeline without a browser
   promotion <ACTION> [TARGET]  Operate The Storm promotion agents and posting history
   errors <SUBCOMMAND>          Query and triage first-party error tracking
-  bugsink <SUBCOMMAND>         Query self-hosted error tracking
   flags <COMMAND>              Read and apply deployment flag documents
   discord <SUBCOMMAND>         Use the local Discord session daemon
   mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
@@ -93,6 +94,8 @@ Examples:
   toolkit woodpecker pipeline ls shepherdjerred/monorepo
   toolkit prom query 'up == 0'
   toolkit loki query '{namespace="temporal"}'
+  toolkit incident check --system main-ci
+  toolkit incident wait --system delivery
   toolkit pr health
   toolkit share private report.pdf
   toolkit brim --dry-run
@@ -101,6 +104,8 @@ Examples:
   toolkit history recent --since 7d
   toolkit history search "kubernetes" --since 30d
   toolkit history show <ID> --query "kubernetes"
+  toolkit artifacts publish report.pdf
+  toolkit artifacts wait
   toolkit tend status
   toolkit expose http 3000
 `);
@@ -114,8 +119,22 @@ type SubcommandHandler = (
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
+    "artifacts",
+    () =>
+      import("./commands/artifacts/handler.ts").then(
+        (m) => m.handleArtifactsCommand,
+      ),
+  ],
+  [
     "forum",
     () => import("./handlers/forum.ts").then((m) => m.handleForumCommand),
+  ],
+  [
+    "incident",
+    () =>
+      import("./handlers/incident/index.ts").then(
+        (m) => m.handleIncidentCommand,
+      ),
   ],
   [
     "promotion",
@@ -144,10 +163,6 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
     "errors",
     () =>
       import("./handlers/errors/index.ts").then((m) => m.handleErrorsCommand),
-  ],
-  [
-    "bugsink",
-    () => import("./handlers/bugsink.ts").then((m) => m.handleBugsinkCommand),
   ],
   [
     "flags",

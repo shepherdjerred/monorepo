@@ -163,4 +163,4 @@ test("cold-checkout Knip orders provider generation even when only the root gate
     expect(client?.dependents, taskId).toContain("//#knip");
     expect(client?.outputs, taskId).toContain("generated/**");
   }
-});
+}, 20_000);

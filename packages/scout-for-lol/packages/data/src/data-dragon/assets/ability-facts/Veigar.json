@@ -74,7 +74,15 @@
         ]
       },
       "resolvedDescription": "Veigar unleashes a bolt of dark energy, dealing 80/120/160/200/240 (+50/55/60/65/70% AP) magic damage to the first two enemies hit. If Veigar kills an enemy with this Ability, he gains 1 stack of Phenomenal Evil. Large minions and large monsters grant 3 stacks instead.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": 70,
+        "missileSpeed": 1200,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Dark Matter",
@@ -132,7 +140,15 @@
         ]
       },
       "resolvedDescription": "Veigar summons dark matter from the sky, dealing 85/140/195/250/305 (+70/80/90/100/110% AP) magic damage. Every 50 stacks of Phenomenal Evil reduce this Ability's Cooldown by 10%.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 225,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Event Horizon",
@@ -176,7 +192,15 @@
         ]
       },
       "resolvedDescription": "Veigar twists the edges of space, creating a cage that Stuns enemies that pass through for 1.5/1.75/2/2.25/2.5 seconds. The cage lasts for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": null,
+        "radius": 390,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Primordial Burst",

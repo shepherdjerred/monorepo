@@ -38,14 +38,29 @@ export function connectTestDatabase(databaseUrl: string): ExtendedPrismaClient {
   );
 }
 
-/** Postgres identifiers cap at 63 bytes; the name encodes its creation time. */
-function testDatabaseName(testName: string): string {
+const UNIQUE_SCOUT_TEST_DB_PATTERN =
+  /^scout_test_(?:[a-z0-9_]+_)?\d+_[a-z0-9]{8,9}_[0-9a-f]{8}$/u;
+
+/** Postgres identifiers cap at 63 bytes; embed PID, base-36 time, and 8 hex chars of UUID entropy. */
+export function testDatabaseName(testName: string): string {
   const sanitized = testName
     .toLowerCase()
     .replaceAll(/[^a-z0-9_]+/gu, "_")
-    .replaceAll(/^_+|_+$/gu, "");
-  const prefix = `scout_test_${Date.now().toString()}_${Math.random().toString(36).slice(2, 6)}_`;
-  return `${prefix}${sanitized}`.slice(0, 63);
+    .replaceAll(/^_+|_+$/gu, "")
+    .replace(/^scout_test_+/u, "");
+  const suffix = `${process.pid.toString()}_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`;
+  const maxStemLength = 63 - "scout_test_".length - 1 - suffix.length;
+  const stem = sanitized.slice(0, maxStemLength).replaceAll(/_+$/gu, "");
+  return stem.length > 0
+    ? `scout_test_${stem}_${suffix}`
+    : `scout_test_${suffix}`;
+}
+
+export function normalizeTestDatabaseName(databaseName: string): string {
+  return databaseName.length <= 63 &&
+    UNIQUE_SCOUT_TEST_DB_PATTERN.test(databaseName)
+    ? databaseName
+    : testDatabaseName(databaseName);
 }
 
 export function createTestDatabase(testName: string): {

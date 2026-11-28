@@ -37,15 +37,15 @@ token; the commands below pass only 1Password references.
 
 ## 1. Start the deployment
 
-Request the set revision. Delivery records an `operator-run` deployment and
-prints it; its `id` is the deployment ID.
+Request the set revision. Delivery creates an `operator-run` deployment in
+`queued` status and prints its `id`.
 
 ```bash
 toolkit deploy start cluster-admission/prod <SET_REVISION_ID>
 ```
 
-Read the chart revision the deployment selected, and name the token reference
-the next stages use:
+Read the chart revision the deployment selected, confirm the remaining stages in
+`pendingAttestationStages`, and name the token reference the next stages use:
 
 ```bash
 DEPLOYMENT_ID='<DEPLOYMENT_ID>'
@@ -56,6 +56,15 @@ OPERATOR_RUN_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/delivery-argocd-operator-run
 
 `CHART_VERSION` must print as a chart version such as `2.0.0-1012345`; stop if
 it is empty.
+
+:::note
+Delivery records stage attestations only after `delivery-dispatch` claims
+`cluster-admission/prod` and moves the deployment to `running`. `toolkit deploy attest`
+waits up to `--timeout` (default 120 seconds) while the deployment is `queued`.
+If a running self-hosted barrier deployment (`temporal/prod`, `delivery`,
+`delivery-control-plane` or `argocd`) holds dispatch longer, wait for it to
+settle first or pass a larger `--timeout`.
+:::
 
 ## 2. Attest `apply-safety`
 

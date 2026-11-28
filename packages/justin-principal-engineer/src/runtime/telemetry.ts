@@ -34,6 +34,7 @@ const TotalsSchema = z.object({
   consecutiveFailures: Count.default(0),
   openPrs: Count.default(0),
   eligible: Count.default(0),
+  staleBaseRestacks: Count.default(0),
   reconciles: z.partialRecord(Outcome, Count).default({}),
   transitions: z.partialRecord(TaskPhaseSchema, Count).default({}),
   passes: z.partialRecord(PassReason, Count).default({}),
@@ -170,6 +171,35 @@ export class JustinTelemetry {
     this.log("queue_decision", {
       reason,
       ...(state === undefined ? {} : taskFields(state)),
+    });
+  }
+
+  public staleBaseRestack(
+    state: TaskState,
+    details: {
+      mergeBaseSha: string;
+      mainHeadSha: string;
+      behindBy: number;
+      restackedHeadSha: string | null;
+      conflict: boolean;
+    },
+  ): void {
+    this.totals.staleBaseRestacks += 1;
+    this.log("stale_base_restack", {
+      ...taskFields(state),
+      mergeBase: /^[a-f0-9]{40}$/.test(details.mergeBaseSha)
+        ? details.mergeBaseSha
+        : null,
+      mainHead: /^[a-f0-9]{40}$/.test(details.mainHeadSha)
+        ? details.mainHeadSha
+        : null,
+      behindBy: details.behindBy,
+      restackedHead:
+        details.restackedHeadSha !== null &&
+        /^[a-f0-9]{40}$/.test(details.restackedHeadSha)
+          ? details.restackedHeadSha
+          : null,
+      conflict: details.conflict,
     });
   }
 
@@ -354,6 +384,11 @@ export class JustinTelemetry {
         cumulative: true,
       });
     }
+    samples.push({
+      name: "justin_stale_base_restacks_total",
+      value: this.totals.staleBaseRestacks,
+      cumulative: true,
+    });
     return samples;
   }
 

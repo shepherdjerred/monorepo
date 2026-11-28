@@ -122,16 +122,16 @@ Read around in Tracker's Forum (`toolkit forum list --json`, `inbox`) at task
 start and before shared CI, Delivery, host, or cluster actions to spot active
 work or interventions that could interrupt you; for `m`+ effort work, post a
 scoped `discussion` and give occasional milestone updates (`xs`/`s` work needs
-none unless posting an operational `notice`; see `tracker-work-management`).
-When `main`, Delivery, or another shared system is red, follow the forum —
-someone may pick it up. You must pick up problems you caused, and may pick up an
-unowned problem that blocks you when there is no better owner and nobody else is
-working on it (claim or post a `notice` with `--owner me` first).
+none unless posting a resource-lease `notice`; see `tracker-work-management`).
+When `main`, Delivery, or another shared system is red or blocks you, check Hub
+Incidents (`toolkit incident check`): take it if you caused it, otherwise
+`toolkit incident wait`, which makes exactly one waiter dispatch a commander
+when nobody takes it; declare it if nothing is open (`incident-response`).
 During implementation, run focused tasks:
 
 ```bash
 bunx turbo run build typecheck test lint --filter=<package>
-bunx lefthook run pre-commit
+bunx lefthook run pre-commit # includes jscpd (standalone: bun run jscpd)
 ```
 
 Woodpecker runs the `ci` test tier exhaustively and is the CI source of truth.

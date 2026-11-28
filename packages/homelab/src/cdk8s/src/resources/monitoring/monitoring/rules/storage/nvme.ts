@@ -84,6 +84,111 @@ export const CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H =
 export const CI_STEP_WORKSPACE_LOGICAL_BYTES_24H =
   "ci_step:workspace_logical_written_bytes:sum24h";
 export const CI_STEP_WORKSPACES_24H = "ci_step:workspaces:count24h";
+// CI pool logical bytes written in 24h, by `writer` (see CI_POOL_WRITERS).
+export const CI_POOL_WRITER_LOGICAL_BYTES_24H =
+  "ci_pool:writer_logical_written_bytes:sum24h";
+
+/**
+ * Who writes to the CI pool (liskov `zfspv-pool-nvme`), classified by the claim
+ * that owns each dataset:
+ *  - workspaces: claims of the `ci-workspace` class in the CI namespace
+ *  - buildkit: claims in the `buildkitd` namespace
+ *  - delivery: claims in any `delivery-*` namespace (stage and platform jobs)
+ *  - caches: every other claim (Bun, Go, Cargo, Turbo and similar caches)
+ *  - other: datasets no claim owns (orphans, non-PVC datasets)
+ */
+export const CI_POOL_WRITERS = [
+  "workspaces",
+  "buildkit",
+  "delivery",
+  "caches",
+  "other",
+] as const;
+export type CiPoolWriter = (typeof CI_POOL_WRITERS)[number];
+
+const BYTES_PER_GB = 1_000_000_000;
+
+/**
+ * Daily logical-write TARGETS per writer, in decimal bytes: where the CI write
+ * program (Forum FM-275) is taking each writer. They sum to 470 GB, under the
+ * CI pool drive's 500 GB/day target (the pool's physical writes run within
+ * about 10% of its logical writes). `other` has no target: it is the residue
+ * no owner is responsible for. The dashboard panel shows these; the alerts
+ * below use CI_POOL_WRITER_ALERT_THRESHOLD_BYTES instead.
+ */
+export const CI_POOL_WRITER_TARGET_BYTES = {
+  workspaces: 250 * BYTES_PER_GB,
+  buildkit: 100 * BYTES_PER_GB,
+  delivery: 50 * BYTES_PER_GB,
+  caches: 70 * BYTES_PER_GB,
+} as const satisfies Partial<Record<CiPoolWriter, number>>;
+
+const CI_POOL_WRITER_TARGET_TOTAL_BYTES = Object.values(
+  CI_POOL_WRITER_TARGET_BYTES,
+).reduce((total, target) => total + target, 0);
+
+/**
+ * Alert thresholds: regression guards, not targets.
+ *
+ * Workspaces, BuildKit and Delivery ran 3-12x over their targets on every one
+ * of the 14 days to 2026-11-26, so alerting at the targets would email on
+ * deploy and never clear. Each threshold sits just above that writer's 14-day
+ * p90 of daily writes (p90 / max, GB: workspaces 2,542 / 2,997; buildkit
+ * 975 / 1,663; delivery 510 / 623; caches 67 / 100), so only a day worse than
+ * nearly every recent day pages. Caches' p90 is already under its 70 GB
+ * target, so it alerts at the target. As the CI write program (Forum FM-275)
+ * lands each fix, ratchet the threshold down toward its target.
+ */
+export const CI_POOL_WRITER_ALERT_THRESHOLD_BYTES = {
+  workspaces: 2600 * BYTES_PER_GB,
+  buildkit: 1000 * BYTES_PER_GB,
+  delivery: 550 * BYTES_PER_GB,
+  caches: 70 * BYTES_PER_GB,
+} as const satisfies Record<keyof typeof CI_POOL_WRITER_TARGET_BYTES, number>;
+
+/** The CI pool drive's daily write target, drawn as a line on the dashboard. */
+export const CI_POOL_DAILY_WRITE_TARGET_BYTES = 500 * BYTES_PER_GB;
+
+// One alert per writer with a target. The copy names the writer in plain
+// English rather than interpolating raw machine labels.
+const CI_POOL_WRITER_ALERTS = [
+  {
+    writer: "workspaces",
+    alert: "CIPoolWorkspaceWritesRegressed",
+    summary: "CI workspaces are writing more than they have recently",
+    description:
+      "Per-workflow CI workspace volumes are writing more to the CI pool than on nearly any recent day, wearing the pool drive faster. Check the golden workspace freshness and the largest steps under CI Workspace Writes by Step.",
+  },
+  {
+    writer: "buildkit",
+    alert: "CIPoolBuildkitWritesRegressed",
+    summary: "BuildKit is writing more than it has recently",
+    description:
+      "BuildKit's cache volume is writing more to the CI pool than on nearly any recent day, wearing the pool drive faster. Look for images that are rebuilt, pushed and pulled without changing.",
+  },
+  {
+    writer: "delivery",
+    alert: "CIPoolDeliveryWritesRegressed",
+    summary: "Delivery jobs are writing more than they have recently",
+    description:
+      "Delivery stage and platform job volumes are writing more to the CI pool than on nearly any recent day, wearing the pool drive faster. Look for jobs that re-clone or rebuild unchanged inputs on every run.",
+  },
+  {
+    writer: "caches",
+    alert: "CIPoolCacheWritesRegressed",
+    summary: "CI caches are writing more than their daily target",
+    description:
+      "The shared CI cache volumes (Bun, Go, Cargo, Turbo and similar) are writing more to the CI pool than their target, wearing the pool drive faster. A cache that is rewritten instead of reused usually means a broken cache key or a garbage collector fighting its writers.",
+  },
+] as const satisfies readonly {
+  writer: keyof typeof CI_POOL_WRITER_TARGET_BYTES;
+  alert: string;
+  summary: string;
+  description: string;
+}[];
+
+/** How long a writer must stay over its threshold before it alerts. */
+const CI_POOL_WRITER_ALERT_FOR = "6h";
 
 const usedRatio = bySerial("nvme_percentage_used_ratio");
 const lifetimeWrittenBytes = `${bySerial("nvme_data_units_written_total")} * ${String(NVME_DATA_UNIT_BYTES)}`;
@@ -136,6 +241,59 @@ const ciStepPods = `max by (persistentvolumeclaim, pod, label_ci_sjer_red_step_k
  * join weight of 1.
  */
 const ciClaimSteps = `label_replace(max by (persistentvolumeclaim, label_ci_sjer_red_step_key) (bottomk by (persistentvolumeclaim) (1, ${ciStepPods} * on(pod) group_left() max by (pod) (last_over_time(kube_pod_created{namespace="${WOODPECKER_CI_NAMESPACE}"}[24h]))) > bool 0), "step", "$1", "label_ci_sjer_red_step_key", "(.+)")`;
+
+/**
+ * Logical bytes written to the pool in the last 24h, by owning writer, as one
+ * `writer`-labelled series each.
+ *
+ * A dataset that was scraped in the 24h before the window is measured with
+ * `increase()`. That is exact for a long-lived cache, and it also sums the
+ * per-mount sessions of a volume that is mounted and unmounted all day (a
+ * mount restarts `nwritten` at zero, which `increase()` counts as a reset;
+ * the Delivery stage workspaces wrote 300+ GB this way while their maximum
+ * never passed 5 GB). A dataset first scraped inside the window starts at zero
+ * and may be destroyed within minutes, so `increase()` would drop the bytes
+ * written before its first scrape; its last scraped value (`max_over_time`) is
+ * its whole lifetime, the same treatment `ciWorkspaceWrites` gives workspace
+ * claims.
+ *
+ * `increase()` is summed per dataset, not maxed: a node-exporter restart gives
+ * every dataset a new `pod` label, splitting it into two series inside the
+ * window, and `max` would keep only the larger piece (a backtest 10h after a
+ * restart summed to 81% of the pool). The `max_over_time` side stays `max`, as
+ * the pieces' lifetimes overlap rather than add.
+ *
+ * Each dataset `<pool>/<pv name>` joins the claim that owns the volume, from
+ * `kube_persistentvolumeclaim_info` over the same window so destroyed claims
+ * still classify. `topk` keeps one claim per volume: a restore claim can name
+ * a volume another namespace's claim already owns, and a duplicate would fail
+ * the join. The later `label_replace` calls override the `caches` default for
+ * the claims that match their class.
+ */
+function ciPoolWritesByWriter(node: string, zpool: string): string {
+  const dataset = `node_zfs_zpool_dataset_nwritten{node="${node}",zpool="${zpool}"}`;
+  const scrapedBeforeWindow = `max by (dataset) (count_over_time(${dataset}[24h] offset 24h))`;
+  const datasetWrites = `(
+  (sum by (dataset) (increase(${dataset}[24h])) and on (dataset) ${scrapedBeforeWindow})
+  or
+  (max by (dataset) (max_over_time(${dataset}[24h])) unless on (dataset) ${scrapedBeforeWindow})
+)`;
+  const withVolume = `label_replace(${datasetWrites}, "volumename", "$1", "dataset", "[^/]+/(.+)")`;
+  const claims = `topk by (volumename) (1, max by (volumename, namespace, storageclass) (last_over_time(kube_persistentvolumeclaim_info{volumename!=""}[24h])))`;
+  const claimed = `label_join(${withVolume} * on (volumename) group_left (namespace, storageclass) ${claims}, "claim_class", "/", "namespace", "storageclass")`;
+  const writers = [
+    ["workspaces", `${WOODPECKER_CI_NAMESPACE}/${CI_WORKSPACE_STORAGE_CLASS}`],
+    ["buildkit", "buildkitd/.*"],
+    ["delivery", "delivery-[^/]*/.*"],
+  ] as const satisfies readonly (readonly [CiPoolWriter, string])[];
+  const classified = writers.reduce(
+    (expression, [writer, classPattern]) =>
+      `label_replace(${expression}, "writer", "${writer}", "claim_class", "${classPattern}")`,
+    `label_replace(${claimed}, "writer", "caches", "", "")`,
+  );
+  const unclaimed = `label_replace(${withVolume} unless on (volumename) ${claims}, "writer", "other", "", "")`;
+  return `sum by (writer) (${classified} or ${unclaimed})`;
+}
 
 function ciPoolDrive(): (typeof NVME_POOL_DRIVES)[number] {
   const drive = NVME_POOL_DRIVES.find(
@@ -235,6 +393,14 @@ function getNvmeWriteBudgetRuleGroup(): PrometheusRuleSpecGroups {
           `count by (step) (${ciWorkspaceWrites(ciPool.node, ciPool.zpool)} * on(persistentvolumeclaim) group_left(step) max by (persistentvolumeclaim, step) (${ciClaimSteps}))`,
         ),
       },
+      // Who wrote the CI pool's bytes: the per-writer budget alerts and the
+      // SMART dashboard's writers panel read this.
+      {
+        record: CI_POOL_WRITER_LOGICAL_BYTES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          ciPoolWritesByWriter(ciPool.node, ciPool.zpool),
+        ),
+      },
     ],
   };
 }
@@ -317,6 +483,26 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
         },
+        ...CI_POOL_WRITER_ALERTS.map(
+          ({ writer, alert, summary, description }) => ({
+            alert,
+            expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+              `${CI_POOL_WRITER_LOGICAL_BYTES_24H}{writer="${writer}"} > ${String(CI_POOL_WRITER_ALERT_THRESHOLD_BYTES[writer])}`,
+            ),
+            for: CI_POOL_WRITER_ALERT_FOR,
+            labels: {
+              severity: "warning",
+              category: "ci",
+              namespace: WOODPECKER_CI_NAMESPACE,
+            },
+            annotations: {
+              summary,
+              description: escapePrometheusTemplate(
+                `${description} It wrote {{ $value | humanize }}B to the CI pool in the last 24 hours against an alert threshold of ${String(CI_POOL_WRITER_ALERT_THRESHOLD_BYTES[writer] / BYTES_PER_GB)} GB and a target of ${String(CI_POOL_WRITER_TARGET_BYTES[writer] / BYTES_PER_GB)} GB. The writer targets add up to ${String(CI_POOL_WRITER_TARGET_TOTAL_BYTES / BYTES_PER_GB)} GB of the pool drive's ${String(CI_POOL_DAILY_WRITE_TARGET_BYTES / BYTES_PER_GB)} GB/day goal; the CI Pool Writes by Writer panel on the SMART Monitoring dashboard shows the split.`,
+              ),
+            },
+          }),
+        ),
         {
           alert: "NvmeWearOutProjectedWithinYear",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

@@ -52,7 +52,7 @@ export type MovieNetworkActivitiesV4 = {
     status: "acquire" | "available" | "waiting" | "blocked" | "obsolete";
     attemptId: string | null;
     reason: string | null;
-    /** Present only when a local provider lease/cooldown prevented searching. */
+    /** Present when provider admission or the next paced search page is pending. */
     retryAfterSeconds?: number;
     providerSearchProgress?: MovieProviderSearchProgressV4;
   }>;

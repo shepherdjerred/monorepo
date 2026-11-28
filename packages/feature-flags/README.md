@@ -36,6 +36,20 @@ Operator management (`7360`, via `https://flags.tailnet-1a49.ts.net` or
 [inventory how-to](../docs/wiki/src/content/docs/how-to/check-flag-inventory.md)
 covers the operator UI, `toolkit flags`, missing-key reconciliation, and
 revision-checked declared rollout writes.
+Machine callers share `FLAGS_MACHINE_TOKEN`, so
+`createFlagsMachineFetcher(url, token, fetch, { actor })` also sends a stable
+advisory `X-Flags-Actor` label (`temporal-flag-inventory-sync`,
+`check-flag-inventory`) that the Flags audit trail records; it is not a
+credential.
+
+`packages/flags/src/flag-usage.generated.json` records which files read each
+managed key, for the operator UI. `scripts/generate/flag-usage.ts` builds it
+syntactically (call arguments, `names.flag`, derived config names, key arrays,
+named constants, and The Storm's Java literals), counting a key only under the
+package roots that `scripts/generate/flag-usage-scopes.json` allows for its
+namespace. CI's `check-flag-usage` fails when the file is stale; refresh it
+with `bun run generate-flag-usage`, and add a scope entry for every new
+inventory namespace.
 
 ## Variant value schemas
 
@@ -83,6 +97,14 @@ after a comma; JSON settings objects reject unknown keys and coerced numeric
 strings; stored strings carry no surrounding whitespace where consumers trimmed.
 `storm-forum-season` lists the `@shepherdjerred/storm-theme` catalog ids,
 guarded by a storm-forum test.
+
+Model-id keys use `modelIdFor(route)`: `ModelIdSchema` tagged in its JSON
+Schema with `x-model-route`, the `@shepherdjerred/llm-models` route the
+consumer resolves (`{ kind: "native", endpoint, requires? }`, `codexSdk`, or
+`claudeAgentSdk`). The tag does not change what parses, and this package does
+not depend on the model catalog; the Flags editor reads the tag to offer the
+catalog models that route. Set the route from the consumer's call site when
+adding a model-id key.
 
 `bun run generate` also writes `src/flag-value-schemas.generated.json`
 (`{ [key]: { encoding, schema } }`, JSON Schema draft 2020-12 of the decoded

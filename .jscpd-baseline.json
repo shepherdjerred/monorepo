@@ -8,6 +8,10 @@
       "clones": 1,
       "tokens": 73
     },
+    "packages/alert-dashboard/src/shared/schema.ts|packages/incidents/src/shared/alertmanager.ts": {
+      "clones": 1,
+      "tokens": 109
+    },
     "packages/better-skill-capped/src/lib/local-store.test.ts|packages/better-skill-capped/src/lib/safe-storage.test.ts": {
       "clones": 1,
       "tokens": 114
@@ -311,10 +315,6 @@
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 140
-    },
-    "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
     },
     "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
@@ -2460,10 +2460,6 @@
       "clones": 2,
       "tokens": 194
     },
-    "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
-      "clones": 1,
-      "tokens": 116
-    },
     "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
       "tokens": 79
@@ -2559,6 +2555,10 @@
     "packages/temporal/src/shared/agent/agent-task.ts|packages/temporal/src/shared/agent/agent-task.ts": {
       "clones": 1,
       "tokens": 143
+    },
+    "packages/temporal/src/workflows/ci/fixtures/ci-maintenance-before-bounded-stalls.ts|packages/temporal/src/workflows/ci/maintenance.ts": {
+      "clones": 2,
+      "tokens": 329
     },
     "packages/temporal/src/workflows/delivery.ts|packages/temporal/src/workflows/replay-fixtures/delivery-dispatch-before-replication.ts": {
       "clones": 1,
@@ -2672,21 +2672,9 @@
       "clones": 1,
       "tokens": 107
     },
-    "packages/toolkit/src/lib/bugsink/issues.ts|packages/toolkit/src/lib/bugsink/queries.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/toolkit/src/lib/bugsink/schemas.ts|packages/toolkit/src/lib/bugsink/schemas.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
     "packages/toolkit/src/lib/discord/handlers.ts|packages/toolkit/src/lib/discord/handlers.ts": {
       "clones": 1,
       "tokens": 77
-    },
-    "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
-      "clones": 1,
-      "tokens": 84
     },
     "packages/toolkit/test/lib/git-conflicts.test.ts|scripts/lib/test-git.ts": {
       "clones": 1,

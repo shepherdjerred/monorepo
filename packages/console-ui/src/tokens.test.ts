@@ -1,12 +1,23 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
-import { renderTokensCss, tokens } from "@shepherdjerred/console-ui/tokens.ts";
+import tokensJson from "@shepherdjerred/console-ui/tokens.json" with { type: "json" };
+import {
+  BREAKPOINTS,
+  SIDEBAR_QUERY,
+  renderTokensCss,
+  tokens,
+} from "@shepherdjerred/console-ui/tokens.ts";
 
 const styles = path.join(import.meta.dirname, "styles");
 
 async function stylesheet(name: string): Promise<string> {
   return Bun.file(path.join(styles, name)).text();
 }
+
+const componentSheets = [
+  ...new Bun.Glob("*.css").scanSync({ cwd: path.join(styles, "components") }),
+].map((name) => `components/${name}`);
+const classSheets = [...componentSheets, "page.css"];
 
 function withoutComments(css: string): string {
   return css.replaceAll(/\/\*[\s\S]*?\*\//g, "");
@@ -15,6 +26,18 @@ function withoutComments(css: string): string {
 describe("tokens.json", () => {
   test("both themes define the same tokens", () => {
     expect(Object.keys(tokens.dark)).toEqual(Object.keys(tokens.light));
+  });
+
+  test("translucent colours exist for both themes", () => {
+    expect(Object.keys(tokensJson.translucent.dark)).toEqual(
+      Object.keys(tokensJson.translucent.light),
+    );
+  });
+
+  test("breakpoints reach scripts and the generated phone overrides", () => {
+    expect(BREAKPOINTS).toEqual({ phone: 600, sidebar: 900 });
+    expect(SIDEBAR_QUERY).toBe("(width > 900px)");
+    expect(renderTokensCss()).toContain("@media (width <= 600px)");
   });
 
   test("every value is a six-digit hex colour, which emails can inline", () => {
@@ -38,22 +61,19 @@ describe("stylesheets", () => {
     );
   });
 
-  test.each([
-    "reset.css",
-    "tokens.css",
-    "fonts.css",
-    "components.css",
-    "page.css",
-  ])("%s keeps every rule inside a ui.* layer", async (name) => {
-    const css = withoutComments(await stylesheet(name)).trim();
-    const topLevel = css
-      .replaceAll(/@import [^;]+ layer\(ui\.[a-z]+\);/g, "")
-      .trim();
-    expect(topLevel).toMatch(/^@layer ui\.[a-z]+ \{[\s\S]*\}$/);
-    expect(topLevel.match(/^@layer /gm)).toHaveLength(1);
-  });
+  test.each(["reset.css", "tokens.css", "fonts.css", ...classSheets])(
+    "%s keeps every rule inside a ui.* layer",
+    async (name) => {
+      const css = withoutComments(await stylesheet(name)).trim();
+      const topLevel = css
+        .replaceAll(/@import [^;]+ layer\(ui\.[a-z]+\);/g, "")
+        .trim();
+      expect(topLevel).toMatch(/^@layer ui\.[a-z]+ \{[\s\S]*\}$/);
+      expect(topLevel.match(/^@layer /gm)).toHaveLength(1);
+    },
+  );
 
-  test.each(["components.css", "page.css"])(
+  test.each(classSheets)(
     "every class in %s uses the ui- prefix",
     async (file) => {
       const css = withoutComments(await stylesheet(file)).replaceAll(
@@ -68,7 +88,7 @@ describe("stylesheets", () => {
     },
   );
 
-  test.each(["components.css", "page.css"])(
+  test.each(classSheets)(
     "%s colours come only from --ui-* tokens",
     async (name) => {
       const css = withoutComments(await stylesheet(name));

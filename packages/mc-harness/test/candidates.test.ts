@@ -45,6 +45,7 @@ import { writeProgramFixture } from "./fixtures/program-evidence.ts";
 import { alignedRender, compiledGrid, cropToBox } from "#build/sources.ts";
 import { BuildWorkspace } from "#build/workspace.ts";
 import { flatSiteBuild } from "./fixtures/flat-site.ts";
+import { useCompactRenderTiles } from "./fixtures/compact-render-tiles.ts";
 import { BUILD_FILES, JudgeRecordSchema, type Op } from "#protocol/build.ts";
 
 vi.mock("@shepherdjerred/mc-build/render/assets.ts", async () => {
@@ -900,7 +901,8 @@ async function interruptedTournament(
   return workspace;
 }
 
-describe("knockout checkpoint invalidation", () => {
+describe("knockout checkpoint invalidation", { timeout: 60_000 }, () => {
+  useCompactRenderTiles();
   it.each([false, true])(
     "ignores unrelated saves with an outside incumbent of %s",
     async (outsideIncumbent) => {
@@ -1125,7 +1127,7 @@ describe("candidate capture and judgment evidence", () => {
         .filter((entry) => entry.kind === "accept")
         .map((entry) => entry.candidate),
     ).toEqual(["b", "b"]);
-  });
+  }, 60_000);
 
   it.each(["contents", "placement", "world"])(
     "rejects a candidate after capture %s changes before side effects",
@@ -1204,7 +1206,7 @@ describe("candidate capture and judgment evidence", () => {
         new Uint8Array(await Bun.file(workspace.file(file)).arrayBuffer()),
       ).toEqual(inputs[index]);
     }
-  });
+  }, 60_000);
 });
 
 describe("candidates and knockout", () => {

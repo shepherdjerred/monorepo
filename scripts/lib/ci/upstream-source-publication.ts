@@ -8,6 +8,7 @@ import type { OwnerRegistry } from "@shepherdjerred/ops-model/delivery-catalog/p
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { z } from "zod";
 import { readRequiredHandoff } from "./ci-handoff.ts";
+import { createRetryingDeliveryFetch } from "../delivery/retry-fetch.ts";
 import {
   DELIVERY_CATALOG_REGISTRY_HANDOFF,
   parseDeliveryCatalogRegistry,
@@ -47,6 +48,7 @@ export async function publishUpstreamSources(): Promise<void> {
         headers: {
           Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}`,
         },
+        fetch: createRetryingDeliveryFetch(),
       });
       return componentArtifactsForPublication(
         client,

@@ -5,6 +5,111 @@ metadata:
   namespace: alert-dashboard
 spec: {}
 ---
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: incidents-postgresql
+  namespace: alert-dashboard
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+  labels:
+    velero.io/backup: enabled
+    velero.io/exclude-from-backup: "false"
+spec:
+  databases:
+    incidents_db: incidents
+  enableShmVolume: true
+  numberOfInstances: 1
+  patroni:
+    initdb:
+      data-checksums: "true"
+      encoding: utf8
+      locale: en_US.utf8
+    pg_hba:
+      - local all postgres peer
+      - local all all peer
+      - hostssl all postgres all scram-sha-256
+      - hostssl incidents_db incidents all scram-sha-256
+      - hostssl replication standby all scram-sha-256
+      - host all postgres all scram-sha-256
+      - host incidents_db incidents all scram-sha-256
+      - host replication standby all scram-sha-256
+    slots: {}
+  postgresql:
+    parameters:
+      checkpoint_completion_target: "0.9"
+      checkpoint_timeout: 15min
+      default_statistics_target: "100"
+      effective_cache_size: 512MB
+      effective_io_concurrency: "200"
+      full_page_writes: off
+      log_min_duration_statement: "1000"
+      log_statement: none
+      maintenance_work_mem: 32MB
+      max_connections: "100"
+      max_wal_size: 4GB
+      min_wal_size: 128MB
+      password_encryption: scram-sha-256
+      random_page_cost: "1.1"
+      shared_buffers: 128MB
+      wal_buffers: 8MB
+      wal_init_zero: off
+      wal_recycle: off
+      work_mem: 4MB
+    version: "18"
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 256Mi
+  teamId: homelab
+  users:
+    incidents:
+      - createdb
+  volume:
+    size: 32Gi
+    storageClass: zfs-ssd-lz4
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: incidents-pg-netpol
+  namespace: alert-dashboard
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: alert-dashboard
+      ports:
+        - port: 5432
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: postgres-operator
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 8008
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              cluster-name: incidents-postgresql
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 8008
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      cluster-name: incidents-postgresql
+  policyTypes:
+    - Ingress
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,6 +145,18 @@ spec:
               value: America/Los_Angeles
             - name: DATABASE_URL
               value: file:/data/alert-dashboard.db
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: incidents.incidents-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: incidents.incidents-postgresql.credentials.postgresql.acid.zalan.do
+            - name: INCIDENTS_DATABASE_URL
+              value: postgresql://$(DB_USER):$(DB_PASSWORD)@incidents-postgresql:5432/incidents_db
             - name: HOME
               value: /tmp
             - name: HOST
@@ -206,6 +323,55 @@ spec:
               name: pvc-alert-dashboard-data
             - mountPath: /tmp
               name: tmp
+        - args:
+            - cd /app/packages/incidents && bunx --no-install prisma migrate deploy
+          command:
+            - /bin/sh
+            - -c
+          env:
+            - name: TZ
+              value: America/Los_Angeles
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: incidents.incidents-postgresql.credentials.postgresql.acid.zalan.do
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: incidents.incidents-postgresql.credentials.postgresql.acid.zalan.do
+            - name: INCIDENTS_DATABASE_URL
+              value: postgresql://$(DB_USER):$(DB_PASSWORD)@incidents-postgresql:5432/incidents_db
+            - name: HOME
+              value: /tmp
+          image: '{{ required `Delivery requires image:alert-dashboard` (get (get (.Values.delivery | default dict) "images" | default dict) "alert-dashboard") }}'
+          imagePullPolicy: Always
+          name: incidents-prisma-migrate
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 25m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /data
+              name: pvc-alert-dashboard-data
+            - mountPath: /tmp
+              name: tmp
       restartPolicy: Always
       securityContext:
         fsGroup: 1000
@@ -338,6 +504,13 @@ spec:
           podSelector:
             matchLabels:
               k8s-app: kube-dns
+    - ports:
+        - port: 5432
+          protocol: TCP
+      to:
+        - podSelector:
+            matchLabels:
+              cluster-name: incidents-postgresql
     - ports:
         - port: grafana
           protocol: TCP

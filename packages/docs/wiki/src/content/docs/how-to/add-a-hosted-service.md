@@ -10,6 +10,18 @@ explains the split.
 
 ## Prepare the service
 
+:::caution
+If the image is `visibility: "private"`, pre-provision its Docker Hub
+repository in a separate PR before adding its build target. Add the entry to
+[`image-registry.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/image-registry.json)
+and `pendingPrivateImages` in `scripts/checks/service-registration-exemptions.json`,
+run `bun run --cwd packages/homelab-cdktn synth`, merge, and wait for
+`tofu-dockerhub/prod` to create the private repository. Pushing a new image
+before `tofu-dockerhub/prod` applies auto-creates a public repository and fails
+the visibility check. `new-service.ts` reuses that `image-registry.json` entry
+and clears `pendingPrivateImages`.
+:::
+
 1. Scaffold it from the repository root:
 
    ```bash
@@ -25,8 +37,9 @@ explains the split.
    | `--title` | The catalog title. Defaults to the name in sentence case            |
 
    The command writes the package, the chart, the Argo Application and every
-   registration. It then installs, runs `generate:catalog` and runs the
-   completeness check. It prints each file it wrote.
+   registration. It then installs, synthesizes `@homelab/cdktn` (updating
+   `packages/homelab/src/tofu/dockerhub/main.tf.json`), runs `generate:catalog`
+   and runs the completeness check. It prints each file it wrote.
 
 2. Bump the three inventory counts that a new image and chart change. Run the
    suite and edit the literal each failure names:
@@ -57,7 +70,8 @@ explains the split.
    ```bash
    bunx turbo run build typecheck test lint \
      --filter=@shepherdjerred/notes --filter=@homelab/cdk8s \
-     --filter=@shepherdjerred/root-scripts --filter=@shepherdjerred/ops-model
+     --filter=@homelab/cdktn --filter=@shepherdjerred/root-scripts \
+     --filter=@shepherdjerred/ops-model
    bun run check-service-registration
    docker build --target smoke -f packages/notes/Dockerfile .
    ```
@@ -118,8 +132,9 @@ service's name throughout.
 
    The first run fails and prints the prerequisite edges the Application
    implies. Add them to `edges` in `catalog-document.json` and run it again.
-   Give every other file it rewrote under `registrations/v2` a new revision id
-   in the catalog.
+   Give every other file it rewrote under `registrations/v2` (including
+   `argocd/prod`'s configuration, which grants Delivery RBAC on
+   `workloads/notes`) a new revision id in the catalog.
 
 8. Run the suites and bump each inventory a failure names:
 
@@ -132,9 +147,12 @@ service's name throughout.
 
 9. Merge, then
    [register the catalog change](/how-to/cut-a-homelab-release/#register-a-catalog-change).
-   Delivery deploys the new automatic environment on its next dispatch.
+   Delivery schedules an automatic `rebind` of `argocd/prod` onto its new
+   configuration revision and holds `notes/prod` queued until that `argocd/prod`
+   rebind accepts, then deploys `notes/prod`.
 
-10. Verify the Application is healthy and the service answers on its host.
+10. Verify both deployments accept (`toolkit deploy selected notes/prod --json`),
+    the Application is healthy, and the service answers on its host.
 
 :::caution
 Do not flip the gate without the catalog change. Synthesis refuses an

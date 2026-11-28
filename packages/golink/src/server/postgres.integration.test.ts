@@ -16,7 +16,7 @@ import {
   LinkItemSchema,
   LinksDirectoryResponseSchema,
 } from "#shared/contract.ts";
-import { createGolinkApp } from "./app.ts";
+import { createGolinkServer } from "./app.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
 const dbSuffix = crypto.randomUUID().replaceAll("-", "");
@@ -107,7 +107,7 @@ describe("golink PostgreSQL integration", () => {
     );
     expect(haAfterReseed?.createdBy).toBe("seed");
 
-    const app = createGolinkApp({
+    const { app } = createGolinkServer({
       repo,
       getIngressHosts: () => ["grafana.tailnet-1a49.ts.net"],
       platformSites: [],
@@ -120,21 +120,27 @@ describe("golink PostgreSQL integration", () => {
     expect(ready.status).toBe(200);
     expect(await ready.text()).toBe("ready");
 
-    const upsertRes = await app.request("http://go.local/api/links", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Tailscale-User-Login": "jerred@sjer.red",
+    const upsertRes = await app.request(
+      "http://go.local/api/links",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Tailscale-User-Login": "jerred@sjer.red",
+        },
+        body: JSON.stringify({
+          short: "docs",
+          targetUrl: "https://wiki.sjer.red/architecture",
+        }),
       },
-      body: JSON.stringify({
-        short: "docs",
-        targetUrl: "https://wiki.sjer.red/architecture",
-      }),
-    });
+      // Through the Tailscale sidecar, so the login is trusted.
+      { peerAddress: "127.0.0.1" },
+    );
     expect(upsertRes.status).toBe(200);
     const created = LinkItemSchema.parse(await upsertRes.json());
     expect(created.short).toBe("docs");
     expect(created.clicks).toBe(0);
+    expect(created.createdBy).toBe("jerred@sjer.red");
 
     const redirectRes = await app.request("http://go.local/docs/golink");
     expect(redirectRes.status).toBe(302);

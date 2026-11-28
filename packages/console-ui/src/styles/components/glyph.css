@@ -1,0 +1,18 @@
+/* Status: a 14px glyph in the severity colour, plus its word. */
+@layer ui.components {
+  .ui-glyph {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    vertical-align: middle;
+  }
+  .ui-glyph-icon {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--ui-sev);
+  }
+  .ui-glyph-label {
+    min-width: 0;
+  }
+}

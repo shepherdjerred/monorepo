@@ -1,4 +1,4 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { MediaIntent, Prisma } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import {
@@ -29,7 +29,10 @@ import { memberMovieTarget } from "#infrastructure/visibility/member-detail.ts";
 export async function readMovieTargetContextV4(
   tx: Prisma.TransactionClient,
   actor: MediaActor,
-  input: { scope: MovieEditionScope } & MovieProtectionViewAccessV4,
+  input: {
+    scope: MovieEditionScope;
+    includeDiscovery?: boolean;
+  } & MovieProtectionViewAccessV4,
   budget = new PublicationAuthorityReadBudget(),
 ): Promise<MovieTargetContextV4> {
   const { scope, access } = input;
@@ -104,7 +107,20 @@ export async function readMovieTargetContextV4(
   });
   const progress = await readMovieTargetProgressV4(
     tx,
-    { scope, epoch: admission.epoch, owner, ownDemand: controls.active },
+    {
+      scope,
+      epoch: admission.epoch,
+      owner,
+      ownDemand: controls.active,
+      ...(input.includeDiscovery === true && targetAllowsDiscovery(target)
+        ? {
+            discovery: {
+              generation: target.generation,
+              reserved: admission.reserved,
+            },
+          }
+        : {}),
+    },
     budget,
   );
   identity.freshness?.assertActive();
@@ -143,6 +159,20 @@ export async function readMovieTargetContextV4(
   });
   // A requester follows their edition's transfer, not how it was acquired.
   return owner ? context : memberMovieTarget(context);
+}
+
+function targetAllowsDiscovery(
+  target: Pick<
+    MediaIntent,
+    "availability" | "monitoring" | "desiredPresence" | "intentionallyRemovedAt"
+  >,
+) {
+  return (
+    target.availability === "wanted" &&
+    target.monitoring &&
+    target.desiredPresence &&
+    target.intentionallyRemovedAt === null
+  );
 }
 
 async function ownMovieControlsV4(
@@ -231,6 +261,7 @@ async function movieTargetAdmissionV4(
     epoch: runtime.epoch,
     canRetry: input.target.profileId !== null && inventory.retryable,
     canSelect: input.target.profileId !== null && !inventory.reserved,
+    reserved: inventory.reserved,
     personalDemand: inventory.personalDemand,
   };
 }

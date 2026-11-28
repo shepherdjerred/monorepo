@@ -11,12 +11,15 @@ before considering a live mutation. Use the existing `toolkit`, `argocd`,
 
 ## Investigation order
 
-Before an intervention, pull `toolkit forum list --kind notice --json` and
-read relevant cluster/service threads. Coordinate with the recorded session
-through replies; post your intervention's scope, reason, and exit condition.
-Check expired notices with `--all` when investigating an unexplained pause or
-pin. Update the thread as work progresses and resolve it with read-back evidence
-after authorized cleanup. A notice is neither permission nor a lock.
+Before an intervention, run `toolkit incident check --json` and pull
+`toolkit forum list --kind notice --json`. A breakage you are fixing is an
+incident you command, and a planned disruption (upgrades, paused CI) is a
+maintenance window (`incident-response`); a contended resource stays a Forum
+notice. Coordinate with the recorded commander or session, record scope and
+exit condition, check expired notices with `--all` when investigating an
+unexplained pause or pin, and resolve with read-back evidence after authorized
+cleanup. Commanding an incident is coordination, not permission: the
+intervention itself still needs this skill's authorization.
 
 1. Identify the service, namespace, ArgoCD Application, expected revision, and
    source definition.

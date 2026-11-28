@@ -16,6 +16,7 @@ import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
 import { STORM_FORUM_SCHEDULES } from "./storm-forum-schedule-definitions.ts";
 import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 import { CI_SCHEDULES } from "./ci-schedule-definitions.ts";
+import { OPS_CI_DASHBOARD_SCHEDULES } from "./ops-ci-dashboard.ts";
 import { TRACKER_ATTACHMENT_SCHEDULE } from "./tracker-attachments.ts";
 import { TEMPORAL_FAILURE_WATCH_SCHEDULE } from "./temporal-failure-watch.ts";
 import { DELIVERY_DISPATCH_SCHEDULE } from "./delivery.ts";
@@ -81,6 +82,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...STORM_FORUM_SCHEDULES,
   ...AGENT_CHAT_SCHEDULES,
   ...CI_SCHEDULES,
+  ...OPS_CI_DASHBOARD_SCHEDULES,
   ...MEDIA_SCHEDULES,
   MEDIA_PLAYBACK_SCHEDULE,
   MEDIA_QUALITY_GUIDE_SCHEDULE,
@@ -335,24 +337,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   },
   ...SECURITY_SCHEDULES,
   {
-    id: "bugsink-housekeeping",
-    workflowType: "runBugsinkHousekeepingWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 3 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
-  },
-  {
     id: "scout-image-gc-daily",
     workflowType: "runScoutImageGcWorkflow",
     args: [{ retentionDays: 30, dryRun: false }],
-    // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
+    // 04:00 PT — after the 03:00 ZFS maintenance window so the nightly
     // destructive jobs don't contend for the worker pod at once.
     timing: {
       kind: "cron",

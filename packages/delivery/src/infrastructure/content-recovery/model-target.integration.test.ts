@@ -38,6 +38,31 @@ async function siteCompound() {
   };
 }
 
+/** A compound whose standalone static-site sub-recipe sits beside an Application. */
+function standaloneSiteCompound() {
+  return Promise.resolve({
+    kind: "compound",
+    subRecipes: [
+      {
+        instance: "application:arcade-search",
+        definition: applicationRecipe("arcade-search"),
+      },
+      {
+        instance: "bucket:arcade-site",
+        definition: {
+          kind: "static-site",
+          archiveComponent: "archive:arcade-site",
+          bucket: "arcade-site",
+          verification: {
+            url: "https://arcade.sjer.red/",
+            expectedStatus: 200,
+          },
+        },
+      },
+    ],
+  });
+}
+
 /** A compound whose forum Application is second (not the primary one). */
 async function forumCompound() {
   const [search, forum] = await Promise.all([
@@ -81,6 +106,12 @@ test.each([
     "static-site",
   ],
   [
+    "a compound's standalone static-site sub-recipe",
+    standaloneSiteCompound,
+    "bucket:arcade-site",
+    "static-site",
+  ],
+  [
     "a compound's second-Application forum",
     forumCompound,
     "application:storm-forum",
@@ -91,25 +122,31 @@ test.each([
   async (_shape, recipe, target, targetKind) => {
     const id = `model-content-${targetKind}-${crypto.randomUUID()}`;
     const generation = await heldRelease(id, await recipe(), target);
-    const intent = await scope.delivery.requestContentRecovery(
+    const unified = await scope.delivery.requestRecoveryIntent(
       id,
       {
-        requestId: `${id}/recovery`,
-        expectedEnvironmentGeneration: generation,
+        requestId: `${id}/unified`,
+        expectedGeneration: generation,
+        expectedKind: "content",
         reason: "Independently inspect the model release's ambiguous content",
       },
       testOperator,
     );
-    expect(intent).toMatchObject({
+    expect(unified).toMatchObject({
+      deploymentId: id,
+      kind: "content",
+      outcome: "pending",
+    });
+    const context = await scope.delivery.contentRecovery(
+      unified.id,
+      testOperator,
+    );
+    expect(context.intent).toMatchObject({
+      id: unified.id,
       deploymentId: id,
       status: "pending",
       targetKind,
     });
-    const context = await scope.delivery.contentRecovery(
-      intent.id,
-      testOperator,
-    );
-    expect(context.intent.id).toBe(intent.id);
   },
 );
 

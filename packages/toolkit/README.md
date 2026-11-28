@@ -35,6 +35,9 @@ an environment is running it.
 ```bash
 toolkit deploy whoami
 toolkit deploy status --json
+toolkit deploy selected <ENVIRONMENT_ID> --json
+toolkit deploy approvals --json
+toolkit deploy list [ENVIRONMENT_ID] --service <SERVICE_ID> --status <STATUS> --cursor <CURSOR> --json
 toolkit deploy versions arcade
 toolkit deploy inventory --json
 toolkit deploy diff none <VERSION_SET_ID>
@@ -64,6 +67,14 @@ toolkit deploy platform recover <DEPLOYMENT_ID> --machine --expected-generation 
 toolkit deploy platform recovery <INTENT_ID> --json
 toolkit deploy platform recovery-approve <INTENT_ID> --plan-fingerprint <HASH> --decision approved --reason "Reviewed exact saved recovery plan and state"
 ```
+
+`selected <ENVIRONMENT_ID>` reads the environment's desired, observed, and accepted
+selection pointers along with the accepted `VersionSet` component revisions (`null`
+before the first accepted release). `approvals` lists pending and recent deployment
+and saved-plan approvals. `list [ENVIRONMENT_ID]` lists deployments across all
+environments or one target environment (`<ENVIRONMENT_ID>` or `--environment <ID>`,
+not both), with optional `--service <ID>`, `--status <STATUS>`, and `--cursor <CURSOR>`
+pagination flags.
 
 The default endpoint is `https://delivery.tailnet-1a49.ts.net`; override bootstrap
 with `--url`, `DELIVERY_URL`, or `[delivery].url` in the toolkit config. Requests
@@ -340,8 +351,8 @@ command does not send a login header. `apply` sends the service origin so a
 human write passes the same-origin check. `--machine` resolves
 `FLAGS_MACHINE_TOKEN` through the credential broker (defaulting to the
 `flags-auth` item in the homelab 1Password vault unless set in the environment
-or `[credentials].FLAGS_MACHINE_TOKEN`), sends it as a bearer, and never prints
-that token. Evaluation stays credentialless; this command uses the management
+or `[credentials].FLAGS_MACHINE_TOKEN`), sends it as a bearer with the advisory
+audit label `X-Flags-Actor: toolkit`, and never prints that token. Evaluation stays credentialless; this command uses the management
 API.
 
 ```bash
@@ -417,7 +428,7 @@ toolkit forum list --kind notice
 toolkit forum inbox
 toolkit forum scopes
 toolkit forum search "CI cache" --scope ci --sort votes
-toolkit forum post --kind notice --title "Repairing main" --scope main --owner me --body "Own change caused the failure; investigating." --condition "Main's authoritative CI passes."
+toolkit forum post --kind notice --title "Holding shared test PostgreSQL for a migration rehearsal" --scope test-postgres --owner me --body "Exclusive use while rehearsing." --condition "Rehearsal finished and the database is released."
 toolkit forum post --kind question --title "Which S3 bucket holds CI diagnostics?" --body-file /tmp/question.md --attach /tmp/trace.log
 toolkit forum post --kind decision --title "Standardize on FM-<N> short references" --body-file /tmp/decision.md --pinned
 toolkit forum view FM-12
@@ -468,6 +479,198 @@ owner, total, and retrieval timestamp. CI reports include global, `main` and
 existing fields and add `coordination`. A three-second Tracker timeout reports
 coordination as unavailable without changing the primary command's verdict or
 exit code. CI waits and merge gates do not query the forum.
+
+## Artifacts
+
+`toolkit artifacts` publishes work for Jerred to review, blocks until the
+review produces comments, and answers them. It talks to the first-party
+`artifacts` service over the tailnet; there is no token, because every request
+already carries your Tailscale login and the service checks it against its
+operator list. The service URL resolves `--url`, then `ARTIFACTS_URL` /
+`[artifacts].url`, then `https://artifacts.tailnet-1a49.ts.net`. Callers
+identify themselves with the same native session identity as `tracker` (see
+[Tracker](#tracker)); the actor travels base64-encoded in `X-Artifacts-Actor`
+and includes a `workspaceKey` of `<hostname>:<worktree or cwd>`, which scopes a
+bare `wait` to the artifacts published from this worktree. A human caller (no agent session) sends no header: the
+service derives the human from the Tailscale login and refuses a human actor in
+the header, so a human names `--board` or `--artifact` to wait.
+
+```bash
+toolkit artifacts publish report.pdf                              # one file: its own entry; viewer chosen by extension
+toolkit artifacts publish dist/ --viewport 1440x900               # a directory with index.html is a site
+toolkit artifacts publish a.html b.html c.html --label A,B,C      # three concepts on one board, side by side
+toolkit artifacts publish flow.mmd --board design-review          # Mermaid, uploaded as diagram.mmd
+toolkit artifacts publish a.html --version-of <artifactId> --note-file why.md
+toolkit artifacts wait                                            # block until a comment arrives; hold exactly one
+toolkit artifacts wait --board design-review --timeout 2h --json
+toolkit artifacts reply <threadId> --body-file reply.md --resolve
+toolkit artifacts resolve <threadId>
+toolkit artifacts list --board design-review
+toolkit artifacts show <artifactId> --json                        # versions, threads with anchors, board notes
+toolkit artifacts boards
+toolkit artifacts guide [publishing]                              # the service's agent guide and references
+```
+
+**The loop.** Publish, then hold one `wait`. When it returns comments, hand
+each to a subagent, publish the result as a new version with `publish <path>
+--version-of <artifactId>`, answer the thread with `reply <threadId> --body-file
+F --resolve`, and run `wait` again. A comment is delivered once: `wait` prints
+the digest, flushes stdout, and only then acknowledges, so a second `wait`
+returns only newer comments and a crash in between redelivers rather than
+loses. An agent that stops and restarts in the same worktree receives the
+comments it never saw.
+
+**`publish`** takes one or more files or directories. Several paths publish
+several artifacts to one board (`<repo>-<yyyy-mm-dd>` unless `--board` names
+one); a single artifact without `--board` gets a board named after it. Kind is
+inferred from the extension (`html`, `pdf`, `image` for png/jpg/gif/webp/svg/avif,
+`video` for mp4/webm/mov, `markdown`, `cast`, `mermaid`, otherwise `file`) and
+`--kind` overrides it. Files stream from disk with their `Content-Length`; only
+blobs the service lacks are sent. The request carries an idempotency key
+derived from the caller's workspace, board, target and manifest digest, so a
+retried publish resumes instead of duplicating a version; `--idempotency-key`
+overrides it. The client rejects what the service would: paths the service
+reserves (a leading `_`), symbolic links, more than 2000 files, 500 MiB per
+file, 1 GiB per version. `--version-of` sends the artifact's current version as
+`expectedCurrentVersionId`; if someone published since, it exits 2 naming the
+current version and the fix. Publishing the exact files the artifact's current version already
+holds (with an unchanged note) creates nothing and reports `deduplicated`. For a
+new version the idempotency key also covers the version it was based on, so
+reverting to older content publishes a new version instead of replaying the
+first one, and this check is what makes a retry after a lost commit response
+safe. Text output starts with the review URL:
+
+```text
+Review: https://artifacts.tailnet-1a49.ts.net/a/<artifactId>
+Board: https://artifacts.tailnet-1a49.ts.net/b/<board>
+Next: toolkit artifacts wait
+```
+
+**`wait`** pins a scope (the caller's own artifacts by default, `--board`, or
+`--artifact`), subscribes to the service's event stream, and then claims. It
+claims again on every event, every reconnect, every 60 seconds, and when a
+comment's settle window ends, so a lost event only delays delivery. A dropped
+stream reconnects with backoff (1 s doubling to 30 s, with jitter) and never
+ends the wait. It writes one stderr heartbeat every five minutes and, inside an
+agent harness, the same one-line hint as `ci wait` for holding it cheaply.
+It does not reuse the CI loop in `lib/ci/wait`: that loop judges one pinned CI
+snapshot and ends when its single subscription fails, whereas this one claims
+and acknowledges work and must survive reconnects. Text output is a markdown
+digest, one `### <title> v<N> · <where> · thread <id>` block per comment with the
+comment quoted, earlier comments in the thread, the review URL, and the next
+steps. `--json` prints one object on stdout and notes on stderr:
+
+```json
+{
+  "outcome": "feedback",
+  "items": [{ "comment": {}, "thread": {}, "artifact": {}, "reviewUrl": "" }]
+}
+```
+
+`outcome` is `feedback`, `timeout` (`items` empty), or `gone`. `publish --json`
+prints `{ "artifacts": [{ "id", "version", "reviewUrl" }], "board": { "slug",
+"url" }, "deduplicated": false, "next": "toolkit artifacts wait" }`.
+
+| Exit | Meaning                                                           |
+| ---- | ----------------------------------------------------------------- |
+| 0    | Published, replied, or `wait` returned feedback                   |
+| 2    | Usage, an unreachable or refusing service, a stale `--version-of` |
+| 4    | `wait`: the board or artifact was archived, expired, or deleted   |
+| 6    | `wait --timeout` elapsed. Not a failure: run `wait` again         |
+| 130  | SIGINT                                                            |
+| 143  | SIGTERM                                                           |
+
+Failures name their fix. An unreachable service says to check
+`tailscale status`; HTTP 403 means your login is not in the service's
+`operatorLogins`; `Unknown command: artifacts` or an unknown artifacts
+subcommand means the installed binary is older than this documentation, so run
+`bun run --cwd packages/toolkit install:local`. Content URLs carry a capability
+token; the CLI redacts it (`/_t/[redacted]/`) from everything it prints. The CLI imports only
+the service's `contract` and `procedures` schemas, so the compiled binary
+carries no server code.
+
+## Incidents
+
+`toolkit incident` reads and writes Hub's incidents module
+(`/api/incidents`): one durable record per shared-system breakage or
+maintenance window, with a single commander. It replaces Forum notices for red
+main, stuck Delivery, and shared-service outages; resource leases stay Forum
+notices. Every `<INC-N>` also accepts `N` or the incident UUID. Reads need no
+identity; writes use the same native session actor as `forum`
+(`--actor-key`/`--actor-kind`/`--actor-name` override it). The Hub URL is
+`OPS_DASHBOARD_URL` / `ops.dashboard.url`, or `--hub-url`. Run
+`toolkit incident --help` for every flag.
+
+Blocked by Delivery, a red main, or another shared system:
+
+1. `toolkit incident check [--system X]`: open incidents, your relation, one next command.
+2. You likely caused it (exit 11): `toolkit incident take INC-N`, then fix it.
+3. Otherwise `toolkit incident wait INC-N` (or `--system X`): joins as affected and
+   exits 0 when it resolves. Past the takeover grace with nobody in command,
+   exactly one waiter wins the server's dispatch lease and spawns a commander
+   session; the rest keep waiting, and a failed or unclaimed spawn lets another retry.
+4. Nothing open: `toolkit incident declare`; a duplicate names the open one.
+
+```bash
+toolkit incident check --system main-ci
+toolkit incident wait --system delivery --timeout-sec 3600
+toolkit incident declare --system storage --severity sev2 --title "Storage is read-only" \
+  --exit-condition "Writes to the storage pool succeed again." --link pr=5150 --take
+toolkit incident update INC-12 --body "Remounted; watching writes"
+toolkit incident status INC-12 monitoring --expected-revision 4
+toolkit incident link INC-12 --kind pipeline --ref 19260 --title "red run"
+toolkit incident take INC-12 --spawn          # dispatch a commander session yourself
+toolkit incident claim INC-12 --dispatch-handle <HANDLE>  # run by the spawned session
+toolkit incident handoff INC-12 --to claude-code:<session> | release INC-12
+toolkit incident resolve INC-12 --expected-revision 6 --note "Probe write succeeded"
+toolkit incident watch INC-12 --until-resolved --json
+```
+
+`status`, `edit`, `resolve`, and `reopen` require `--expected-revision`
+(read it with `view`); `update`, `handoff`, and `release` default to the
+current revision, since an appended note or a commander-only handoff does not
+depend on what the caller saw. `wait --no-spawn` takes command itself instead
+of spawning a session, and so does every waiter when the
+`alert-dashboard-incidents-takeover-spawn-enabled` flag is off. Maintenance is
+waited on but never taken over or dispatched. `wait` sets one
+timer for the next deadline (takeover eligibility or lease expiry, which the
+server lapses without publishing) and otherwise only refetches on stream
+frames; disconnects reconnect with backoff and refetch.
+
+The spawner is `herdr-new-worktree` from PATH (`INCIDENT_SPAWNER` /
+`incident.spawner` overrides it). It runs as `<spawner> --request-env` with the
+request in `HERDR_WORKTREE_REQUEST`: provider from the lease, this machine, the
+current repository's main checkout and `~/.herdr/worktrees/<repo>`, and a tab
+named `INC-N commander`. The first message reaches downstream process
+arguments (Herdr's `space.new` and the agent's launch command), so it never
+holds the dispatch token. The token waits in a `0600` file under
+`$XDG_STATE_HOME/toolkit/incident-dispatch` (default `~/.local/state/...`), and
+the message carries only its opaque handle: `claim --dispatch-handle` reads the
+token on this machine, redeems it, and deletes the file. A failed spawn or
+refused claim deletes it too; leftovers older than a day are swept. When the
+Hub is not the default one, every command in the message carries `--hub-url`.
+JSON output prints the token as `[redacted]`, and the timeline records the
+spawn without it.
+
+| Exit    | Meaning                                                                                                  |
+| ------- | -------------------------------------------------------------------------------------------------------- |
+| 0       | Done; `check`: nothing relevant open; `wait`: resolved, or nothing open                                  |
+| 1       | Refused (forbidden, not found, bad request) or Hub unreachable; spawn failed                             |
+| 2       | Usage error                                                                                              |
+| 6       | `wait`/`watch` `--timeout-sec` elapsed; the incident is not necessarily stuck                            |
+| 10      | `check`: a relevant open incident exists                                                                 |
+| 11      | `check`/`wait`: you likely caused it and nobody commands it; take it                                     |
+| 12      | `wait`: you are the commander (already, or took command after the grace)                                 |
+| 13      | `declare`: an open incident already covers the system; wait on or join it                                |
+| 14      | Stale `--expected-revision`; the message names the current one                                           |
+| 15      | `take`/`claim`: someone else commands or is dispatching, grace not over, or no such dispatch handle here |
+| 130/143 | SIGINT/SIGTERM                                                                                           |
+
+When main is red, `ci wait` (exit 5) and `ci main` add the open `main-ci`
+incident, its command state, and the `toolkit incident` command to run (`wait`,
+or `take` for its suspect) as `incident` in JSON and an `Incident:` line in
+text. A failing lookup prints a warning line instead and never changes the CI
+exit code.
 
 ## Platform commands
 
@@ -582,7 +785,10 @@ toolkit ci explain 3447                # Current blockers and bounded failure lo
 toolkit ci main                        # Current main verification and last completed verdict
 toolkit ci load                        # Queue, compute/gate admission, CPU/memory/disk/I/O
 toolkit ci timings --since 72h --json   # Recent timing cohorts and per-workflow phases
-toolkit ci analyze --since 72h           # Uncached work, critical path, repeated misses, hot files
+toolkit ci scorecard --since 24h --json  # Ready-PR/main latency, failure share, queue, pool writes by writer
+toolkit ci analyze --since 72h           # Uncached work, critical path, miss causes, repeated misses, hot files
+toolkit ci maintenance retry workspace-golden          # Dry run: would a blocked stream be retried?
+toolkit ci maintenance retry workspace-golden --apply  # Send maintenanceRetry and read the memo back
 toolkit ci analyze --suites --compare 4300  # Slowest test suites of the newest run; deltas from pipeline 4300
 toolkit pr review list 3447 --json      # Human and provider feedback with full bodies
 ```
@@ -601,7 +807,55 @@ verify's task list in the current checkout. Each file's commits on `--ref`
 (default `origin/main`) over `--churn-days` are multiplied by the median miss
 cost of every task hash the file reaches, directly or through `dependsOn`.
 `--no-hot-files` skips the local graph. Costs come from task IDs seen in the
-window, so a renamed task counts as free until new runs record it.
+window, so a renamed task counts as free until new runs record it. The
+hot-file graph treats only `globalCacheInputs.files` and the root `turbo.json`
+as always global, and spreads a `bun.lock` edit over one
+`hashOfExternalDependencies` group (one package's lockfile closure) on average,
+because Turbo scopes the lockfile per package. The root `package.json` is an
+input of the root `//#` tasks, but its dependency fields also feed Turbo's
+global external-dependency hash, so a commit that changes `dependencies`,
+`devDependencies`, `peerDependencies`, `optionalDependencies`, `overrides`,
+`resolutions`, `patchedDependencies`, `trustedDependencies` or a catalog
+reaches every task; any other root `package.json` commit (a new workspace
+glob, a script) reaches only the root `//#` tasks. The analysis reads each
+commit's diff to tell them apart. Were that history unavailable, every root
+`package.json` commit would count as global, an upper bound.
+
+A "why executed tasks ran" section classifies each executed (MISS) task
+against the earlier tasks with the same id, ordered by start so concurrent
+pipelines count, and prints hours and share of executed time per cause:
+identical hash re-ran (any earlier task already had this exact hash, so it was
+cacheable: cache isolation between PR and main, a lost artifact or concurrent
+duplicate work; checked first so an intervening different hash cannot hide
+it), unknown (first seen in the window, which keeps the window edge from
+inflating the other causes), own inputs changed (earlier tasks exist, none with
+these own files and external dependencies), an upstream dependency hash changed
+since the latest earlier task with the same own inputs, or no own or upstream
+change (the global hash, environment or task config moved).
+
+`toolkit ci scorecard [--since 24h] [--json]` is the CI program's one report:
+finished ready-PR pipelines (success, failure or error; killed and canceled
+ones are not verdicts) end to end at p50 and p90, split into agent wait
+(pipeline created to the `verify` workflow starting), Kueue gate (the verify
+step pod created to its container started, from kube-state-metrics, since
+Woodpecker marks the step started when it creates the pod) and run (the rest);
+the share of those pipelines that failed; main-push p50 and p90; Woodpecker's
+pending and running workflows now; and the CI pool's logical writes over the
+last 24 hours by writer (`ci-workspace` claims, `buildkitd` claims,
+`delivery-*` claims, other caches) against budgets of 250, 100, 50 and 70 GB
+and a 500 GB total, next to the pool's physical writes. Workspace datasets live
+for minutes, so they use the counter's `max_over_time` as the
+`ci_step:workspace_logical_written_bytes:sum24h` rule does; long-lived claims
+use `increase`. It reads pipeline history without per-step logs and finishes in
+seconds. A source that cannot be read is reported in its own section.
+
+`toolkit ci maintenance retry <kind> [--apply]` reads the
+`ci-maintenance-coordinator` memo and, when `blocked[kind]` exists and nothing
+is pending, would send the Temporal signal `maintenanceRetry {kind, requestId}`
+bound to that blocked request; otherwise it prints why not. It is a dry run
+unless `--apply`, which sends the signal through the `temporal` passthrough and
+reads the memo back until the block clears. `toolkit ci maintenance` now also
+lists `workspace-seeds` and `workspace-golden` runs.
 
 `toolkit ci analyze --suites` explains a slow test task by the files inside
 it. Verify diagnostics carry the `<testsuite>` summaries (name, seconds, tests,
@@ -787,10 +1041,9 @@ to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
-red; read active forum threads (`toolkit forum list --json`) and failure
-evidence, follow an owned recovery, repair failures your changes caused, or
-claim/post a `notice` (`--owner me`) before picking up an unowned blocker with
-no better active owner; otherwise continue your task. `ci explain --main` is an
+red; the report names the main-ci incident: `toolkit incident take` it if you
+caused it, otherwise hold `toolkit incident wait` on it (see
+[Incidents](#incidents)); otherwise continue your task. `ci explain --main` is an
 alias for `ci main`. To wait for main itself, use `ci wait --main`.
 
 | Wait exit | Meaning                                                         |
@@ -800,7 +1053,7 @@ alias for `ci main`. To wait for main itself, use `ci wait --main`.
 | 2         | Usage, authentication, API, or contract error                   |
 | 3         | Human intervention (review, draft, pipeline approval)           |
 | 4         | PR head changed; explicitly start a new wait for the new head   |
-| 5         | PR ready but main red; follow forum or claim unowned blocker    |
+| 5         | PR ready but main red; take or wait on the main-ci incident     |
 | 6         | Requested timeout; this does not mean CI failed                 |
 | 7         | PR closed or already merged                                     |
 
@@ -814,12 +1067,20 @@ and 143. The command does not merge or mutate the PR.
 
 ### Wait, then merge
 
-`toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--json]`
+`toolkit pr land [PR] [--head <SHA>] [--timeout <duration>] [--allow-red-main] [--allow-stale-base] [--json]`
 merges, so run it only when the task authorizes merging. It runs the same
 pinned wait as `ci wait`, but treats a red main as a reason to keep waiting
 rather than a result. `--allow-red-main` merges while main is red. When the PR
-is ready, it rechecks the head and the shared GraphQL budget, then runs
+is ready, it rechecks the head, evaluates asymmetric workspace and global-input
+overlap between the PR diff and `merge-base(head, main)..main` (appending a
+sanitized receipt to `${TOOLKIT_STATE_DIR:-~/.local/state/toolkit}/pr-land.ndjson`),
+checks the shared GraphQL budget, and runs
 `git-spice branch merge --method squash --ready-timeout 0 --branch <head>`.
+If `main` advanced with overlapping workspace dependencies, shared synthesis
+inputs, global root verification files, or same-directory file additions, `pr land`
+exits `1` (`outcome: "failure"`) with git-spice restack commands so callers
+restack and re-verify before merging; `--allow-stale-base` bypasses that guard
+when authorized.
 When fewer than 200 GraphQL points remain, it waits for the reset and proves
 readiness again before merging. A merge that fails while the bucket is
 exhausted is retried once after the reset, again after a fresh readiness
@@ -828,11 +1089,11 @@ git-spice output goes to stderr, so `--json` keeps stdout for one report. The
 report includes `mergeCommitSha` and a `ci wait --main --head` command for the
 merge commit.
 
-| Land exit | Meaning                                                         |
-| --------- | --------------------------------------------------------------- |
-| 0         | Merged, confirmed on GitHub                                     |
-| 1–4, 6, 7 | As for `ci wait`; nothing was merged. Fix, push, run land again |
-| 8         | Ready, but `git-spice branch merge` failed or did not merge     |
+| Land exit | Meaning                                                      |
+| --------- | ------------------------------------------------------------ |
+| 0         | Merged, confirmed on GitHub                                  |
+| 1–4, 6, 7 | As for `ci wait` (plus `1` for stale-base overlap); unmerged |
+| 8         | Ready, but `git-spice branch merge` failed or did not merge  |
 
 Run `pr land` from a checkout where git-spice tracks the PR branch. To get a PR
 green and then merge, run `pr land`, fix whatever it reports, push, and run it
@@ -874,7 +1135,9 @@ brokered token as `toolkit prom`.
 GitHub’s status can lag or describe a different state. The exact-head
 Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
-`overallStatus`, `checks`, and `nextSteps` fields.
+`overallStatus`, `checks`, and `nextSteps` fields, plus an informational
+`staleBase` summary (`up_to_date`, `disjoint_clean`, or `stale_overlap`) that
+does not change `CI Status` or the report's exit status.
 
 `toolkit pr review list [PR] [--json] [--all] [--provider NAME]` lists current,
 unresolved feedback across human reviewers and registered providers. Each item
@@ -1038,11 +1301,6 @@ PinchTab credentials or config.
   stacktraces, releases, Tracker links, and Bugsink imports in the first-party
   `errors` service (`ERRORS_URL`, default `https://errors.tailnet-1a49.ts.net`).
   See [Errors](#errors).
-- `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
-  and releases in self-hosted Bugsink. `issues` lists unresolved, unmuted
-  issues across every project unless `--project` narrows it; `--all` includes
-  resolved and muted issues. `issues` and `events` accept `--limit` and
-  `--max-pages`. The canonical API is read-only.
 - `toolkit discord ...` operates the private local Discord session daemon.
   `TOOLKIT_DISCORD_DIR` selects an isolated daemon directory and socket.
   `discord daemon start --password-login` uses parent-injected
@@ -1718,15 +1976,15 @@ the unsafe setting without printing its value, including for help commands.
 Option names are checked after ArgoCD-compatible quote and escape parsing;
 header values and root paths containing the same text are preserved.
 
-| Commands                                                                                                                   | Registered backend             |
-| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `woodpecker`, `pr health`, `pr land`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account      |
-| `talosctl`, `kube credential`, `aws credential`, `run`                                                                     | 1Password service account      |
-| `discord`                                                                                                                  | macOS Keychain / Windows DPAPI |
-| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                                 | 1Password service account      |
-| `flags --machine` (`FLAGS_MACHINE_TOKEN`)                                                                                  | 1Password service account      |
-| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                                | 1Password service account      |
-| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                                | 1Password service account      |
+| Commands                                                                                                        | Registered backend             |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `woodpecker`, `pr health`, `pr land`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal` | 1Password service account      |
+| `talosctl`, `kube credential`, `aws credential`, `run`                                                          | 1Password service account      |
+| `discord`                                                                                                       | macOS Keychain / Windows DPAPI |
+| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                      | 1Password service account      |
+| `flags --machine` (`FLAGS_MACHINE_TOKEN`)                                                                       | 1Password service account      |
+| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                     | 1Password service account      |
+| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                     | 1Password service account      |
 
 The registry in `src/lib/credential-registry.ts` owns the variable names and
 secret locators; `src/lib/credentials.ts` resolves them. Backend failures are errors; a missing Keychain secret does not
@@ -2211,6 +2469,8 @@ value or unparseable file is an error, not a fallback.
 | `HISTORY_METRICS_PUSH_ENABLED` / `history.metrics.push.enabled`   | `false`                                               |
 | `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
 | `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://hub.tailnet-1a49.ts.net`                     |
+| `ARTIFACTS_URL` / `artifacts.url`                                 | `https://artifacts.tailnet-1a49.ts.net`               |
+| `INCIDENT_SPAWNER` / `incident.spawner`                           | `herdr-new-worktree` (incident commander spawner)     |
 | `BRIM_SYNC_MACHINE_ID` / `brim.sync.machine.id`                   | normalized hostname                                   |
 | `BRIM_SYNC_BUCKET` / `brim.sync.bucket`                           | `brim-sessions`                                       |
 | `BRIM_SYNC_PROFILE` / `brim.sync.profile`                         | `brim-sync` (AWS profile)                             |
@@ -2235,8 +2495,7 @@ profiles remain owned by their respective clients.
 | Variable              | Purpose                                     |
 | --------------------- | ------------------------------------------- |
 | `ALERT_DASHBOARD_URL` | Hub URL; defaults to the `hub` tailnet host |
-| `BUGSINK_URL`         | Bugsink instance URL                        |
-| `BUGSINK_TOKEN`       | Bugsink API token                           |
+| `ERRORS_URL`          | Errors console URL                          |
 | `DISCORD_BOT_TOKEN`   | Bot identity for `discord daemon start`     |
 | `DISCORD_USER_TOKEN`  | Userbot identity for `discord daemon start` |
 

@@ -99,7 +99,7 @@ export function buildBugsinkFacet(input: {
       id: project.id,
       slug: project.slug,
       name: project.name,
-      url: bugsinkProjectUrl(baseUrl, project.id),
+      url: bugsinkProjectUrl(baseUrl, project.slug),
       activeIssues7d,
       staleIssues,
       mutedIssues,

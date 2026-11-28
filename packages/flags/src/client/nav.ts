@@ -1,4 +1,5 @@
 import {
+  ArchiveIcon,
   BoxIcon,
   FlaskConicalIcon,
   GitCompareArrowsIcon,
@@ -8,7 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-export type View = "home" | "compare" | "drift";
+export type View = "home" | "compare" | "drift" | "archive";
 
 export const VIEWS: readonly {
   readonly view: View;
@@ -24,6 +25,7 @@ export const VIEWS: readonly {
     icon: GitCompareArrowsIcon,
   },
   { view: "drift", label: "Drift", href: "/drift", icon: RadarIcon },
+  { view: "archive", label: "Archived", href: "/archive", icon: ArchiveIcon },
 ];
 
 /** The view a pathname shows, or undefined inside a deployment. */
@@ -42,6 +44,9 @@ export function viewTitle(view: View): string {
     }
     case "drift": {
       return "Drift · Flags";
+    }
+    case "archive": {
+      return "Archived · Flags";
     }
   }
 }

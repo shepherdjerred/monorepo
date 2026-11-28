@@ -20,10 +20,11 @@
 set -eu
 
 if [ "$#" -lt 2 ]; then
-  echo "usage: agent-exec <name> [default flags...] -- [args...]" >&2
+  echo "usage: agent-exec <name|path> [default flags...] -- [args...]" >&2
   exit 2
 fi
-name=$1
+raw_target=$1
+name=${raw_target##*/}
 shift
 
 defaults=""
@@ -39,19 +40,25 @@ shift
 
 wrapper_dir=$(cd -P -- "$(dirname -- "$0")" && pwd)
 real=""
-old_ifs=$IFS
-IFS=:
-for dir in $PATH; do
-  [ -n "$dir" ] || continue
-  [ -d "$dir" ] || continue
-  resolved=$(cd -P -- "$dir" && pwd) || continue
-  [ "$resolved" = "$wrapper_dir" ] && continue
-  if [ -f "$dir/$name" ] && [ -x "$dir/$name" ]; then
-    real="$dir/$name"
-    break
+if [ "${raw_target#*/}" != "$raw_target" ]; then
+  if [ -f "$raw_target" ] && [ -x "$raw_target" ]; then
+    real=$raw_target
   fi
-done
-IFS=$old_ifs
+else
+  old_ifs=$IFS
+  IFS=:
+  for dir in $PATH; do
+    [ -n "$dir" ] || continue
+    [ -d "$dir" ] || continue
+    resolved=$(cd -P -- "$dir" && pwd) || continue
+    [ "$resolved" = "$wrapper_dir" ] && continue
+    if [ -f "$dir/$name" ] && [ -x "$dir/$name" ]; then
+      real="$dir/$name"
+      break
+    fi
+  done
+  IFS=$old_ifs
+fi
 if [ -z "$real" ]; then
   echo "$name is not installed or not on PATH (outside $wrapper_dir)" >&2
   exit 127

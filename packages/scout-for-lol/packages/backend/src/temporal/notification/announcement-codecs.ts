@@ -1,9 +1,14 @@
 import {
   HallBreakRecordsSchema,
+  LegacyHallBreakRecordsSchema,
   type HallBreakPayload,
+  type LegacyHallBreakPayload,
 } from "#src/progression/hall/break-payload.ts";
 import { UndeliverableContentError } from "#src/temporal/notification/undeliverable-content.ts";
-import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
+import {
+  defineVersionedCodec,
+  VersionedPayloadEnvelopeSchema,
+} from "@scout-for-lol/domain/codec/versioned.ts";
 import {
   RiotMatchIdSchema,
   type RiotMatchId,
@@ -13,28 +18,60 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
-export type HallRecordBreakAnnouncement = z.infer<
-  typeof HallRecordBreakAnnouncementSchema
->;
-export const HallRecordBreakAnnouncementSchema = z
-  .strictObject({
-    guildId: DiscordGuildIdSchema,
-    riotMatchId: RiotMatchIdSchema,
-    records: HallBreakRecordsSchema,
-  })
-  .refine(
-    (announcement) =>
-      announcement.records.every(
-        (record) => record.matchId === announcement.riotMatchId,
-      ),
-    { message: "Hall records must belong to the announced match" },
-  );
 
-export const hallRecordBreakAnnouncementCodec = defineVersionedCodec({
+const HallAnnouncementBaseSchema = z.strictObject({
+  guildId: DiscordGuildIdSchema,
+  riotMatchId: RiotMatchIdSchema,
+});
+const wrongMatch = {
+  message: "Hall records must belong to the announced match",
+};
+
+function recordsBelongToMatch(announcement: {
+  riotMatchId: RiotMatchId;
+  records: readonly { matchId: RiotMatchId }[];
+}): boolean {
+  return announcement.records.every(
+    (record) => record.matchId === announcement.riotMatchId,
+  );
+}
+
+const legacyHallRecordBreakAnnouncementCodec = defineVersionedCodec({
   kind: "scout-hall-record-break-announcement",
   version: 1,
-  schema: HallRecordBreakAnnouncementSchema,
+  schema: HallAnnouncementBaseSchema.extend({
+    records: LegacyHallBreakRecordsSchema,
+  }).refine(recordsBelongToMatch, wrongMatch),
 });
+
+const currentHallRecordBreakAnnouncementCodec = defineVersionedCodec({
+  kind: "scout-hall-record-break-announcement",
+  version: 2,
+  schema: HallAnnouncementBaseSchema.extend({
+    records: HallBreakRecordsSchema,
+  }).refine(recordsBelongToMatch, wrongMatch),
+});
+
+export type HallRecordBreakAnnouncement = z.infer<
+  typeof HallAnnouncementBaseSchema
+> & {
+  records: (
+    | HallBreakPayload
+    | (LegacyHallBreakPayload & { previous?: never; standings?: never })
+  )[];
+};
+
+// V1 never recorded the old score or the standings. Keep that evidence shape
+// so pending announcements still render with the data they were minted with.
+export const hallRecordBreakAnnouncementCodec = {
+  ...currentHallRecordBreakAnnouncementCodec,
+  parse(json: unknown): HallRecordBreakAnnouncement {
+    const envelope = VersionedPayloadEnvelopeSchema.parse(json);
+    return envelope.version === 1
+      ? legacyHallRecordBreakAnnouncementCodec.parse(envelope)
+      : currentHallRecordBreakAnnouncementCodec.parse(envelope);
+  },
+};
 
 /** What a minter puts on a `hall-record-break` intent. */
 export function hallRecordBreakAnnouncementEnvelope(input: {

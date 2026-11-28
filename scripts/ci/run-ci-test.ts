@@ -1,4 +1,5 @@
 import path from "node:path";
+import { spawnManagedProcessGroup } from "../run-temporal-node.ts";
 import { prepareMstestConfiguration } from "./mstest-configuration.ts";
 import {
   applyDefaultEnvironment,
@@ -344,14 +345,10 @@ async function spawnStepProcess(
       );
     });
   }
-  const child = Bun.spawn([...command], {
+  const exitCode = await spawnManagedProcessGroup(command, {
     cwd: process.cwd(),
     env: stepEnv,
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
   });
-  const exitCode = await child.exited;
   if (ctx.step.runner !== "gradle") return { exitCode };
   return withCapturedReportingError(exitCode, () =>
     writeGradleJUnitReport({
@@ -471,7 +468,11 @@ async function main(): Promise<void> {
   const covRoot = path.join(reportsDir, "coverage/raw", sanitized);
   await Bun.$`mkdir -p ${junitDir}`;
 
-  const environment = { ...Bun.env };
+  const environment: Record<string, string | undefined> = {
+    ...Bun.env,
+    CI_TEST_TIER: tier,
+    ...(group === undefined ? {} : { CI_TEST_GROUP: group }),
+  };
   applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
   const coverageEnabled = workspace.coverageAlways === true;
 

@@ -18,7 +18,15 @@
         ]
       },
       "resolvedDescription": "Olaf gains Attack Speed and Life Steal based on his missing Health.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Undertow",
@@ -128,7 +136,44 @@
       "unresolved": [
         "tooltipcdrefund",
         "tooltipcdrefund"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 220,
+        "lineWidth": 90,
+        "missileSpeed": 1600,
+        "missiles": [
+          {
+            "name": "olafaxethrow",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "olafaxethrowdamage",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Tough It Out",
@@ -202,7 +247,15 @@
       "resolvedDescription": "Olaf gains 40/50/60/70/80% Attack Speed for 5 seconds, and 10/40/70/100/130 plus 17.5% missing Health Shield (up to a maximum of {{ maxshieldcalc }} Shield below 30% Health) for 2.5 seconds.",
       "unresolved": [
         "maxshieldcalc"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Reckless Swing",
@@ -302,7 +355,15 @@
         ]
       },
       "resolvedDescription": "Olaf ferociously swings his axes, dealing 70/115/160/205/250 (+50% AD) true damage. If the enemy dies, the cost is refunded. Attacks lower the Cooldown of this Ability by 1 second, increased to 2 seconds when attacking monsters.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Ragnarok",
@@ -361,7 +422,30 @@
         ]
       },
       "resolvedDescription": "Passive: Olaf gains 10/15/20 Armor and 10/15/20 Magic Resist. Active: Olaf cleanses all Immobilizing and Disabling effects on himself and becomes immune to them for 3 seconds. While active, Olaf gains 10/20/30 (+25% AD) Attack Damage. Hitting a champion with an Attack or Reckless Swing extends the duration by 2.5 seconds. Additionally, Olaf gains 20/45/70% Move Speed towards enemy champions for 1 second.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "olafragnarokpassivebuff",
+            "width": 90,
+            "movement": "FixedSpeedMovement",
+            "speed": 1600,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

@@ -186,6 +186,9 @@ export function markAllReadInDb(db: Database, body: MarkAllReadBody): number {
     feedId: body.feedId,
     q: body.q,
     beforeId: body.beforeId,
+    publishedBefore: body.publishedBefore,
+    includeHidden: body.includeHidden,
+    excludeStarred: body.excludeStarred,
     unreadOnly: true,
   });
   return clause.impossible

@@ -41,7 +41,7 @@ export default defineConfig({
   // Fixture personas and scenarios live in each browser context's cookies,
   // so separate spec files can share the fixture server safely. Bound CI
   // concurrency because this lane can also run another package's suite.
-  workers: ci ? 2 : 1,
+  workers: ci ? 3 : 1,
   reporter: ci
     ? [
         ["list"],

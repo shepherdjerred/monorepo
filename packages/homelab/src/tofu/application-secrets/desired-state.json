@@ -1,18 +1,6 @@
 {
   "$schema": "./desired-state.schema.json",
   "credentials": {
-    "bugsink": {
-      "revision": 0,
-      "environment": "production",
-      "consumer_probe": "Authenticated Bugsink session and existing issue access",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "g6iok6ni3xsd3dyfet7ln3ybom",
-          "vault_field": "SECRET_KEY",
-          "vault_field_id": "mpb2cceivzns4hw5hgdq3g5lae"
-        }
-      ]
-    },
     "woodpecker_agent": {
       "revision": 0,
       "environment": "shared",

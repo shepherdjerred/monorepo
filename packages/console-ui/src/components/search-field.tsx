@@ -1,4 +1,4 @@
-import { SearchIcon } from "lucide-react";
+import { ICONS } from "@shepherdjerred/console-ui/icons.ts";
 
 export type SearchFieldProps = Omit<
   React.ComponentProps<"input">,
@@ -8,7 +8,12 @@ export type SearchFieldProps = Omit<
   readonly label: string;
 };
 
-/** A search input with a leading icon, sized like the page controls. */
+const SearchIcon = ICONS.search;
+
+/**
+ * A 28px search input on the field look, with a leading icon. `ref`
+ * reaches the `<input>`, e.g. to focus it from a `/` shortcut.
+ */
 export function SearchField({
   label,
   ...props
@@ -17,7 +22,7 @@ export function SearchField({
     <label className="ui-search">
       <span className="ui-sr-only">{label}</span>
       <SearchIcon aria-hidden="true" />
-      <input {...props} type="search" className="ui-input" />
+      <input {...props} type="search" className="ui-search-input" />
     </label>
   );
 }

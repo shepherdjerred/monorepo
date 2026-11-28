@@ -10,6 +10,10 @@ import {
 
 /** Cookie that selects the signed-in persona for one browser. */
 export const PERSONA_COOKIE = "media-fixture-persona";
+/** CSRF cookie read by `writeApi` so fixture writes reach the router's 501. */
+export const FIXTURE_CSRF_COOKIE = "media-csrf";
+export const FIXTURE_CSRF_TOKEN = "fixture-csrf";
+const CSRF_SET_COOKIE = `${FIXTURE_CSRF_COOKIE}=${FIXTURE_CSRF_TOKEN}; Path=/; SameSite=Lax`;
 const PERSONA_SWITCH = /^\/api\/fixture\/persona\/([^/]+)$/u;
 const SCENARIO_SWITCH = /^\/api\/fixture\/scenario\/([^/]+)$/u;
 const ARTWORK = /^\/api\/v1\/artwork\/([^/]+)\/([^/]+)$/u;
@@ -21,11 +25,12 @@ export type FixtureApiOptions = {
   log: (line: string) => void;
 };
 
-function json(status: number, body: unknown): Response {
-  return Response.json(body, {
-    status,
-    headers: { "Cache-Control": "no-store" },
-  });
+function json(status: number, body: unknown, setCookie?: string): Response {
+  const headers = new Headers({ "Cache-Control": "no-store" });
+  if (setCookie !== undefined) {
+    headers.append("Set-Cookie", setCookie);
+  }
+  return Response.json(body, { status, headers });
 }
 
 function invalidPersona(value: string): Response {
@@ -51,20 +56,29 @@ function cookie(request: Request, name: string): string | null {
   return null;
 }
 
+function hasCsrfCookie(request: Request): boolean {
+  return (
+    cookie(request, FIXTURE_CSRF_COOKIE) !== null ||
+    cookie(request, "__Host-media-csrf") !== null
+  );
+}
+
 /** `GET /api/fixture/persona/<persona>` signs this browser in as that persona. */
 function switchPersona(value: string): Response {
   const persona = UserRoleSchema.safeParse(value);
   if (!persona.success) {
     return invalidPersona(value);
   }
-  return new Response(null, {
-    status: 303,
-    headers: {
-      Location: "/",
-      "Set-Cookie": `${PERSONA_COOKIE}=${persona.data}; Path=/; SameSite=Lax`,
-      "Cache-Control": "no-store",
-    },
+  const headers = new Headers({
+    Location: "/",
+    "Cache-Control": "no-store",
   });
+  headers.append(
+    "Set-Cookie",
+    `${PERSONA_COOKIE}=${persona.data}; Path=/; SameSite=Lax`,
+  );
+  headers.append("Set-Cookie", CSRF_SET_COOKIE);
+  return new Response(null, { status: 303, headers });
 }
 
 function invalidScenario(value: string): Response {
@@ -177,6 +191,13 @@ export function createFixtureApi(
     ) {
       options.log(`no fixture: GET ${url.pathname}${url.search}`);
     }
-    return json(outcome.status, outcome.body);
+    const setCookie =
+      request.method === "GET" &&
+      url.pathname === "/api/v1/me" &&
+      outcome.status === 200 &&
+      !hasCsrfCookie(request)
+        ? CSRF_SET_COOKIE
+        : undefined;
+    return json(outcome.status, outcome.body, setCookie);
   };
 }

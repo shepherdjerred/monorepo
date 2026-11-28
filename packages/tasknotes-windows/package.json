@@ -43,6 +43,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "windows:preflight": "bun scripts/windows.ts preflight",
     "windows:build": "bun scripts/windows.ts build",
+    "windows:build-remote": "bun scripts/windows.ts build-remote",
     "windows:test": "bun scripts/windows.ts test",
     "windows:package": "bun scripts/windows.ts package",
     "windows:store-package": "bun scripts/windows.ts store-package",

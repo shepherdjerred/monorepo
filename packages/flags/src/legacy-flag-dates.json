@@ -1,0 +1,934 @@
+{
+  "$comment": "Frozen, generated once by packages/flags/scripts/generate-legacy-flag-dates.ts: the first-parent committer date of the first main commit whose managed-flag-inventory.json declares each key. onOrBefore marks keys present in that file's first commit (declared earlier elsewhere). Do not regenerate in CI; keys created after the audit trail started use their recorded create row.",
+  "computedAt": "2026-11-27T03:31:44.608Z",
+  "dates": {
+    "ai_reports_enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "ai_reports_unlimited": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "alert-dashboard-daily-digest-quiet-clear": {
+      "date": "2026-11-24T17:56:01.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-digest-email-from": {
+      "date": "2026-11-21T22:29:14.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-digest-email-to": {
+      "date": "2026-11-21T22:29:14.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-email-enabled": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-email-from": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-email-to": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-incident-email-from": {
+      "date": "2026-11-21T22:29:14.000Z",
+      "onOrBefore": false
+    },
+    "alert-dashboard-incident-email-to": {
+      "date": "2026-11-21T22:29:14.000Z",
+      "onOrBefore": false
+    },
+    "arcade_brawl_enabled": {
+      "date": "2026-10-14T16:48:48.000Z",
+      "onOrBefore": false
+    },
+    "arcade_enabled": {
+      "date": "2026-10-14T16:48:48.000Z",
+      "onOrBefore": false
+    },
+    "arcade_melee_enabled": {
+      "date": "2026-10-14T16:48:48.000Z",
+      "onOrBefore": false
+    },
+    "arcade_mkwii_enabled": {
+      "date": "2026-10-14T16:48:48.000Z",
+      "onOrBefore": false
+    },
+    "birmel-activity-tracking-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-agent-auxiliary-timeout-ms": {
+      "date": "2026-09-07T05:04:57.000Z",
+      "onOrBefore": false
+    },
+    "birmel-agent-max-steps": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-agent-response-timeout-ms": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-birthdays-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-daily-posts-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-elections-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-classifier-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-decisions-enabled": {
+      "date": "2026-11-16T06:48:11.000Z",
+      "onOrBefore": false
+    },
+    "birmel-llm-decisions-model": {
+      "date": "2026-11-16T06:48:11.000Z",
+      "onOrBefore": false
+    },
+    "birmel-llm-decisions-threshold": {
+      "date": "2026-11-16T06:48:11.000Z",
+      "onOrBefore": false
+    },
+    "birmel-llm-embedding-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-image-model": {
+      "date": "2026-09-07T04:25:17.000Z",
+      "onOrBefore": false
+    },
+    "birmel-llm-max-output-tokens": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-memory-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-llm-reasoning-effort": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-persona-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-persona-style-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-responder-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-responder-engagement-window-ms": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-responder-transcript-max-messages": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "birmel-responder-transcript-window-ms": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "challenge_runs_enabled": {
+      "date": "2026-09-05T20:27:46.000Z",
+      "onOrBefore": false
+    },
+    "ci-extended-verify-dispatch-enabled": {
+      "date": "2026-11-09T07:20:45.000Z",
+      "onOrBefore": false
+    },
+    "ci-maintenance-dispatch-enabled": {
+      "date": "2026-10-09T22:25:09.000Z",
+      "onOrBefore": false
+    },
+    "ci-workspace-golden-refresh-enabled": {
+      "date": "2026-10-31T01:38:23.000Z",
+      "onOrBefore": false
+    },
+    "ci-workspace-seed-refresh-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "clash_surface": {
+      "date": "2026-09-20T23:36:18.000Z",
+      "onOrBefore": false
+    },
+    "dare_notifications_enabled": {
+      "date": "2026-09-04T04:23:36.000Z",
+      "onOrBefore": false
+    },
+    "dares_enabled": {
+      "date": "2026-10-26T03:22:03.000Z",
+      "onOrBefore": false
+    },
+    "debug": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "delivery-enabled-environments": {
+      "date": "2026-10-18T06:37:51.000Z",
+      "onOrBefore": false
+    },
+    "delivery-enrichment-sources": {
+      "date": "2026-10-20T05:51:33.000Z",
+      "onOrBefore": false
+    },
+    "delivery-executor-concurrency": {
+      "date": "2026-10-23T15:49:47.000Z",
+      "onOrBefore": false
+    },
+    "delivery-lease-seconds": {
+      "date": "2026-10-23T15:49:47.000Z",
+      "onOrBefore": false
+    },
+    "delivery-operator-logins": {
+      "date": "2026-10-18T06:37:51.000Z",
+      "onOrBefore": false
+    },
+    "delivery-writes-enabled": {
+      "date": "2026-10-18T06:37:51.000Z",
+      "onOrBefore": false
+    },
+    "duels_enabled": {
+      "date": "2026-09-05T20:27:46.000Z",
+      "onOrBefore": false
+    },
+    "errors-email-notifications-enabled": {
+      "date": "2026-11-25T19:58:17.000Z",
+      "onOrBefore": false
+    },
+    "errors-ingest-enabled": {
+      "date": "2026-11-25T19:58:17.000Z",
+      "onOrBefore": false
+    },
+    "errors-telemetry-enabled": {
+      "date": "2026-11-25T19:58:17.000Z",
+      "onOrBefore": false
+    },
+    "errors-tracker-creation-enabled": {
+      "date": "2026-11-25T19:58:17.000Z",
+      "onOrBefore": false
+    },
+    "explore-guild-allowlist": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "explore_creation_enabled": {
+      "date": "2026-09-05T23:47:59.000Z",
+      "onOrBefore": false
+    },
+    "explore_on_demand_riot_enabled": {
+      "date": "2026-09-15T07:02:45.000Z",
+      "onOrBefore": false
+    },
+    "feature_tips_enabled": {
+      "date": "2026-09-14T22:33:32.000Z",
+      "onOrBefore": false
+    },
+    "feeds-refresh-enabled": {
+      "date": "2026-11-25T13:08:14.000Z",
+      "onOrBefore": false
+    },
+    "golink-dynamic-aliases-enabled": {
+      "date": "2026-11-21T09:38:01.000Z",
+      "onOrBefore": false
+    },
+    "golink-telemetry-enabled": {
+      "date": "2026-11-21T09:38:01.000Z",
+      "onOrBefore": false
+    },
+    "golink-writes-enabled": {
+      "date": "2026-11-21T09:38:01.000Z",
+      "onOrBefore": false
+    },
+    "hall_of_fame_enabled": {
+      "date": "2026-09-05T20:27:46.000Z",
+      "onOrBefore": false
+    },
+    "initial_match_history_import_enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "justin_autonomous_devex_enabled": {
+      "date": "2026-10-05T00:02:41.000Z",
+      "onOrBefore": false
+    },
+    "karma-admin-user-id": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "karma-emoji": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "llm-daily-token-budget": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "llm-hourly-token-budget": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "mail-relay-enabled": {
+      "date": "2026-11-25T09:07:44.000Z",
+      "onOrBefore": false
+    },
+    "mail-settings": {
+      "date": "2026-11-25T09:07:44.000Z",
+      "onOrBefore": false
+    },
+    "media-acquisition-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-artwork-cache-max-bytes": {
+      "date": "2026-11-21T20:12:32.000Z",
+      "onOrBefore": false
+    },
+    "media-capacity-observation-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-email-sender": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-keep-days": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-permitted-movie-section-id": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-permitted-tv-section-id": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-personal-discord-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-plex-event-hints-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-purge-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-quarantine-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-requests-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-session-lifetime-ms": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-shared-announcements-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-shared-announcements-upgrades": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-shared-discord-channel-id": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-source-cleanup-enabled": {
+      "date": "2026-11-08T07:08:12.000Z",
+      "onOrBefore": false
+    },
+    "media-subtitle-maintenance-enabled": {
+      "date": "2026-11-19T06:25:41.000Z",
+      "onOrBefore": false
+    },
+    "mvp_votes_enabled": {
+      "date": "2026-09-20T07:04:50.000Z",
+      "onOrBefore": false
+    },
+    "player-card-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "riot_account_linking_enabled": {
+      "date": "2026-11-08T22:11:29.000Z",
+      "onOrBefore": false
+    },
+    "scout-client-end-of-game-deadline-seconds": {
+      "date": "2026-11-14T04:15:45.000Z",
+      "onOrBefore": false
+    },
+    "scout-client-minimum-version": {
+      "date": "2026-11-14T21:32:12.000Z",
+      "onOrBefore": false
+    },
+    "scout-consumer-player-profiles-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "scout-evidence-recovery-enabled": {
+      "date": "2026-11-14T01:48:19.000Z",
+      "onOrBefore": false
+    },
+    "scout-explore-analysis-enabled": {
+      "date": "2026-10-04T04:54:47.000Z",
+      "onOrBefore": false
+    },
+    "scout-explore-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "scout-explore-model-picker-enabled": {
+      "date": "2026-10-04T04:54:47.000Z",
+      "onOrBefore": false
+    },
+    "scout-explore-quota-limits": {
+      "date": "2026-09-14T01:48:48.000Z",
+      "onOrBefore": false
+    },
+    "scout-explore-spend-policy": {
+      "date": "2026-10-04T04:54:47.000Z",
+      "onOrBefore": false
+    },
+    "scout-feature-tip-cooldown-hours": {
+      "date": "2026-09-14T22:33:32.000Z",
+      "onOrBefore": false
+    },
+    "scout-feature-tip-percent": {
+      "date": "2026-09-14T22:33:32.000Z",
+      "onOrBefore": false
+    },
+    "scout-participant-crawl-daily-match-budget": {
+      "date": "2026-11-15T01:56:06.000Z",
+      "onOrBefore": false
+    },
+    "scout-participant-crawl-enabled": {
+      "date": "2026-11-15T01:56:06.000Z",
+      "onOrBefore": false
+    },
+    "scout-report-ai-model": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "scout-riot-budget-mode": {
+      "date": "2026-11-14T03:49:24.000Z",
+      "onOrBefore": false
+    },
+    "scout-temporal-call-graph-tracing": {
+      "date": "2026-09-02T01:33:59.000Z",
+      "onOrBefore": false
+    },
+    "scout_client_ingestion": {
+      "date": "2026-09-22T05:37:32.000Z",
+      "onOrBefore": false
+    },
+    "scout_client_result_recovery": {
+      "date": "2026-10-13T19:20:53.000Z",
+      "onOrBefore": false
+    },
+    "scout_coach_live_answers": {
+      "date": "2026-11-15T07:52:38.000Z",
+      "onOrBefore": false
+    },
+    "scout_coach_proactive": {
+      "date": "2026-11-21T08:34:26.000Z",
+      "onOrBefore": false
+    },
+    "scout_desktop_coach": {
+      "date": "2026-11-15T07:52:38.000Z",
+      "onOrBefore": false
+    },
+    "scout_desktop_explore_enabled": {
+      "date": "2026-11-14T23:10:11.000Z",
+      "onOrBefore": false
+    },
+    "scout_desktop_voice": {
+      "date": "2026-11-20T07:23:35.000Z",
+      "onOrBefore": false
+    },
+    "scout_durable_orchestration_enabled": {
+      "date": "2026-10-13T19:20:41.000Z",
+      "onOrBefore": false
+    },
+    "scout_operations_console_enabled": {
+      "date": "2026-09-14T19:37:48.000Z",
+      "onOrBefore": false
+    },
+    "scout_support_conversations_enabled": {
+      "date": "2026-10-04T23:00:39.000Z",
+      "onOrBefore": false
+    },
+    "storm-brain-conversation-enabled": {
+      "date": "2026-10-04T16:02:03.000Z",
+      "onOrBefore": false
+    },
+    "storm-brain-conversation-model": {
+      "date": "2026-10-04T16:02:03.000Z",
+      "onOrBefore": false
+    },
+    "storm-brain-decisions-model": {
+      "date": "2026-11-16T06:31:55.000Z",
+      "onOrBefore": false
+    },
+    "storm-brain-model": {
+      "date": "2026-09-30T03:08:30.000Z",
+      "onOrBefore": false
+    },
+    "storm-forum-calendar-enabled": {
+      "date": "2026-10-05T01:21:43.000Z",
+      "onOrBefore": false
+    },
+    "storm-forum-registration-enabled": {
+      "date": "2026-10-04T05:34:29.000Z",
+      "onOrBefore": false
+    },
+    "storm-forum-season": {
+      "date": "2026-10-04T05:34:29.000Z",
+      "onOrBefore": false
+    },
+    "storm-stats-ingest-enabled": {
+      "date": "2026-11-24T09:33:57.000Z",
+      "onOrBefore": false
+    },
+    "storm-stats-public-enabled": {
+      "date": "2026-11-24T09:33:57.000Z",
+      "onOrBefore": false
+    },
+    "streambot-assistant-v2-enabled": {
+      "date": "2026-09-06T17:27:26.000Z",
+      "onOrBefore": false
+    },
+    "streambot-automatic-channel-routing-enabled": {
+      "date": "2026-10-04T04:54:07.000Z",
+      "onOrBefore": false
+    },
+    "streambot-history-enabled": {
+      "date": "2026-09-06T17:27:26.000Z",
+      "onOrBefore": false
+    },
+    "streambot-idle-timeout-seconds": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-live-buffer-ms": {
+      "date": "2026-11-09T10:03:38.000Z",
+      "onOrBefore": false
+    },
+    "streambot-lol-autoplay-enabled": {
+      "date": "2026-10-26T01:23:28.000Z",
+      "onOrBefore": false
+    },
+    "streambot-lol-esports-enabled": {
+      "date": "2026-10-26T01:23:28.000Z",
+      "onOrBefore": false
+    },
+    "streambot-music-catalog-enabled": {
+      "date": "2026-10-26T03:20:44.000Z",
+      "onOrBefore": false
+    },
+    "streambot-music-over-voice-enabled": {
+      "date": "2026-09-07T16:27:15.000Z",
+      "onOrBefore": false
+    },
+    "streambot-music-search-provider": {
+      "date": "2026-11-21T08:29:21.000Z",
+      "onOrBefore": false
+    },
+    "streambot-numbered-channels-enabled": {
+      "date": "2026-10-03T01:05:25.000Z",
+      "onOrBefore": false
+    },
+    "streambot-player-card-repost-after-messages": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-player-card-tick-ms": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-playlists-enabled": {
+      "date": "2026-10-26T03:20:44.000Z",
+      "onOrBefore": false
+    },
+    "streambot-plex-posters-enabled": {
+      "date": "2026-10-03T23:05:35.000Z",
+      "onOrBefore": false
+    },
+    "streambot-radio-enabled": {
+      "date": "2026-11-18T07:56:54.000Z",
+      "onOrBefore": false
+    },
+    "streambot-reconnect-delay-seconds": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-reconnect-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-reconnect-max-attempts": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-sports-streaming-enabled": {
+      "date": "2026-09-30T02:37:58.000Z",
+      "onOrBefore": false
+    },
+    "streambot-spotify-links-enabled": {
+      "date": "2026-10-26T03:20:44.000Z",
+      "onOrBefore": false
+    },
+    "streambot-subtitle-languages": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-subtitles-include-auto-generated": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "streambot-tv-enabled": {
+      "date": "2026-11-18T09:09:12.000Z",
+      "onOrBefore": false
+    },
+    "streambot-usage-analytics-enabled": {
+      "date": "2026-11-21T04:29:49.000Z",
+      "onOrBefore": false
+    },
+    "streambot-voice-decisions-router-enabled": {
+      "date": "2026-11-16T06:19:10.000Z",
+      "onOrBefore": false
+    },
+    "streambot-web-ui-enabled": {
+      "date": "2026-10-03T02:32:23.000Z",
+      "onOrBefore": false
+    },
+    "subtitles-enabled": {
+      "date": "2026-08-26T01:11:52.000Z",
+      "onOrBefore": true
+    },
+    "temporal-agent-chat-discord-claude-default-model": {
+      "date": "2026-09-30T03:23:27.000Z",
+      "onOrBefore": false
+    },
+    "temporal-agent-chat-discord-codex-default-model": {
+      "date": "2026-09-30T03:23:27.000Z",
+      "onOrBefore": false
+    },
+    "temporal-agent-chat-imessage-claude-model": {
+      "date": "2026-09-30T03:23:27.000Z",
+      "onOrBefore": false
+    },
+    "temporal-agent-chat-imessage-codex-model": {
+      "date": "2026-09-30T03:23:27.000Z",
+      "onOrBefore": false
+    },
+    "temporal-agent-chat-photon-enabled": {
+      "date": "2026-10-04T00:21:08.000Z",
+      "onOrBefore": false
+    },
+    "temporal-agent-chat-photon-owners": {
+      "date": "2026-10-04T00:21:08.000Z",
+      "onOrBefore": false
+    },
+    "temporal-call-graph-tracing": {
+      "date": "2026-08-30T22:54:14.000Z",
+      "onOrBefore": false
+    },
+    "temporal-code-review-enabled": {
+      "date": "2026-11-24T11:42:51.000Z",
+      "onOrBefore": false
+    },
+    "temporal-code-review-settings": {
+      "date": "2026-11-24T11:42:51.000Z",
+      "onOrBefore": false
+    },
+    "temporal-daily-report-notifications-enabled": {
+      "date": "2026-10-11T02:12:14.000Z",
+      "onOrBefore": false
+    },
+    "temporal-email-recipient": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "temporal-email-sender": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "temporal-renovate-llm-delta-enabled": {
+      "date": "2026-11-22T05:56:56.000Z",
+      "onOrBefore": false
+    },
+    "temporal-report-auto-remediation-enabled": {
+      "date": "2026-11-24T17:56:01.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-analytics-enabled": {
+      "date": "2026-10-10T20:46:04.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-anticheat-corrections-enabled": {
+      "date": "2026-10-17T05:58:26.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-async-chat-moderation-enabled": {
+      "date": "2026-11-16T05:21:23.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-beginners-luck-enabled": {
+      "date": "2026-10-16T20:49:44.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-companions-enabled": {
+      "date": "2026-10-04T16:02:03.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-content-safety-enabled": {
+      "date": "2026-10-17T05:58:26.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-crier-enabled": {
+      "date": "2026-09-30T03:08:30.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-identity-enabled": {
+      "date": "2026-10-06T04:15:31.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-ip-enforcement-enabled": {
+      "date": "2026-10-06T04:15:31.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-letters-enabled": {
+      "date": "2026-10-06T04:15:31.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-merchant-enabled": {
+      "date": "2026-09-30T03:08:30.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-promotion-enabled": {
+      "date": "2026-11-09T10:26:20.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-promotion-settings": {
+      "date": "2026-11-09T10:26:20.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-reddit-outreach-enabled": {
+      "date": "2026-11-21T09:21:45.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-reddit-outreach-settings": {
+      "date": "2026-11-21T09:21:45.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-bomb-effects-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-candidate-visits-enabled": {
+      "date": "2026-10-14T16:51:26.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-carry-over-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-death-feed-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-enabled": {
+      "date": "2026-10-04T23:35:13.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-host-settings-enabled": {
+      "date": "2026-10-14T16:51:26.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-killstreaks-enabled": {
+      "date": "2026-10-13T01:13:14.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-kits-enabled": {
+      "date": "2026-10-13T01:13:14.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-match-flow-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-recording-archive-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-spectator-tools-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-stats-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwf-team-chat-enabled": {
+      "date": "2026-10-13T01:02:11.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwfbots-chat-enabled": {
+      "date": "2026-10-05T04:04:44.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-rwfbots-learning-enabled": {
+      "date": "2026-10-11T09:33:24.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-shop-rentals-enabled": {
+      "date": "2026-10-04T07:06:07.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-skylands-launch-enabled": {
+      "date": "2026-11-08T21:52:25.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-staff-tools-enabled": {
+      "date": "2026-10-06T04:15:31.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-stargates-enabled": {
+      "date": "2026-10-28T01:59:31.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-stats-export-enabled": {
+      "date": "2026-11-24T09:33:57.000Z",
+      "onOrBefore": false
+    },
+    "the-storm-survival-enabled": {
+      "date": "2026-10-04T23:44:55.000Z",
+      "onOrBefore": false
+    },
+    "tracker-attachment-max-bytes": {
+      "date": "2026-10-13T01:18:24.000Z",
+      "onOrBefore": false
+    },
+    "tracker-forum-enabled": {
+      "date": "2026-11-15T04:17:58.000Z",
+      "onOrBefore": false
+    },
+    "tracker-live-updates-enabled": {
+      "date": "2026-11-11T01:15:42.000Z",
+      "onOrBefore": false
+    },
+    "tracker-telemetry-enabled": {
+      "date": "2026-10-13T01:18:24.000Z",
+      "onOrBefore": false
+    },
+    "tracker-writes-enabled": {
+      "date": "2026-10-13T01:18:24.000Z",
+      "onOrBefore": false
+    },
+    "trmnl-ha-climate-entities": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "trmnl-ha-presence-entities": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "trmnl-ha-security-entities": {
+      "date": "2026-10-07T21:46:01.000Z",
+      "onOrBefore": false
+    },
+    "voice_assistant_enabled": {
+      "date": "2026-09-07T04:26:51.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-bun-copyfile-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-delivery-catalog-v2-enabled": {
+      "date": "2026-10-23T17:00:52.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-delivery-publication-enabled": {
+      "date": "2026-10-18T06:37:51.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-extended-verify-enabled": {
+      "date": "2026-11-09T07:20:45.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-format-cache-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-gradle-seed-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-log-retention-days": {
+      "date": "2026-10-04T08:38:54.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-log-retention-enabled": {
+      "date": "2026-10-04T08:38:54.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-maintenance-lanes-enabled": {
+      "date": "2026-10-09T22:25:09.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-mise-shared-installs-enabled": {
+      "date": "2026-11-09T07:20:45.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-prepared-workspace-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-ram-scratch-enabled": {
+      "date": "2026-10-14T20:53:34.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-small-check-grouping-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-source-cache-enabled": {
+      "date": "2026-10-09T19:25:52.000Z",
+      "onOrBefore": false
+    },
+    "woodpecker-source-incremental-enabled": {
+      "date": "2026-10-13T00:14:59.000Z",
+      "onOrBefore": false
+    }
+  }
+}

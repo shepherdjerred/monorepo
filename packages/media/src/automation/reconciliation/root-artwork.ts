@@ -76,6 +76,28 @@ export async function observeUntargetedRootArtwork(
   }
 }
 
+function logArtworkBackfillFailure(
+  root: WaitingRoot,
+  failure: {
+    failureKind: IntegrationError["kind"];
+    status: number | null;
+    reason: "id_mismatch" | "upstream_tmdb_error";
+  },
+): void {
+  console.warn(
+    JSON.stringify({
+      level: "warn",
+      event: "media.root_artwork.tmdb_failed",
+      mediaId: root.id,
+      mediaKind: root.kind,
+      tmdbId: root.tmdbId,
+      failureKind: failure.failureKind,
+      status: failure.status,
+      reason: failure.reason,
+    }),
+  );
+}
+
 /**
  * TMDB being unavailable, no longer having the title, or sending a body Media
  * cannot read are all expected at this boundary and leave the root waiting.
@@ -92,12 +114,24 @@ async function readArtwork(
       root.kind === "movie"
         ? await context.tmdb.movie(root.tmdbId)
         : await context.tmdb.series(root.tmdbId);
-    if (details.id !== root.tmdbId)
-      throw new IntegrationError("tmdb", "invalid-response");
+    if (details.id !== root.tmdbId) {
+      logArtworkBackfillFailure(root, {
+        failureKind: "invalid-response",
+        status: null,
+        reason: "id_mismatch",
+      });
+      return null;
+    }
     return catalogArtwork(details);
   } catch (error) {
-    if (error instanceof IntegrationError && error.service === "tmdb")
+    if (error instanceof IntegrationError && error.service === "tmdb") {
+      logArtworkBackfillFailure(root, {
+        failureKind: error.kind,
+        status: error.status ?? null,
+        reason: "upstream_tmdb_error",
+      });
       return null;
+    }
     throw error;
   }
 }

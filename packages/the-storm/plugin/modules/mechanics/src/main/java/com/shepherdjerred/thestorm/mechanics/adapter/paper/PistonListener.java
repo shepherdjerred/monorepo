@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -81,25 +82,23 @@ final class PistonListener implements Listener {
     if (signs.isEmpty()) {
       return;
     }
-    var facing = facing(piston);
+    var facing = event.getDirection();
     var head = piston.getRelative(facing);
+    var expected = new SettledPiston(piston, piston.getType(), facing, true);
     var bouncer = signs.get(Mechanism.BOUNCE);
     if (bouncer != null) {
-      var type = piston.getType();
       kit.scheduler()
           .runOnMainThreadLater(
               SETTLE,
               () -> {
-                if (piston.getType() == type
-                    && piston.getBlockData() instanceof Piston state
-                    && state.isExtended()) {
+                if (expected.matches()) {
                   bounce(bouncer, head, facing);
                 }
               });
     }
     var pusher = signs.get(Mechanism.SUPER_PUSH);
     if (pusher != null) {
-      settleThen(piston, pusher, true, grid -> push(grid, piston, facing));
+      settleThen(expected, pusher, grid -> push(grid, piston, facing));
     }
   }
 
@@ -111,8 +110,11 @@ final class PistonListener implements Listener {
     }
     var puller = signs(piston).get(Mechanism.SUPER_STICKY);
     if (puller != null) {
-      var facing = facing(piston);
-      settleThen(piston, puller, false, grid -> pull(grid, piston, facing));
+      var facing = event.getDirection();
+      // Paper replaces a retracting sticky piston base with MOVING_PISTON before firing
+      // BlockPistonRetractEvent; once settled, the block returns to STICKY_PISTON.
+      var expected = new SettledPiston(piston, Material.STICKY_PISTON, facing, false);
+      settleThen(expected, puller, grid -> pull(grid, piston, facing));
     }
   }
 
@@ -170,20 +172,26 @@ final class PistonListener implements Listener {
         new PistonRules.Reach(config.stickyReach(), config.maxBlocks()));
   }
 
+  private record SettledPiston(Block piston, Material type, BlockFace facing, boolean extended) {
+    boolean matches() {
+      return piston.getType() == type
+          && piston.getBlockData() instanceof Piston state
+          && state.isExtended() == extended
+          && state.getFacing() == facing;
+    }
+  }
+
   /** After the piston settles, plans moves and applies them if the owner may make every one. */
   private void settleThen(
-      Block piston, UUID owner, boolean extended, Function<PaperGrid, List<BlockMove>> planner) {
-    var type = piston.getType();
+      SettledPiston expected, UUID owner, Function<PaperGrid, List<BlockMove>> planner) {
     kit.scheduler()
         .runOnMainThreadLater(
             SETTLE,
             () -> {
-              if (piston.getType() != type
-                  || !(piston.getBlockData() instanceof Piston state)
-                  || state.isExtended() != extended) {
+              if (!expected.matches()) {
                 return;
               }
-              var grid = new PaperGrid(piston.getWorld());
+              var grid = new PaperGrid(expected.piston().getWorld());
               var moves = planner.apply(grid);
               if (!moves.isEmpty() && kit.guard().moves(owner, grid, moves).isAllowed()) {
                 Placer.move(grid, moves, kit.changes());

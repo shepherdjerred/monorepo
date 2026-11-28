@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, expect, test, vi } from "vitest";
-import { DiscordAccountIdSchema, RawMatchSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  RawMatchSchema,
+  type RawMatch,
+} from "@scout-for-lol/data";
 import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
 import {
   createTestDatabase,
@@ -21,6 +25,7 @@ const io = vi.hoisted(() => ({
     definitiveAbsence: undefined,
   })),
   production: false,
+  matchData: vi.fn<() => RawMatch | undefined>(),
 }));
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 vi.mock("#src/configuration/flags.ts", async (original) => ({
@@ -41,7 +46,7 @@ vi.mock("#src/evidence/matches.ts", () => ({
     io.available
       ? {
           kind: "available",
-          value: match,
+          value: io.matchData() ?? match,
           frozen: true,
           evidence: [],
           coverage: "complete",
@@ -56,9 +61,13 @@ vi.mock("#src/evidence/timelines.ts", () => ({
   resolveMatchTimeline: io.timeline,
 }));
 vi.mock("#src/temporal/match/match-context.ts", () => ({
-  resolveScoutMatchContext: async () => context,
+  resolveScoutMatchContext: async () => ({
+    ...context,
+    matchData: io.matchData() ?? match,
+  }),
   resolveScoutObservedMatchContext: async () => ({
     ...context,
+    matchData: io.matchData() ?? match,
     observedPuuids: [],
   }),
 }));
@@ -93,6 +102,7 @@ beforeEach(async () => {
   io.available = false;
   io.absence.mockReset();
   io.production = false;
+  io.matchData.mockReset();
   io.render.mockReset();
   io.render.mockResolvedValue("rendered");
   io.archive.mockClear();
@@ -400,4 +410,37 @@ test("a quarantined upload accepted after abandonment reopens recovery", async (
   });
   await due();
   expect(await reconcileMatchHistory()).toBe(1);
+});
+
+test("an Arena HISTORY_ONLY row settles on its first pass and is not re-claimed 5 minutes later", async () => {
+  io.available = true;
+  io.matchData.mockReturnValue({
+    ...match,
+    info: { ...match.info, queueId: 1700, gameMode: "CHERRY" },
+  });
+  const t0 = Date.now();
+  await due();
+  expect(await reconcileMatchHistory(new Date(t0))).toBe(1);
+  const settled = await admission();
+  expect(settled).toMatchObject({
+    policy: "HISTORY_ONLY",
+    historyReportComplete: true,
+    historyTimelineRecovered: false,
+    recoveryAbandonedReason: "arena_timeline_unavailable",
+    recoveryClaimId: null,
+    recoveryError: null,
+  });
+  expect(settled.recoveryAbandonedAt).toBeInstanceOf(Date);
+
+  // Even past the 5-minute claim backoff, the abandoned Arena row is not selected again.
+  expect(await reconcileMatchHistory(new Date(t0 + 5 * 60_000 + 1000))).toBe(0);
+  await due();
+  expect(await reconcileMatchHistory(new Date(t0 + 10 * 60_000))).toBe(0);
+
+  // Late client post_game evidence still reopens the row once.
+  const abandonedAt = settled.recoveryAbandonedAt;
+  if (abandonedAt === null) throw new Error("Expected Arena abandonment");
+  await clientObservation(new Date(abandonedAt.getTime() + 1000));
+  await due();
+  expect(await reconcileMatchHistory(new Date(t0 + 15 * 60_000))).toBe(1);
 });

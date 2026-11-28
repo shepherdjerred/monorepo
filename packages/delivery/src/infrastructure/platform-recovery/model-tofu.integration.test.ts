@@ -144,7 +144,8 @@ test("a failed model tofu deployment settles through platform recovery at its fr
       testExecutor,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  expect(await context.cluster.database.platformLock.count()).toBe(1);
+  // A plan-only failure never started step-apply, so it holds only its stack target lock (AI-907).
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
   await context.delivery.completePlatformRecovery(
     intent.id,
     proof,
@@ -310,4 +311,199 @@ test("an unapplied model tofu deployment settles readonly without re-planning, w
     testOperator,
   );
   expect(Object.keys(plannedRecovery.expectedSettlements)).toEqual(["desired"]);
+});
+
+test("admitting recovery apply on a deferred-lock model tofu deployment acquires and retains the platform lock through settlement", async () => {
+  const db = context.cluster.database;
+  const { deployment, buildId } = await requestStackDeployment(context);
+  await startStackPlan(context, deployment.id);
+  const originalPlan = savedStackPlan(deployment.id, buildId);
+  await context.delivery.recordTofuPlan(originalPlan, testExecutor);
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-plan",
+      status: "succeeded",
+      operationId: stackPlanJob.name,
+      message: JSON.stringify({ ...stackPlanJob, requestId: deployment.id }),
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    deployment.id,
+    {
+      status: "failed",
+      message: "Quarantined after saved plan before step-apply",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  expect(await db.platformLock.count()).toBe(0);
+
+  const detail = await context.delivery.detail(deployment.id);
+  const intent = await context.delivery.requestRecoveryIntent(
+    deployment.id,
+    {
+      requestId: "stack/recovery/1",
+      reason: "Converge saved-plan stack failure under shared platform lock",
+      expectedGeneration: detail.environment.generation,
+    },
+    testOperator,
+  );
+  await context.delivery.recordPlatformRecoveryNative(
+    intent.id,
+    { action: "plan", receipt: recoveryJob },
+    testExecutor,
+  );
+  await context.delivery.recordPlatformRecoveryPlan(
+    intent.id,
+    recoveryPlan(buildId),
+    testExecutor,
+  );
+  const applyJob = {
+    namespace: "delivery-platform-jobs" as const,
+    name: `delivery-${"9".repeat(40)}`,
+    uid: "55555555-5555-4555-8555-555555555555",
+    specFingerprint: "f".repeat(64),
+    requestId: intent.id,
+  };
+  await context.delivery.recordPlatformRecoveryNative(
+    intent.id,
+    { action: "apply", receipt: applyJob },
+    testExecutor,
+  );
+  const beforeAdmit = await context.delivery.platformRecovery(
+    intent.id,
+    testOperator,
+  );
+  if (beforeAdmit.intent.planFingerprint === null)
+    throw new Error("Expected recorded recovery plan fingerprint");
+
+  const admitInput = {
+    expectedEnvironmentGeneration:
+      beforeAdmit.intent.expectedEnvironmentGeneration,
+    snapshotFingerprint: beforeAdmit.intent.snapshotFingerprint,
+    observedAt: new Date().toISOString(),
+    sourceWorkflow: {
+      workflowId: `delivery/${deployment.id}`,
+      status: "FAILED" as const,
+    },
+    nativeJobs: [
+      {
+        ...stackPlanJob,
+        requestId: deployment.id,
+        status: "Complete" as const,
+        podsAbsent: false,
+      },
+      {
+        ...recoveryJob,
+        status: "Complete" as const,
+        podsAbsent: false,
+      },
+    ],
+    planFingerprint: beforeAdmit.intent.planFingerprint,
+  };
+
+  // Another deployment holding PlatformLock blocks recovery apply admission.
+  const foreign = await db.deployment.create({
+    data: {
+      id: "foreign/platform-holder",
+      requestId: "foreign/platform-holder",
+      serviceId: deployment.serviceId,
+      environmentId: deployment.environmentId,
+      pipelineRevisionId: deployment.pipelineRevisionId,
+      versionSetRevisionId: deployment.versionSetRevisionId,
+      configurationId: deployment.configurationId,
+      catalogRevision: deployment.catalogRevision,
+      expectedGeneration: detail.environment.generation,
+      kind: "deploy",
+      status: "running",
+      requestedBy: "operator",
+      message: "Holding platform lock",
+    },
+  });
+  await db.platformLock.create({
+    data: { id: "platform", deploymentId: foreign.id },
+  });
+  await expect(
+    context.delivery.admitPlatformRecoveryApply(
+      intent.id,
+      admitInput,
+      testExecutor,
+    ),
+  ).rejects.toMatchObject({ code: "BUSY" });
+  await db.platformLock.delete({ where: { id: "platform" } });
+
+  // Admission reserves PlatformLock on the quarantined deployment and is idempotent on retry.
+  await context.delivery.admitPlatformRecoveryApply(
+    intent.id,
+    admitInput,
+    testExecutor,
+  );
+  expect(
+    await db.platformLock.findUniqueOrThrow({ where: { id: "platform" } }),
+  ).toMatchObject({ deploymentId: deployment.id });
+  await context.delivery.admitPlatformRecoveryApply(
+    intent.id,
+    admitInput,
+    testExecutor,
+  );
+
+  // Subsequent recovery checkpoints succeed with the acquired lock and fail closed if it is lost.
+  const inspectJob = {
+    namespace: "delivery-platform-jobs" as const,
+    name: `delivery-${"a".repeat(40)}`,
+    uid: "66666666-6666-4666-8666-666666666666",
+    specFingerprint: "1".repeat(64),
+    requestId: intent.id,
+  };
+  await context.delivery.recordPlatformRecoveryNative(
+    intent.id,
+    { action: "inspect", receipt: inspectJob },
+    testExecutor,
+  );
+  const desired = beforeAdmit.expectedSettlements.desired;
+  if (desired === undefined) throw new Error("Expected desired settlement");
+  const completeInput = {
+    expectedEnvironmentGeneration:
+      beforeAdmit.intent.expectedEnvironmentGeneration,
+    snapshotFingerprint: beforeAdmit.intent.snapshotFingerprint,
+    observedAt: new Date().toISOString(),
+    sourceWorkflow: {
+      workflowId: `delivery/${deployment.id}`,
+      status: "FAILED" as const,
+    },
+    nativeJobs: [
+      ...admitInput.nativeJobs,
+      { ...applyJob, status: "Complete" as const, podsAbsent: false },
+      { ...inspectJob, status: "Complete" as const, podsAbsent: false },
+    ],
+    settlement: { state: "desired" as const, fingerprint: desired },
+    proofSummary:
+      "Independent fixed-source OpenTofu cloudflare observation after recovery apply",
+  };
+
+  await db.platformLock.delete({ where: { id: "platform" } });
+  await expect(
+    context.delivery.completePlatformRecovery(
+      intent.id,
+      completeInput,
+      testExecutor,
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+
+  await db.platformLock.create({
+    data: { id: "platform", deploymentId: deployment.id },
+  });
+  await context.delivery.completePlatformRecovery(
+    intent.id,
+    completeInput,
+    testExecutor,
+  );
+  expect(await db.platformLock.count()).toBe(0);
+  expect(
+    await db.targetLock.count({ where: { deploymentId: deployment.id } }),
+  ).toBe(0);
 });

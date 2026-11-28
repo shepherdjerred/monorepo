@@ -1,7 +1,15 @@
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from "vitest";
 import { prepareBundle } from "./bundle.ts";
 import { Suite } from "#learning/native/evidence/wire.ts";
 import { hashFile } from "./archive.ts";
@@ -18,64 +26,92 @@ vi.mock("#learning/preference/media.ts", () => ({
     return helper.datasetBoundary(command);
   },
 }));
-let directory = "";
-beforeEach(async () => {
-  directory = await mkdtemp(
-    path.join(os.tmpdir(), "rwf-promotion-collection-"),
-  );
-});
-afterEach(async () => {
-  await rm(directory, { recursive: true, force: true });
-});
+function fixtureDirectory() {
+  return mkdtemp(path.join(os.tmpdir(), "rwf-promotion-collection-"));
+}
 
-it("assembles portable original evidence while leaving the manifest unaccepted", async () => {
-  const request = await collectionFixture(directory);
-  const original = await readFile(path.join(request.model, "manifest.json"));
-  const proof = await prepareBundle(request);
-  const suite = Suite.parse(await readJson(request.regressions));
-  expect(
-    await readJson(
-      path.join(
-        request.output,
-        `evidence/${proof.regressions.evidence_sha256}.blob`,
+async function testDirectory() {
+  const directory = await fixtureDirectory();
+  onTestFinished(async () => rm(directory, { recursive: true, force: true }));
+  return directory;
+}
+
+describe("a prepared promotion bundle", () => {
+  let directory: string | undefined;
+  let prepared: {
+    request: Awaited<ReturnType<typeof collectionFixture>>;
+    original: Uint8Array;
+    proof: Awaited<ReturnType<typeof prepareBundle>>;
+  };
+
+  beforeAll(async () => {
+    directory = await fixtureDirectory();
+    const request = await collectionFixture(directory);
+    const original = await readFile(path.join(request.model, "manifest.json"));
+    const proof = await prepareBundle(request);
+    prepared = { request, original, proof };
+  });
+
+  afterAll(async () => {
+    if (directory !== undefined) {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("assembles portable original evidence while leaving the manifest unaccepted", async () => {
+    const { request, original, proof } = prepared;
+    const suite = Suite.parse(await readJson(request.regressions));
+    expect(
+      await readJson(
+        path.join(
+          request.output,
+          `evidence/${proof.regressions.evidence_sha256}.blob`,
+        ),
       ),
-    ),
-  ).toEqual(suite.measured);
-  expect(
-    proof.files.some((file) => file.sha256 === suite.measured_sha256),
-  ).toBe(true);
-  const originalSuiteDigest = await hashFile(request.regressions);
-  expect(proof.files.some((file) => file.sha256 === originalSuiteDigest)).toBe(
-    true,
-  );
-  expect(proof.preference.learned_votes).toBe(15);
-  expect(proof.pilot.seeds.map((seed) => seed.seed)).toEqual([11, 12, 13]);
-  expect(proof.load.phases.map((phase) => phase.bots)).toEqual([20, 50, 100]);
-  expect(proof.load.phases.map((phase) => phase.maximum_batch)).toEqual([
-    20, 50, 100,
-  ]);
-  for (const file of proof.files) {
-    expect(file.file).toBe(`evidence/${file.sha256}.blob`);
-    expect(await hashFile(path.join(request.output, file.file))).toBe(
-      file.sha256,
+    ).toEqual(suite.measured);
+    expect(
+      proof.files.some((file) => file.sha256 === suite.measured_sha256),
+    ).toBe(true);
+    const originalSuiteDigest = await hashFile(request.regressions);
+    expect(
+      proof.files.some((file) => file.sha256 === originalSuiteDigest),
+    ).toBe(true);
+    expect(proof.preference.learned_votes).toBe(15);
+    expect(proof.pilot.seeds.map((seed) => seed.seed)).toEqual([11, 12, 13]);
+    expect(proof.load.phases.map((phase) => phase.bots)).toEqual([20, 50, 100]);
+    expect(proof.load.phases.map((phase) => phase.maximum_batch)).toEqual([
+      20, 50, 100,
+    ]);
+    for (const file of proof.files) {
+      expect(file.file).toBe(`evidence/${file.sha256}.blob`);
+      expect(await hashFile(path.join(request.output, file.file))).toBe(
+        file.sha256,
+      );
+    }
+    expect(
+      await readFile(path.join(request.output, "source-manifest.json")),
+    ).toEqual(original);
+    expect(await readFile(path.join(request.model, "manifest.json"))).toEqual(
+      original,
     );
-  }
-  expect(
-    await readFile(path.join(request.output, "source-manifest.json")),
-  ).toEqual(original);
-  expect(await readFile(path.join(request.model, "manifest.json"))).toEqual(
-    original,
-  );
-  await expect(
-    readFile(path.join(request.output, "manifest.json")),
-  ).rejects.toThrow();
-  await expect(prepareBundle(request)).rejects.toThrow();
-  expect(await readJson(path.join(request.output, "promotion.json"))).toEqual(
-    proof,
-  );
+    await expect(
+      readFile(path.join(request.output, "manifest.json")),
+    ).rejects.toThrow();
+  });
+
+  it("refuses to overwrite the existing bundle and keeps its proof", async () => {
+    const { request, proof } = prepared;
+    await expect(prepareBundle(request)).rejects.toMatchObject({
+      code: "EEXIST",
+    });
+    expect(await readJson(path.join(request.output, "promotion.json"))).toEqual(
+      proof,
+    );
+  });
 });
 
 it("a failed original human ballot cannot be replaced by a promotion claim", async () => {
+  const directory = await testDirectory();
   const request = await collectionFixture(directory, 14);
   await expect(prepareBundle(request)).rejects.toThrow(
     "original passing human review",
@@ -86,6 +122,7 @@ it("a failed original human ballot cannot be replaced by a promotion claim", asy
 });
 
 it("an edited load summary cannot override its original raw command stream", async () => {
+  const directory = await testDirectory();
   const request = await collectionFixture(directory);
   const file = path.join(request.load, "verification.json");
   const original = z
@@ -104,6 +141,7 @@ it("an edited load summary cannot override its original raw command stream", asy
 });
 
 it("rejects changed original frozen weights before archiving evidence", async () => {
+  const directory = await testDirectory();
   const request = await collectionFixture(directory);
   await writeFile(
     path.join(request.pilot, "seed-0/learning/final/weights.pt"),
@@ -118,6 +156,7 @@ it("rejects changed original frozen weights before archiving evidence", async ()
 });
 
 it("rejects a regression receipt with skipped required checks", async () => {
+  const directory = await testDirectory();
   const request = await collectionFixture(directory);
   const evidence = Suite.parse(await readJson(request.regressions));
   const first = evidence.measured.cases[0];
@@ -139,6 +178,7 @@ it("rejects a regression receipt with skipped required checks", async () => {
 });
 
 it("the real CLI rejects diagnostic pilots before creating output", async () => {
+  const directory = await testDirectory();
   const pilot = path.join(directory, "diagnostic");
   await PilotLedger.create(pilot, {
     version: 1,

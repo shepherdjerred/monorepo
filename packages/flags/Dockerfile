@@ -29,7 +29,7 @@ RUN bun install --frozen-lockfile --filter '@shepherdjerred/flags'
 # Add each workspace dependency's directory to this COPY and to the runtime
 # stage's as the service gains them.
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/flags packages/feature-flags packages/eslint-config packages/console-ui packages/ops-model ./
+COPY --parents tsconfig.base.json packages/flags packages/feature-flags packages/eslint-config packages/console-ui packages/llm-models packages/ops-model ./
 RUN cd packages/flags && bun run build
 
 FROM base AS prod-deps

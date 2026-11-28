@@ -15,6 +15,7 @@ import type {
   HealthStatus,
   PullRequest,
 } from "#lib/github/types.ts";
+import type { StaleBaseReport } from "./stale-base/evaluate.ts";
 const MONOREPO_REPOSITORY = "shepherdjerred/monorepo";
 
 export type ReviewEvidence = {
@@ -29,6 +30,7 @@ export type PrHealthEvidence = {
   readonly ciPipeline: WoodpeckerPipeline | null;
   readonly reviews: readonly ReviewEvidence[];
   readonly snapshot?: Snapshot;
+  readonly staleBase?: StaleBaseReport | undefined;
 };
 
 /**
@@ -266,6 +268,9 @@ export function buildPrHealthReport(evidence: PrHealthEvidence): HealthReport {
       verdict === null
         ? nextStepsFor(checks)
         : readinessSteps(verdict, evidence.snapshot?.main.state === "red"),
+    ...(evidence.staleBase === undefined
+      ? {}
+      : { staleBase: evidence.staleBase }),
   };
 }
 

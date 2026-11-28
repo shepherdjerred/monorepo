@@ -85,7 +85,6 @@ export const SPECIALIZED_DELIVERY_ENVIRONMENTS: Readonly<
 const INFRASTRUCTURE_SERVICE_OWNERS = new Set([
   "gitops",
   "observability",
-  "bugsink",
   "ci",
   "storage",
   "networking",

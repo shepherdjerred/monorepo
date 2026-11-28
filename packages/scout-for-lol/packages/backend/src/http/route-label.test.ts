@@ -60,6 +60,12 @@ describe("classifyRoute", () => {
         "/api/scout-client/v1/pairings/4fa2a856-53af-42a4-85af-5cc085a942a3/exchange",
       ),
     ).toBe("/api/scout-client/v1/pairings/:id/exchange");
+    expect(classifyRoute("/api/meta/v1/matchups/2")).toBe(
+      "/api/meta/v1/matchups/:id",
+    );
+    expect(classifyRoute("/api/meta/v1/matchups/2/3")).toBe(
+      "/api/meta/v1/matchups/:a/:b",
+    );
     expect(classifyRoute("/api/scout-client/v1/replays/123456789")).toBe(
       "/api/scout-client/v1/replays/:gameId",
     );

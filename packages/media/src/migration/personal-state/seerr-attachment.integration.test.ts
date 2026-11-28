@@ -1,12 +1,18 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
+import type { Prisma } from "#generated/prisma/client.ts";
+import { currentSubtitleWork } from "#automation/subtitles/authority.ts";
+import { planSubtitleTargetV1 } from "#automation/subtitle-maintenance/planning.ts";
 import { PrismaAuthStore } from "#infrastructure/auth-store.ts";
+import { replacePlexClaims } from "#infrastructure/plex-binding/claims.ts";
+import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 import { legacyClaimsHarness } from "#infrastructure/recovery/legacy-claims/test-fixture.ts";
 import { captureFixture } from "#migration/bundle-test-fixtures.ts";
 import { recordKey } from "#migration/capture/capture-validation.ts";
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import { captureHasUniquePlexRequester } from "./seerr-attachment-binding.ts";
 import { PrismaPersonalMigration } from "./service.ts";
 
 const harness = legacyClaimsHarness();
@@ -282,4 +288,158 @@ test("a full newer capture retires omitted approvals before an account signs in"
     0,
   );
   expect(await f.db.operation.count({ where: { userId: actor.id } })).toBe(0);
+});
+
+type QueryTracker = {
+  inFlight: number;
+  maxInFlight: number;
+  overlaps: number;
+};
+
+function trackPromiseLike(result: unknown, tracker: QueryTracker): unknown {
+  if (
+    result === null ||
+    (typeof result !== "object" && typeof result !== "function") ||
+    !("then" in result) ||
+    typeof result.then !== "function"
+  ) {
+    return result;
+  }
+  tracker.inFlight++;
+  tracker.maxInFlight = Math.max(tracker.maxInFlight, tracker.inFlight);
+  if (tracker.inFlight > 1) {
+    tracker.overlaps++;
+  }
+  return Promise.resolve(result).finally(() => {
+    tracker.inFlight--;
+  });
+}
+
+function wrapModelDelegate<T extends object>(
+  delegate: T,
+  tracker: QueryTracker,
+): T {
+  return new Proxy(delegate, {
+    get(target, prop, receiver) {
+      const value: unknown = Reflect.get(target, prop, receiver);
+      return typeof value === "function"
+        ? (...args: unknown[]) =>
+            trackPromiseLike(Reflect.apply(value, target, args), tracker)
+        : value;
+    },
+  });
+}
+
+function guardSequentialTransaction<T extends object>(rawTx: T) {
+  const tracker: QueryTracker = { inFlight: 0, maxInFlight: 0, overlaps: 0 };
+  const tx = new Proxy(rawTx, {
+    get(target, prop, receiver) {
+      const value: unknown = Reflect.get(target, prop, receiver);
+      if (typeof value === "function") {
+        return (...args: unknown[]) =>
+          trackPromiseLike(Reflect.apply(value, target, args), tracker);
+      }
+      return typeof value === "object" && value !== null
+        ? wrapModelDelegate(value, tracker)
+        : value;
+    },
+  });
+  return { tx, tracker };
+}
+
+test("interactive transaction helpers serialize single-client pg queries without overlapping execution", async () => {
+  const positiveControl = guardSequentialTransaction({
+    probe: {
+      count: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        return 1;
+      },
+    },
+  });
+  await Promise.all([
+    positiveControl.tx.probe.count(),
+    positiveControl.tx.probe.count(),
+  ]);
+  expect(positiveControl.tracker.overlaps).toBeGreaterThan(0);
+
+  const f = await setupAttachment();
+  const warnings: string[] = [];
+  const onWarning = (warning: Error) => {
+    if (warning.message.includes("already executing a query")) {
+      warnings.push(warning.message);
+    }
+  };
+  process.on("warning", onWarning);
+  try {
+    const snapshot = captureFixture("seerr", [f.movieRecord]);
+    const review = await f.review(snapshot);
+    const actor = await f.signIn();
+    await f.db.mediaIntent.createMany({
+      data: [
+        { mediaId: f.first.id, desiredPresence: true, monitoring: true },
+        { mediaId: f.second.id, desiredPresence: true, monitoring: true },
+      ],
+      skipDuplicates: true,
+    });
+    const asset = await f.db.libraryAsset.create({
+      data: {
+        path: `/data/movies/${crypto.randomUUID()}/movie.mkv`,
+        sizeBytes: 1024n,
+        checksum: "a".repeat(64),
+        state: "published",
+        owned: true,
+        ownershipEpoch: 0,
+        properties: { audioLanguages: ["ja"] },
+        coverage: {
+          create: [
+            { mediaId: f.first.id, current: true },
+            { mediaId: f.second.id, current: true },
+          ],
+        },
+      },
+    });
+
+    await f.db.$transaction(async (rawTx: Prisma.TransactionClient) => {
+      const { tx, tracker } = guardSequentialTransaction(rawTx);
+      expect(
+        await captureHasUniquePlexRequester(tx, {
+          captureId: review.captureId,
+          requesterSourceId: f.movieRecord.requesterSourceId,
+          plexAccountId: f.access.accountId,
+        }),
+      ).toBe(true);
+      await replacePlexClaims(
+        tx,
+        { serverMachineId, oldGroups: [], members: [] },
+        plexBindingFreshness({
+          observed: { wall: Date.now(), monotonic: performance.now() },
+          expiresAtMs: Date.now() + 60_000,
+          guards: [],
+        }),
+      );
+      const work = await currentSubtitleWork(tx, asset.id, 0);
+      await planSubtitleTargetV1(tx, {
+        work,
+        resolved: {
+          movieScope: undefined,
+          access: undefined,
+        },
+        target: { language: "en", hearingImpaired: "any" },
+        mode: "wanted",
+        epoch: 0,
+        now: new Date(),
+      });
+      expect(tracker.overlaps).toBe(0);
+      expect(tracker.maxInFlight).toBe(1);
+    });
+
+    const attached = await Promise.all([
+      f.service.attachImportedRequests(actor),
+      f.service.attachImportedRequests(actor),
+    ]);
+    expect(attached.sort((a, b) => a - b)).toEqual([0, 1]);
+    expect(warnings).toEqual([]);
+  } finally {
+    process.off("warning", onWarning);
+  }
 });

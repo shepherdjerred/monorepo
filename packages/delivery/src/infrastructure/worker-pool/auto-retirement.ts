@@ -18,10 +18,10 @@ import { requireUnreferencedWorker } from "./proof.ts";
  * drainage and routing before the scale-to-zero. Nothing here trusts the
  * proposal beyond choosing which host to request.
  *
- * One attempt per host: a host whose retirement ever failed or was canceled
- * is left to an operator, so a refused proof never retries on a loop. An
- * environment whose releases require approval is never offered: its
- * retirements stay operator-requested.
+ * A failed or operator-canceled retirement leaves the host to an operator.
+ * A superseded retirement did not try to drain the host and can be proposed
+ * again after a different selection is accepted. An environment whose
+ * releases require approval keeps retirements operator-requested.
  */
 export const AUTO_RETIRE_ACTOR: Principal = {
   id: "delivery/auto-retire",
@@ -73,21 +73,47 @@ async function idleWorkerEnvironments(database: Delivery["database"]) {
   return idle;
 }
 
-/** Hosts whose retirement already failed or was canceled: an operator decides. */
+type RetirementEnvironment = {
+  id: string;
+  acceptedVersionSetRevisionId: string | null;
+};
+
+/** Failed or canceled retirements suppress a host, except an audited preclaim supersession after acceptance advances. */
 async function attemptedRetirements(
   database: Delivery["database"],
-  environmentId: string,
+  env: RetirementEnvironment,
 ): Promise<Set<string>> {
   const rows = await database.deployment.findMany({
     where: {
-      environmentId,
+      environmentId: env.id,
       kind: "retire-host",
       status: { in: ["failed", "canceled"] },
     },
-    select: { workerSnapshot: true },
+    select: {
+      id: true,
+      status: true,
+      requestedBy: true,
+      versionSetRevisionId: true,
+      workerSnapshot: true,
+    },
   });
+  const possiblySuperseded = rows.filter(
+    (row) =>
+      row.status === "canceled" &&
+      row.requestedBy === AUTO_RETIRE_ACTOR.id &&
+      row.versionSetRevisionId !== env.acceptedVersionSetRevisionId,
+  );
+  const audit = await database.audit.findMany({
+    where: {
+      action: "deployment.superseded",
+      entityId: { in: possiblySuperseded.map(({ id }) => id) },
+    },
+    select: { entityId: true },
+  });
+  const superseded = new Set(audit.map(({ entityId }) => entityId));
   return new Set(
     rows.flatMap((row) => {
+      if (superseded.has(row.id)) return [];
       const snapshot = WorkerPoolSnapshotSchema.safeParse(row.workerSnapshot);
       const id = snapshot.success ? snapshot.data.retiringWorkerId : null;
       return id === null ? [] : [id];
@@ -114,7 +140,10 @@ async function unreferenced(
 /** One idle environment's offer, or null when it has no retirable host. */
 async function environmentCandidates(
   database: Delivery["database"],
-  env: { id: string; generation: number; acceptedDeploymentId: string | null },
+  env: RetirementEnvironment & {
+    generation: number;
+    acceptedDeploymentId: string | null;
+  },
 ): Promise<RetirementCandidates["environments"][number] | null> {
   const accepted = await database.deployment.findUnique({
     where: { id: env.acceptedDeploymentId ?? "" },
@@ -124,7 +153,7 @@ async function environmentCandidates(
   if (snapshot === null) return null;
   const baseline = WorkerPoolSnapshotSchema.parse(snapshot);
   const versions = await readWorkerVersions(database, env.id);
-  const attempted = await attemptedRetirements(database, env.id);
+  const attempted = await attemptedRetirements(database, env);
   const workers = [];
   for (const worker of versions) {
     const live =
@@ -168,7 +197,7 @@ export async function retirementCandidates(
 
 /**
  * Requests the guarded retirement of a host the executor proved drained,
- * as `delivery/auto-retire`, with an idempotent request per host generation.
+ * as `delivery/auto-retire`, with an idempotent request per host and environment generation.
  */
 export async function autoRetireWorker(
   this: Delivery,
@@ -180,23 +209,50 @@ export async function autoRetireWorker(
   const input = AutoRetireWorkerSchema.parse(rawInput);
   const worker = await this.database.workerVersion.findUnique({
     where: { id: workerId },
-    select: { environmentId: true },
+    select: {
+      environment: { select: { id: true, acceptedVersionSetRevisionId: true } },
+    },
   });
   if (worker === null)
     throw new DeliveryError("NOT_FOUND", "Worker version not found");
+  const legacyRequestId = `auto-retire-${workerId}-${input.expectedWorkerGeneration.toString()}`;
+  const requestId = `${legacyRequestId}-${input.expectedEnvironmentGeneration.toString()}`;
+  // Existing requests retain their original idempotent identity on an exact replay.
+  const replay = await this.database.deployment.findFirst({
+    where: {
+      environmentId: worker.environment.id,
+      kind: "retire-host",
+      requestedBy: AUTO_RETIRE_ACTOR.id,
+      expectedGeneration: input.expectedEnvironmentGeneration,
+      requestId: { in: [requestId, legacyRequestId] },
+    },
+    select: { id: true, requestId: true },
+  });
   const attempted = await attemptedRetirements(
     this.database,
-    worker.environmentId,
+    worker.environment,
   );
-  if (attempted.has(workerId))
-    throw new DeliveryError(
-      "CONFLICT",
-      "This host's retirement already failed; an operator decides",
-    );
+  if (attempted.has(workerId)) {
+    // An exact superseded request can still be replayed after a later
+    // attempt leaves the host to an operator. The request ledger returns the
+    // original cancellation without creating another retirement.
+    const superseded =
+      replay === null
+        ? null
+        : await this.database.audit.findFirst({
+            where: { action: "deployment.superseded", entityId: replay.id },
+            select: { id: true },
+          });
+    if (superseded === null)
+      throw new DeliveryError(
+        "CONFLICT",
+        "This host's retirement already failed; an operator decides",
+      );
+  }
   return this.retireWorker(
     workerId,
     {
-      requestId: `auto-retire-${workerId}-${input.expectedWorkerGeneration.toString()}`,
+      requestId: replay?.requestId ?? requestId,
       ...input,
     },
     AUTO_RETIRE_ACTOR,

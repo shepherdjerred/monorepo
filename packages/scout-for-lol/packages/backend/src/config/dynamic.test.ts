@@ -11,6 +11,7 @@ import {
   participantCrawlEnabled,
   riotBudgetMode,
   scoutClientEndOfGameDeadlineSeconds,
+  scoutRankRefreshEnabled,
   shutdownDynamicConfig,
   temporalCallGraphTracing,
   type DynamicConfigSeed,
@@ -212,6 +213,41 @@ describe("scout dynamic config", () => {
     });
     expect(participantCrawlEnabled()).toBe(false);
     expect(participantCrawlDailyMatchBudget()).toBe(0);
+  });
+
+  test("the rank refresh is off before configuration boots, on in beta and off in production by default", async () => {
+    expect(scoutRankRefreshEnabled()).toBe(false);
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, ENVIRONMENT: "beta" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(scoutRankRefreshEnabled()).toBe(true);
+    await shutdownDynamicConfig();
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, ENVIRONMENT: "prod" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(scoutRankRefreshEnabled()).toBe(false);
+  });
+
+  test("the rank refresh follows its flag, and an explicit false is an answer", async () => {
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, ENVIRONMENT: "prod" },
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({ "scout-rank-refresh-enabled": true }),
+    });
+    expect(scoutRankRefreshEnabled()).toBe(true);
+    await shutdownDynamicConfig();
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, ENVIRONMENT: "beta" },
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({ "scout-rank-refresh-enabled": false }),
+    });
+    expect(scoutRankRefreshEnabled()).toBe(false);
   });
 
   test("readiness flips with initialize and shutdown", async () => {

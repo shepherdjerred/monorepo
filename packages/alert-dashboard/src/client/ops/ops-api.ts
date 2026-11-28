@@ -4,6 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { z } from "zod";
+import { CiDashboardResponseSchema } from "@shepherdjerred/ops-model/ci-dashboard.ts";
 import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 import {
   FACET_SCHEMAS,
@@ -131,6 +132,17 @@ export function serviceQuery(id: string) {
         { signal },
       ),
     refetchInterval: REFRESH_MS,
+  });
+}
+
+export function ciDashboardQuery() {
+  return queryOptions({
+    queryKey: [...opsKeys.all, "ci"] as const,
+    queryFn: ({ signal }) =>
+      request("/api/v1/ops/ci", CiDashboardResponseSchema, { signal }),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   });
 }
 

@@ -8,6 +8,13 @@ import {
 } from "#src/report-lake/crawl/crawl-lake-schema.ts";
 import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
+import { eventPartialQueries } from "#src/report-lake/crawl/meta-partials-events.ts";
+import {
+  CHECKPOINT_COLUMNS,
+  CHECKPOINT_SELECT,
+  LANE_PREPARE_SQL,
+  lanePartialQueries,
+} from "#src/report-lake/crawl/meta-partials-lane.ts";
 
 /**
  * Daily partial aggregates over one ingest day of crawl data.
@@ -54,6 +61,12 @@ import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
  * | keystone      | picked        | primary rune 0 id          | -                   |
  * | spell_single  | picked        | one summoner spell id      | -                   |
  * | matchup_spell | picked        | opposing champion id       | `4,12` (own pair)   |
+ * | lane          | picked        | -                          | -                   |
+ * | lane_matchup  | picked        | opposing champion id       | -                   |
+ *
+ * `lane` and `lane_matchup` count the games with a 15:00 checkpoint and, in
+ * `wins`, the games the champion had strictly more gold than its opponent
+ * (`meta-partials-lane.ts`).
  *
  * `games` is the number of participants (matches, for `matches` and `ban`)
  * and `wins` how many of them won. A match is counted only when it is a
@@ -67,11 +80,13 @@ import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 export const META_PARTIALS_TABLE = "meta_partials_crawl";
 /**
  * 2 added `duration`, `boots`, `keystone`, `spell_single` and `matchup_spell`.
- * Bumping it makes every retained day's v1 file count as missing, so the next
- * nightly rebuild re-derives each completed day (`compactCrawlDay`) before the
- * roll-up, which only reads files at this version.
+ * 3 added `lane` and `lane_matchup`. Bumping it makes every retained day's
+ * older file count as missing, so the next nightly rebuild re-derives each
+ * completed day (`compactCrawlDay`) before the roll-up, which only reads files
+ * at this version. A day whose crawl segments predate the crawl's timeline
+ * checkpoints re-derives with no lane rows: lane data cannot be backfilled.
  */
-export const META_PARTIALS_VERSION = 2;
+export const META_PARTIALS_VERSION = 3;
 
 export const META_ROLES = [
   "TOP",
@@ -80,9 +95,6 @@ export const META_ROLES = [
   "BOTTOM",
   "UTILITY",
 ] as const;
-
-/** Starting items are everything bought in the first 90 seconds. */
-const START_WINDOW_MS = 90_000;
 
 /**
  * Consumables, wards and trinkets that sit in the final inventory without
@@ -134,6 +146,8 @@ export const MetaPartialKindSchema = z.enum([
   "keystone",
   "spell_single",
   "matchup_spell",
+  "lane",
+  "lane_matchup",
 ]);
 export type MetaPartialKind = z.infer<typeof MetaPartialKindSchema>;
 
@@ -153,6 +167,7 @@ export const META_PARTIAL_COLUMNS = {
 const TIMELINE_TABLE: CrawlLakeTable = "timeline_events_crawl";
 const MATCH_TABLE: CrawlLakeTable = "matches_crawl";
 const BAN_TABLE: CrawlLakeTable = "match_team_bans_crawl";
+const CHECKPOINT_TABLE: CrawlLakeTable = "timeline_checkpoints_crawl";
 
 const PARTIALS_TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -289,7 +304,6 @@ const EVENTS_COLUMNS =
   "match_id VARCHAR, participant_id INTEGER, t BIGINT, event_type VARCHAR, item_id INTEGER, before_id INTEGER, skill_slot INTEGER, level_up_type VARCHAR";
 
 const GROUP = "patch, queue_id, tier, role, champion_id";
-const CONTEXT = "p.patch, p.queue_id, p.tier, p.role, p.champion_id";
 
 /** Every branch yields the partial columns in order. */
 function partialQueries(): string[] {
@@ -355,58 +369,8 @@ function partialQueries(): string[] {
      FROM meta_p a JOIN meta_p b
        ON a.match_id = b.match_id AND a.role = b.role AND a.team_id <> b.team_id AND a.champion_id <> b.champion_id
      GROUP BY a.patch, a.queue_id, a.tier, a.role, a.champion_id, b.champion_id`,
-    // Starting items: everything bought in the first 90s, net of undone buys.
-    `WITH buys AS (
-       SELECT match_id, participant_id, item_id, count(*) AS n FROM meta_ev
-       WHERE event_type = 'ITEM_PURCHASED' AND t <= ${START_WINDOW_MS.toString()} AND item_id IS NOT NULL
-       GROUP BY ALL
-     ), undos AS (
-       SELECT match_id, participant_id, before_id AS item_id, count(*) AS n FROM meta_ev
-       WHERE event_type = 'ITEM_UNDO' AND t <= ${START_WINDOW_MS.toString()} AND before_id IS NOT NULL
-       GROUP BY ALL
-     ), net AS (
-       SELECT b.match_id, b.participant_id, b.item_id, b.n - coalesce(u.n, 0) AS n
-       FROM buys b LEFT JOIN undos u USING (match_id, participant_id, item_id)
-       WHERE b.n - coalesce(u.n, 0) > 0
-     ), keyed AS (
-       SELECT match_id, participant_id,
-         string_agg(CAST(item_id AS VARCHAR) || CASE WHEN n > 1 THEN 'x' || CAST(n AS INTEGER) ELSE '' END, '+' ORDER BY item_id) AS key
-       FROM net GROUP BY match_id, participant_id
-     )
-     SELECT 'start_items', ${CONTEXT}, k.key, '', count(*), sum(CAST(p.win AS INTEGER))
-     FROM keyed k JOIN meta_p p USING (match_id, participant_id)
-     GROUP BY p.patch, p.queue_id, p.tier, p.role, p.champion_id, k.key`,
-    // Build path: the first three items bought that were still held at the end.
-    `WITH firsts AS (
-       SELECT match_id, participant_id, item_id, min(t) AS first_t FROM meta_ev
-       WHERE event_type = 'ITEM_PURCHASED' AND item_id IS NOT NULL
-       GROUP BY ALL
-     ), ordered AS (
-       SELECT f.match_id, f.participant_id, f.item_id,
-         row_number() OVER (PARTITION BY f.match_id, f.participant_id ORDER BY f.first_t, f.item_id) AS rn
-       FROM firsts f JOIN meta_pi i
-         ON i.match_id = f.match_id AND i.participant_id = f.participant_id AND i.item = f.item_id
-     ), keyed AS (
-       SELECT match_id, participant_id,
-         string_agg(CAST(item_id AS VARCHAR), '>' ORDER BY rn) AS key
-       FROM ordered WHERE rn <= 3 GROUP BY match_id, participant_id HAVING count(*) = 3
-     )
-     SELECT 'build_path', ${CONTEXT}, k.key, '', count(*), sum(CAST(p.win AS INTEGER))
-     FROM keyed k JOIN meta_p p USING (match_id, participant_id)
-     GROUP BY p.patch, p.queue_id, p.tier, p.role, p.champion_id, k.key`,
-    // Skill order: Q/W/E ranked by points put in, ties by first level.
-    `WITH points AS (
-       SELECT match_id, participant_id, skill_slot, count(*) AS n, min(t) AS first_t FROM meta_ev
-       WHERE event_type = 'SKILL_LEVEL_UP' AND level_up_type = 'NORMAL' AND skill_slot IN (1, 2, 3)
-       GROUP BY ALL
-     ), keyed AS (
-       SELECT match_id, participant_id,
-         string_agg(CASE skill_slot WHEN 1 THEN 'Q' WHEN 2 THEN 'W' ELSE 'E' END, '' ORDER BY n DESC, first_t) AS key
-       FROM points GROUP BY match_id, participant_id HAVING count(*) = 3 AND sum(n) >= 9
-     )
-     SELECT 'skill_order', ${CONTEXT}, k.key, '', count(*), sum(CAST(p.win AS INTEGER))
-     FROM keyed k JOIN meta_p p USING (match_id, participant_id)
-     GROUP BY p.patch, p.queue_id, p.tier, p.role, p.champion_id, k.key`,
+    ...eventPartialQueries(),
+    ...lanePartialQueries(),
   ];
 }
 
@@ -444,6 +408,11 @@ export async function writeDayPartials(input: {
     input.day,
   );
   const banFiles = await crawlDayFiles(input.buildDir, BAN_TABLE, input.day);
+  const checkpointFiles = await crawlDayFiles(
+    input.buildDir,
+    CHECKPOINT_TABLE,
+    input.day,
+  );
   const staged = path.join(
     input.buildDir,
     `.partials-${input.day}-${input.buildId}.parquet`,
@@ -463,7 +432,15 @@ export async function writeDayPartials(input: {
           : "CREATE OR REPLACE TEMP TABLE meta_ev AS SELECT match_id, participant_id, event_timestamp_ms AS t, event_type, item_id, before_id, skill_slot, level_up_type FROM read_parquet($1, hive_partitioning = false)",
         eventFiles.length === 0 ? [] : [session.list(eventFiles)],
       );
-      for (const statement of PREPARE_SQL) await session.run(statement);
+      await session.run(
+        checkpointFiles.length === 0
+          ? `CREATE OR REPLACE TEMP TABLE meta_cp_raw (${CHECKPOINT_COLUMNS})`
+          : `CREATE OR REPLACE TEMP TABLE meta_cp_raw AS ${CHECKPOINT_SELECT}`,
+        checkpointFiles.length === 0 ? [] : [session.list(checkpointFiles)],
+      );
+      for (const statement of [...PREPARE_SQL, ...LANE_PREPARE_SQL]) {
+        await session.run(statement);
+      }
       input.abortSignal?.throwIfAborted();
       const columns = Object.entries(META_PARTIAL_COLUMNS)
         .map(([name, type]) => `CAST(${name} AS ${type}) AS ${name}`)

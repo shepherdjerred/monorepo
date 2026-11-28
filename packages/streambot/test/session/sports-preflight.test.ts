@@ -49,6 +49,7 @@ it.each([false, true])(
       audioCodec: "aac",
       audioChannels: 2,
       durationSeconds: undefined,
+      ranked: {},
     });
     const prepared = await f.prepare();
     try {
@@ -75,6 +76,7 @@ it("preflight probes per-track inputs then discards all private input state", as
     audioCodec: "aac",
     audioChannels: 2,
     durationSeconds: undefined,
+    ranked: {},
   });
   const signal = new AbortController().signal;
   const result = await resolveSource(config, source, signal, {

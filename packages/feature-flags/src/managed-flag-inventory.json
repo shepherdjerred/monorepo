@@ -2700,6 +2700,90 @@
       "thresholdRollouts": []
     },
     {
+      "key": "alert-dashboard-incidents-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Enable Hub incident writes, signal ingestion, and the live stream; reads stay available when off. Resolved per request.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-auto-open-alertmanager-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Let curated Alertmanager alerts open new incidents; when off they still attach to and clear existing ones. Resolved per signal.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-auto-open-main-ci-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Let a red main CI signal open a new main-ci incident; when off it still attaches to and clears an existing one. Resolved per signal.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-takeover-grace-seconds",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Seconds after declaration during which only the suspect or creator is expected to take command; fixed on the record at declaration.",
+      "type": "variant",
+      "default": "600",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-dispatch-lease-seconds",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Seconds a dispatch lease holds command while a spawned agent session starts; an unredeemed lease lapses back to unowned.",
+      "type": "variant",
+      "default": "600",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-takeover-spawn-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Allow take --spawn to lease command for a newly spawned commander session. Resolved per request.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incidents-takeover-provider",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "incidents",
+      "purpose": "Agent provider a dispatcher should spawn as commander, returned with each dispatch lease.",
+      "type": "variant",
+      "default": "claude-code",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-email-recipient",
       "owner": "temporal",
       "namespace": "temporal",
@@ -3102,6 +3186,27 @@
       ]
     },
     {
+      "key": "scout-rank-refresh-enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Run Scout's daily rank refresh: fetch the current rank of each tracked player with no rank evidence in the last 7 days from Riot at backfill priority and store it as their current-rank snapshot. A kill switch, read per Activity batch.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Production turns the refresh on as an explicit operator change once beta shows the Riot backfill budget has headroom and the release exporting the Workflow is promoted.",
+          "issue": "AI-1093",
+          "enableWhen": "The release exporting scoutRankRefreshWorkflow is promoted, a beta run drains without 429s attributable to it, and ranks appear for previously unranked tracked players; then the flag is turned on in the production Flags deployment.",
+          "reviewBy": "2026-12-11"
+        }
+      ]
+    },
+    {
       "key": "scout-participant-crawl-daily-match-budget",
       "owner": "scout",
       "namespace": "scout",
@@ -3315,6 +3420,54 @@
           "reviewBy": "2026-12-07"
         }
       ]
+    },
+    {
+      "key": "streambot-audio-dialog-downmix-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Downmix 5.1/7.1 audio to stereo with a dialogue-first matrix and a peak limiter instead of ffmpeg's generic -ac 2 downmix.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-live-resync-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Resample discontinuous live audio onto its timestamps so audio holes cannot permanently shift lip-sync.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-loudness-normalization-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Apply realtime loudness normalisation before the playback volume on video and music.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-audio-track-ranking-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Play the ranked audio track (default, preferred language, no commentary, most channels) and the best HLS video variant within the output height.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-automatic-channel-routing-enabled",
@@ -4729,6 +4882,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "temporal-renovate-publishing-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "temporal",
+      "purpose": "Allow the Renovate bundle workflow to submit independently verified dependency upgrades to GitHub and Woodpecker.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-report-auto-remediation-enabled",
       "owner": "temporal",
       "namespace": "temporal",
@@ -4746,6 +4911,18 @@
       "namespace": "alert-dashboard",
       "source": "alert-dashboard",
       "purpose": "Suppress sending the daily ops digest email when the snapshot is healthy and unchanged since the prior clear daily digest, while still recording the run in Hub.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-ci-jobs-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Show Woodpecker queue depth, jobs, and CI finish estimates on the Hub CI service page.",
       "type": "boolean",
       "default": true,
       "rollouts": [],
@@ -5314,6 +5491,14 @@
         },
         {
           "key": "scout-participant-crawl-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-rank-refresh-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

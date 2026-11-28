@@ -6,7 +6,7 @@ import {
   ResourcesSchema,
   VersionedTerraformSchema,
   enforcedEncryption,
-  synthesizedStack,
+  useSynthesizedApp,
 } from "#src/testing.ts";
 
 const TOFU_ROOT = path.resolve(import.meta.dir, "../../homelab/src/tofu");
@@ -28,9 +28,8 @@ const DesiredStateSchema = z.looseObject({
   discord_bots: z.record(z.string(), z.unknown()),
 });
 
-async function discord() {
-  return synthesizedStack("discord", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const discord = () => readStack("discord", ConfigurationSchema);
 
 const ALIASES = [
   "birmel",
@@ -52,8 +51,8 @@ describe("discord", () => {
     );
   });
 
-  test("keeps one aliased provider per bot, authenticated by that bot's token", async () => {
-    const { provider, terraform } = await discord();
+  test("keeps one aliased provider per bot, authenticated by that bot's token", () => {
+    const { provider, terraform } = discord();
     expect(Object.keys(provider)).toEqual(["discord"]);
     expect(provider["discord"]).toEqual([
       { alias: "birmel", bot_token: "${var.discord_bot_tokens.birmel}" },
@@ -86,8 +85,8 @@ describe("discord", () => {
     expect(terraform.required_version).toBe(">= 1.11.0");
   });
 
-  test("every data source and resource keeps its address and its own provider alias", async () => {
-    const { data, resource } = await discord();
+  test("every data source and resource keeps its address and its own provider alias", () => {
+    const { data, resource } = discord();
     expect(Object.keys(data)).toEqual(["discord_current_application"]);
     expect(Object.keys(resource)).toEqual(["discord_application_settings"]);
     expect(
@@ -125,8 +124,8 @@ describe("discord", () => {
     }
   });
 
-  test("keeps the six self imports, the output and no moved or removed block", async () => {
-    const configuration = await discord();
+  test("keeps the six self imports, the output and no moved or removed block", () => {
+    const configuration = discord();
     expect(configuration.import).toEqual(
       ALIASES.map((alias) => ({
         id: "self",
@@ -148,8 +147,8 @@ describe("discord", () => {
     expect(configuration.removed).toBeUndefined();
   });
 
-  test("keeps the variables, the local and the encryption its state was written with", async () => {
-    const { variable, locals, terraform } = await discord();
+  test("keeps the variables, the local and the encryption its state was written with", () => {
+    const { variable, locals, terraform } = discord();
     expect(Object.keys(variable).toSorted()).toEqual([
       "discord_bot_tokens",
       "discord_bots",

@@ -201,14 +201,16 @@ describe("disposable data directory guard & WAL panic detection", () => {
     );
   });
 
-  test("configures fsync and full_page_writes according to cluster durability", () => {
+  test("configures fsync, full_page_writes, and UTC timezone according to cluster durability", () => {
     const disposable = pgCtlOptionsForDurability(55_606, "disposable");
     expect(disposable).toContain("fsync=off");
     expect(disposable).toContain("full_page_writes=off");
+    expect(disposable).toContain("-c timezone=UTC");
 
     const durable = pgCtlOptionsForDurability(5471, "durable");
     expect(durable).toContain("fsync=on");
     expect(durable).toContain("full_page_writes=on");
     expect(durable).toContain("synchronous_commit=on");
+    expect(durable).toContain("-c timezone=UTC");
   });
 });

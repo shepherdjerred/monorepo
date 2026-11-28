@@ -28,17 +28,25 @@ const PAGES = [
 ];
 
 for (const scheme of ["light", "dark"] as const) {
-  test(`pages meet WCAG 2.2 AA in ${scheme} mode`, async ({ page }) => {
+  for (const path of PAGES) {
+    test(`${path} meets WCAG 2.2 AA in ${scheme} mode`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await expectAccessible(page, path);
+    });
+  }
+
+  test(`deployment awaiting approval meets WCAG 2.2 AA in ${scheme} mode`, async ({
+    page,
+  }) => {
     await page.emulateMedia({ colorScheme: scheme });
-    const approvals = await api(
+    const [deployment] = await api(
       page,
       "/api/v1/approvals",
       z.array(DeploymentSchema),
     );
-    const extra = approvals
-      .slice(0, 1)
-      .map((deployment) => `/deployments/${deployment.id}`);
-    for (const path of [...PAGES, ...extra]) await expectAccessible(page, path);
+    if (deployment === undefined)
+      throw new Error("Awaiting-approval deployment fixture required");
+    await expectAccessible(page, `/deployments/${deployment.id}`);
   });
 }
 

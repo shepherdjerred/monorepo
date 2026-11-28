@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   ResourcesSchema,
   VersionedTerraformSchema,
-  synthesizedStack,
+  useSynthesizedApp,
 } from "#src/testing.ts";
 
 const ConfigurationSchema = z.looseObject({
@@ -17,9 +17,8 @@ const ConfigurationSchema = z.looseObject({
   output: z.record(z.string(), z.unknown()),
 });
 
-async function openai() {
-  return synthesizedStack("openai", ConfigurationSchema);
-}
+const readStack = useSynthesizedApp();
+const openai = () => readStack("openai", ConfigurationSchema);
 
 /** Each `for_each` instance the stack forgets, and the address it is forgotten at. */
 const RETIRED = [
@@ -60,8 +59,8 @@ const RETIRED = [
 ] as const;
 
 describe("openai", () => {
-  test("keeps the addresses and instance keys of its state", async () => {
-    const { resource, variable, output } = await openai();
+  test("keeps the addresses and instance keys of its state", () => {
+    const { resource, variable, output } = openai();
     // Every resource iterates the variable of its HCL `for_each`, so instance
     // keys stay the desired-state keys.
     expect(
@@ -137,8 +136,8 @@ describe("openai", () => {
     });
   });
 
-  test("protects imported users and groups, and orders spend limits after alerts", async () => {
-    const { resource } = await openai();
+  test("protects imported users and groups, and orders spend limits after alerts", () => {
+    const { resource } = openai();
     expect(resource["openai_organization_user"]?.["managed"]).toMatchObject({
       lifecycle: { prevent_destroy: true },
     });
@@ -150,8 +149,8 @@ describe("openai", () => {
     ).toEqual(["openai_project_spend_alert.managed"]);
   });
 
-  test("declares both providers under their local names and selects the companion only for service accounts", async () => {
-    const { terraform, provider, resource } = await openai();
+  test("declares both providers under their local names and selects the companion only for service accounts", () => {
+    const { terraform, provider, resource } = openai();
     expect(terraform.required_version).toBe(">= 1.9.0");
     expect(terraform.required_providers).toEqual({
       openai: { source: "openai/openai", version: "~> 1.1" },
@@ -167,8 +166,8 @@ describe("openai", () => {
     ).toEqual([["openai_project_service_account", "openaikeys"]]);
   });
 
-  test("imports projects with an id and every declared group, certificate and user", async () => {
-    const { import: imports } = await openai();
+  test("imports projects with an id and every declared group, certificate and user", () => {
+    const { import: imports } = openai();
     expect(imports).toEqual([
       {
         for_each:
@@ -194,8 +193,8 @@ describe("openai", () => {
     ]);
   });
 
-  test("keeps the Woodpecker renames and forgets the archived projects instead of destroying them", async () => {
-    const { moved, removed } = await openai();
+  test("keeps the Woodpecker renames and forgets the archived projects instead of destroying them", () => {
+    const { moved, removed } = openai();
     expect(moved).toEqual([
       {
         from: 'openai_project.managed["buildkite"]',
@@ -220,8 +219,8 @@ describe("openai", () => {
     );
   });
 
-  test("encrypts state and plans with the key provider its state records", async () => {
-    const { terraform } = await openai();
+  test("encrypts state and plans with the key provider its state records", () => {
+    const { terraform } = openai();
     expect(terraform.encryption).toMatchObject({
       key_provider: { pbkdf2: { state: {} } },
       state: { method: "method.aes_gcm.encrypted", enforced: true },

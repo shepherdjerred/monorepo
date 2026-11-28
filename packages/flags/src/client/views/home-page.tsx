@@ -24,6 +24,7 @@ import {
   type DeploymentDrift,
 } from "./drift-model.ts";
 import { DriftChip } from "./drift-chip.tsx";
+import { FetchLiveness } from "./usage-panel.tsx";
 import { useDrift } from "./views-api.ts";
 
 type Summary = {
@@ -73,6 +74,10 @@ function CatalogCard({
                   {deployment.flagCount} flags · r{deployment.revision}
                 </span>
                 <DriftChip entry={drift?.get(deployment.id)} />
+                <FetchLiveness
+                  deployment={deployment.id}
+                  className="fl-card-live"
+                />
               </li>
             );
           })}

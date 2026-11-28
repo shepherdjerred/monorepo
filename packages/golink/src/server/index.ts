@@ -14,7 +14,7 @@ import {
   initializeTelemetry,
   shutdownTelemetry,
 } from "#infrastructure/telemetry.ts";
-import { createGolinkApp } from "./app.ts";
+import { createGolinkServer } from "./app.ts";
 
 const config = BootstrapSchema.parse(Bun.env);
 const flagsDisabled = config.FEATURE_FLAGS_MODE === "disabled";
@@ -55,43 +55,23 @@ const [platformSites, discovery] = await Promise.all([
   startK8sTailscaleDiscovery(),
 ]);
 
-const metrics = createGolinkMetrics();
-const app = createGolinkApp({
+const server = createGolinkServer({
   repo,
   getIngressHosts: () => discovery.getHosts(),
   platformSites,
   tailnetDomain: config.TAILNET_DOMAIN,
   dynamicAliasesEnabled: () => behavior.value("dynamicAliasesEnabled"),
   writesEnabled: () => behavior.value("writesEnabled"),
-  metrics,
-});
-
-const server = Bun.serve({
+  metrics: createGolinkMetrics(),
   hostname: config.HOST,
   port: config.PORT,
-  fetch: app.fetch,
+  onShutdown: async () => {
+    discovery.stop();
+    await repo.close();
+    await shutdownFeatureFlags();
+    await shutdownTelemetry();
+  },
 });
 
-console.warn(
-  JSON.stringify({
-    message: "golink_started",
-    host: config.HOST,
-    port: server.port,
-  }),
-);
-
-async function shutdown(): Promise<void> {
-  discovery.stop();
-  await server.stop();
-  await repo.close();
-  await shutdownFeatureFlags();
-  await shutdownTelemetry();
-}
-
-process.once("SIGINT", () => {
-  void shutdown();
-});
-
-process.once("SIGTERM", () => {
-  void shutdown();
-});
+// Listens, and drains then closes everything above on SIGTERM or SIGINT.
+server.start();

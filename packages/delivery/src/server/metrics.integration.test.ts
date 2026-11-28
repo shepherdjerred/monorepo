@@ -152,6 +152,17 @@ test("the platform lock gauge names its holder's status, so a stranded lock is v
     "delivery_platform_lock_held_seconds{",
   );
   await context.delivery.claim(deployment.id, testExecutor);
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: `delivery-${"1".repeat(40)}`,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
   expect(await deliveryMetrics(database)).toMatch(
     /delivery_platform_lock_held_seconds\{environment="tofu-cloudflare\/prod",service_id="tofu-cloudflare",holder_status="running",recovery_required="false",producer_barrier="false"\} [\d.]+\n/u,
   );
@@ -202,6 +213,17 @@ test("timestamp gauges anchor naive UTC columns in non-UTC sessions and clamp fu
 
   const { deployment: stack } = await requestStackDeployment(context);
   await context.delivery.claim(stack.id, testExecutor);
+  await context.delivery.stage(
+    stack.id,
+    {
+      key: "step-apply",
+      status: "running",
+      operationId: `delivery-${"2".repeat(40)}`,
+      message: "step-apply: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
   await database.targetLock.updateMany({
     where: { deploymentId: stack.id },
     data: { acquiredAt: twoMinutesAgo },

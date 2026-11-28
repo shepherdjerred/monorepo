@@ -383,19 +383,26 @@ describe("credential preparation", () => {
       await rm(fixture, { recursive: true, force: true });
     }
   });
-  test("failed private subprocess output stays out of errors", async () => {
-    await expect(
-      capturedRead(
-        [
-          "bun",
-          "-e",
-          'console.log("fixture-private-stdout"); console.error("fixture-private-stderr"); process.exit(1);',
-        ],
-        "synthetic failure",
-      ),
-    ).rejects.toThrow(
-      "Read failed (synthetic failure); command output withheld.",
+  test("failed private subprocess output stays out of errors while recording exit status", async () => {
+    const promise = capturedRead(
+      [
+        "bun",
+        "-e",
+        'console.log("fixture-private-stdout"); console.error("fixture-private-stderr"); process.exit(1);',
+      ],
+      "synthetic failure",
     );
+    await expect(promise).rejects.toThrow(
+      "Read failed (synthetic failure, exit 1); command output withheld.",
+    );
+    await promise.catch((error: unknown) => {
+      const rendered = String(error);
+      expect(rendered).not.toContain("fixture-private-stdout");
+      expect(rendered).not.toContain("fixture-private-stderr");
+    });
+    await expect(
+      capturedRead(["/nonexistent-binary-fixture"], "missing binary"),
+    ).rejects.toThrow("Read failed (missing binary); command output withheld.");
   });
   test("the new stack wrapper rejects live apply before requesting credentials", async () => {
     const child = Bun.spawn(

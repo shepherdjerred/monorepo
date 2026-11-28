@@ -21,6 +21,7 @@ import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "../../../packages/ops-model/src/catalog.ts";
+import { createRetryingDeliveryFetch } from "../../../scripts/lib/delivery/retry-fetch.ts";
 import { imageRuntimeDigests } from "../../../scripts/lib/ci/image-runtime-digests.ts";
 import { requireEnv } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
@@ -147,6 +148,7 @@ async function main(): Promise<void> {
   const client = createDeliveryClient({
     baseUrl: requireEnv("DELIVERY_URL"),
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+    fetch: createRetryingDeliveryFetch(),
   });
   await registerCiImageBuild({
     candidatePath,

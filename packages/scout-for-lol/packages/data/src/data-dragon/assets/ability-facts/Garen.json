@@ -87,7 +87,15 @@
         ]
       },
       "resolvedDescription": "Garen removes all Slowing effects on him and gains 35% Move Speed for 1.4/1.95/2.5/3.05/3.6 second(s). His next Attack Silences for 1.5 seconds and does 30/60/90/120/150 (+150% AD) physical damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Courage",
@@ -204,7 +212,15 @@
       "unresolved": [
         "resistsfortooltip",
         "resistsfortooltip"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 20,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Judgment",
@@ -306,7 +322,15 @@
       "resolvedDescription": "Garen rapidly spins his sword for 3 seconds, dealing 4/7/10/13/16 (+40/43/46/49/52% AD) physical damage {{ f1 }} times over the duration. The nearest enemy takes 25% increased damage. Champions hit by 6 strikes lose 25% Armor for 6 seconds. Recast: Garen ends this Ability early.",
       "unresolved": [
         "f1"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 35,
+        "lineWidth": 160,
+        "missileSpeed": 700,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Demacian Justice",
@@ -345,7 +369,15 @@
         ]
       },
       "resolvedDescription": "Garen calls upon the might of Demacia to slay his enemy, dealing 125/200/275 plus 25/30/35% missing Health true damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": null,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 900,
+        "missiles": []
+      }
     }
   }
 }

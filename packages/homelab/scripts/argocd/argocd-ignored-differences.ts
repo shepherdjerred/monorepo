@@ -20,6 +20,12 @@ const IgnoreDifferenceSchema = z
 
 const ApplicationIgnoreRulesSchema = z
   .object({
+    metadata: z
+      .object({
+        annotations: z.record(z.string(), z.string()).optional(),
+      })
+      .loose()
+      .optional(),
     spec: z
       .object({
         ignoreDifferences: z.array(IgnoreDifferenceSchema).optional(),
@@ -34,6 +40,27 @@ const ApplicationIgnoreRulesSchema = z
   .loose();
 
 const RESPECT_IGNORE_DIFFERENCES = "RespectIgnoreDifferences=true";
+const SERVER_SIDE_APPLY = "ServerSideApply=true";
+const SERVER_SIDE_DIFF_FALSE = "ServerSideDiff=false";
+const SERVER_SIDE_DIFF_TRUE = "ServerSideDiff=true";
+const COMPARE_OPTIONS_ANNOTATION = "argocd.argoproj.io/compare-options";
+
+function usesServerSideDiff(
+  syncOptions: readonly string[],
+  annotations: Readonly<Record<string, string>> | undefined,
+): boolean {
+  const compareOptions = new Set(
+    (annotations?.[COMPARE_OPTIONS_ANNOTATION] ?? "")
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0),
+  );
+  return (
+    compareOptions.has(SERVER_SIDE_DIFF_TRUE) ||
+    (!compareOptions.has(SERVER_SIDE_DIFF_FALSE) &&
+      syncOptions.includes(SERVER_SIDE_APPLY))
+  );
+}
 
 /**
  * RFC 6901: `~1` is a literal `/` and `~0` a literal `~`, and the pointer's
@@ -155,9 +182,11 @@ export function withIgnoredDifferencesApplied(
 ): readonly ManagedResource[] {
   const parsed = ApplicationIgnoreRulesSchema.parse(application);
   const spec = parsed.spec;
+  const syncOptions = spec?.syncPolicy?.syncOptions ?? [];
   if (
     spec?.ignoreDifferences === undefined ||
-    !(spec.syncPolicy?.syncOptions ?? []).includes(RESPECT_IGNORE_DIFFERENCES)
+    !syncOptions.includes(RESPECT_IGNORE_DIFFERENCES) ||
+    usesServerSideDiff(syncOptions, parsed.metadata?.annotations)
   ) {
     return resources;
   }

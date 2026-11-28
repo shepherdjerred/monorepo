@@ -9,7 +9,7 @@ import {
   Secret,
   Service,
 } from "cdk8s-plus-31";
-import { tailnetService } from "homelab/src/platform-model.ts";
+import { publicHostname, tailnetService } from "homelab/src/platform-model.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
@@ -33,7 +33,6 @@ import {
   nsPeer,
   otlpEgress,
   prometheusIngressRule,
-  tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
@@ -81,9 +80,6 @@ function buildErrorsServerContainer(
     MAIL_API_URL: EnvValue.fromValue(MAIL_API_ENDPOINT.url),
     MAIL_FROM: EnvValue.fromValue("Errors <errors@sjer.red>"),
     MAIL_TO: EnvValue.fromValue("alerts@sjer.red"),
-    BUGSINK_IMPORT_URL: EnvValue.fromValue(
-      "http://bugsink-bugsink-service.bugsink.svc.cluster.local:8000",
-    ),
     ERRORS_MACHINE_TOKEN: EnvValue.fromSecretValue({
       secret: authSecret,
       key: "ERRORS_MACHINE_TOKEN",
@@ -91,10 +87,6 @@ function buildErrorsServerContainer(
     MAIL_API_TOKEN: EnvValue.fromSecretValue({
       secret: authSecret,
       key: "MAIL_API_TOKEN",
-    }),
-    BUGSINK_IMPORT_TOKEN: EnvValue.fromSecretValue({
-      secret: authSecret,
-      key: "BUGSINK_IMPORT_TOKEN",
     }),
     OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     ENVIRONMENT: EnvValue.fromValue("production"),
@@ -171,7 +163,13 @@ export function createErrorsDeployment(
           prometheusIngressRule([ERRORS_ADMIN_ENDPOINT.port]),
           blackboxProbeIngressRule(ERRORS_ADMIN_ENDPOINT.port),
           {
-            from: [nsPeer("tailscale")],
+            from: [
+              nsPeer("tailscale"),
+              {
+                ...nsPeer("temporal"),
+                podSelector: { matchLabels: { component: "infra-worker" } },
+              },
+            ],
             ports: [ERRORS_ADMIN_ENDPOINT.tcp()],
           },
           cloudflareTunnelIngressRule([ERRORS_INGEST_ENDPOINT.port]),
@@ -192,10 +190,6 @@ export function createErrorsDeployment(
           {
             to: [TRACKER_ENDPOINT.peer()],
             ports: [TRACKER_ENDPOINT.tcp()],
-          },
-          {
-            to: [nsPeer("bugsink")],
-            ports: [tcp(8000)],
           },
           otlpEgress(),
         ],
@@ -226,10 +220,19 @@ export function createErrorsDeployment(
   });
 
   createCloudflareTunnelBinding(chart, "errors-cf-tunnel", {
+    hostname: publicHostname("logging.sjer.red"),
     serviceName: ingestService.name,
     port: ERRORS_INGEST_ENDPOINT.port,
     probePath: "/healthz",
     publicProbePath: "/healthz",
+  });
+  // Legacy compatibility route for deployed native/browser DSNs targeting
+  // bugsink.sjer.red; primary probe on logging.sjer.red covers errors-ingest.
+  createCloudflareTunnelBinding(chart, "errors-bugsink-cf-tunnel", {
+    hostname: publicHostname("bugsink.sjer.red"),
+    serviceName: ingestService.name,
+    port: ERRORS_INGEST_ENDPOINT.port,
+    disableProbe: true,
   });
 
   return webService;

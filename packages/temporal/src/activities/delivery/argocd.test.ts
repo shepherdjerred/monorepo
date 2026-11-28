@@ -11,12 +11,15 @@ import { ApplicationFailure } from "@temporalio/common";
 
 const pruneMocks = vi.hoisted(() => {
   const serviceProbesReleases: unknown[] = [];
+  const clusterObservabilityReleases: unknown[] = [];
   return {
     forumPrune: false,
     arcadePrune: false,
     hubPrune: false,
     serviceProbesPrune: false,
     serviceProbesReleases,
+    clusterObservabilityPrune: false,
+    clusterObservabilityReleases,
   };
 });
 
@@ -38,6 +41,12 @@ vi.mock("#lib/delivery/service-probes/prune.ts", () => ({
   serviceProbesSyncPrunes: (release: unknown) => {
     pruneMocks.serviceProbesReleases.push(release);
     return Promise.resolve(pruneMocks.serviceProbesPrune);
+  },
+}));
+vi.mock("#lib/delivery/cluster-observability/prune.ts", () => ({
+  clusterObservabilitySyncPrunes: (release: unknown) => {
+    pruneMocks.clusterObservabilityReleases.push(release);
+    return Promise.resolve(pruneMocks.clusterObservabilityPrune);
   },
 }));
 
@@ -656,9 +665,58 @@ describe("syncArgoRelease service-probes pruning", () => {
     pruneMocks.hubPrune = false;
     pruneMocks.serviceProbesPrune = false;
     pruneMocks.serviceProbesReleases = [];
+    pruneMocks.clusterObservabilityPrune = false;
+    pruneMocks.clusterObservabilityReleases = [];
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
+
+  it.each([true, false])(
+    "passes --prune=%s to sync-managed when clusterObservabilitySyncPrunes decides",
+    async (clusterObservabilityPrune) => {
+      pruneMocks.clusterObservabilityPrune = clusterObservabilityPrune;
+      const clusterObsSelection = {
+        application: "cluster-observability",
+        environmentId: "cluster-observability/prod",
+        repository: "https://chartmuseum.sjer.red",
+        chart: "cluster-observability",
+        namespace: "argocd",
+        revision: "1.0.0-12",
+        parameters: {},
+      };
+      const spawnedArgs: string[][] = [];
+      const realSpawn = Bun.spawn;
+      vi.spyOn(Bun, "spawn").mockImplementation((cmd) => {
+        if (Array.isArray(cmd)) spawnedArgs.push(cmd.map(String));
+        return realSpawn(["sh", "-c", "exit 0"], {
+          stdin: "ignore",
+          stdout: "ignore",
+          stderr: "pipe",
+        });
+      });
+      await syncArgoRelease(clusterObsSelection, operationId);
+      expect(pruneMocks.clusterObservabilityReleases).toEqual([
+        expect.objectContaining({
+          application: "cluster-observability",
+          chart: "cluster-observability",
+          namespace: "argocd",
+          environmentId: "cluster-observability/prod",
+          revision: "1.0.0-12",
+        }),
+      ]);
+      expect(spawnedArgs[0]?.slice(2)).toEqual([
+        "sync-managed",
+        "cluster-observability",
+        "--revision",
+        "1.0.0-12",
+        "--request-id",
+        operationId,
+        ...(clusterObservabilityPrune ? ["--prune"] : []),
+        "--timeout",
+        "1200",
+      ]);
+    },
+  );
 
   it.each([true, false])(
     "passes --prune=%s to sync-managed when serviceProbesSyncPrunes decides",

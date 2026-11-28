@@ -14,8 +14,8 @@ clusters; they have no public database ingress.
 
 | Cluster                 | Namespace    | User         | Databases                         |
 | ----------------------- | ------------ | ------------ | --------------------------------- |
-| `bugsink-postgresql`    | `bugsink`    | `bugsink`    | `bugsink_db`                      |
 | `delivery-postgresql`   | `delivery`   | `delivery`   | `delivery_db`                     |
+| `errors-postgresql`     | `errors`     | `errors`     | `errors_db`                       |
 | `grafana-postgresql`    | `prometheus` | `grafana`    | `grafana`                         |
 | `scout-beta-postgresql` | `scout-beta` | `scout`      | `scout`                           |
 | `scout-prod-postgresql` | `scout-prod` | `scout`      | `scout`                           |

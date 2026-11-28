@@ -9,7 +9,7 @@ import { AnthropicProvider } from "#generated/providers/anthropic/provider/index
 import { ApiKey } from "#generated/providers/anthropic/api-key/index.ts";
 import { Workspace } from "#generated/providers/anthropic/workspace/index.ts";
 import { WorkspaceMember } from "#generated/providers/anthropic/workspace-member/index.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
 import { retire } from "#src/state-migrations.ts";
 
@@ -23,7 +23,11 @@ export class AnthropicStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "anthropic", {
       requiredVersion: ">= 1.9.0",
-      providerConstraints: { anthropic: "1.96.0" },
+      providerConstraints: {
+        anthropic: pinnedProviderVersion(
+          "registry.terraform.io/ippontech/anthropic",
+        ),
+      },
     });
     encryptStateAndPlans(this, {
       description:

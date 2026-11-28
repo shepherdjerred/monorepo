@@ -14,15 +14,16 @@ command below.
 
 ## 1. Find what is held
 
-Pull `toolkit forum list --json` (`--all` includes expired notices: expiry never
-restores state) before changing recovery or dispatch state. Coordinate with an
-existing owner via replies or `watch --until-resolved`; when picking up an
-unowned blocker (mandatory if you caused it, allowed if it blocks you with no
-better active owner), `claim` or post a `notice` (`--owner me`, scope, reason,
-exit condition) first, update at milestones, and resolve with evidence.
+Run `toolkit incident check --system delivery --json` before changing recovery
+or dispatch state and follow `incident-response`: change state only as the
+`delivery` incident's commander (`take` is mandatory when you caused it), link
+deployments and PRs, and resolve with Delivery evidence. Delivery alerts open
+the incident automatically. Check `toolkit forum list --all --json` for older
+interventions; expiry never restores state.
 
 ```bash
-toolkit deploy status --json | jq -r '.deployments[] | select(.status=="queued" or .status=="running" or .recoveryRequired) | [.id,.environmentId,.status,.recoveryRequired] | @tsv'
+toolkit deploy list --status running --json
+toolkit deploy approvals --json
 toolkit deploy recovery --pending --json
 ```
 
@@ -47,10 +48,9 @@ toolkit deploy recovery --pending --json
 2. Read the Workflow:
    `toolkit temporal workflow show -w delivery/<DEPLOYMENT_ID> -o json`, then
    the failed Activity's message and stack.
-3. A refused apply-safety preflight can be reproduced read-only with the
-   workstation ArgoCD token and
-   `bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`.
-
+3. Reproduce a refused apply-safety preflight read-only with the workstation
+   ArgoCD token (`bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <APP> --revision <CHART_VERSION>`);
+   for "still co-owns", see `how-to/clear-a-stale-field-manager.md`.
 4. A worker sync that failed with `exceeded its progress deadline` is usually
    capacity: look for a Pending `*-wf-retained-*` pod in the Application's
    namespace and `Insufficient cpu` on torvalds. The worker reader then
@@ -63,12 +63,10 @@ toolkit deploy recovery --pending --json
 Fix a defective check or chart in source first (a false positive must not be
 worked around), then settle the deployment.
 
-When a platform recovery inspection keeps failing for a reason already fixed
-on main, the running worker still builds its Jobs from the old source
-(AI-598). Pause `delivery-dispatch`, then run the operator script in
-`packages/temporal/README.md` (`platform-delivery-recovery.ts --action
-inspect`) from a checkout that has the fix. On macOS its Kubernetes client
-may reject the cluster certificate chain (AI-320).
+When a platform recovery inspection keeps failing for a reason already fixed on
+main, the running worker still builds Jobs from old source (AI-598). Pause
+`delivery-dispatch`, then run `platform-delivery-recovery.ts --action inspect`
+(`packages/temporal/README.md`) from a fixed checkout (macOS may hit AI-320).
 
 ## 3. Settle it with its own reader
 
@@ -121,11 +119,11 @@ the ArgoCD API, return to read-only, and audit `environment.break_glass`.
 ## 6. Operator-run releases
 
 `delivery-data`, `temporal-data` and `cluster-admission` are `operator-run`:
-after `toolkit deploy start`, an operator attests every stage the recipe
-lists, in order. Follow
-`packages/docs/wiki/src/content/docs/how-to/release-cluster-admission.md`
-exactly; for the data layers, substitute the Application name and skip its
-`admission-canary` stage, which only `cluster-admission` declares.
+after `toolkit deploy start`, `delivery-dispatch` claims the target once any
+self-hosted barrier clears (`toolkit deploy attest` waits up to `--timeout`
+while `queued`), and an operator attests each stage in `pendingAttestationStages`
+in order. Follow `packages/docs/wiki/src/content/docs/how-to/release-cluster-admission.md`;
+for the data layers, substitute the Application name and skip `admission-canary`.
 
 The checked sequence, with the `operator-run` ArgoCD account (1Password item
 `delivery-argocd-operator-run-token`, read through

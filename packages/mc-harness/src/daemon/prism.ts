@@ -3,6 +3,7 @@ import {
   access,
   copyFile,
   cp,
+  lstat,
   mkdir,
   open,
   readFile,
@@ -33,6 +34,14 @@ export function prismControlInstanceName(
     .replaceAll(/-+$/gu, "");
   const cleanId = shortId.replaceAll(/[^a-z0-9]+/giu, "").slice(0, 12);
   return `storm-control-${slug.length > 0 ? slug : "client"}-${cleanId.length > 0 ? cleanId : "session"}`;
+}
+
+export function prismControlLaunchArgs(
+  launcher: string,
+  instanceName: string,
+  profileName: string,
+): string[] {
+  return [launcher, "--launch", instanceName, "--profile", profileName];
 }
 
 async function exists(file: string): Promise<boolean> {
@@ -209,6 +218,123 @@ export async function waitForPrismDiscovery(
   );
 }
 
+const MEMORY_PROMPT_MESSAGE =
+  "Prism Launcher is paused at its macOS memory-pressure confirmation dialog (EnsureAvailableMemory); confirm or dismiss the Prism Launcher prompt or free system memory and retry";
+const MEMORY_ABORT_MESSAGE =
+  "Prism Launcher aborted at its macOS memory-pressure check (EnsureAvailableMemory); confirm the Prism Launcher prompt or free system memory and retry";
+
+function isMemoryCheckCompleteLine(line: string): boolean {
+  return (
+    (line.includes("EnsureAvailableMemory") && line.includes("succeeded")) ||
+    line.includes("LaunchMinecraft") ||
+    line.includes("Minecraft process ID") ||
+    line.includes("Launching instance")
+  );
+}
+
+function isMemoryCheckFailedLine(line: string): boolean {
+  return (
+    line.includes("EnsureAvailableMemory") &&
+    (line.includes("failed") || line.includes("aborted"))
+  );
+}
+
+async function isSocketFile(socketPath: string): Promise<boolean> {
+  try {
+    const info = await lstat(socketPath);
+    return info.isSocket();
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT")
+      return false;
+    throw error;
+  }
+}
+
+/**
+ * Watches `PrismLauncher-0.log` from `offset` so a stalled macOS
+ * `EnsureAvailableMemory` modal dialog fails fast with an actionable prompt
+ * instead of waiting out the 300 s client launch timeout.
+ */
+export function createPrismMemoryMonitor(options: {
+  logPath: string;
+  offset: number;
+  graceMs?: number;
+  now?: () => number;
+}): { poll: () => Promise<void> } {
+  let offset = options.offset;
+  let pending = "";
+  let promptStartedAt: number | undefined;
+  const graceMs = options.graceMs ?? 3000;
+  const now = options.now ?? (() => performance.now());
+
+  const inspectLine = (line: string): void => {
+    if (isMemoryCheckFailedLine(line)) {
+      throw new Error(MEMORY_ABORT_MESSAGE);
+    }
+    if (isMemoryCheckCompleteLine(line)) {
+      promptStartedAt = undefined;
+      return;
+    }
+    if (line.includes("EnsureAvailableMemory")) {
+      promptStartedAt ??= now();
+    }
+  };
+
+  return {
+    poll: async (): Promise<void> => {
+      try {
+        const tail = await readLogTail(options.logPath, offset);
+        offset = tail.offset;
+        pending += tail.text;
+        const lines = pending.split("\n");
+        pending = lines.pop() ?? "";
+        for (const line of lines) {
+          inspectLine(line);
+        }
+      } catch (error) {
+        if (!(
+          error instanceof Error &&
+          "code" in error &&
+          error.code === "ENOENT"
+        )) {
+          throw error;
+        }
+      }
+      if (promptStartedAt !== undefined && now() - promptStartedAt >= graceMs) {
+        throw new Error(MEMORY_PROMPT_MESSAGE);
+      }
+    },
+  };
+}
+
+export async function watchPrismMemoryPrompt(options: {
+  logPath: string;
+  offset: number;
+  socketPath: string;
+  signal: AbortSignal;
+  graceMs?: number;
+  pollMs?: number;
+}): Promise<never> {
+  const monitor = createPrismMemoryMonitor(
+    options.graceMs === undefined
+      ? { logPath: options.logPath, offset: options.offset }
+      : {
+          logPath: options.logPath,
+          offset: options.offset,
+          graceMs: options.graceMs,
+        },
+  );
+  const pollMs = options.pollMs ?? 100;
+  while (!options.signal.aborted) {
+    if (await isSocketFile(options.socketPath)) {
+      break;
+    }
+    await monitor.poll();
+    await Bun.sleep(pollMs);
+  }
+  return Promise.withResolvers<never>().promise;
+}
+
 async function launcherFailure(child: Bun.Subprocess): Promise<never> {
   if ((await child.exited) !== 0)
     throw new Error("Prism Launcher could not start the controlled instance");
@@ -279,10 +405,12 @@ export async function stageAndLaunchPrism(options: {
       stderr: "ignore",
     },
   );
+  const watchAbort = new AbortController();
   let cleanedUp = false;
   const cleanup = async (retainDiagnostics = false): Promise<void> => {
     if (cleanedUp) return;
     cleanedUp = true;
+    watchAbort.abort();
     try {
       awake.kill();
     } catch {
@@ -301,6 +429,9 @@ export async function stageAndLaunchPrism(options: {
     await rm(instanceDir, { recursive: true, force: true });
   };
   try {
+    const socketPath = z
+      .object({ socket: z.string() })
+      .parse(JSON.parse(await readFile(options.bootstrap, "utf8"))).socket;
     const created = await preparePrismInstance({
       root: prismRoot,
       stagedMods,
@@ -312,13 +443,28 @@ export async function stageAndLaunchPrism(options: {
     }
     const launcher = Bun.which("prismlauncher");
     if (launcher === null) throw new Error("Prism Launcher is not installed");
-    const child = Bun.spawn([launcher, "--launch", instanceName], {
-      env,
-      stdout: "ignore",
-      stderr: "ignore",
-    });
+    const launchLogInfo = (await exists(prismLog))
+      ? await stat(prismLog)
+      : undefined;
+    const launchOffset = launchLogInfo?.size ?? 0;
+    const child = Bun.spawn(
+      prismControlLaunchArgs(launcher, instanceName, options.name),
+      {
+        env,
+        stdout: "ignore",
+        stderr: "ignore",
+      },
+    );
     return {
-      failure: launcherFailure(child),
+      failure: Promise.race([
+        launcherFailure(child),
+        watchPrismMemoryPrompt({
+          logPath: prismLog,
+          offset: launchOffset,
+          socketPath,
+          signal: watchAbort.signal,
+        }),
+      ]),
       pid: child.pid,
       instanceName,
       cleanup: () => cleanup(true),

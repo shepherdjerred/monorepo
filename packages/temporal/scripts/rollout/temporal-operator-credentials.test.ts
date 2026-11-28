@@ -8,6 +8,7 @@ import {
   temporalApiKeyNeedsResolution,
   type OperatorFetch,
 } from "./temporal-operator-credentials.ts";
+import { formatPlatformRecoveryFailure } from "./platform-delivery-recovery.ts";
 
 const EXTERNAL = "temporal.example.test:443";
 const MANAGED_KEYS = [
@@ -246,5 +247,29 @@ describe("configureOperatorKubeConfig", () => {
       .parse(capturedInit).tls;
     expect(tls.cert).toBe(certPem);
     expect(tls.key).toBe(keyPem);
+  });
+});
+
+describe("formatPlatformRecoveryFailure", () => {
+  test("surfaces nested error causes while scrubbing secret environment tokens (AI-598)", () => {
+    const fixtureBearer = "a".repeat(32);
+    const fixtureGrpcCredential = "b".repeat(32);
+    const failure = new Error(`Request failed with Bearer ${fixtureBearer}`, {
+      cause: new Error(
+        `gRPC dial rejected value ${fixtureGrpcCredential}: ECONNREFUSED`,
+      ),
+    });
+    const formatted = formatPlatformRecoveryFailure(failure, {
+      DELIVERY_EXECUTOR_TOKEN: fixtureBearer,
+      TEMPORAL_API_KEY: fixtureGrpcCredential,
+      TEMPORAL_ADDRESS: "127.0.0.1:7233",
+    });
+    expect(formatted).toContain("Independent platform recovery failed (");
+    expect(formatted).toContain("ECONNREFUSED");
+    expect(formatted).toContain(
+      "original result and quarantine remain unchanged",
+    );
+    expect(formatted).not.toContain(fixtureBearer);
+    expect(formatted).not.toContain(fixtureGrpcCredential);
   });
 });

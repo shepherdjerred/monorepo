@@ -220,7 +220,7 @@ describe("runRenovateDryRun", () => {
       });
       expect(capturedCmd).toEqual([
         "bunx",
-        "renovate",
+        expect.stringMatching(/^renovate@\d+\.\d+\.\d+$/u),
         "--platform=local",
         "--require-config=ignored",
         "--dry-run=lookup",
@@ -233,6 +233,7 @@ describe("runRenovateDryRun", () => {
       ).toEqual({
         extends: ["config:recommended"],
         env: { BUN_CONFIG_MAX_HTTP_REQUESTS: "4" },
+        allowedEnv: ["BUN_CONFIG_MAX_HTTP_REQUESTS"],
       });
       expect(await Bun.file(capturedTempConfigPath).exists()).toBe(false);
     } finally {
@@ -261,6 +262,50 @@ describe("runRenovateDryRun", () => {
       ).rejects.toThrow("simulated renovate failure");
       expect(tempPath).not.toBe("");
       expect(await Bun.file(tempPath).exists()).toBe(false);
+    } finally {
+      await rm(repoDir, { recursive: true, force: true });
+    }
+  });
+
+  test("presents sanitized tracked config only inside an isolated checkout and restores it on failure", async () => {
+    const repoDir = await mkdtemp(
+      path.join(tmpdir(), "renovate-isolated-test-"),
+    );
+    const configPath = path.join(repoDir, "renovate.json");
+    const raw = JSON.stringify(
+      {
+        extends: ["config:recommended"],
+        hostRules: [
+          {
+            matchHost: "docker.io",
+            password: "{{ secrets.DOCKERHUB_RENOVATE_TOKEN }}",
+          },
+        ],
+      },
+      null,
+      2,
+    );
+    try {
+      await Bun.write(configPath, raw);
+      await expect(
+        runRenovateDryRun(["lookup", "--isolated-checkout"], {
+          cwd: repoDir,
+          env: {},
+          runner: async (_cmd, opts) => {
+            const globalConfig = opts?.env?.["RENOVATE_CONFIG_FILE"];
+            if (globalConfig === undefined)
+              throw new Error("missing global config");
+            expect(await Bun.file(globalConfig).json()).toEqual({
+              allowedEnv: ["BUN_CONFIG_MAX_HTTP_REQUESTS"],
+            });
+            expect(await Bun.file(configPath).json()).toEqual({
+              extends: ["config:recommended"],
+            });
+            throw new Error("lookup exited");
+          },
+        }),
+      ).rejects.toThrow("lookup exited");
+      expect(await Bun.file(configPath).text()).toBe(raw);
     } finally {
       await rm(repoDir, { recursive: true, force: true });
     }

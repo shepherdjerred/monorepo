@@ -4,9 +4,11 @@ import {
 } from "@shepherdjerred/llm-observability";
 import { LlmTraceArchiveStore } from "@shepherdjerred/llm-observability/archive-index";
 import { TempoClient } from "@shepherdjerred/ops-clients/tempo.ts";
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 
 import type { AlertDashboardConfig } from "#infrastructure/config";
 import type { ServerModule } from "#server/platform/module";
+import { createIncidentsServerModule } from "../modules/incidents/server.ts";
 import { createTracesServerModule } from "../modules/traces/server.ts";
 
 function configuredArchive(config: AlertDashboardConfig): ArchiveConfig | null {
@@ -43,6 +45,14 @@ export function createServerModules(
       : new TempoClient({ baseUrl: config.TEMPO_URL });
   const archive = configuredArchive(config);
   return [
+    // Flags come from the module's default reader: Hub's process-wide flag
+    // client (`alert-dashboard/prod`), initialised before this runs.
+    createIncidentsServerModule({
+      databaseUrl: config.INCIDENTS_DATABASE_URL,
+      webhookToken: config.ALERT_DASHBOARD_WEBHOOK_TOKEN,
+      opsIngestToken: config.OPS_INGEST_TOKEN,
+      publicOrigin: APP_HOSTS.hub,
+    }),
     createTracesServerModule({
       store,
       tempo,

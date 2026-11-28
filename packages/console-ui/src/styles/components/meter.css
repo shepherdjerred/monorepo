@@ -1,0 +1,31 @@
+/* Meter: a 64px track with its figure; values past `max` fill the bar. */
+@layer ui.components {
+  .ui-meter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--ui-space-2);
+    vertical-align: middle;
+  }
+  .ui-meter-track {
+    width: 64px;
+    height: 4px;
+    overflow: hidden;
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-track);
+  }
+  .ui-meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--ui-radius-xs);
+    background: var(--ui-sev);
+  }
+  .ui-meter-text {
+    min-width: 4ch;
+    font-family: var(--ui-font-mono);
+    font-size: var(--ui-text-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    text-align: right;
+  }
+}

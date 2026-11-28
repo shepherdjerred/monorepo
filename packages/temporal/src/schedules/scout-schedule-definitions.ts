@@ -27,11 +27,15 @@ const CRAWL_PAUSE_NOTE =
 const CRAWL_FRONTIER_PRUNE_PAUSE_NOTE =
   "Paused until the Scout worker bundle exports scoutCrawlFrontierPruneWorkflow and the crawl is enabled";
 
+const RANK_REFRESH_PAUSE_NOTE =
+  "Paused until the Scout worker bundle exports scoutRankRefreshWorkflow and the rank refresh is enabled";
+
 // The crawl's pauses are retired on beta only: its worker bundle is live and
 // the crawl flag is on. Production keeps them until its crawl is enabled.
 const BETA_RETIRED_PAUSE_NOTES = [
   CRAWL_PAUSE_NOTE,
   CRAWL_FRONTIER_PRUNE_PAUSE_NOTE,
+  RANK_REFRESH_PAUSE_NOTE,
   INITIAL_PAUSE_NOTE,
   "Paused until the matching Scout Temporal feature family is enabled",
 ];
@@ -63,6 +67,8 @@ type ScoutCronSchedule = ScoutSchedule & {
   readonly expression: string;
   readonly timezone?: string;
   readonly catchupWindow?: "1 hour" | "12 hours";
+  /** Created paused in every stage, with this note, until an enablement PR clears it. */
+  readonly pauseNote?: string;
 };
 
 function scoutWorkflowTaskQueue(stage: ScoutStage) {
@@ -118,7 +124,12 @@ function cronSchedule(
     memo: `Scout ${stage} ${schedule.name}`,
     ...(stage === "beta"
       ? { retiredPauseNotes: BETA_RETIRED_PAUSE_NOTES }
-      : { initialPauseNote: INITIAL_PAUSE_NOTE }),
+      : {}),
+    ...(schedule.pauseNote === undefined
+      ? stage === "beta"
+        ? {}
+        : { initialPauseNote: INITIAL_PAUSE_NOTE }
+      : { initialPauseNote: schedule.pauseNote }),
   };
 }
 
@@ -270,6 +281,20 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       workflowType: "scoutReportLakeWorkflow",
       args: [{ stage, kind: "rebuild" }],
       expression: "0 2 * * *",
+    }),
+    cronSchedule(stage, {
+      // Refreshes the current rank of tracked players with no rank evidence in
+      // the last seven days. Riot calls run at backfill priority on the
+      // background queue, as the other backfills do. It ships paused for the
+      // same reason as the crawl: the schedule deploys with the central worker,
+      // independently of the Scout images that export the Workflow. The
+      // `scout-rank-refresh-enabled` flag is the kill switch.
+      pauseNote: RANK_REFRESH_PAUSE_NOTE,
+      name: "rank-refresh",
+      workflowType: SCOUT_WORKFLOW_NAMES.rankRefresh,
+      args: [{ stage, trigger: "schedule" }],
+      expression: "0 5 * * *",
+      catchupWindow: "12 hours",
     }),
     cronSchedule(stage, {
       name: "player-pruning",

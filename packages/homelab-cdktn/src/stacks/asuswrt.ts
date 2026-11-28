@@ -5,7 +5,7 @@ import { PortForward } from "#generated/providers/asuswrt/port-forward/index.ts"
 import { AsuswrtProvider } from "#generated/providers/asuswrt/provider/index.ts";
 import { System } from "#generated/providers/asuswrt/system/index.ts";
 import { WirelessNetwork } from "#generated/providers/asuswrt/wireless-network/index.ts";
-import { HomelabStack } from "#src/homelab-stack.ts";
+import { HomelabStack, pinnedProviderVersion } from "#src/homelab-stack.ts";
 
 /**
  * Configuration of the three home Asus devices, through the provider built
@@ -21,7 +21,11 @@ export class AsuswrtStack extends HomelabStack {
       requiredVersion: ">= 1.6.0",
       // Not published to a registry: the stack runner builds the provider
       // into a filesystem mirror at exactly this version.
-      providerConstraints: { asuswrt: "0.1.0" },
+      providerConstraints: {
+        asuswrt: pinnedProviderVersion(
+          "registry.opentofu.org/shepherdjerred/asuswrt",
+        ),
+      },
     });
 
     const username = new TerraformVariable(this, "asuswrt_username", {

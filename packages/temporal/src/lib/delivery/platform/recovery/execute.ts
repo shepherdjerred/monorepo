@@ -102,6 +102,20 @@ export async function executePlatformRecoveryAction(
     attempt,
   });
   const existing = context.intent.nativeReceipts[priorIndex]?.receipt;
+  await effects.closedWorkflow(context.deployment.deployment.id);
+  await effects.nativeJobs(
+    priorIndex < 0
+      ? context
+      : {
+          ...context,
+          intent: {
+            ...context.intent,
+            nativeReceipts: context.intent.nativeReceipts.filter(
+              (_, index) => index !== priorIndex,
+            ),
+          },
+        },
+  );
   let native: DeliveryJobReceipt | undefined;
   const result = await effects.runJob(
     request,

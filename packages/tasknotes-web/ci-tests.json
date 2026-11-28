@@ -6,5 +6,11 @@
       "runner": "vitest",
       "args": ["src"]
     }
+  ],
+  "excludedSuites": [
+    {
+      "path": "e2e",
+      "reason": "Playwright acceptance runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts)."
+    }
   ]
 }

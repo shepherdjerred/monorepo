@@ -57,24 +57,14 @@ describe("test standardization guard", () => {
       name: "workflows",
       runtime: "node",
       runtimeReason: "Temporal workers require Node runtime primitives.",
-      args: [
-        "src/workflows",
-        "--exclude",
-        "src/workflows/agent-task.test.ts",
-        "--no-file-parallelism",
-      ],
+      args: ["src/workflows", "--no-file-parallelism"],
     };
 
     expect(
       manifestStepViolations("@shepherdjerred/temporal", [temporalStep]),
     ).toEqual([]);
     expect(
-      manifestStepViolations("@scout-for-lol/temporal", [
-        {
-          ...temporalStep,
-          args: ["src/workflows", "--no-file-parallelism"],
-        },
-      ]),
+      manifestStepViolations("@scout-for-lol/temporal", [temporalStep]),
     ).toEqual([]);
     expect(
       manifestStepViolations("other-package", [temporalStep]),
@@ -85,11 +75,18 @@ describe("test standardization guard", () => {
           runner: "vitest",
           name: "workflows",
           runtime: "node",
-          args: [
-            "src/workflows",
-            "--exclude",
-            "src/workflows/agent-task.test.ts",
-          ],
+          runtimeReason: "Temporal workers require Node runtime primitives.",
+          args: ["src/workflows"],
+        },
+      ]),
+    ).toHaveLength(1);
+    expect(
+      manifestStepViolations("@shepherdjerred/temporal", [
+        {
+          runner: "vitest",
+          name: "workflows",
+          runtime: "node",
+          args: ["src/workflows", "--no-file-parallelism"],
         },
       ]),
     ).toHaveLength(1);

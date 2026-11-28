@@ -10,6 +10,10 @@ import type { OpsService } from "#application/ops-service";
 import type { ReportService } from "#application/reports/report-service";
 import { hasBearer } from "#server/bearer";
 import type { ChangeBus } from "#server/change-bus";
+import {
+  registerCiDashboardRoutes,
+  type CiDashboardOptions,
+} from "#server/ci-dashboard-routes";
 import type { Metrics } from "#server/metrics";
 import { withSpan } from "#infrastructure/observability";
 import { opsErrorResponse, registerOpsRoutes } from "#server/ops-routes";
@@ -35,6 +39,7 @@ type AppOptions = {
   digests: DigestService;
   reports: ReportService;
   opsIngestToken: string;
+  ciDashboard?: CiDashboardOptions;
   promotionStatusUrl?: string;
   onWebhookIngested?: () => void;
   /** Modules mounted under `/api/<id>` beside the built-in core routes. */
@@ -246,6 +251,9 @@ export function createApp(options: AppOptions): Hono {
   app.all("/trpc/*", handleTrpc);
 
   registerOpsRoutes(app, options);
+  if (options.ciDashboard !== undefined) {
+    registerCiDashboardRoutes(app, options.ciDashboard, options.opsIngestToken);
+  }
   registerReportRoutes(app, options);
   registerPromotionRoutes(
     app,

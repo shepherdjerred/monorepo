@@ -1,4 +1,5 @@
 import { chmod, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -21,7 +22,7 @@ import {
 import { BOOT_TIMEOUT_MS, newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
-import { SandboxStore } from "#sandbox/record.ts";
+import { SandboxStore, type SandboxRecord } from "#sandbox/record.ts";
 import { publishedStorm } from "#test/fixtures/published-storm.ts";
 
 const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
@@ -355,6 +356,157 @@ process.exit(1);
         "Docker is not available for sandboxes: docker info failed (1): Cannot connect to the Docker daemon",
       );
     } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+async function listenEchoBackend(tag: string) {
+  const sockets = new Set<net.Socket>();
+  const server = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+    socket.once("data", (chunk) => {
+      socket.end(`${tag}:${chunk.toString("utf8")}`);
+    });
+  });
+  await new Promise<void>((resolve) => {
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const address = server.address();
+  if (address === null || typeof address === "string")
+    throw new Error("missing backend port");
+  return {
+    port: address.port,
+    close: async () => {
+      for (const socket of sockets) socket.destroy();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    },
+  };
+}
+
+async function probeProxy(port: number): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const client = net.createConnection({ host: "127.0.0.1", port }, () => {
+      client.write("ping");
+    });
+    let received = "";
+    client.setEncoding("utf8");
+    client.on("data", (chunk: string) => {
+      received += chunk;
+    });
+    client.once("error", reject);
+    client.once("end", () => resolve(received));
+  });
+}
+
+describe("docker restart port reconciliation", () => {
+  it("persists reassigned ports for plain sandboxes and recreates real-map capture proxies", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mc-docker-restart-"));
+    const stateFile = path.join(root, "ps-output.txt");
+    const fakeDocker = path.join(root, "docker");
+    const backendA = await listenEchoBackend("before");
+    const backendB = await listenEchoBackend("after");
+    const store = new SandboxStore(path.join(root, "sandboxes"));
+    const provider = new DockerSandboxProvider({
+      repoRoot: root,
+      store,
+      owner: "me@host",
+    });
+    try {
+      await Bun.write(
+        fakeDocker,
+        `#!${process.execPath}\nimport { readFileSync } from "node:fs";\nif (process.argv[2] === "ps") process.stdout.write(readFileSync(${JSON.stringify(stateFile)}, "utf8"));\n`,
+      );
+      await chmod(fakeDocker, 0o755);
+      vi.stubEnv("PATH", `${root}:${Bun.env["PATH"] ?? ""}`);
+      vi.stubEnv("TOOLKIT_MC_INSTANCE", "");
+
+      const baseRecord = (
+        id: string,
+        containerId: string,
+        world: SandboxRecord["world"],
+      ): SandboxRecord => ({
+        id,
+        provider: "docker",
+        profile: "paper",
+        world,
+        ...(world === "real-map"
+          ? { mapSource: { sha256: "a".repeat(64), files: 1, bytes: 1024 } }
+          : {}),
+        status: "ready",
+        createdAt: "2026-10-04T00:00:00.000Z",
+        expiresAt: "2026-10-04T02:00:00.000Z",
+        keep: true,
+        bootMs: 1200,
+        endpoints: {
+          game: { host: "127.0.0.1", port: 40_001 },
+          rcon: { host: "127.0.0.1", port: 40_002 },
+          bridge: { host: "127.0.0.1", port: 40_003 },
+        },
+        providerRef: { kind: "docker", containerId },
+        owner: "me@host",
+        secrets,
+      });
+
+      await store.write(baseRecord("sbx-aa0001", "111111111111aaaa", "flat"));
+      await store.write(
+        baseRecord("sbx-bb0002", "222222222222bbbb", "real-map"),
+      );
+      const rowLine = (row: {
+        cid: string;
+        id: string;
+        ports: readonly [number, number, number];
+      }) =>
+        `${row.cid}\t${row.id}\t1791079200000\ttrue\trunning\t127.0.0.1:${row.ports[0].toString()}->25565/tcp, 127.0.0.1:${row.ports[1].toString()}->25575/tcp, 127.0.0.1:${row.ports[2].toString()}->25580/tcp\tme@host\t${process.pid.toString()}`;
+
+      await Bun.write(
+        stateFile,
+        `${rowLine({ cid: "111111111111", id: "sbx-aa0001", ports: [41_001, 41_002, 41_003] })}\n${rowLine({ cid: "222222222222", id: "sbx-bb0002", ports: [backendA.port, 42_002, 42_003] })}\n`,
+      );
+      const firstList = await provider.list();
+      const plainFirst = firstList.find((r) => r.id === "sbx-aa0001");
+      const realFirst = firstList.find((r) => r.id === "sbx-bb0002");
+      const plainStoredFirst = await store.read("sbx-aa0001");
+      expect(plainFirst?.endpoints).toEqual({
+        game: { host: "127.0.0.1", port: 41_001 },
+        rcon: { host: "127.0.0.1", port: 41_002 },
+        bridge: { host: "127.0.0.1", port: 41_003 },
+      });
+      expect(plainStoredFirst?.endpoints).toEqual(plainFirst?.endpoints);
+      expect(realFirst?.endpoints.rcon.port).toBe(42_002);
+      expect(realFirst?.endpoints.bridge.port).toBe(42_003);
+      const firstProxyPort = realFirst?.endpoints.game.port ?? 0;
+      expect(await probeProxy(firstProxyPort)).toContain("before:");
+
+      await Bun.write(
+        stateFile,
+        `${rowLine({ cid: "111111111111", id: "sbx-aa0001", ports: [51_001, 51_002, 51_003] })}\n${rowLine({ cid: "222222222222", id: "sbx-bb0002", ports: [backendB.port, 52_002, 52_003] })}\n`,
+      );
+      const secondList = await provider.list();
+      const plainSecond = secondList.find((r) => r.id === "sbx-aa0001");
+      const realSecond = secondList.find((r) => r.id === "sbx-bb0002");
+      const plainStoredSecond = await store.read("sbx-aa0001");
+      const realStoredSecond = await store.read("sbx-bb0002");
+      expect(plainSecond?.endpoints).toEqual({
+        game: { host: "127.0.0.1", port: 51_001 },
+        rcon: { host: "127.0.0.1", port: 51_002 },
+        bridge: { host: "127.0.0.1", port: 51_003 },
+      });
+      expect(plainStoredSecond?.endpoints).toEqual(plainSecond?.endpoints);
+      expect(realSecond?.endpoints.rcon.port).toBe(52_002);
+      expect(realSecond?.endpoints.bridge.port).toBe(52_003);
+      const secondProxyPort = realSecond?.endpoints.game.port ?? 0;
+      expect(secondProxyPort).not.toBe(firstProxyPort);
+      expect(await probeProxy(secondProxyPort)).toContain("after:");
+      expect(realStoredSecond?.endpoints).toEqual(realSecond?.endpoints);
+    } finally {
+      await provider.destroy("sbx-bb0002").catch(() => {
+        // Best-effort cleanup when mock docker has no real container.
+      });
+      await backendA.close();
+      await backendB.close();
       vi.unstubAllEnvs();
       await rm(root, { recursive: true, force: true });
     }

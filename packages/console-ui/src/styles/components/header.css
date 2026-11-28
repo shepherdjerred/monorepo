@@ -1,0 +1,99 @@
+/*
+ * The 48px header bar at the top of the panel: optional lead (back link or
+ * breadcrumb), the page's 15px `h1`, tabs, muted meta and actions. It wraps
+ * on narrow screens instead of overflowing.
+ */
+@layer ui.components {
+  .ui-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 14px;
+    min-height: var(--ui-header);
+    padding: 0 var(--ui-gutter);
+    border-bottom: 1px solid var(--ui-line);
+  }
+  .ui-header-lead {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    margin-right: -6px;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-header-lead a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-space-1);
+    color: inherit;
+    text-decoration: none;
+  }
+  .ui-header-lead a:hover {
+    color: var(--ui-ink);
+  }
+  .ui-header-lead svg {
+    width: 14px;
+    height: 14px;
+    flex: none;
+  }
+  .ui-header-title {
+    min-width: 0;
+    margin: 0;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-xl);
+    letter-spacing: -0.006em;
+    font-weight: var(--ui-weight-strong);
+    overflow-wrap: anywhere;
+  }
+  .ui-header-title:focus {
+    outline: none;
+  }
+  .ui-header-title:focus-visible {
+    outline: 2px solid var(--ui-accent);
+  }
+  .ui-header-meta {
+    margin-left: auto;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-md);
+  }
+  .ui-header-title + .ui-header-meta {
+    margin-left: 0;
+  }
+  .ui-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-2);
+    margin-left: auto;
+  }
+  /* Meta sits right-aligned, just before the actions. */
+  .ui-header-meta + .ui-header-actions {
+    margin-left: 0;
+  }
+
+  @media (width <= 600px) {
+    .ui-header {
+      gap: 6px 12px;
+      padding-block: var(--ui-space-2);
+    }
+    .ui-header-title {
+      flex: 1 1 auto;
+    }
+    /* Tabs take their own row and keep their underline on the bar's edge. */
+    .ui-header > .ui-tabs {
+      order: 1;
+      flex-basis: 100%;
+      min-height: 36px;
+      margin: 0 0 calc(-1 * var(--ui-space-2));
+      overflow-x: auto;
+    }
+    .ui-header-meta {
+      flex-basis: 100%;
+      margin-left: 0;
+    }
+    .ui-header-actions {
+      margin-left: 0;
+    }
+  }
+}

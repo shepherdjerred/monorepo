@@ -315,3 +315,260 @@ test("host-only baseline intent requires admin authority and preserves source ar
     versions: accepted.versions,
   });
 });
+
+async function scoutWorkerPromotion() {
+  const beta = await workerFixture(context.delivery, "scout-beta");
+  const prod = await workerFixture(context.delivery, "scout-prod");
+  const db = context.cluster.database;
+
+  // Accept two releases in scout-beta so workerA is eligible for retirement.
+  const { b, workerA, workerB } = await beta.acceptedPool();
+  await db.deployment.update({
+    where: { id: workerB.introducedByDeploymentId },
+    data: { monitorState: "settled", monitorSettledAt: new Date() },
+  });
+
+  // Request an approved worker promotion without claiming it.
+  await db.environment.update({
+    where: { id: prod.environmentId },
+    data: { promotionSourceEnvironmentId: beta.environmentId },
+  });
+  const prodEnv = await db.environment.findUniqueOrThrow({
+    where: { id: prod.environmentId },
+  });
+  const prodRollout = await context.delivery.createDeployment(
+    {
+      requestId: "scout-prod/rollout",
+      environmentId: prod.environmentId,
+      expectedGeneration: prodEnv.generation,
+      kind: "promote",
+      sourceEnvironmentId: beta.environmentId,
+    },
+    testOperator,
+  );
+  await context.delivery.approve(
+    prodRollout.id,
+    { decision: "approve", reason: "Approved scout-prod promotion" },
+    testOperator,
+  );
+  await prod.freeze({ ...b, deployment: prodRollout });
+  await prod.frozenRecipe(prodRollout.id);
+  return { beta, prodRollout, workerA, workerB };
+}
+
+async function claimScoutBetaRetirement(
+  input: Awaited<ReturnType<typeof scoutWorkerPromotion>>,
+) {
+  const { beta, workerA, workerB } = input;
+  const betaPool = await context.delivery.workers(
+    beta.environmentId,
+    testOperator,
+  );
+  const retirement = await context.delivery.retireWorker(
+    workerA.id,
+    {
+      requestId: "scout-beta/retire-during-prod",
+      expectedEnvironmentGeneration: betaPool.generation,
+      expectedWorkerGeneration: workerA.generation,
+    },
+    testOperator,
+  );
+  const claimedRetire = await context.delivery.claim(
+    retirement.id,
+    testExecutor,
+    freshWorkerProof(workerA, workerB.buildId),
+  );
+  expect(claimedRetire.deployment.status).toBe("running");
+  return retirement;
+}
+
+test("a queued scout-beta worker rollout waits while scout-prod's worker rollout is running, while retire-host stays unblocked (AI-857)", async () => {
+  const promotion = await scoutWorkerPromotion();
+  const { beta, prodRollout } = promotion;
+  await context.delivery.claim(prodRollout.id, testExecutor);
+
+  const retirement = await claimScoutBetaRetirement(promotion);
+  await context.delivery.stage(
+    retirement.id,
+    {
+      key: "worker-retire",
+      status: "succeeded",
+      operationId: deliveryOperationId(`${retirement.id}:worker-retire`),
+      message: "Retired drained host",
+      evidence: [
+        { kind: "reconciliation", summary: "scaled down" },
+        { kind: "acceptance", summary: "drained" },
+      ],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    retirement.id,
+    {
+      status: "succeeded",
+      message: "Retired workerA",
+      recoveryRequired: false,
+      observedRevisionId: retirement.versionSetRevisionId,
+      evidence: [
+        { kind: "reconciliation", summary: "scaled down" },
+        { kind: "acceptance", summary: "drained" },
+      ],
+    },
+    testExecutor,
+  );
+
+  // 2. Queued scout-beta worker rollout answers BUSY while scout-prod rollout is running.
+  const nextBeta = await beta.requestedFrozenRelease(3);
+  await expect(
+    context.delivery.claim(nextBeta.deployment.id, testExecutor),
+  ).rejects.toMatchObject({
+    code: "BUSY",
+    message: expect.stringMatching(/scout-for-lol\/prod/u),
+  });
+
+  // 3. Once scout-prod finishes, scout-beta claims immediately.
+  await context.delivery.finish(
+    prodRollout.id,
+    {
+      status: "failed",
+      message: "Finished prod rollout",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const claimedBeta = await context.delivery.claim(
+    nextBeta.deployment.id,
+    testExecutor,
+  );
+  expect(claimedBeta.deployment.status).toBe("running");
+});
+
+async function expectUnclaimed(id: string, status: string) {
+  const detail = await context.delivery.detail(id);
+  expect(detail.deployment.status).toBe(status);
+  expect(detail.deployment.startedAt).toBeNull();
+  expect(detail.environment.activeDeploymentId).toBeNull();
+  expect(
+    await context.cluster.database.targetLock.count({
+      where: { deploymentId: id },
+    }),
+  ).toBe(0);
+}
+
+test.each(["advanced", "refused", "recovery-required"] as const)(
+  "a queued Scout promotion waits for beta's claimed worker wave (%s)",
+  async (settlement) => {
+    const { beta, prodRollout } = await scoutWorkerPromotion();
+    const nextBeta = await beta.requestedFrozenRelease(3);
+    const betaId = nextBeta.deployment.id;
+    await context.delivery.claim(betaId, testExecutor);
+
+    function claimProd() {
+      return context.delivery.claim(prodRollout.id, testExecutor);
+    }
+    const contention = {
+      code: "BUSY",
+      message: expect.stringContaining(betaId),
+    };
+    await expect(claimProd()).rejects.toMatchObject(contention);
+    await expectUnclaimed(prodRollout.id, "queued");
+
+    if (settlement === "advanced") {
+      await context.delivery.finish(
+        betaId,
+        {
+          status: "succeeded",
+          message: "Accepted the next beta worker wave",
+          observedRevisionId: nextBeta.versionSet.id,
+          recoveryRequired: false,
+          evidence: [
+            { kind: "reconciliation", summary: "Beta selection applied" },
+            { kind: "acceptance", summary: "Beta worker accepted" },
+          ],
+        },
+        testExecutor,
+      );
+      await expect(claimProd()).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: expect.stringMatching(/stale.*\(M2\)/u),
+      });
+      await expectUnclaimed(prodRollout.id, "failed");
+      return;
+    }
+
+    await context.delivery.finish(
+      betaId,
+      {
+        status: "failed",
+        message: "The beta worker wave failed",
+        recoveryRequired: settlement === "recovery-required",
+        evidence: [],
+      },
+      testExecutor,
+    );
+    if (settlement === "recovery-required") {
+      await expect(claimProd()).rejects.toMatchObject(contention);
+      await expectUnclaimed(prodRollout.id, "queued");
+    } else {
+      const claimed = await claimProd();
+      expect(claimed.deployment.status).toBe("running");
+    }
+  },
+);
+
+test("a claimed same-set beta host retirement leaves Scout prod eligible", async () => {
+  const promotion = await scoutWorkerPromotion();
+  await claimScoutBetaRetirement(promotion);
+  const claimed = await context.delivery.claim(
+    promotion.prodRollout.id,
+    testExecutor,
+  );
+  expect(claimed.deployment.status).toBe("running");
+});
+
+test.each(["queued", "running"] as const)(
+  "a catalog change preserves the frozen source safety of a %s worker promotion",
+  async (status) => {
+    const { beta, prodRollout } = await scoutWorkerPromotion();
+    if (status === "running")
+      await context.delivery.claim(prodRollout.id, testExecutor);
+    await context.cluster.database.environment.update({
+      where: { id: prodRollout.environmentId },
+      data: { promotionSourceEnvironmentId: null },
+    });
+
+    if (status === "queued") {
+      await expect(
+        context.delivery.claim(prodRollout.id, testExecutor),
+      ).rejects.toMatchObject({
+        code: "CONFLICT",
+        message: expect.stringMatching(/no longer promotes from.*\(M2\)/u),
+      });
+      await expectUnclaimed(prodRollout.id, "failed");
+      return;
+    }
+
+    const nextBeta = await beta.requestedFrozenRelease(3);
+    await expect(
+      context.delivery.claim(nextBeta.deployment.id, testExecutor),
+    ).rejects.toMatchObject({
+      code: "BUSY",
+      message: expect.stringContaining(prodRollout.id),
+    });
+    await expectUnclaimed(nextBeta.deployment.id, "queued");
+  },
+);
+
+test("workerFixture seeds revisioned pipeline and configuration IDs accepted by the selection route (AI-817)", async () => {
+  const scout = await workerFixture(context.delivery, "scout-prod");
+  await scout.acceptedPool();
+  await workers.requestedBaseline();
+  for (const environmentId of [workers.environmentId, scout.environmentId]) {
+    const response = await app.request(
+      `/api/v1/environments/${encodeURIComponent(environmentId)}/selection`,
+      { headers: { Authorization: "Bearer fixture-deployer" } },
+    );
+    expect(response.status, environmentId).toBe(200);
+  }
+});

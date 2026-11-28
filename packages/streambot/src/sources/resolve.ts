@@ -204,9 +204,34 @@ export function finalizeResolved(
   return {
     ...(reconciled === undefined ? resolved : demoteToMusic(resolved)),
     ...(info?.hdr === true ? { hdr: true } : {}),
+    ...probedProperties(info),
     ...(info?.durationSeconds === undefined
       ? {}
       : { durationSeconds: info.durationSeconds }),
+  };
+}
+
+/**
+ * The probed display properties, plus the probed video stream index. The index matters for every
+ * source, not only sports: without it the fork maps `0:v`, which also matches embedded cover art
+ * and MKV image attachments, so a poster frame would get its own encode branch.
+ */
+function probedProperties(
+  info: MediaInfo | null,
+): Partial<
+  Pick<
+    ConcreteResolvedSource,
+    "probedVideo" | "probedAudio" | "ffmpegVideoStreamIndex" | "rankedTracks"
+  >
+> {
+  if (info === null) return {};
+  return {
+    ...(info.video === undefined ? {} : { probedVideo: info.video }),
+    ...(info.audio === undefined ? {} : { probedAudio: info.audio }),
+    rankedTracks: info.ranked,
+    ...(info.video === undefined || info.videoStreamIndex === undefined
+      ? {}
+      : { ffmpegVideoStreamIndex: info.videoStreamIndex }),
   };
 }
 

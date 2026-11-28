@@ -24,7 +24,15 @@
         ]
       },
       "resolvedDescription": "Milio's abilities enchant allies on touch, making their next damage deal a burst of extra damage and burn the target.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": null,
+        "lineWidth": null,
+        "missileSpeed": null,
+        "missiles": []
+      }
     },
     "Q": {
       "name": "Ultra Mega Fire Kick",
@@ -140,7 +148,42 @@
       "resolvedDescription": "Milio kicks a fireball, Knocking Back the first enemy hit. If it hits, the ball bounces past them and explodes, dealing 80/140/200/260/320 (+120% AP) magic damage to surrounding enemies and Slowing them by {{ slowamountpercent }} for 1.5 seconds. Hitting at least one enemy champion with Ultra Mega Fire Kick refunds 50% of it's Mana cost.",
       "unresolved": [
         "slowamountpercent"
-      ]
+      ],
+      "mechanics": {
+        "targeting": "Direction",
+        "castTime": 0.25,
+        "radius": 50,
+        "lineWidth": 45,
+        "missileSpeed": null,
+        "missiles": [
+          {
+            "name": "milioqhit",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "milioqhitminion",
+            "width": null,
+            "movement": "FixedTimeMovement",
+            "speed": null,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "W": {
       "name": "Cozy Campfire",
@@ -212,7 +255,15 @@
         ]
       },
       "resolvedDescription": "Milio creates a hearth that follows ally champions for 6 seconds. Ally champions nearby gain 10/12.5/15/17.5/20% Attack Range and restore 70/90/110/130/150 (+15% AP) Health over the duration. The hearth also applies Fired Up! every 3 seconds. Recast: Change the hearth's follow ally.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "TargetOrLocation",
+        "castTime": 0.25,
+        "radius": 350,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Warm Hugs",
@@ -270,7 +321,15 @@
         ]
       },
       "resolvedDescription": "Milio wraps an ally champion in protective flames, granting 45/75/105/135/165 (+45% AP) Shield and 12/14/16/18/20% Move Speed for 2.5 seconds. This ability has 2 charges and the effects stack on repeat targets.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": null,
+        "castTime": 0.01,
+        "radius": 171.9,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Breath of Life",
@@ -314,7 +373,15 @@
         ]
       },
       "resolvedDescription": "Milio unleashes a wave of soothing flames on nearby ally champions, cleansing Disabling and Immobilizing effects, restoring 150/250/350 (+50% AP) Health, and granting 65% Tenacity for 3 seconds.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.713,
+        "radius": 800,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

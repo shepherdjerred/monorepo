@@ -2,7 +2,35 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    "build": { "dependsOn": ["generate", "^build"] },
+    // A hash of build or generate reaches every dependent's typecheck, lint
+    // and test tasks (^build, ^generate). `vite build` and `prisma generate`
+    // read src/**, prisma/**, index.html, vite.config.ts and the manifests;
+    // they never read the model document, the Playwright suite, agent
+    // guidance, the CI manifest or the lint config. Nothing outside the
+    // package imports docs/ or e2e/ (package exports point at src/ only).
+    "build": {
+      "dependsOn": ["generate", "^build"],
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "!docs/**",
+        "!e2e/**",
+        "!AGENTS.md",
+        "!CLAUDE.md",
+        "!ci-tests.json",
+        "!eslint.config.ts"
+      ]
+    },
+    "generate": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "!docs/**",
+        "!e2e/**",
+        "!AGENTS.md",
+        "!CLAUDE.md",
+        "!ci-tests.json",
+        "!eslint.config.ts"
+      ]
+    },
     "test:e2e": {
       "dependsOn": ["generate", "^build"],
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]

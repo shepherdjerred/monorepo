@@ -161,7 +161,13 @@ export const ConfigSchema = z.strictObject({
   stream: z.strictObject({
     width: z.number().int().positive().default(1280),
     height: z.number().int().positive().default(720),
-    fps: z.number().int().positive().default(30),
+    /**
+     * Output frame-rate cap, not a forced rate: a source plays at its own standard rate (23.976,
+     * 25, 29.97, …) when that fits, and at an even fraction of it when it does not. Sources with no
+     * recognisable rate play at exactly this. Non-integer caps (29.97) are allowed; Discord Go Live
+     * tops out at 60. Bitrate does not scale with it.
+     */
+    fps: z.number().positive().max(60).default(30),
     bitrateKbps: z.number().int().positive().default(2000),
     bitrateAudioKbps: z.number().int().positive().default(128),
     /** Use Intel VAAPI hardware encoding (falls back to software if the device is unavailable). */
@@ -231,7 +237,8 @@ export const ConfigSchema = z.strictObject({
     enabled: z.boolean().default(true),
     /**
      * Language preference order (e.g. `en`, `eng`, `en-US`). Matched against sidecar/embedded/yt-dlp
-     * track languages; falls back to the first available track when none match.
+     * track languages. Only a track in one of these languages (or with no language tag) is burned
+     * automatically; when none match, playback has no subtitles until the user picks a track.
      */
     languages: z.array(z.string().min(1)).default(["en", "eng", "en-US"]),
     /** For yt-dlp sources: fall back to auto-generated captions when no human subtitles exist. */

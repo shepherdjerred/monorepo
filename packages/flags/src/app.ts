@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Env } from "hono";
 import { serveStatic } from "@hono/bun";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
@@ -25,6 +25,16 @@ import {
   type FlagsSurface,
 } from "./metrics.ts";
 import type { FlagStore } from "./store.ts";
+import {
+  createFlagsUsageTracker,
+  usageView,
+  type FlagsUsageTracker,
+} from "./usage.ts";
+import {
+  actorFor,
+  registerAuditRoutes,
+  type FlagsManagementEnv,
+} from "./audit-routes.ts";
 
 const SNAPSHOT = /^\/v1\/deployments\/[^/]+\/[^/]+\/snapshot$/u;
 const CREDENTIALLESS_REJECTION = {
@@ -34,6 +44,8 @@ const CREDENTIALLESS_REJECTION = {
 export type FlagsEvaluationAppDependencies = {
   readonly store: FlagStore;
   readonly metrics?: FlagsMetrics;
+  /** Records consumer snapshot fetches and evaluations; shared with management. */
+  readonly usage?: FlagsUsageTracker;
 };
 
 export type FlagsAppDependencies = {
@@ -43,6 +55,8 @@ export type FlagsAppDependencies = {
   /** Built operator client. Absent in tests and before `vite build`. */
   readonly clientRoot?: string;
   readonly metrics?: FlagsMetrics;
+  /** Serves `GET /v1/usage`; the evaluation app records into the same one. */
+  readonly usage?: FlagsUsageTracker;
 };
 
 function deploymentId(catalog: string, stage: string): string {
@@ -61,7 +75,7 @@ async function readBody(request: Request): Promise<unknown> {
   }
 }
 
-function attachErrorHandler(app: Hono): void {
+function attachErrorHandler<E extends Env>(app: Hono<E>): void {
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
       return c.json({ error: error.message }, error.status);
@@ -81,7 +95,17 @@ function attachErrorHandler(app: Hono): void {
   });
 }
 
-function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
+/**
+ * Snapshot and evaluate routes. `usage` is passed only by the evaluation app:
+ * its reads are consumers', while management-port reads come from tooling.
+ * Only stored deployments and live keys are recorded, so unauthenticated
+ * requests cannot grow the tracker.
+ */
+function registerEvaluationRoutes<E extends Env>(
+  app: Hono<E>,
+  store: FlagStore,
+  usage?: FlagsUsageTracker,
+): void {
   app.get("/v1/deployments/:catalog/:stage/snapshot", (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
     const document = store.document(id);
@@ -89,7 +113,11 @@ function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
       return c.json({ error: "unknown deployment" }, 404);
     const tag = etag(document.revision);
     c.header("ETag", tag);
-    if (c.req.header("if-none-match") === tag) return c.body(null, 304);
+    if (c.req.header("if-none-match") === tag) {
+      usage?.recordFetch(id, 304);
+      return c.body(null, 304);
+    }
+    usage?.recordFetch(id, 200);
     return c.json({
       deployment: document.id,
       revision: document.revision,
@@ -110,14 +138,15 @@ function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
     if (evaluated.kind === "missing") {
       return c.json({ error: "FLAG_NOT_FOUND" }, 404);
     }
+    usage?.recordEvaluation(body.deployment, body.key);
     return evaluated.kind === "type-mismatch" || evaluated.kind === "invalid"
       ? c.json({ error: evaluated.message }, 400)
       : c.json({ enabled: evaluated.value });
   });
 }
 
-function attachRequestMetrics(
-  app: Hono,
+function attachRequestMetrics<E extends Env>(
+  app: Hono<E>,
   metrics: FlagsMetrics,
   surface: FlagsSurface,
   hasClient: boolean,
@@ -142,6 +171,7 @@ function attachRequestMetrics(
 export function createFlagsEvaluationApp({
   store,
   metrics = createFlagsMetrics(),
+  usage = createFlagsUsageTracker(),
 }: FlagsEvaluationAppDependencies) {
   const app = new Hono();
   attachErrorHandler(app);
@@ -152,7 +182,7 @@ export function createFlagsEvaluationApp({
       ? next()
       : c.json(CREDENTIALLESS_REJECTION, 401),
   );
-  registerEvaluationRoutes(app, store);
+  registerEvaluationRoutes(app, store, usage);
   return app;
 }
 
@@ -162,8 +192,9 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   }
   const { store } = dependencies;
   const metrics = dependencies.metrics ?? createFlagsMetrics();
+  const usage = dependencies.usage ?? createFlagsUsageTracker();
   const clientRoot = dependencies.clientRoot;
-  const app = new Hono();
+  const app = new Hono<FlagsManagementEnv>();
 
   attachErrorHandler(app);
   attachRequestMetrics(app, metrics, "management", clientRoot !== undefined);
@@ -191,12 +222,16 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
       dependencies.peerAddress?.(c.req.raw) ?? null,
       dependencies.auth,
     );
-    return "status" in principal
-      ? c.json({ error: principal.error }, principal.status)
-      : next();
+    if ("status" in principal) {
+      return c.json({ error: principal.error }, principal.status);
+    }
+    c.set("principal", principal);
+    return next();
   });
 
   app.get("/v1/deployments", (c) => c.json({ deployments: store.list() }));
+
+  app.get("/v1/usage", (c) => c.json(usageView(usage, store)));
 
   app.get("/v1/diff", (c) => {
     const deployments = flagDeployments.map((deployment) => {
@@ -236,7 +271,12 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   app.post("/v1/deployments/:catalog/:stage/apply", async (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
     const body = ApplyBodySchema.parse(await readBody(c.req.raw));
-    const result = store.apply(id, body.expectedRevision, body.flags);
+    const result = store.apply(
+      id,
+      body.expectedRevision,
+      body.flags,
+      actorFor(c),
+    );
     return result.ok
       ? c.json({ revision: result.revision })
       : writeFailure(c, result.failure);
@@ -245,7 +285,7 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   app.post("/v1/deployments/:catalog/:stage/create-missing", async (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
     const body = CreateMissingBodySchema.parse(await readBody(c.req.raw));
-    const result = store.createMissing(id, body.flags);
+    const result = store.createMissing(id, body.flags, actorFor(c));
     return result.ok
       ? c.json({ revision: result.revision, created: result.created })
       : writeFailure(c, result.failure);
@@ -254,7 +294,12 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   app.post("/v1/deployments/:catalog/:stage/retire", async (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
     const body = RetireBodySchema.parse(await readBody(c.req.raw));
-    const result = store.retire(id, body.expectedRevision, body.keys);
+    const result = store.retire(
+      id,
+      body.expectedRevision,
+      body.keys,
+      actorFor(c),
+    );
     if (!result.ok) {
       return result.failure.kind === "missing"
         ? c.json({ error: "retire refused", missing: result.failure.keys }, 409)
@@ -263,12 +308,14 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
     return c.json({ revision: result.revision });
   });
 
+  registerAuditRoutes(app, store);
+
   if (clientRoot !== undefined) serveClient(app, clientRoot);
 
   return app;
 }
 
-function serveClient(app: Hono, clientRoot: string): void {
+function serveClient<E extends Env>(app: Hono<E>, clientRoot: string): void {
   app.use(
     "/assets/*",
     serveStatic({

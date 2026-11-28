@@ -35,6 +35,7 @@ export type MovieLifecycleApplicationV4 = {
   getMovieTargetContextV4: (
     actor: MediaActor,
     scope: MovieEditionScope,
+    includeDiscovery?: boolean,
   ) => Promise<MovieTargetContextV4>;
   requestMovieEditionV4: (
     actor: MediaActor,

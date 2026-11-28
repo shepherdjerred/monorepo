@@ -3,6 +3,7 @@ import {
   buildSoftwareVideoGraph,
   buildVaapiVideoGraph,
   escapeFilterPath,
+  formatFrameRate,
   SOFTWARE_TONEMAP_CHAIN,
   subtitlePtsSandwich,
 } from "../src/media/videoGraph.ts";
@@ -137,6 +138,71 @@ describe("buildSoftwareVideoGraph", () => {
         encoderOutFilters: ["", ""],
       }),
     ).toEqual({ kind: "filterChain", filters: ["scale=1280:720"] });
+  });
+
+  test("text subtitles with fontsDir: libass gets the attached-fonts directory", () => {
+    const graph = buildSoftwareVideoGraph({
+      width: 1280,
+      height: 720,
+      inputColor: "sdr",
+      subtitle: {
+        path: "/tmp/streambot-subs/x/track.ass",
+        fontsDir: "/tmp/streambot-subs/x/fonts",
+        startTime: 0,
+      },
+      encoderOutFilters: [],
+    });
+    expect(graph).toEqual({
+      kind: "filterChain",
+      filters: [
+        "scale=1280:720",
+        "subtitles=filename=/tmp/streambot-subs/x/track.ass:fontsdir=/tmp/streambot-subs/x/fonts",
+      ],
+    });
+  });
+
+  test("image subtitles: filter_complex overlays the fitted subtitle stream after the tonemap", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 804,
+        inputColor: "hdr",
+        videoStreamIndex: 0,
+        subtitle: { kind: "image", streamIndex: 3 },
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        `[0:v:0]scale=1920:804,${SOFTWARE_TONEMAP_CHAIN}[main]`,
+        "[0:s:3]scale=1920:804:force_original_aspect_ratio=decrease," +
+          "pad=1920:804:-1:-1:color=black@0,format=bgra[subs]",
+        "[main][subs]overlay=eof_action=pass[vout]",
+      ],
+      mapLabel: "vout",
+    });
+  });
+
+  test("image subtitles + letterbox pad + encoder outFilters: subtitles fit the picture, centred on the padded frame", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        pad: { width: 1920, height: 1080 },
+        subtitle: { kind: "image", streamIndex: 0 },
+        encoderOutFilters: ["format=nv12|vaapi", "", "hwupload"],
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        "[0:v]scale=1440:1080,pad=1920:1080:-1:-1:color=black[main]",
+        "[0:s:0]scale=1440:1080:force_original_aspect_ratio=decrease," +
+          "pad=1920:1080:-1:-1:color=black@0,format=bgra[subs]",
+        "[main][subs]overlay=eof_action=pass,format=nv12|vaapi,hwupload[vout]",
+      ],
+      mapLabel: "vout",
+    });
   });
 });
 
@@ -279,4 +345,197 @@ describe("buildVaapiVideoGraph", () => {
     );
   });
 
+  test("text subtitles with fontsDir: escaped fontsdir before alpha on the canvas branch", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1280,
+      height: 720,
+      inputColor: "sdr",
+      subtitle: {
+        path: "/cache/abc.ass",
+        fontsDir: "/cache/abc,fonts",
+        startTime: 0,
+      },
+    });
+    if (graph.kind !== "filterComplex") {
+      throw new Error("expected a filterComplex graph");
+    }
+    expect(graph.graph[1]).toContain(
+      String.raw`subtitles=filename=/cache/abc.ass:fontsdir=/cache/abc\,fonts:alpha=1`,
+    );
+  });
+
+  test("image subtitles: the subtitle stream replaces the canvas, uploaded and blended with eof_action=pass", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 804,
+        frameRate: 30,
+        inputColor: "hdr",
+        uploadInput: true,
+        videoStreamIndex: 0,
+        subtitle: { kind: "image", streamIndex: 1 },
+      }),
+    ).toEqual({
+      kind: "filterComplex",
+      graph: [
+        "[0:v:0]hwupload,scale_vaapi=w=1920:h=804:format=p010," +
+          "tonemap_vaapi=format=nv12:t=bt709:m=bt709:p=bt709[base]",
+        "[0:s:1]scale=1920:804:force_original_aspect_ratio=decrease," +
+          "pad=1920:804:-1:-1:color=black@0,format=bgra,hwupload[subs]",
+        // Not shortest=1: the subtitle stream ends before the video does.
+        "[base][subs]overlay_vaapi=eof_action=pass[vout]",
+      ],
+      mapLabel: "vout",
+    });
+  });
+
+  test("interlaced: deinterlace_vaapi ahead of the scale, after the upload in upload mode", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1920:h=1080:format=nv12",
+      ],
+    });
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        uploadInput: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "hwupload,deinterlace_vaapi=rate=frame:auto=1,scale_vaapi=w=1920:h=1080:format=nv12",
+      ],
+    });
+  });
+
+  test("BT.709 conversion rides on the SDR scale_vaapi and leaves the HDR tonemap alone", () => {
+    expect(
+      buildVaapiVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        convertToBt709: true,
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "scale_vaapi=w=1440:h=1080:format=nv12:out_color_matrix=bt709:out_range=tv",
+      ],
+    });
+    expect(
+      buildVaapiVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "hdr",
+        convertToBt709: true,
+      }),
+    ).toEqual(
+      buildVaapiVideoGraph({ width: 1920, height: 1080, inputColor: "hdr" }),
+    );
+  });
+
+  test("an NTSC canvas rate is written as its exact rational", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1920,
+      height: 804,
+      frameRate: 24_000 / 1001,
+      inputColor: "sdr",
+      subtitle: { path: SUB, startTime: 0 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected overlay");
+    expect(graph.graph[1]?.startsWith("color=c=black@0:s=1920x804:r=24000/1001,")).toBe(true);
+  });
+});
+
+describe("buildSoftwareVideoGraph picture corrections", () => {
+  test("interlaced: bwdif (frame rate out, flagged frames only) before the scale", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["bwdif=mode=send_frame:deint=interlaced", "scale=1920:1080"],
+    });
+  });
+
+  test("BT.709 conversion on the SDR scale; HDR keeps its tonemap chain unchanged", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["scale=1440:1080:out_color_matrix=bt709:out_range=tv"],
+    });
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1920,
+        height: 1080,
+        inputColor: "hdr",
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: ["scale=1920:1080", SOFTWARE_TONEMAP_CHAIN],
+    });
+  });
+
+  test("an interlaced SD BT.601 source deinterlaces, then converts while it scales", () => {
+    expect(
+      buildSoftwareVideoGraph({
+        width: 1440,
+        height: 1080,
+        inputColor: "sdr",
+        deinterlace: true,
+        convertToBt709: true,
+        encoderOutFilters: [],
+      }),
+    ).toEqual({
+      kind: "filterChain",
+      filters: [
+        "bwdif=mode=send_frame:deint=interlaced",
+        "scale=1440:1080:out_color_matrix=bt709:out_range=tv",
+      ],
+    });
+  });
+});
+
+describe("formatFrameRate", () => {
+  test("integers render exactly as String() always did", () => {
+    expect(formatFrameRate(30)).toBe("30");
+    expect(formatFrameRate(25)).toBe("25");
+    expect(formatFrameRate(60)).toBe("60");
+  });
+
+  test("NTSC rates render as their exact N/1001 rational", () => {
+    expect(formatFrameRate(24_000 / 1001)).toBe("24000/1001");
+    expect(formatFrameRate(30_000 / 1001)).toBe("30000/1001");
+    expect(formatFrameRate(60_000 / 1001)).toBe("60000/1001");
+  });
+
+  test("any other fraction renders as the plain number", () => {
+    expect(formatFrameRate(12.5)).toBe("12.5");
+    expect(formatFrameRate(29.97)).toBe("29.97");
+  });
 });

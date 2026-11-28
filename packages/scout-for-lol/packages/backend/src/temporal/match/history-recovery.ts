@@ -16,8 +16,10 @@ import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolut
 import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
 import {
   completeMatchOf,
+  isArenaQueueOrMode,
   matchCoverageOf,
   type CanonicalMatch,
+  type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
 import type { EvidenceResolution } from "#src/evidence/source-read.ts";
@@ -86,18 +88,34 @@ function matchAbandonment(
 
 /**
  * The timeline must be the only open work: a FULL row's report belongs to
- * live processing, a HISTORY_ONLY row's to this loop.
+ * live processing, a HISTORY_ONLY row's to this loop. Arena skips Riot's
+ * timeline read (`isArenaQueueOrMode`), so once client evidence is also absent
+ * and the report is settled, abandon immediately rather than retrying forever;
+ * later client `post_game` evidence still reopens the row.
  */
 function timelineAbandonment(
   admission: { createdAt: Date; policy: string },
-  timeline: EvidenceResolution<RawTimeline>,
-  reportComplete: boolean,
+  settled: {
+    readonly match: RawMatch;
+    readonly timeline: EvidenceResolution<RawTimeline>;
+    readonly reportComplete: boolean;
+  },
   clock: AttemptClock,
 ) {
-  return (reportComplete || admission.policy === "FULL") &&
-    timeline.kind === "unavailable"
-    ? abandonment(admission, "timeline", timeline.definitiveAbsence, clock)
-    : NOT_ABANDONED;
+  const { match, timeline, reportComplete } = settled;
+  if (
+    !(reportComplete || admission.policy === "FULL") ||
+    timeline.kind !== "unavailable"
+  ) {
+    return NOT_ABANDONED;
+  }
+  if (isArenaQueueOrMode(match.info.queueId, match.info.gameMode)) {
+    return {
+      recoveryAbandonedAt: clock.evidenceReadAt,
+      recoveryAbandonedReason: "arena_timeline_unavailable",
+    };
+  }
+  return abandonment(admission, "timeline", timeline.definitiveAbsence, clock);
 }
 
 /**
@@ -153,9 +171,10 @@ function timelineOutcome(
   clock: AttemptClock,
 ) {
   const { match, timeline, reportComplete } = settled;
+  const complete = completeMatchOf(match);
   return {
     historyTimelineRecovered: timeline?.kind === "available",
-    ...(timeline === null
+    ...(timeline === null || complete === null
       ? partialRecordAbandonment(
           admission,
           matchCoverageOf(match.metadata) === "history"
@@ -164,7 +183,11 @@ function timelineOutcome(
           reportComplete,
           clock,
         )
-      : timelineAbandonment(admission, timeline, reportComplete, clock)),
+      : timelineAbandonment(
+          admission,
+          { match: complete, timeline, reportComplete },
+          clock,
+        )),
   };
 }
 

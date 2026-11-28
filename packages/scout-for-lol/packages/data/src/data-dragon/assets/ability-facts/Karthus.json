@@ -66,7 +66,15 @@
         ]
       },
       "resolvedDescription": "Karthus creates a blast of magic, dealing 40/59/78/97/116 (+35% AP) magic damage. If the blast hits only one enemy, it instead deals 80/118/156/194/232 (+70% AP) magic damage.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.25,
+        "radius": 160,
+        "lineWidth": null,
+        "missileSpeed": 20,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Wall of Pain",
@@ -131,7 +139,15 @@
         ]
       },
       "resolvedDescription": "Karthus creates a wall that lasts for 5 seconds. Enemies that pass through lose 25% Magic Resist for 5 seconds and are Slowed by 40/50/60/70/80% decaying over the duration.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Location",
+        "castTime": 0.25,
+        "radius": 100,
+        "lineWidth": null,
+        "missileSpeed": 1600,
+        "missiles": []
+      }
     },
     "E": {
       "name": "Defile",
@@ -182,7 +198,15 @@
         ]
       },
       "resolvedDescription": "Passive: When Karthus kills a unit, he restores 10/20/30/40/50 Mana. Toggle: Karthus creates a necrotic aura, dealing 30/50/70/90/110 (+20% AP) magic damage per second to nearby enemies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": 0.25,
+        "radius": 1,
+        "lineWidth": 150,
+        "missileSpeed": 1000,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Requiem",
@@ -216,7 +240,15 @@
         ]
       },
       "resolvedDescription": "Karthus channels for 3 seconds, then deals 200/350/500 (+70% AP) magic damage to enemy champions, regardless of distance.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": 0.25,
+        "radius": 1000,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     }
   }
 }

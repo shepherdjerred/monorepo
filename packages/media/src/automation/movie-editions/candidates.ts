@@ -1,12 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { persistCandidateSnapshot } from "#automation/candidate-evidence.ts";
-import {
-  ProviderAdmissionDeferred,
-  ProviderIdSchema,
-} from "#automation/providers.ts";
-import { networkMovieAccess } from "#automation/editions/access.ts";
-import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/authority.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import {
@@ -20,12 +14,9 @@ import {
 import { cutCanonical } from "#infrastructure/editions/cut-context.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
 import { referenceConflict } from "#infrastructure/acquisition-identity/evaluation.ts";
-import { rejectedMovieSourceHashesV1 } from "#infrastructure/movie-editions/rollback/rejected-sources.ts";
 import { matchMovieReleaseV4 } from "#domain/editions/release-v4.ts";
 import { evaluateRelease, chooseUpgrade } from "#domain/quality.ts";
-import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
-import { MediaError } from "#application/errors.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
@@ -35,41 +26,12 @@ import {
   assessRetainedMovieRelease,
   ObservedMovieSourceChanged,
 } from "./release-assessment.ts";
-import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
-import { movieManagementContext } from "./management-context.ts";
 import { movieCurrentQuality } from "./current-quality.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   providerCandidateAdmission,
   readProviderCandidateAdmission,
 } from "#automation/provider-selection.ts";
-import { compareProviderCandidates } from "#domain/provider-selection.ts";
-import type {
-  MovieProviderSearchProgressV4,
-  MovieReconcileOperationV4,
-} from "#shared/movie-editions/lifecycle/automation-v4.ts";
-import { queueMovieSearchDelay } from "./provider-search-delay.ts";
-
-export class MovieProviderSearchDeferredV4 extends ProviderAdmissionDeferred {
-  constructor(
-    deferred: ProviderAdmissionDeferred,
-    readonly progress: MovieProviderSearchProgressV4,
-  ) {
-    super(deferred.service, deferred.retryAt, deferred.admission);
-  }
-}
-
-function completedProviders(
-  progress: MovieProviderSearchProgressV4 | undefined,
-  criteriaDigest: string,
-) {
-  return new Set<string>(
-    progress?.criteriaDigest === criteriaDigest
-      ? progress.completedProviderIds
-      : [],
-  );
-}
 
 export type MovieCandidateV4 = {
   releaseId: string;
@@ -288,7 +250,7 @@ export async function storeMovieCandidateV4(
     : null;
 }
 
-async function listMovieCandidateV4(
+export async function listMovieCandidateV4(
   context: MediaAutomationContext,
   scope: MovieEditionScope,
   source: ProviderCandidate,
@@ -313,143 +275,4 @@ async function listMovieCandidateV4(
     ...admission,
     candidate: { ...candidate, priority: admission.priority },
   };
-}
-
-async function assessProviderResults(
-  context: MediaAutomationContext,
-  scope: MovieEditionScope,
-  providerId: string,
-  input: { sources: ProviderCandidate[]; rejected: ReadonlySet<string> },
-) {
-  const { sources, rejected } = input;
-  if (sources.length > 100)
-    throw new MediaError(
-      "movie_candidate_limit",
-      "Provider search exceeded its candidate bound",
-      422,
-    );
-  const accepted: MovieCandidateV4[] = [];
-  let earliest = Infinity;
-  for (const source of sources) {
-    if (source.providerId !== providerId)
-      throw new Error("Movie provider returned another provider's source");
-    if (rejected.has(source.infoHash.toLowerCase())) continue;
-    context.plexBindingExecution().assertActive();
-    const admission = await listMovieCandidateV4(context, scope, source);
-    if (admission === null) continue;
-    if (admission.accepted) accepted.push(admission.candidate);
-    if (admission.eligibleAt !== null)
-      earliest = Math.min(earliest, admission.eligibleAt);
-  }
-  return { accepted, earliest };
-}
-
-export async function searchMovieCandidatesV4(
-  initial: MediaAutomationContext,
-  input: MovieEditionScope,
-  continuation?: Pick<
-    MovieReconcileOperationV4,
-    "operationId" | "generation" | "providerSearchProgress"
-  >,
-) {
-  const context = movieManagementContext(initial);
-  const scope = MovieEditionScopeSchema.parse(input);
-  const access = requireMovieChoiceAccess(
-    (await networkMovieAccess(context, [scope.mediaId])) ?? {},
-  );
-  await requireMovieAcquisitionAuthorityV4(
-    context.db,
-    scope,
-    access,
-    context.movieManagement,
-  );
-  const target = await movieAssessmentContext(context.db, scope);
-  const providers = await context.db.mediaProvider.findMany({
-    where: { enabled: true, id: { in: ProviderIdSchema.options } },
-    orderBy: { id: "asc" },
-  });
-  const rejected = await rejectedMovieSourceHashesV1(
-    context.db,
-    scope,
-    context.movieManagement.budget,
-  );
-  const accepted: MovieCandidateV4[] = [];
-  const query = { query: target.media.title, kind: "movie" as const, page: 1 };
-  // Only stable search criteria bind progress: successful admission itself
-  // changes updatedAt/lastError and lease timestamps, so none belongs here.
-  const criteriaDigest = identityHash({
-    operationId: continuation?.operationId ?? null,
-    generation: continuation?.generation ?? null,
-    scope,
-    query,
-    canonicalHash: target.canonicalHash,
-    profile: target.profile,
-    rejected: [...rejected].sort(),
-    providers: providers.map((provider) => ({
-      id: provider.id,
-      configuration: provider.configuration,
-      credentialId: provider.credentialId,
-    })),
-  });
-  const completed = completedProviders(
-    continuation?.providerSearchProgress,
-    criteriaDigest,
-  );
-  let deferred: ProviderAdmissionDeferred | undefined;
-  let earliest = Infinity;
-  for (const provider of providers.filter((item) => !completed.has(item.id))) {
-    try {
-      const sources = await context.providers.withProvider(
-        provider.id,
-        async (client) => {
-          const sponsor = await requireMovieAcquisitionAuthorityV4(
-            context.db,
-            scope,
-            access,
-            context.movieManagement,
-          );
-          sponsor.freshness.assertActive();
-          return client.search(query);
-        },
-      );
-      const listing = await assessProviderResults(context, scope, provider.id, {
-        sources,
-        rejected,
-      });
-      accepted.push(...listing.accepted);
-      earliest = Math.min(earliest, listing.earliest);
-      completed.add(provider.id);
-    } catch (error) {
-      if (error instanceof ProviderAdmissionDeferred) {
-        if (
-          deferred === undefined ||
-          error.retryAt.getTime() < deferred.retryAt.getTime()
-        )
-          deferred = error;
-      } else if (error instanceof IntegrationError) {
-        // A terminal remote result settles this provider for this search pass;
-        // another provider's local wait must not manufacture remote retries.
-        completed.add(provider.id);
-      } else throw error;
-    }
-  }
-  if (Number.isFinite(earliest))
-    await queueMovieSearchDelay(context, scope, {
-      profile: target.profile,
-      generation: continuation?.generation,
-      eligibleAt: new Date(earliest),
-    });
-  if (deferred !== undefined && accepted.length === 0)
-    throw new MovieProviderSearchDeferredV4(deferred, {
-      criteriaDigest,
-      completedProviderIds: providers
-        .filter((provider) => completed.has(provider.id))
-        .map((provider) => ProviderIdSchema.parse(provider.id)),
-    });
-  return accepted.sort((left, right) =>
-    compareProviderCandidates(
-      { ...left, id: left.releaseId },
-      { ...right, id: right.releaseId },
-    ),
-  );
 }

@@ -97,7 +97,15 @@
         ]
       },
       "resolvedDescription": "Hecarim cleaves nearby enemies for 60/90/120/150/180 (+90% bonus AD) physical damage. If this Ability hits, he gains a stack that decreases its Cooldown by 0.75 seconds and increases its damage by 3% (+3% bonus AD) for 8 seconds. Stacks up to 3 times.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 375,
+        "lineWidth": null,
+        "missileSpeed": 1450,
+        "missiles": []
+      }
     },
     "W": {
       "name": "Spirit of Dread",
@@ -190,7 +198,30 @@
         ]
       },
       "resolvedDescription": "Hecarim deals 80/120/160/200/240 (+80% AP) magic damage over 4 seconds to nearby enemies. Hecarim gains 5/10/15/20/25 Armor and Magic Resist and heals for 25% of damage nearby enemies take from Hecarim and 12.5% of damage taken from his allies.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "SelfAoe",
+        "castTime": null,
+        "radius": 575,
+        "lineWidth": null,
+        "missileSpeed": 828.5,
+        "missiles": [
+          {
+            "name": "hecarimwvfx",
+            "width": null,
+            "movement": "FixedSpeedMovement",
+            "speed": 1000,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnMovementComplete",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     },
     "E": {
       "name": "Devastating Charge",
@@ -290,7 +321,15 @@
         ]
       },
       "resolvedDescription": "Hecarim becomes Ghosted and gains 25% Move Speed increasing to 65% over 4 seconds. His next Attack Knocks Back and deals between 30/45/60/75/90 (+50% bonus AD) and 60/90/120/150/180 (+100% bonus AD) physical damage. Knock Back distance and damage scales with distance travelled during this Ability.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Self",
+        "castTime": null,
+        "radius": 210,
+        "lineWidth": null,
+        "missileSpeed": 0,
+        "missiles": []
+      }
     },
     "R": {
       "name": "Onslaught of Shadows",
@@ -349,7 +388,142 @@
         ]
       },
       "resolvedDescription": "Hecarim summons spectral riders and charges forward, dealing 150/250/350 (+100% AP) magic damage. Hecarim unleashes a shockwave at the end of the charge that Fears for between 0.75 to 1.5 seconds, increased by charge distance.",
-      "unresolved": []
+      "unresolved": [],
+      "mechanics": {
+        "targeting": "Area",
+        "castTime": 0.01,
+        "radius": 300,
+        "lineWidth": 200,
+        "missileSpeed": 1200,
+        "missiles": [
+          {
+            "name": "hecarimultmissile",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissilegrab",
+            "width": 80,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissilegrabempty",
+            "width": 180,
+            "movement": "FixedSpeedMovement",
+            "speed": 1200,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4audio",
+            "width": 280,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4c",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4l1",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4l2",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4r1",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          },
+          {
+            "name": "hecarimultmissileskn4r2",
+            "width": 40,
+            "movement": "FixedSpeedMovement",
+            "speed": 1100,
+            "minSpeed": null,
+            "maxSpeed": null,
+            "tracksTarget": false,
+            "behaviors": [
+              "CastOnHit",
+              "DestroyOnMovementComplete"
+            ],
+            "stopsOnFirstHit": false
+          }
+        ]
+      }
     }
   }
 }

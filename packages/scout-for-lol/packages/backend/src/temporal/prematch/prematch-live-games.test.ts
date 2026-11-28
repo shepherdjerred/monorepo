@@ -33,8 +33,12 @@ vi.mock("#src/database/index.ts", () => ({
   prisma: { matchProcessingReceipt: { findMany: stubs.findMany } },
 }));
 
-const { listLivePrematchGames, livePrematchCapturesOf } =
-  await import("#src/temporal/prematch/prematch-reads.ts");
+const {
+  listLivePrematchCaptures,
+  listLivePrematchGames,
+  livePrematchCapturesOf,
+  resolveLivePrematchGames,
+} = await import("#src/temporal/prematch/prematch-reads.ts");
 const { LIVE_GAME_TTL_MS } =
   await import("#src/temporal/prematch/prematch-intents.ts");
 
@@ -49,7 +53,11 @@ const DESCRIPTOR = { kind: "prematch", key: "prematch/9101.json" };
 function snapshot(gameId: number, puuids: (string | null)[]) {
   return {
     gameId,
-    participants: puuids.map((puuid) => ({ puuid })),
+    gameQueueConfigId: 420,
+    participants: puuids.map((puuid, index) => ({
+      puuid,
+      championId: 100 + index,
+    })),
   };
 }
 
@@ -140,8 +148,37 @@ describe("listLivePrematchGames", () => {
         detectedAt: minutesAgo(5),
         expiresAt: new Date(minutesAgo(5).getTime() + LIVE_GAME_TTL_MS),
         participantPuuids: ["a".repeat(78), "b".repeat(78)],
+        queueId: 420,
+        participants: [
+          { puuid: "a".repeat(78), championId: 100 },
+          { puuid: "b".repeat(78), championId: 102 },
+        ],
       },
     ]);
+  });
+
+  test("lists captures and resolves them apart, so a caller can check completion on its own lake slot", async () => {
+    stubs.findMany.mockResolvedValue([
+      { riotMatchId: LIVE, recordedAt: minutesAgo(5) },
+      { riotMatchId: FINISHED, recordedAt: minutesAgo(60) },
+    ]);
+    stubs.readArchivedPrematchSnapshot.mockResolvedValue(
+      snapshot(9101, ["a".repeat(78)]),
+    );
+
+    const captures = await listLivePrematchCaptures(NOW);
+    expect(captures.map((capture) => capture.riotMatchId)).toEqual([
+      LIVE,
+      FINISHED,
+    ]);
+    expect(stubs.readArchivedPrematchSnapshot).not.toHaveBeenCalled();
+
+    const games = await resolveLivePrematchGames(
+      captures,
+      new Set<string>([FINISHED]),
+    );
+    expect(games.map((game) => game.riotMatchId)).toEqual([LIVE]);
+    expect(stubs.readArchivedPrematchSnapshot).toHaveBeenCalledTimes(1);
   });
 
   test("drops a completed game before reading its snapshot", async () => {

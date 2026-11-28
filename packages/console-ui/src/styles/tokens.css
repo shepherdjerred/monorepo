@@ -2,6 +2,45 @@
 @layer ui.tokens {
   :root {
     color-scheme: light;
+    --ui-space-1: 4px;
+    --ui-space-2: 8px;
+    --ui-space-3: 12px;
+    --ui-space-4: 16px;
+    --ui-space-5: 20px;
+    --ui-space-6: 24px;
+    --ui-space-8: 32px;
+    --ui-gutter: 20px;
+    --ui-text-xs: 11px;
+    --ui-text-sm: 12px;
+    --ui-text-md: 12.5px;
+    --ui-text-base: 13px;
+    --ui-text-lg: 14px;
+    --ui-text-xl: 15px;
+    --ui-text-figure: 21px;
+    --ui-weight-regular: 400;
+    --ui-weight-medium: 500;
+    --ui-weight-strong: 600;
+    --ui-radius-xs: 2px;
+    --ui-radius-sm: 5px;
+    --ui-radius-md: 6px;
+    --ui-radius-lg: 10px;
+    --ui-radius-round: 50%;
+    --ui-control: 28px;
+    --ui-hit: 28px;
+    --ui-nav-row: 30px;
+    --ui-head-row: 30px;
+    --ui-group-row: 32px;
+    --ui-row: 36px;
+    --ui-header: 48px;
+    --ui-topbar: 52px;
+    --ui-sidebar: 228px;
+    --ui-z-sticky: 10;
+    --ui-z-backdrop: 20;
+    --ui-z-overlay: 21;
+    --ui-z-popover: 50;
+    --ui-duration-press: 80ms;
+    --ui-duration-panel: 180ms;
+    --ui-ease-out: cubic-bezier(0.2, 0, 0, 1);
     --ui-bg: #ecede6;
     --ui-panel: #ffffff;
     --ui-head: #f8f8f4;
@@ -18,6 +57,7 @@
     --ui-track: #e9eae3;
     --ui-accent: #176b4d;
     --ui-on-accent: #ffffff;
+    --ui-accent-edge: #0f4632;
     --ui-sev-ok: #1c8a48;
     --ui-sev-ok-text: #17703b;
     --ui-sev-ok-soft: #e8f3ed;
@@ -33,6 +73,22 @@
     --ui-sev-error: #d1332b;
     --ui-sev-error-text: #b72d26;
     --ui-sev-error-soft: #faebea;
+    --ui-backdrop: rgb(10 12 10 / 0.45);
+    --ui-shadow-menu: 0 6px 24px rgb(0 0 0 / 0.12);
+    --ui-shadow-overlay: 0 24px 60px rgb(0 0 0 / 0.28);
+  }
+
+  /* Touch screens keep 28px controls but give them 44px hit areas. */
+  @media (pointer: coarse) {
+    :root {
+      --ui-hit: 44px;
+    }
+  }
+
+  @media (width <= 600px) {
+    :root {
+      --ui-gutter: 16px;
+    }
   }
 
   :root[data-theme="dark"] {
@@ -53,6 +109,7 @@
     --ui-track: #2c2e2a;
     --ui-accent: #4cc393;
     --ui-on-accent: #0c1410;
+    --ui-accent-edge: #317f60;
     --ui-sev-ok: #6fd08c;
     --ui-sev-ok-text: #6fd08c;
     --ui-sev-ok-soft: #27372b;
@@ -68,6 +125,9 @@
     --ui-sev-error: #ff7f76;
     --ui-sev-error-text: #ff7f76;
     --ui-sev-error-soft: #3e2a27;
+    --ui-backdrop: rgb(0 0 0 / 0.6);
+    --ui-shadow-menu: 0 6px 24px rgb(0 0 0 / 0.45);
+    --ui-shadow-overlay: 0 24px 60px rgb(0 0 0 / 0.6);
   }
 
   /* The same dark values: CSS cannot join a selector and a media query in one rule. */
@@ -90,6 +150,7 @@
       --ui-track: #2c2e2a;
       --ui-accent: #4cc393;
       --ui-on-accent: #0c1410;
+      --ui-accent-edge: #317f60;
       --ui-sev-ok: #6fd08c;
       --ui-sev-ok-text: #6fd08c;
       --ui-sev-ok-soft: #27372b;
@@ -105,6 +166,9 @@
       --ui-sev-error: #ff7f76;
       --ui-sev-error-text: #ff7f76;
       --ui-sev-error-soft: #3e2a27;
+      --ui-backdrop: rgb(0 0 0 / 0.6);
+      --ui-shadow-menu: 0 6px 24px rgb(0 0 0 / 0.45);
+      --ui-shadow-overlay: 0 24px 60px rgb(0 0 0 / 0.6);
     }
   }
 }

@@ -112,6 +112,7 @@ export const TORVALDS_SOURCE_PATCHES = [
   "sysctls",
   "promotion-seccomp",
   "promotion-seccomp-containerd-237",
+  "promotion-seccomp-codex-01720-containerd-237",
   "watchdog",
   "zfs",
   "interface",
