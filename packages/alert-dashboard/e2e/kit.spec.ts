@@ -72,6 +72,22 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
+test("a linked row navigates from any cell, not only the lead cell", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/kit");
+  const row = page
+    .getByRole("row")
+    .filter({ has: page.locator("a.ui-row-link") })
+    .first();
+  // The link's cover sits over every cell, so click where the last cell is.
+  const box = await row.getByRole("cell").last().boundingBox();
+  if (box === null) throw new Error("the last cell has no box");
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  await expect(page).toHaveURL(/\/kit\/detail$/);
+});
+
 test("a stacked table reads as label and value lines on a phone", async ({
   page,
 }) => {

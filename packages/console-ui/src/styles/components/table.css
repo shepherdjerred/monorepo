@@ -151,6 +151,14 @@
   .ui-lead {
     position: relative;
   }
+  /*
+   * In a linked row the row, not the lead cell, must contain the cover, or
+   * only the lead cell navigates. The lead cell stays static there, so keep
+   * it the row's first cell: its unread dot then measures from the row edge.
+   */
+  .ui-table tr:has(.ui-row-link) .ui-lead {
+    position: static;
+  }
   .ui-lead > .ui-glyph {
     margin-right: 9px;
   }

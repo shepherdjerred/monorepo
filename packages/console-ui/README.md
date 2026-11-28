@@ -211,7 +211,7 @@ Plain markup with classes: `ui-table` (with `ui-table-scroll`,
 `ui-table-group`, `ui-table-child`, `ui-table-empty`, `tr[data-current]`,
 `th[scope=row]`, `tfoot`, `caption`, `ui-num` for mono right-aligned figures,
 `ui-fill` plus `ui-truncate` for a cell that takes the rest of the width,
-`ui-row-link` for a whole-row link, `ui-twist` for expand buttons,
+`ui-row-link` for a whole-row link (in the row's first, lead cell), `ui-twist` for expand buttons,
 `data-sticky` for a sticky head, and `data-stack` for label/value lines on a
 phone using each cell's `data-label`), `ui-toolbar` and `ui-toolbar-end`,
 `ui-section-body` (padded prose inside a section), `ui-columns`, `ui-chips`,
