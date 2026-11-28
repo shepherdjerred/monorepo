@@ -79,26 +79,10 @@ function readReplicationVector(payload, decodeVectorByte, decodeTailByte) {
   return { vector, count };
 }
 
-function readChampionReplication(
-  vector,
-  count,
-  verifiedChampionIds,
-  { includeChampionStats, includeChampionExperience },
-) {
+function visitReplicationGroups(vector, count, visit) {
   const view = new DataView(vector.buffer);
-  const updates = [];
-  const statsWrites = includeChampionStats ? [] : null;
-  const experienceWrites = includeChampionExperience ? [] : null;
-  const schema = includeChampionExperience
-    ? includeChampionStats
-      ? statsWithExperienceSchema
-      : experienceOnlySchema
-    : includeChampionStats
-      ? championStatsSchema
-      : moveSpeedSchema;
   let cursor = 0;
   let recordIndex = 0;
-  let championGroups = 0;
   while (cursor < vector.length) {
     if (cursor + 5 > vector.length)
       throw Error("Truncated opcode 309 replication record");
@@ -117,16 +101,45 @@ function readChampionReplication(
       cursor = start + size;
       if (cursor > vector.length)
         throw Error("Truncated opcode 309 replication group body");
+      visit(entityId, recordIndex, group, mask, start, cursor);
+    }
+    recordIndex++;
+  }
+  if (recordIndex !== count)
+    throw Error("Opcode 309 replication record count mismatch");
+}
+
+function readChampionReplication(
+  vector,
+  count,
+  verifiedChampionIds,
+  { includeChampionStats, includeChampionExperience },
+) {
+  const updates = [];
+  const statsWrites = includeChampionStats ? [] : null;
+  const experienceWrites = includeChampionExperience ? [] : null;
+  const schema = includeChampionExperience
+    ? includeChampionStats
+      ? statsWithExperienceSchema
+      : experienceOnlySchema
+    : includeChampionStats
+      ? championStatsSchema
+      : moveSpeedSchema;
+  let championGroups = 0;
+  visitReplicationGroups(
+    vector,
+    count,
+    (entityId, recordIndex, group, mask, start, end) => {
       if (
         !verifiedChampionIds.has(entityId) ||
         (group !== 32 && !(statsWrites && group === 1 && mask & 1))
       )
-        continue;
+        return;
       if (group === 32) championGroups++;
       const { values } = decodeRegisteredStateGroup(
         group,
         mask,
-        vector.subarray(start, cursor),
+        vector.subarray(start, end),
         schema,
       );
       if (Object.hasOwn(values, "moveSpeed"))
@@ -142,17 +155,48 @@ function readChampionReplication(
         if (statsWrites && Object.keys(stats).length > 0)
           statsWrites.push({ entityId, ...stats });
       }
-    }
-    recordIndex++;
-  }
-  if (recordIndex !== count)
-    throw Error("Opcode 309 replication record count mismatch");
+    },
+  );
   return {
     recordCount: count,
     championGroups,
     updates,
     ...(statsWrites && { statsWrites }),
     ...(experienceWrites && { experienceWrites }),
+  };
+}
+
+/** Expose original Group 8 field bytes for independently registered prefixes. */
+export function createGroup8Prefix309ReaderFromCodecs({
+  decodeReplicationVectorByte,
+  decodeReplicationTailByte,
+}) {
+  return (payload, verifiedEntityIds) => {
+    if (verifiedEntityIds !== undefined && !(verifiedEntityIds instanceof Set))
+      throw Error("A verified entity ID set is required when filtering");
+    const { vector, count } = readReplicationVector(
+      payload,
+      decodeReplicationVectorByte,
+      decodeReplicationTailByte,
+    );
+    const rows = [];
+    visitReplicationGroups(
+      vector,
+      count,
+      (entityId, recordIndex, group, mask, start, end) => {
+        if (
+          group === 8 &&
+          (verifiedEntityIds === undefined || verifiedEntityIds.has(entityId))
+        )
+          rows.push({
+            entityId,
+            recordIndex,
+            mask,
+            bytes: vector.subarray(start, end),
+          });
+      },
+    );
+    return { recordCount: count, rows };
   };
 }
 

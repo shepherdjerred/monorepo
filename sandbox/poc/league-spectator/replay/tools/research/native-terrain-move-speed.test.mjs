@@ -4,7 +4,10 @@ import {
   createMoveSpeed309Reader,
   loadMoveSpeed309Reader,
 } from "./native-terrain-move-speed.mjs";
-import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
+import {
+  createGroup8Prefix309ReaderFromCodecs,
+  createMoveSpeed309ReaderFromCodecs,
+} from "./native-terrain-move-speed-reader.mjs";
 
 const replay = { build: "16.23.840.6595", protocol: "8bbfcd5af2bc92db" };
 
@@ -51,6 +54,34 @@ function oneRecord(groups) {
   );
   return Uint8Array.of(0xf0, 1, record.length, ...interleaved);
 }
+
+test("exposes Group 8 bytes and the full unsigned mask for bound IDs", () => {
+  const read = createGroup8Prefix309ReaderFromCodecs({
+    decodeReplicationVectorByte: (byte) => byte,
+    decodeReplicationTailByte: (byte) => byte,
+  });
+  const body = oneRecord([
+    [1, 1, [255]],
+    [8, 0x80000003, [255, 0, 0, 0x80, 0x3f, 42]],
+    [32, 1, [255]],
+  ]);
+  const expected = {
+    recordCount: 1,
+    rows: [
+      {
+        entityId: 7,
+        recordIndex: 0,
+        mask: 0x80000003,
+        bytes: Uint8Array.of(255, 0, 0, 0x80, 0x3f, 42),
+      },
+    ],
+  };
+  assert.deepEqual(read(body), expected);
+  assert.deepEqual(read(body, new Set([7])), expected);
+  assert.deepEqual(read(body, new Set([8])), { recordCount: 1, rows: [] });
+  assert.throws(() => read(body, [7]), /verified entity ID set/);
+  assert.throws(() => read(body.subarray(0, -1)), /exceeds packet length/);
+});
 
 test("opts into verified champion group 1 and 32 stats with the same speed reads", () => {
   const body = oneRecord([

@@ -417,12 +417,11 @@ export const createReplayEngine: ReplayEngineFactory = async ({
           loaded.announcerCues,
         )
       : undefined;
-  const data = prepareScene(
-    loaded.scene,
-    loaded.heights,
-    inventory,
-    loaded.playerNames,
-  );
+  const data = prepareScene(loaded.scene, loaded.heights, {
+    inventoryPoints: inventory,
+    playerNames: loaded.playerNames,
+    laneHealth: loaded.laneHealth,
+  });
   let perspective: ReplayPerspective = "all";
   function visibilityAt(timeSeconds: number) {
     const side = perspective;
@@ -491,6 +490,9 @@ export const createReplayEngine: ReplayEngineFactory = async ({
               ...(data.championHealthAt === undefined
                 ? {}
                 : { championHealthAt: data.championHealthAt }),
+              ...(data.laneMinionHealthAt === undefined
+                ? {}
+                : { laneMinionHealthAt: data.laneMinionHealthAt }),
               ...(data.championNameplateAt === undefined
                 ? {}
                 : { championNameplateAt: data.championNameplateAt }),

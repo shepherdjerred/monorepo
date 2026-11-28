@@ -232,6 +232,20 @@ producer copies the existing GLBs and strips the match-specific actor proof.
 bun tools/native-terrain-lane-minion-catalog.mjs $newPrivateLaneCatalog $preparedLaneModelsA $preparedLaneModelsASha256 $preparedLaneModelsB $preparedLaneModelsBSha256
 ```
 
+The `.8428` Scout preview reads lane-minion health from opcode 309 group 8.
+It uses chronological updates after birth and before death, and waits for
+both current and maximum health. Bars apply in the detail camera to minions
+that are visible under the selected vision mode. The replay worker derives
+these values from the ROFL. The package needs no match-specific health file.
+
+Verify the exact client registration, stream bytes, and native getters with
+the same original archive and the portable lane evidence from above.
+
+```powershell
+$laneHealthGroupsSha256 = bun tools/research/recorded-lane-minion-health.mjs $macGameExecutable $replayPath $newLaneActorProof $newLaneHealthGroups
+uv run --offline --with unicorn python tools/research/probe-exact-lane-minion-health.py $macGameExecutable $newLaneHealthGroups $newLaneHealthReceipt --groups-sha256 $laneHealthGroupsSha256
+```
+
 Give `serve-native-terrain.mjs` the catalog with `--lane-minion-model-catalog`
 and `--lane-minion-model-catalog-sha256`. Pass the original WAD entries as
 `--lane-minion-map-materials` and `--lane-minion-map-definitions`. The builder

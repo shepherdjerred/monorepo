@@ -1,5 +1,9 @@
 import { decompress } from "scout-terrain-fzstd";
 import { prepareReplayForSeek } from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/prepare.mjs";
+import {
+  foldRecordedLaneMinionHealth,
+  laneMinionHealthGroup,
+} from "../../../../../../packages/scout-for-lol/packages/replay/src/observations/replay-lane-minion-health.mjs";
 import { replayTimedPacketEnvelopes } from "../../replay-packet-clock.mjs";
 import { openReplay, replayPacketEnvelopes } from "../../transport.mjs";
 import { createCurrentChampionAnimationCueAccumulator } from "./native-terrain-animation-cue-reader.mjs";
@@ -24,7 +28,10 @@ import {
   verifyCurrentMap11ControllerGraph,
 } from "./native-terrain-controller-visibility.mjs";
 import { prepareNativeTerrainMotion } from "./native-terrain-motion.mjs";
-import { createMoveSpeed309ReaderFromCodecs } from "./native-terrain-move-speed-reader.mjs";
+import {
+  createGroup8Prefix309ReaderFromCodecs,
+  createMoveSpeed309ReaderFromCodecs,
+} from "./native-terrain-move-speed-reader.mjs";
 import { readCurrentRecordedPlayerState } from "./native-terrain-player-state.mjs";
 import { createPosition944ReaderFromCodecs } from "./native-terrain-positions-944-reader.mjs";
 import { createWaypointReaderFromCodecs } from "./native-terrain-waypoints-reader.mjs";
@@ -150,7 +157,31 @@ async function readLaneModelIds(catalog) {
   return ids;
 }
 
-function finishLaneMinions(lane, modelIds) {
+function createLaneMinionHealthCollector(codecs) {
+  const readGroup8 = createGroup8Prefix309ReaderFromCodecs(codecs);
+  const updates = [];
+  let opcode;
+  return {
+    observe(packet) {
+      if (packet.stream !== 1) return;
+      if (packet.blockOffset === 0) opcode = undefined;
+      opcode = packet.explicitOpcode ?? opcode;
+      if (opcode !== 309) return;
+      for (const { entityId, mask, bytes } of readGroup8(packet.payload).rows)
+        updates.push({
+          participantId: entityId,
+          stream: packet.stream,
+          group: laneMinionHealthGroup,
+          fieldMask: mask,
+          timeSeconds: packet.timeSeconds,
+          bytes: bytes.slice(0, 10),
+        });
+    },
+    finish: (instances) => foldRecordedLaneMinionHealth(instances, updates),
+  };
+}
+
+function finishLaneMinions(lane, modelIds, health) {
   const { instances, coverage } = lane.finish();
   const laneMinionInstances = instances.map(
     ({
@@ -174,7 +205,11 @@ function finishLaneMinions(lane, modelIds) {
       };
     },
   );
-  return { laneMinionInstances, laneMinionCoverage: coverage };
+  return {
+    laneMinionInstances,
+    laneMinionCoverage: coverage,
+    laneMinionHealth: health.finish(instances),
+  };
 }
 
 function readPreparedChampionAnimationActors(binding, catalog) {
@@ -590,6 +625,8 @@ async function prepareMotion({
           onBirth: teamVision?.addCandidate,
           readWaypoints,
         });
+  const laneHealth =
+    lane === undefined ? undefined : createLaneMinionHealthCollector(codecs);
   const neutral =
     neutralModelIds === undefined
       ? undefined
@@ -625,6 +662,7 @@ async function prepareMotion({
     teamVision,
     terrain,
     lane,
+    laneHealth,
     neutral,
     inhibitors,
     turrets,
@@ -686,7 +724,9 @@ async function prepareMotion({
     };
   }
   const laneResult =
-    lane === undefined ? undefined : finishLaneMinions(lane, laneModelIds);
+    lane === undefined
+      ? undefined
+      : finishLaneMinions(lane, laneModelIds, laneHealth);
   const neutralResult =
     neutral === undefined
       ? undefined

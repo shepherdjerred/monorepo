@@ -28,26 +28,28 @@ export function inhibitorIsActive(
   );
 }
 
-function drawChampionHealth(
+function drawHealthBars(
   gl,
-  frame,
+  actors,
   sample,
   models,
   matrix,
   width,
   height,
   ratio,
+  size,
 ) {
-  const gaugeWidth = Math.round(54 * ratio);
-  const gaugeHeight = Math.round(6 * ratio);
+  const gaugeWidth = Math.round(size[0] * ratio);
+  const gaugeHeight = Math.round(size[1] * ratio);
   const border = Math.round(ratio);
   const screenGap = Math.round(4 * ratio);
   let drawing = false;
   try {
-    for (const { participantId, position, teamId } of frame.markers) {
+    for (const actor of actors) {
+      const { participantId, position, teamId } = actor;
       const model = models.get(participantId);
       if (model === undefined) continue;
-      const health = sample(participantId, frame.timeSeconds);
+      const health = sample(actor);
       if (health === undefined) continue;
       const point = projectChampionTop(
         position,
@@ -72,7 +74,7 @@ function drawChampionHealth(
       gl.scissor(left, bottom, gaugeWidth, gaugeHeight);
       gl.clearColor(...healthTrackColor);
       gl.clear(gl.COLOR_BUFFER_BIT);
-      const [, current, max] = health;
+      const [current, max] = health;
       if (current === 0) continue;
       const filled = Math.max(
         1,
@@ -737,18 +739,53 @@ export function createTerrainRenderer(
         recordedParticles.sampleAt(frame.timeSeconds),
       );
     if (
+      options.focus !== undefined &&
+      worldUnitModels !== undefined &&
+      frame.worldUnits !== undefined &&
+      options.laneMinionHealthAt !== undefined
+    ) {
+      drawHealthBars(
+        gl,
+        frame.worldUnits,
+        ({ context, teamId }) => {
+          if (
+            context === undefined ||
+            (teamId !== 100 && teamId !== 200) ||
+            options.isVisible?.(context) === false
+          )
+            return undefined;
+          const health = options.laneMinionHealthAt(context, frame.timeSeconds);
+          if (health === undefined || health.current <= 0) return undefined;
+          return [health.current, health.max];
+        },
+        worldUnitModels,
+        viewProjection.elements,
+        width,
+        height,
+        ratio,
+        [24, 4],
+      );
+    }
+    if (
       championModels !== undefined &&
       options.championHealthAt !== undefined
     ) {
-      drawChampionHealth(
+      drawHealthBars(
         gl,
-        frame,
-        options.championHealthAt,
+        frame.markers,
+        ({ participantId }) => {
+          const health = options.championHealthAt(
+            participantId,
+            frame.timeSeconds,
+          );
+          return health === undefined ? undefined : [health[1], health[2]];
+        },
         championModels,
         viewProjection.elements,
         width,
         height,
         ratio,
+        [54, 6],
       );
     }
     const nameplateAt =

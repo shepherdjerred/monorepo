@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sampleRecordedLaneMinionHealth } from "../../../../packages/scout-for-lol/packages/replay/src/observations/replay-lane-minion-health.mjs";
 import { parseReplaySceneTrace } from "@scout-for-lol/replay/scene";
 import type {
   ReplayPlayerScore,
@@ -552,6 +553,22 @@ const LaneMinionCoverageSchema = z.strictObject({
 });
 const LaneMinionInstancesSchema = z.array(
   worldUnitInstance.extend({ teamId, killTimeSeconds: z.number().positive() }),
+);
+const LaneMinionHealthSchema = z.array(
+  z.strictObject({
+    context: participantId,
+    start: z.number().nonnegative(),
+    end: z.number().positive(),
+    points: z
+      .array(
+        z.tuple([
+          z.number().nonnegative(),
+          z.number().nonnegative(),
+          z.number().positive(),
+        ]),
+      )
+      .min(1),
+  }),
 );
 const NeutralObjectiveInstancesSchema = z.array(
   worldUnitInstance.omit({ teamId: true }),
@@ -1255,6 +1272,10 @@ export type RendererModule = {
         ) =>
           | readonly [timeSeconds: number, current: number, max: number]
           | undefined;
+        laneMinionHealthAt?: (
+          context: number,
+          timeSeconds: number,
+        ) => { current: number; max: number } | undefined;
         championNameplateAt?: (
           participantId: number,
           timeSeconds: number,
@@ -1379,6 +1400,7 @@ const WorkerMotionResponse = z.discriminatedUnion("type", [
     terrainVisibility: TerrainVisibilitySchema.optional(),
     laneMinionInstances: LaneMinionInstancesSchema.optional(),
     laneMinionCoverage: LaneMinionCoverageSchema.optional(),
+    laneMinionHealth: LaneMinionHealthSchema.optional(),
     neutralObjectiveInstances: NeutralObjectiveInstancesSchema.optional(),
     neutralObjectiveKills: NeutralObjectiveWorkerKillsSchema.optional(),
     neutralObjectiveOmissions: NeutralObjectiveOmissionsSchema.optional(),
@@ -1539,9 +1561,41 @@ async function loadWorkerMotion(
     const decodeLanes = workerMotion.laneMinionCatalog !== undefined;
     if (
       (result.laneMinionInstances !== undefined) !== decodeLanes ||
-      (result.laneMinionCoverage !== undefined) !== decodeLanes
+      (result.laneMinionCoverage !== undefined) !== decodeLanes ||
+      (result.laneMinionHealth !== undefined) !== decodeLanes
     )
       throw Error("Replay motion worker returned unexpected lane coverage.");
+    const laneHealth = new Map<
+      number,
+      z.infer<typeof LaneMinionHealthSchema>[number]
+    >();
+    const laneActors = new Map(
+      result.laneMinionInstances?.map((actor) => [actor.context, actor]),
+    );
+    for (const track of result.laneMinionHealth ?? []) {
+      const actor = laneActors.get(track.context);
+      if (
+        actor === undefined ||
+        track.start !== actor.creationTimeSeconds ||
+        track.end !== actor.killTimeSeconds ||
+        laneHealth.has(track.context)
+      )
+        throw Error(
+          "Lane minion health does not match a unique recorded actor.",
+        );
+      let previous = -1;
+      for (const [seconds, current, max] of track.points) {
+        if (
+          seconds < track.start ||
+          seconds >= track.end ||
+          seconds <= previous ||
+          current > max
+        )
+          throw Error("Lane minion health has an invalid observation.");
+        previous = seconds;
+      }
+      laneHealth.set(track.context, track);
+    }
     const decodeObjectives = workerMotion.neutralObjectiveModels !== undefined;
     if (
       (result.neutralObjectiveInstances !== undefined) !== decodeObjectives ||
@@ -1725,7 +1779,7 @@ async function loadWorkerMotion(
         announcerEvents,
         identity.durationMilliseconds / 1000,
       );
-    return result;
+    return { ...result, laneHealth };
   } finally {
     if (cancel !== undefined) signal.removeEventListener("abort", cancel);
     worker.terminate();
@@ -2200,14 +2254,25 @@ export async function loadSceneMotion(
     heights,
     announcerCues: decoded.announcerCues,
     playerNames: decoded.playerNames,
+    laneHealth: decoded.laneHealth,
   };
 }
 
 export function prepareScene(
   scene: TerrainScene,
   heights: Float32Array | undefined,
-  inventoryPoints?: ReplayInventoryPoints,
-  playerNames?: z.infer<typeof WorkerPlayerNames>,
+  {
+    inventoryPoints,
+    playerNames,
+    laneHealth,
+  }: {
+    inventoryPoints?: ReplayInventoryPoints;
+    playerNames?: z.infer<typeof WorkerPlayerNames>;
+    laneHealth?: ReadonlyMap<
+      number,
+      z.infer<typeof LaneMinionHealthSchema>[number]
+    >;
+  } = {},
 ) {
   const teams = new Map(
     scene.participants.map((participant) => [
@@ -2496,6 +2561,12 @@ export function prepareScene(
         : { resource: { current: resource[1], max: resource[2] } }),
     };
   }
+  function laneMinionHealthAt(context: number, timeSeconds: number) {
+    const track = laneHealth?.get(context);
+    return track === undefined
+      ? undefined
+      : sampleRecordedLaneMinionHealth(track, timeSeconds);
+  }
   function championExperienceAt(participantId: number, timeSeconds: number) {
     const track = experienceTracks?.get(participantId);
     const point =
@@ -2664,6 +2735,7 @@ export function prepareScene(
     playerCheckpoints,
     scoreboardAt,
     championHealthAt: healthTracks === null ? undefined : championHealthAt,
+    laneMinionHealthAt: laneHealth?.size ? laneMinionHealthAt : undefined,
     championNameplateAt:
       healthTracks === null ? undefined : championNameplateAt,
   };
