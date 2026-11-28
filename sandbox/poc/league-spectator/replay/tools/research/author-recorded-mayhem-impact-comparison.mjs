@@ -47,6 +47,18 @@ const heimerImpact = {
   stopSha256:
     "bb81d1e253d06442f10a2e8fe99337306df5a9fb74fb3950a42560623b810b6c",
 };
+const heimerAmmo = {
+  family: "heimerdinger-q-ammo-spend",
+  lifetime: 0.5,
+  nativeSha256:
+    "a0a20c3167b18016c044079fac2089d47809955cc209ea185839689f44a85781",
+  stopsSha256:
+    "8eb6f1c9bb85c000b5a8cc062c60c210610662ac6d3c7cc6a0e356cfb644c680",
+  textureSha256:
+    "0df0fde80d211e8b9f53222a27b197fa79701a88e049a103554985cb1c1ac633",
+  paletteSha256:
+    "c23e325cc59c7b6aa50a333e61fda6ae676022fd51a1a0eb54c75ccad3a9d84f",
+};
 const hash = (bytes) => Bun.CryptoHasher.hash("sha256", bytes, "hex");
 const leaf = (sha256, extension) => `recorded-particles/${sha256}.${extension}`;
 
@@ -100,6 +112,77 @@ async function prepareHeimerImpact(inputs, replaySha256, files) {
           alphaTest: true,
           depthTest: true,
         })),
+      },
+    ],
+  };
+}
+
+async function prepareHeimerAmmo(inputs, replaySha256, files) {
+  const nativeBytes = (await readFile(inputs.native, "utf8")).replace(
+    /\r?\n$/u,
+    "",
+  );
+  assert.equal(hash(nativeBytes), heimerAmmo.nativeSha256);
+  const native = JSON.parse(nativeBytes);
+  assert.equal(native.inserts[0].lifetime, heimerAmmo.lifetime);
+  const stops = JSON.parse(await pinned(inputs.stops, heimerAmmo.stopsSha256));
+  assert.equal(stops.replaySha256, replaySha256);
+  assert.deepEqual(stops.matching, []);
+  assert.equal(stops.events.length, 84);
+  assert.deepEqual(
+    stops.targetHandles,
+    stops.events.map(({ handle }) => handle).sort((a, b) => a - b),
+  );
+  const texture = leaf(heimerAmmo.textureSha256, "png");
+  const palette = leaf(heimerAmmo.paletteSha256, "png");
+  files.set(texture, await pinned(inputs.texture, heimerAmmo.textureSha256));
+  if (!files.has(palette))
+    files.set(palette, await pinned(inputs.palette, heimerAmmo.paletteSha256));
+
+  const indices = "000001000200000002000300";
+  const samples = native.timeline
+    .filter(([age]) => age > 0)
+    .map(([age, count, geometry]) => {
+      assert.equal(count, 1);
+      assert.equal(geometry.indexBytes, indices);
+      return { age, vertices: geometry.vertexBytes };
+    });
+  const effects = stops.events.map(
+    ({ stamp, handle, owner, context, parent, status, descriptor }) => {
+      assert.equal(owner, 1073741898);
+      assert.equal(context, 0);
+      assert.equal(parent, 0);
+      assert.equal(status, "detached-placement-confirmed");
+      assert.equal(descriptor.resourceKey, 0x45f7e988);
+      assert.equal(descriptor.flags, 0x20);
+      assert.deepEqual(descriptor.scaleRate, [1, 1]);
+      const [position, secondary, unused] = descriptor.positions;
+      assert.deepEqual(position, secondary);
+      assert.deepEqual(unused, [0, 0, 0]);
+      assert.ok(
+        stamp >= stops.first && stamp + heimerAmmo.lifetime <= stops.last,
+      );
+      return { handle, start: stamp, position, family: heimerAmmo.family };
+    },
+  );
+  return {
+    effects,
+    families: [
+      {
+        id: heimerAmmo.family,
+        components: [
+          {
+            texture,
+            palette,
+            blend: "one-one",
+            centerY: native.inserts[0].position[1],
+            alphaTest: true,
+            depthTest: true,
+            indices,
+            lifetime: heimerAmmo.lifetime,
+            samples,
+          },
+        ],
       },
     ],
   };
@@ -289,6 +372,14 @@ const heimer =
         primary.source.replaySha256,
         files,
       );
+const ammo =
+  inputs.heimerAmmo === undefined
+    ? { effects: [], families: [] }
+    : await prepareHeimerAmmo(
+        inputs.heimerAmmo,
+        primary.source.replaySha256,
+        files,
+      );
 const track = {
   schema: 8,
   kind: "recorded-native-terrain-particles",
@@ -300,7 +391,10 @@ const track = {
     vertex: leaf(vertexSha256, "glsl"),
     fragment: leaf(fragmentSha256, "glsl"),
   },
-  ...heimer,
+  effects: [...heimer.effects, ...ammo.effects].sort(
+    (a, b) => a.start - b.start || a.handle - b.handle,
+  ),
+  families: [...heimer.families, ...ammo.families],
   worldImpact,
   ...(additionalWorldImpacts.length === 0 ? {} : { additionalWorldImpacts }),
   textures: {

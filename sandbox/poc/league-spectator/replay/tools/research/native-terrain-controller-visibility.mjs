@@ -26,6 +26,10 @@ const graphDigests = new Map([
     "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc",
     "cc8d22ab357189efe67e15379d55353fa59902f28dd49b09cda99fe4c14600e2",
   ],
+  [
+    "e5f69629e7a28a2ede5945cfb944f3558758953559a22c3c70ae82f97365b0bb",
+    "2d1020a2d45eb578dbbdeec6e3ca025a9401d0f855d905a7edb152960c3dce8c",
+  ],
 ]);
 const materialsDigest =
   "ed38cba7aaa4390e8b2a2cfe778d5f1151152b9b97f2c90883c17b27b510d67a";
@@ -44,7 +48,8 @@ export async function verifyCurrentMap11ControllerGraph(input) {
     expected === undefined ||
     materialsSha256 !== materialsDigest ||
     !Array.isArray(meshControllerIds) ||
-    (meshControllerIds.length !== 12 && meshControllerIds.length !== 13) ||
+    meshControllerIds.length < 12 ||
+    meshControllerIds.length > 14 ||
     controllers === null ||
     typeof controllers !== "object" ||
     Object.keys(controllers).length !== 35 ||

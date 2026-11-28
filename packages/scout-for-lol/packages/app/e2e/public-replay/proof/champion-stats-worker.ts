@@ -1,6 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { z } from "zod";
+import { expectedRecordedTerrainTracks } from "#replay-e2e/recorded-terrain-assertions.ts";
 import {
   AnimationOmissionsSchema,
   verifyRecordedAnimationResponse,
@@ -386,24 +387,10 @@ async function verifyDirectTerrainVisibility(
     }).parse(decode(bytes));
   expect(replaySha256).toBe(fixture.descriptor.sha256);
   const map = await Bun.file(path.join(fixture.root, "map.json")).bytes();
-  const mountain =
-    new Bun.CryptoHasher("sha256").update(map).digest("hex") ===
-    "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc";
-  // Authored default plus pinned ordinary write to name hash 215400aa.
-  const mountainTrack = {
-    controllerId: 402_973_412,
-    points: [
-      [0, false],
-      [883.34115234375, true],
-    ],
-  };
+  const mapDigest = new Bun.CryptoHasher("sha256").update(map).digest("hex");
   expect(actual).toEqual({
     ...expected,
-    tracks: mountain
-      ? [...expected.tracks, mountainTrack].sort(
-          (a, b) => a.controllerId - b.controllerId,
-        )
-      : expected.tracks,
+    tracks: expectedRecordedTerrainTracks(mapDigest, expected.tracks),
     omittedMeshControllerIds: unresolvedMeshControllerIds,
   });
   return actual;

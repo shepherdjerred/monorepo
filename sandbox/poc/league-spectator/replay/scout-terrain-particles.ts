@@ -177,32 +177,36 @@ const billboardDepthTrack = familyTrack.extend({
     noAlphaTestFragment: glsl.optional(),
   }),
 });
+const mayhemLocalQuad = (lifetime: number) =>
+  depthComponent.extend({
+    lifetime: z.literal(Math.fround(lifetime)),
+    blend: z.literal("one-one"),
+    alphaTest: z.literal(true),
+    depthTest: z.literal(true),
+  });
 const mayhemImpactComparisonTrack = familyTrack.extend({
   schema: z.literal(8),
   status: z.literal("controlled-mayhem-impact-comparison"),
   scope: z.literal("native-sampled-supplied-random"),
   effects: z.array(
-    particleEffect.extend({ family: z.literal("heimerdinger-w-impact") }),
+    particleEffect.extend({
+      family: z.enum(["heimerdinger-w-impact", "heimerdinger-q-ammo-spend"]),
+    }),
   ),
   families: z
     .array(
-      family.extend({
-        id: z.literal("heimerdinger-w-impact"),
-        components: z.tuple([
-          depthComponent.extend({
-            lifetime: z.literal(Math.fround(0.2)),
-            alphaTest: z.literal(true),
-            depthTest: z.literal(true),
-          }),
-          depthComponent.extend({
-            lifetime: z.literal(Math.fround(0.3)),
-            alphaTest: z.literal(true),
-            depthTest: z.literal(true),
-          }),
-        ]),
-      }),
+      z.discriminatedUnion("id", [
+        family.extend({
+          id: z.literal("heimerdinger-w-impact"),
+          components: z.tuple([mayhemLocalQuad(0.2), mayhemLocalQuad(0.3)]),
+        }),
+        family.extend({
+          id: z.literal("heimerdinger-q-ammo-spend"),
+          components: z.tuple([mayhemLocalQuad(0.5)]),
+        }),
+      ]),
     )
-    .max(1),
+    .max(2),
   worldImpact: worldQuadTrack.extend({
     paths: worldQuadTrack.shape.paths.length(2),
   }),

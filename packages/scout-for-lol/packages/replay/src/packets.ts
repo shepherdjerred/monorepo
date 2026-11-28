@@ -1,4 +1,5 @@
 import { createReplayPacketReader as createReader } from "./observations/packet-reader.mjs";
+import { openReplay } from "./observations/transport.mjs";
 import type { ReplayDecompressor } from "./observations.ts";
 
 export type ReplayPacketKeyframe = Readonly<{
@@ -40,6 +41,22 @@ export type ReplayPacketReader = Readonly<{
     options?: { signal?: AbortSignal },
   ) => ReplayPacketWindow;
 }>;
+
+/** Read the original container header and footer without decoding packet bodies. */
+export function readReplayContainerIdentity(buffer: ArrayBuffer): Pick<
+  ReplayPacketReader,
+  "build" | "protocol" | "durationMilliseconds"
+> & {
+  participantCount: number;
+} {
+  const { build, protocol, durationMilliseconds, roster } = openReplay(buffer);
+  return {
+    build,
+    protocol,
+    durationMilliseconds,
+    participantCount: roster.length,
+  };
+}
 
 /** Read-only original-buffer ownership; cancellation is checked between packet reads. */
 export function createReplayPacketReader(

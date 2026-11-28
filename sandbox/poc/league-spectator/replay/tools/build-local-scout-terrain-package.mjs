@@ -128,15 +128,27 @@ export async function readLocalRecordedParticleResources(
     expectedTextures.add(palette);
   }
   if (impactComparison) {
-    const [family] = track.families;
-    assert.ok(track.families.length <= 1);
-    if (family === undefined) assert.deepEqual(track.effects, []);
-    else {
-      assert.equal(family.id, "heimerdinger-w-impact");
-      assert.equal(family.components.length, 2);
-      assert.equal(track.effects.length, 210);
-      assert.ok(track.effects.every((effect) => effect.family === family.id));
+    const reviewed = new Map([
+      ["heimerdinger-w-impact", { components: 2, effects: 210 }],
+      ["heimerdinger-q-ammo-spend", { components: 1, effects: 84 }],
+    ]);
+    const declared = new Set();
+    let effects = 0;
+    for (const { id, components } of track.families) {
+      const expected = reviewed.get(id);
+      assert.ok(
+        expected && !declared.has(id),
+        "Unreviewed Mayhem effect family",
+      );
+      declared.add(id);
+      assert.equal(components.length, expected.components);
+      assert.equal(
+        track.effects.filter(({ family }) => family === id).length,
+        expected.effects,
+      );
+      effects += expected.effects;
     }
+    assert.equal(track.effects.length, effects);
     for (const { texture, palette } of [
       track.worldImpact,
       ...(track.additionalWorldImpacts ?? []),
@@ -227,6 +239,7 @@ async function buildEngine(threeCore) {
 export async function writeLocalScoutTerrainPackage({
   output,
   identity,
+  buildScoped = false,
   map = { mapId: 11, gameMode: "CLASSIC" },
   routes,
   threeCore,
@@ -235,6 +248,23 @@ export async function writeLocalScoutTerrainPackage({
   particleFiles,
   impactComparisonFiles,
 }) {
+  if (buildScoped) {
+    assert.deepEqual(map, { mapId: 11, gameMode: "CLASSIC" });
+    assert.ok(
+      [
+        announcerFiles,
+        combatAudioFiles,
+        particleFiles,
+        impactComparisonFiles,
+      ].every((files) => files === undefined),
+      "Replay-bound resources are unavailable in build-scoped packages",
+    );
+    const { validateBuildScopedRiftScene } =
+      await import("./research/build-scoped-rift-scene.mjs");
+    const scene = routes.get("/scene.json")?.[0];
+    assert.equal(typeof scene, "string");
+    validateBuildScopedRiftScene(JSON.parse(scene));
+  }
   const cache = join(await realpath(repoRoot), ".cache");
   const outputRoot = resolve(output);
   assert.equal(
@@ -297,24 +327,30 @@ export async function writeLocalScoutTerrainPackage({
     gameBuild: identity.build,
     protocol: identity.protocol,
     entrypoint,
-    capabilities: {
-      ...map,
-      teamSizes: [5, 5],
-      rosterCoverage: "recorded-replay",
-      replaySha256: identity.replaySha256,
-      ...(announcerFiles === undefined
-        ? {}
-        : { announcerPreview: "female1-en-us" }),
-      ...(combatAudioFiles === undefined
-        ? {}
-        : { combatAudioComparison: "packet-clock-dry-source" }),
-      ...(particleFiles === undefined
-        ? {}
-        : { particlePreview: "verified-partial-effects" }),
-      ...(impactComparisonFiles === undefined
-        ? {}
-        : { mayhemImpactComparison: "supplied-random-world-quad" }),
-    },
+    capabilities: buildScoped
+      ? {
+          ...map,
+          teamSizes: [5, 5],
+          rosterCoverage: "build-scoped-archive",
+        }
+      : {
+          ...map,
+          teamSizes: [5, 5],
+          rosterCoverage: "recorded-replay",
+          replaySha256: identity.replaySha256,
+          ...(announcerFiles === undefined
+            ? {}
+            : { announcerPreview: "female1-en-us" }),
+          ...(combatAudioFiles === undefined
+            ? {}
+            : { combatAudioComparison: "packet-clock-dry-source" }),
+          ...(particleFiles === undefined
+            ? {}
+            : { particlePreview: "verified-partial-effects" }),
+          ...(impactComparisonFiles === undefined
+            ? {}
+            : { mayhemImpactComparison: "supplied-random-world-quad" }),
+        },
     files,
   });
   const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
@@ -330,7 +366,14 @@ export async function writeLocalScoutTerrainPackage({
   }
   const manifestPath = join(packageDirectory, "manifest.json");
   await writeFile(manifestPath, manifestBytes, { flag: "wx" });
-  return { manifestPath, manifestSha256, ...identity, fileCount: files.length };
+  return {
+    manifestPath,
+    manifestSha256,
+    ...(buildScoped
+      ? { build: identity.build, protocol: identity.protocol }
+      : identity),
+    fileCount: files.length,
+  };
 }
 
 if (import.meta.main) {

@@ -530,7 +530,11 @@ export function createTerrainRenderer(
           (worldUnitModels?.size ?? 0)
       )
         throw Error("Duplicate terrain model binding");
-      if (structureModels !== undefined && scene.structureModels === undefined)
+      if (
+        structureModels !== undefined &&
+        scene.structureModels === undefined &&
+        scene.bloomTurretCores === undefined
+      )
         throw Error("Missing replay-bound structure positions");
       if (nexusModels !== undefined && scene.nexusModels === undefined)
         throw Error("Missing replay-bound Nexus positions");
@@ -701,6 +705,17 @@ export function createTerrainRenderer(
         modelRenderer.draw(viewProjection.elements, frame.worldUnits ?? []);
       if (structureModels !== undefined || nexusModels !== undefined)
         modelRenderer.draw(viewProjection.elements, visibleStructures);
+      if (structureModels !== undefined && scene.bloomTurretCores !== undefined)
+        modelRenderer.draw(
+          viewProjection.elements,
+          scene.bloomTurretCores.instances.filter(
+            ({ destroyedAtSeconds }) =>
+              frame.timeSeconds <
+              (destroyedAtSeconds ??
+                scene.bloomTurretCores.beforeSeconds ??
+                Infinity),
+          ),
+        );
       if (nexusModels !== undefined) {
         const { instances, terminalLoss, cue } = scene.nexusModels;
         const loss = terminalLoss ?? cue;

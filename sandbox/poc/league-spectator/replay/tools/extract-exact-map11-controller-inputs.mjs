@@ -26,6 +26,7 @@ export function readExactMap11ControllerGraph(map, materials) {
     ["24716f3c47ed5eadaa80693f0113dffb21dd2b5ab419957c5ae91c3a0e77ad15", 12],
     ["4a8b2432fa3316647092fee062ff84c198f5e085ea11860aa4584082f46a889d", 13],
     ["5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc", 13],
+    ["e5f69629e7a28a2ede5945cfb944f3558758953559a22c3c70ae82f97365b0bb", 14],
   ]);
   assert.ok(allowedExports.has(geometrySha256));
   const materialsSha256 = sha(materials);

@@ -184,11 +184,13 @@ if (process.argv[2] === "--help") {
   );
   assert.equal(manifest.gameBuild, replay.build);
   assert.equal(manifest.protocol, replay.protocol);
-  assert.equal(
-    manifest.capabilities.replaySha256,
-    new Bun.CryptoHasher("sha256").update(replayBytes).digest("hex"),
-    "The package belongs to another replay",
-  );
+  if (manifest.capabilities.rosterCoverage === "recorded-replay") {
+    assert.equal(
+      manifest.capabilities.replaySha256,
+      new Bun.CryptoHasher("sha256").update(replayBytes).digest("hex"),
+      "The package belongs to another replay",
+    );
+  }
 
   const inherited = childEnv();
   const databasePort = Number(inherited.SCOUT_PG_PORT || 5471);

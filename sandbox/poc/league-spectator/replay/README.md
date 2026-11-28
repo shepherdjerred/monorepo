@@ -484,6 +484,16 @@ worker pass binds the original hero creation and team packets to the replay
 footer. The resulting roster supplies camera, vision, and item inventory.
 The package still pins its source replay digest and duration.
 
+For a private build-scoped Rift package, add `--build-scoped-package`,
+`--rift-startup-archive`, `--turrets-from-replay`, and `--nexus-from-replay`.
+The preparer checks an exact-build Map11 CLASSIC seed in the offline native
+startup reader. The emitted scene contains build and protocol identities.
+Scout reads the replay identity and duration from the supplied ROFL, then
+the worker checks the opening Map11 structures and terminal Nexus evidence.
+Use the replay-bound package to include prepared combat effects or audio.
+Set `SCOUT_REPLAY_E2E_WRONG_MAP_ROFL` to a same-build Map12 ROFL to exercise
+wrong-map rejection in the recorded browser test.
+
 To prepare its champion position decoder from the
 matching archive, use the replay-specific decoder command below. With a
 verified visibility receipt, the newer package omits mesh groups whose
@@ -793,6 +803,18 @@ Pass the output `materials.json` to `--terrain-materials`, the expanded map
 directory to `--mountain-terrain-export`, and the reviewed material definition
 to `--terrain-visibility-from-replay`. The worker follows the two recorded
 Mountain controller clocks and keeps unresolved intervals explicit.
+
+The build-scoped package can ship both reviewed Infernal and Mountain ranges.
+Combine the verified geometry and material exports in a private directory.
+
+```powershell
+bun tools/prepare-native-terrain-elemental-materials.mjs $infernalGeometry $infernalMaterials $mountainGeometry $mountainMaterials $privateElementalTerrain
+```
+
+Pass that directory to `--infernal-mountain-terrain-export` and its
+`materials.json` to `--terrain-materials`. The worker selects the visible
+ranges from each replay's original controller packets. In the reviewed .8428
+Mountain match, the Infernal geometry remains hidden.
 
 To prepare the champions' original mesh and rig inputs, read the skin
 selectors from the replay's opening hero creation packets. The exporter uses
@@ -1510,6 +1532,20 @@ The same package can include Heimerdinger's recorded W impacts. Set
 `heimerImpact.stops` to the pinned full stop scan for its handles.
 The author verifies all 210 placements against the same Bloom ROFL. The
 browser check samples before, during, and after their first cluster.
+Set `heimerAmmo.native` and `heimerAmmo.stops` to the pinned Skin 2 Ammo Spend
+native capture and full stop scan, and supply its `texture` and `palette`.
+The separate turret-deployment bubble covers 84 recorded placements.
+
+The Bloom turret core comparison uses the original opaque model ranges
+and the eight lane and base placements in the saved replay. Prepare the
+archive geometry with `tools/research/prepare-mayhem-bloom-turret-geometry.mjs`.
+Use `tools/research/audit-mayhem-bloom-structures.mjs` and the offline
+`tools/research/probe-mayhem-bloom-turret-opening.py` for the opening receipt.
+Set `bloomTurretCores.geometry` and `bloomTurretCores.opening` to those receipt
+paths. The builder corroborates six losses against decoded replay events,
+keyframes, and footer evidence. The two surviving cores persist to replay
+end. Turret foliage, branches, shrines, health bars, and destruction visuals
+remain unverified.
 
 To include recorded champion animation, prepare clips using the exact replay
 and the archived executable. Use the source and ordinal model manifests bound

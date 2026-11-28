@@ -1,4 +1,5 @@
 import type { ReplayEngineFactory } from "@scout-for-lol/replay/engine";
+import { readReplayContainerIdentity } from "@scout-for-lol/replay/packets";
 import { createReplaySceneSession } from "@scout-for-lol/replay/scene";
 import {
   ReplayCapabilityError,
@@ -20,6 +21,7 @@ import {
   prepareScene,
   SceneSchema,
 } from "./scout-terrain-scene.ts";
+import { validateBuildScopedRiftScene } from "./tools/research/build-scoped-rift-scene.mjs";
 import {
   currentInhibitorArchiveModels,
   currentInhibitorRegistrationSha256,
@@ -220,14 +222,41 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const localManifest = LocalScoutTerrainManifestSchema.parse(manifest);
   const read = async (path: string) =>
     (await resources.read(path.slice(1))).buffer;
-  const scene = SceneSchema.parse(parseTerrainJson(await read("/scene.json")));
   const capabilities = localManifest.capabilities;
+  const buildScoped = capabilities.rosterCoverage === "build-scoped-archive";
+  const recordedCapabilities = buildScoped ? undefined : capabilities;
+  const source: unknown = parseTerrainJson(await read("/scene.json"));
+  let scene;
+  if (buildScoped) {
+    validateBuildScopedRiftScene(source);
+    const recorded = readReplayContainerIdentity(replay);
+    if (
+      recorded.build !== localManifest.gameBuild ||
+      recorded.protocol !== localManifest.protocol
+    )
+      throw new ReplayCapabilityError(
+        "incompatible-build",
+        "The saved replay does not match the archive build and protocol.",
+      );
+    scene = SceneSchema.parse({
+      ...(source as object),
+      identity: {
+        ...recorded,
+        replaySha256: await sha256Hex(replay),
+      },
+      participants: [],
+      frames: [],
+    });
+  } else {
+    scene = SceneSchema.parse(source);
+  }
   const mayhemMapSkin =
     capabilities.mapId === 12 ? capabilities.mayhemMapSkin : undefined;
   if (
     scene.identity.build !== localManifest.gameBuild ||
     scene.identity.protocol !== localManifest.protocol ||
-    scene.identity.replaySha256 !== capabilities.replaySha256 ||
+    (!buildScoped &&
+      scene.identity.replaySha256 !== capabilities.replaySha256) ||
     scene.identity.mayhemMapSkin !== mayhemMapSkin
   )
     throw new ReplayCapabilityError(
@@ -237,6 +266,33 @@ export const createReplayEngine: ReplayEngineFactory = async ({
   const modelCatalog = scene.workerMotion?.championModelCatalog;
   const animationCatalog = scene.workerMotion?.championAnimationModelCatalog;
   const files = new Map(localManifest.files.map((file) => [file.path, file]));
+  const bloomTurretCores = scene.bloomTurretCores;
+  if (bloomTurretCores !== undefined) {
+    const replaySha256 =
+      "4bb0f94d3ceb19df374c0937a9e59dcc866a5b92e4727b81c6c7d5b3aca970b7";
+    const comparisonSha256 =
+      bloomTurretCores.kind === "recorded-authored-turret-cores"
+        ? "0f63c759cd3e1bb8b1aaadb7992f6aa554b98bc1ae32e2f6f2efa792553585f1"
+        : "3c9d767d3900c31fae22f4bcc8aa2c4534125e07e2fbfc86c0ccc5dfa5622fe0";
+    if (
+      capabilities.mapId !== 12 ||
+      capabilities.mayhemMapSkin !== "Bloom" ||
+      scene.identity.build !== "16.23.841.8428" ||
+      scene.identity.replaySha256 !== replaySha256 ||
+      scene.structureModels !== undefined ||
+      scene.workerMotion?.turretCatalog !== undefined ||
+      (await sha256Hex(replay)) !== replaySha256 ||
+      (await jsonSha256(bloomTurretCores)) !== comparisonSha256 ||
+      bloomTurretCores.bindings.some(({ url }) => {
+        const path = url.slice(1);
+        return !matchesDigestInPath(files.get(path), path);
+      })
+    )
+      throw new ReplayCapabilityError(
+        "invalid-package",
+        "The Bloom turret core comparison differs from the reviewed opening.",
+      );
+  }
   const nexusCatalog = scene.workerMotion?.nexusCatalog;
   if (nexusCatalog !== undefined) {
     const [registration, placeables, receipt] = await Promise.all([
@@ -355,11 +411,11 @@ export const createReplayEngine: ReplayEngineFactory = async ({
       }
     }
   }
-  const announcerProfile = localManifest.capabilities.announcerPreview;
-  const particlePreview = localManifest.capabilities.particlePreview;
+  const announcerProfile = recordedCapabilities?.announcerPreview;
+  const particlePreview = recordedCapabilities?.particlePreview;
   const combatAudioComparison =
-    localManifest.capabilities.mapId === 11 &&
-    localManifest.capabilities.combatAudioComparison !== undefined;
+    recordedCapabilities?.mapId === 11 &&
+    recordedCapabilities.combatAudioComparison !== undefined;
   const mayhemImpactComparison =
     localManifest.capabilities.mapId === 12 &&
     localManifest.capabilities.mayhemImpactComparison !== undefined;
@@ -378,7 +434,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     combatAudioComparison
   ) {
     const replayDigest = await sha256Hex(replay);
-    if (replayDigest !== localManifest.capabilities.replaySha256) {
+    if (replayDigest !== recordedCapabilities?.replaySha256) {
       const source = combatAudioComparison
         ? "combat audio comparison"
         : particlePreview === undefined && !mayhemImpactComparison
@@ -433,7 +489,7 @@ export const createReplayEngine: ReplayEngineFactory = async ({
     typeof AudioContext !== "undefined"
       ? new ScoutTerrainAnnouncer(
           resources,
-          localManifest.capabilities.replaySha256,
+          scene.identity.replaySha256,
           signal,
           {
             announcer: includeAnnouncer,

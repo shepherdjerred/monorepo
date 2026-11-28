@@ -71,10 +71,12 @@ const { positionals, values } = parseArgs({
     "terrain-visibility-from-replay": { type: "string" },
     "infernal-terrain-export": { type: "string" },
     "mountain-terrain-export": { type: "string" },
+    "infernal-mountain-terrain-export": { type: "string" },
     "champion-models": { type: "string" },
     "champion-catalog-sha256": { type: "string" },
     "champion-models-from-replay": { type: "boolean" },
     "participants-from-replay": { type: "boolean" },
+    "build-scoped-package": { type: "boolean" },
     "champion-animation-cues": { type: "string" },
     "champion-animation-cues-sha256": { type: "string" },
     "champion-animation-catalog": { type: "string" },
@@ -133,6 +135,7 @@ const { positionals, values } = parseArgs({
 const [terrainRoot, threeCore, replayPath, ...receiptPaths] = positionals;
 const rawReplayOnly = receiptPaths.length === 0;
 const privatePackageOutput = values["private-package-output"];
+const buildScoped = values["build-scoped-package"] === true;
 const combatAudioInput = values["combat-audio-comparison"];
 assert.ok(
   combatAudioInput === undefined || privatePackageOutput !== undefined,
@@ -142,6 +145,32 @@ const recoveryPath = values["scout-recovery-db"];
 const canonicalMatchPath = values["canonical-match"];
 const canonicalMatchDigest = values["canonical-match-sha256"];
 const riftStartupArchive = values["rift-startup-archive"];
+assert.ok(
+  !buildScoped ||
+    (riftStartupArchive !== undefined &&
+      values["turrets-from-replay"] === true &&
+      values["nexus-from-replay"] === true),
+  "Build-scoped Rift requires offline startup validation and authored turret and Nexus catalogs",
+);
+if (buildScoped) {
+  for (const option of [
+    "announcer-preview",
+    "announcer-catalog",
+    "combat-audio-comparison",
+    "recorded-particles",
+    "terrain-visibility",
+    "champion-animation-cues",
+    "champion-health",
+    "champion-resources",
+    "champion-experience",
+    "champion-inventory",
+    "world-unit-models",
+    "neutral-unit-models",
+    "lane-minion-models",
+    "team-vision",
+  ])
+    assert.equal(values[option], undefined, `--${option} is replay-bound`);
+}
 assert.ok(
   riftStartupArchive === undefined ||
     (privatePackageOutput !== undefined &&
@@ -533,6 +562,7 @@ async function loadTerrainMaterials(manifestPath, meshes, proof, assetDigests) {
       "ac8454d98df0416515f0ac4618050af121668ee00e1511c8ed866daf6f02518b",
       "c4ccce86cabfe3f8c47e39eb60588c35ff605c75dd118d0fd898f99f9eea1340",
       "12a412d96d08f7fec511f3a6547d3fb8f0dbd2fe1673592ff8567e1e0895d6fc",
+      "40f2dd3644ac56dd5908dd3b1fb216bccf20008d10d9a4d0bbadbad509518559",
     ].includes(sha256(manifestBytes)),
     "Terrain materials do not match the pinned preview export",
   );
@@ -1400,7 +1430,16 @@ const replayBuffer = new Uint8Array(bytes).buffer;
 const replay = openReplay(replayBuffer);
 const currentBuild = replay.build === currentTerrainPositionBuild;
 const decodeChampionModels = values["champion-models-from-replay"] === true;
-const decodeParticipants = values["participants-from-replay"] === true;
+const decodeParticipants =
+  buildScoped || values["participants-from-replay"] === true;
+function staticRiftScene({
+  identity: { build, protocol },
+  participants: _participants,
+  frames: _frames,
+  ...scene
+}) {
+  return { ...scene, identity: { build, protocol } };
+}
 assert.ok(
   !decodeParticipants || decodeChampionModels,
   "Replay-derived participants require --champion-models-from-replay",
@@ -1515,12 +1554,18 @@ if (shortFixture) {
 assert.equal(proof.staticMesh.sha256, localDigests["map/map.bin"]);
 const infernalTerrainExport = values["infernal-terrain-export"];
 const mountainTerrainExport = values["mountain-terrain-export"];
+const combinedTerrainExport = values["infernal-mountain-terrain-export"];
 assert.ok(
-  infernalTerrainExport === undefined || mountainTerrainExport === undefined,
+  [infernalTerrainExport, mountainTerrainExport, combinedTerrainExport].filter(
+    (value) => value !== undefined,
+  ).length <= 1,
   "Select one authored terrain export",
 );
-const variantTerrainExport = mountainTerrainExport ?? infernalTerrainExport;
-const mountainTerrain = mountainTerrainExport !== undefined;
+const variantTerrainExport =
+  combinedTerrainExport ?? mountainTerrainExport ?? infernalTerrainExport;
+const combinedTerrain = combinedTerrainExport !== undefined;
+const mountainTerrain = combinedTerrain || mountainTerrainExport !== undefined;
+const infernalTerrain = combinedTerrain || infernalTerrainExport !== undefined;
 let metadata = baseMetadata;
 let mesh = baseMesh;
 let staticMesh = proof.staticMesh;
@@ -1541,15 +1586,19 @@ if (variantTerrainExport !== undefined) {
   const meshDigest = sha256(mesh);
   assert.equal(
     metadataDigest,
-    mountainTerrain
-      ? "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc"
-      : "4a8b2432fa3316647092fee062ff84c198f5e085ea11860aa4584082f46a889d",
+    combinedTerrain
+      ? "e5f69629e7a28a2ede5945cfb944f3558758953559a22c3c70ae82f97365b0bb"
+      : mountainTerrain
+        ? "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc"
+        : "4a8b2432fa3316647092fee062ff84c198f5e085ea11860aa4584082f46a889d",
   );
   assert.equal(
     meshDigest,
-    mountainTerrain
-      ? "437bb9c7fd9ea99268b0d2f6c417fe7af447c5645d451ee11daa7b9653d56636"
-      : "c0419c77f44277f4e0257c1dae73a24d355461b87640318231e351cba208c61c",
+    combinedTerrain
+      ? "84cfbbd225b635b3c955b61a5034d251a7cab986efa5ab363126ebfb6e97825a"
+      : mountainTerrain
+        ? "437bb9c7fd9ea99268b0d2f6c417fe7af447c5645d451ee11daa7b9653d56636"
+        : "c0419c77f44277f4e0257c1dae73a24d355461b87640318231e351cba208c61c",
   );
   assert.ok(mesh.subarray(0, baseMesh.length).equals(baseMesh));
   const original = JSON.parse(baseMetadata);
@@ -1559,22 +1608,27 @@ if (variantTerrainExport !== undefined) {
     original.meshes,
   );
   const replacements = expanded.meshes.slice(original.meshes.length);
-  assert.equal(replacements.length, mountainTerrain ? 12 : 3);
+  assert.equal(
+    replacements.length,
+    (mountainTerrain ? 12 : 0) + (infernalTerrain ? 3 : 0),
+  );
   if (mountainTerrain) {
-    assert.ok(replacements.every((entry) => entry.flags === 4));
+    const mountain = replacements.filter(({ flags }) => flags === 4);
     assert.equal(
-      replacements.filter(({ controller }) => controller === 0x48106271).length,
+      mountain.filter(({ controller }) => controller === 0x48106271).length,
       9,
     );
     assert.equal(
-      replacements.filter(({ controller }) => controller === 0x1804e2e4).length,
+      mountain.filter(({ controller }) => controller === 0x1804e2e4).length,
       3,
     );
-  } else {
-    assert.ok(
-      replacements.every(
+  }
+  if (infernalTerrain) {
+    assert.equal(
+      replacements.filter(
         (entry) => entry.controller === 0xd1a17399 && entry.flags === 2,
-      ),
+      ).length,
+      3,
     );
   }
   staticMesh = {
@@ -1691,7 +1745,9 @@ const frames = (trace?.frames ?? []).map(({ timeSeconds, actors }) => ({
 }));
 const scene = {
   identity,
-  ...(replay.winningTeam === null || values["player-state-from-replay"]
+  ...(buildScoped ||
+  replay.winningTeam === null ||
+  values["player-state-from-replay"]
     ? {}
     : { winningTeam: replay.winningTeam }),
   mapBounds: proof.mapBounds,
@@ -1744,11 +1800,12 @@ if (values["terrain-materials"] !== undefined) {
 // The base export omits Infernal replacements. Preserve the existing
 // conservative omission when a match lacks the reviewed base-variant evidence.
 const reviewedBaseTerrainReplay =
+  !buildScoped &&
   currentBuild &&
   identity.replaySha256 ===
     "a7eff15aa08dd60e52a9c7e289aa99cfaf06fdd4edd789c1999ccef9fc5b7fa1";
 const missingReplacementMeshControllerIds =
-  infernalTerrainExport === undefined && !reviewedBaseTerrainReplay
+  !infernalTerrain && !reviewedBaseTerrainReplay
     ? [0x4aefd282, 0xa8951ff3]
     : [];
 if (terrainVisibilityPath !== undefined) {
@@ -2672,7 +2729,7 @@ if (
     );
     const items = [];
     for (const { itemId, icon, iconSha256, name, width, height } of catalog) {
-      if (!required.delete(itemId)) continue;
+      if (!required.delete(itemId) && !buildScoped) continue;
       const image = await readFile(join(dirname(itemAssetsPath), icon));
       assert.equal(
         sha256(image),
@@ -2935,7 +2992,11 @@ const routes = new Map([
     "/scene.json",
     [
       JSON.stringify(
-        decodeParticipants ? { ...scene, participants: [] } : scene,
+        buildScoped
+          ? staticRiftScene(scene)
+          : decodeParticipants
+            ? { ...scene, participants: [] }
+            : scene,
       ),
       "application/json",
     ],
@@ -3020,6 +3081,7 @@ if (privatePackageOutput !== undefined) {
         );
   const result = await writeLocalScoutTerrainPackage({
     output: privatePackageOutput,
+    buildScoped,
     identity,
     routes,
     threeCore,

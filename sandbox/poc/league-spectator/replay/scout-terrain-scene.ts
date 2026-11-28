@@ -675,7 +675,7 @@ const meshId = z.number().int().positive().max(0xffffffff);
 const TerrainControllerGraphSchema = z.strictObject({
   geometrySha256: z.string().regex(/^[0-9a-f]{64}$/),
   materialsSha256: z.string().regex(/^[0-9a-f]{64}$/),
-  meshControllerIds: z.array(meshId).min(12).max(13),
+  meshControllerIds: z.array(meshId).min(12).max(14),
   controllers: z
     .record(
       z.string().regex(/^[1-9]\d{0,9}$/),
@@ -817,6 +817,36 @@ const TerrainSceneFields = z.object({
     )
     .optional(),
   structureModelBindings: z.array(renderedTurretBinding).length(2).optional(),
+  bloomTurretCores: z
+    .strictObject({
+      kind: z.enum([
+        "opening-authored-turret-cores",
+        "recorded-authored-turret-cores",
+      ]),
+      beforeSeconds: z.literal(120).optional(),
+      bindings: z
+        .array(
+          z.strictObject({
+            participantId,
+            url: z.string().regex(/^\/structure-models\/[a-f0-9]{64}\.glb$/),
+            skinScale: z.literal(1),
+            hiddenRanges: z.tuple([
+              z.literal("Stage3"),
+              z.literal("Branches"),
+              z.literal("Foliage"),
+            ]),
+          }),
+        )
+        .length(2),
+      instances: z
+        .array(
+          worldModelInstance.extend({
+            destroyedAtSeconds: z.number().positive().nullable().optional(),
+          }),
+        )
+        .length(8),
+    })
+    .optional(),
   nexusModels: z
     .object({
       bindings: z.array(modelBinding).length(2),
@@ -2880,9 +2910,10 @@ export async function loadRenderer(
         signal,
         read,
       );
-    if (scene.structureModels !== undefined)
+    const structures = scene.structureModels ?? scene.bloomTurretCores;
+    if (structures !== undefined)
       structureModels = await render.loadChampionModels(
-        scene.structureModels.bindings,
+        structures.bindings,
         signal,
         read,
       );

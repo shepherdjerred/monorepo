@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import path from "node:path";
+import { readReplayContainerIdentity } from "@scout-for-lol/replay/packets";
 import { z } from "zod";
 import {
   readFooterScores,
@@ -22,6 +23,7 @@ import {
   readRecordedDraw,
 } from "./recorded-draw-probe.ts";
 import {
+  apiPath,
   contentPath,
   readRecordedReplay,
   replayPath,
@@ -47,10 +49,52 @@ import {
 
 async function sceneDerivesRoster(root: string) {
   const { participants } = z
-    .object({ participants: z.array(z.unknown()) })
+    .object({ participants: z.array(z.unknown()).optional() })
     .parse(await Bun.file(path.join(root, "scene.json")).json());
-  return participants.length === 0;
+  return (participants?.length ?? 0) === 0;
 }
+
+test("the build-scoped package rejects a same-build replay from the wrong map", async ({
+  page,
+}) => {
+  const wrongMapPath = Bun.env["SCOUT_REPLAY_E2E_WRONG_MAP_ROFL"];
+  test.skip(
+    wrongMapPath === undefined,
+    "Requires a genuine same-build replay from another map.",
+  );
+  if (wrongMapPath === undefined) return;
+  const fixture = await readRecordedReplay();
+  expect(fixture.buildScoped).toBe(true);
+  const replay = await Bun.file(wrongMapPath).arrayBuffer();
+  const identity = readReplayContainerIdentity(replay);
+  expect(identity.build).toBe(fixture.descriptor.gameBuild);
+  expect(identity.protocol).toBe(fixture.descriptor.protocol);
+  expect(identity.participantCount).toBe(10);
+  const replaySha256 = sha256(new Uint8Array(replay));
+  expect(replaySha256).not.toBe(fixture.descriptor.sha256);
+  await page.route(apiPath, (route) =>
+    route.fulfill({
+      json: {
+        ...fixture.descriptor,
+        sha256: replaySha256,
+        bytes: replay.byteLength,
+        durationSeconds: identity.durationMilliseconds / 1000,
+      },
+    }),
+  );
+  await page.route(contentPath, (route) =>
+    route.fulfill({
+      path: wrongMapPath,
+      contentType: "application/vnd.riot.rofl",
+    }),
+  );
+  await page.goto(replayPath);
+  const player = page.getByRole("region", { name: "Replay player" });
+  await expect(player.getByRole("alert")).toContainText(/Map11|turret|Nexus/u);
+  await expect(
+    player.getByRole("button", { name: "Play", exact: true }),
+  ).toHaveCount(0);
+});
 
 function verifyCameraProjection(
   draw: Awaited<ReturnType<typeof readRecordedDraw>>,

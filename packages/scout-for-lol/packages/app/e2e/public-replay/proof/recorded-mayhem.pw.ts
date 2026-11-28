@@ -86,8 +86,28 @@ async function verifyMayhemImpacts(
         [75.7, 0],
       ] as const)
     : [];
-  expect(track.effects).toHaveLength(heimer.length === 0 ? 0 : 210);
-  for (const [time, draws] of [...flash, ...maokai, ...heimer]) {
+  const hasAmmo = track.families.some(
+    ({ id }) => id === "heimerdinger-q-ammo-spend",
+  );
+  const ammo = hasAmmo
+    ? ([
+        [81.7, maokai.length === 0 ? 0 : 1],
+        [82, maokai.length === 0 ? 1 : 2],
+        [82.4, 0],
+      ] as const)
+    : [];
+  expect(
+    track.effects.filter(({ family }) => family === "heimerdinger-w-impact"),
+  ).toHaveLength(heimer.length === 0 ? 0 : 210);
+  expect(
+    track.effects.filter(
+      ({ family }) => family === "heimerdinger-q-ammo-spend",
+    ),
+  ).toHaveLength(hasAmmo ? 84 : 0);
+  expect(track.effects).toHaveLength(
+    (heimer.length === 0 ? 0 : 210) + (hasAmmo ? 84 : 0),
+  );
+  for (const [time, draws] of [...flash, ...maokai, ...heimer, ...ammo]) {
     await seek(page, time);
     const frame = await readRecordedDraw(page);
     expect(frame.recordedParticleDraws).toBe(draws);
@@ -146,9 +166,12 @@ test("signed-out Bloom replay plays the opening fight at 1× and restores a shar
       factors: [770, 771, 770, 771],
     });
   }
+  const scene = z
+    .object({ bloomTurretCores: z.object({}).optional() })
+    .parse(await Bun.file(path.join(fixture.root, "scene.json")).json());
   expect(
     new Set(opening.actorOrigins.map((origin) => origin.join(","))).size,
-  ).toBe(22);
+  ).toBe(scene.bloomTurretCores === undefined ? 22 : 30);
   await expect(laneMinions).toHaveCount(12);
   const openingPixels = sha256(
     await canvas.screenshot({

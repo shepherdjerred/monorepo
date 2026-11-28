@@ -1,8 +1,7 @@
-import path from "node:path";
 import { z } from "zod";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { replayFixture } from "#src/lib/replay/replay-fixture.ts";
-import { LocalScoutTerrainManifestSchema } from "./local-scout-terrain-manifest.ts";
+import { readRecordedPackageSource } from "./proof/recorded-package-source.ts";
 import { RecordedTerrainVisibilitySchema } from "./proof/terrain-visibility-schema.ts";
 
 const uploadOrigin = Bun.env["SCOUT_REPLAY_E2E_BACKEND_ORIGIN"];
@@ -54,9 +53,8 @@ export async function fetchRecordedBackend(
 }
 
 export function sha256(bytes: Uint8Array): string {
-  return new Bun.CryptoHasher("sha256").update(bytes).digest("hex");
+  return Bun.CryptoHasher.hash("sha256", bytes, "hex");
 }
-
 const SceneIdentitySchema = z.object({
   followCameraDefaults: z
     .object({
@@ -409,16 +407,16 @@ export async function readRecordedReplay() {
   if (manifestPath === "" || roflPath === "")
     throw new Error("Set SCOUT_REPLAY_E2E_MANIFEST and SCOUT_REPLAY_E2E_ROFL.");
 
-  const manifest = await Bun.file(manifestPath).bytes();
-  const inventory = LocalScoutTerrainManifestSchema.parse(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(manifest)),
-  );
-  const rofl = await Bun.file(roflPath).bytes();
-  const digest = sha256(rofl);
-  const root = path.dirname(manifestPath);
-  const scene = SceneIdentitySchema.parse(
-    await Bun.file(path.join(root, "scene.json")).json(),
-  );
+  const {
+    inventory,
+    root,
+    manifest,
+    scene: sourceScene,
+    replaySha256,
+    recorded,
+    replayBytes,
+  } = await readRecordedPackageSource(manifestPath, roflPath);
+  const scene = SceneIdentitySchema.parse(sourceScene);
   const {
     identity,
     followCameraDefaults,
@@ -428,8 +426,8 @@ export async function readRecordedReplay() {
     championAnimationCues,
   } = scene;
   if (
-    identity.replaySha256 !== digest ||
-    inventory.capabilities.replaySha256 !== digest ||
+    identity.replaySha256 !== replaySha256 ||
+    (recorded !== undefined && recorded.replaySha256 !== replaySha256) ||
     identity.build !== inventory.gameBuild ||
     identity.protocol !== inventory.protocol
   )
@@ -450,8 +448,8 @@ export async function readRecordedReplay() {
     ]),
   );
   const recordedIdentity = {
-    bytes: rofl.byteLength,
-    sha256: digest,
+    bytes: replayBytes,
+    sha256: replaySha256,
     gameBuild: inventory.gameBuild,
     protocol: inventory.protocol,
     durationSeconds: identity.durationMilliseconds / 1000,
@@ -461,6 +459,7 @@ export async function readRecordedReplay() {
   const uploaded = await readUploadedReplay(recordedIdentity);
   return {
     root,
+    buildScoped: recorded === undefined,
     paths,
     packageUrl,
     followCameraDefaults,
@@ -476,8 +475,8 @@ export async function readRecordedReplay() {
     directReplayObservations:
       directWorldObservations || capabilities.directChampionObservations,
     announcerEvents: scene.workerMotion?.announcerEvents,
-    announcerPreview: inventory.capabilities.announcerPreview,
-    particlePreview: inventory.capabilities.particlePreview,
+    announcerPreview: recorded?.announcerPreview,
+    particlePreview: recorded?.particlePreview,
     championAnimationCueCount: championAnimationCues?.length ?? 0,
     ...capabilities,
     descriptor: {

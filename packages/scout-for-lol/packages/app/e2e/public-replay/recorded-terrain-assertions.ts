@@ -1,6 +1,7 @@
 import path from "node:path";
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { z } from "zod";
+import type { RecordedTerrainVisibilitySchema } from "./proof/terrain-visibility-schema.ts";
 import { readRecordedDraw } from "./recorded-draw-probe.ts";
 import type { readRecordedReplay } from "./recorded-replay-data.ts";
 import { seek } from "./recorded-replay-fixture.ts";
@@ -21,6 +22,37 @@ const meshRanges = z.object({
     }),
   ),
 });
+
+type TerrainTracks = z.infer<typeof RecordedTerrainVisibilitySchema>["tracks"];
+
+export function expectedRecordedTerrainTracks(
+  mapDigest: string,
+  tracks: TerrainTracks,
+) {
+  const combined =
+    mapDigest ===
+    "e5f69629e7a28a2ede5945cfb944f3558758953559a22c3c70ae82f97365b0bb";
+  const mountain =
+    combined ||
+    mapDigest ===
+      "5b3ed6a403893e7c4f38aab225aeadb96c625283956ffd010d649de9b80a3ccc";
+  const variantTracks: TerrainTracks = [];
+  // Authored default plus pinned ordinary write to name hash 215400aa.
+  if (mountain)
+    variantTracks.push({
+      controllerId: 402_973_412,
+      points: [
+        [0, false],
+        [883.34115234375, true],
+      ],
+    });
+  // The authored Infernal cohort stays hidden during this Mountain replay.
+  if (combined)
+    variantTracks.push({ controllerId: 3_517_019_033, points: [[0, false]] });
+  return [...tracks, ...variantTracks].sort(
+    (a, b) => a.controllerId - b.controllerId,
+  );
+}
 
 export async function readRecordedTerrainRanges(
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -47,6 +79,7 @@ export async function readRecordedTerrainRanges(
   );
   let offset = 0;
   const mountainOffsets: number[] = [];
+  const infernalOffsets: number[] = [];
   const ranges = meshes.flatMap((mesh) => {
     const firstIndex = offset;
     offset += mesh.indexCount;
@@ -55,6 +88,11 @@ export async function readRecordedTerrainRanges(
       [0x18_04_e2_e4, 0x48_10_62_71].includes(mesh.controller)
     ) {
       mountainOffsets.push(
+        ...mesh.submeshes.map(({ start }) => (firstIndex + start) * 4),
+      );
+    }
+    if (mesh.flags === 2 && mesh.controller === 0xd1_a1_73_99) {
+      infernalOffsets.push(
         ...mesh.submeshes.map(({ start }) => (firstIndex + start) * 4),
       );
     }
@@ -86,7 +124,7 @@ export async function readRecordedTerrainRanges(
         throw new Error("Terrain coverage has no opening controller state.");
       return active[1];
     });
-  return Object.assign(rangesAt, { mountainOffsets });
+  return Object.assign(rangesAt, { mountainOffsets, infernalOffsets });
 }
 
 type TerrainRanges = NonNullable<
@@ -102,11 +140,21 @@ export function verifyOpeningTerrain(
   expect(opening.textures).toBeGreaterThan(0);
   expect(opening.texturedIndices).toBeGreaterThan(0);
   if (rangesAt !== undefined && rangesAt.mountainOffsets.length > 0) {
-    expect(sourceAlphaBlendMaterials.toSorted()).toEqual([
+    const mountainDecals = [
       "Earth_Chaos_KrugDecal_A_MAT",
       "Earth_Order_KrugDecal_A_MAT",
       "Earth_Order_RaptorDecal_A_MAT",
-    ]);
+    ];
+    if (rangesAt.infernalOffsets.length > 0) {
+      expect(rangesAt.infernalOffsets).toHaveLength(3);
+      mountainDecals.push(
+        "Earth_Chaos_GrompDecal_A_MAT",
+        "Earth_Order_GrompDecal_A_MAT",
+      );
+    }
+    expect(sourceAlphaBlendMaterials.toSorted()).toEqual(
+      mountainDecals.toSorted(),
+    );
   } else {
     expect(sourceAlphaBlendMaterials).toEqual(
       Bun.env["SCOUT_REPLAY_E2E_EXPECT_GROMP_DECALS"] === "1" ||

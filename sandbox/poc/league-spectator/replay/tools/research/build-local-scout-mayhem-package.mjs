@@ -13,6 +13,7 @@ import {
   mayhemLaneMaterialsSha256,
   verifyMayhemLaneCatalog,
 } from "./mayhem-lane-minion-catalog.mjs";
+import { readMayhemBloomTurretCoreComparison } from "./mayhem-bloom-turret-core-comparison.mjs";
 import { readCurrentChampionAnimationModelCatalog } from "./recorded-champion-animation-resources.mjs";
 import { readRecordedMayhemExperienceThresholds } from "./recorded-champion-experience.mjs";
 
@@ -276,6 +277,15 @@ async function buildPackage(inputs) {
     for (const [route, asset] of animation.routes) routes.set(route, asset);
     championAnimationModelCatalog = animation.championAnimationModelCatalog;
   }
+  const bloomTurretCores =
+    inputs.bloomTurretCores === undefined
+      ? undefined
+      : await readMayhemBloomTurretCoreComparison(
+          inputs.bloomTurretCores,
+          identity,
+          routes,
+          replayBytes,
+        );
   const scene = {
     identity,
     mapBounds: { min, max },
@@ -292,6 +302,7 @@ async function buildPackage(inputs) {
     },
     navgrid: { columns: x, rows: z, step },
     minimap: true,
+    ...(bloomTurretCores === undefined ? {} : { bloomTurretCores }),
     ...(laneMinionCatalog === undefined ? {} : { laneMinionModelBindings }),
     ...(mayhemFlowMapControl === undefined ? {} : { mayhemFlowMapControl }),
     ...(thresholds === undefined
