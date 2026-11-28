@@ -1188,7 +1188,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "8.5.13-fpm-bookworm@sha256:bad1d3498eaa489efe88c1d532e47e2f4111304c3f0b19fbc428842c39ec155c"
+      "value": "8.6.0-fpm-bookworm@sha256:ca011d23187931fef48cac15c66a298cf16ee0bc3b83830ccaa5f0daa699dab3"
     },
     {
       "name": "library/mariadb",
