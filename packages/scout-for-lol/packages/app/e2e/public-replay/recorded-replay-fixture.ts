@@ -46,16 +46,24 @@ export async function seek(page: Page, seconds: number) {
   await expect(slider).toHaveAttribute("aria-busy", "false");
 }
 
-const ParticleComponents = z.array(
-  z.object({
-    lifetime: z.number(),
-    samples: z.array(z.object({ age: z.number() })),
-  }),
-);
+const ParticleComponent = z.object({
+  lifetime: z.number(),
+  samples: z.array(z.object({ age: z.number() })),
+});
+const ParticleComponents = z.array(ParticleComponent);
 const FamilyParticleTrack = z.object({
   effects: z.array(z.object({ start: z.number(), family: z.string() })).min(1),
   families: z.array(
     z.object({ id: z.string(), components: ParticleComponents }),
+  ),
+});
+const WorldRibbon = z.object({
+  paths: z.array(
+    z.object({
+      start: z.number(),
+      end: z.number(),
+      samples: z.array(z.object({ age: z.number() })).nonempty(),
+    }),
   ),
 });
 
@@ -76,15 +84,19 @@ export async function readRecordedParticleTrack(
       }),
       FamilyParticleTrack.extend({
         schema: z.literal(4),
-        worldRibbon: z.object({
-          paths: z.array(
-            z.object({
-              start: z.number(),
-              end: z.number(),
-              samples: z.array(z.object({ age: z.number() })).nonempty(),
-            }),
-          ),
-        }),
+        worldRibbon: WorldRibbon,
+      }),
+      FamilyParticleTrack.extend({
+        schema: z.literal(5),
+        worldRibbon: WorldRibbon,
+        families: z.array(
+          z.object({
+            id: z.string(),
+            components: z.array(
+              ParticleComponent.extend({ depthTest: z.boolean() }),
+            ),
+          }),
+        ),
       }),
     ])
     .parse(
@@ -117,7 +129,7 @@ function expectedParticleDraws(
     track.families.map(({ id, components: parts }) => [id, parts]),
   );
   const ribbons =
-    track.schema === 4
+    track.schema === 4 || track.schema === 5
       ? track.worldRibbon.paths.filter(
           ({ start, end, samples }) =>
             time < end && samples.some(({ age }) => age <= time - start),
@@ -152,6 +164,41 @@ function ammoWitnessClocks(
   });
 }
 
+async function verifySnowflashDraws(
+  page: Page,
+  track: NonNullable<Awaited<ReturnType<typeof readRecordedParticleTrack>>>,
+) {
+  if (track.schema !== 5) return;
+  const snowflash = track.families.find(
+    ({ id }) => id === "anivia-q-snowflash",
+  );
+  if (snowflash === undefined) return;
+  expect(snowflash.components.map(({ depthTest }) => depthTest)).toEqual([
+    false,
+  ]);
+  expect(
+    track.effects.filter(({ family }) => family === snowflash.id),
+  ).toHaveLength(1);
+  for (const [seconds, depthDisabled] of [
+    [1714.3, 0],
+    [1714.5, 1],
+    [1714.6, 0],
+    [1714.5, 1],
+  ] as const) {
+    await seek(page, seconds);
+    const total = expectedParticleDraws(track, seconds);
+    await expect
+      .poll(async () => {
+        const draw = await readRecordedDraw(page);
+        return [
+          draw.recordedParticleDraws,
+          draw.recordedDepthDisabledParticleDraws,
+        ];
+      })
+      .toEqual([total, depthDisabled]);
+  }
+}
+
 export async function verifyRecordedParticlePreview(
   page: Page,
   fixture: Awaited<ReturnType<typeof readRecordedReplay>>,
@@ -184,6 +231,7 @@ export async function verifyRecordedParticlePreview(
       0,
     );
   await vision.selectOption("all");
+  await verifySnowflashDraws(page, track);
   if (track.effects.length > 100) {
     // Five distinct impacts share one start time in the recorded fight.
     await expectAt(1715.7, 10);
@@ -205,7 +253,7 @@ export async function verifyRecordedParticlePreview(
     await expectAt(1719, 1);
   }
   if (
-    (track.schema === 3 || track.schema === 4) &&
+    (track.schema === 3 || track.schema === 4 || track.schema === 5) &&
     track.families.some(({ id }) => id === "senna-soul-death")
   ) {
     await expectAt(254.7, 0);
@@ -213,7 +261,7 @@ export async function verifyRecordedParticlePreview(
     await expectAt(255.3, 0);
     await expectAt(255, 1);
   }
-  if (track.schema === 4) {
+  if (track.schema === 4 || track.schema === 5) {
     for (const seconds of [1713.9, 1714.3, 1714.7, 1714.9, 1715.2, 1714.3])
       await expectAt(seconds, expectedDraws(seconds));
     await vision.selectOption("blue");

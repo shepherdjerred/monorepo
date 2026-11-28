@@ -308,11 +308,13 @@ export function createRecordedParticleRenderer(
         let activePalette;
         let activeBlend;
         let activeProgram = program;
+        let activeDepthTest = true;
         for (const {
           texture,
           palette,
           blend,
           alphaTest,
+          depthTest = true,
           centerY,
           position,
           vertices,
@@ -346,6 +348,7 @@ export function createRecordedParticleRenderer(
               indices.length === 0 ||
               indices.length % 6 !== 0 ||
               !alphaTest ||
+              !depthTest ||
               blend !== "src-alpha-one"
             )
               throw Error("Invalid recorded world ribbon");
@@ -398,6 +401,11 @@ export function createRecordedParticleRenderer(
               gl.ONE,
             );
             activeBlend = blend;
+          }
+          if (depthTest !== activeDepthTest) {
+            if (depthTest) gl.enable(gl.DEPTH_TEST);
+            else gl.disable(gl.DEPTH_TEST);
+            activeDepthTest = depthTest;
           }
           gl.activeTexture(gl.TEXTURE1);
           gl.bindTexture(gl.TEXTURE_2D, base);

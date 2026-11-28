@@ -229,7 +229,7 @@ async function currentRiftSamplingWindows(
             timeSeconds: 1714,
             follow: 1_073_742_170,
             verifyParticleDraws: true as const,
-            ...(track?.schema === 4
+            ...(track?.schema === 4 || track?.schema === 5
               ? { verifyIndexedParticleDraws: true as const }
               : {}),
           },

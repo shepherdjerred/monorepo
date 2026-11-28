@@ -910,6 +910,26 @@ uv run --with unicorn python $ammoProbe $macGameExecutable $reviewedAmmoAuthored
 bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-heimer-ammo-bubble.mjs $ribbonTrackDirectory $fightPlacements $fightStopReceipt $ammoProbeLow $ammoProbeHigh $ammoBubbleMip0 $newPrivateParticleDirectory
 ```
 
+The Anivia Q impact track adds the `SnowFlash` component at the recorded
+detached origin. It captures the original spawn scale, camera table, rotate and
+palette sampling, and material state. The archived cosmetic RNG initialization
+uses a host clock. For repeatable playback, the author seeds the original
+sampler from the replay digest and effect handle. The preview uses the resulting
+sample of the original rotation curve. The two control runs check distinct
+geometry from that curve. The original palette is uniformly white.
+
+Schema 5 stores the depth-test decision for every billboard component.
+Earlier tracks and the indexed ribbon continue to use depth testing. The
+particle pass restores the scene's depth state after drawing.
+
+```powershell
+$snowflashProbe = 'sandbox/poc/league-spectator/replay/tools/research/probe-recorded-anivia-snowflash.py'
+uv run --with unicorn python $snowflashProbe $macGameExecutable $reviewedSnowflashAuthoredReceipt 0.125 > $snowflashLow
+uv run --with unicorn python $snowflashProbe $macGameExecutable $reviewedSnowflashAuthoredReceipt 0.875 > $snowflashHigh
+uv run --with unicorn python $snowflashProbe $macGameExecutable $reviewedSnowflashAuthoredReceipt seeded > $snowflashSample
+bun sandbox/poc/league-spectator/replay/tools/research/prepare-recorded-anivia-snowflash.mjs $ammoTrackDirectory $fightPlacements $fightStopReceipt $snowflashLow $snowflashHigh $snowflashSample $snowflashMip0 $newPrivateParticleDirectory
+```
+
 The Illaoi spawn probe captures the original `Ground_SLOW2` arbitrary quads at
 the recorded detached origin. It also checks the native stop request. It supplies
 an identity attachment and leaves ground-mask, fog and post-stop scheduling
@@ -969,6 +989,8 @@ at that instant and camera. The continuous capture checks ordinary playback.
 The control defaults to Playwright Chromium. Set
 `SCOUT_REPLAY_E2E_PERF_GRAPHICS=edge` for installed Edge and keep the same
 graphics mode when comparing receipts.
+The `billboard` selector covers depth-tested quads. Use `depth-test-off` for
+quads whose original draw state disables depth testing.
 
 ```powershell
 bun packages/scout-for-lol/packages/app/e2e/public-replay/proof/capture-recorded-particle-visibility.ts $loopbackReplayUrl $newPrivateAttributionDirectory 1714.3 1073742170 world-ribbon

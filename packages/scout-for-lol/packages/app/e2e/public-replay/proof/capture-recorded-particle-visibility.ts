@@ -5,12 +5,13 @@ import { chromium, expect, type Page } from "@playwright/test";
 import { PublicReplayDescriptorSchema } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { seek } from "#replay-e2e/recorded-replay-fixture.ts";
 
-type Geometry = "world-ribbon" | "billboard";
+type Geometry = "world-ribbon" | "billboard" | "depth-test-off";
 type RecordedSubmission = {
   selected: boolean;
   mode: number;
   indexCount: number;
   indexType: number;
+  depthTest: boolean;
   offset: number;
   vertexBytes: number;
   indexBytes: number;
@@ -108,12 +109,15 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
     prototype.drawElements = function (mode, indexCount, indexType, offset) {
       if (particleProgramActive) {
         const worldRibbon = this.isEnabled(this.POLYGON_OFFSET_FILL);
+        const depthTest = this.isEnabled(this.DEPTH_TEST);
         const selected =
           mode === this.TRIANGLES &&
           indexType === this.UNSIGNED_SHORT &&
           (targetGeometry === "world-ribbon"
             ? worldRibbon
-            : !worldRibbon && indexCount === 6);
+            : !worldRibbon &&
+              indexCount === 6 &&
+              depthTest === (targetGeometry === "billboard"));
         const vertices = uploads.get(this.ARRAY_BUFFER);
         const indices = uploads.get(this.ELEMENT_ARRAY_BUFFER);
         const hex = (data: Uint8Array) =>
@@ -126,6 +130,7 @@ async function installAttributionProbe(page: Page, geometry: Geometry) {
           mode,
           indexCount,
           indexType,
+          depthTest,
           offset,
           vertexBytes: vertices?.bytes.byteLength ?? 0,
           indexBytes: indices?.bytes.byteLength ?? 0,
@@ -255,8 +260,10 @@ assert.ok(
     output !== undefined &&
     secondsArgument !== undefined &&
     follow !== undefined &&
-    (geometry === "world-ribbon" || geometry === "billboard"),
-  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard>",
+    (geometry === "world-ribbon" ||
+      geometry === "billboard" ||
+      geometry === "depth-test-off"),
+  "Usage: bun capture-recorded-particle-visibility.ts <loopback replay URL> <new evidence directory> <seconds> <follow ID> <world-ribbon|billboard|depth-test-off>",
 );
 const preview = new URL(previewArgument);
 assert.equal(preview.protocol, "http:");

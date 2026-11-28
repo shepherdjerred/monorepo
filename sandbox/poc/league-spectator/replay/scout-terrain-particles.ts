@@ -26,6 +26,7 @@ const familyComponent = quadComponent.extend({
   blend: material,
   centerY: z.number(),
 });
+const programComponent = familyComponent.extend({ alphaTest: z.boolean() });
 const familyId = z.string().regex(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
 const family = z.object({
   id: familyId,
@@ -61,9 +62,7 @@ const multipleProgramsTrack = familyTrack.extend({
   families: z
     .array(
       family.extend({
-        components: z
-          .array(familyComponent.extend({ alphaTest: z.boolean() }))
-          .min(1),
+        components: z.array(programComponent).min(1),
       }),
     )
     .min(1),
@@ -104,11 +103,24 @@ const indexedRibbonTrack = multipleProgramsTrack.extend({
       .max(256),
   }),
 });
+const depthStateTrack = indexedRibbonTrack.extend({
+  schema: z.literal(5),
+  families: z
+    .array(
+      family.extend({
+        components: z
+          .array(programComponent.extend({ depthTest: z.boolean() }))
+          .min(1),
+      }),
+    )
+    .min(1),
+});
 const particleTrack = z.discriminatedUnion("schema", [
   singleFamilyTrack,
   familyTrack,
   multipleProgramsTrack,
   indexedRibbonTrack,
+  depthStateTrack,
 ]);
 
 function normalizeTrack(track: z.infer<typeof particleTrack>) {
@@ -205,6 +217,7 @@ function compileWorldRibbon(
     palette,
     blend: "src-alpha-one" as const,
     alphaTest: true,
+    depthTest: true,
     worldRibbon: true as const,
   };
   return (time: number) =>
@@ -257,15 +270,13 @@ export async function loadRecordedTerrainParticles(
     throw new Error("The recorded particle track disagrees with this replay.");
   const components = track.families.flatMap((family) => family.components);
   const noAlphaTestFragment =
-    track.schema === 3 || track.schema === 4
+    "noAlphaTestFragment" in track.shaders
       ? track.shaders.noAlphaTestFragment
       : undefined;
   if (
-    (track.schema === 3 || track.schema === 4) &&
+    noAlphaTestFragment !== undefined &&
     (track.shaders.fragment === noAlphaTestFragment ||
-      !track.families.some(({ components }) =>
-        components.some(({ alphaTest }) => !alphaTest),
-      ))
+      !components.some((entry) => "alphaTest" in entry && !entry.alphaTest))
   )
     throw new Error(
       "The recorded particle track lacks a distinct untested-alpha program.",
@@ -273,13 +284,13 @@ export async function loadRecordedTerrainParticles(
   const palettePaths = new Set(components.map(({ palette }) => palette));
   const basePaths = new Set(components.map(({ texture }) => texture));
   const worldRibbonAt =
-    track.schema === 4
+    "worldRibbon" in track
       ? compileWorldRibbon(
           track.worldRibbon,
           identity.durationMilliseconds / 1000,
         )
       : undefined;
-  if (track.schema === 4) {
+  if ("worldRibbon" in track) {
     palettePaths.add(track.worldRibbon.palette);
     basePaths.add(track.worldRibbon.texture);
   }
@@ -308,6 +319,7 @@ export async function loadRecordedTerrainParticles(
         return {
           ...entry,
           alphaTest: "alphaTest" in entry ? entry.alphaTest : true,
+          depthTest: "depthTest" in entry ? entry.depthTest : true,
           indices: decodeHex(indices),
           samples: samples.map(({ age, vertices }) => ({
             age,

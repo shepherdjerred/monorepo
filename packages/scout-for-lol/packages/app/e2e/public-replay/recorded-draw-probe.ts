@@ -14,6 +14,7 @@ type RecordedDraw = {
   actorIndexCounts: number[];
   animationPaletteDraws: { indexCount: number; hash: number }[];
   recordedParticleDraws: number;
+  recordedDepthDisabledParticleDraws: number;
   viewProjection: number[];
 };
 
@@ -32,6 +33,7 @@ export async function installRecordedDrawProbe(page: Page) {
       actorIndexCounts: [],
       animationPaletteDraws: [],
       recordedParticleDraws: 0,
+      recordedDepthDisabledParticleDraws: 0,
       viewProjection: [],
     };
     globalThis.recordedReplayDraw = draw;
@@ -126,14 +128,18 @@ export async function installRecordedDrawProbe(page: Page) {
         draw.actorIndexCounts = [];
         draw.animationPaletteDraws = [];
         draw.recordedParticleDraws = 0;
+        draw.recordedDepthDisabledParticleDraws = 0;
         pendingActor = undefined;
         paletteHash = undefined;
       }
       clear.call(this, mask);
     };
     gl.drawElements = function (mode, count, type, offset) {
-      if (particlesActive && count > 0 && mode === this.TRIANGLES)
+      if (particlesActive && count > 0 && mode === this.TRIANGLES) {
         draw.recordedParticleDraws += 1;
+        if (!this.isEnabled(this.DEPTH_TEST))
+          draw.recordedDepthDisabledParticleDraws += 1;
+      }
       if (terrainActive && textured) {
         draw.texturedIndices += count;
         draw.terrainDrawOffsets.push(offset);
