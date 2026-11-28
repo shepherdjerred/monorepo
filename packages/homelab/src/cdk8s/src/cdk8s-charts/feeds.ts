@@ -18,9 +18,8 @@ export function createFeedsChart(app: App, active = FEEDS_ACTIVE) {
   if (!active) return closeActivationGate(chart);
   new Namespace(chart, "feeds-namespace", { metadata: { name: "feeds" } });
   // Feeds is moving from its SQLite file onto its own PostgreSQL cluster. The
-  // cluster comes up beside the running app; the Deployment does not reference
-  // it beyond network egress, so its pod never waits on the
-  // operator-generated credentials.
+  // server still serves from SQLite; the database is migrated at every start
+  // and filled by the one-shot importer (packages/feeds/src/migration).
   const database = singleAppDatabase(chart, {
     app: "feeds",
     provision: true,
